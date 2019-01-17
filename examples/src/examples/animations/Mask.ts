@@ -37,7 +37,7 @@ namespace examples.animations {
             const mask = layer.mask = egret3d.AnimationMask.create("UpperBody");
             mask.createJoints(gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.mesh!).addJoint("mixamorig:Spine2");
             //
-            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
+            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
         }
     }
 }

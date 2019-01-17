@@ -10,34 +10,34 @@ namespace paper {
          * 该组件的实例是否在编辑模式拥有生命周期。
          * @internal
          */
-        public static executeInEditMode: boolean = false;
+        public static readonly executeInEditMode: boolean = false;
         /**
          * 是否允许在同一实体上添加多个该组件的实例。
          * @internal
          */
-        public static allowMultiple: boolean = false;
-        /**
-         * 该组件实例依赖的其他前置组件。
-         * @internal
-         */
-        public static requireComponents: IComponentClass<BaseComponent>[] | null = null;
+        public static readonly allowMultiple: boolean = false;
         /**
          * 当该组件被激活时派发事件。
          * @internal
          */
-        public static onComponentEnabled: signals.Signal = null!;
+        public static readonly onComponentEnabled: signals.Signal = null!;
         /**
          * 当该组件被禁用时派发事件。
          * @internal
          */
-        public static onComponentDisabled: signals.Signal = null!;
-        // TODO 基类标记，以阻止注册基类。
+        public static readonly onComponentDisabled: signals.Signal = null!;
+        /**
+         * 该组件实例依赖的其他前置组件。
+         * @internal
+         */
+        public static readonly requireComponents: IComponentClass<BaseComponent>[] | null = null;
         /**
          * 该组件实例是否为单例组件。
          * @internal
          */
         public static readonly __isSingleton: boolean = false;
         /**
+         * TODO
          * @internal
          */
         public static readonly __isBehaviour: boolean = false;
@@ -45,7 +45,7 @@ namespace paper {
          * 该组件实例索引。
          * @internal
          */
-        public static __index: number = -1;
+        public static readonly __index: int = -1;
         /**
          * 所有已注册的组件类。
          */
@@ -68,21 +68,21 @@ namespace paper {
             }
 
             if (this.requireComponents) { // Inherited parent class require components.
-                this.requireComponents = this.requireComponents.concat();
+                (this.requireComponents as any) = this.requireComponents.concat();
             }
             else {
-                this.requireComponents = [];
+                (this.requireComponents as any) = [];
             }
 
-            this.onComponentEnabled = new signals.Signal();
-            this.onComponentDisabled = new signals.Signal();
+            (this.onComponentEnabled as signals.Signal) = new signals.Signal();
+            (this.onComponentDisabled as signals.Signal) = new signals.Signal();
 
             if (this.__isSingleton) {
-                this.__index = this._allSingletonComponents.length + 300; // This means that a maximum of 300 non-singleton components can be added.
+                (this.__index as uint) = this._allSingletonComponents.length + 256; // This means that a maximum of 256 non-singleton components can be added.
                 this._allSingletonComponents.push(this as any);
             }
             else {
-                this.__index = this._allComponents.length;
+                (this.__index as uint) = this._allComponents.length;
                 this._allComponents.push(this as any);
             }
 

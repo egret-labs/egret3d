@@ -40,7 +40,7 @@ namespace examples.animations {
             animationController.createAnimationNode(tree, "Assets/Animations/Mixamo/Running.ani.bin", "Running");
             animation.play("WalkAndRun");
             //
-            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
+            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
         }
     }
 

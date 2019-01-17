@@ -237,19 +237,15 @@ namespace paper {
         /**
          * @internal
          */
-        __isBase?: boolean;
+        readonly __owner?: IBaseClass;
         /**
          * @internal
          */
-        __owner?: IBaseClass;
+        readonly __deserializeIgnore?: string[];
         /**
          * @internal
          */
-        __deserializeIgnore?: string[];
-        /**
-         * @internal
-         */
-        __serializeKeys?: { [key: string]: string | null };
+        readonly __serializeKeys?: { [key: string]: string | null };
         /**
          * @internal
          */
@@ -264,27 +260,27 @@ namespace paper {
          * 该组件的实例是否在编辑模式拥有生命周期。
          * @internal
          */
-        executeInEditMode: boolean;
+        readonly executeInEditMode: boolean;
         /**
          * 是否允许在同一实体上添加多个该组件的实例。
          * @internal
          */
-        allowMultiple: boolean;
+        readonly allowMultiple: boolean;
         /**
          * 该组件实例依赖的其他前置组件。
          * @internal
          */
-        requireComponents: IComponentClass<BaseComponent>[] | null;
+        readonly requireComponents: IComponentClass<BaseComponent>[] | null;
         /**
          * 当该组件被激活时派发事件。
          * @internal
          */
-        onComponentEnabled: signals.Signal;
+        readonly onComponentEnabled: signals.Signal;
         /**
          * 当该组件实例被禁用时派发事件。
          * @internal
          */
-        onComponentDisabled: signals.Signal;
+        readonly onComponentDisabled: signals.Signal;
         /**
          * 该组件实例是否为单例组件。
          * @internal
@@ -299,7 +295,7 @@ namespace paper {
          * 该组件实例索引。
          * @internal
          */
-        __index: number;
+        readonly __index: int;
         /**
          * @protected
          */

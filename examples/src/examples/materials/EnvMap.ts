@@ -31,7 +31,7 @@ namespace examples.materials {
                 mainCamera.transform.setLocalPosition(0.0, 0.0, -1000.0).lookAt(egret3d.Vector3.ZERO);
                 mainCamera.gameObject.addComponent(egret3d.SkyBox).material = egret3d.Material.create(egret3d.DefaultShaders.CUBE)
                     .setTexture(egret3d.ShaderUniformName.CubeMap, texture);
-                mainCamera.gameObject.addComponent(behaviors.RotateComponent);
+                mainCamera.gameObject.addComponent(behaviors.RotateAround);
             }
 
             { // Create lights.

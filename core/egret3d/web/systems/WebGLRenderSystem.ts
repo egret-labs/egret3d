@@ -621,12 +621,12 @@ namespace egret3d.webgl {
 
                 for (let i = 0, l = (isPoint ? 6 : 1); i < l; i++) {
                     //update shadowMatrix
-                    shadow.onUpdate!(i);
+                    shadow._onUpdate!(i);
                     //update draw call
                     camera._update();
 
-                    if (renderState.renderTarget !== shadow.renderTarget) {
-                        renderState.renderTarget = shadow.renderTarget;
+                    if (renderState.renderTarget !== shadow._renderTarget) {
+                        renderState.renderTarget = shadow._renderTarget;
                         renderState.renderTarget.activateTexture();
                         renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
                     }
@@ -882,7 +882,7 @@ namespace egret3d.webgl {
                 // Render lights shadow.
                 if (lights.length > 0) {
                     for (const light of lights) {
-                        if (!light.castShadows || !light.shadow.onUpdate) {
+                        if (!light.castShadows || !light.shadow._onUpdate) {
                             continue;
                         }
 

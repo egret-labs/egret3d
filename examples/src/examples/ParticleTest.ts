@@ -13,7 +13,7 @@ namespace examples {
             const gameObject = paper.Prefab.create("Assets/texiao_anhei13x13.prefab.json");
 
             //
-            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
+            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
         }
     }
 

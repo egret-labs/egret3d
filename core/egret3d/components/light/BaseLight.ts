@@ -32,5 +32,11 @@ namespace egret3d {
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.NESTED)
         public readonly shadow: LightShadow = LightShadow.create(this);
+
+        public uninitialize() {
+            super.uninitialize();
+
+            this.shadow._renderTarget.dispose();
+        }
     }
 }

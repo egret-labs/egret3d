@@ -2,7 +2,8 @@ namespace egret3d {
     /**
      * 默认的 shader。
      */
-    export class DefaultShaders extends paper.SingletonComponent {
+    @paper.singleton
+    export class DefaultShaders extends paper.BaseComponent {
         public static LINEDASHED: Shader;
         public static VERTEX_COLOR: Shader;
 

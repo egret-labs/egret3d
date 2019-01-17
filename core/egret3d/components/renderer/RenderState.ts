@@ -5,7 +5,8 @@ namespace egret3d {
     /**
      * 全局渲染状态组件。
      */
-    export class RenderState extends paper.SingletonComponent {
+    @paper.singleton
+    export class RenderState extends paper.BaseComponent {
         public version: number;
         public standardDerivativesEnabled: boolean;
         public textureFloatEnabled: boolean;

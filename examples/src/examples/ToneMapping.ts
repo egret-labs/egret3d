@@ -84,7 +84,7 @@ namespace examples {
                     .addDefine(egret3d.ShaderDefine.STANDARD)
                     ;
 
-                gameObject.addComponent(behaviors.RotateComponent);
+                gameObject.addComponent(behaviors.RotateAround);
             }
 
             { // Create background.

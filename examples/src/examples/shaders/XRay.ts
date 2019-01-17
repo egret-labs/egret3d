@@ -65,7 +65,7 @@ namespace examples.shaders {
                 renderer.gameObject.addComponent(XRayEditor);
             }
             //
-            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
+            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
             //
             createGridRoom();
         }

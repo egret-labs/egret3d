@@ -69,17 +69,17 @@ namespace egret3d {
      * 内联的数字常数枚举。
      */
     export const enum Const {
-
+        PI = 3.141592653589793,
+        PI_HALF = PI * 0.5,
+        PI_QUARTER = PI * 0.25,
         /**
          * 弧度制到角度制相乘的系数。
          */
         RAD_DEG = 57.29577951308232,
-
         /**
          * 角度制到弧度制相乘的系数。
          */
         DEG_RAD = 0.017453292519943295,
-
         /**
          * 大于零的最小正值。
          * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON

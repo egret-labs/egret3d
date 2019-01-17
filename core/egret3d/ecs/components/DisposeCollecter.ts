@@ -7,7 +7,8 @@ namespace paper {
     /**
      * 全局销毁信息收集组件。
      */
-    export class DisposeCollecter extends SingletonComponent {
+    @singleton
+    export class DisposeCollecter extends BaseComponent {
         /**
          * 缓存此帧销毁的全部场景。
          */

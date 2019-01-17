@@ -2,7 +2,8 @@ namespace egret3d {
     /**
      * 全局碰撞信息收集组件。
      */
-    export class ContactCollecter extends paper.SingletonComponent {
+    @paper.singleton
+    export class ContactCollecter extends paper.BaseComponent {
         /**
          * 当前帧开始碰撞的。
          */

@@ -254,9 +254,10 @@ namespace egret3d {
                 const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
                 children["__root__"] = rootGameObject.transform; // 
 
-                for (const glTFChannel of this.animation.channels) {
+                for (const glTFChannel of this.animation.channels as GLTFAnimationChannel[]) {
                     const nodeIndex = glTFChannel.target.node;
                     const pathName = glTFChannel.target.path;
+                    const extension = glTFChannel.extensions ? glTFChannel.extensions.paper : null;
 
                     if (nodeIndex === undefined) {
                         // const channel = AnimationChannel.create();
@@ -277,7 +278,7 @@ namespace egret3d {
 
                         const channel = AnimationChannel.create();
                         const transforms = children[nodeName];
-                        const binder = animation._getBinder(nodeName, pathName);
+                        let binder: AnimationBinder | null = null;
 
                         channel.glTFChannel = glTFChannel;
                         channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
@@ -285,42 +286,33 @@ namespace egret3d {
                         channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output)) as Float32Array;
                         this.channels.push(channel);
 
-                        if (binder) {
-                            channel.binder = binder;
-                            binder.components = transforms; // TODO 更多组件
-                        }
-                        else {
-                            channel.binder = transforms;
+                        if (!extension) {
+                            binder = channel.binder = animation._getBinder(nodeName, pathName);
+                            binder.target = transforms;
                         }
 
                         switch (pathName) {
                             case "translation":
                                 channel.updateTarget = channel.onUpdateTranslation;
-                                if (!binder.bindPose) {
-                                    binder.bindPose = Vector3.create().copy((transforms as Transform).localPosition);
-                                }
-                                if (!binder.updateTarget) {
-                                    binder.updateTarget = binder.onUpdateTranslation;
+                                if (binder!.bindPose === null) {
+                                    binder!.bindPose = Vector3.create().copy((transforms as Transform).localPosition);
+                                    binder!.updateTarget = binder!.onUpdateTranslation;
                                 }
                                 break;
 
                             case "rotation":
                                 channel.updateTarget = channel.onUpdateRotation;
-                                if (!binder.bindPose) {
-                                    binder.bindPose = Quaternion.create().copy((transforms as Transform).localRotation);
-                                }
-                                if (!binder.updateTarget) {
-                                    binder.updateTarget = binder.onUpdateRotation;
+                                if (binder!.bindPose === null) {
+                                    binder!.bindPose = Quaternion.create().copy((transforms as Transform).localRotation);
+                                    binder!.updateTarget = binder!.onUpdateRotation;
                                 }
                                 break;
 
                             case "scale":
                                 channel.updateTarget = channel.onUpdateScale;
-                                if (!binder.bindPose) {
-                                    binder.bindPose = Vector3.create().copy((transforms as Transform).localScale);
-                                }
-                                if (!binder.updateTarget) {
-                                    binder.updateTarget = binder.onUpdateScale;
+                                if (binder!.bindPose === null) {
+                                    binder!.bindPose = Vector3.create().copy((transforms as Transform).localScale);
+                                    binder!.updateTarget = binder!.onUpdateScale;
                                 }
                                 break;
 
@@ -329,18 +321,79 @@ namespace egret3d {
                                 break;
 
                             case "custom":
-                                switch (channel.glTFChannel.extensions!.paper.type) {
+                                switch (extension!.type) {
                                     case "paper.GameObject":
-                                        switch (channel.glTFChannel.extensions!.paper.property) {
+                                        switch (extension!.property) {
                                             case "activeSelf":
+                                                channel.binder = transforms;
                                                 channel.updateTarget = channel.onUpdateActive;
                                                 break;
                                         }
                                         break;
 
                                     default:
-                                        console.warn("Unknown animation channel.", channel.glTFChannel.extensions!.paper.type);
-                                        break;
+                                        const componentClass = egret.getDefinitionByName(extension!.type) as paper.IComponentClass<paper.BaseComponent> | undefined | null;
+
+                                        if (componentClass) {
+                                            const component = (transforms as Transform).gameObject.getComponent(componentClass);
+                                            if (component) {
+                                                const uri = extension!.uri;
+                                                channel.updateTarget = channel.onUpdateFloat; // TODO
+
+                                                if (uri) {
+                                                    binder = channel.binder = animation._getBinder(nodeName, uri);
+
+                                                    if (!binder.target) {
+                                                        const paths = uri.split("/");
+                                                        let target: any = component;
+                                                        let path = "";
+
+                                                        for (path of paths) {
+                                                            const firstChar = path.charAt(0);
+                                                            if (firstChar === "$") {
+                                                                target = target._getAnimationTarget(path.substring(1));
+                                                            }
+                                                            else {
+                                                                target = target[path];
+                                                            }
+                                                        }
+
+                                                        binder.target = target;
+                                                        binder.property = extension!.property;
+
+                                                        if (extension!.pose) {
+                                                            binder.bindPose = target._getAnimationPose(path);
+                                                        }
+                                                        else {
+                                                            binder.bindPose = binder.target[binder.property];
+                                                        }
+
+                                                        if (extension!.update) {
+                                                            binder.updateTarget = target._getAnimationUpdate(path);
+                                                        }
+                                                        else {
+                                                            binder.updateTarget = binder.onUpdateFloat;
+                                                        }
+                                                    }
+                                                }
+                                                else {
+                                                    binder = channel.binder = animation._getBinder(nodeName, extension!.type);
+
+                                                    if (!binder.target) {
+                                                        binder.target = component;
+                                                        binder.property = extension!.property;
+                                                        binder.bindPose = binder.target[binder.property];
+                                                        binder.updateTarget = binder.onUpdateFloat;
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                console.warn("Can not find component.", extension!.type);
+                                            }
+                                        }
+                                        else {
+                                            console.warn("Unknown component class.", extension!.type);
+                                        }
                                 }
                                 break;
 

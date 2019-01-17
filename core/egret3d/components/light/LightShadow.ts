@@ -10,60 +10,58 @@ namespace egret3d {
             return new LightShadow(light);
         }
         /**
-         * 
+         * 该阴影的边缘模糊。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public radius: number = 0.5;
+        public radius: number = 1.0;
         /**
-         * 
+         * 该阴影的贴图偏差。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: -0.01, maximum: 0.01, step: 0.0001 })
-        public bias: number = 0.01;
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: -0.02, maximum: 0.02, step: 0.0001 })
+        public bias: number = -0.01; // TODO
         /**
-         * 
+         * 产生该阴影的灯光位置到近裁剪面距离。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: 9999 })
         public near: number = 0.5;
         /**
-         * 
+         * 产生该阴影的灯光位置到远裁剪面距离。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.02, maximum: 10000 })
         public far: number = 500.0;
         /**
-         * 
+         * 该阴影的范围。（仅用于平行光产生的阴影）
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
         public size: number = 10.0;
-        /**
-         * @private
-         */
-        public readonly matrix: Matrix4 = Matrix4.create();
-        /**
-         * @private
-         */
-        public readonly renderTarget: RenderTexture = RenderTexture.create({ width: 512, height: 512 });
-        /**
-         * @private
-         */
-        public onUpdate: ((face: uint) => void) | null = null;
 
-        private _textureSize: uint = 512;
+        private _mapSize: uint = 512;
+        /**
+         * @internal
+         */
+        public readonly _matrix: Matrix4 = Matrix4.create();
+        /**
+         * @internal
+         */
+        public readonly _renderTarget: RenderTexture = RenderTexture.create({ width: 512, height: 512 });
         private readonly _light: BaseLight = null!;
         /**
-         * 禁止实例化。
+         * @internal
          */
+        public _onUpdate: ((face: uint) => void) | null = null;
+
         private constructor(light: BaseLight) {
             this._light = light;
         }
 
         public serialize() {
-            return [this.radius, this.bias, this._textureSize, this.near, this.far, this.size];
+            return [this.radius, this.bias, this._mapSize, this.near, this.far, this.size];
         }
 
         public deserialize(data: ReadonlyArray<number>) {
             this.radius = data[0];
             this.bias = data[1];
-            this._textureSize = data[2];
+            this._mapSize = data[2];
             this.near = data[3];
             this.far = data[4];
             this.size = data[5];
@@ -71,26 +69,26 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
+         * 该阴影的贴图尺寸。
          */
         @paper.editor.property(paper.editor.EditType.UINT)
-        public get textureSize(): uint {
-            return this._textureSize;
+        public get mapSize(): uint {
+            return this._mapSize;
         }
-        public set textureSize(value: uint) {
+        public set mapSize(value: uint) {
             value = Math.min(value, renderState.maxTextureSize);
-            if (this._textureSize === value) {
+            if (this._mapSize === value) {
                 return;
             }
 
-            if (this._light.constructor === DirectionalLight) {
-                this.renderTarget.uploadTexture(value * 4.0, value * 2.0);
+            if (this._light.constructor === PointLight) {
+                this._renderTarget.uploadTexture(value * 4.0, value * 2.0);
             }
             else {
-                this.renderTarget.uploadTexture(value, value);
+                this._renderTarget.uploadTexture(value, value);
             }
 
-            this._textureSize = value;
+            this._mapSize = value;
         }
     }
 }

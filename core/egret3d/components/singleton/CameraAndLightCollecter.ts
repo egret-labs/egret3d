@@ -13,7 +13,8 @@ namespace egret3d {
     /**
      * 全局摄像机和灯光组件。
      */
-    export class CameraAndLightCollecter extends paper.SingletonComponent {
+    @paper.singleton
+    export class CameraAndLightCollecter extends paper.BaseComponent {
         /**
          * 
          */

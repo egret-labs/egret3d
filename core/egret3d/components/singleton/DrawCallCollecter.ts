@@ -2,7 +2,8 @@ namespace egret3d {
     /**
      * 全局绘制信息组件。
      */
-    export class DrawCallCollecter extends paper.SingletonComponent {
+    @paper.singleton
+    export class DrawCallCollecter extends paper.BaseComponent {
         /**
          * 专用于天空盒渲染的绘制信息。
          */

@@ -33,7 +33,7 @@ namespace examples.clipping {
                 spotLight.penumbra = 0.2;
                 spotLight.color.fromHex(0xFFFFFF);
                 spotLight.castShadows = true;
-                spotLight.shadow.textureSize = 1024;
+                spotLight.shadow.mapSize = 1024;
                 spotLight.shadow.near = 3.0;
                 spotLight.shadow.far = 10.0;
                 spotLight.transform.setLocalPosition(2.0, 3.0, 3.0).lookAt(egret3d.Vector3.ZERO);
@@ -42,7 +42,7 @@ namespace examples.clipping {
                 directionalLight.intensity = 1.0;
                 directionalLight.color.fromHex(0x55505A);
                 directionalLight.castShadows = true;
-                directionalLight.shadow.textureSize = 1024;
+                directionalLight.shadow.mapSize = 1024;
                 directionalLight.shadow.near = 1.0;
                 directionalLight.shadow.far = 10.0;
                 directionalLight.shadow.size = 10;
@@ -64,14 +64,14 @@ namespace examples.clipping {
             }
 
             { // Create background.
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Background");
+                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.QUAD, "Background");
                 const renderer = gameObject.renderer!;
                 renderer.receiveShadows = true;
                 renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
                     .setColor(0xA0ADAF)
                     .setFloat(egret3d.ShaderUniformName.Shininess, 150.0)
                     .setCullFace(false);
-                gameObject.transform.setLocalEulerAngles(90.0, 0.0, 0.0);
+                gameObject.transform.setLocalEulerAngles(90.0, 0.0, 0.0).setLocalScale(9.0);
             }
         }
 

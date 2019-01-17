@@ -117,27 +117,27 @@ namespace egret3d {
             rawData[0] = vector.x; rawData[1] = 0.0; rawData[2] = 0.0;
             rawData[3] = 0.0; rawData[4] = vector.y; rawData[5] = 0.0;
             rawData[6] = 0.0; rawData[7] = 0.0; rawData[8] = vector.z;
-            
+
             return this;
         }
 
         /**
          * 通过 UV 变换设置该矩阵。
-         * @param tx 水平偏移。
-         * @param ty 垂直偏移。
-         * @param sx 水平重复。
-         * @param sy 垂直重复。
+         * @param offsetX 水平偏移。
+         * @param offsetY 垂直偏移。
+         * @param repeatX 水平重复。
+         * @param repeatY 垂直重复。
          * @param rotation 旋转。（弧度制）
-         * @param cx 水平中心。
-         * @param cy 垂直中心。
+         * @param pivotX 水平中心。
+         * @param pivotY 垂直中心。
          */
-        public fromUVTransform(tx: number, ty: number, sx: number, sy: number, rotation: number, cx: number, cy: number) {
-            const c = Math.cos(rotation);
-            const s = Math.sin(rotation);
+        public fromUVTransform(offsetX: number, offsetY: number, repeatX: number, repeatY: number, rotation: number = 0.0, pivotX: number = 0.0, pivotY: number = 0.0) {
+            const cos = Math.cos(rotation);
+            const sin = Math.sin(rotation);
 
             return this.set(
-                sx * c, sx * s, - sx * (c * cx + s * cy) + cx + tx,
-                - sy * s, sy * c, - sy * (- s * cx + c * cy) + cy + ty,
+                repeatX * cos, repeatX * sin, - repeatX * (cos * pivotX + sin * pivotY) + pivotX + offsetX,
+                - repeatY * sin, repeatY * cos, - repeatY * (- sin * pivotX + cos * pivotY) + pivotY + offsetY,
                 0.0, 0.0, 1.0
             );
         }

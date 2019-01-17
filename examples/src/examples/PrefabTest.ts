@@ -21,7 +21,7 @@ namespace examples {
             paper.Prefab.create("Assets/Motorcycle01.prefab.json")!;
 
             //
-            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
+            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
         }
     }
 

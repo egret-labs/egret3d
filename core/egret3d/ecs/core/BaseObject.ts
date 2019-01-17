@@ -65,19 +65,15 @@ namespace paper {
         /**
          * @internal
          */
-        public static __isBase?: boolean;
+        public static readonly __owner?: IBaseClass;
         /**
          * @internal
          */
-        public static __owner?: IBaseClass;
+        public static readonly __deserializeIgnore?: string[];
         /**
          * @internal
          */
-        public static __deserializeIgnore?: string[];
-        /**
-         * @internal
-         */
-        public static __serializeKeys?: { [key: string]: string | null };
+        public static readonly __serializeKeys?: { [key: string]: string | null };
         /**
          * @internal
          */
@@ -86,9 +82,9 @@ namespace paper {
                 return false;
             }
 
-            this.__deserializeIgnore = [];
-            this.__serializeKeys = {};
-            this.__owner = this;
+            (this.__deserializeIgnore as any) = [];
+            (this.__serializeKeys as any) = {};
+            (this.__owner as any) = this;
 
             return true;
         }

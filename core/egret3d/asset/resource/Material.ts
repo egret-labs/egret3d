@@ -1,6 +1,7 @@
 namespace egret3d {
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: uint = 0;
+    const _uvTransformMatrix = Matrix3.create();
     /**
      * 材质资源。
      */
@@ -50,6 +51,7 @@ namespace egret3d {
          * @internal
          */
         public readonly _id: uint = _hashCode++;
+        private readonly _uvTransform: Array<number> = [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0];
         /**
          * @internal
          */
@@ -243,6 +245,46 @@ namespace egret3d {
                     renderState._updateTextureDefine(k, add ? texture : null, this.defines);
                 }
             }
+        }
+
+        private _getAnimationPose(key: string) {
+            switch (key) {
+                case "_uvTransform":
+                    return [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0]; // TODO
+            }
+
+            return null;
+        }
+
+        private _getAnimationUpdate(key: string) {
+            switch (key) {
+                case "_uvTransform":
+                    return this._updateUVTransform;
+            }
+
+            return null;
+        }
+
+        private readonly _updateUVTransform = (binder: AnimationBinder) => {
+            const target = binder.target as Array<number>;
+
+            if (binder.totalWeight < 1.0 - Const.EPSILON) {
+                const weight = 1.0 - binder.totalWeight;
+                const bindPose = binder.bindPose as ArrayLike<number>;
+
+                if (binder.dirty > 0) {
+                    for (let i = 0; i < 7; ++i) {
+                        target[i] += bindPose[i] * weight;
+                    }
+                }
+                else {
+                    for (let i = 0; i < 7; ++i) {
+                        target[i] = bindPose[i] * weight;
+                    }
+                }
+            }
+
+            this.setUVTransform(_uvTransformMatrix.fromUVTransform.apply(_uvTransformMatrix, target as any));
         }
 
         public retain(): this {

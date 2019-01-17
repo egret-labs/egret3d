@@ -5,7 +5,6 @@ namespace paper {
     export function registerClass(baseClass: IBaseClass) {
         baseClass.__onRegister();
     }
-
     /**
      * 通过装饰器标记序列化属性。
      * @param classPrototype 类原型。
@@ -13,6 +12,7 @@ namespace paper {
      */
     export function serializedField(classPrototype: any, key: string): void;
     /**
+     * 通过装饰器标记序列化属性。
      * @param oldKey 兼容旧序列化键值。
      */
     export function serializedField(oldKey: string): Function;
@@ -30,7 +30,6 @@ namespace paper {
             };
         }
     }
-
     /**
      * 通过装饰器标记反序列化时需要忽略的属性。
      * @param classPrototype 类原型。
@@ -45,35 +44,42 @@ namespace paper {
             keys.push(key);
         }
     }
-
+    // /** TODO
+    //  * 通过装饰器标记组件是否为抽象组件。
+    //  * @param componentClass 组件类。
+    //  */
+    // export function abstract(componentClass: IComponentClass<BaseComponent>) {
+    //     (componentClass.__isAbstract as boolean) = true;
+    // }
     /**
-     * 通过装饰器标记组件是否允许在同一实体上添加多个实例。
+     * 通过装饰器标记组件允许在同一实体上添加多个实例。
      * @param componentClass 组件类。
      */
     export function allowMultiple(componentClass: IComponentClass<BaseComponent>) {
-        registerClass(componentClass);
-
         if (!componentClass.__isSingleton) {
-            componentClass.allowMultiple = true;
-        }
-        else {
-            console.warn("Singleton component cannot allow multiple.");
+            (componentClass.allowMultiple as boolean) = true;
+            // (componentClass.notAllowMultiple as boolean) = false;
         }
     }
-
+    // /** TODO
+    //  * 通过装饰器标记组件（或子类）不允许在同一实体上添加多个实例。
+    //  * @param componentClass 组件类。
+    //  */
+    // export function notAllowMultiple(componentClass: IComponentClass<BaseComponent>) {
+    //     if (!componentClass.__isSingleton) {
+    //         (componentClass.allowMultiple as boolean) = false;
+    //         (componentClass.notAllowMultiple as boolean) = true;
+    //     }
+    // }
     /**
-     * 通过装饰器标记组件依赖的其他组件。
-     * @param requireComponentClass 依赖的组件类。
+     * 通过装饰器标记组件是否为单例组件。
+     * @param componentClass 组件类。
      */
-    export function requireComponent(requireComponentClass: IComponentClass<BaseComponent>) {
-        return function (componentClass: IComponentClass<BaseComponent>) {
-            const requireComponents = componentClass.requireComponents!;
-            if (requireComponents.indexOf(requireComponentClass) < 0) {
-                requireComponents.push(requireComponentClass);
-            }
-        };
+    export function singleton(componentClass: IComponentClass<BaseComponent>) {
+        (componentClass.__isSingleton as boolean) = true;
+        (componentClass.allowMultiple as boolean) = false;
+        // (componentClass.notAllowMultiple as boolean) = false;
     }
-
     // executionOrder: number; TODO
     // /**
     //  * 通过装饰器标记脚本组件的生命周期优先级。（默认：0）
@@ -89,10 +95,20 @@ namespace paper {
      * @param componentClass 组件类。
      */
     export function executeInEditMode(componentClass: IComponentClass<Behaviour>) {
-        registerClass(componentClass);
-        componentClass.executeInEditMode = true;
+        (componentClass.executeInEditMode as boolean) = true;
     }
-
+    /**
+     * 通过装饰器标记组件依赖的其他组件。
+     * @param requireComponentClass 依赖的组件类。
+     */
+    export function requireComponent(requireComponentClass: IComponentClass<BaseComponent>) {
+        return function (componentClass: IComponentClass<BaseComponent>) {
+            const requireComponents = componentClass.requireComponents!;
+            if (requireComponents.indexOf(requireComponentClass) < 0) {
+                requireComponents.push(requireComponentClass);
+            }
+        };
+    }
     /**
      * 通过装饰器标记 API 已被废弃。
      * @param version 废弃的版本。

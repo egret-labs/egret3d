@@ -2,7 +2,8 @@ namespace egret3d {
     /**
      * 默认的纹理。
      */
-    export class DefaultTextures extends paper.SingletonComponent {
+    @paper.singleton
+    export class DefaultTextures extends paper.BaseComponent {
         /**
          * 纯白色纹理。
          */

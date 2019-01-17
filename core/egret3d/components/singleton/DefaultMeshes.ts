@@ -2,7 +2,8 @@ namespace egret3d {
     /**
      * 提供默认的几何网格资源的快速访问方式。
      */
-    export class DefaultMeshes extends paper.SingletonComponent {
+    @paper.singleton
+    export class DefaultMeshes extends paper.BaseComponent {
         public static TRIANGLE: Mesh;
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;

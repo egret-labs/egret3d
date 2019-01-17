@@ -1,6 +1,6 @@
 namespace behaviors {
 
-    export class RotateComponent extends paper.Behaviour {
+    export class RotateAround extends paper.Behaviour {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: -10.0, maximum: 10.0 })
         public rotateSpeed: number = 0.5;
         @paper.editor.property(paper.editor.EditType.VECTOR3)
@@ -33,17 +33,12 @@ namespace behaviors {
                 }
 
                 this._radian += deltaTime * this.rotateSpeed * 0.5;
-                // transform.setPosition(
-                //     target.x + Math.cos(this._radian) * this._radius,
-                //     position.y,
-                //     target.z + Math.sin(this._radian) * this._radius
-                // );
 
-                position.set(
+                transform.setPosition(
                     target.x + Math.cos(this._radian) * this._radius,
                     position.y,
                     target.z + Math.sin(this._radian) * this._radius
-                ).update();
+                );
             }
 
             transform.lookAt(target);

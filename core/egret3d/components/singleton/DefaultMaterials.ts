@@ -2,7 +2,8 @@ namespace egret3d {
     /**
      * 默认的材质。
      */
-    export class DefaultMaterials extends paper.SingletonComponent {
+    @paper.singleton
+    export class DefaultMaterials extends paper.BaseComponent {
         /**
          * 
          */

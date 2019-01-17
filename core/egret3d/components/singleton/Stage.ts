@@ -3,7 +3,8 @@ namespace egret3d {
      * 全局舞台信息组件。
      * TODO 调整文件结构，标记接口源码链接。
      */
-    export class Stage extends paper.SingletonComponent {
+    @paper.singleton
+    export class Stage extends paper.BaseComponent {
         /**
          * 当屏幕尺寸改变时派发事件。
          */

@@ -2,7 +2,8 @@ namespace paper.editor {
     /**
      * 
      */
-    export class ModelComponent extends SingletonComponent {
+    @singleton
+    export class ModelComponent extends BaseComponent {
         public static readonly onSceneSelected: signals.Signal = new signals.Signal();
         public static readonly onSceneUnselected: signals.Signal = new signals.Signal();
 

@@ -22,10 +22,11 @@ namespace egret3d {
         public dirty: uint;
         public totalWeight: number;
         public weight: number;
-        public components: paper.BaseComponent | ReadonlyArray<paper.BaseComponent>;
+        public property: string;
+        public target: paper.BaseComponent | any | ReadonlyArray<paper.BaseComponent>;
         public bindPose: any;
         public layer: AnimationLayer | null;
-        public updateTarget: (() => void);
+        public updateTarget: ((binder?: AnimationBinder) => void);
 
         private constructor() {
             super();
@@ -34,12 +35,13 @@ namespace egret3d {
         public onClear() {
             this.clear();
 
-            if (this.bindPose) {
-                this.bindPose.release(); // TODO
+            if (this.bindPose && this.bindPose.release) { // TODO
+                this.bindPose.release();
             }
 
-            this.bindPose = null!;
-            this.components = null!;
+            this.bindPose = null;
+            this.property = "";
+            this.target = null!;
             this.updateTarget = null!;
         }
 
@@ -82,9 +84,9 @@ namespace egret3d {
         }
 
         public onUpdateTranslation() {
-            const components = this.components;
-            const isArray = Array.isArray(components);
-            const target = (isArray ? (components as Transform[])[0].localPosition : (components as Transform).localPosition) as Vector3;
+            const transforms = this.target;
+            const isArray = Array.isArray(transforms);
+            const target = (isArray ? (transforms as Transform[])[0].localPosition : (transforms as Transform).localPosition) as Vector3;
 
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
@@ -103,7 +105,7 @@ namespace egret3d {
             }
 
             if (isArray) {
-                for (const component of components as Transform[]) {
+                for (const component of transforms as Transform[]) {
                     component.localPosition = target;
                 }
             }
@@ -113,9 +115,9 @@ namespace egret3d {
         }
 
         public onUpdateRotation() {
-            const components = this.components;
-            const isArray = Array.isArray(components);
-            const target = (isArray ? (components as Transform[])[0].localRotation : (components as Transform).localRotation) as Quaternion;
+            const transforms = this.target;
+            const isArray = Array.isArray(transforms);
+            const target = (isArray ? (transforms as Transform[])[0].localRotation : (transforms as Transform).localRotation) as Quaternion;
 
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
@@ -138,7 +140,7 @@ namespace egret3d {
             target.normalize();
 
             if (isArray) {
-                for (const component of components as Transform[]) {
+                for (const component of transforms as Transform[]) {
                     component.localRotation = target;
                 }
             }
@@ -148,9 +150,9 @@ namespace egret3d {
         }
 
         public onUpdateScale() {
-            const components = this.components;
-            const isArray = Array.isArray(components);
-            const target = (isArray ? (components as Transform[])[0].localScale : (components as Transform).localScale) as Vector3;
+            const transforms = this.target;
+            const isArray = Array.isArray(transforms);
+            const target = (isArray ? (transforms as Transform[])[0].localScale : (transforms as Transform).localScale) as Vector3;
 
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
@@ -169,12 +171,29 @@ namespace egret3d {
             }
 
             if (isArray) {
-                for (const component of components as Transform[]) {
+                for (const component of transforms as Transform[]) {
                     component.localScale = target;
                 }
             }
             else {
                 target.update();
+            }
+        }
+
+        public onUpdateFloat() {
+            const target = this.target;
+            const property = this.property;
+
+            if (this.totalWeight < 1.0 - Const.EPSILON) {
+                const weight = 1.0 - this.totalWeight;
+                const bindPose = this.bindPose as number;
+
+                if (this.dirty > 0) {
+                    target[property] += bindPose * weight;
+                }
+                else {
+                    target[property] = bindPose * weight;
+                }
             }
         }
     }

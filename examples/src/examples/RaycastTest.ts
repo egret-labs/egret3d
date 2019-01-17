@@ -25,7 +25,7 @@ namespace examples {
 
                 const line = paper.GameObject.create("MeshRendererRaycast");
                 line.transform.setLocalPosition(0.0, 3.0, -2.0);
-                line.addComponent(behaviors.RotateComponent).target = gameObject;
+                line.addComponent(behaviors.RotateAround).target = gameObject;
                 const rendererRaycast = line.addComponent(behaviors.RendererRaycast);
                 rendererRaycast.raycastMesh = true;
                 rendererRaycast.target = gameObject;
@@ -41,7 +41,7 @@ namespace examples {
 
                 const line = paper.GameObject.create("MeshRendererRaycast");
                 line.transform.setLocalPosition(0.0, 0.0, -2.0);
-                line.addComponent(behaviors.RotateComponent).target = gameObject;
+                line.addComponent(behaviors.RotateAround).target = gameObject;
                 const rendererRaycast = line.addComponent(behaviors.RendererRaycast);
                 rendererRaycast.raycastMesh = true;
                 rendererRaycast.target = gameObject;
@@ -97,7 +97,7 @@ namespace examples {
 
                 const line = paper.GameObject.create("ColliderRaycast");
                 line.transform.setLocalPosition(3.0, 2.0, -2.0);
-                line.addComponent(behaviors.RotateComponent).target = gameObject;
+                line.addComponent(behaviors.RotateAround).target = gameObject;
                 line.addComponent(behaviors.ColliderRaycast).target = gameObject;
             }
         }

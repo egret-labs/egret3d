@@ -12,11 +12,11 @@ namespace examples.animations {
             await RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin");
             await RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin");
 
-            paper.GameObject.globalGameObject.addComponent(Start);
+            paper.GameObject.globalGameObject.addComponent(Starter);
         }
     }
 
-    class Start extends paper.Behaviour {
+    class Starter extends paper.Behaviour {
 
         public onAwake() {
             //
@@ -32,8 +32,13 @@ namespace examples.animations {
             animation.play("Running");
             //
             gameObject.addComponent(behaviors.AnimationHelper);
+
+            for (const renderer of gameObject.getComponentsInChildren(egret3d.SkinnedMeshRenderer)) {
+                renderer.castShadows = true;
+                renderer.receiveShadows = true;
+            }
             //
-            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
+            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
             //
             const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
             if (modelComponent) {

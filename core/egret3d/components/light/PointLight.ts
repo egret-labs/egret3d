@@ -1,13 +1,14 @@
 namespace egret3d {
     const _targets = [
-        new Vector3(1, 0, 0), new Vector3(- 1, 0, 0), new Vector3(0, 0, 1),
-        new Vector3(0, 0, - 1), new Vector3(0, 1, 0), new Vector3(0, - 1, 0)
+        Vector3.RIGHT, Vector3.LEFT,
+        Vector3.FORWARD, Vector3.BACK,
+        Vector3.UP, Vector3.DOWN,
     ];
     const _ups = [
-        new Vector3(0, 1, 0), new Vector3(0, 1, 0), new Vector3(0, 1, 0),
-        new Vector3(0, 1, 0), new Vector3(0, 0, 1), new Vector3(0, 0, - 1)
+        Vector3.UP, Vector3.UP,
+        Vector3.UP, Vector3.UP,
+        Vector3.FORWARD, Vector3.BACK,
     ];
-
     //  xzXZ
     //   y Y
     //
@@ -21,47 +22,45 @@ namespace egret3d {
         new Rectangle(2, 1, 1, 1), new Rectangle(0, 1, 1, 1), new Rectangle(3, 1, 1, 1),
         new Rectangle(1, 1, 1, 1), new Rectangle(3, 0, 1, 1), new Rectangle(1, 0, 1, 1)
     ];
-
-    const _pointLightFov = Math.PI * 0.5;
     /**
      * 点光组件。
      */
     export class PointLight extends BaseLight {
         /**
-         * 
+         * 该灯光组件光照强度线性衰减的速度。
+         * - 0 不衰减。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public decay: number = 1.0;
         /**
-         * 
+         * 该灯光组件光照强度线性衰减的距离。
+         * - 0 不衰减。
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public distance: number = 100.0;
-
-        public renderTarget: RenderTexture;
+        public distance: number = 0.0;
 
         public initialize() {
             super.initialize();
 
-            this.shadow.onUpdate = this._updateShadow.bind(this);
+            this.shadow._onUpdate = this._updateShadow.bind(this);
         }
 
-        private _updateShadow(face: number) {
-            const shadow = this.shadow;
-            const shadowMatrix = shadow.matrix;
+        private _updateShadow(face: uint) {
             const shadowCamera = cameraAndLightCollecter.shadowCamera;
-            const transform = this.gameObject.transform;
-            const textureSize = Math.min(shadow.textureSize, renderState.maxTextureSize);
-
-            const lightPosition = transform.position;
-            shadowCamera.transform.localPosition = lightPosition;
-            shadowCamera.transform.lookAt(lightPosition.clone().add(_targets[face]).release(), _ups[face]);
-            shadowCamera.viewport.copy(_viewPortsScale[face]).multiplyScalar(textureSize);
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(_pointLightFov, shadow.near, shadow.far, 0.0, 1.0, 1.0, stage.matchFactor).release();
-
-            shadowMatrix.fromTranslate(lightPosition.clone().multiplyScalar(-1).release());
+            const shadow = this.shadow;
+            const shadowMatrix = shadow._matrix;
+            const mapSize = shadow.mapSize;
+            const lightPosition = this.gameObject.transform.position;
+            //
+            shadowCamera.viewport.copy(_viewPortsScale[face]).multiplyScalar(mapSize).update();
+            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(Const.PI_HALF, shadow.near, shadow.far, 0.0, 1.0, 1.0, 0.0).release();
+            shadowCamera.transform
+                .setLocalPosition(lightPosition)
+                .lookAt(lightPosition.clone().add(_targets[face]).release(), _ups[face]);
+            //
+            shadowMatrix.fromTranslate(lightPosition.clone().multiplyScalar(-1.0).release());
         }
     }
 }

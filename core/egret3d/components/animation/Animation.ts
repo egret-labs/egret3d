@@ -124,13 +124,13 @@ namespace egret3d {
                 for (const node of animationLayer.machine.nodes) { // TODO
                     if (node.name === animationClipName) {
                         animationTree = node as AnimationTree;
-            }
-            }
+                    }
+                }
 
                 if (!animationTree) {
                     console.warn(`There is no animation clip named "${animationClipName}" in the "${this.gameObject.path}" gameObject.`, animationClipName, this.gameObject.path);
-                return null;
-            }
+                    return null;
+                }
             }
             //
             const fadeStatess = this._fadeStates;
@@ -157,11 +157,11 @@ namespace egret3d {
                     if (animationAsset) {
                         animationClip = animationAsset.getAnimationClip(animationNode.name);
                         if (animationClip) {
-            const animationState = AnimationState.create();
+                            const animationState = AnimationState.create();
                             animationState._parent = animationTreeState;
                             animationState._initialize(this, animationLayer, null, animationAsset, animationClip);
-            animationState.playTimes = playTimes < 0 ? (animationClip.playTimes || 0) : playTimes;
-            lastFadeState.states.push(animationState);
+                            animationState.playTimes = playTimes < 0 ? (animationClip.playTimes || 0) : playTimes;
+                            lastFadeState.states.push(animationState);
                         }
                     }
                 }
@@ -261,11 +261,11 @@ namespace egret3d {
                         for (const animationState of fadeState.states) {
                             if (animationState.constructor === AnimationState) {
                                 (animationState as AnimationState).stop();
+                            }
                         }
                     }
                 }
             }
-        }
         }
         /**
          * 
@@ -362,12 +362,12 @@ namespace egret3d {
                     const fadeStates = fadeStatess[layerIndex];
 
                     if (fadeStates.length > 0) {
-                    const animationStates = fadeStates[fadeStates.length - 1].states;
+                        const animationStates = fadeStates[fadeStates.length - 1].states;
                         const animationState = animationStates[animationStates.length - 1];
                         if (animationState.constructor === AnimationState) {
                             return animationState as AnimationState;
-                }
-            }
+                        }
+                    }
                 }
             }
 

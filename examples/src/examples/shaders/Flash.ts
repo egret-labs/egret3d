@@ -72,7 +72,7 @@ namespace examples.shaders {
                 renderer.gameObject.addComponent(FlashEditor);
             }
             //
-            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateComponent);
+            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
             //
             createGridRoom();
         }

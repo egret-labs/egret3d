@@ -70,7 +70,7 @@ namespace examples.camera {
                 mainCamera.far = 10000.0;
                 mainCamera.near = 1.0;
                 mainCamera.backgroundColor.fromHex(0xFFFFFF);
-                mainCamera.gameObject.addComponent(behaviors.RotateComponent);
+                mainCamera.gameObject.addComponent(behaviors.RotateAround);
                 //
                 paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent)!.select(mainCamera.gameObject);
             }

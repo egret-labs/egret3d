@@ -274,10 +274,10 @@ namespace egret3d {
                     directLightBuffer[offset++] = 1;
                     directLightBuffer[offset++] = shadow.bias;
                     directLightBuffer[offset++] = shadow.radius;
-                    directLightBuffer[offset++] = shadow.textureSize;
-                    directLightBuffer[offset++] = shadow.textureSize;
-                    directShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Directional);
-                    directShadowMaps[shadowIndex++] = shadow.renderTarget;
+                    directLightBuffer[offset++] = shadow.mapSize;
+                    directLightBuffer[offset++] = shadow.mapSize;
+                    directShadowMatrix.set(shadow._matrix.rawData, shadowIndex * ShadowSize.Directional);
+                    directShadowMaps[shadowIndex++] = shadow._renderTarget;
                     renderState.castShadows = true;
                 }
                 else {
@@ -316,10 +316,10 @@ namespace egret3d {
                     spotLightBuffer[offset++] = 1;
                     spotLightBuffer[offset++] = shadow.bias;
                     spotLightBuffer[offset++] = shadow.radius;
-                    spotLightBuffer[offset++] = shadow.textureSize;
-                    spotLightBuffer[offset++] = shadow.textureSize;
-                    spotShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Spot);
-                    spotShadowMaps[shadowIndex++] = shadow.renderTarget;
+                    spotLightBuffer[offset++] = shadow.mapSize;
+                    spotLightBuffer[offset++] = shadow.mapSize;
+                    spotShadowMatrix.set(shadow._matrix.rawData, shadowIndex * ShadowSize.Spot);
+                    spotShadowMaps[shadowIndex++] = shadow._renderTarget;
                     renderState.castShadows = true;
                 }
                 else {
@@ -369,13 +369,13 @@ namespace egret3d {
                     pointLightBuffer[offset++] = 1;
                     pointLightBuffer[offset++] = shadow.bias;
                     pointLightBuffer[offset++] = shadow.radius;
-                    pointLightBuffer[offset++] = shadow.textureSize;
-                    pointLightBuffer[offset++] = shadow.textureSize;
+                    pointLightBuffer[offset++] = shadow.mapSize;
+                    pointLightBuffer[offset++] = shadow.mapSize;
                     pointLightBuffer[offset++] = shadow.near;
                     pointLightBuffer[offset++] = shadow.far;
 
-                    pointShadowMatrix.set(shadow.matrix.rawData, shadowIndex * ShadowSize.Point);
-                    pointShadowMaps[shadowIndex++] = shadow.renderTarget;
+                    pointShadowMatrix.set(shadow._matrix.rawData, shadowIndex * ShadowSize.Point);
+                    pointShadowMaps[shadowIndex++] = shadow._renderTarget;
                     renderState.castShadows = true;
                 }
                 else {

@@ -337,6 +337,9 @@ namespace egret3d {
             paper: {
                 type: string,
                 property: string,
+                uri?: string,
+                pose?: boolean,
+                update?: boolean,
             }
         };
     }

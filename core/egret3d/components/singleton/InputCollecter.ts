@@ -424,7 +424,8 @@ namespace egret3d {
      * - https://github.com/millermedeiros/js-signals/
      */
     // @requireComponent(Stage) TODO
-    export class InputCollecter extends paper.SingletonComponent {
+    @paper.singleton
+    export class InputCollecter extends paper.BaseComponent {
         /**
          * 滚轮当前值。
          */
