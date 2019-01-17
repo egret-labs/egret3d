@@ -104,6 +104,7 @@
         "egret3d/components/camera/CameraPostprocessing.ts",
         "egret3d/components/camera/CameraRenderContext.ts",
         "egret3d/components/camera/CameraAndLightSystem.ts",
+        "egret3d/components/camera/SkyBox.ts",
 
         "egret3d/components/light/Shadow.ts",
         "egret3d/components/light/BaseLight.ts",

@@ -6,7 +6,7 @@ namespace paper {
     /**
      * @deprecated
      */
-    export const CullingMask = (paper as any).Layer;
+    export const CullingMask = (paper as any).Layer as any;
     /**
      * @deprecated
      */
@@ -14,7 +14,7 @@ namespace paper {
     /**
      * @deprecated
      */
-    export const RenderQueue = (egret3d as any).RenderQueue;
+    export const RenderQueue = (egret3d as any).RenderQueue as any;
     /**
      * @deprecated 
      * @see paper.clock
@@ -30,7 +30,7 @@ namespace gltf {
     /**
      * @deprecated
      */
-    export const BlendMode = (egret3d as any).BlendMode;
+    export const BlendMode = (egret3d as any).BlendMode as any;
     /**
      * @deprecated
      */
@@ -38,7 +38,7 @@ namespace gltf {
     /**
      * @deprecated
      */
-    export const MeshAttributeType = (gltf as any).AttributeSemantics;
+    export const MeshAttributeType = (gltf as any).AttributeSemantics as any;
 }
 
 namespace egret3d {

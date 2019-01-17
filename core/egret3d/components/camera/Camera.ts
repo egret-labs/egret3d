@@ -62,8 +62,9 @@ namespace egret3d {
                 gameObject.transform.lookAt(Vector3.ZERO);
 
                 const camera = gameObject.addComponent(Camera);
-                camera.cullingMask &= ~paper.Layer.UI; // TODO 更明确的 UI 编辑方案。
-                camera.far = 10000.0;
+                camera.cullingMask = paper.Layer.Everything;
+                camera.cullingMask &= ~(paper.Layer.UI | paper.Layer.EditorUI); // TODO 更明确的 UI 编辑方案。
+                camera.far = 30000.0;
             }
 
             return gameObject.getOrAddComponent(Camera);
@@ -83,7 +84,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).Layer) }) // TODO
-        public cullingMask: paper.Layer = paper.Layer.Everything;
+        public cullingMask: paper.Layer = paper.Layer.Default;
         /**
          * 该相机渲染排序。
          * - 该值越低的相机优先绘制。
@@ -122,15 +123,13 @@ namespace egret3d {
         private readonly _worldToCameraMatrix: Matrix4 = Matrix4.create();
         private readonly _worldToClipMatrix: Matrix4 = Matrix4.create();
         private readonly _clipToWorldMatrix: Matrix4 = Matrix4.create();
-        /**
-         * @internal
-         */
-        public _readRenderTarget: RenderTexture = null!;
-        /**
-         * @internal
-         */
-        public _writeRenderTarget: RenderTexture = null!;
+        private _readRenderTarget: RenderTexture | null = null;
+        private _writeRenderTarget: RenderTexture | null = null;
         private _renderTarget: RenderTexture | null = null;
+        /**
+         * @private
+         */
+        public _previewRenderTarget: RenderTexture | null = null;
         /**
          * 该相机渲染前更新。
          * @internal
@@ -144,22 +143,43 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
+
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.Culling;
+            const { w, h } = stage.viewport;
+            const readRenderTarget = this._readRenderTarget;
+            const writeRenderTarget = this._writeRenderTarget;
+
+            if (readRenderTarget) {
+                readRenderTarget.uploadTexture(w, h);
+            }
+
+            if (writeRenderTarget) {
+                writeRenderTarget.uploadTexture(w, h);
+            }
+        }
+
+        private _onViewportUpdate(value: Readonly<Rectangle>): void {
+            if (value === this._viewport) {
+                this.viewport = value;
+            }
+            else {
+                this.pixelViewport = value;
             }
         }
 
         public initialize() {
             super.initialize();
-            //TODO
-            this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).setRepeat(false).retain();
-            this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h, depthBuffer: true }).setRepeat(false).retain();
 
             this.transform.registerObserver(this);
             stage.onScreenResize.add(this._onStageResize, this);
             stage.onResize.add(this._onStageResize, this);
+
+            this._viewport.onUpdateTarget = this._pixelViewport.onUpdateTarget = this;
+            this._viewport.onUpdate = this._pixelViewport.onUpdate = this._onViewportUpdate;
         }
 
         public uninitialize() {
@@ -177,9 +197,9 @@ namespace egret3d {
                 this._renderTarget.release();
             }
 
-            this._readRenderTarget = null!;
-            this._writeRenderTarget = null!;
-            this._renderTarget = null;
+            this._readRenderTarget = null;
+            this._writeRenderTarget = null;
+            this._previewRenderTarget = null;
 
             stage.onScreenResize.remove(this._onStageResize, this);
             stage.onResize.remove(this._onStageResize, this);
@@ -307,6 +327,16 @@ namespace egret3d {
             return this;
         }
         /**
+         * 
+         */
+        public swapPostprocessingRenderTarget(): this {
+            const temp = this._writeRenderTarget;
+            this._readRenderTarget = this._writeRenderTarget;
+            this._writeRenderTarget = temp;
+
+            return this;
+        }
+        /**
          * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
          */
         @paper.serializedField
@@ -315,6 +345,13 @@ namespace egret3d {
             return this._opvalue;
         }
         public set opvalue(value: number) {
+            if (value !== value || value < 0.0) {
+                value = 0.0;
+            }
+            else if (value > 1.0) {
+                value = 1.0;
+            }
+
             if (this._opvalue === value) {
                 return;
             }
@@ -339,12 +376,16 @@ namespace egret3d {
             return this._near;
         }
         public set near(value: number) {
-            if (value >= this.far) {
-                value = this.far - 0.01;
+            if (value >= this._far) {
+                value = this._far - 0.01;
             }
 
             if (value < 0.01) {
                 value = 0.01;
+            }
+
+            if (this._near === value) {
+                return;
             }
 
             this._near = value;
@@ -370,8 +411,8 @@ namespace egret3d {
                 value = this._near + 0.01;
             }
 
-            if (value >= 10000.0) {
-                value = 10000.0;
+            if (this._far === value) {
+                return;
             }
 
             this._far = value;
@@ -393,6 +434,13 @@ namespace egret3d {
             return this._fov;
         }
         public set fov(value: number) {
+            if (value !== value || value < 0.01) {
+                value = 0.01;
+            }
+            else if (value > Math.PI - 0.01) {
+                value = Math.PI - 0.01;
+            }
+
             if (this._fov === value) {
                 return;
             }
@@ -411,11 +459,15 @@ namespace egret3d {
          * 该相机的正交投影的尺寸。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
         public get size(): number {
             return this._size;
         }
         public set size(value: number) {
+            if (value !== value || value < 0.01) {
+                value = 0.01;
+            }
+
             if (this._size === value) {
                 return;
             }
@@ -628,10 +680,10 @@ namespace egret3d {
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
-            }
 
-            if (!this._nativeCulling) {
-                this._dirtyMask |= DirtyMask.Culling;
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
             }
         }
         /**
@@ -660,6 +712,7 @@ namespace egret3d {
          * 该相机的渲染目标。
          * - 未设置该值则直接绘制到舞台。
          */
+        @paper.serializedField
         public get renderTarget(): RenderTexture | null {
             return this._renderTarget;
         }
@@ -677,6 +730,7 @@ namespace egret3d {
             }
 
             this._renderTarget = value;
+            this._dirtyMask |= DirtyMask.PixelViewport;
 
             if (!this._nativeProjection) {
                 this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
@@ -690,6 +744,14 @@ namespace egret3d {
          * 
          */
         public get postprocessingRenderTarget(): RenderTexture {
+            if (!this._readRenderTarget) {
+                this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setRepeat(false).retain();
+            }
+
+            if (!this._writeRenderTarget) {
+                this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setRepeat(false).retain();
+            }
+
             return this._readRenderTarget;
         }
 

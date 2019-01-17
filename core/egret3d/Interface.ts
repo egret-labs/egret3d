@@ -3,6 +3,10 @@ namespace egret3d {
      * Shader 通用宏定义。
      */
     export const enum ShaderDefine {
+        //
+        TONE_MAPPING = "TONE_MAPPING",
+        GAMMA_FACTOR = "GAMMA_FACTOR",
+        //
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
         USE_ALPHAMAP = "USE_ALPHAMAP",
@@ -22,8 +26,18 @@ namespace egret3d {
         TOON = "TOON",
         STANDARD = "STANDARD",
         //
-        FLAT_SHADED = "FLAT_SHADED",
+        TEXTURE_LOD_EXT = "TEXTURE_LOD_EXT",
+        //
+        ENVMAP_TYPE_CUBE = "ENVMAP_TYPE_CUBE",
         ENVMAP_TYPE_CUBE_UV = "ENVMAP_TYPE_CUBE_UV",
+        ENVMAP_TYPE_EQUIREC = "ENVMAP_TYPE_EQUIREC",
+        ENVMAP_TYPE_SPHERE = "ENVMAP_TYPE_SPHERE",
+        ENVMAP_MODE_REFRACTION = "ENVMAP_MODE_REFRACTION",
+        ENVMAP_BLENDING_MULTIPLY = "ENVMAP_BLENDING_MULTIPLY",
+        ENVMAP_BLENDING_MIX = "ENVMAP_BLENDING_MIX",
+        ENVMAP_BLENDING_ADD = "ENVMAP_BLENDING_ADD",
+        //
+        FLAT_SHADED = "FLAT_SHADED",
         //
         MAX_BONES = "MAX_BONES",
         //
@@ -32,6 +46,8 @@ namespace egret3d {
         NUM_RECT_AREA_LIGHTS = "NUM_RECT_AREA_LIGHTS",
         NUM_SPOT_LIGHTS = "NUM_SPOT_LIGHTS",
         NUM_HEMI_LIGHTS = "NUM_HEMI_LIGHTS",
+        NUM_CLIPPING_PLANES = "NUM_CLIPPING_PLANES",
+        UNION_CLIPPING_PLANES = "UNION_CLIPPING_PLANES",
         //
         SHADOWMAP_TYPE_PCF = "SHADOWMAP_TYPE_PCF",
         SHADOWMAP_TYPE_PCF_SOFT = "SHADOWMAP_TYPE_PCF_SOFT",
@@ -40,6 +56,7 @@ namespace egret3d {
         //
         FLIP_SIDED = "FLIP_SIDED",
         DOUBLE_SIDED = "DOUBLE_SIDED",
+        PREMULTIPLIED_ALPHA = "PREMULTIPLIED_ALPHA",
         //
         USE_FOG = "USE_FOG",
         FOG_EXP2 = "FOG_EXP2",
@@ -53,6 +70,7 @@ namespace egret3d {
         Diffuse = "diffuse",
         Opacity = "opacity",
         Size = "size",
+
         Map = "map",
         AlphaMap = "alphaMap",
         AOMap = "aoMap",
@@ -65,9 +83,21 @@ namespace egret3d {
         DisplacementMap = "displacementMap",
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
+
+        CubeMap = "tCube",
+        Flip = "tFlip",
+
+        UVTransform = "uvTransform",
+
+        Reflectivity = "reflectivity",
+        RefractionRatio = "refractionRatio",
+
         Specular = "specular",
         Shininess = "shininess",
-        UVTransform = "uvTransform",
+
+        BumpScale = "bumpScale",
+        Roughness = "roughness",
+        Metalness = "metalness",
     }
     /**
      * TODO

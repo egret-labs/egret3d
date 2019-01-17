@@ -42,7 +42,7 @@ namespace components {
             }
         }
 
-        public render(camera: egret3d.Camera) {
+        public onRender(camera: egret3d.Camera) {
             const context = camera.context;
             const depthMaterial = this._depathMaterial;
             const material = this._material;
@@ -50,7 +50,7 @@ namespace components {
             const postProcessingRenderTarget = camera.postprocessingRenderTarget;
 
             if (!this._depthRenderTarget) {
-                this._depthRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, mipmap: true, premultiplyAlpha: 1 }).setLiner(false).setRepeat(false);
+                this._depthRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, premultiplyAlpha: 1 }).setLiner(false).setRepeat(false).setMipmap(true);
             }
 
             depthMaterial.setFloat("mNear", camera.near).setFloat("mFar", camera.far);
@@ -73,7 +73,7 @@ namespace components {
 
             material.setTexture("tDepth", this._depthRenderTarget);
 
-            context.blit(postProcessingRenderTarget, this._material);
+            this.blit(postProcessingRenderTarget, this._material);
 
             this._preMatrix.copy(camera.worldToClipMatrix);
         }

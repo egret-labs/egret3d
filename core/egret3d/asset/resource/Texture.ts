@@ -2,11 +2,11 @@ namespace egret3d {
     /**
      * 
      */
-    export interface CreateTextureParameters extends gltf.Sampler, GLTFEgretTextureExtension {
+    export interface CreateTextureParameters extends gltf.Sampler, GLTFTextureExtension {
         /**
          * 纹理数据源。
          */
-        source?: ArrayBufferView | gltf.ImageSource | null;
+        source?: gltf.ImageSource | ArrayBufferView | null;
     }
     /**
      * 基础纹理资源。
@@ -16,10 +16,7 @@ namespace egret3d {
         protected static _createConfig(createTextureParameters: CreateTextureParameters) {
             const config = this.createConfig();
             config.images = [{}];
-            config.samplers = [{
-                magFilter: gltf.TextureFilter.Nearest, minFilter: gltf.TextureFilter.Nearest,
-                wrapS: gltf.TextureWrappingMode.Repeat, wrapT: gltf.TextureWrappingMode.Repeat,
-            }];
+            config.samplers = [{}];
             config.textures = [{ sampler: 0, source: 0, extensions: { paper: {} } }];
             //
             const gltfTexture = config.textures![0] as GLTFTexture;
@@ -28,16 +25,19 @@ namespace egret3d {
             const extension = gltfTexture.extensions.paper;
             //
             const {
-                source, width = 0, height = 0,
-                mipmap = false, premultiplyAlpha = 0, flipY = 0,
-                anisotropy = 1,
-                format = gltf.TextureFormat.RGBA, type = gltf.TextureDataType.UNSIGNED_BYTE,
-                wrapS = gltf.TextureWrappingMode.Repeat, wrapT = gltf.TextureWrappingMode.Repeat,
-                magFilter = gltf.TextureFilter.Nearest, minFilter = gltf.TextureFilter.Nearest,
-                unpackAlignment = gltf.TextureAlignment.Four,
-                encoding = TextureEncoding.LinearEncoding,
+                wrapS, wrapT,
+                magFilter, minFilter,
+
+                source, width, height,
+                premultiplyAlpha, flipY,
+                anisotropy,
+                format, type,
+                unpackAlignment,
+                encoding,
                 //
-                depthBuffer = false, stencilBuffer = false,
+                depth, layers, faces, levels,
+                //
+                depthBuffer = true, stencilBuffer = false,
             } = createTextureParameters as CreateTextureParameters;
             //
             sampler.wrapS = wrapS;
@@ -45,27 +45,40 @@ namespace egret3d {
             sampler.magFilter = magFilter;
             sampler.minFilter = minFilter;
 
-            extension.width = width;
-            extension.height = height;
-            extension.anisotropy = anisotropy;
-
-            extension.mipmap = mipmap;
             extension.premultiplyAlpha = premultiplyAlpha;
             extension.flipY = flipY;
 
-            extension.depthBuffer = depthBuffer;
-            extension.stencilBuffer = stencilBuffer;
+            extension.width = width; // TODO min size
+            extension.height = height; // TODO min size
+            extension.anisotropy = anisotropy;
 
             extension.format = format;
             extension.type = type;
             extension.unpackAlignment = unpackAlignment;
             extension.encoding = encoding;
+
+            extension.depth = depth;
+            extension.layers = layers;
+            extension.faces = faces;
+            extension.levels = levels;
+
+            extension.depthBuffer = depthBuffer;
+            extension.stencilBuffer = stencilBuffer;
             //
-            if (ArrayBuffer.isView(source)) {
-                image.uri = source;
+            if (source) {
+                if (ArrayBuffer.isView(source)) {
+                    config.buffers = [];
+                    config.buffers[0] = { byteLength: source.byteLength };
+                    image.bufferView = 0;
+                }
+                else {
+                    image.uri = source; // 兼容
+                    extension.width = source.width;
+                    extension.height = source.height;
+                }
             }
-            else if (source) {
-                image.uri = source;
+            else if (image.uri) {
+                const source = image.uri as gltf.ImageSource;
                 extension.width = source.width;
                 extension.height = source.height;
             }
@@ -73,22 +86,70 @@ namespace egret3d {
             return config;
         }
 
+        public type: gltf.TextureType = gltf.TextureType.Texture2D;
+
+        protected _sourceDirty: boolean = true;
         protected _gltfTexture: GLTFTexture = null!;
         protected _image: gltf.Image = null!;
         protected _sampler: gltf.Sampler = null!;
+
+        private _formatLevelsAndSampler() {
+            const sampler = this._sampler;
+            let levels = this._gltfTexture.extensions.paper.levels;
+
+            if (!this.isPowerOfTwo) {
+                if (levels !== undefined && levels !== 1) {
+                    levels = this._gltfTexture.extensions.paper.levels = 1;
+                }
+
+                if (sampler.wrapS !== gltf.TextureWrappingMode.ClampToEdge || sampler.wrapT !== gltf.TextureWrappingMode.ClampToEdge) {
+                    // console.warn('Texture is not power of two. Texture.wrapS and Texture.wrapT should be set to gltf.TextureWrap.CLAMP_TO_EDGE.');
+                    sampler.wrapS = gltf.TextureWrappingMode.ClampToEdge;
+                    sampler.wrapT = gltf.TextureWrappingMode.ClampToEdge;
+                }
+            }
+            else {
+                if (!sampler.wrapS) {
+                    sampler.wrapS = gltf.TextureWrappingMode.Repeat;
+                }
+
+                if (!sampler.wrapT) {
+                    sampler.wrapT = gltf.TextureWrappingMode.Repeat;
+                }
+            }
+
+            if (!sampler.magFilter) {
+                sampler.magFilter = gltf.TextureFilter.Nearest;
+            }
+
+            if (levels === undefined || levels === 1) {
+                if (sampler.minFilter === gltf.TextureFilter.LinearMipMapLinear || sampler.minFilter === gltf.TextureFilter.NearestMipMapLinear) {
+                    sampler.minFilter = gltf.TextureFilter.Linear;
+                }
+                else if (!sampler.minFilter || sampler.minFilter === gltf.TextureFilter.NearestMipmapNearest || sampler.minFilter === gltf.TextureFilter.LinearMipmapNearest) {
+                    sampler.minFilter = gltf.TextureFilter.Nearest;
+                }
+            }
+            else {
+                if (sampler.minFilter === gltf.TextureFilter.Linear) {
+                    sampler.minFilter = gltf.TextureFilter.LinearMipMapLinear;
+                }
+                else if (!sampler.minFilter || sampler.minFilter === gltf.TextureFilter.Nearest) {
+                    sampler.minFilter = gltf.TextureFilter.NearestMipmapNearest;
+                }
+            }
+        }
         /**
          * @internal
          */
-        public setupTexture(index: uint): void { }
-        /**
-         * @internal
-         */
-        public initialize(name: string, config: GLTF) {
-            super.initialize(name, config, null);
+        public initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null) {
+            super.initialize(name, config, buffers);
 
             const gltfTexture = this._gltfTexture = this.config.textures![0] as GLTFTexture;
             this._image = this.config.images![gltfTexture.source!];
             this._sampler = this.config.samplers![gltfTexture.sampler!];
+            //
+            this._formatLevelsAndSampler();
         }
         /**
          * @internal
@@ -105,30 +166,56 @@ namespace egret3d {
             return true;
         }
         /**
+         * @internal
+         */
+        public bindTexture(index: uint): this {
+            return this;
+        }
+        /**
          * 
          */
-        public setLiner(linear: boolean): this {
+        public setLiner(value: boolean): this {
             const sampler = this._sampler;
+            const levels = this._gltfTexture.extensions.paper.levels;
 
-            if (this._gltfTexture.extensions.paper.mipmap) {
-                sampler.magFilter = linear ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
-                sampler.minFilter = linear ? gltf.TextureFilter.LinearMipMapLinear : gltf.TextureFilter.MearestMipmapNearest;
+            sampler.magFilter = value ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
+
+            if (levels === undefined || levels === 1) {
+                sampler.minFilter = value ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
             }
             else {
-                sampler.magFilter = linear ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
-                sampler.minFilter = linear ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
+                sampler.minFilter = value ? gltf.TextureFilter.LinearMipMapLinear : gltf.TextureFilter.NearestMipmapNearest;
             }
+
+            this._formatLevelsAndSampler();
 
             return this;
         }
         /**
          * 
          */
-        public setRepeat(repeat: boolean): this {
+        public setRepeat(value: boolean): this {
             const sampler = this._sampler;
-            sampler.wrapS = sampler.wrapT = repeat ? gltf.TextureWrappingMode.Repeat : gltf.TextureWrappingMode.ClampToEdge;
+            sampler.wrapS = sampler.wrapT = value ? gltf.TextureWrappingMode.Repeat : gltf.TextureWrappingMode.ClampToEdge;
+
+            this._formatLevelsAndSampler();
 
             return this;
+        }
+        /**
+         * 
+         */
+        public setMipmap(value: boolean): this {
+            this._gltfTexture.extensions.paper.levels = value ? 0 : 1;
+            this._formatLevelsAndSampler();
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public get isPowerOfTwo(): boolean {
+            return math.isPowerOfTwo(this.width) && math.isPowerOfTwo(this.height);
         }
         /**
          * 
@@ -146,31 +233,31 @@ namespace egret3d {
          * 
          */
         public get format(): gltf.TextureFormat {
-            return this._gltfTexture!.extensions.paper!.format!;
+            return this._gltfTexture!.extensions.paper!.format || gltf.TextureFormat.RGBA;
         }
-        /**
-         * 
-         */
-        public get memory(): uint {
-            let k = 0;
+        // /**
+        //  * 
+        //  */
+        // public get memory(): uint {
+        //     let k = 0;
 
-            switch (this.format) {
-                case gltf.TextureFormat.RGB:
-                case gltf.TextureFormat.Luminance:
-                    k = 3;
-                    break;
+        //     switch (this.format) {
+        //         case gltf.TextureFormat.RGB:
+        //         case gltf.TextureFormat.Luminance:
+        //             k = 3;
+        //             break;
 
-                case gltf.TextureFormat.RGBA:
-                    k = 4;
-                    break;
-            }
+        //         case gltf.TextureFormat.RGBA:
+        //             k = 4;
+        //             break;
+        //     }
 
-            if (this._gltfTexture.extensions.paper.mipmap) {
-                k *= 2;
-            }
+        //     if (this._gltfTexture.extensions.paper.mipmap) {
+        //         k *= 2;
+        //     }
 
-            return this.width * this.height * k;
-        }
+        //     return this.width * this.height * k;
+        // }
         /**
          * 
          */
@@ -196,8 +283,8 @@ namespace egret3d {
         /**
          * @private
          */
-        public static create(name: string, config: GLTF): Texture;
-        public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF) {
+        public static create(name: string, config: GLTF, buffers?: ReadonlyArray<ArrayBufferView>): Texture;
+        public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF, buffers?: ReadonlyArray<ArrayBufferView>) {
             let name: string;
             let texture: Texture;
 
@@ -207,11 +294,15 @@ namespace egret3d {
             else {
                 config = this._createConfig(parametersOrName as CreateTextureParameters);
                 name = (parametersOrName as CreateTextureParameters).name || "";
+
+                if (ArrayBuffer.isView(parametersOrName.source)) {
+                    buffers = [parametersOrName.source];
+                }
             }
 
             // Retargeting.
             texture = new egret3d.Texture();
-            texture.initialize(name, config!);
+            texture.initialize(name, config!, buffers || null);
 
             return texture;
         }
@@ -220,10 +311,9 @@ namespace egret3d {
          */
         public static createColorTexture(name: string, r: number, g: number, b: number): Texture {
             const texture = Texture.create({
-                name, source: new Uint8Array([r, g, b, 255]), width: 1, height: 1,
-                // mipmap: true,
+                name, source: new Uint8Array([r, g, b, 255, r, g, b, 255, r, g, b, 255, r, g, b, 255]), width: 2, height: 2,
                 wrapS: gltf.TextureWrappingMode.ClampToEdge, wrapT: gltf.TextureWrappingMode.ClampToEdge,
-                magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.LinearMipMapLinear
+                magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.Linear
             });
 
             return texture;
@@ -247,12 +337,22 @@ namespace egret3d {
 
             const texture = Texture.create({
                 name, source, width, height,
-                mipmap: true,
                 wrapS: gltf.TextureWrappingMode.Repeat, wrapT: gltf.TextureWrappingMode.Repeat,
-                magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.LinearMipMapLinear
+                magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.LinearMipMapLinear,
+                levels: 0,
             });
 
             return texture;
+        }
+        /**
+         * 
+         * @param source 
+         */
+        public uploadTexture(source?: gltf.ImageSource): this {
+            this._sourceDirty = true;
+            this._image.uri = source;
+
+            return this;
         }
     }
 }

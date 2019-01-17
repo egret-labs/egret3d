@@ -42,16 +42,34 @@ namespace egret3d {
             }
         }
 
+        private _updateAnimationTreeState(animationFadeState: AnimationFadeState, animationTreeState: AnimationTreeState) {
+            const animationLayer = animationTreeState.animationLayer;
+
+            let weight = animationLayer.weight * animationTreeState.weight;
+            if (animationTreeState._parent) {
+                weight *= animationTreeState._parent._globalWeight;
+            }
+            else {
+                weight *= animationFadeState.progress;
+            }
+
+            animationTreeState._globalWeight = weight;
+        }
+
         private _updateAnimationState(animationFadeState: AnimationFadeState, animationState: AnimationState, deltaTime: number, forceUpdate: boolean) {
             const animation = this._animation!;
             const gameObject = animation.gameObject;
             const animationLayer = animationState.animationLayer;
             // const animationNode = animationState.animationNode;
 
-            let weight = animationLayer.weight * animationFadeState.progress * animationState.weight;
-            // if (this.parent) { TODO
-            //     this._globalWeight *= this.parent._globalWeight;
-            // }
+            let weight = animationLayer.weight * animationState.weight;
+            if (animationState._parent) {
+                weight *= animationState._parent._globalWeight;
+            }
+            else {
+                weight *= animationFadeState.progress;
+            }
+
             animationState._globalWeight = weight;
 
             // Update time.
@@ -104,6 +122,7 @@ namespace egret3d {
 
             if (forceUpdate || weight !== 0.0) {
                 const mask = animationLayer.mask as AnimationMask | null;
+
                 if (mask && mask._dirty) {
                     const jointNames = mask.jointNames;
                     const nodes = animationState.animationAsset.config.nodes!;
@@ -265,10 +284,6 @@ namespace egret3d {
                     blendLayer.clear();
                 }
 
-                if (animation._statesDirty) {
-                    animation._statesDirty = false;
-                }
-
                 for (let i = animationFadeStates.length - 1; i >= 0; i--) {
                     const fadeStates = animationFadeStates[i];
 
@@ -293,13 +308,17 @@ namespace egret3d {
                             }
 
                             for (const animationState of fadeState.states) {
-                                this._updateAnimationState(fadeState, animationState, deltaTime, forceUpdate);
+                                if (animationState.constructor === AnimationTreeState) {
+                                    this._updateAnimationTreeState(fadeState, animationState as AnimationTreeState);
+                                }
+                                else {
+                                    this._updateAnimationState(fadeState, animationState as AnimationState, deltaTime, forceUpdate);
+                                }
                             }
                         }
 
                         if (j === lJ - 1 && r > 0) {
                             fadeStates.length -= r;
-                            animation._statesDirty = true;
                         }
                     }
                 }

@@ -11,18 +11,21 @@ namespace egret3d {
         HemisphereLight = 0b10000,
     }
     /**
-     * 激活的摄像机和灯光。
+     * 全局摄像机和灯光组件。
      */
     export class CameraAndLightCollecter extends paper.SingletonComponent {
-        /**
-         * TODO
-         * @internal
-         */
-        public currentLight: BaseLight | null = null;
         /**
          * 
          */
         public lightCountDirty: LightCountDirty = LightCountDirty.None;
+        /**
+         * 
+         */
+        public readonly postprocessingCamera: Camera = null!;
+        /**
+         * 
+         */
+        public readonly shadowCamera: Camera = null!;
         /**
          * 
          */
@@ -51,12 +54,48 @@ namespace egret3d {
          * 
          */
         public readonly hemisphereLights: HemisphereLight[] = [];
+        /**
+         * 
+         */
+        public currentLight: BaseLight | null = null;
 
         private _sortCameras(a: Camera, b: Camera) {
-            const aOrder = a.renderTarget ? a.order : a.order * 1000 + 1;
-            const bOrder = b.renderTarget ? b.order : b.order * 1000 + 1;
+            // renderTarget 相机应优先渲染。
+            const aOrder = (a.renderTarget || a._previewRenderTarget) ? a.order : (a.order * 1000 + 1);
+            const bOrder = (b.renderTarget || b._previewRenderTarget) ? b.order : (b.order * 1000 + 1);
 
             return aOrder - bOrder;
+        }
+        /**
+         * @internal
+         */
+        public initialize() {
+            super.initialize();
+
+            (cameraAndLightCollecter as CameraAndLightCollecter) = this;
+
+            { //
+                const gameObject = paper.GameObject.create("Postprocessing Camera", paper.DefaultTags.Global, paper.Scene.globalScene);
+                //
+                const camera = gameObject.getOrAddComponent(Camera);
+                camera.enabled = false;
+                camera.opvalue = 0.0;
+                camera.size = 1.0;
+                camera.near = 0.01;
+                camera.far = 1.0;
+                camera.projectionMatrix = Matrix4.IDENTITY;
+                //
+                (this.postprocessingCamera as Camera) = camera;
+            }
+
+            { //
+                const gameObject = paper.GameObject.create("Shadow Camera", paper.DefaultTags.Global, paper.Scene.globalScene);
+                //
+                const camera = gameObject.getOrAddComponent(Camera);
+                camera.enabled = false;
+                //
+                (this.shadowCamera as Camera) = camera;
+            }
         }
         /**
          * 更新相机。
@@ -256,4 +295,8 @@ namespace egret3d {
                 + this.hemisphereLights.length;
         }
     }
+    /**
+     * 全局摄像机和灯光组件实例。
+     */
+    export const cameraAndLightCollecter: CameraAndLightCollecter = null!;
 }

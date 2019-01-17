@@ -20,7 +20,7 @@ namespace egret3d {
     /**
      * 矩形。
      */
-    export class Rectangle extends paper.BaseRelease<Box> implements IRectangle, paper.ICCS<Rectangle>, paper.ISerializable {
+    export class Rectangle extends paper.BaseRelease<Rectangle> implements IRectangle, paper.ICCS<Rectangle>, paper.ISerializable {
         private static readonly _instances: Rectangle[] = [];
         /**
          * 创建一个矩形。

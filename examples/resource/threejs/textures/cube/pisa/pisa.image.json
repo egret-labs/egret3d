@@ -1,0 +1,44 @@
+{
+    "version": "4",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {},
+    "extensionsRequired": [
+        "paper"
+    ],
+    "extensionsUsed": [
+        "paper"
+    ],
+    "images": [
+        {
+            "uri": [
+                "threejs/textures/cube/pisa/px.png",
+                "threejs/textures/cube/pisa/nx.png",
+                "threejs/textures/cube/pisa/py.png",
+                "threejs/textures/cube/pisa/ny.png",
+                "threejs/textures/cube/pisa/pz.png",
+                "threejs/textures/cube/pisa/nz.png"
+            ]
+        }
+    ],
+    "samplers": [
+        {}
+    ],
+    "textures": [
+        {
+            "sampler": 0,
+            "source": 0,
+            "extensions": {
+                "paper": {
+                    "width": 256,
+                    "height": 256,
+                    "format": 6407,
+                    "faces": 6,
+                    "levels": 0,
+                    "mapping": 1
+                }
+            }
+        }
+    ]
+}

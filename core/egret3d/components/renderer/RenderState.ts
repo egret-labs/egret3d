@@ -24,7 +24,8 @@ namespace egret3d {
         public maxPrecision: string = "";
 
         public logarithmicDepthBuffer: boolean = false;
-        public toneMapping: ToneMapping = ToneMapping.None;
+
+        public toneMapping: ToneMapping = ToneMapping.LinearToneMapping;
         public toneMappingExposure: number = 1.0;
         public toneMappingWhitePoint: number = 1.0;
 
@@ -38,9 +39,12 @@ namespace egret3d {
         public commonDefines: string = "";
         public vertexDefines: string = "";
         public fragmentDefines: string = "";
-
+        /**
+         * @internal
+         */
+        public castShadows: boolean = false;
         public readonly clearColor: Color = Color.create();
-        public readonly viewPort: Rectangle = Rectangle.create();
+        public readonly viewport: Rectangle = Rectangle.create();
         public readonly defines: Defines = new Defines();
         public readonly defaultCustomShaderChunks: Readonly<{ [key: string]: string }> = {
             custom_vertex: "",
@@ -59,7 +63,7 @@ namespace egret3d {
         /**
          * 
          */
-        public draw: (drawCall: DrawCall) => void = null!;
+        public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;
 
         protected _getCommonExtensions() {
             // fragmentExtensions.
@@ -82,6 +86,7 @@ namespace egret3d {
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
             this.commonDefines = defines;
+            // fragmentDefines
             defines = "";
 
             if (this.toneMapping !== ToneMapping.None) {
@@ -147,25 +152,90 @@ namespace egret3d {
                     break;
 
                 default:
-                    throw new Error('unsupported toneMapping: ' + toneMapping);
+                    throw new Error('Unsupported toneMapping: ' + toneMapping);
             }
 
             return `vec3 toneMapping( vec3 color ) { return ${toneMappingName}ToneMapping( color ); } \n`;
         }
-        /**
-         * @internal
-         */
-        public _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+
+        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
             const components = this._getEncodingComponents(encoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
+        }
+
+        protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+            const finialEncoding = (this.gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
+            const components = this._getEncodingComponents(finialEncoding);
+            return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         }
         /**
          * @internal
          */
-        public _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
-            const finialEncoding = (this.gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
-            const components = this._getEncodingComponents(finialEncoding);
-            return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
+        public _updateTextureDefine(mapName: string, texture: BaseTexture | null, defines: Defines | null = null) {
+            defines = defines || this.defines;
+
+            const mapNameDefine = (egret3d as any).ShaderTextureDefine[mapName];//TODO
+            defines.removeDefine(mapNameDefine);
+            defines.removeDefine(ShaderDefine.FLIP_V);
+            //
+            if (texture) {
+                defines.addDefine(mapNameDefine);
+
+                if (texture instanceof RenderTexture) {
+                    defines.addDefine(ShaderDefine.FLIP_V);
+                }
+            }
+
+            const decodingFunName = (egret3d as any).TextureDecodingFunction[mapName]; // TODO
+            if (decodingFunName) {
+                defines.removeDefineByName(decodingFunName);
+
+                if (texture) {
+                    const decodingCode = this._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding);
+                    const define = defines.addDefine(decodingCode)!;
+                    define.isCode = true;
+                    define.name = decodingFunName;
+                    define.type = DefineLocation.Fragment;
+                }
+            }
+            //
+            if (mapName === ShaderUniformName.EnvMap) {
+                const nameA = "envMapA";
+                const nameB = "envMapB";
+
+                defines.removeDefineByName(nameA);
+                defines.removeDefineByName(nameB);
+
+                if (texture) {
+                    const { mapping } = texture.gltfTexture.extensions.paper;
+                    let typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE;
+                    let blendDefine = ShaderDefine.ENVMAP_BLENDING_MULTIPLY; // TODO
+                    let define: Define;
+
+                    switch (mapping) {
+                        case TextureUVMapping.Cube:
+                        default:
+                            typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE;
+                            break;
+                        case TextureUVMapping.CubeUV:
+                            typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE_UV;
+                            break;
+                        case TextureUVMapping.Equirectangular:
+                            typeDefine = ShaderDefine.ENVMAP_TYPE_EQUIREC;
+                            break;
+                        case TextureUVMapping.Spherical:
+                            typeDefine = ShaderDefine.ENVMAP_TYPE_SPHERE;
+                            break;
+                    }
+
+                    define = defines.addDefine(typeDefine)!;
+                    define.type = DefineLocation.Fragment;
+                    define.name = nameA;
+                    define = defines.addDefine(blendDefine)!;
+                    define.type = DefineLocation.Fragment;
+                    define.name = nameB;
+                }
+            }
         }
         /**
          * @internal
@@ -210,7 +280,7 @@ namespace egret3d {
         /**
          * 
          */
-        public updateViewport(viewport: Readonly<Rectangle>, target: RenderTexture | null): void { }
+        public updateViewport(camera: Camera, target: RenderTexture | null): void { }
         /**
          * 
          */
@@ -219,6 +289,62 @@ namespace egret3d {
          * 
          */
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
+
+        // public setGamma(factor: number, input: boolean, output: boolean) {
+        //     factor = (factor > 1.0 ? factor : 1.0);
+
+        //     const nameA = "GammaA";
+        //     const nameB = "GammaB";
+
+        //     this.defines.removeDefine(ShaderDefine.GAMMA_FACTOR, this._gammaFactor);
+        //     this.defines.removeDefineByName(nameA);
+        //     this.defines.removeDefineByName(nameB);
+
+        //     let define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, factor)!;
+        //     define.type = DefineLocation.Fragment;
+        //     define = this.defines.addDefine(ShaderChunk.encodings_pars_fragment)!;
+        //     define.name = nameA;
+        //     define.isCode = true;
+        //     define.type = DefineLocation.Fragment;
+        //     define = this.defines.addDefine(this._getTexelEncodingFunction("linearToOutputTexel", output ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding))!;
+        //     define.name = nameB;
+        //     define.isCode = true;
+        //     define.type = DefineLocation.Fragment;
+
+        //     this._gammaFactor = factor;
+        //     this._gammaInput = input;
+        //     this._gammaOutput = output;
+
+        //     return this;
+        // }
+
+        // public setToneMapping(toneMapping: ToneMapping, exposure: number = 1.0, whitePoint: number = 1.0) {
+        //     if (this._toneMapping !== toneMapping) {
+        //         const nameA = "ToneMappingA";
+        //         const nameB = "ToneMappingB";
+
+        //         this.defines.removeDefine(ShaderDefine.TONE_MAPPING);
+        //         this.defines.removeDefineByName(nameA);
+        //         this.defines.removeDefineByName(nameB);
+
+        //         let define = this.defines.addDefine(ShaderDefine.TONE_MAPPING)!;
+        //         define.type = DefineLocation.Fragment;
+        //         define = this.defines.addDefine(ShaderChunk.tonemapping_pars_fragment)!;
+        //         define.name = nameA;
+        //         define.isCode = true;
+        //         define.type = DefineLocation.Fragment;
+        //         define = this.defines.addDefine(this._getToneMappingFunction(toneMapping))!;
+        //         define.name = nameB;
+        //         define.isCode = true;
+        //         define.type = DefineLocation.Fragment;
+        //     }
+
+        //     this._toneMapping = toneMapping;
+        //     this.toneMappingExposure = exposure;
+        //     this.toneMappingWhitePoint = whitePoint;
+
+        //     return this;
+        // }
     }
     /**
      * 全局渲染状态组件实例。

@@ -16,6 +16,7 @@ namespace examples {
             const renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.RenderState);
             renderState.toneMapping = egret3d.ToneMapping.LinearToneMapping;
             renderState.toneMappingExposure = 1.0;
+            renderState.toneMappingWhitePoint = 1.0;
 
             //
             const lightObj = paper.GameObject.create("light");

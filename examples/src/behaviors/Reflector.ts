@@ -29,7 +29,7 @@ namespace behaviors {
         public readonly color: egret3d.Color = egret3d.Color.create(0.0, 0.0, 0.0, 1.0);
 
         private readonly _renderState: egret3d.RenderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState)!;
-        private readonly _renderTarget: egret3d.RenderTexture = egret3d.RenderTexture.create({ width: this.textureWidth, height: this.textureHeight, mipmap: true });
+        private readonly _renderTarget: egret3d.RenderTexture = egret3d.RenderTexture.create({ width: this.textureWidth, height: this.textureHeight }).setMipmap(true);
 
         public onStart() {
             if (!Reflector._reflectorCamera) {
@@ -121,7 +121,7 @@ namespace behaviors {
 
             // Render
             const renderState = this._renderState;
-            const backupViewPort = _viewPort.copy(renderState.viewPort);
+            const backupViewPort = _viewPort.copy(renderState.viewport);
             const backupRenderTarget = renderState.renderTarget;
 
             const saveCamera = egret3d.Camera.current;
@@ -131,9 +131,9 @@ namespace behaviors {
             egret3d.Camera.current = saveCamera;
 
             const reflectorMaterial = this.gameObject.renderer!.material!;
-            reflectorMaterial.setTexture("tDiffuse", this._renderTarget).setColor("color", this.color);
+            reflectorMaterial.setTexture("tDiffuse", this._renderTarget).setColor(this.color);
 
-            renderState.updateViewport(backupViewPort, backupRenderTarget);
+            // renderState.updateViewport(backupViewPort, backupRenderTarget);
 
             return true;
         }

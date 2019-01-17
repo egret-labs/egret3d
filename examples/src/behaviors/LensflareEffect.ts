@@ -26,14 +26,14 @@ namespace behaviors {
             this._tempMap = egret3d.Texture.create({
                 source: new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3),
                 width: LensflareEffect.TEXTURE_SIZE.x, height: LensflareEffect.TEXTURE_SIZE.y,
-                format: gltf.TextureFormat.RGB, mipmap: false,
+                format: gltf.TextureFormat.RGB,
                 wrapS: gltf.TextureWrappingMode.ClampToEdge, wrapT: gltf.TextureWrappingMode.ClampToEdge
             });
 
             this._occlusionMap = egret3d.Texture.create({
                 source: new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3),
                 width: LensflareEffect.TEXTURE_SIZE.x, height: LensflareEffect.TEXTURE_SIZE.y,
-                format: gltf.TextureFormat.RGB, mipmap: false,
+                format: gltf.TextureFormat.RGB,
                 wrapS: gltf.TextureWrappingMode.ClampToEdge, wrapT: gltf.TextureWrappingMode.ClampToEdge
             });
             // this._tempMap.uploadImage(new Uint8Array(LensflareEffect.TEXTURE_SIZE.x * LensflareEffect.TEXTURE_SIZE.y * 3), false, false, false);

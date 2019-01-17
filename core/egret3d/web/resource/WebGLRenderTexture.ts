@@ -2,95 +2,96 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
-    export interface IWebGLRenderTexture {
-        frameBuffer: WebGLFramebuffer | null;
-        renderBuffer: WebGLRenderbuffer | null;
-    }
-    /**
-     * @internal
-     */
-    export class WebGLRenderTexture extends RenderTexture implements IWebGLTexture, IWebGLRenderTexture {
+    export class WebGLRenderTexture extends RenderTexture {
         public webGLTexture: GlobalWeblGLTexture | null = null;
         public frameBuffer: WebGLFramebuffer | null = null;
         public renderBuffer: WebGLRenderbuffer | null = null;
 
-        private _setupFrameBufferTexture(frameBuffer: WebGLFramebuffer, texture: GlobalWeblGLTexture, textureTarget: number, type: gltf.TextureDataType, width: number, height: number, format: gltf.TextureFormat, attachment: number): void {
+        private _uploadTexture() {
             const webgl = WebGLRenderState.webgl!;
+            let type: gltf.TextureType;
+            let uploadType: gltf.TextureType;
+            const sampler = this._sampler;
+            const extension = this._gltfTexture!.extensions.paper!;
+            const width = extension.width!;
+            const height = extension.height!;
+            const format = extension.format || gltf.TextureFormat.RGBA;
+            const dataType = extension.type || gltf.TextureDataType.UNSIGNED_BYTE;
 
-            webgl.texImage2D(textureTarget, 0, format, width, height, 0, format, type, null);
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
-            webgl.framebufferTexture2D(webgl.FRAMEBUFFER, attachment, textureTarget, texture, 0);
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        }
-
-        private _setupRenderBufferStorage(frameBuffer: WebGLFramebuffer, renderBuffer: WebGLRenderbuffer, depthBuffer: boolean, stencilBuffer: boolean, width: number, height: number): void {
-            const webgl = WebGLRenderState.webgl!;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
-            //
-            webgl.bindRenderbuffer(webgl.RENDERBUFFER, renderBuffer);
-            if (depthBuffer && stencilBuffer) {
-                webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_STENCIL, width, height);
-                webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_STENCIL_ATTACHMENT, webgl.RENDERBUFFER, renderBuffer);
+            if (extension.depth !== undefined && extension.depth > 1) {
+                type = gltf.TextureType.Texture3D;
+                uploadType = type;
             }
-            else if (depthBuffer) {
-                webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.DEPTH_COMPONENT16, width, height);
-                webgl.framebufferRenderbuffer(webgl.FRAMEBUFFER, webgl.DEPTH_ATTACHMENT, webgl.RENDERBUFFER, renderBuffer);
+            else if (extension.faces !== undefined && extension.faces > 1) {
+                type = gltf.TextureType.TextureCube;
+                uploadType = gltf.TextureType.TextureCubeStart;
+            }
+            else if (extension.height! > 1) {
+                type = gltf.TextureType.Texture2D;
+                uploadType = type;
             }
             else {
-                webgl.renderbufferStorage(webgl.RENDERBUFFER, webgl.RGBA4, width, height);
+                type = gltf.TextureType.Texture1D;
+                uploadType = type;
             }
 
-            webgl.bindRenderbuffer(webgl.RENDERBUFFER, null);
-            //
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
+            this.type = type;
+
+            if (!this.webGLTexture) {
+                this.webGLTexture = webgl.createTexture()!;
+            }
+
+            webgl.bindTexture(type, this.webGLTexture);
+            // webgl.pixelStorei(gltf.WebGL.UNPACK_ALIGNMENT, extension.unpackAlignment || gltf.TextureAlignment.Four);
+            // webgl.pixelStorei(gltf.WebGL.UNPACK_FLIP_Y_WEBGL, extension.flipY || 0);
+            // webgl.pixelStorei(gltf.WebGL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, extension.premultiplyAlpha || 0);
+            setTexturexParameters(type, sampler, extension.anisotropy || 1);
+            webgl.texImage2D(type, 0, format, width, height, 0, format, dataType, null);
+
+            if (extension.layers === 0) {
+                webgl.generateMipmap(type);
+            }
         }
 
-        private _setupDepthRenderbuffer(frameBuffer: WebGLFramebuffer, renderBuffer: WebGLRenderbuffer, depthBuffer: boolean, stencilBuffer: boolean, width: number, height: number) {
+        private _uploadBuffer(): void {
             const webgl = WebGLRenderState.webgl!;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, frameBuffer);
-            this._setupRenderBufferStorage(frameBuffer, renderBuffer, depthBuffer, stencilBuffer, width, height);
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, null);
-        }
-
-        private _setupRenderTexture(): void {
-            const sampler = this._sampler;
-            const paperExtension = this._gltfTexture!.extensions.paper!;
-            const width = paperExtension.width!;
-            const height = paperExtension.height!;
-            const format = paperExtension.format!;
-            const depth = paperExtension.depthBuffer!;
-            const stencil = paperExtension.stencilBuffer!;
-            //
-            const webgl = WebGLRenderState.webgl!;
+            const extension = this._gltfTexture!.extensions.paper!;
+            const width = extension.width!;
+            const height = extension.height!;
+            const depthBuffer = extension.depthBuffer || false;
+            const stencilBuffer = extension.stencilBuffer || false;
 
             if (!this.frameBuffer) {
                 this.frameBuffer = webgl.createFramebuffer()!;
             }
 
-            if (!this.webGLTexture) { // TODO 创建与 buffer 分离。
-                this.webGLTexture = webgl.createTexture()!;
-            }
+            webgl.bindTexture(this.type, this.webGLTexture);
+            webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, this.frameBuffer);
+            webgl.framebufferTexture2D(gltf.WebGL.FrameBuffer, gltf.WebGL.COLOR_ATTACHMENT0, this.type, this.webGLTexture, 0);
 
-            webgl.bindTexture(webgl.TEXTURE_2D, this.webGLTexture);
-
-            const isPowerTwo = isPowerOfTwo(width, height);
-            setTexturexParameters(isPowerTwo, sampler, paperExtension.anisotropy || 1);
-            this._setupFrameBufferTexture(this.frameBuffer, this.webGLTexture, webgl.TEXTURE_2D, gltf.TextureDataType.UNSIGNED_BYTE, width, height, format, webgl.COLOR_ATTACHMENT0);
-
-            const minFilter = sampler.minFilter!;
-            const canGenerateMipmap = isPowerTwo && minFilter !== gltf.TextureFilter.Nearest && minFilter !== gltf.TextureFilter.Linear;
-            if (canGenerateMipmap) {
-                webgl.generateMipmap(webgl.TEXTURE_2D);
-            }
-
-            webgl.bindTexture(webgl.TEXTURE_2D, null);
-
-            if (depth || stencil) {
+            if (depthBuffer || stencilBuffer) {
                 if (!this.renderBuffer) {
                     this.renderBuffer = webgl.createRenderbuffer()!;
                 }
-                this._setupDepthRenderbuffer(this.frameBuffer, this.renderBuffer, depth, stencil, width, height);
+
+                webgl.bindRenderbuffer(gltf.WebGL.RenderBuffer, this.renderBuffer);
+
+                if (depthBuffer && stencilBuffer) {
+                    webgl.renderbufferStorage(gltf.WebGL.RenderBuffer, gltf.WebGL.DEPTH_STENCIL, width, height);
+                    webgl.framebufferRenderbuffer(gltf.WebGL.FrameBuffer, gltf.WebGL.DEPTH_STENCIL_ATTACHMENT, gltf.WebGL.RenderBuffer, this.renderBuffer);
+                }
+                else if (depthBuffer) {
+                    webgl.renderbufferStorage(gltf.WebGL.RenderBuffer, gltf.WebGL.DEPTH_COMPONENT16, width, height);
+                    webgl.framebufferRenderbuffer(gltf.WebGL.FrameBuffer, gltf.WebGL.DEPTH_ATTACHMENT, gltf.WebGL.RenderBuffer, this.renderBuffer);
+                }
+                else {
+                    webgl.renderbufferStorage(gltf.WebGL.RenderBuffer, gltf.TextureFormat.RGBA4, width, height);
+                }
             }
+
+            // webgl.bindTexture(this.type, null);
+            // webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
+            // webgl.bindRenderbuffer(gltf.WebGL.RenderBuffer, null);
         }
 
         public dispose() {
@@ -119,21 +120,48 @@ namespace egret3d.webgl {
             return true;
         }
 
-        public activateRenderTexture() {
-            if (!this.webGLTexture) { // TODO 引用计数的问题
-                this._setupRenderTexture();
+        public bindTexture(index: uint) {
+            if (this._sourceDirty) {
+                this._uploadTexture();
+                this._sourceDirty = false;
+            }
+            else {
+                const webgl = WebGLRenderState.webgl!;
+                webgl.activeTexture(gltf.TextureType.Texture2DStart + index);
+                webgl.bindTexture(this.type, this.webGLTexture);
             }
 
-            const webgl = WebGLRenderState.webgl!;
-            webgl.bindFramebuffer(webgl.FRAMEBUFFER, this.frameBuffer);
+            return this;
+        }
+
+        public activateTexture() {
+            if (this._sourceDirty) {
+                this._uploadTexture();
+                this._sourceDirty = false;
+            }
+
+            if (this._bufferDirty) {
+                this._uploadBuffer();
+                this._bufferDirty = false;
+            }
+            else {
+                const webgl = WebGLRenderState.webgl!;
+                webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, this.frameBuffer);
+
+                if (this.renderBuffer) {
+                    webgl.bindRenderbuffer(gltf.WebGL.RenderBuffer, this.renderBuffer);
+                }
+            }
+
+            return this;
         }
 
         public generateMipmap(): boolean {
-            if (this._mipmap) {
+            if (this._gltfTexture.extensions.paper.levels === 0) {
                 const webgl = WebGLRenderState.webgl!;
-                webgl.bindTexture(webgl.TEXTURE_2D, this.webGLTexture);
-                webgl.generateMipmap(webgl.TEXTURE_2D);
-                webgl.bindTexture(webgl.TEXTURE_2D, null);
+                webgl.bindTexture(this.type, this.webGLTexture);
+                webgl.generateMipmap(this.type);
+                // webgl.bindTexture(this.type, null);
 
                 return true;
             }

@@ -31,34 +31,28 @@ namespace egret3d {
         public initialize() {
             super.initialize();
 
-            this.shadow.update = this._updateShadow.bind(this);
+            this.shadow.onUpdate = this._updateShadow.bind(this);
         }
 
         private _updateShadow() {
             const shadow = this.shadow;
             const shadowMatrix = shadow.matrix;
-            const shadowCamera = shadow.camera;
+            const shadowCamera = cameraAndLightCollecter.shadowCamera;
             const transform = this.gameObject.transform;
-            const shadowSize = Math.min(shadow.size, renderState.maxTextureSize);
-            if (!shadow.renderTarget) {
-                shadow.renderTarget = RenderTexture.create({ width: shadowSize, height: shadowSize, depthBuffer: true });
-            }
+            const textureSize = shadow.textureSize;
             //
             shadowCamera.transform.position.copy(transform.position).update();
             shadowCamera.transform.rotation.copy(transform.rotation).update();
 
-            shadowCamera.viewport.set(0, 0, shadowSize, shadowSize);
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(this.angle * 2.0, shadow.near, shadow.far, 0.0, 1.0, 1.0, stage.matchFactor).release();
+            shadowCamera.viewport.set(0, 0, textureSize, textureSize).update();
+            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(this.angle * 2.0, shadow.near, shadow.far, 0.0, 1.0, 1.0, 0.0).release();
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             shadowMatrix.set(
                 0.5, 0.0, 0.0, 0.5,
                 0.0, 0.5, 0.0, 0.5,
                 0.0, 0.0, 0.5, 0.5,
                 0.0, 0.0, 0.0, 1.0
-            );
-
-            shadowMatrix.multiply(shadowCamera.projectionMatrix);
-            shadowMatrix.multiply(shadowCamera.worldToCameraMatrix);
+            ).multiply(shadowCamera.projectionMatrix).multiply(shadowCamera.worldToCameraMatrix);
         }
     }
 }

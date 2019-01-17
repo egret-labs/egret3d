@@ -1,0 +1,45 @@
+{
+    "version": "4",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {},
+    "extensionsRequired": [
+        "paper"
+    ],
+    "extensionsUsed": [
+        "paper"
+    ],
+    "images": [
+        {
+            "uri": [
+                "threejs/textures/cube/Bridge2/posx.jpg",
+                "threejs/textures/cube/Bridge2/negx.jpg",
+                "threejs/textures/cube/Bridge2/posy.jpg",
+                "threejs/textures/cube/Bridge2/negy.jpg",
+                "threejs/textures/cube/Bridge2/posz.jpg",
+                "threejs/textures/cube/Bridge2/negz.jpg"
+            ]
+        }
+    ],
+    "samplers": [
+        {}
+    ],
+    "textures": [
+        {
+            "sampler": 0,
+            "source": 0,
+            "extensions": {
+                "paper": {
+                    "width": 256,
+                    "height": 256,
+                    "format": 6407,
+                    "encoding": 2,
+                    "faces": 6,
+                    "levels": 0,
+                    "mapping": 1
+                }
+            }
+        }
+    ]
+}

@@ -26,21 +26,35 @@ namespace egret3d {
 
             // Retargeting.
             renderTexture = new egret3d.RenderTexture();
-            renderTexture.initialize(name, config!);
+            renderTexture.initialize(name, config!, null);
 
             return renderTexture;
         }
 
-        protected _mipmap: boolean = false;
+        protected _bufferDirty: boolean = true;
+        /**
+         * 
+         * @param index 
+         */
+        public activateTexture(index?: uint): this {
+            return this;
+        }
+        /**
+         * 
+         * @param source 
+         */
+        public uploadTexture(width: uint, height: uint): this {
+            width = Math.min(width, renderState.maxTextureSize);
+            height = Math.min(height, renderState.maxTextureSize);
 
-        public initialize(name: string, config: GLTF) {
-            super.initialize(name, config);
+            this._sourceDirty = true;
+            this._bufferDirty = true;
+            this._gltfTexture.extensions.paper.width = width;
+            this._gltfTexture.extensions.paper.height = height;
 
-            const extension = this._gltfTexture!.extensions.paper!;
-            this._mipmap = extension.mipmap!;
+            return this;
         }
 
-        public activateRenderTexture(index?: uint): void { }
         public generateMipmap(): boolean { return false; }
     }
 }
