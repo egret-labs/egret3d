@@ -2018,13 +2018,6 @@ declare namespace egret3d {
         maxAnisotropy: uint;
         maxBoneCount: uint;
         maxPrecision: string;
-        logarithmicDepthBuffer: boolean;
-        toneMapping: ToneMapping;
-        toneMappingExposure: number;
-        toneMappingWhitePoint: number;
-        gammaFactor: number;
-        gammaInput: boolean;
-        gammaOutput: boolean;
         commonExtensions: string;
         vertexExtensions: string;
         fragmentExtensions: string;
@@ -2049,12 +2042,18 @@ declare namespace egret3d {
          *
          */
         draw: (drawCall: DrawCall, material?: Material | null) => void;
+        private _logarithmicDepthBuffer;
+        private _gammaFactor;
+        private _gammaInput;
+        private _gammaOutput;
+        private _toneMapping;
         protected _getCommonExtensions(): void;
         protected _getCommonDefines(): void;
         protected _getEncodingComponents(encoding: TextureEncoding): string[];
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         protected _getTexelEncodingFunction(functionName: string, encoding?: TextureEncoding): string;
         protected _getTexelDecodingFunction(functionName: string, encoding?: TextureEncoding): string;
+        initialize(config?: any): void;
         /**
          *
          */
@@ -2067,6 +2066,18 @@ declare namespace egret3d {
          *
          */
         copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level?: uint): void;
+        /**
+         *
+         */
+        setGamma(factor: number, input: boolean, output: boolean): this;
+        /**
+         *
+         */
+        setToneMapping(toneMapping: ToneMapping, exposure: number, whitePoint: number): this;
+        /**
+         *
+         */
+        logarithmicDepthBuffer: boolean;
     }
     /**
      * 全局渲染状态组件实例。
@@ -5406,6 +5417,8 @@ declare namespace egret3d {
     const enum ShaderDefine {
         TONE_MAPPING = "TONE_MAPPING",
         GAMMA_FACTOR = "GAMMA_FACTOR",
+        USE_LOGDEPTHBUF = "USE_LOGDEPTHBUF",
+        USE_LOGDEPTHBUF_EXT = "USE_LOGDEPTHBUF_EXT",
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",
         USE_ALPHAMAP = "USE_ALPHAMAP",
@@ -7511,13 +7524,7 @@ declare namespace egret3d {
          * 雾的远平面。
          * - 最小值 0.02。
          */
-<<<<<<< HEAD
         far: number;
-=======
-        onUpdate: ((face: uint) => void) | null;
-        private _textureSize;
-        private readonly _light;
->>>>>>> 93f9082657698b427c7553397f63ba086e2e7db4
         /**
          * 雾的颜色。
          */
@@ -8340,12 +8347,10 @@ declare namespace egret3d {
         dirty: uint;
         totalWeight: number;
         weight: number;
-        needUpdate: int;
-        property: string;
         target: paper.BaseComponent | any | ReadonlyArray<paper.BaseComponent>;
         bindPose: any;
         layer: AnimationLayer | null;
-        updateTarget: ((dirty?: int) => void);
+        updateTarget: () => void;
         private constructor();
         onClear(): void;
         clear(): void;
@@ -8367,8 +8372,9 @@ declare namespace egret3d {
         glTFSampler: gltf.AnimationSampler;
         inputBuffer: Float32Array;
         outputBuffer: ArrayBufferView & ArrayLike<number>;
-        binder: paper.BaseComponent | paper.BaseComponent[] | AnimationBinder;
+        binder: paper.BaseComponent | (paper.BaseComponent[]) | AnimationBinder | any;
         updateTarget: ((animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
+        needUpdate: ((dirty: int) => void) | null;
         private constructor();
         onClear(): void;
         onUpdateTranslation(animationlayer: AnimationLayer, animationState: AnimationState): void;
@@ -9378,23 +9384,23 @@ declare namespace egret3d {
          */
         readonly mask: uint;
         /**
-         * 内容。
-         */
-        readonly context: string;
-        /**
          * 名称。
          */
-        name?: string;
-        constructor(index: uint, mask: uint, context: string);
+        readonly name: string;
+        /**
+         * 内容。
+         */
+        readonly context?: number | string;
+        constructor(index: uint, mask: uint, name: string, context?: number | string);
     }
     /**
      * @private
      */
     class Defines {
         static link(definess: (Defines | null)[], location: DefineLocation): string;
+        private static _sortDefine(a, b);
         definesMask: string;
         private readonly _defines;
-        private _sortDefine(a, b);
         private _update();
         /**
          *
@@ -9407,12 +9413,11 @@ declare namespace egret3d {
         /**
          *
          */
-        addDefine(defineString: string, value?: number): Define | null;
+        addDefine(name: string, context?: number | string): Define | null;
         /**
          *
          */
-        removeDefine(defineString: string, value?: number): Define | null;
-        removeDefineByName(name: string): Define | null;
+        removeDefine(name: string): Define | null;
     }
 }
 declare namespace egret3d {
@@ -9491,7 +9496,7 @@ declare namespace egret3d {
          * 从该材质移除指定的 define。
          * @param defineString define 字符串。
          */
-        removeDefine(defineString: string, value?: number): this;
+        removeDefine(defineString: string): this;
         /**
          * 设置该材质的混合模式。
          * @param blend 混合模式。

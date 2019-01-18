@@ -521,8 +521,8 @@ namespace egret3d {
          * 从该材质移除指定的 define。
          * @param defineString define 字符串。
          */
-        public removeDefine(defineString: string, value?: number): this {
-            this.defines.removeDefine(defineString, value);
+        public removeDefine(defineString: string): this {
+            this.defines.removeDefine(defineString);
 
             return this;
         }

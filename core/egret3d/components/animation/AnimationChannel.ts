@@ -26,8 +26,9 @@ namespace egret3d {
         public glTFSampler: gltf.AnimationSampler;
         public inputBuffer: Float32Array;
         public outputBuffer: ArrayBufferView & ArrayLike<number>;
-        public binder: paper.BaseComponent | paper.BaseComponent[] | AnimationBinder;
+        public binder: paper.BaseComponent | (paper.BaseComponent[]) | AnimationBinder | any;
         public updateTarget: ((animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
+        public needUpdate: ((dirty: int) => void) | null;
 
         private constructor() {
             super();
@@ -37,6 +38,7 @@ namespace egret3d {
             this.enabled = true;
             this.binder = null!;
             this.updateTarget = null;
+            this.needUpdate = null;
         }
 
         public onUpdateTranslation(animationlayer: AnimationLayer, animationState: AnimationState) {
@@ -268,9 +270,9 @@ namespace egret3d {
             const currentTime = animationState._currentTime;
             const interpolation = this.glTFSampler.interpolation;
             const outputBuffer = this.outputBuffer;
-            const binder = this.binder as AnimationBinder;
             const frameIndex = this.getFrameIndex(currentTime);
-            const target = binder.target;
+            const target = this.binder;
+            const extension = this.glTFChannel.extensions!.paper;
 
             let x: number;
 
@@ -293,16 +295,10 @@ namespace egret3d {
                 x -= outputBuffer[0];
             }
 
-            const weight = binder.weight;
+            target[extension.property] = x;
 
-            if (binder.dirty > 1) {
-                target[binder.property] += x * weight;
-            }
-            else if (weight === 1.0) {
-                target[binder.property] = x;
-            }
-            else {
-                target[binder.property] = x * weight;
+            if (this.needUpdate) {
+                this.needUpdate(extension.needUpdate!);
             }
         }
 

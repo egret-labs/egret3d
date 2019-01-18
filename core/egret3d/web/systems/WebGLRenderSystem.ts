@@ -144,11 +144,11 @@ namespace egret3d.webgl {
 
                     switch (semantic!) {
                         case gltf.UniformSemantics._TONE_MAPPING_EXPOSURE:
-                            webgl.uniform1f(location, renderState.toneMappingExposure);
+                            webgl.uniform1f(location, renderState._toneMappingExposure);
                             break;
 
                         case gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT:
-                            webgl.uniform1f(location, renderState.toneMappingWhitePoint);
+                            webgl.uniform1f(location, renderState._toneMappingWhitePoint);
                             break;
 
                         case gltf.UniformSemantics._AMBIENTLIGHTCOLOR:
@@ -713,7 +713,7 @@ namespace egret3d.webgl {
             const programs = shader.programs;
 
             // TODO
-            const receiveShadows = (renderState.castShadows && renderer) ? renderer.receiveShadows : false;
+            const receiveShadows = (renderState._castShadows && renderer) ? renderer.receiveShadows : false;
             if (this._cacheReceiveShadows !== receiveShadows) {
                 if (receiveShadows) {
                     renderState.defines.addDefine(ShaderDefine.USE_SHADOWMAP);
@@ -759,10 +759,10 @@ namespace egret3d.webgl {
             else {
                 const extensions = shader.config.extensions!.KHR_techniques_webgl;
                 const defines = [
-                    material.defines,
-                    renderer ? renderer.defines : null,
-                    (currentScene || activeScene).defines,
                     renderState.defines,
+                    (currentScene || activeScene).defines,
+                    renderer ? renderer.defines : null,
+                    material.defines,
                 ];
 
                 renderState.customShaderChunks = shader.customs;

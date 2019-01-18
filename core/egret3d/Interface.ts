@@ -6,6 +6,8 @@ namespace egret3d {
         //
         TONE_MAPPING = "TONE_MAPPING",
         GAMMA_FACTOR = "GAMMA_FACTOR",
+        USE_LOGDEPTHBUF = "USE_LOGDEPTHBUF",
+        USE_LOGDEPTHBUF_EXT = "USE_LOGDEPTHBUF_EXT",
         //
         USE_COLOR = "USE_COLOR",
         USE_MAP = "USE_MAP",

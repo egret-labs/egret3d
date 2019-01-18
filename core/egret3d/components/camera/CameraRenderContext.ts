@@ -199,7 +199,7 @@ namespace egret3d {
             const rectangleAreaLightCount = rectangleAreaLights.length;
             const pointLightCount = pointLights.length;
             const hemisphereLightCount = hemisphereLights.length;
-            renderState.castShadows = false;
+            renderState._castShadows = false;
             //
             if (this.directLightBuffer.length !== directLightCount * LightSize.Directional) {
                 this.directLightBuffer = new Float32Array(directLightCount * LightSize.Directional);
@@ -278,7 +278,7 @@ namespace egret3d {
                     directLightBuffer[offset++] = shadow.mapSize;
                     directShadowMatrix.set(shadow._matrix.rawData, shadowIndex * ShadowSize.Directional);
                     directShadowMaps[shadowIndex++] = shadow._renderTarget;
-                    renderState.castShadows = true;
+                    renderState._castShadows = true;
                 }
                 else {
                     directLightBuffer[offset++] = 0;
@@ -320,7 +320,7 @@ namespace egret3d {
                     spotLightBuffer[offset++] = shadow.mapSize;
                     spotShadowMatrix.set(shadow._matrix.rawData, shadowIndex * ShadowSize.Spot);
                     spotShadowMaps[shadowIndex++] = shadow._renderTarget;
-                    renderState.castShadows = true;
+                    renderState._castShadows = true;
                 }
                 else {
                     spotLightBuffer[offset++] = 0;
@@ -376,7 +376,7 @@ namespace egret3d {
 
                     pointShadowMatrix.set(shadow._matrix.rawData, shadowIndex * ShadowSize.Point);
                     pointShadowMaps[shadowIndex++] = shadow._renderTarget;
-                    renderState.castShadows = true;
+                    renderState._castShadows = true;
                 }
                 else {
                     pointLightBuffer[offset++] = 0;
@@ -410,9 +410,7 @@ namespace egret3d {
          * @internal
          */
         public _update() {
-            if (renderState.logarithmicDepthBuffer) {
-                this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
-            }
+            this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
 
             if (this._cameraAndLightCollecter.currentLight) {
                 this._shadowFrustumCulling();

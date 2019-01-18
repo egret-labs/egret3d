@@ -22,12 +22,10 @@ namespace egret3d {
         public dirty: uint;
         public totalWeight: number;
         public weight: number;
-        public needUpdate: int;
-        public property: string;
         public target: paper.BaseComponent | any | ReadonlyArray<paper.BaseComponent>;
         public bindPose: any;
         public layer: AnimationLayer | null;
-        public updateTarget: ((dirty?: int) => void);
+        public updateTarget: () => void;
 
         private constructor() {
             super();
@@ -40,8 +38,6 @@ namespace egret3d {
                 this.bindPose.release();
             }
 
-            this.needUpdate = -1;
-            this.property = "";
             this.target = null!;
             this.bindPose = null;
             this.updateTarget = null!;

@@ -147,15 +147,14 @@ namespace egret3d {
             const defines = renderState.defines;
 
             if (directLightCount !== directionalLights.length) {
-                if (directionalLights.length > 0) {
-                    defines.removeDefine(ShaderDefine.NUM_DIR_LIGHTS, directionalLights.length);
-                }
-
                 if (directLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_DIR_LIGHTS, directLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
+                }
+                else {
+                    defines.removeDefine(ShaderDefine.NUM_DIR_LIGHTS);
                 }
 
                 this.lightCountDirty |= LightCountDirty.DirectionalLight;
@@ -172,15 +171,14 @@ namespace egret3d {
             }
 
             if (spotLightCount !== spotLights.length) {
-                if (spotLights.length > 0) {
-                    defines.removeDefine(ShaderDefine.NUM_SPOT_LIGHTS, spotLights.length);
-                }
-
                 if (spotLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_SPOT_LIGHTS, spotLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
+                }
+                else {
+                    defines.removeDefine(ShaderDefine.NUM_SPOT_LIGHTS);
                 }
 
                 this.lightCountDirty |= LightCountDirty.SpotLight;
@@ -197,15 +195,14 @@ namespace egret3d {
             }
 
             if (rectangleAreaLightCount !== rectangleAreaLights.length) {
-                if (rectangleAreaLights.length > 0) {
-                    defines.removeDefine(ShaderDefine.NUM_RECT_AREA_LIGHTS, rectangleAreaLights.length);
-                }
-
                 if (rectangleAreaLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_RECT_AREA_LIGHTS, rectangleAreaLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
+                }
+                else {
+                    defines.removeDefine(ShaderDefine.NUM_RECT_AREA_LIGHTS);
                 }
 
                 this.lightCountDirty |= LightCountDirty.RectangleAreaLight;
@@ -222,15 +219,14 @@ namespace egret3d {
             }
 
             if (pointLightCount !== pointLights.length) {
-                if (pointLights.length > 0) {
-                    defines.removeDefine(ShaderDefine.NUM_POINT_LIGHTS, pointLights.length);
-                }
-
                 if (pointLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_POINT_LIGHTS, pointLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
+                }
+                else {
+                    defines.removeDefine(ShaderDefine.NUM_POINT_LIGHTS);
                 }
 
                 this.lightCountDirty |= LightCountDirty.PointLight;
@@ -247,15 +243,14 @@ namespace egret3d {
             }
 
             if (hemisphereLightCount !== hemisphereLights.length) {
-                if (hemisphereLights.length > 0) {
-                    defines.removeDefine(ShaderDefine.NUM_HEMI_LIGHTS, hemisphereLights.length);
-                }
-
                 if (hemisphereLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_HEMI_LIGHTS, hemisphereLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
+                }
+                else {
+                    defines.removeDefine(ShaderDefine.NUM_HEMI_LIGHTS);
                 }
 
                 this.lightCountDirty |= LightCountDirty.HemisphereLight;

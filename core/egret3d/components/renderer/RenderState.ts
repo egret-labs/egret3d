@@ -24,26 +24,13 @@ namespace egret3d {
         public maxBoneCount: uint = 24;
         public maxPrecision: string = "";
 
-        public logarithmicDepthBuffer: boolean = true;
-
-        public toneMapping: ToneMapping = ToneMapping.LinearToneMapping;
-        public toneMappingExposure: number = 1.0;
-        public toneMappingWhitePoint: number = 1.0;
-
-        public gammaFactor: number = 2.0;
-        public gammaInput: boolean = false;
-        public gammaOutput: boolean = false;
-
         public commonExtensions: string = "";
         public vertexExtensions: string = "";
         public fragmentExtensions: string = "";
         public commonDefines: string = "";
         public vertexDefines: string = "";
         public fragmentDefines: string = "";
-        /**
-         * @internal
-         */
-        public castShadows: boolean = false;
+
         public readonly clearColor: Color = Color.create();
         public readonly viewport: Rectangle = Rectangle.create();
         public readonly defines: Defines = new Defines();
@@ -66,9 +53,26 @@ namespace egret3d {
          */
         public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;
 
+        private _logarithmicDepthBuffer: boolean = false;
+        private _gammaFactor: number = 1.0;
+        private _gammaInput: boolean = false;
+        private _gammaOutput: boolean = false;
+        private _toneMapping: ToneMapping = ToneMapping.None;
+        /**
+         * @internal
+         */
+        public _toneMappingExposure: number = 1.0;
+        /**
+         * @internal
+         */
+        public _toneMappingWhitePoint: number = 1.0;
+        /**
+         * @internal
+         */
+        public _castShadows: boolean = false;
+
         protected _getCommonExtensions() {
-            // fragmentExtensions.
-            let extensions = "";
+            let extensions = ""; // fragmentExtensions.
 
             if (this.standardDerivativesEnabled) {
                 extensions += "#extension GL_OES_standard_derivatives : enable \n";
@@ -82,33 +86,13 @@ namespace egret3d {
         }
 
         protected _getCommonDefines() {
-            // commonDefines.
-            let defines = "";
+            let defines = ""; // commonDefines.
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
-
-            if (this.logarithmicDepthBuffer) {
-                defines += "#define USE_LOGDEPTHBUF \n";
-                if (this.fragDepthEnabled) {
-                    defines += "#define USE_LOGDEPTHBUF_EXT \n";
-                }
-            }
-
             this.commonDefines = defines;
-            // fragmentDefines
-            defines = "";
 
-            if (this.toneMapping !== ToneMapping.None) {
-                defines += "#define TONE_MAPPING \n";
-                defines += ShaderChunk.tonemapping_pars_fragment + " \n";
-                defines += this._getToneMappingFunction(this.toneMapping) + " \n";
-            }
-
-            defines += "#define GAMMA_FACTOR " + (this.gammaFactor > 0.0 ? this.gammaFactor : 1.0) + "\n";
-            defines += ShaderChunk.encodings_pars_fragment;
-            defines += this._getTexelEncodingFunction("linearToOutputTexel", this.gammaOutput ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding) + " \n";
-
-            this.fragmentDefines = defines;
+            // defines = ""; // fragmentDefines
+            // this.fragmentDefines = defines;
         }
 
         protected _getEncodingComponents(encoding: TextureEncoding) {
@@ -166,7 +150,7 @@ namespace egret3d {
         }
 
         protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
-            const finialEncoding = (this.gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
+            const finialEncoding = (this._gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
             const components = this._getEncodingComponents(finialEncoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         }
@@ -175,10 +159,7 @@ namespace egret3d {
          */
         public _updateTextureDefine(mapName: string, texture: BaseTexture | null, defines: Defines | null = null) {
             defines = defines || this.defines;
-
             const mapNameDefine = (egret3d as any).ShaderTextureDefine[mapName];//TODO
-            defines.removeDefine(mapNameDefine);
-            defines.removeDefine(ShaderDefine.FLIP_V);
             //
             if (texture) {
                 defines.addDefine(mapNameDefine);
@@ -186,18 +167,27 @@ namespace egret3d {
                 if (texture instanceof RenderTexture) {
                     defines.addDefine(ShaderDefine.FLIP_V);
                 }
+                else {
+                    defines.removeDefine(ShaderDefine.FLIP_V);
+                }
             }
-
+            else {
+                defines.removeDefine(mapNameDefine);
+                defines.removeDefine(ShaderDefine.FLIP_V);
+            }
+            //
             const decodingFunName = (egret3d as any).TextureDecodingFunction[mapName]; // TODO
             if (decodingFunName) {
-                defines.removeDefineByName(decodingFunName);
-
                 if (texture) {
                     const decodingCode = this._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding);
-                    const define = defines.addDefine(decodingCode)!;
-                    define.isCode = true;
-                    define.name = decodingFunName;
-                    define.type = DefineLocation.Fragment;
+                    const define = defines.addDefine(decodingFunName, decodingCode);
+                    if (define) {
+                        define.isCode = true;
+                        define.type = DefineLocation.Fragment;
+                    }
+                }
+                else {
+                    defines.removeDefine(decodingFunName);
                 }
             }
             //
@@ -205,14 +195,11 @@ namespace egret3d {
                 const nameA = "envMapA";
                 const nameB = "envMapB";
 
-                defines.removeDefineByName(nameA);
-                defines.removeDefineByName(nameB);
-
                 if (texture) {
                     const { mapping } = texture.gltfTexture.extensions.paper;
                     let typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE;
                     let blendDefine = ShaderDefine.ENVMAP_BLENDING_MULTIPLY; // TODO
-                    let define: Define;
+                    let define: Define | null;
 
                     switch (mapping) {
                         case TextureUVMapping.Cube:
@@ -230,12 +217,19 @@ namespace egret3d {
                             break;
                     }
 
-                    define = defines.addDefine(typeDefine)!;
-                    define.type = DefineLocation.Fragment;
-                    define.name = nameA;
-                    define = defines.addDefine(blendDefine)!;
-                    define.type = DefineLocation.Fragment;
-                    define.name = nameB;
+                    define = defines.addDefine(nameA, typeDefine);
+                    if (define) {
+                        define.type = DefineLocation.Fragment;
+                    }
+
+                    define = defines.addDefine(nameB, blendDefine);
+                    if (define) {
+                        define.type = DefineLocation.Fragment;
+                    }
+                }
+                else {
+                    defines.removeDefine(nameA);
+                    defines.removeDefine(nameB);
                 }
             }
         }
@@ -271,13 +265,15 @@ namespace egret3d {
 
             return prefixContext;
         }
-        /**
-         * @internal
-         */
+
         public initialize(config?: any) {
             super.initialize();
 
             (renderState as RenderState) = this;
+            //
+            this.logarithmicDepthBuffer = true;
+            this.setToneMapping(ToneMapping.LinearToneMapping, this._toneMappingExposure, this._toneMappingWhitePoint);
+            this.setGamma(2.0, this._gammaInput, this._gammaOutput);
         }
         /**
          * 
@@ -291,62 +287,96 @@ namespace egret3d {
          * 
          */
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
+        /**
+         * 
+         */
+        public setGamma(factor: number, input: boolean, output: boolean): this {
+            factor = (factor > 1.0 ? factor : 1.0);
 
-        // public setGamma(factor: number, input: boolean, output: boolean) {
-        //     factor = (factor > 1.0 ? factor : 1.0);
+            const nameA = "GammaA";
+            const nameB = "GammaB";
 
-        //     const nameA = "GammaA";
-        //     const nameB = "GammaB";
+            let define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, factor);
+            if (define) {
+                define.type = DefineLocation.Fragment;
+            }
 
-        //     this.defines.removeDefine(ShaderDefine.GAMMA_FACTOR, this._gammaFactor);
-        //     this.defines.removeDefineByName(nameA);
-        //     this.defines.removeDefineByName(nameB);
+            define = this.defines.addDefine(nameA, ShaderChunk.encodings_pars_fragment);
+            if (define) {
+                define.isCode = true;
+                define.type = DefineLocation.Fragment;
+            }
 
-        //     let define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, factor)!;
-        //     define.type = DefineLocation.Fragment;
-        //     define = this.defines.addDefine(ShaderChunk.encodings_pars_fragment)!;
-        //     define.name = nameA;
-        //     define.isCode = true;
-        //     define.type = DefineLocation.Fragment;
-        //     define = this.defines.addDefine(this._getTexelEncodingFunction("linearToOutputTexel", output ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding))!;
-        //     define.name = nameB;
-        //     define.isCode = true;
-        //     define.type = DefineLocation.Fragment;
+            define = this.defines.addDefine(nameB, this._getTexelEncodingFunction("linearToOutputTexel", output ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding));
+            if (define) {
+                define.isCode = true;
+                define.type = DefineLocation.Fragment;
+            }
 
-        //     this._gammaFactor = factor;
-        //     this._gammaInput = input;
-        //     this._gammaOutput = output;
+            this._gammaFactor = factor;
+            this._gammaInput = input;
+            this._gammaOutput = output;
 
-        //     return this;
-        // }
+            return this;
+        }
+        /**
+         * 
+         */
+        public setToneMapping(toneMapping: ToneMapping, exposure: number, whitePoint: number): this {
+            const nameA = "ToneMappingA";
+            const nameB = "ToneMappingB";
 
-        // public setToneMapping(toneMapping: ToneMapping, exposure: number = 1.0, whitePoint: number = 1.0) {
-        //     if (this._toneMapping !== toneMapping) {
-        //         const nameA = "ToneMappingA";
-        //         const nameB = "ToneMappingB";
+            if (this._toneMapping !== toneMapping) {
+                let define = this.defines.addDefine(ShaderDefine.TONE_MAPPING);
+                if (define) {
+                    define.type = DefineLocation.Fragment;
+                }
 
-        //         this.defines.removeDefine(ShaderDefine.TONE_MAPPING);
-        //         this.defines.removeDefineByName(nameA);
-        //         this.defines.removeDefineByName(nameB);
+                define = this.defines.addDefine(nameA, ShaderChunk.tonemapping_pars_fragment);
+                if (define) {
+                    define.isCode = true;
+                    define.type = DefineLocation.Fragment;
+                }
 
-        //         let define = this.defines.addDefine(ShaderDefine.TONE_MAPPING)!;
-        //         define.type = DefineLocation.Fragment;
-        //         define = this.defines.addDefine(ShaderChunk.tonemapping_pars_fragment)!;
-        //         define.name = nameA;
-        //         define.isCode = true;
-        //         define.type = DefineLocation.Fragment;
-        //         define = this.defines.addDefine(this._getToneMappingFunction(toneMapping))!;
-        //         define.name = nameB;
-        //         define.isCode = true;
-        //         define.type = DefineLocation.Fragment;
-        //     }
+                define = this.defines.addDefine(nameB, this._getToneMappingFunction(toneMapping));
+                if (define) {
+                    define.isCode = true;
+                    define.type = DefineLocation.Fragment;
+                }
+            }
 
-        //     this._toneMapping = toneMapping;
-        //     this.toneMappingExposure = exposure;
-        //     this.toneMappingWhitePoint = whitePoint;
+            this._toneMapping = toneMapping;
+            this._toneMappingExposure = exposure;
+            this._toneMappingWhitePoint = whitePoint;
 
-        //     return this;
-        // }
+            return this;
+        }
+        /**
+         * 
+         */
+        public get logarithmicDepthBuffer(): boolean {
+            return this._logarithmicDepthBuffer;
+        }
+        public set logarithmicDepthBuffer(value: boolean) {
+            if (this._logarithmicDepthBuffer === value) {
+                return;
+            }
+
+            if (value) {
+                this.defines.addDefine(ShaderDefine.USE_LOGDEPTHBUF);
+
+                if (this.fragDepthEnabled) {
+                    this.defines.addDefine(ShaderDefine.USE_LOGDEPTHBUF_EXT);
+                }
+                else {
+                    this.defines.removeDefine(ShaderDefine.USE_LOGDEPTHBUF_EXT);
+                }
+            }
+            else {
+                this.defines.removeDefine(ShaderDefine.USE_LOGDEPTHBUF);
+                this.defines.removeDefine(ShaderDefine.USE_LOGDEPTHBUF_EXT);
+            }
+        }
     }
     /**
      * 全局渲染状态组件实例。

@@ -338,49 +338,38 @@ namespace egret3d {
                                             const component = (transforms as Transform).gameObject.getComponent(componentClass);
                                             if (component) {
                                                 const uri = extension!.uri;
+                                                const needUpdate = extension!.needUpdate;
                                                 channel.updateTarget = channel.onUpdateFloat; // TODO
 
                                                 if (uri) {
-                                                    binder = channel.binder = animation._getBinder(nodeName, uri + "/" + extension!.property);
+                                                    const paths = uri.split("/");
+                                                    let target: any = component;
+                                                    let updateTarget: any = null;
+                                                    let path = "";
 
-                                                    if (!binder.target) {
-                                                        const paths = uri.split("/");
-                                                        let target: any = component;
-                                                        let updateTarget: any = null;
-                                                        let path = "";
-
-                                                        for (path of paths) {
-                                                            if (!path) {
-                                                                continue;
-                                                            }
-
-                                                            if (path === "$") {
-                                                                updateTarget = target;
-                                                            }
-                                                            else {
-                                                                target = target[path];
-                                                            }
+                                                    for (path of paths) {
+                                                        if (!path) {
+                                                            continue;
                                                         }
 
-                                                        binder.target = target;
-                                                        binder.property = extension!.property;
-
-                                                        const needUpdate = extension!.needUpdate;
-                                                        if (needUpdate !== undefined && needUpdate >= 0) {
-                                                            binder.needUpdate = needUpdate;
-                                                            binder.updateTarget = (updateTarget || target).needUpdate;
+                                                        if (path === "$") {
+                                                            updateTarget = target;
                                                         }
+                                                        else {
+                                                            target = target[path];
+                                                        }
+                                                    }
+
+                                                    channel.binder = target;
+                                                    if (needUpdate !== undefined && needUpdate >= 0) {
+                                                        channel.needUpdate = (updateTarget || target).needUpdate;
                                                     }
                                                 }
                                                 else {
-                                                    binder = channel.binder = animation._getBinder(nodeName, extension!.type);
-
-                                                    if (!binder.target) {
-                                                        binder.target = component;
-                                                        binder.property = extension!.property;
+                                                    channel.binder = component;
+                                                    if (needUpdate !== undefined && needUpdate >= 0) {
+                                                        channel.needUpdate = (component as any).needUpdate; // TODO interface
                                                     }
-                                                    // TODO 
-                                                    // needUpdate
                                                 }
                                             }
                                             else {

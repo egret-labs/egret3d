@@ -3,12 +3,12 @@ namespace egret3d {
     let _mask: uint = 0x80000000;
     const _defines: { [key: string]: Define } = {};
 
-    function _get(defineString: string): Define {
+    function _get(name: string, context?: number | string): Define {
         const defines = _defines;
-        let define = defines[defineString];
+        let define = defines[name];
 
         if (!define) {
-            define = defines[defineString] = new Define(_index, _mask, defineString);
+            define = defines[name] = new Define(_index, _mask, name, context);
             _mask >>>= 1;
 
             if (_mask === 0) {
@@ -41,9 +41,13 @@ namespace egret3d {
          */
         public readonly mask: uint;
         /**
+         * 名称。
+         */
+        public readonly name: string;
+        /**
          * 内容。
          */
-        public readonly context: string;
+        public readonly context?: number | string;
         /**
          * @internal
          */
@@ -52,14 +56,11 @@ namespace egret3d {
          * @internal
          */
         public type?: DefineLocation;
-        /**
-         * 名称。
-         */
-        public name?: string;
 
-        public constructor(index: uint, mask: uint, context: string) {
+        public constructor(index: uint, mask: uint, name: string, context?: number | string) {
             this.index = index;
             this.mask = mask;
+            this.name = name;
             this.context = context;
         }
     }
@@ -68,8 +69,7 @@ namespace egret3d {
      */
     export class Defines {
         public static link(definess: (Defines | null)[], location: DefineLocation) {
-            let definesString = "";
-            const linked = [] as (Define | string)[];
+            const linked = [] as Define[];
 
             for (const defines of definess) {
                 if (!defines) {
@@ -78,32 +78,49 @@ namespace egret3d {
 
                 for (const define of defines._defines) {
                     if (define.type === undefined || (define.type & location)) {
-                        if (define.name) {
-                            if (linked.indexOf(define.name) >= 0) {
-                                continue;
-                            }
-
-                            linked.push(define.name);
+                        const index = linked.indexOf(define);
+                        if (index >= 0) {
+                            linked[index] = define;
                         }
                         else {
-                            if (linked.indexOf(define) >= 0) {
-                                continue;
-                            }
-
                             linked.push(define);
-                        }
-
-                        if (define.isCode) {
-                            definesString += define.context + " \n";
-                        }
-                        else {
-                            definesString += "#define " + define.context + " \n";
                         }
                     }
                 }
             }
 
+            let definesString = "";
+            linked.sort(this._sortDefine);
+
+            for (const define of linked) {
+                let context = define.context;
+                if (context) {
+                    if (typeof context === "number") {
+                        context = define.name + " " + context;
+                    }
+                }
+                else {
+                    context = define.name;
+                }
+
+                if (define.isCode) {
+                    definesString += context + " \n";
+                }
+                else {
+                    definesString += "#define " + context + " \n";
+                }
+            }
+
             return definesString;
+        }
+
+        private static _sortDefine(a: Define, b: Define) {
+            let d = a.index - b.index;
+            if (d === 0) {
+                d = b.mask - a.mask; // Define 顺序。
+            }
+
+            return d;
         }
 
         public definesMask: string = "";
@@ -111,21 +128,12 @@ namespace egret3d {
         // mask, string, array,
         private readonly _defines: Array<Define> = [];
 
-        private _sortDefine(a: Define, b: Define) {
-            let d = a.index - b.index;
-            if (d === 0) {
-                d = a.mask - b.mask;
-            }
-
-            return d;
-        }
-
         private _update() {
             let index = 0;
             let mask = 0;
             let definesMask = "";
             const defines = this._defines;
-            defines.sort(this._sortDefine);
+            defines.sort(Defines._sortDefine);
 
             for (const define of defines) {
                 if (define.index !== index) {
@@ -168,12 +176,8 @@ namespace egret3d {
         /**
          * 
          */
-        public addDefine(defineString: string, value?: number): Define | null {
-            if (value !== undefined) {
-                defineString += " " + value;
-            }
-            //
-            const define = _get(defineString);
+        public addDefine(name: string, context?: number | string): Define | null {
+            const define = _get(name, context);
             const defines = this._defines;
 
             if (defines.indexOf(define) < 0) {
@@ -188,12 +192,8 @@ namespace egret3d {
         /**
          * 
          */
-        public removeDefine(defineString: string, value?: number): Define | null {
-            if (value !== undefined) {
-                defineString += " " + value;
-            }
-            //
-            const define = _get(defineString);
+        public removeDefine(name: string): Define | null {
+            const define = _get(name);
             const defines = this._defines;
             const index = defines.indexOf(define);
 
@@ -202,16 +202,6 @@ namespace egret3d {
                 this._update();
 
                 return define;
-            }
-
-            return null;
-        }
-
-        public removeDefineByName(name: string): Define | null {
-            for (const define of this._defines) {
-                if (define.name && define.name === name) {
-                    return this.removeDefine(define.context);
-                }
             }
 
             return null;

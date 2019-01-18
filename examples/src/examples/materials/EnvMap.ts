@@ -20,7 +20,7 @@ namespace examples.materials {
 
             {
                 const renderState = this.gameObject.getComponent(egret3d.RenderState)!;
-                renderState.gammaOutput = true;
+                renderState.setGamma(2.0, false, true);
             }
 
             { // Main camera.

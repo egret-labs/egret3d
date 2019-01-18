@@ -22,11 +22,9 @@ namespace examples {
             const mainCamera = this._mainCamera;
 
             const renderState = this.gameObject.getComponent(egret3d.RenderState)!;
-            renderState.gammaInput = true;
-            renderState.gammaOutput = true;
-            renderState.toneMapping = egret3d.ToneMapping.Uncharted2ToneMapping;
-            renderState.toneMappingExposure = 3.0;
-            renderState.toneMappingWhitePoint = 5.0;
+            renderState
+                .setGamma(2.0, true, true)
+                .setToneMapping(egret3d.ToneMapping.Uncharted2ToneMapping, 3.0, 5.0);
 
             { // Main camera.
                 mainCamera.fov = 40.0 * egret3d.Const.DEG_RAD;
