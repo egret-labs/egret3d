@@ -9413,11 +9413,11 @@ declare namespace egret3d {
         /**
          *
          */
-        addDefine(name: string, context?: number | string): Define | null;
+        addDefine(name: string, context?: number | string, isGlobal?: boolean): Define | null;
         /**
          *
          */
-        removeDefine(name: string): Define | null;
+        removeDefine(name: string, isLocal?: boolean): Define | null;
     }
 }
 declare namespace egret3d {
@@ -9496,7 +9496,7 @@ declare namespace egret3d {
          * 从该材质移除指定的 define。
          * @param defineString define 字符串。
          */
-        removeDefine(defineString: string): this;
+        removeDefine(defineString: string, value?: number): this;
         /**
          * 设置该材质的混合模式。
          * @param blend 混合模式。

@@ -3,12 +3,29 @@ namespace egret3d {
     let _mask: uint = 0x80000000;
     const _defines: { [key: string]: Define } = {};
 
-    function _get(name: string, context?: number | string): Define {
+    function _get(name: string, context?: number | string, isGlobal?: boolean): Define {
+        let key = name;
         const defines = _defines;
-        let define = defines[name];
 
-        if (!define) {
-            define = defines[name] = new Define(_index, _mask, name, context);
+        if (isGlobal || !context) {
+        }
+        else if (typeof context === "number") {
+            key = name + " " + context;
+            context = undefined;
+        }
+        else {
+            key = context;
+        }
+
+        let define = defines[key];
+
+        if (define) {
+            if (isGlobal) {
+                (define.context as any) = context;
+            }
+        }
+        else {
+            define = defines[key] = new Define(_index, _mask, name, context);
             _mask >>>= 1;
 
             if (_mask === 0) {
@@ -176,8 +193,8 @@ namespace egret3d {
         /**
          * 
          */
-        public addDefine(name: string, context?: number | string): Define | null {
-            const define = _get(name, context);
+        public addDefine(name: string, context?: number | string, isGlobal?: boolean): Define | null {
+            const define = _get(name, context, isGlobal);
             const defines = this._defines;
 
             if (defines.indexOf(define) < 0) {
@@ -192,16 +209,32 @@ namespace egret3d {
         /**
          * 
          */
-        public removeDefine(name: string): Define | null {
-            const define = _get(name);
+        public removeDefine(name: string, isLocal?: boolean): Define | null {
             const defines = this._defines;
-            const index = defines.indexOf(define);
+            let define: Define | null = null;
 
-            if (index >= 0) {
-                defines.splice(index, 1);
-                this._update();
+            if (isLocal) {
+                for (define of defines) {
+                    if (define.name === name) {
+                        break;
+                    }
 
-                return define;
+                    define = null;
+                }
+            }
+            else {
+                define = _get(name);
+            }
+
+            if (define) {
+                const index = defines.indexOf(define);
+
+                if (index >= 0) {
+                    defines.splice(index, 1);
+                    this._update();
+
+                    return define;
+                }
             }
 
             return null;

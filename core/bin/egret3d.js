@@ -4583,7 +4583,7 @@ var egret3d;
                     }
                 }
                 else {
-                    defines.removeDefine(decodingFunName);
+                    defines.removeDefine(decodingFunName, true);
                 }
             }
             //
@@ -4620,8 +4620,8 @@ var egret3d;
                     }
                 }
                 else {
-                    defines.removeDefine(nameA);
-                    defines.removeDefine(nameB);
+                    defines.removeDefine(nameA, true);
+                    defines.removeDefine(nameB, true);
                 }
             }
         };
@@ -4684,16 +4684,16 @@ var egret3d;
             factor = (factor > 1.0 ? factor : 1.0);
             var nameA = "GammaA";
             var nameB = "GammaB";
-            var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, factor);
+            var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, factor, true);
             if (define) {
                 define.type = 2 /* Fragment */;
             }
-            define = this.defines.addDefine(nameA, egret3d.ShaderChunk.encodings_pars_fragment);
+            define = this.defines.addDefine(nameA, egret3d.ShaderChunk.encodings_pars_fragment, true);
             if (define) {
                 define.isCode = true;
                 define.type = 2 /* Fragment */;
             }
-            define = this.defines.addDefine(nameB, this._getTexelEncodingFunction("linearToOutputTexel", output ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */));
+            define = this.defines.addDefine(nameB, this._getTexelEncodingFunction("linearToOutputTexel", output ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */), true);
             if (define) {
                 define.isCode = true;
                 define.type = 2 /* Fragment */;
@@ -4714,12 +4714,12 @@ var egret3d;
                 if (define) {
                     define.type = 2 /* Fragment */;
                 }
-                define = this.defines.addDefine(nameA, egret3d.ShaderChunk.tonemapping_pars_fragment);
+                define = this.defines.addDefine(nameA, egret3d.ShaderChunk.tonemapping_pars_fragment, true);
                 if (define) {
                     define.isCode = true;
                     define.type = 2 /* Fragment */;
                 }
-                define = this.defines.addDefine(nameB, this._getToneMappingFunction(toneMapping));
+                define = this.defines.addDefine(nameB, this._getToneMappingFunction(toneMapping), true);
                 if (define) {
                     define.isCode = true;
                     define.type = 2 /* Fragment */;
@@ -12621,7 +12621,7 @@ var egret3d;
             var defines = egret3d.renderState.defines;
             if (directLightCount !== directionalLights.length) {
                 if (directLightCount > 0) {
-                    var define = defines.addDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */, directLightCount);
+                    var define = defines.addDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */, directLightCount, true);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -12642,7 +12642,7 @@ var egret3d;
             }
             if (spotLightCount !== spotLights.length) {
                 if (spotLightCount > 0) {
-                    var define = defines.addDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */, spotLightCount);
+                    var define = defines.addDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */, spotLightCount, true);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -12663,7 +12663,7 @@ var egret3d;
             }
             if (rectangleAreaLightCount !== rectangleAreaLights.length) {
                 if (rectangleAreaLightCount > 0) {
-                    var define = defines.addDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */, rectangleAreaLightCount);
+                    var define = defines.addDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */, rectangleAreaLightCount, true);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -12684,7 +12684,7 @@ var egret3d;
             }
             if (pointLightCount !== pointLights.length) {
                 if (pointLightCount > 0) {
-                    var define = defines.addDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLightCount);
+                    var define = defines.addDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLightCount, true);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -12705,7 +12705,7 @@ var egret3d;
             }
             if (hemisphereLightCount !== hemisphereLights.length) {
                 if (hemisphereLightCount > 0) {
-                    var define = defines.addDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLightCount);
+                    var define = defines.addDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLightCount, true);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -24908,11 +24908,26 @@ var egret3d;
     var _index = 0;
     var _mask = 0x80000000;
     var _defines = {};
-    function _get(name, context) {
+    function _get(name, context, isGlobal) {
+        var key = name;
         var defines = _defines;
-        var define = defines[name];
-        if (!define) {
-            define = defines[name] = new Define(_index, _mask, name, context);
+        if (isGlobal || !context) {
+        }
+        else if (typeof context === "number") {
+            key = name + " " + context;
+            context = undefined;
+        }
+        else {
+            key = context;
+        }
+        var define = defines[key];
+        if (define) {
+            if (isGlobal) {
+                define.context = context;
+            }
+        }
+        else {
+            define = defines[key] = new Define(_index, _mask, name, context);
             _mask >>>= 1;
             if (_mask === 0) {
                 _index++;
@@ -25045,8 +25060,8 @@ var egret3d;
         /**
          *
          */
-        Defines.prototype.addDefine = function (name, context) {
-            var define = _get(name, context);
+        Defines.prototype.addDefine = function (name, context, isGlobal) {
+            var define = _get(name, context, isGlobal);
             var defines = this._defines;
             if (defines.indexOf(define) < 0) {
                 defines.push(define);
@@ -25058,14 +25073,28 @@ var egret3d;
         /**
          *
          */
-        Defines.prototype.removeDefine = function (name) {
-            var define = _get(name);
+        Defines.prototype.removeDefine = function (name, isLocal) {
             var defines = this._defines;
-            var index = defines.indexOf(define);
-            if (index >= 0) {
-                defines.splice(index, 1);
-                this._update();
-                return define;
+            var define = null;
+            if (isLocal) {
+                for (var _i = 0, defines_2 = defines; _i < defines_2.length; _i++) {
+                    define = defines_2[_i];
+                    if (define.name === name) {
+                        break;
+                    }
+                    define = null;
+                }
+            }
+            else {
+                define = _get(name);
+            }
+            if (define) {
+                var index = defines.indexOf(define);
+                if (index >= 0) {
+                    defines.splice(index, 1);
+                    this._update();
+                    return define;
+                }
             }
             return null;
         };
@@ -25532,7 +25561,10 @@ var egret3d;
          * 从该材质移除指定的 define。
          * @param defineString define 字符串。
          */
-        Material.prototype.removeDefine = function (defineString) {
+        Material.prototype.removeDefine = function (defineString, value) {
+            if (value !== undefined) {
+                defineString += " " + value;
+            }
             this.defines.removeDefine(defineString);
             return this;
         };

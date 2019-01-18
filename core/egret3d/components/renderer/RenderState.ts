@@ -187,7 +187,7 @@ namespace egret3d {
                     }
                 }
                 else {
-                    defines.removeDefine(decodingFunName);
+                    defines.removeDefine(decodingFunName, true);
                 }
             }
             //
@@ -228,8 +228,8 @@ namespace egret3d {
                     }
                 }
                 else {
-                    defines.removeDefine(nameA);
-                    defines.removeDefine(nameB);
+                    defines.removeDefine(nameA, true);
+                    defines.removeDefine(nameB, true);
                 }
             }
         }
@@ -296,18 +296,18 @@ namespace egret3d {
             const nameA = "GammaA";
             const nameB = "GammaB";
 
-            let define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, factor);
+            let define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, factor, true);
             if (define) {
                 define.type = DefineLocation.Fragment;
             }
 
-            define = this.defines.addDefine(nameA, ShaderChunk.encodings_pars_fragment);
+            define = this.defines.addDefine(nameA, ShaderChunk.encodings_pars_fragment, true);
             if (define) {
                 define.isCode = true;
                 define.type = DefineLocation.Fragment;
             }
 
-            define = this.defines.addDefine(nameB, this._getTexelEncodingFunction("linearToOutputTexel", output ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding));
+            define = this.defines.addDefine(nameB, this._getTexelEncodingFunction("linearToOutputTexel", output ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding), true);
             if (define) {
                 define.isCode = true;
                 define.type = DefineLocation.Fragment;
@@ -332,13 +332,13 @@ namespace egret3d {
                     define.type = DefineLocation.Fragment;
                 }
 
-                define = this.defines.addDefine(nameA, ShaderChunk.tonemapping_pars_fragment);
+                define = this.defines.addDefine(nameA, ShaderChunk.tonemapping_pars_fragment, true);
                 if (define) {
                     define.isCode = true;
                     define.type = DefineLocation.Fragment;
                 }
 
-                define = this.defines.addDefine(nameB, this._getToneMappingFunction(toneMapping));
+                define = this.defines.addDefine(nameB, this._getToneMappingFunction(toneMapping), true);
                 if (define) {
                     define.isCode = true;
                     define.type = DefineLocation.Fragment;
