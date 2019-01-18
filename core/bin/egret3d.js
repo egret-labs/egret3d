@@ -6552,18 +6552,21 @@ var egret3d;
         };
         /**
          * 通过 UV 变换设置该矩阵。
-         * @param tx 水平偏移。
-         * @param ty 垂直偏移。
-         * @param sx 水平重复。
-         * @param sy 垂直重复。
+         * @param offsetX 水平偏移。
+         * @param offsetY 垂直偏移。
+         * @param repeatX 水平重复。
+         * @param repeatY 垂直重复。
          * @param rotation 旋转。（弧度制）
-         * @param cx 水平中心。
-         * @param cy 垂直中心。
+         * @param pivotX 水平中心。
+         * @param pivotY 垂直中心。
          */
-        Matrix3.prototype.fromUVTransform = function (tx, ty, sx, sy, rotation, cx, cy) {
-            var c = Math.cos(rotation);
-            var s = Math.sin(rotation);
-            return this.set(sx * c, sx * s, -sx * (c * cx + s * cy) + cx + tx, -sy * s, sy * c, -sy * (-s * cx + c * cy) + cy + ty, 0.0, 0.0, 1.0);
+        Matrix3.prototype.fromUVTransform = function (offsetX, offsetY, repeatX, repeatY, rotation, pivotX, pivotY) {
+            if (rotation === void 0) { rotation = 0.0; }
+            if (pivotX === void 0) { pivotX = 0.0; }
+            if (pivotY === void 0) { pivotY = 0.0; }
+            var cos = Math.cos(rotation);
+            var sin = Math.sin(rotation);
+            return this.set(repeatX * cos, repeatX * sin, -repeatX * (cos * pivotX + sin * pivotY) + pivotX + offsetX, -repeatY * sin, repeatY * cos, -repeatY * (-sin * pivotX + cos * pivotY) + pivotY + offsetY, 0.0, 0.0, 1.0);
         };
         Matrix3.prototype.fromMatrix4 = function (value) {
             var rawData = value.rawData;
@@ -16220,7 +16223,7 @@ var egret3d;
             var mapSize = shadow.mapSize;
             var transform = this.gameObject.transform;
             //
-            shadowCamera.viewport.set(0.0, 0.0, mapSize, mapSize).update();
+            shadowCamera.viewport.set(0.0, 0.0, mapSize, mapSize);
             shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(0.0, shadow.near, shadow.far, shadow.size, 0.0, 1.0, 0.0).release();
             shadowCamera.transform
                 .setLocalPosition(transform.position)
@@ -19807,6 +19810,7 @@ var egret3d;
                     var glTFChannel = _a[_i];
                     var nodeIndex = glTFChannel.target.node;
                     var pathName = glTFChannel.target.path;
+                    var extension = glTFChannel.extensions ? glTFChannel.extensions.paper : null;
                     if (nodeIndex === undefined) {
                         // const channel = AnimationChannel.create();
                         // channel.components = animation;
@@ -19824,44 +19828,35 @@ var egret3d;
                         }
                         var channel = egret3d.AnimationChannel.create();
                         var transforms = children[nodeName];
-                        var binder = animation._getBinder(nodeName, pathName);
+                        var binder = null;
                         channel.glTFChannel = glTFChannel;
                         channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
                         channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
                         channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
                         this.channels.push(channel);
-                        if (binder) {
-                            channel.binder = binder;
-                            binder.components = transforms; // TODO 更多组件
-                        }
-                        else {
-                            channel.binder = transforms;
+                        if (!extension) {
+                            binder = channel.binder = animation._getBinder(nodeName, pathName);
+                            binder.target = transforms;
                         }
                         switch (pathName) {
                             case "translation":
                                 channel.updateTarget = channel.onUpdateTranslation;
-                                if (!binder.bindPose) {
+                                if (binder.bindPose === null) {
                                     binder.bindPose = egret3d.Vector3.create().copy(transforms.localPosition);
-                                }
-                                if (!binder.updateTarget) {
                                     binder.updateTarget = binder.onUpdateTranslation;
                                 }
                                 break;
                             case "rotation":
                                 channel.updateTarget = channel.onUpdateRotation;
-                                if (!binder.bindPose) {
+                                if (binder.bindPose === null) {
                                     binder.bindPose = egret3d.Quaternion.create().copy(transforms.localRotation);
-                                }
-                                if (!binder.updateTarget) {
                                     binder.updateTarget = binder.onUpdateRotation;
                                 }
                                 break;
                             case "scale":
                                 channel.updateTarget = channel.onUpdateScale;
-                                if (!binder.bindPose) {
+                                if (binder.bindPose === null) {
                                     binder.bindPose = egret3d.Vector3.create().copy(transforms.localScale);
-                                }
-                                if (!binder.updateTarget) {
                                     binder.updateTarget = binder.onUpdateScale;
                                 }
                                 break;
@@ -19869,26 +19864,67 @@ var egret3d;
                                 // TODO
                                 break;
                             case "custom":
-                                var extension = channel.glTFChannel.extensions.paper;
                                 switch (extension.type) {
-                                    case "paper.GameObject": // 兼容。
-                                    case "GameObject":
+                                    case "paper.GameObject":
                                         switch (extension.property) {
                                             case "activeSelf":
-                                                channel.updateTarget = channel.onUpdateActive;
-                                                break;
-                                        }
-                                        break;
-                                    case "Material":
-                                        switch (extension.property) {
-                                            case "activeSelf":
+                                                channel.binder = transforms;
                                                 channel.updateTarget = channel.onUpdateActive;
                                                 break;
                                         }
                                         break;
                                     default:
-                                        console.warn("Unknown animation channel.", extension.type);
-                                        break;
+                                        var componentClass = egret.getDefinitionByName(extension.type);
+                                        if (componentClass) {
+                                            var component = transforms.gameObject.getComponent(componentClass);
+                                            if (component) {
+                                                var uri = extension.uri;
+                                                channel.updateTarget = channel.onUpdateFloat; // TODO
+                                                if (uri) {
+                                                    binder = channel.binder = animation._getBinder(nodeName, uri + "/" + extension.property);
+                                                    if (!binder.target) {
+                                                        var paths = uri.split("/");
+                                                        var target = component;
+                                                        var updateTarget = null;
+                                                        var path = "";
+                                                        for (var _b = 0, paths_1 = paths; _b < paths_1.length; _b++) {
+                                                            path = paths_1[_b];
+                                                            if (!path) {
+                                                                continue;
+                                                            }
+                                                            if (path === "$") {
+                                                                updateTarget = target;
+                                                            }
+                                                            else {
+                                                                target = target[path];
+                                                            }
+                                                        }
+                                                        binder.target = target;
+                                                        binder.property = extension.property;
+                                                        var needUpdate = extension.needUpdate;
+                                                        if (needUpdate !== undefined && needUpdate >= 0) {
+                                                            binder.needUpdate = needUpdate;
+                                                            binder.updateTarget = (updateTarget || target).needUpdate;
+                                                        }
+                                                    }
+                                                }
+                                                else {
+                                                    binder = channel.binder = animation._getBinder(nodeName, extension.type);
+                                                    if (!binder.target) {
+                                                        binder.target = component;
+                                                        binder.property = extension.property;
+                                                    }
+                                                    // TODO 
+                                                    // needUpdate
+                                                }
+                                            }
+                                            else {
+                                                console.warn("Can not find component.", extension.type);
+                                            }
+                                        }
+                                        else {
+                                            console.warn("Unknown component class.", extension.type);
+                                        }
                                 }
                                 break;
                             default:
@@ -20009,11 +20045,13 @@ var egret3d;
         };
         AnimationBinder.prototype.onClear = function () {
             this.clear();
-            if (this.bindPose) {
-                this.bindPose.release(); // TODO
+            if (this.bindPose && this.bindPose.release) {
+                this.bindPose.release();
             }
+            this.needUpdate = -1;
+            this.property = "";
+            this.target = null;
             this.bindPose = null;
-            this.components = null;
             this.updateTarget = null;
         };
         AnimationBinder.prototype.clear = function () {
@@ -20047,9 +20085,9 @@ var egret3d;
             return true;
         };
         AnimationBinder.prototype.onUpdateTranslation = function () {
-            var components = this.components;
-            var isArray = Array.isArray(components);
-            var target = (isArray ? components[0].localPosition : components.localPosition);
+            var transforms = this.target;
+            var isArray = Array.isArray(transforms);
+            var target = (isArray ? transforms[0].localPosition : transforms.localPosition);
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
                 var bindPose = this.bindPose;
@@ -20065,7 +20103,7 @@ var egret3d;
                 }
             }
             if (isArray) {
-                for (var _i = 0, _a = components; _i < _a.length; _i++) {
+                for (var _i = 0, _a = transforms; _i < _a.length; _i++) {
                     var component = _a[_i];
                     component.localPosition = target;
                 }
@@ -20075,9 +20113,9 @@ var egret3d;
             }
         };
         AnimationBinder.prototype.onUpdateRotation = function () {
-            var components = this.components;
-            var isArray = Array.isArray(components);
-            var target = (isArray ? components[0].localRotation : components.localRotation);
+            var transforms = this.target;
+            var isArray = Array.isArray(transforms);
+            var target = (isArray ? transforms[0].localRotation : transforms.localRotation);
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
                 var bindPose = this.bindPose;
@@ -20096,7 +20134,7 @@ var egret3d;
             }
             target.normalize();
             if (isArray) {
-                for (var _i = 0, _a = components; _i < _a.length; _i++) {
+                for (var _i = 0, _a = transforms; _i < _a.length; _i++) {
                     var component = _a[_i];
                     component.localRotation = target;
                 }
@@ -20106,9 +20144,9 @@ var egret3d;
             }
         };
         AnimationBinder.prototype.onUpdateScale = function () {
-            var components = this.components;
-            var isArray = Array.isArray(components);
-            var target = (isArray ? components[0].localScale : components.localScale);
+            var transforms = this.target;
+            var isArray = Array.isArray(transforms);
+            var target = (isArray ? transforms[0].localScale : transforms.localScale);
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
                 var bindPose = this.bindPose;
@@ -20124,7 +20162,7 @@ var egret3d;
                 }
             }
             if (isArray) {
-                for (var _i = 0, _a = components; _i < _a.length; _i++) {
+                for (var _i = 0, _a = transforms; _i < _a.length; _i++) {
                     var component = _a[_i];
                     component.localScale = target;
                 }
@@ -20174,8 +20212,8 @@ var egret3d;
             var interpolation = this.glTFSampler.interpolation;
             var outputBuffer = this.outputBuffer;
             var binder = this.binder;
-            var components = binder.components;
             var frameIndex = this.getFrameIndex(currentTime);
+            var transforms = binder.target;
             var x, y, z;
             if (frameIndex >= 0) {
                 var offset = frameIndex * 3;
@@ -20201,25 +20239,23 @@ var egret3d;
                 y -= outputBuffer[1];
                 z -= outputBuffer[2];
             }
-            var isArray = Array.isArray(components);
+            var isArray = Array.isArray(transforms);
             var weight = binder.weight;
-            var target = (isArray ? components[0].localPosition : components.localPosition);
+            var target = (isArray ? transforms[0].localPosition : transforms.localPosition);
             if (binder.dirty > 1) {
                 target.x += x * weight;
                 target.y += y * weight;
                 target.z += z * weight;
             }
+            else if (weight === 1.0) {
+                target.x = x;
+                target.y = y;
+                target.z = z;
+            }
             else {
-                if (weight !== 1.0) {
-                    target.x = x * weight;
-                    target.y = y * weight;
-                    target.z = z * weight;
-                }
-                else {
-                    target.x = x;
-                    target.y = y;
-                    target.z = z;
-                }
+                target.x = x * weight;
+                target.y = y * weight;
+                target.z = z * weight;
             }
         };
         AnimationChannel.prototype.onUpdateRotation = function (animationlayer, animationState) {
@@ -20230,8 +20266,8 @@ var egret3d;
             var interpolation = this.glTFSampler.interpolation;
             var outputBuffer = this.outputBuffer;
             var binder = this.binder;
-            var components = binder.components;
             var frameIndex = this.getFrameIndex(currentTime);
+            var transforms = binder.target;
             var x, y, z, w;
             if (frameIndex >= 0) {
                 var offset = frameIndex * 4;
@@ -20258,9 +20294,9 @@ var egret3d;
             if (additive) {
                 helpQuaternionA.fromArray(outputBuffer).multiply(helpQuaternionB.set(x, y, z, w)).inverse();
             }
-            var isArray = Array.isArray(components);
+            var isArray = Array.isArray(transforms);
             var weight = binder.weight;
-            var target = (isArray ? components[0].localRotation : components.localRotation);
+            var target = (isArray ? transforms[0].localRotation : transforms.localRotation);
             if (binder.dirty > 1) {
                 if (additive) {
                     target.multiply(helpQuaternionA.lerp(egret3d.Quaternion.IDENTITY, helpQuaternionA, weight));
@@ -20288,17 +20324,17 @@ var egret3d;
                     target.multiply(helpQuaternionA);
                 }
             }
-            else if (weight !== 1.0) {
-                target.x = x * weight;
-                target.y = y * weight;
-                target.z = z * weight;
-                target.w = w * weight;
-            }
-            else {
+            else if (weight === 1.0) {
                 target.x = x;
                 target.y = y;
                 target.z = z;
                 target.w = w;
+            }
+            else {
+                target.x = x * weight;
+                target.y = y * weight;
+                target.z = z * weight;
+                target.w = w * weight;
             }
         };
         AnimationChannel.prototype.onUpdateScale = function (animationlayer, animationState) {
@@ -20307,8 +20343,8 @@ var egret3d;
             var interpolation = this.glTFSampler.interpolation;
             var outputBuffer = this.outputBuffer;
             var binder = this.binder;
-            var components = binder.components;
             var frameIndex = this.getFrameIndex(currentTime);
+            var transforms = binder.target;
             var x, y, z;
             if (frameIndex >= 0) {
                 var offset = frameIndex * 3;
@@ -20334,42 +20370,76 @@ var egret3d;
                 y -= outputBuffer[1];
                 z -= outputBuffer[2];
             }
-            var isArray = Array.isArray(components);
+            var isArray = Array.isArray(transforms);
             var weight = binder.weight;
-            var target = (isArray ? components[0].localScale : components.localScale);
+            var target = (isArray ? transforms[0].localScale : transforms.localScale);
             if (binder.dirty > 1) {
                 target.x += x * weight;
                 target.y += y * weight;
                 target.z += z * weight;
             }
+            else if (weight === 1.0) {
+                target.x = x;
+                target.y = y;
+                target.z = z;
+            }
             else {
-                if (weight !== 1.0) {
-                    target.x = x * weight;
-                    target.y = y * weight;
-                    target.z = z * weight;
-                }
-                else {
-                    target.x = x;
-                    target.y = y;
-                    target.z = z;
-                }
+                target.x = x * weight;
+                target.y = y * weight;
+                target.z = z * weight;
             }
         };
         AnimationChannel.prototype.onUpdateActive = function (animationlayer, animationState) {
             var currentTime = animationState._currentTime;
             var outputBuffer = this.outputBuffer;
-            var components = this.binder;
             var frameIndex = this.getFrameIndex(currentTime);
+            var transforms = this.binder;
             //
             var activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
-            if (Array.isArray(components)) {
-                for (var _i = 0, _a = components; _i < _a.length; _i++) {
+            if (Array.isArray(transforms)) {
+                for (var _i = 0, _a = transforms; _i < _a.length; _i++) {
                     var component = _a[_i];
                     component.gameObject.activeSelf = activeSelf;
                 }
             }
             else {
-                components.gameObject.activeSelf = activeSelf;
+                transforms.gameObject.activeSelf = activeSelf;
+            }
+        };
+        AnimationChannel.prototype.onUpdateFloat = function (animationlayer, animationState) {
+            var additive = animationlayer.additive;
+            var currentTime = animationState._currentTime;
+            var interpolation = this.glTFSampler.interpolation;
+            var outputBuffer = this.outputBuffer;
+            var binder = this.binder;
+            var frameIndex = this.getFrameIndex(currentTime);
+            var target = binder.target;
+            var x;
+            if (frameIndex >= 0) {
+                var offset = frameIndex;
+                x = outputBuffer[offset++];
+                if (!interpolation || interpolation !== "STEP") {
+                    var inputBuffer = this.inputBuffer;
+                    var frameStart = inputBuffer[frameIndex];
+                    var progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
+                    x += (outputBuffer[offset++] - x) * progress;
+                }
+            }
+            else {
+                x = outputBuffer[0];
+            }
+            if (additive) {
+                x -= outputBuffer[0];
+            }
+            var weight = binder.weight;
+            if (binder.dirty > 1) {
+                target[binder.property] += x * weight;
+            }
+            else if (weight === 1.0) {
+                target[binder.property] = x;
+            }
+            else {
+                target[binder.property] = x * weight;
             }
         };
         AnimationChannel.prototype.getFrameIndex = function (currentTime) {
@@ -20731,7 +20801,7 @@ var egret3d;
                 }
                 for (var k in blendlayers) {
                     var blendLayer = blendlayers[k];
-                    blendLayer.updateTarget();
+                    blendLayer.updateTarget(blendLayer.needUpdate);
                 }
             }
         };
@@ -24964,6 +25034,16 @@ var egret3d;
 (function (egret3d) {
     //TODO 运行时DrawCall排序优化使用
     var _hashCode = 0;
+    var _uvTransformMatrix = egret3d.Matrix3.create();
+    /**
+     *
+     */
+    var MaterialDirty;
+    (function (MaterialDirty) {
+        MaterialDirty[MaterialDirty["All"] = 1] = "All";
+        MaterialDirty[MaterialDirty["None"] = 0] = "None";
+        MaterialDirty[MaterialDirty["UVTransform"] = 1] = "UVTransform";
+    })(MaterialDirty = egret3d.MaterialDirty || (egret3d.MaterialDirty = {}));
     /**
      * 材质资源。
      */
@@ -24986,11 +25066,19 @@ var egret3d;
             /**
              * @internal
              */
+            _this._dirty = 0 /* None */;
+            _this._uvTransform = [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0];
+            /**
+             * @internal
+             */
             _this._technique = null;
             /**
              * @internal
              */
             _this._shader = null;
+            _this.needUpdate = function (dirty) {
+                _this._dirty |= dirty;
+            };
             return _this;
         }
         Material.create = function (shaderOrName, shaderOrConfig) {
@@ -25179,6 +25267,15 @@ var egret3d;
                     var texture = uniform.value;
                     egret3d.renderState._updateTextureDefine(k, add ? texture : null, this.defines);
                 }
+            }
+        };
+        /**
+         * @internal
+         */
+        Material.prototype._update = function () {
+            if (this._dirty & 1 /* UVTransform */) {
+                this.setUVTransform(_uvTransformMatrix.fromUVTransform.apply(_uvTransformMatrix, this._uvTransform));
+                this._dirty &= ~1 /* UVTransform */;
             }
         };
         Material.prototype.retain = function () {
@@ -29341,14 +29438,18 @@ var egret3d;
                     if (this._cacheMaterial !== material) {
                         var technique = material.technique;
                         var techniqueState = technique.states || null;
-                        this._updateUniforms(program, technique);
-                        this._cacheMaterial = material;
-                        // Update states.
-                        renderState.updateState(techniqueState);
+                        //
+                        if (material._dirty) {
+                            material._update();
+                        }
                         // 
                         if (technique.program !== program.id) {
                             technique.program = program.id;
                         }
+                        this._updateUniforms(program, technique);
+                        // Update states.
+                        renderState.updateState(techniqueState);
+                        this._cacheMaterial = material;
                     }
                     //  TODO
                     // if (techniqueState && renderer.transform._worldMatrixDeterminant < 0) {

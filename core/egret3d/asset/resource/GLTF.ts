@@ -338,8 +338,7 @@ namespace egret3d {
                 type: string,
                 property: string,
                 uri?: string,
-                pose?: boolean,
-                update?: boolean,
+                needUpdate?: int,
             }
         };
     }

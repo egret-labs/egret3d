@@ -823,15 +823,20 @@ namespace egret3d.webgl {
                 if (this._cacheMaterial !== material) {
                     const technique = material.technique;
                     const techniqueState = technique.states || null;
-
-                    this._updateUniforms(program, technique);
-                    this._cacheMaterial = material;
-                    // Update states.
-                    renderState.updateState(techniqueState);
+                    //
+                    if (material._dirty) {
+                        material._update();
+                    }
                     // 
                     if (technique.program !== program.id) {
                         technique.program = program.id;
                     }
+                    //
+                    this._updateUniforms(program, technique);
+                    // Update states.
+                    renderState.updateState(techniqueState);
+                    //
+                    this._cacheMaterial = material;
                 }
                 //  TODO
                 // if (techniqueState && renderer.transform._worldMatrixDeterminant < 0) {

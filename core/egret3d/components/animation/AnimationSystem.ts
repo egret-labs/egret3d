@@ -332,7 +332,7 @@ namespace egret3d {
 
                 for (const k in blendlayers) { // Update blendLayers.
                     const blendLayer = blendlayers[k];
-                    blendLayer.updateTarget(blendLayer);
+                    blendLayer.updateTarget(blendLayer.needUpdate);
                 }
             }
         }

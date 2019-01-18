@@ -2329,6 +2329,8 @@ declare namespace egret3d {
             paper: {
                 type: string;
                 property: string;
+                uri?: string;
+                needUpdate?: int;
             };
         };
     }
@@ -4317,15 +4319,15 @@ declare namespace egret3d {
         fromScale(vector: Readonly<IVector3>): this;
         /**
          * 通过 UV 变换设置该矩阵。
-         * @param tx 水平偏移。
-         * @param ty 垂直偏移。
-         * @param sx 水平重复。
-         * @param sy 垂直重复。
+         * @param offsetX 水平偏移。
+         * @param offsetY 垂直偏移。
+         * @param repeatX 水平重复。
+         * @param repeatY 垂直重复。
          * @param rotation 旋转。（弧度制）
-         * @param cx 水平中心。
-         * @param cy 垂直中心。
+         * @param pivotX 水平中心。
+         * @param pivotY 垂直中心。
          */
-        fromUVTransform(tx: number, ty: number, sx: number, sy: number, rotation: number, cx: number, cy: number): Matrix3;
+        fromUVTransform(offsetX: number, offsetY: number, repeatX: number, repeatY: number, rotation?: number, pivotX?: number, pivotY?: number): Matrix3;
         fromMatrix4(value: Readonly<Matrix4>): this;
         inverse(input?: Matrix3): this;
         getNormalMatrix(matrix4: Readonly<Matrix4>): this;
@@ -8331,10 +8333,12 @@ declare namespace egret3d {
         dirty: uint;
         totalWeight: number;
         weight: number;
-        components: paper.BaseComponent | ReadonlyArray<paper.BaseComponent>;
+        needUpdate: int;
+        property: string;
+        target: paper.BaseComponent | any | ReadonlyArray<paper.BaseComponent>;
         bindPose: any;
         layer: AnimationLayer | null;
-        updateTarget: (() => void);
+        updateTarget: ((dirty?: int) => void);
         private constructor();
         onClear(): void;
         clear(): void;
@@ -8364,6 +8368,7 @@ declare namespace egret3d {
         onUpdateRotation(animationlayer: AnimationLayer, animationState: AnimationState): void;
         onUpdateScale(animationlayer: AnimationLayer, animationState: AnimationState): void;
         onUpdateActive(animationlayer: AnimationLayer, animationState: AnimationState): void;
+        onUpdateFloat(animationlayer: AnimationLayer, animationState: AnimationState): void;
         getFrameIndex(currentTime: number): uint;
     }
 }
@@ -9405,6 +9410,14 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     *
+     */
+    const enum MaterialDirty {
+        All = 1,
+        None = 0,
+        UVTransform = 1,
+    }
+    /**
      * 材质资源。
      */
     class Material extends GLTFAsset {
@@ -9432,6 +9445,7 @@ declare namespace egret3d {
          *
          */
         readonly defines: Defines;
+        private readonly _uvTransform;
         private _createTechnique(shader, glTFMaterial);
         private _reset(shaderOrConfig);
         private _retainOrReleaseTextures(isRatain, isOnce);
@@ -9447,6 +9461,7 @@ declare namespace egret3d {
          * 克隆该材质。
          */
         clone(): this;
+        readonly needUpdate: (dirty: MaterialDirty) => void;
         setBoolean(id: string, value: boolean): this;
         setInt(id: string, value: int): this;
         setIntv(id: string, value: Float32Array | ReadonlyArray<int>): this;

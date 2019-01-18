@@ -105,6 +105,8 @@ namespace paper {
         UI = BuiltinLayer5,
         Editor = BuiltinLayer6,
         EditorUI = BuiltinLayer7,
+
+        Postprocessing = UserLayer8,
     }
     /**
      * 系统排序。

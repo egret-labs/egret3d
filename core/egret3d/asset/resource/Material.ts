@@ -3,6 +3,14 @@ namespace egret3d {
     let _hashCode: uint = 0;
     const _uvTransformMatrix = Matrix3.create();
     /**
+     * 
+     */
+    export const enum MaterialDirty {
+        All = 0b1,
+        None = 0b0,
+        UVTransform = 0b1,
+    }
+    /**
      * 材质资源。
      */
     export class Material extends GLTFAsset {
@@ -51,6 +59,10 @@ namespace egret3d {
          * @internal
          */
         public readonly _id: uint = _hashCode++;
+        /**
+         * @internal
+         */
+        public _dirty: MaterialDirty = MaterialDirty.None;
         private readonly _uvTransform: Array<number> = [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0];
         /**
          * @internal
@@ -246,45 +258,14 @@ namespace egret3d {
                 }
             }
         }
-
-        private _getAnimationPose(key: string) {
-            switch (key) {
-                case "_uvTransform":
-                    return [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0]; // TODO
+        /**
+         * @internal
+         */
+        public _update() {
+            if (this._dirty & MaterialDirty.UVTransform) {
+                this.setUVTransform(_uvTransformMatrix.fromUVTransform.apply(_uvTransformMatrix, this._uvTransform as any));
+                this._dirty &= ~MaterialDirty.UVTransform;
             }
-
-            return null;
-        }
-
-        private _getAnimationUpdate(key: string) {
-            switch (key) {
-                case "_uvTransform":
-                    return this._updateUVTransform;
-            }
-
-            return null;
-        }
-
-        private readonly _updateUVTransform = (binder: AnimationBinder) => {
-            const target = binder.target as Array<number>;
-
-            if (binder.totalWeight < 1.0 - Const.EPSILON) {
-                const weight = 1.0 - binder.totalWeight;
-                const bindPose = binder.bindPose as ArrayLike<number>;
-
-                if (binder.dirty > 0) {
-                    for (let i = 0; i < 7; ++i) {
-                        target[i] += bindPose[i] * weight;
-                    }
-                }
-                else {
-                    for (let i = 0; i < 7; ++i) {
-                        target[i] = bindPose[i] * weight;
-                    }
-                }
-            }
-
-            this.setUVTransform(_uvTransformMatrix.fromUVTransform.apply(_uvTransformMatrix, target as any));
         }
 
         public retain(): this {
@@ -360,6 +341,10 @@ namespace egret3d {
          */
         public clone(): this {
             return Material.create(this._shader).copy(this) as this;
+        }
+
+        public readonly needUpdate = (dirty: MaterialDirty) => {
+            this._dirty |= dirty;
         }
 
         setBoolean(id: string, value: boolean) {

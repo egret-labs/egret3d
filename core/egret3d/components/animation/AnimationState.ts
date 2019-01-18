@@ -341,17 +341,21 @@ namespace egret3d {
                                                 channel.updateTarget = channel.onUpdateFloat; // TODO
 
                                                 if (uri) {
-                                                    binder = channel.binder = animation._getBinder(nodeName, uri);
+                                                    binder = channel.binder = animation._getBinder(nodeName, uri + "/" + extension!.property);
 
                                                     if (!binder.target) {
                                                         const paths = uri.split("/");
                                                         let target: any = component;
+                                                        let updateTarget: any = null;
                                                         let path = "";
 
                                                         for (path of paths) {
-                                                            const firstChar = path.charAt(0);
-                                                            if (firstChar === "$") {
-                                                                target = target._getAnimationTarget(path.substring(1));
+                                                            if (!path) {
+                                                                continue;
+                                                            }
+
+                                                            if (path === "$") {
+                                                                updateTarget = target;
                                                             }
                                                             else {
                                                                 target = target[path];
@@ -361,18 +365,10 @@ namespace egret3d {
                                                         binder.target = target;
                                                         binder.property = extension!.property;
 
-                                                        if (extension!.pose) {
-                                                            binder.bindPose = target._getAnimationPose(path);
-                                                        }
-                                                        else {
-                                                            binder.bindPose = binder.target[binder.property];
-                                                        }
-
-                                                        if (extension!.update) {
-                                                            binder.updateTarget = target._getAnimationUpdate(path);
-                                                        }
-                                                        else {
-                                                            binder.updateTarget = binder.onUpdateFloat;
+                                                        const needUpdate = extension!.needUpdate;
+                                                        if (needUpdate !== undefined && needUpdate >= 0) {
+                                                            binder.needUpdate = needUpdate;
+                                                            binder.updateTarget = (updateTarget || target).needUpdate;
                                                         }
                                                     }
                                                 }
@@ -382,9 +378,9 @@ namespace egret3d {
                                                     if (!binder.target) {
                                                         binder.target = component;
                                                         binder.property = extension!.property;
-                                                        binder.bindPose = binder.target[binder.property];
-                                                        binder.updateTarget = binder.onUpdateFloat;
                                                     }
+                                                    // TODO 
+                                                    // needUpdate
                                                 }
                                             }
                                             else {
