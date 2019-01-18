@@ -11,11 +11,12 @@ namespace egret3d {
                 material.setTexture(src);
             }
 
+            const saveCamera = Camera.current!;
+            //
             const camera = cameraAndLightCollecter.postprocessingCamera;
             renderState.updateViewport(camera, dest);
-            renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
+            renderState.clearBuffer(saveCamera.bufferMask, saveCamera.backgroundColor);
             //
-            const saveCamera = Camera.current;
             Camera.current = camera;
             renderState.draw(drawCallCollecter.postprocessing, material);
             Camera.current = saveCamera;

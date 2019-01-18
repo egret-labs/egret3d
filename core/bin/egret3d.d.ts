@@ -4298,7 +4298,7 @@ declare namespace egret3d {
          * @param rawData
          * @param offsetOrByteOffset
          */
-        static create(): Matrix3;
+        static create(rawData?: ArrayLike<number>, offsetOrByteOffset?: number): Matrix3;
         /**
          * 矩阵原始数据。
          * @readonly
@@ -7511,7 +7511,13 @@ declare namespace egret3d {
          * 雾的远平面。
          * - 最小值 0.02。
          */
+<<<<<<< HEAD
         far: number;
+=======
+        onUpdate: ((face: uint) => void) | null;
+        private _textureSize;
+        private readonly _light;
+>>>>>>> 93f9082657698b427c7553397f63ba086e2e7db4
         /**
          * 雾的颜色。
          */

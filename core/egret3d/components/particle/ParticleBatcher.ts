@@ -345,8 +345,8 @@ namespace egret3d.particle {
             }
 
             const transform = comp.gameObject.transform;
-            this._worldPostionCache = transform.position.clone();
-            this._worldRotationCache = transform.rotation.clone();
+            this._worldPostionCache.copy(transform.position);
+            this._worldRotationCache.copy(transform.rotation);
             if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
                 this._updateEmission(elapsedTime);
             }
