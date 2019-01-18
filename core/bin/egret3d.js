@@ -553,6 +553,7 @@ var paper;
         Layer[Layer["UI"] = 32] = "UI";
         Layer[Layer["Editor"] = 64] = "Editor";
         Layer[Layer["EditorUI"] = 128] = "EditorUI";
+        Layer[Layer["Postprocessing"] = 256] = "Postprocessing";
     })(Layer = paper.Layer || (paper.Layer = {}));
     /**
      * 系统排序。
@@ -4434,7 +4435,7 @@ var egret3d;
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.maxBoneCount = 24;
             _this.maxPrecision = "";
-            _this.logarithmicDepthBuffer = false;
+            _this.logarithmicDepthBuffer = true;
             _this.toneMapping = 1 /* LinearToneMapping */;
             _this.toneMappingExposure = 1.0;
             _this.toneMappingWhitePoint = 1.0;
@@ -4535,6 +4536,12 @@ var egret3d;
             var defines = "";
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
+            if (this.logarithmicDepthBuffer) {
+                defines += "#define USE_LOGDEPTHBUF \n";
+                if (this.fragDepthEnabled) {
+                    defines += "#define USE_LOGDEPTHBUF_EXT \n";
+                }
+            }
             this.commonDefines = defines;
             // fragmentDefines
             defines = "";
@@ -4546,12 +4553,6 @@ var egret3d;
             defines += "#define GAMMA_FACTOR " + (this.gammaFactor > 0.0 ? this.gammaFactor : 1.0) + "\n";
             defines += egret3d.ShaderChunk.encodings_pars_fragment;
             defines += this._getTexelEncodingFunction("linearToOutputTexel", this.gammaOutput ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */) + " \n";
-            if (this.logarithmicDepthBuffer) {
-                defines += "#define USE_LOGDEPTHBUF \n";
-                if (this.fragDepthEnabled) {
-                    defines += "#define USE_LOGDEPTHBUF_EXT \n";
-                }
-            }
             this.fragmentDefines = defines;
         };
         RenderState.prototype._getEncodingComponents = function (encoding) {
@@ -9352,6 +9353,7 @@ var paper;
             _this.interests = [
                 { componentClass: paper.Behaviour, type: 1 /* Extends */ | 4 /* Unessential */, isBehaviour: true }
             ];
+            _this._disposeCollecter = paper.GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter);
             return _this;
         }
         EnableSystem.prototype.onAddComponent = function (component) {
@@ -9368,6 +9370,17 @@ var paper;
                 }
             }
             component.onEnable && component.onEnable();
+        };
+        EnableSystem.prototype.onUpdate = function () {
+            var assets = this._disposeCollecter.assets;
+            if (assets.length > 0) {
+                // for (const asset of assets) { // TODO
+                //     if (asset.onReferenceCountChange!(true)) {
+                //         console.debug("Auto dispose GPU memory.", asset.name);
+                //     }
+                // }
+                assets.length = 0;
+            }
         };
         return EnableSystem;
     }(paper.BaseSystem));
@@ -9559,12 +9572,6 @@ var paper;
                 var instances = instance.constructor._instances; // TODO
                 instance.onClear && instance.onClear();
                 instances.push(instance);
-            }
-            for (var _f = 0, _g = disposeCollecter.assets; _f < _g.length; _f++) {
-                var asset = _g[_f];
-                if (asset.onReferenceCountChange(true)) {
-                    console.debug("Auto dispose GPU memory.", asset.name);
-                }
             }
             disposeCollecter.clear();
         };
@@ -15782,7 +15789,7 @@ var egret3d;
             /**
              * 该阴影的贴图偏差。
              */
-            this.bias = -0.01; // TODO
+            this.bias = 0.0; // TODO
             /**
              * 产生该阴影的灯光位置到近裁剪面距离。
              */
@@ -16223,11 +16230,11 @@ var egret3d;
             var mapSize = shadow.mapSize;
             var transform = this.gameObject.transform;
             //
-            shadowCamera.viewport.set(0.0, 0.0, mapSize, mapSize);
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(0.0, shadow.near, shadow.far, shadow.size, 0.0, 1.0, 0.0).release();
             shadowCamera.transform
                 .setLocalPosition(transform.position)
                 .setLocalRotation(transform.rotation); // TODO
+            shadowCamera.viewport.set(0.0, 0.0, mapSize, mapSize);
+            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(0.0, shadow.near, shadow.far, shadow.size, 0.0, 1.0, 0.0).release();
             // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
             shadowMatrix.set(0.5, 0.0, 0.0, 0.5, 0.0, 0.5, 0.0, 0.5, 0.0, 0.0, 0.5, 0.5, 0.0, 0.0, 0.0, 1.0).multiply(shadowCamera.projectionMatrix).multiply(shadowCamera.worldToCameraMatrix);
         };
@@ -25505,11 +25512,11 @@ var egret3d;
             }
             else {
                 switch (blend) {
-                    case 4 /* Add */:
+                    case 4 /* Additive */:
                         functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
                         functions.blendFuncSeparate = [770 /* SRC_ALPHA */, 1 /* ONE */, 770 /* SRC_ALPHA */, 1 /* ONE */];
                         break;
-                    case 5 /* Add_PreMultiply */:
+                    case 5 /* Additive_PreMultiply */:
                         functions.blendEquationSeparate = [32774 /* Add */, 32774 /* Add */];
                         functions.blendFuncSeparate = [1 /* ONE */, 1 /* ONE */, 1 /* ONE */, 1 /* ONE */];
                         break;
@@ -29446,9 +29453,11 @@ var egret3d;
                         if (technique.program !== program.id) {
                             technique.program = program.id;
                         }
+                        //
                         this._updateUniforms(program, technique);
                         // Update states.
                         renderState.updateState(techniqueState);
+                        //
                         this._cacheMaterial = material;
                     }
                     //  TODO

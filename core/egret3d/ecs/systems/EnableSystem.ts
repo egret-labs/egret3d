@@ -7,6 +7,8 @@ namespace paper {
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
 
+        private readonly _disposeCollecter: DisposeCollecter = GameObject.globalGameObject.getOrAddComponent(DisposeCollecter);
+
         public onAddComponent(component: Behaviour) {
             if (!component) {
                 return;
@@ -24,6 +26,20 @@ namespace paper {
             }
 
             component.onEnable && component.onEnable();
+        }
+
+        public onUpdate() {
+            const { assets } = this._disposeCollecter;
+
+            if (assets.length > 0) {
+                // for (const asset of assets) { // TODO
+                //     if (asset.onReferenceCountChange!(true)) {
+                //         console.debug("Auto dispose GPU memory.", asset.name);
+                //     }
+                // }
+
+                assets.length = 0;
+            }
         }
     }
 }

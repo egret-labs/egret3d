@@ -24,7 +24,7 @@ namespace egret3d {
         public maxBoneCount: uint = 24;
         public maxPrecision: string = "";
 
-        public logarithmicDepthBuffer: boolean = false;
+        public logarithmicDepthBuffer: boolean = true;
 
         public toneMapping: ToneMapping = ToneMapping.LinearToneMapping;
         public toneMappingExposure: number = 1.0;
@@ -86,6 +86,14 @@ namespace egret3d {
             let defines = "";
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
+
+            if (this.logarithmicDepthBuffer) {
+                defines += "#define USE_LOGDEPTHBUF \n";
+                if (this.fragDepthEnabled) {
+                    defines += "#define USE_LOGDEPTHBUF_EXT \n";
+                }
+            }
+
             this.commonDefines = defines;
             // fragmentDefines
             defines = "";
@@ -99,13 +107,6 @@ namespace egret3d {
             defines += "#define GAMMA_FACTOR " + (this.gammaFactor > 0.0 ? this.gammaFactor : 1.0) + "\n";
             defines += ShaderChunk.encodings_pars_fragment;
             defines += this._getTexelEncodingFunction("linearToOutputTexel", this.gammaOutput ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding) + " \n";
-
-            if (this.logarithmicDepthBuffer) {
-                defines += "#define USE_LOGDEPTHBUF \n";
-                if (this.fragDepthEnabled) {
-                    defines += "#define USE_LOGDEPTHBUF_EXT \n";
-                }
-            }
 
             this.fragmentDefines = defines;
         }

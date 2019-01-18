@@ -212,6 +212,7 @@ declare namespace paper {
         UI = 32,
         Editor = 64,
         EditorUI = 128,
+        Postprocessing = 256,
     }
     /**
      * 系统排序。

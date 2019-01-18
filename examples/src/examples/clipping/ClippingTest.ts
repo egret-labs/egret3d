@@ -53,7 +53,6 @@ namespace examples.clipping {
                 const gameObject = this._gameObject = egret3d.DefaultMeshes.createObject(egret3d.MeshBuilder.createTorusKnot(0.4, 0.08, 95, 20), "Object");
                 const renderer = gameObject.renderer!;
                 renderer.castShadows = true;
-                renderer.receiveShadows = true;
                 renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
                     .setColor(0x80EE10)
                     .setFloat(egret3d.ShaderUniformName.Shininess, 100.0)

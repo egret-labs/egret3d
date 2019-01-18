@@ -554,12 +554,12 @@ namespace egret3d {
             }
             else {
                 switch (blend) {
-                    case BlendMode.Add:
+                    case BlendMode.Additive:
                         functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                         functions!.blendFuncSeparate = [gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE, gltf.BlendFactor.SRC_ALPHA, gltf.BlendFactor.ONE];
                         break;
 
-                    case BlendMode.Add_PreMultiply:
+                    case BlendMode.Additive_PreMultiply:
                         functions!.blendEquationSeparate = [gltf.BlendEquation.Add, gltf.BlendEquation.Add];
                         functions!.blendFuncSeparate = [gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE, gltf.BlendFactor.ONE];
                         break;

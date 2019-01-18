@@ -6,7 +6,7 @@ namespace paper {
         public readonly interests = [
             { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
         ];
-
+        
         public onAddComponent(component: Behaviour) {
             if (!component || component._isStarted) {
                 return;
