@@ -26,7 +26,7 @@ namespace components {
             material.setFloat("time", this._time);
             material.setTexture(camera.postprocessingRenderTarget);
 
-            camera.context.blit(camera.postprocessingRenderTarget, material);
+            this.blit(camera.postprocessingRenderTarget, material);
         }
     }
 }

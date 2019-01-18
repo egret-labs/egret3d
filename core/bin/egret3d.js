@@ -6315,6 +6315,11 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    var _mat3Array = [
+        1.0, 0.0, 0.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0
+    ];
     /**
      * 3×3 矩阵。
      */
@@ -6324,24 +6329,28 @@ var egret3d;
          * 请使用 `egret3d.Matrix3.create()` 创建实例。
          * @see egret3d.Matrix3.create()
          */
-        function Matrix3() {
+        function Matrix3(rawData, offsetOrByteOffset) {
+            if (offsetOrByteOffset === void 0) { offsetOrByteOffset = 0; }
             var _this = _super.call(this) || this;
             /**
              * 矩阵原始数据。
              * @readonly
              */
             _this.rawData = null;
-            // if (rawData) {
-            //     this.rawData = rawData;
-            // }
-            // else {
-            // TODO
-            _this.rawData = new Float32Array([
-                1.0, 0.0, 0.0,
-                0.0, 1.0, 0.0,
-                0.0, 0.0, 1.0,
-            ]);
+            if (rawData && rawData instanceof ArrayBuffer) {
+                _this.fromBuffer(rawData, offsetOrByteOffset);
+            }
+            else {
+                _this.rawData = new Float32Array(9);
+                _this.fromArray(rawData || _mat3Array);
+            }
             return _this;
+            // TODO
+            // this.rawData = new Float32Array([
+            //     1.0, 0.0, 0.0,
+            //     0.0, 1.0, 0.0,
+            //     0.0, 0.0, 1.0,
+            // ]);
             // }
         }
         /**
@@ -6349,13 +6358,25 @@ var egret3d;
          * @param rawData
          * @param offsetOrByteOffset
          */
-        Matrix3.create = function () {
+        Matrix3.create = function (rawData, offsetOrByteOffset) {
+            if (offsetOrByteOffset === void 0) { offsetOrByteOffset = 0; }
             if (this._instances.length > 0) {
                 var instance = this._instances.pop().identity();
                 instance._released = false;
+                if (rawData) {
+                    if (rawData instanceof ArrayBuffer) {
+                        instance.fromBuffer(rawData, offsetOrByteOffset);
+                    }
+                    else {
+                        instance.fromArray(rawData, offsetOrByteOffset);
+                    }
+                }
+                else {
+                    instance.identity();
+                }
                 return instance;
             }
-            return new Matrix3();
+            return new Matrix3(rawData, offsetOrByteOffset);
         };
         Matrix3.prototype.serialize = function () {
             return this.rawData;
@@ -6579,34 +6600,8 @@ var egret3d;
             /**
              *
              */
-            _this.shadow = egret3d.LightShadow.create();
+            _this.shadow = egret3d.LightShadow.create(_this);
             return _this;
-            // protected _updateShadowMatrix(camera: Camera) {
-            //     // matrix * 0.5 + 0.5, after identity, range is 0 ~ 1 instead of -1 ~ 1
-            //     const matrix = this.shadowMatrix;
-            //     matrix.set(
-            //         0.5, 0.0, 0.0, 0.5,
-            //         0.0, 0.5, 0.0, 0.5,
-            //         0.0, 0.0, 0.5, 0.5,
-            //         0.0, 0.0, 0.0, 1.0
-            //     );
-            //     const context = camera.context;
-            //     context.updateCameraTransform(camera, this.gameObject.transform.localToWorldMatrix);
-            //     context.updateLightDepth(this);
-            //     helpMatrixA.fromProjection(
-            //         camera.fov, this.shadowCameraNear, this.shadowCameraFar,
-            //         this.shadowSize, camera.opvalue,
-            //         camera.aspect, stage.matchFactor
-            //     );
-            //     matrix.multiply(helpMatrixA).multiply(this.gameObject.transform.worldToLocalMatrix);
-            // }
-            // public updateShadow(camera: Camera) {
-            // }
-            // /**
-            //  * @internal
-            //  */
-            // public updateFace(camera: Camera, faceIndex: number) {
-            // }
         }
         __decorate([
             paper.serializedField
@@ -14243,7 +14238,7 @@ var egret3d;
              * - camera.cullingMask |= paper.Layer.UI;
              * - camera.cullingMask &= ~paper.Layer.UI;
              */
-            _this.cullingMask = 1 /* Default */;
+            _this.cullingMask = 1 /* Default */ | 2 /* TransparentFX */ | 32 /* UI */ | 512 /* UserLayer9 */;
             /**
              * 该相机渲染排序。
              * - 该值越低的相机优先绘制。
@@ -15849,7 +15844,7 @@ var egret3d;
         /**
          * 禁止实例化。
          */
-        function LightShadow() {
+        function LightShadow(light) {
             /**
              *
              */
@@ -15877,18 +15872,20 @@ var egret3d;
             /**
              * @private
              */
-            this.renderTarget = egret3d.RenderTexture.create({ width: this.textureSize, height: this.textureSize });
+            this.renderTarget = egret3d.RenderTexture.create({ width: 512, height: 512, depthBuffer: true });
             /**
              * @private
              */
             this.onUpdate = null;
             this._textureSize = 512;
+            this._light = null;
+            this._light = light;
         }
         /**
          * @internal
          */
-        LightShadow.create = function () {
-            return new LightShadow();
+        LightShadow.create = function (light) {
+            return new LightShadow(light);
         };
         LightShadow.prototype.serialize = function () {
             return [this.radius, this.bias, this._textureSize, this.near, this.far, this.size];
@@ -15914,7 +15911,12 @@ var egret3d;
                 if (this._textureSize === value) {
                     return;
                 }
-                this.renderTarget.uploadTexture(value, value);
+                if (this._light.constructor === egret3d.DirectionalLight) {
+                    this.renderTarget.uploadTexture(value * 4.0, value * 2.0);
+                }
+                else {
+                    this.renderTarget.uploadTexture(value, value);
+                }
                 this._textureSize = value;
             },
             enumerable: true,
@@ -16914,7 +16916,7 @@ var egret3d;
             var shadowMatrix = shadow.matrix;
             var shadowCamera = egret3d.cameraAndLightCollecter.shadowCamera;
             var transform = this.gameObject.transform;
-            var textureSize = Math.min(shadow.textureSize, egret3d.renderState.maxTextureSize);
+            var textureSize = shadow.textureSize;
             //
             shadowCamera.viewport.set(0, 0, textureSize, textureSize);
             shadowCamera.transform.position.copy(transform.position).update();
@@ -16964,7 +16966,7 @@ var egret3d;
             var shadowMatrix = shadow.matrix;
             var shadowCamera = egret3d.cameraAndLightCollecter.shadowCamera;
             var transform = this.gameObject.transform;
-            var textureSize = Math.min(shadow.textureSize, egret3d.renderState.maxTextureSize);
+            var textureSize = shadow.textureSize;
             //
             shadowCamera.transform.position.copy(transform.position).update();
             shadowCamera.transform.rotation.copy(transform.rotation).update();
@@ -22724,8 +22726,8 @@ var egret3d;
                     }
                 }
                 var transform = comp.gameObject.transform;
-                this._worldPostionCache = transform.position.clone();
-                this._worldRotationCache = transform.rotation.clone();
+                this._worldPostionCache.copy(transform.position);
+                this._worldRotationCache.copy(transform.rotation);
                 if (comp._isPlaying && this._time >= mainModule.startDelay.constant && comp.emission.enable) {
                     this._updateEmission(elapsedTime);
                 }
@@ -29927,11 +29929,12 @@ var egret3d;
                 material = egret3d.DefaultMaterials.COPY;
                 material.setTexture(src);
             }
+            var saveCamera = egret3d.Camera.current;
+            //
             var camera = egret3d.cameraAndLightCollecter.postprocessingCamera;
             egret3d.renderState.updateViewport(camera, dest);
-            egret3d.renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
+            egret3d.renderState.clearBuffer(saveCamera.bufferMask, saveCamera.backgroundColor);
             //
-            var saveCamera = egret3d.Camera.current;
             egret3d.Camera.current = camera;
             egret3d.renderState.draw(egret3d.drawCallCollecter.postprocessing, material);
             egret3d.Camera.current = saveCamera;

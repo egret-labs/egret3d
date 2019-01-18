@@ -7098,6 +7098,7 @@ declare namespace egret3d {
          */
         onUpdate: ((face: uint) => void) | null;
         private _textureSize;
+        private readonly _light;
         /**
          * 禁止实例化。
          */
