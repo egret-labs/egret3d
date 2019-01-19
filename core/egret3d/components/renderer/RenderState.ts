@@ -54,28 +54,19 @@ namespace egret3d {
         public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;
 
         private _logarithmicDepthBuffer: boolean = false;
-        private _toneMapping: ToneMapping = ToneMapping.None;
         private _gammaInputLocked: boolean = false;
         private _gammaInput: boolean = true; //
         private _gammaOutput: boolean = true; //
         private _gammaFactor: number = 1.0;
+        private _toneMapping: ToneMapping = ToneMapping.None;
+        
+        private _useLightMap: boolean = false;
         /**
          * @internal
          */
         public _castShadows: boolean = false;
-
-        /**
-         * @internal
-         */
-        public _useLightMap: boolean = false;
-        /**
-         * @internal
-         */
-        public _receiveShadows: boolean = false;
-        /**
-         * @internal
-         */
-        public _boneCount: int = 0;
+        private _receiveShadows: boolean = false;
+        private _boneCount: int = 0;
         protected readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
         protected readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
 
@@ -165,7 +156,7 @@ namespace egret3d {
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         }
         /**
-         * 
+         * @internal
          */
         public _updateDrawDefines(renderer: paper.BaseRenderer | null) {
             let useLightMap = false;

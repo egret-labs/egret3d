@@ -4,7 +4,7 @@ namespace behaviors {
 
     export class Wander extends paper.Behaviour {
         @paper.editor.property(paper.editor.EditType.FLOAT)
-        public length: number = 10.0;
+        public radius: number = 10.0;
 
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public readonly timeScale: egret3d.Vector3 = egret3d.Vector3.create(1.0, 0.7, 0.4);
@@ -16,7 +16,7 @@ namespace behaviors {
 
         public onUpdate() {
             const time = paper.clock.time;
-            const radius = this.length;
+            const radius = this.radius;
             const timeScale = this.timeScale;
             const center = this.center;
 

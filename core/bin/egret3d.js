@@ -3871,26 +3871,17 @@ var egret3d;
              */
             _this.draw = null;
             _this._logarithmicDepthBuffer = false;
-            _this._toneMapping = 0 /* None */;
             _this._gammaInputLocked = false;
             _this._gammaInput = true; //
             _this._gammaOutput = true; //
             _this._gammaFactor = 1.0;
+            _this._toneMapping = 0 /* None */;
             /**
              * @internal
              */
             _this._castShadows = false;
-            /**
-             * @internal
-             */
             _this._useLightMap = false;
-            /**
-             * @internal
-             */
             _this._receiveShadows = false;
-            /**
-             * @internal
-             */
             _this._boneCount = 0;
             _this._stateEnables = [3042 /* Blend */, 2884 /* CullFace */, 2929 /* DepthTest */]; // TODO
             _this._cacheStateEnable = {};
@@ -3976,7 +3967,7 @@ var egret3d;
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         };
         /**
-         *
+         * @internal
          */
         RenderState.prototype._updateDrawDefines = function (renderer) {
             var useLightMap = false;
@@ -10684,6 +10675,8 @@ var egret3d;
         ShaderUniformName["BumpScale"] = "bumpScale";
         ShaderUniformName["Roughness"] = "roughness";
         ShaderUniformName["Metalness"] = "metalness";
+        ShaderUniformName["Emissive"] = "emissive";
+        ShaderUniformName["EmissiveIntensity"] = "emissiveIntensity";
     })(ShaderUniformName = egret3d.ShaderUniformName || (egret3d.ShaderUniformName = {}));
     /**
      *
@@ -16658,6 +16651,9 @@ var egret3d;
         PointLight.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             this.shadow._onUpdate = this._updateShadow.bind(this);
+            // TODO
+            var mapSize = this.shadow.mapSize;
+            this.shadow._renderTarget.uploadTexture(mapSize * 4.0, mapSize * 2.0);
         };
         PointLight.prototype._updateShadow = function (face) {
             var shadowCamera = egret3d.cameraAndLightCollecter.shadowCamera;
@@ -20001,7 +19997,7 @@ var egret3d;
         };
         Object.defineProperty(AnimationTreeState.prototype, "name", {
             /**
-             * @internal
+             *
              */
             get: function () {
                 return this.animationNode.name;
@@ -20269,7 +20265,7 @@ var egret3d;
         });
         Object.defineProperty(AnimationState.prototype, "name", {
             /**
-             * @internal
+             *
              */
             get: function () {
                 return this.animationClip ? this.animationClip.name : "";

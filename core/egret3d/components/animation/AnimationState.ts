@@ -137,7 +137,7 @@ namespace egret3d {
             return instance;
         }
         /**
-         * @internal
+         * 
          */
         public get name() {
             return (this.animationNode as AnimationTree).name;
@@ -444,7 +444,7 @@ namespace egret3d {
             return this._currentTime;
         }
         /**
-         * @internal
+         * 
          */
         public get name() {
             return this.animationClip ? this.animationClip.name : "";

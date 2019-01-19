@@ -29,7 +29,7 @@ namespace examples.materials {
                 const coneMesh = egret3d.MeshBuilder.createCylinder(0.0, 10.0, 100.0).applyMatrix(egret3d.Matrix4.create().fromRotationX(Math.PI * 0.5));
                 const sphere = egret3d.DefaultMeshes.createObject(sphereMesh, "Sphere");
                 sphere.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL);
-                sphere.addComponent(behaviors.Wander).length = 2000.0;
+                sphere.addComponent(behaviors.Wander).radius = 2000.0;
 
                 for (let i = 0; i < 1000; ++i) {
                     const cone = egret3d.DefaultMeshes.createObject(coneMesh, `Cone ${i}`);

@@ -3375,11 +3375,14 @@ declare namespace egret3d {
          */
         draw: (drawCall: DrawCall, material?: Material | null) => void;
         private _logarithmicDepthBuffer;
-        private _toneMapping;
         private _gammaInputLocked;
         private _gammaInput;
         private _gammaOutput;
         private _gammaFactor;
+        private _toneMapping;
+        private _useLightMap;
+        private _receiveShadows;
+        private _boneCount;
         protected readonly _stateEnables: ReadonlyArray<gltf.EnableState>;
         protected readonly _cacheStateEnable: {
             [key: string]: boolean | undefined;
@@ -3390,10 +3393,6 @@ declare namespace egret3d {
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         protected _getTexelEncodingFunction(functionName: string, encoding?: TextureEncoding): string;
         protected _getTexelDecodingFunction(functionName: string, encoding?: TextureEncoding): string;
-        /**
-         *
-         */
-        _updateDrawDefines(renderer: paper.BaseRenderer | null): void;
         initialize(config?: any): void;
         /**
          *
@@ -5520,6 +5519,8 @@ declare namespace egret3d {
         BumpScale = "bumpScale",
         Roughness = "roughness",
         Metalness = "metalness",
+        Emissive = "emissive",
+        EmissiveIntensity = "emissiveIntensity",
     }
     /**
      *
@@ -8310,6 +8311,10 @@ declare namespace egret3d {
      */
     class AnimationTreeState extends AnimationBaseState {
         private static readonly _instances;
+        /**
+         *
+         */
+        readonly name: string;
     }
     /**
      * 动画状态。
@@ -8369,6 +8374,10 @@ declare namespace egret3d {
          * 该动画状态的当前播放时间。
          */
         readonly currentTime: number;
+        /**
+         *
+         */
+        readonly name: string;
     }
 }
 declare namespace egret3d {

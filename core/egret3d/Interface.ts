@@ -100,6 +100,8 @@ namespace egret3d {
         BumpScale = "bumpScale",
         Roughness = "roughness",
         Metalness = "metalness",
+        Emissive = "emissive",
+        EmissiveIntensity = "emissiveIntensity",
     }
     /**
      * 

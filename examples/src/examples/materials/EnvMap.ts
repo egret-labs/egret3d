@@ -20,7 +20,8 @@ namespace examples.materials {
 
             {
                 const renderState = this.gameObject.getComponent(egret3d.RenderState)!;
-                renderState.setGamma(2.0, false, true);
+                renderState.gammaOutput = true;
+                renderState.gammaFactor = 2.0;
             }
 
             { // Main camera.
@@ -41,7 +42,7 @@ namespace examples.materials {
             { // Create game object.
                 const mesh = egret3d.MeshBuilder.createSphere(400.0, 0.0, 0.0, 0.0, 48, 24);
                 const gameObject = egret3d.DefaultMeshes.createObject(mesh);
-                gameObject.getComponentInChildren(egret3d.MeshRenderer)!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT)
+                gameObject.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT)
                     .setTexture(egret3d.ShaderUniformName.EnvMap, texture);
             }
         }
