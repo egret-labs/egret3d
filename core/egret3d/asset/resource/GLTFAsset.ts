@@ -1,4 +1,10 @@
 namespace egret3d {
+    // egret build bug. 
+    RenderQueue.Background;
+    BlendMode.None;
+    ToneMapping.None;
+    TextureEncoding.LinearEncoding;
+    TextureUVMapping.UV;
     /**
      * glTF 资源。
      */

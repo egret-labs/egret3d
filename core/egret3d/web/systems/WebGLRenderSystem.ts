@@ -137,11 +137,11 @@ namespace egret3d.webgl {
 
                     switch (semantic!) {
                         case gltf.UniformSemantics._TONE_MAPPING_EXPOSURE:
-                            webgl.uniform1f(location, renderState._toneMappingExposure);
+                            webgl.uniform1f(location, renderState.toneMappingExposure);
                             break;
 
                         case gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT:
-                            webgl.uniform1f(location, renderState._toneMappingWhitePoint);
+                            webgl.uniform1f(location, renderState.toneMappingWhitePoint);
                             break;
 
                         case gltf.UniformSemantics._AMBIENTLIGHTCOLOR:

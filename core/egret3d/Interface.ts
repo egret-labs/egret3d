@@ -102,34 +102,6 @@ namespace egret3d {
         Metalness = "metalness",
     }
     /**
-     * TODO
-     * @internal
-     */
-    export const TextureDecodingFunction: { [key: string]: string } = {
-        "map": "mapTexelToLinear",
-        "envMap": "envMapTexelToLinear",
-        "emissiveMap": "emissiveMapTexelToLinear",
-    };
-    /**
-     * TODO
-     * @internal
-     */
-    export const ShaderTextureDefine: { [key: string]: ShaderDefine } = {
-        "map": ShaderDefine.USE_MAP,
-        "alphaMap": ShaderDefine.USE_ALPHAMAP,
-        "aoMap": ShaderDefine.USE_AOMAP,
-        "bumpMap": ShaderDefine.USE_BUMPMAP,
-        "normalMap": ShaderDefine.USE_NORMALMAP,
-        "specularMap": ShaderDefine.USE_SPECULARMAP,
-        "gradientMap": ShaderDefine.TOON,
-        "roughnessMap": ShaderDefine.USE_ROUGHNESSMAP,
-        "metalnessMap": ShaderDefine.USE_METALNESSMAP,
-        "displacementMap": ShaderDefine.USE_DISPLACEMENTMAP,
-        "envMap": ShaderDefine.USE_ENVMAP,
-        "emissiveMap": ShaderDefine.USE_EMISSIVEMAP,
-    };
-
-    /**
      * 
      */
     export const enum HumanoidMask {
@@ -213,6 +185,33 @@ namespace egret3d {
         RightLittleIntermediate = "RH_LittleIntermediate",
         RightLittleDistal = "RH_LittleDistal",
     }
+    /**
+     * TODO
+     * @internal
+     */
+    export const TextureDecodingFunction: { [key: string]: string } = {
+        "map": "mapTexelToLinear",
+        "envMap": "envMapTexelToLinear",
+        "emissiveMap": "emissiveMapTexelToLinear",
+    };
+    /**
+     * TODO
+     * @internal
+     */
+    export const ShaderTextureDefine: { [key: string]: ShaderDefine } = {
+        "map": ShaderDefine.USE_MAP,
+        "alphaMap": ShaderDefine.USE_ALPHAMAP,
+        "aoMap": ShaderDefine.USE_AOMAP,
+        "bumpMap": ShaderDefine.USE_BUMPMAP,
+        "normalMap": ShaderDefine.USE_NORMALMAP,
+        "specularMap": ShaderDefine.USE_SPECULARMAP,
+        "gradientMap": ShaderDefine.TOON,
+        "roughnessMap": ShaderDefine.USE_ROUGHNESSMAP,
+        "metalnessMap": ShaderDefine.USE_METALNESSMAP,
+        "displacementMap": ShaderDefine.USE_DISPLACEMENTMAP,
+        "envMap": ShaderDefine.USE_ENVMAP,
+        "emissiveMap": ShaderDefine.USE_EMISSIVEMAP,
+    };
     /**
      * 
      */

@@ -53,9 +53,6 @@ namespace egret3d.webgl {
          */
         public static webgl: WebGLRenderingContext | null = null;
 
-        private readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
-        private readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
-
         public initialize(config: { canvas: HTMLCanvasElement, webgl: WebGLRenderingContext }) {
             super.initialize();
 
@@ -177,12 +174,6 @@ namespace egret3d.webgl {
                         ((webgl as any)[k] as Function).apply(webgl, functions[k]);
                     }
                 }
-            }
-        }
-
-        public clearState() {
-            for (const key in this._cacheStateEnable) {
-                delete this._cacheStateEnable[key];
             }
         }
     }

@@ -55,6 +55,16 @@ namespace egret3d {
         Custom = -1,
     }
     /**
+     * 
+     */
+    export const enum ToneMapping {
+        None = 0,
+        LinearToneMapping = 1,
+        ReinhardToneMapping = 2,
+        Uncharted2ToneMapping = 3,
+        CineonToneMapping = 4,
+    }
+    /**
      * 纹理编码。
      */
     export const enum TextureEncoding {
@@ -65,16 +75,6 @@ namespace egret3d {
         RGBM16Encoding = 5,
         RGBDEncoding = 6,
         GammaEncoding = 7,
-    }
-    /**
-     * 
-     */
-    export const enum ToneMapping {
-        None = 0,
-        LinearToneMapping = 1,
-        ReinhardToneMapping = 2,
-        Uncharted2ToneMapping = 3,
-        CineonToneMapping = 4,
     }
     /**
      * 

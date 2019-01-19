@@ -772,175 +772,6 @@ var paper;
     paper.BaseObject = BaseObject;
     __reflect(BaseObject.prototype, "paper.BaseObject", ["paper.IUUID"]);
 })(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        /**
-         * 属性信息。
-         */
-        var PropertyInfo = (function () {
-            function PropertyInfo(name, editType, option) {
-                this.name = name;
-                this.editType = editType;
-                this.option = option;
-            }
-            return PropertyInfo;
-        }());
-        editor.PropertyInfo = PropertyInfo;
-        __reflect(PropertyInfo.prototype, "paper.editor.PropertyInfo");
-        /**
-         * 编辑类型。
-         */
-        var EditType;
-        (function (EditType) {
-            /**
-             * 选中框。
-             */
-            EditType["CHECKBOX"] = "CHECKBOX";
-            /**
-             * 正整数。
-             */
-            EditType["UINT"] = "UINT";
-            /**
-             * 整数。
-             */
-            EditType["INT"] = "INT";
-            /**
-             * 浮点数。
-             */
-            EditType["FLOAT"] = "FLOAT";
-            /**
-             * 文本。
-             */
-            EditType["TEXT"] = "TEXT";
-            /**
-             * 下拉列表。
-             */
-            EditType["LIST"] = "LIST";
-            /**
-             * 数组。
-             */
-            EditType["ARRAY"] = "ARRAY";
-            /**
-             * 尺寸。
-             */
-            EditType["SIZE"] = "SIZE";
-            /**
-             * 矩形。
-             */
-            EditType["RECT"] = "RECT";
-            /**
-             * 二维向量。
-             */
-            EditType["VECTOR2"] = "VECTOR2";
-            /**
-             * 三维向量。
-             */
-            EditType["VECTOR3"] = "VECTOR3";
-            /**
-             * 四维向量。
-             */
-            EditType["VECTOR4"] = "VECTOR4";
-            /**
-             * 四元数。
-             */
-            EditType["QUATERNION"] = "QUATERNION";
-            /**
-             * 颜色选择器。
-             */
-            EditType["COLOR"] = "COLOR";
-            /**
-             * 着色器。
-             */
-            EditType["SHADER"] = "SHADER";
-            /**
-             * 材质。
-             */
-            EditType["MATERIAL"] = "MATERIAL";
-            /**
-             * 材质数组。
-             */
-            EditType["MATERIAL_ARRAY"] = "MATERIAL_ARRAY";
-            /**
-             * 贴图纹理。
-             */
-            EditType["TEXTUREDESC"] = "TEXTUREDESC";
-            /**
-             * 网格。
-             */
-            EditType["MESH"] = "MESH";
-            /**
-             * 实体。
-             */
-            EditType["GAMEOBJECT"] = "GAMEOBJECT";
-            /**
-             * 组件。
-             */
-            EditType["COMPONENT"] = "COMPONENT";
-            /**
-             * 声音。
-             */
-            EditType["SOUND"] = "SOUND";
-            /**
-             * 按钮。
-             */
-            EditType["BUTTON"] = "BUTTON";
-            /**
-             * 3x3 矩阵。
-             */
-            EditType["MAT3"] = "MAT3";
-            /**
-             * 内嵌的。
-             */
-            EditType["NESTED"] = "NESTED";
-            /**变换 TODO remove*/
-            EditType["TRANSFROM"] = "TRANSFROM";
-        })(EditType = editor.EditType || (editor.EditType = {}));
-        /**
-         * 自定义装饰器。
-         */
-        function custom() {
-            return function (target) {
-                target['__custom__'] = true;
-            };
-        }
-        editor.custom = custom;
-        /**
-         * 属性装饰器。
-         * @param editType 编辑类型。
-         * @param option 配置。
-         */
-        function property(editType, option) {
-            return function (target, property) {
-                if (!target.hasOwnProperty('__props__')) {
-                    target['__props__'] = [];
-                }
-                if (editType !== undefined) {
-                    target['__props__'].push(new PropertyInfo(property, editType, option));
-                }
-                else {
-                    //TODO:自动分析编辑类型
-                }
-            };
-        }
-        editor.property = property;
-        /**
-         * 从枚举中生成装饰器列表项。
-         */
-        function getItemsFromEnum(enumObject) {
-            var items = [];
-            for (var k in enumObject) {
-                if (!isNaN(Number(k))) {
-                    continue;
-                }
-                items.push({ label: k, value: enumObject[k] });
-            }
-            return items;
-        }
-        editor.getItemsFromEnum = getItemsFromEnum;
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -1343,6 +1174,720 @@ var paper;
     }(paper.BaseObject));
     paper.Asset = Asset;
     __reflect(Asset.prototype, "paper.Asset");
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * 属性信息。
+         */
+        var PropertyInfo = (function () {
+            function PropertyInfo(name, editType, option) {
+                this.name = name;
+                this.editType = editType;
+                this.option = option;
+            }
+            return PropertyInfo;
+        }());
+        editor.PropertyInfo = PropertyInfo;
+        __reflect(PropertyInfo.prototype, "paper.editor.PropertyInfo");
+        /**
+         * 编辑类型。
+         */
+        var EditType;
+        (function (EditType) {
+            /**
+             * 选中框。
+             */
+            EditType["CHECKBOX"] = "CHECKBOX";
+            /**
+             * 正整数。
+             */
+            EditType["UINT"] = "UINT";
+            /**
+             * 整数。
+             */
+            EditType["INT"] = "INT";
+            /**
+             * 浮点数。
+             */
+            EditType["FLOAT"] = "FLOAT";
+            /**
+             * 文本。
+             */
+            EditType["TEXT"] = "TEXT";
+            /**
+             * 下拉列表。
+             */
+            EditType["LIST"] = "LIST";
+            /**
+             * 数组。
+             */
+            EditType["ARRAY"] = "ARRAY";
+            /**
+             * 尺寸。
+             */
+            EditType["SIZE"] = "SIZE";
+            /**
+             * 矩形。
+             */
+            EditType["RECT"] = "RECT";
+            /**
+             * 二维向量。
+             */
+            EditType["VECTOR2"] = "VECTOR2";
+            /**
+             * 三维向量。
+             */
+            EditType["VECTOR3"] = "VECTOR3";
+            /**
+             * 四维向量。
+             */
+            EditType["VECTOR4"] = "VECTOR4";
+            /**
+             * 四元数。
+             */
+            EditType["QUATERNION"] = "QUATERNION";
+            /**
+             * 颜色选择器。
+             */
+            EditType["COLOR"] = "COLOR";
+            /**
+             * 着色器。
+             */
+            EditType["SHADER"] = "SHADER";
+            /**
+             * 材质。
+             */
+            EditType["MATERIAL"] = "MATERIAL";
+            /**
+             * 材质数组。
+             */
+            EditType["MATERIAL_ARRAY"] = "MATERIAL_ARRAY";
+            /**
+             * 贴图纹理。
+             */
+            EditType["TEXTUREDESC"] = "TEXTUREDESC";
+            /**
+             * 网格。
+             */
+            EditType["MESH"] = "MESH";
+            /**
+             * 实体。
+             */
+            EditType["GAMEOBJECT"] = "GAMEOBJECT";
+            /**
+             * 组件。
+             */
+            EditType["COMPONENT"] = "COMPONENT";
+            /**
+             * 声音。
+             */
+            EditType["SOUND"] = "SOUND";
+            /**
+             * 按钮。
+             */
+            EditType["BUTTON"] = "BUTTON";
+            /**
+             * 3x3 矩阵。
+             */
+            EditType["MAT3"] = "MAT3";
+            /**
+             * 内嵌的。
+             */
+            EditType["NESTED"] = "NESTED";
+            /**变换 TODO remove*/
+            EditType["TRANSFROM"] = "TRANSFROM";
+        })(EditType = editor.EditType || (editor.EditType = {}));
+        /**
+         * 自定义装饰器。
+         */
+        function custom() {
+            return function (target) {
+                target['__custom__'] = true;
+            };
+        }
+        editor.custom = custom;
+        /**
+         * 属性装饰器。
+         * @param editType 编辑类型。
+         * @param option 配置。
+         */
+        function property(editType, option) {
+            return function (target, property) {
+                if (!target.hasOwnProperty('__props__')) {
+                    target['__props__'] = [];
+                }
+                if (editType !== undefined) {
+                    target['__props__'].push(new PropertyInfo(property, editType, option));
+                }
+                else {
+                    //TODO:自动分析编辑类型
+                }
+            };
+        }
+        editor.property = property;
+        /**
+         * 从枚举中生成装饰器列表项。
+         */
+        function getItemsFromEnum(enumObject) {
+            var items = [];
+            for (var k in enumObject) {
+                if (!isNaN(Number(k))) {
+                    continue;
+                }
+                items.push({ label: k, value: enumObject[k] });
+            }
+            return items;
+        }
+        editor.getItemsFromEnum = getItemsFromEnum;
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 渲染排序。
+     */
+    var RenderQueue;
+    (function (RenderQueue) {
+        RenderQueue[RenderQueue["Background"] = 1000] = "Background";
+        RenderQueue[RenderQueue["Geometry"] = 2000] = "Geometry";
+        RenderQueue[RenderQueue["Mask"] = 2450] = "Mask";
+        RenderQueue[RenderQueue["Blend"] = 3000] = "Blend";
+        RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
+    })(RenderQueue = egret3d.RenderQueue || (egret3d.RenderQueue = {}));
+    /**
+     * 混合模式。
+     */
+    var BlendMode;
+    (function (BlendMode) {
+        /**
+         * 不混合。
+         */
+        BlendMode[BlendMode["None"] = 0] = "None";
+        /**
+         * 正常。
+         */
+        BlendMode[BlendMode["Normal"] = 2] = "Normal";
+        /**
+         * 正常并预乘。
+         */
+        BlendMode[BlendMode["Normal_PreMultiply"] = 3] = "Normal_PreMultiply";
+        /**
+         * 相加。
+         */
+        BlendMode[BlendMode["Additive"] = 4] = "Additive";
+        /**
+         * 相加并预乘。
+         */
+        BlendMode[BlendMode["Additive_PreMultiply"] = 5] = "Additive_PreMultiply";
+        /**
+         * 相减。
+         */
+        BlendMode[BlendMode["Subtractive"] = 8] = "Subtractive";
+        /**
+         * 相减并预乘。
+         */
+        BlendMode[BlendMode["Subtractive_PreMultiply"] = 9] = "Subtractive_PreMultiply";
+        /**
+         * 相乘。
+         */
+        BlendMode[BlendMode["Multiply"] = 16] = "Multiply";
+        /**
+         * 相乘并预乘。
+         */
+        BlendMode[BlendMode["Multiply_PreMultiply"] = 17] = "Multiply_PreMultiply";
+        /**
+         * 自定义混合。
+         */
+        BlendMode[BlendMode["Custom"] = -1] = "Custom";
+    })(BlendMode = egret3d.BlendMode || (egret3d.BlendMode = {}));
+    /**
+     *
+     */
+    var ToneMapping;
+    (function (ToneMapping) {
+        ToneMapping[ToneMapping["None"] = 0] = "None";
+        ToneMapping[ToneMapping["LinearToneMapping"] = 1] = "LinearToneMapping";
+        ToneMapping[ToneMapping["ReinhardToneMapping"] = 2] = "ReinhardToneMapping";
+        ToneMapping[ToneMapping["Uncharted2ToneMapping"] = 3] = "Uncharted2ToneMapping";
+        ToneMapping[ToneMapping["CineonToneMapping"] = 4] = "CineonToneMapping";
+    })(ToneMapping = egret3d.ToneMapping || (egret3d.ToneMapping = {}));
+    /**
+     * 纹理编码。
+     */
+    var TextureEncoding;
+    (function (TextureEncoding) {
+        TextureEncoding[TextureEncoding["LinearEncoding"] = 1] = "LinearEncoding";
+        TextureEncoding[TextureEncoding["sRGBEncoding"] = 2] = "sRGBEncoding";
+        TextureEncoding[TextureEncoding["RGBEEncoding"] = 3] = "RGBEEncoding";
+        TextureEncoding[TextureEncoding["RGBM7Encoding"] = 4] = "RGBM7Encoding";
+        TextureEncoding[TextureEncoding["RGBM16Encoding"] = 5] = "RGBM16Encoding";
+        TextureEncoding[TextureEncoding["RGBDEncoding"] = 6] = "RGBDEncoding";
+        TextureEncoding[TextureEncoding["GammaEncoding"] = 7] = "GammaEncoding";
+    })(TextureEncoding = egret3d.TextureEncoding || (egret3d.TextureEncoding = {}));
+    /**
+     *
+     */
+    var TextureUVMapping;
+    (function (TextureUVMapping) {
+        TextureUVMapping[TextureUVMapping["UV"] = 0] = "UV";
+        TextureUVMapping[TextureUVMapping["Cube"] = 1] = "Cube";
+        TextureUVMapping[TextureUVMapping["CubeUV"] = 2] = "CubeUV";
+        TextureUVMapping[TextureUVMapping["Equirectangular"] = 3] = "Equirectangular";
+        TextureUVMapping[TextureUVMapping["Spherical"] = 4] = "Spherical";
+    })(TextureUVMapping = egret3d.TextureUVMapping || (egret3d.TextureUVMapping = {}));
+    /**
+     * 内置提供的全局 Attribute。
+     * @private
+     */
+    egret3d.globalAttributeSemantics = {
+        "position": "POSITION" /* POSITION */,
+        "normal": "NORMAL" /* NORMAL */,
+        "uv": "TEXCOORD_0" /* TEXCOORD_0 */,
+        "uv2": "TEXCOORD_1" /* TEXCOORD_1 */,
+        "color": "COLOR_0" /* COLOR_0 */,
+        // "morphTarget0": gltf.AttributeSemanticType.MORPHTARGET_0,
+        // "morphTarget1": gltf.AttributeSemanticType.MORPHTARGET_1,
+        // "morphTarget2": gltf.AttributeSemanticType.MORPHTARGET_2,
+        // "morphTarget3": gltf.AttributeSemanticType.MORPHTARGET_3,
+        // "morphTarget4": gltf.AttributeSemanticType.MORPHTARGET_4,
+        // "morphTarget5": gltf.AttributeSemanticType.MORPHTARGET_5,
+        // "morphTarget6": gltf.AttributeSemanticType.MORPHTARGET_6,
+        // "morphTarget7": gltf.AttributeSemanticType.MORPHTARGET_7,
+        // "morphNormal0": gltf.AttributeSemanticType.MORPHNORMAL_0,
+        // "morphNormal1": gltf.AttributeSemanticType.MORPHNORMAL_1,
+        // "morphNormal2": gltf.AttributeSemanticType.MORPHNORMAL_2,
+        // "morphNormal3": gltf.AttributeSemanticType.MORPHNORMAL_3,
+        "skinIndex": "JOINTS_0" /* JOINTS_0 */,
+        "skinWeight": "WEIGHTS_0" /* WEIGHTS_0 */,
+        "corner": "_CORNER" /* _CORNER */,
+        "startPosition": "_START_POSITION" /* _START_POSITION */,
+        "startVelocity": "_START_VELOCITY" /* _START_VELOCITY */,
+        "startColor": "_START_COLOR" /* _START_COLOR */,
+        "startSize": "_START_SIZE" /* _START_SIZE */,
+        "startRotation": "_START_ROTATION" /* _START_ROTATION */,
+        "time": "_TIME" /* _TIME */,
+        "random0": "_RANDOM0" /* _RANDOM0 */,
+        "random1": "_RANDOM1" /* _RANDOM1 */,
+        "startWorldPosition": "_WORLD_POSITION" /* _WORLD_POSITION */,
+        "startWorldRotation": "_WORLD_ROTATION" /* _WORLD_ROTATION */,
+        "lineDistance": "_INSTANCE_DISTANCE" /* _INSTANCE_DISTANCE */,
+        "instanceStart": "_INSTANCE_START" /* _INSTANCE_START */,
+        "instanceEnd": "_INSTANCE_END" /* _INSTANCE_END */,
+        "instanceColorStart": "_INSTANCE_COLOR_START" /* _INSTANCE_COLOR_START */,
+        "instanceColorEnd": "_INSTANCE_COLOR_END" /* _INSTANCE_COLOR_END */,
+        "instanceDistanceStart": "_INSTANCE_DISTANCE_START" /* _INSTANCE_DISTANCE_START */,
+        "instanceDistanceEnd": "_INSTANCE_DISTANCE_END" /* _INSTANCE_DISTANCE_END */,
+    };
+    /**
+     * 内置提供的全局 Uniform。
+     * @private
+     */
+    egret3d.globalUniformSemantics = {
+        "modelMatrix": "MODEL" /* MODEL */,
+        "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
+        "projectionMatrix": "PROJECTION" /* PROJECTION */,
+        "viewMatrix": "VIEW" /* VIEW */,
+        "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
+        "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
+        "clock": "_CLOCK" /* _CLOCK */,
+        "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
+        "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
+        "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
+        "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
+        "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
+        "ambientLightColor": "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */,
+        "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
+        "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
+        "rectAreaLights[0]": "_RECTAREALIGHTS" /* _RECTAREALIGHTS */,
+        "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
+        "hemisphereLights[0]": "_HEMILIGHTS" /* _HEMILIGHTS */,
+        "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
+        "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
+        "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
+        "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
+        "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
+        "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
+        "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
+        "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
+        "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
+        "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
+        "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
+        "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
+        "fogColor": "_FOG_COLOR" /* _FOG_COLOR */,
+        "fogDensity": "_FOG_DENSITY" /* _FOG_DENSITY */,
+        "fogNear": "_FOG_NEAR" /* _FOG_NEAR */,
+        "fogFar": "_FOG_FAR" /* _FOG_FAR */,
+        "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
+        "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
+        "logDepthBufFC": "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */,
+    };
+    /**
+     * @private
+     */
+    var AnimationBlendType;
+    (function (AnimationBlendType) {
+        AnimationBlendType[AnimationBlendType["E1D"] = 0] = "E1D";
+    })(AnimationBlendType = egret3d.AnimationBlendType || (egret3d.AnimationBlendType = {}));
+})(egret3d || (egret3d = {}));
+// For keep const enum.
+var gltf;
+(function (gltf) {
+    /**
+     * 绘制缓存掩码。
+     */
+    var BufferMask;
+    (function (BufferMask) {
+        BufferMask[BufferMask["None"] = 0] = "None";
+        BufferMask[BufferMask["Depth"] = 256] = "Depth";
+        BufferMask[BufferMask["Stencil"] = 1024] = "Stencil";
+        BufferMask[BufferMask["Color"] = 16384] = "Color";
+        BufferMask[BufferMask["DepthAndStencil"] = 1280] = "DepthAndStencil";
+        BufferMask[BufferMask["DepthAndColor"] = 16640] = "DepthAndColor";
+        BufferMask[BufferMask["StencilAndColor"] = 17408] = "StencilAndColor";
+        BufferMask[BufferMask["All"] = 17664] = "All";
+    })(BufferMask = gltf.BufferMask || (gltf.BufferMask = {}));
+    var BlendEquation;
+    (function (BlendEquation) {
+        BlendEquation[BlendEquation["Add"] = 32774] = "Add";
+        BlendEquation[BlendEquation["Subtract"] = 32778] = "Subtract";
+        BlendEquation[BlendEquation["ReverseSubtract"] = 32779] = "ReverseSubtract";
+    })(BlendEquation = gltf.BlendEquation || (gltf.BlendEquation = {}));
+    var BlendFactor;
+    (function (BlendFactor) {
+        BlendFactor[BlendFactor["ZERO"] = 0] = "ZERO";
+        BlendFactor[BlendFactor["ONE"] = 1] = "ONE";
+        BlendFactor[BlendFactor["SRC_COLOR"] = 768] = "SRC_COLOR";
+        BlendFactor[BlendFactor["ONE_MINUS_SRC_COLOR"] = 769] = "ONE_MINUS_SRC_COLOR";
+        BlendFactor[BlendFactor["DST_COLOR"] = 774] = "DST_COLOR";
+        BlendFactor[BlendFactor["ONE_MINUS_DST_COLOR"] = 775] = "ONE_MINUS_DST_COLOR";
+        BlendFactor[BlendFactor["SRC_ALPHA"] = 770] = "SRC_ALPHA";
+        BlendFactor[BlendFactor["ONE_MINUS_SRC_ALPHA"] = 771] = "ONE_MINUS_SRC_ALPHA";
+        BlendFactor[BlendFactor["DST_ALPHA"] = 772] = "DST_ALPHA";
+        BlendFactor[BlendFactor["ONE_MINUS_DST_ALPHA"] = 773] = "ONE_MINUS_DST_ALPHA";
+        BlendFactor[BlendFactor["CONSTANT_COLOR"] = 32769] = "CONSTANT_COLOR";
+        BlendFactor[BlendFactor["ONE_MINUS_CONSTANT_COLOR"] = 32770] = "ONE_MINUS_CONSTANT_COLOR";
+        BlendFactor[BlendFactor["CONSTANT_ALPHA"] = 32771] = "CONSTANT_ALPHA";
+        BlendFactor[BlendFactor["ONE_MINUS_CONSTANT_ALPHA"] = 32772] = "ONE_MINUS_CONSTANT_ALPHA";
+        BlendFactor[BlendFactor["SRC_ALPHA_SATURATE"] = 776] = "SRC_ALPHA_SATURATE";
+    })(BlendFactor = gltf.BlendFactor || (gltf.BlendFactor = {}));
+    var CullFace;
+    (function (CullFace) {
+        CullFace[CullFace["Front"] = 1028] = "Front";
+        CullFace[CullFace["Back"] = 1029] = "Back";
+        CullFace[CullFace["FrontAndBack"] = 1032] = "FrontAndBack";
+    })(CullFace = gltf.CullFace || (gltf.CullFace = {}));
+    var FrontFace;
+    (function (FrontFace) {
+        FrontFace[FrontFace["CW"] = 2304] = "CW";
+        FrontFace[FrontFace["CCW"] = 2305] = "CCW";
+    })(FrontFace = gltf.FrontFace || (gltf.FrontFace = {}));
+    var MeshPrimitiveMode;
+    (function (MeshPrimitiveMode) {
+        MeshPrimitiveMode[MeshPrimitiveMode["Points"] = 0] = "Points";
+        MeshPrimitiveMode[MeshPrimitiveMode["Lines"] = 1] = "Lines";
+        MeshPrimitiveMode[MeshPrimitiveMode["LineLoop"] = 2] = "LineLoop";
+        MeshPrimitiveMode[MeshPrimitiveMode["LineStrip"] = 3] = "LineStrip";
+        MeshPrimitiveMode[MeshPrimitiveMode["Triangles"] = 4] = "Triangles";
+        MeshPrimitiveMode[MeshPrimitiveMode["TrianglesStrip"] = 5] = "TrianglesStrip";
+        MeshPrimitiveMode[MeshPrimitiveMode["TrianglesFan"] = 6] = "TrianglesFan";
+    })(MeshPrimitiveMode = gltf.MeshPrimitiveMode || (gltf.MeshPrimitiveMode = {}));
+    /**
+     *
+     */
+    var DrawMode;
+    (function (DrawMode) {
+        DrawMode[DrawMode["Stream"] = 35040] = "Stream";
+        DrawMode[DrawMode["Static"] = 35044] = "Static";
+        DrawMode[DrawMode["Dynamic"] = 35048] = "Dynamic";
+    })(DrawMode = gltf.DrawMode || (gltf.DrawMode = {}));
+    /**
+     *
+     */
+    var TextureFormat;
+    (function (TextureFormat) {
+        TextureFormat[TextureFormat["RGB"] = 6407] = "RGB";
+        TextureFormat[TextureFormat["RGBA"] = 6408] = "RGBA";
+        TextureFormat[TextureFormat["Luminance"] = 6409] = "Luminance";
+        TextureFormat[TextureFormat["RGBA4"] = 32854] = "RGBA4";
+    })(TextureFormat = gltf.TextureFormat || (gltf.TextureFormat = {}));
+    /**
+     *
+     */
+    var TextureDataType;
+    (function (TextureDataType) {
+        TextureDataType[TextureDataType["UNSIGNED_BYTE"] = 5121] = "UNSIGNED_BYTE";
+        TextureDataType[TextureDataType["UNSIGNED_SHORT_5_6_5"] = 33635] = "UNSIGNED_SHORT_5_6_5";
+        TextureDataType[TextureDataType["UNSIGNED_SHORT_4_4_4_4"] = 32819] = "UNSIGNED_SHORT_4_4_4_4";
+        TextureDataType[TextureDataType["UNSIGNED_SHORT_5_5_5_1"] = 32820] = "UNSIGNED_SHORT_5_5_5_1";
+    })(TextureDataType = gltf.TextureDataType || (gltf.TextureDataType = {}));
+    /**
+     *
+     */
+    var TextureFilter;
+    (function (TextureFilter) {
+        TextureFilter[TextureFilter["Nearest"] = 9728] = "Nearest";
+        TextureFilter[TextureFilter["Linear"] = 9729] = "Linear";
+        TextureFilter[TextureFilter["NearestMipmapNearest"] = 9984] = "NearestMipmapNearest";
+        TextureFilter[TextureFilter["LinearMipmapNearest"] = 9985] = "LinearMipmapNearest";
+        TextureFilter[TextureFilter["NearestMipMapLinear"] = 9986] = "NearestMipMapLinear";
+        TextureFilter[TextureFilter["LinearMipMapLinear"] = 9987] = "LinearMipMapLinear";
+    })(TextureFilter = gltf.TextureFilter || (gltf.TextureFilter = {}));
+    /**
+     *
+     */
+    var TextureWrappingMode;
+    (function (TextureWrappingMode) {
+        TextureWrappingMode[TextureWrappingMode["Repeat"] = 10497] = "Repeat";
+        TextureWrappingMode[TextureWrappingMode["ClampToEdge"] = 33071] = "ClampToEdge";
+        TextureWrappingMode[TextureWrappingMode["MirroredRepeat"] = 33648] = "MirroredRepeat";
+    })(TextureWrappingMode = gltf.TextureWrappingMode || (gltf.TextureWrappingMode = {}));
+    /**
+     *
+     */
+    var EnableState;
+    (function (EnableState) {
+        EnableState[EnableState["Blend"] = 3042] = "Blend";
+        EnableState[EnableState["CullFace"] = 2884] = "CullFace";
+        EnableState[EnableState["DepthTest"] = 2929] = "DepthTest";
+        EnableState[EnableState["StencilTest"] = 2960] = "StencilTest";
+        EnableState[EnableState["PolygonOffsetFill"] = 32823] = "PolygonOffsetFill";
+        EnableState[EnableState["SampleAlphaToCoverage"] = 32926] = "SampleAlphaToCoverage";
+    })(EnableState = gltf.EnableState || (gltf.EnableState = {}));
+    /**
+     *
+     */
+    var DepthFunc;
+    (function (DepthFunc) {
+        DepthFunc[DepthFunc["Never"] = 512] = "Never";
+        DepthFunc[DepthFunc["Less"] = 513] = "Less";
+        DepthFunc[DepthFunc["Lequal"] = 515] = "Lequal";
+        DepthFunc[DepthFunc["Equal"] = 514] = "Equal";
+        DepthFunc[DepthFunc["Greater"] = 516] = "Greater";
+        DepthFunc[DepthFunc["NotEqual"] = 517] = "NotEqual";
+        DepthFunc[DepthFunc["GEqual"] = 518] = "GEqual";
+        DepthFunc[DepthFunc["Always"] = 519] = "Always";
+    })(DepthFunc = gltf.DepthFunc || (gltf.DepthFunc = {}));
+})(gltf || (gltf = {}));
+var paper;
+(function (paper) {
+    var _createEnabled = null;
+    /**
+     * 基础组件。
+     * - 所有组件的基类。
+     * - 在纯粹的实体组件系统中，组件通常应只包含数据，不应有业务逻辑、行为和生命周期。
+     */
+    var BaseComponent = (function (_super) {
+        __extends(BaseComponent, _super);
+        /**
+         * 禁止实例化组件。
+         * @protected
+         */
+        function BaseComponent() {
+            var _this = _super.call(this) || this;
+            /**
+             *
+             */
+            _this.hideFlags = 0 /* None */;
+            /**
+             * 该组件的实体。
+             */
+            _this.gameObject = null;
+            /**
+             * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
+             */
+            _this.extras = paper.Application.playerMode === 2 /* Editor */ ? {} : undefined;
+            _this._enabled = true;
+            if (!_createEnabled) {
+                throw new Error("Component instantiation through constructor is not allowed.");
+            }
+            _this.gameObject = _createEnabled;
+            _createEnabled = null;
+            return _this;
+        }
+        /**
+         * @internal
+         */
+        BaseComponent.__onRegister = function () {
+            if (!paper.BaseObject.__onRegister.call(this)) {
+                return false;
+            }
+            if ((this.__isSingleton ? this._allSingletonComponents : this._allComponents).indexOf(this) >= 0) {
+                console.warn("Register component class again.", egret.getQualifiedClassName(this));
+                return false;
+            }
+            if (this.requireComponents) {
+                this.requireComponents = this.requireComponents.concat();
+            }
+            else {
+                this.requireComponents = [];
+            }
+            this.onComponentEnabled = new signals.Signal();
+            this.onComponentDisabled = new signals.Signal();
+            if (this.__isSingleton) {
+                this.__index = this._allSingletonComponents.length + 256; // This means that a maximum of 256 non-singleton components can be added.
+                this._allSingletonComponents.push(this);
+            }
+            else {
+                this.__index = this._allComponents.length;
+                this._allComponents.push(this);
+            }
+            return true;
+        };
+        /**
+         * @internal
+         */
+        BaseComponent.create = function (componentClass, gameObject) {
+            _createEnabled = gameObject;
+            return new componentClass();
+        };
+        /**
+         * @private
+         */
+        BaseComponent.prototype._dispatchEnabledEvent = function (value) {
+            var componentClass = this.constructor;
+            if (value) {
+                componentClass.onComponentEnabled.dispatch(this);
+            }
+            else {
+                componentClass.onComponentDisabled.dispatch(this);
+            }
+        };
+        /**
+         * 添加组件后，组件内部初始化时执行。
+         * - 重写此方法时，必须调用 `super.initialize()`。
+         * @param config 实体添加该组件时可以传递的初始化数据。（注意：如果添加该组件时，实体未处于激活状态，则该属性无效）
+         */
+        BaseComponent.prototype.initialize = function (config) {
+        };
+        /**
+         * 移除组件后，组件内部卸载时执行。
+         * - 重写此方法时，必须调用 `super.uninitialize()`。
+         */
+        BaseComponent.prototype.uninitialize = function () {
+        };
+        Object.defineProperty(BaseComponent.prototype, "isDestroyed", {
+            /**
+             * 该组件是否已被销毁。
+             */
+            get: function () {
+                return !this.gameObject;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BaseComponent.prototype, "enabled", {
+            /**
+             * 该组件自身的激活状态。
+             */
+            get: function () {
+                return this._enabled;
+            },
+            set: function (value) {
+                if (this._enabled === value) {
+                    return;
+                }
+                // if (!value && this.constructor === egret3d.Transform) { TODO
+                //     console.warn("Cannot disable transform compnent.");
+                //     return;
+                // }
+                var prevEnabled = this.isActiveAndEnabled;
+                this._enabled = value;
+                var currentEnabled = this.isActiveAndEnabled;
+                if (currentEnabled !== prevEnabled) {
+                    this._dispatchEnabledEvent(currentEnabled);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BaseComponent.prototype, "isActiveAndEnabled", {
+            /**
+             * 该组件在场景的激活状态。
+             */
+            get: function () {
+                // return this._enabled && this.gameObject.activeInHierarchy;
+                return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(BaseComponent.prototype, "transform", {
+            /**
+             * 该组件所属实体的变换组件。
+             */
+            get: function () {
+                return this.gameObject.transform;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * 该组件的实例是否在编辑模式拥有生命周期。
+         * @internal
+         */
+        BaseComponent.executeInEditMode = false;
+        /**
+         * 是否允许在同一实体上添加多个该组件的实例。
+         * @internal
+         */
+        BaseComponent.allowMultiple = false;
+        /**
+         * 当该组件被激活时派发事件。
+         * @internal
+         */
+        BaseComponent.onComponentEnabled = null;
+        /**
+         * 当该组件被禁用时派发事件。
+         * @internal
+         */
+        BaseComponent.onComponentDisabled = null;
+        /**
+         * 该组件实例依赖的其他前置组件。
+         * @internal
+         */
+        BaseComponent.requireComponents = null;
+        /**
+         * 该组件实例是否为单例组件。
+         * @internal
+         */
+        BaseComponent.__isSingleton = false;
+        /**
+         * TODO
+         * @internal
+         */
+        BaseComponent.__isBehaviour = false;
+        /**
+         * 该组件实例索引。
+         * @internal
+         */
+        BaseComponent.__index = -1;
+        /**
+         * 所有已注册的组件类。
+         */
+        BaseComponent._allComponents = [];
+        /**
+         * 所有已注册的单例组件类。
+         */
+        BaseComponent._allSingletonComponents = [];
+        __decorate([
+            paper.serializedField
+        ], BaseComponent.prototype, "hideFlags", void 0);
+        __decorate([
+            paper.serializedField
+        ], BaseComponent.prototype, "extras", void 0);
+        __decorate([
+            paper.serializedField
+        ], BaseComponent.prototype, "_enabled", void 0);
+        __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
+        ], BaseComponent.prototype, "enabled", null);
+        return BaseComponent;
+    }(paper.BaseObject));
+    paper.BaseComponent = BaseComponent;
+    __reflect(BaseComponent.prototype, "paper.BaseComponent");
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -1965,226 +2510,14 @@ var egret3d;
      */
     egret3d.helpVector3H = Vector3.create();
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    var _createEnabled = null;
-    /**
-     * 基础组件。
-     * - 所有组件的基类。
-     * - 在纯粹的实体组件系统中，组件通常应只包含数据，不应有业务逻辑、行为和生命周期。
-     */
-    var BaseComponent = (function (_super) {
-        __extends(BaseComponent, _super);
-        /**
-         * 禁止实例化组件。
-         * @protected
-         */
-        function BaseComponent() {
-            var _this = _super.call(this) || this;
-            /**
-             *
-             */
-            _this.hideFlags = 0 /* None */;
-            /**
-             * 该组件的实体。
-             */
-            _this.gameObject = null;
-            /**
-             * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
-             */
-            _this.extras = paper.Application.playerMode === 2 /* Editor */ ? {} : undefined;
-            _this._enabled = true;
-            if (!_createEnabled) {
-                throw new Error("Component instantiation through constructor is not allowed.");
-            }
-            _this.gameObject = _createEnabled;
-            _createEnabled = null;
-            return _this;
-        }
-        /**
-         * @internal
-         */
-        BaseComponent.__onRegister = function () {
-            if (!paper.BaseObject.__onRegister.call(this)) {
-                return false;
-            }
-            if ((this.__isSingleton ? this._allSingletonComponents : this._allComponents).indexOf(this) >= 0) {
-                console.warn("Register component class again.", egret.getQualifiedClassName(this));
-                return false;
-            }
-            if (this.requireComponents) {
-                this.requireComponents = this.requireComponents.concat();
-            }
-            else {
-                this.requireComponents = [];
-            }
-            this.onComponentEnabled = new signals.Signal();
-            this.onComponentDisabled = new signals.Signal();
-            if (this.__isSingleton) {
-                this.__index = this._allSingletonComponents.length + 256; // This means that a maximum of 256 non-singleton components can be added.
-                this._allSingletonComponents.push(this);
-            }
-            else {
-                this.__index = this._allComponents.length;
-                this._allComponents.push(this);
-            }
-            return true;
-        };
-        /**
-         * @internal
-         */
-        BaseComponent.create = function (componentClass, gameObject) {
-            _createEnabled = gameObject;
-            return new componentClass();
-        };
-        /**
-         * @private
-         */
-        BaseComponent.prototype._dispatchEnabledEvent = function (value) {
-            var componentClass = this.constructor;
-            if (value) {
-                componentClass.onComponentEnabled.dispatch(this);
-            }
-            else {
-                componentClass.onComponentDisabled.dispatch(this);
-            }
-        };
-        /**
-         * 添加组件后，组件内部初始化时执行。
-         * - 重写此方法时，必须调用 `super.initialize()`。
-         * @param config 实体添加该组件时可以传递的初始化数据。（注意：如果添加该组件时，实体未处于激活状态，则该属性无效）
-         */
-        BaseComponent.prototype.initialize = function (config) {
-        };
-        /**
-         * 移除组件后，组件内部卸载时执行。
-         * - 重写此方法时，必须调用 `super.uninitialize()`。
-         */
-        BaseComponent.prototype.uninitialize = function () {
-        };
-        Object.defineProperty(BaseComponent.prototype, "isDestroyed", {
-            /**
-             * 该组件是否已被销毁。
-             */
-            get: function () {
-                return !this.gameObject;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(BaseComponent.prototype, "enabled", {
-            /**
-             * 该组件自身的激活状态。
-             */
-            get: function () {
-                return this._enabled;
-            },
-            set: function (value) {
-                if (this._enabled === value) {
-                    return;
-                }
-                // if (!value && this.constructor === egret3d.Transform) { TODO
-                //     console.warn("Cannot disable transform compnent.");
-                //     return;
-                // }
-                var prevEnabled = this.isActiveAndEnabled;
-                this._enabled = value;
-                var currentEnabled = this.isActiveAndEnabled;
-                if (currentEnabled !== prevEnabled) {
-                    this._dispatchEnabledEvent(currentEnabled);
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(BaseComponent.prototype, "isActiveAndEnabled", {
-            /**
-             * 该组件在场景的激活状态。
-             */
-            get: function () {
-                // return this._enabled && this.gameObject.activeInHierarchy;
-                return this._enabled && (this.gameObject._activeDirty ? this.gameObject.activeInHierarchy : this.gameObject._activeInHierarchy);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(BaseComponent.prototype, "transform", {
-            /**
-             * 该组件所属实体的变换组件。
-             */
-            get: function () {
-                return this.gameObject.transform;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * 该组件的实例是否在编辑模式拥有生命周期。
-         * @internal
-         */
-        BaseComponent.executeInEditMode = false;
-        /**
-         * 是否允许在同一实体上添加多个该组件的实例。
-         * @internal
-         */
-        BaseComponent.allowMultiple = false;
-        /**
-         * 当该组件被激活时派发事件。
-         * @internal
-         */
-        BaseComponent.onComponentEnabled = null;
-        /**
-         * 当该组件被禁用时派发事件。
-         * @internal
-         */
-        BaseComponent.onComponentDisabled = null;
-        /**
-         * 该组件实例依赖的其他前置组件。
-         * @internal
-         */
-        BaseComponent.requireComponents = null;
-        /**
-         * 该组件实例是否为单例组件。
-         * @internal
-         */
-        BaseComponent.__isSingleton = false;
-        /**
-         * TODO
-         * @internal
-         */
-        BaseComponent.__isBehaviour = false;
-        /**
-         * 该组件实例索引。
-         * @internal
-         */
-        BaseComponent.__index = -1;
-        /**
-         * 所有已注册的组件类。
-         */
-        BaseComponent._allComponents = [];
-        /**
-         * 所有已注册的单例组件类。
-         */
-        BaseComponent._allSingletonComponents = [];
-        __decorate([
-            paper.serializedField
-        ], BaseComponent.prototype, "hideFlags", void 0);
-        __decorate([
-            paper.serializedField
-        ], BaseComponent.prototype, "extras", void 0);
-        __decorate([
-            paper.serializedField
-        ], BaseComponent.prototype, "_enabled", void 0);
-        __decorate([
-            paper.editor.property("CHECKBOX" /* CHECKBOX */)
-        ], BaseComponent.prototype, "enabled", null);
-        return BaseComponent;
-    }(paper.BaseObject));
-    paper.BaseComponent = BaseComponent;
-    __reflect(BaseComponent.prototype, "paper.BaseComponent");
-})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
+    // egret build bug. 
+    1000 /* Background */;
+    0 /* None */;
+    0 /* None */;
+    1 /* LinearEncoding */;
+    0 /* UV */;
     /**
      * glTF 资源。
      */
@@ -2546,926 +2879,6 @@ var paper;
     paper.Prefab = Prefab;
     __reflect(Prefab.prototype, "paper.Prefab");
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    var _array = [
-        1.0, 0.0, 0.0, 0.0,
-        0.0, 1.0, 0.0, 0.0,
-        0.0, 0.0, 1.0, 0.0,
-        0.0, 0.0, 0.0, 1.0
-    ];
-    /**
-     * 4x4 矩阵。
-     */
-    var Matrix4 = (function (_super) {
-        __extends(Matrix4, _super);
-        /**
-         * 请使用 `egret3d.Matrix4.create()` 创建实例。
-         * @see egret3d.Matrix4.create()
-         * @deprecated
-         */
-        function Matrix4(rawData, offsetOrByteOffset) {
-            if (offsetOrByteOffset === void 0) { offsetOrByteOffset = 0; }
-            var _this = _super.call(this) || this;
-            /**
-             * 矩阵原始数据。
-             * @readonly
-             */
-            _this.rawData = null;
-            if (rawData && rawData instanceof ArrayBuffer) {
-                _this.fromBuffer(rawData, offsetOrByteOffset);
-            }
-            else {
-                _this.rawData = new Float32Array(16);
-                _this.fromArray(rawData || _array);
-            }
-            return _this;
-        }
-        /**
-         * 创建一个矩阵。
-         * @param rawData
-         * @param offsetOrByteOffset
-         */
-        Matrix4.create = function (rawData, offsetOrByteOffset) {
-            if (offsetOrByteOffset === void 0) { offsetOrByteOffset = 0; }
-            if (this._instances.length > 0) {
-                var instance = this._instances.pop();
-                instance._released = false;
-                if (rawData) {
-                    if (rawData instanceof ArrayBuffer) {
-                        instance.fromBuffer(rawData, offsetOrByteOffset);
-                    }
-                    else {
-                        instance.fromArray(rawData, offsetOrByteOffset);
-                    }
-                }
-                else {
-                    instance.identity();
-                }
-                return instance;
-            }
-            return new Matrix4(rawData, offsetOrByteOffset);
-        };
-        Matrix4.prototype.serialize = function () {
-            return this.rawData;
-        };
-        Matrix4.prototype.deserialize = function (value) {
-            return this.fromArray(value);
-        };
-        Matrix4.prototype.copy = function (value) {
-            return this.fromArray(value.rawData);
-        };
-        Matrix4.prototype.clone = function () {
-            return Matrix4.create(this.rawData);
-        };
-        Matrix4.prototype.set = function (n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44) {
-            var rawData = this.rawData;
-            rawData[0] = n11;
-            rawData[4] = n12;
-            rawData[8] = n13;
-            rawData[12] = n14;
-            rawData[1] = n21;
-            rawData[5] = n22;
-            rawData[9] = n23;
-            rawData[13] = n24;
-            rawData[2] = n31;
-            rawData[6] = n32;
-            rawData[10] = n33;
-            rawData[14] = n34;
-            rawData[3] = n41;
-            rawData[7] = n42;
-            rawData[11] = n43;
-            rawData[15] = n44;
-            return this;
-        };
-        /**
-         * 将该矩阵转换为恒等矩阵。
-         */
-        Matrix4.prototype.identity = function () {
-            this.rawData[0] = 1.0;
-            this.rawData[1] = 0.0;
-            this.rawData[2] = 0.0;
-            this.rawData[3] = 0.0;
-            this.rawData[4] = 0.0;
-            this.rawData[5] = 1.0;
-            this.rawData[6] = 0.0;
-            this.rawData[7] = 0.0;
-            this.rawData[8] = 0.0;
-            this.rawData[9] = 0.0;
-            this.rawData[10] = 1.0;
-            this.rawData[11] = 0.0;
-            this.rawData[12] = 0.0;
-            this.rawData[13] = 0.0;
-            this.rawData[14] = 0.0;
-            this.rawData[15] = 1.0;
-            return this;
-        };
-        Matrix4.prototype.fromArray = function (array, offset) {
-            if (offset === void 0) { offset = 0; }
-            for (var i = 0; i < 16; ++i) {
-                this.rawData[i] = array[i + offset];
-            }
-            return this;
-        };
-        Matrix4.prototype.fromBuffer = function (buffer, byteOffset) {
-            if (byteOffset === void 0) { byteOffset = 0; }
-            this.rawData = new Float32Array(buffer, byteOffset, 16);
-            return this;
-        };
-        /**
-         * 通过平移向量设置该矩阵。
-         * @param translate 平移向量。
-         * @param rotationAndScaleStays 是否保留该矩阵的旋转和数据。
-         */
-        Matrix4.prototype.fromTranslate = function (translate, rotationAndScaleStays) {
-            if (rotationAndScaleStays === void 0) { rotationAndScaleStays = false; }
-            if (!rotationAndScaleStays) {
-                this.identity();
-            }
-            this.rawData[12] = translate.x;
-            this.rawData[13] = translate.y;
-            this.rawData[14] = translate.z;
-            return this;
-        };
-        /**
-         * 通过四元数旋转设置该矩阵。
-         * @param rotation 四元数旋转。
-         * @param translateStays 是否保留该矩阵的平移数据。
-         */
-        Matrix4.prototype.fromRotation = function (rotation, translateStays) {
-            if (translateStays === void 0) { translateStays = false; }
-            return this.compose(translateStays ? _helpVector3A.fromArray(this.rawData, 12) : egret3d.Vector3.ZERO, rotation, egret3d.Vector3.ONE);
-        };
-        /**
-         * 通过欧拉旋转设置该矩阵。
-         * @param euler 欧拉旋转。
-         * @param order 欧拉旋转顺序。
-         * @param translateStays 是否保留该矩阵的平移数据。
-         */
-        Matrix4.prototype.fromEuler = function (euler, order, translateStays) {
-            // http://www.mathworks.com/matlabcentral/fileexchange/
-            // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
-            //	content/SpinCalc.m
-            if (order === void 0) { order = 2 /* YXZ */; }
-            if (translateStays === void 0) { translateStays = false; }
-            var cos = Math.cos;
-            var sin = Math.sin;
-            var x = euler.x, y = euler.y, z = euler.z;
-            var a = cos(x), b = sin(x);
-            var c = cos(y), d = sin(y);
-            var e = cos(z), f = sin(z);
-            var rawData = this.rawData;
-            switch (order) {
-                case 0 /* XYZ */: {
-                    var ae = a * e, af = a * f, be = b * e, bf = b * f;
-                    rawData[0] = c * e;
-                    rawData[4] = -c * f;
-                    rawData[8] = d;
-                    rawData[1] = af + be * d;
-                    rawData[5] = ae - bf * d;
-                    rawData[9] = -b * c;
-                    rawData[2] = bf - ae * d;
-                    rawData[6] = be + af * d;
-                    rawData[10] = a * c;
-                    break;
-                }
-                case 1 /* XZY */: {
-                    var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
-                    rawData[0] = c * e;
-                    rawData[4] = -f;
-                    rawData[8] = d * e;
-                    rawData[1] = ac * f + bd;
-                    rawData[5] = a * e;
-                    rawData[9] = ad * f - bc;
-                    rawData[2] = bc * f - ad;
-                    rawData[6] = b * e;
-                    rawData[10] = bd * f + ac;
-                    break;
-                }
-                case 2 /* YXZ */: {
-                    var ce = c * e, cf = c * f, de = d * e, df = d * f;
-                    rawData[0] = ce + df * b;
-                    rawData[4] = de * b - cf;
-                    rawData[8] = a * d;
-                    rawData[1] = a * f;
-                    rawData[5] = a * e;
-                    rawData[9] = -b;
-                    rawData[2] = cf * b - de;
-                    rawData[6] = df + ce * b;
-                    rawData[10] = a * c;
-                    break;
-                }
-                case 3 /* YZX */: {
-                    var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
-                    rawData[0] = c * e;
-                    rawData[4] = bd - ac * f;
-                    rawData[8] = bc * f + ad;
-                    rawData[1] = f;
-                    rawData[5] = a * e;
-                    rawData[9] = -b * e;
-                    rawData[2] = -d * e;
-                    rawData[6] = ad * f + bc;
-                    rawData[10] = ac - bd * f;
-                    break;
-                }
-                case 4 /* ZXY */: {
-                    var ce = c * e, cf = c * f, de = d * e, df = d * f;
-                    rawData[0] = ce - df * b;
-                    rawData[4] = -a * f;
-                    rawData[8] = de + cf * b;
-                    rawData[1] = cf + de * b;
-                    rawData[5] = a * e;
-                    rawData[9] = df - ce * b;
-                    rawData[2] = -a * d;
-                    rawData[6] = b;
-                    rawData[10] = a * c;
-                    break;
-                }
-                case 5 /* ZYX */: {
-                    var ae = a * e, af = a * f, be = b * e, bf = b * f;
-                    rawData[0] = c * e;
-                    rawData[4] = be * d - af;
-                    rawData[8] = ae * d + bf;
-                    rawData[1] = c * f;
-                    rawData[5] = bf * d + ae;
-                    rawData[9] = af * d - be;
-                    rawData[2] = -d;
-                    rawData[6] = b * c;
-                    rawData[10] = a * c;
-                    break;
-                }
-            }
-            // bottom row
-            rawData[3] = 0.0;
-            rawData[7] = 0.0;
-            rawData[11] = 0.0;
-            if (!translateStays) {
-                // last column
-                rawData[12] = 0.0;
-                rawData[13] = 0.0;
-                rawData[14] = 0.0;
-                rawData[15] = 1.0;
-            }
-            return this;
-        };
-        /**
-         * 通过缩放向量设置该矩阵。
-         * @param scale 缩放向量。
-         * @param translateStays 是否保留该矩阵的平移数据。
-         */
-        Matrix4.prototype.fromScale = function (scale, translateStays) {
-            if (translateStays === void 0) { translateStays = false; }
-            if (translateStays) {
-                _helpVector3A.fromArray(this.rawData, 12);
-            }
-            this.identity();
-            this.rawData[0] = scale.x;
-            this.rawData[5] = scale.y;
-            this.rawData[10] = scale.z;
-            if (translateStays) {
-                this.rawData[12] = _helpVector3A.x;
-                this.rawData[13] = _helpVector3A.y;
-                this.rawData[14] = _helpVector3A.z;
-            }
-            return this;
-        };
-        /**
-         * 通过绕 X 轴的旋转角度设置该矩阵。
-         * @param angle 旋转角。（弧度制）
-         */
-        Matrix4.prototype.fromRotationX = function (angle) {
-            var c = Math.cos(angle), s = Math.sin(angle);
-            return this.set(1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1);
-        };
-        /**
-         * 通过绕 Y 轴的旋转角度设置该矩阵。
-         * @param theta 旋转角。（弧度制）
-         */
-        Matrix4.prototype.fromRotationY = function (theta) {
-            var c = Math.cos(theta), s = Math.sin(theta);
-            return this.set(c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1);
-        };
-        /**
-         * 通过绕 Z 轴的旋转角度设置该矩阵。
-         * @param theta 旋转角。（弧度制）
-         */
-        Matrix4.prototype.fromRotationZ = function (theta) {
-            var c = Math.cos(theta), s = Math.sin(theta);
-            return this.set(c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
-        };
-        /**
-         * 通过旋转轴设置该矩阵。
-         * - 假设旋转轴已被归一化。
-         * @param axis 旋转轴。
-         * @param angle 旋转角。（弧度制）
-         */
-        Matrix4.prototype.fromAxis = function (axis, angle) {
-            // Based on http://www.gamedev.net/reference/articles/article1199.asp
-            var c = Math.cos(angle);
-            var s = Math.sin(angle);
-            var t = 1.0 - c;
-            var x = axis.x, y = axis.y, z = axis.z;
-            var tx = t * x, ty = t * y;
-            return this.set(tx * x + c, tx * y - s * z, tx * z + s * y, 0.0, tx * y + s * z, ty * y + c, ty * z - s * x, 0.0, tx * z - s * y, ty * z + s * x, t * z * z + c, 0.0, 0.0, 0.0, 0.0, 1.0);
-        };
-        Matrix4.prototype.fromProjection = function (fov, near, far, size, opvalue, asp, matchFactor) {
-            var orthographicMatrix = _helpMatrix;
-            matchFactor = 1.0 - matchFactor;
-            if (opvalue > 0.0) {
-                var tan = Math.tan(fov * 0.5);
-                var topX = near * tan;
-                var heightX = 2.0 * topX;
-                var widthX = asp * heightX;
-                var leftX = -0.5 * widthX;
-                var leftY = -near * tan;
-                var widthY = 2.0 * -leftY;
-                var heightY = widthY / asp;
-                var topY = 0.5 * heightY;
-                var top_1 = topX + (topY - topX) * matchFactor;
-                var left = leftX + (leftY - leftX) * matchFactor;
-                var width = widthX + (widthY - widthX) * matchFactor;
-                var height = heightX + (heightY - heightX) * matchFactor;
-                Matrix4._perspectiveProjectMatrix(left, left + width, top_1, top_1 - height, near, far, this);
-            }
-            if (opvalue < 1.0) {
-                var widthX = size * asp;
-                var heightX = size;
-                var widthY = size;
-                var heightY = size / asp;
-                var width = widthX + (widthY - widthX) * matchFactor;
-                var height = heightX + (heightY - heightX) * matchFactor;
-                Matrix4._orthographicProjectLH(width, height, near, far, orthographicMatrix);
-            }
-            if (opvalue === 0.0) {
-                this.copy(orthographicMatrix);
-            }
-            else if (opvalue === 1.0) {
-                // this;
-            }
-            else {
-                this.lerp(orthographicMatrix, this, Math.pow(opvalue, 8));
-            }
-            return this;
-        };
-        /**
-         * 通过 X、Y、Z 轴设置该矩阵。
-         * @param axisX X 轴。
-         * @param axisY Y 轴。
-         * @param axisZ Z 轴。
-         */
-        Matrix4.prototype.fromAxises = function (axisX, axisY, axisZ) {
-            return this.set(axisX.x, axisY.x, axisZ.x, 0.0, axisX.y, axisY.y, axisZ.y, 0.0, axisX.z, axisY.z, axisZ.z, 0.0, 0.0, 0.0, 0.0, 1.0);
-        };
-        /**
-         * 通过平移向量、四元数旋转、缩放向量设置该矩阵。
-         * @param translation 平移向量。
-         * @param rotation 四元数旋转。
-         * @param scale 缩放向量。
-         */
-        Matrix4.prototype.compose = function (translation, rotation, scale) {
-            var rX = rotation.x, rY = rotation.y, rZ = rotation.z, rW = rotation.w;
-            var sX = scale.x, sY = scale.y, sZ = scale.z;
-            var x2 = rX + rX, y2 = rY + rY, z2 = rZ + rZ;
-            var xx = rX * x2, xy = rX * y2, xz = rX * z2;
-            var yy = rY * y2, yz = rY * z2, zz = rZ * z2;
-            var wx = rW * x2, wy = rW * y2, wz = rW * z2;
-            var rawData = this.rawData;
-            rawData[0] = (1.0 - (yy + zz)) * sX;
-            rawData[1] = (xy + wz) * sX;
-            rawData[2] = (xz - wy) * sX;
-            rawData[4] = (xy - wz) * sY;
-            rawData[5] = (1.0 - (xx + zz)) * sY;
-            rawData[6] = (yz + wx) * sY;
-            rawData[8] = (xz + wy) * sZ;
-            rawData[9] = (yz - wx) * sZ;
-            rawData[10] = (1.0 - (xx + yy)) * sZ;
-            rawData[12] = translation.x;
-            rawData[13] = translation.y;
-            rawData[14] = translation.z;
-            rawData[3] = rawData[7] = rawData[11] = 0.0, rawData[15] = 1.0;
-            return this;
-        };
-        /**
-         * 将该矩阵分解为平移向量、四元数旋转、缩放向量。
-         * @param translation 平移向量。
-         * @param rotation 四元数旋转。
-         * @param scale 缩放向量。
-         */
-        Matrix4.prototype.decompose = function (translation, rotation, scale) {
-            if (translation === void 0) { translation = null; }
-            if (rotation === void 0) { rotation = null; }
-            if (scale === void 0) { scale = null; }
-            var rawData = this.rawData;
-            if (translation) {
-                translation.x = rawData[12];
-                translation.y = rawData[13];
-                translation.z = rawData[14];
-            }
-            if (rotation || scale) {
-                var helpVector3A_1 = _helpVector3A;
-                var sx = helpVector3A_1.set(rawData[0], rawData[1], rawData[2]).length;
-                var sy = helpVector3A_1.set(rawData[4], rawData[5], rawData[6]).length;
-                var sz = helpVector3A_1.set(rawData[8], rawData[9], rawData[10]).length;
-                // if determine is negative, we need to invert one scale
-                var det = this.determinant;
-                if (det < 0.0)
-                    sx = -sx;
-                if (rotation) {
-                    // scale the rotation part
-                    var helpMatrix = _helpMatrix;
-                    helpMatrix.copy(this);
-                    var invSX = 1.0 / sx;
-                    var invSY = 1.0 / sy;
-                    var invSZ = 1.0 / sz;
-                    helpMatrix.rawData[0] *= invSX;
-                    helpMatrix.rawData[1] *= invSX;
-                    helpMatrix.rawData[2] *= invSX;
-                    helpMatrix.rawData[4] *= invSY;
-                    helpMatrix.rawData[5] *= invSY;
-                    helpMatrix.rawData[6] *= invSY;
-                    helpMatrix.rawData[8] *= invSZ;
-                    helpMatrix.rawData[9] *= invSZ;
-                    helpMatrix.rawData[10] *= invSZ;
-                    rotation.fromMatrix(helpMatrix);
-                }
-                if (scale) {
-                    scale.x = sx;
-                    scale.y = sy;
-                    scale.z = sz;
-                }
-            }
-            return this;
-        };
-        Matrix4.prototype.extractRotation = function (input) {
-            if (!input) {
-                input = this;
-            }
-            var rawData = this.rawData;
-            var inputRawData = input.rawData;
-            var helpVector = _helpVector3A;
-            var scaleX = 1.0 / helpVector.fromMatrixColumn(input, 0).length;
-            var scaleY = 1.0 / helpVector.fromMatrixColumn(input, 1).length;
-            var scaleZ = 1.0 / helpVector.fromMatrixColumn(input, 2).length;
-            rawData[0] = inputRawData[0] * scaleX;
-            rawData[1] = inputRawData[1] * scaleX;
-            rawData[2] = inputRawData[2] * scaleX;
-            rawData[3] = 0.0;
-            rawData[4] = inputRawData[4] * scaleY;
-            rawData[5] = inputRawData[5] * scaleY;
-            rawData[6] = inputRawData[6] * scaleY;
-            rawData[7] = 0.0;
-            rawData[8] = inputRawData[8] * scaleZ;
-            rawData[9] = inputRawData[9] * scaleZ;
-            rawData[10] = inputRawData[10] * scaleZ;
-            rawData[11] = 0.0;
-            rawData[12] = 0.0;
-            rawData[13] = 0.0;
-            rawData[14] = 0.0;
-            rawData[15] = 1.0;
-            return this;
-        };
-        Matrix4.prototype.transpose = function (input) {
-            if (!input) {
-                input = this;
-            }
-            var inputRawData = input.rawData;
-            var rawData = this.rawData;
-            var temp = 0.0;
-            temp = inputRawData[1];
-            rawData[1] = inputRawData[4];
-            rawData[4] = temp;
-            temp = inputRawData[2];
-            rawData[2] = inputRawData[8];
-            rawData[8] = temp;
-            temp = inputRawData[6];
-            rawData[6] = inputRawData[9];
-            rawData[9] = temp;
-            temp = inputRawData[3];
-            rawData[3] = inputRawData[12];
-            rawData[12] = temp;
-            temp = inputRawData[7];
-            rawData[7] = inputRawData[13];
-            rawData[13] = temp;
-            temp = inputRawData[11];
-            rawData[11] = inputRawData[14];
-            rawData[14] = temp;
-            return this;
-        };
-        Matrix4.prototype.inverse = function (input) {
-            if (!input) {
-                input = this;
-            }
-            var valueRawData = input.rawData;
-            var rawData = this.rawData;
-            var n11 = valueRawData[0], n21 = valueRawData[1], n31 = valueRawData[2], n41 = valueRawData[3], n12 = valueRawData[4], n22 = valueRawData[5], n32 = valueRawData[6], n42 = valueRawData[7], n13 = valueRawData[8], n23 = valueRawData[9], n33 = valueRawData[10], n43 = valueRawData[11], n14 = valueRawData[12], n24 = valueRawData[13], n34 = valueRawData[14], n44 = valueRawData[15], t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44, t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44, t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44, t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
-            var det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
-            if (det === 0.0) {
-                console.warn("Cannot invert matrix, determinant is 0.");
-                return this.identity();
-            }
-            var detInv = 1.0 / det;
-            rawData[0] = t11 * detInv;
-            rawData[1] = (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) * detInv;
-            rawData[2] = (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) * detInv;
-            rawData[3] = (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) * detInv;
-            rawData[4] = t12 * detInv;
-            rawData[5] = (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) * detInv;
-            rawData[6] = (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) * detInv;
-            rawData[7] = (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) * detInv;
-            rawData[8] = t13 * detInv;
-            rawData[9] = (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) * detInv;
-            rawData[10] = (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) * detInv;
-            rawData[11] = (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) * detInv;
-            rawData[12] = t14 * detInv;
-            rawData[13] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * detInv;
-            rawData[14] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * detInv;
-            rawData[15] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * detInv;
-            return this;
-        };
-        Matrix4.prototype.multiplyScalar = function (scalar, input) {
-            if (!input) {
-                input = this;
-            }
-            var sourceRawData = input.rawData;
-            var rawData = this.rawData;
-            rawData[0] = sourceRawData[0] * scalar;
-            rawData[1] = sourceRawData[1] * scalar;
-            rawData[2] = sourceRawData[2] * scalar;
-            rawData[3] = sourceRawData[3] * scalar;
-            rawData[4] = sourceRawData[4] * scalar;
-            rawData[5] = sourceRawData[5] * scalar;
-            rawData[6] = sourceRawData[6] * scalar;
-            rawData[7] = sourceRawData[7] * scalar;
-            rawData[8] = sourceRawData[8] * scalar;
-            rawData[9] = sourceRawData[9] * scalar;
-            rawData[10] = sourceRawData[10] * scalar;
-            rawData[11] = sourceRawData[11] * scalar;
-            rawData[12] = sourceRawData[12] * scalar;
-            rawData[13] = sourceRawData[13] * scalar;
-            rawData[14] = sourceRawData[14] * scalar;
-            rawData[15] = sourceRawData[15] * scalar;
-            return this;
-        };
-        Matrix4.prototype.multiply = function (matrixA, matrixB) {
-            if (!matrixB) {
-                matrixB = matrixA;
-                matrixA = this;
-            }
-            var rawDataA = matrixA.rawData;
-            var rawDataB = matrixB.rawData;
-            var rawData = this.rawData;
-            var a11 = rawDataA[0], a12 = rawDataA[4], a13 = rawDataA[8], a14 = rawDataA[12];
-            var a21 = rawDataA[1], a22 = rawDataA[5], a23 = rawDataA[9], a24 = rawDataA[13];
-            var a31 = rawDataA[2], a32 = rawDataA[6], a33 = rawDataA[10], a34 = rawDataA[14];
-            var a41 = rawDataA[3], a42 = rawDataA[7], a43 = rawDataA[11], a44 = rawDataA[15];
-            var b11 = rawDataB[0], b12 = rawDataB[4], b13 = rawDataB[8], b14 = rawDataB[12];
-            var b21 = rawDataB[1], b22 = rawDataB[5], b23 = rawDataB[9], b24 = rawDataB[13];
-            var b31 = rawDataB[2], b32 = rawDataB[6], b33 = rawDataB[10], b34 = rawDataB[14];
-            var b41 = rawDataB[3], b42 = rawDataB[7], b43 = rawDataB[11], b44 = rawDataB[15];
-            rawData[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
-            rawData[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
-            rawData[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
-            rawData[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
-            rawData[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
-            rawData[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
-            rawData[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
-            rawData[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
-            rawData[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
-            rawData[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
-            rawData[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
-            rawData[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
-            rawData[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
-            rawData[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
-            rawData[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
-            rawData[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
-            return this;
-        };
-        /**
-         * 将一个矩阵与该矩阵相乘的结果写入该矩阵。
-         * - v = matrix * v
-         * @param matrix 一个矩阵。
-         */
-        Matrix4.prototype.premultiply = function (matrix) {
-            return this.multiply(matrix, this);
-        };
-        Matrix4.prototype.lerp = function (p1, p2, p3) {
-            if (typeof p2 === "number") {
-                p3 = p2;
-                p2 = p1;
-                p1 = this;
-            }
-            if (p3 === 0.0) {
-                for (var i = 0; i < 16; i++) {
-                    this.rawData[i] = p1.rawData[i];
-                }
-                return this;
-            }
-            else if (p3 === 1.0) {
-                for (var i = 0; i < 16; i++) {
-                    this.rawData[i] = p2.rawData[i];
-                }
-                return this;
-            }
-            for (var i = 0; i < 16; i++) {
-                var fV = p1.rawData[i];
-                this.rawData[i] = fV + (p2.rawData[i] - fV) * p3;
-            }
-            return this;
-        };
-        /**
-         * 设置该矩阵，使其 Z 轴正方向与起始点到目标点的方向相一致。
-         * - 矩阵的缩放值将被覆盖。
-         * @param from 起始点。
-         * @param to 目标点。
-         * @param up
-         */
-        Matrix4.prototype.lookAt = function (from, to, up) {
-            this.lookRotation(_helpVector3C.subtract(to, from), up);
-            return this;
-        };
-        /**
-         * 设置该矩阵，使其 Z 轴正方向与目标方向相一致。
-         * - 矩阵的缩放值将被覆盖。
-         * @param vector 目标方向。
-         * @param up
-         */
-        Matrix4.prototype.lookRotation = function (vector, up) {
-            var z = _helpVector3C.normalize(vector);
-            var x = _helpVector3A.cross(up, z).normalize(_helpVector3A, egret3d.Vector3.RIGHT);
-            var y = _helpVector3B.cross(z, x);
-            var rawData = this.rawData;
-            rawData[0] = x.x;
-            rawData[4] = y.x;
-            rawData[8] = z.x;
-            rawData[1] = x.y;
-            rawData[5] = y.y;
-            rawData[9] = z.y;
-            rawData[2] = x.z;
-            rawData[6] = y.z;
-            rawData[10] = z.z;
-            return this;
-        };
-        /**
-         * 将该旋转矩阵转换为数组。
-         * @param array 数组。
-         * @param offset 数组偏移。
-         */
-        Matrix4.prototype.toArray = function (array, offset) {
-            if (offset === void 0) { offset = 0; }
-            if (!array) {
-                array = [];
-            }
-            for (var i = 0; i < 16; ++i) {
-                array[i + offset] = this.rawData[i];
-            }
-            return array;
-        };
-        /**
-         * 将该旋转矩阵转换为欧拉旋转。
-         * @param euler 欧拉旋转。（弧度制）
-         * @param order 欧拉旋转顺序。
-         */
-        Matrix4.prototype.toEuler = function (euler, order) {
-            if (order === void 0) { order = 2 /* YXZ */; }
-            if (!euler) {
-                euler = egret3d.Vector3.create();
-            }
-            // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
-            var rawData = this.rawData;
-            var m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
-            var m21 = rawData[1], m22 = rawData[5], m23 = rawData[9];
-            var m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
-            switch (order) {
-                case 0 /* XYZ */: {
-                    euler.y = Math.asin(egret3d.math.clamp(m13, -1.0, 1.0));
-                    if (Math.abs(m13) < 0.999999) {
-                        euler.x = Math.atan2(-m23, m33);
-                        euler.z = Math.atan2(-m12, m11);
-                    }
-                    else {
-                        euler.x = Math.atan2(m32, m22);
-                        euler.z = 0.0;
-                    }
-                    break;
-                }
-                case 1 /* XZY */: {
-                    euler.z = Math.asin(-egret3d.math.clamp(m12, -1.0, 1.0));
-                    if (Math.abs(m12) < 0.999999) {
-                        euler.x = Math.atan2(m32, m22);
-                        euler.y = Math.atan2(m13, m11);
-                    }
-                    else {
-                        euler.x = Math.atan2(-m23, m33);
-                        euler.y = 0.0;
-                    }
-                    break;
-                }
-                case 2 /* YXZ */: {
-                    euler.x = Math.asin(-egret3d.math.clamp(m23, -1.0, 1.0));
-                    if (Math.abs(m23) < 0.999999) {
-                        euler.y = Math.atan2(m13, m33);
-                        euler.z = Math.atan2(m21, m22);
-                    }
-                    else {
-                        euler.y = Math.atan2(-m31, m11);
-                        euler.z = 0.0;
-                    }
-                    break;
-                }
-                case 3 /* YZX */: {
-                    euler.z = Math.asin(egret3d.math.clamp(m21, -1.0, 1.0));
-                    if (Math.abs(m21) < 0.999999) {
-                        euler.x = Math.atan2(-m23, m22);
-                        euler.y = Math.atan2(-m31, m11);
-                    }
-                    else {
-                        euler.x = 0.0;
-                        euler.y = Math.atan2(m13, m33);
-                    }
-                    break;
-                }
-                case 4 /* ZXY */: {
-                    euler.x = Math.asin(egret3d.math.clamp(m32, -1.0, 1.0));
-                    if (Math.abs(m32) < 0.999999) {
-                        euler.y = Math.atan2(-m31, m33);
-                        euler.z = Math.atan2(-m12, m22);
-                    }
-                    else {
-                        euler.y = 0.0;
-                        euler.z = Math.atan2(m21, m11);
-                    }
-                    break;
-                }
-                case 5 /* ZYX */: {
-                    euler.y = Math.asin(-egret3d.math.clamp(m31, -1.0, 1.0));
-                    if (Math.abs(m31) < 0.999999) {
-                        euler.x = Math.atan2(m32, m33);
-                        euler.z = Math.atan2(m21, m11);
-                    }
-                    else {
-                        euler.x = 0.0;
-                        euler.z = Math.atan2(-m12, m22);
-                    }
-                    break;
-                }
-            }
-            return euler;
-        };
-        Object.defineProperty(Matrix4.prototype, "determinant", {
-            /**
-             * 获取该矩阵的行列式。
-             * - 该值是实时计算的。
-             */
-            get: function () {
-                var rawData = this.rawData;
-                var n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
-                var n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
-                var n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
-                var n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
-                //TODO: make this more efficient
-                //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
-                return (n41 * (+n14 * n23 * n32
-                    - n13 * n24 * n32
-                    - n14 * n22 * n33
-                    + n12 * n24 * n33
-                    + n13 * n22 * n34
-                    - n12 * n23 * n34) +
-                    n42 * (+n11 * n23 * n34
-                        - n11 * n24 * n33
-                        + n14 * n21 * n33
-                        - n13 * n21 * n34
-                        + n13 * n24 * n31
-                        - n14 * n23 * n31) +
-                    n43 * (+n11 * n24 * n32
-                        - n11 * n22 * n34
-                        - n14 * n21 * n32
-                        + n12 * n21 * n34
-                        + n14 * n22 * n31
-                        - n12 * n24 * n31) +
-                    n44 * (-n13 * n22 * n31
-                        - n11 * n23 * n32
-                        + n11 * n22 * n33
-                        + n13 * n21 * n32
-                        - n12 * n21 * n33
-                        + n12 * n23 * n31));
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Matrix4.prototype, "maxScaleOnAxis", {
-            /**
-             * 获取该矩阵的最大缩放值。
-             * - 该值是实时计算的。
-             */
-            get: function () {
-                var rawData = this.rawData;
-                var scaleXSq = rawData[0] * rawData[0] + rawData[1] * rawData[1] + rawData[2] * rawData[2];
-                var scaleYSq = rawData[4] * rawData[4] + rawData[5] * rawData[5] + rawData[6] * rawData[6];
-                var scaleZSq = rawData[8] * rawData[8] + rawData[9] * rawData[9] + rawData[10] * rawData[10];
-                return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * @deprecated
-         */
-        Matrix4.prototype.transformVector3 = function (value, out) {
-            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]) + this.rawData[12];
-            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]) + this.rawData[13];
-            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]) + this.rawData[14];
-            var w = (value.x * this.rawData[3]) + (value.y * this.rawData[7]) + (value.z * this.rawData[11]) + this.rawData[15];
-            if (!out) {
-                out = value;
-            }
-            out.x = x / w;
-            out.y = y / w;
-            out.z = z / w;
-            return out;
-        };
-        /**
-         * @deprecated
-         */
-        Matrix4.prototype.transformNormal = function (value, out) {
-            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]);
-            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]);
-            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]);
-            if (!out) {
-                out = value;
-            }
-            out.x = x;
-            out.y = y;
-            out.z = z;
-            return out;
-        };
-        Matrix4._perspectiveProjectMatrix = function (left, right, top, bottom, near, far, out) {
-            var iDeltaZ = 1.0 / (near - far);
-            var doubleNear = 2.0 * near;
-            out.rawData[0] = doubleNear / (right - left);
-            out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
-            out.rawData[4] = out.rawData[6] = out.rawData[7] = 0.0;
-            out.rawData[5] = doubleNear / (top - bottom);
-            out.rawData[8] = out.rawData[9] = 0.0;
-            out.rawData[10] = (far + near) * -iDeltaZ;
-            out.rawData[11] = 1.0;
-            out.rawData[12] = out.rawData[13] = out.rawData[15] = 0.0;
-            out.rawData[14] = doubleNear * far * iDeltaZ;
-            return out;
-        };
-        Matrix4._orthographicProjectLH = function (width, height, znear, zfar, out) {
-            var hw = 2.0 / width;
-            var hh = 2.0 / height;
-            var id = 2.0 / (zfar - znear);
-            var nid = (znear + zfar) / (znear - zfar);
-            out.rawData[0] = hw;
-            out.rawData[1] = 0;
-            out.rawData[2] = 0;
-            out.rawData[3] = 0;
-            out.rawData[4] = 0;
-            out.rawData[5] = hh;
-            out.rawData[6] = 0;
-            out.rawData[7] = 0;
-            out.rawData[8] = 0;
-            out.rawData[9] = 0;
-            out.rawData[10] = id;
-            out.rawData[11] = 0;
-            out.rawData[12] = 0;
-            out.rawData[13] = 0;
-            out.rawData[14] = nid;
-            out.rawData[15] = 1;
-            return out;
-        };
-        /**
-         * 一个静态的恒等矩阵。
-         * - 请注意不要修改该值。
-         */
-        Matrix4.IDENTITY = new Matrix4();
-        Matrix4._instances = [];
-        return Matrix4;
-    }(paper.BaseRelease));
-    egret3d.Matrix4 = Matrix4;
-    __reflect(Matrix4.prototype, "egret3d.Matrix4", ["paper.ICCS", "paper.ISerializable"]);
-    var _helpVector3A = egret3d.Vector3.create();
-    var _helpVector3B = egret3d.Vector3.create();
-    var _helpVector3C = egret3d.Vector3.create();
-    var _helpMatrix = Matrix4.create();
-    /**
-     * @internal
-     */
-    egret3d.helpMatrixA = Matrix4.create();
-    /**
-     * @internal
-     */
-    egret3d.helpMatrixB = Matrix4.create();
-    /**
-     * @internal
-     */
-    egret3d.helpMatrixC = Matrix4.create();
-    /**
-     * @internal
-     */
-    egret3d.helpMatrixD = Matrix4.create();
-})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -4458,18 +3871,11 @@ var egret3d;
              */
             _this.draw = null;
             _this._logarithmicDepthBuffer = false;
-            _this._gammaFactor = 1.0;
-            _this._gammaInput = false;
-            _this._gammaOutput = false;
             _this._toneMapping = 0 /* None */;
-            /**
-             * @internal
-             */
-            _this._toneMappingExposure = 1.0;
-            /**
-             * @internal
-             */
-            _this._toneMappingWhitePoint = 1.0;
+            _this._gammaInputLocked = false;
+            _this._gammaInput = true; //
+            _this._gammaOutput = true; //
+            _this._gammaFactor = 1.0;
             /**
              * @internal
              */
@@ -4486,6 +3892,16 @@ var egret3d;
              * @internal
              */
             _this._boneCount = 0;
+            _this._stateEnables = [3042 /* Blend */, 2884 /* CullFace */, 2929 /* DepthTest */]; // TODO
+            _this._cacheStateEnable = {};
+            /**
+             *
+             */
+            _this.toneMappingExposure = 1.0;
+            /**
+             *
+             */
+            _this.toneMappingWhitePoint = 1.0;
             return _this;
         }
         RenderState.prototype._getCommonExtensions = function () {
@@ -4503,8 +3919,9 @@ var egret3d;
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
             this.commonDefines = defines;
-            // defines = ""; // fragmentDefines
-            // this.fragmentDefines = defines;
+            defines = ""; // fragmentDefines
+            defines += egret3d.ShaderChunk.encodings_pars_fragment + " \n";
+            this.fragmentDefines = defines;
         };
         RenderState.prototype._getEncodingComponents = function (encoding) {
             switch (encoding) {
@@ -4553,6 +3970,7 @@ var egret3d;
         };
         RenderState.prototype._getTexelDecodingFunction = function (functionName, encoding) {
             if (encoding === void 0) { encoding = 1 /* LinearEncoding */; }
+            this._gammaInputLocked = true;
             var finialEncoding = (this._gammaInput && encoding === 1 /* LinearEncoding */) ? 7 /* GammaEncoding */ : encoding;
             var components = this._getEncodingComponents(finialEncoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
@@ -4711,9 +4129,10 @@ var egret3d;
             _super.prototype.initialize.call(this);
             egret3d.renderState = this;
             //
-            // this.logarithmicDepthBuffer = true;
-            this.setToneMapping(1 /* LinearToneMapping */, this._toneMappingExposure, this._toneMappingWhitePoint);
-            this.setGamma(2.0, this._gammaInput, this._gammaOutput);
+            this.toneMapping = 1 /* LinearToneMapping */;
+            this.gammaFactor = 2.0;
+            this.gammaInput = false;
+            this.gammaOutput = false;
         };
         /**
          *
@@ -4732,55 +4151,10 @@ var egret3d;
         /**
          *
          */
-        RenderState.prototype.setGamma = function (factor, input, output) {
-            factor = (factor > 1.0 ? factor : 1.0);
-            var nameA = "GammaA";
-            var nameB = "GammaB";
-            var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, factor, true);
-            if (define) {
-                define.type = 2 /* Fragment */;
+        RenderState.prototype.clearState = function () {
+            for (var key in this._cacheStateEnable) {
+                delete this._cacheStateEnable[key];
             }
-            define = this.defines.addDefine(nameA, egret3d.ShaderChunk.encodings_pars_fragment, true);
-            if (define) {
-                define.isCode = true;
-                define.type = 2 /* Fragment */;
-            }
-            define = this.defines.addDefine(nameB, this._getTexelEncodingFunction("linearToOutputTexel", output ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */), true);
-            if (define) {
-                define.isCode = true;
-                define.type = 2 /* Fragment */;
-            }
-            this._gammaFactor = factor;
-            this._gammaInput = input;
-            this._gammaOutput = output;
-            return this;
-        };
-        /**
-         *
-         */
-        RenderState.prototype.setToneMapping = function (toneMapping, exposure, whitePoint) {
-            var nameA = "ToneMappingA";
-            var nameB = "ToneMappingB";
-            if (this._toneMapping !== toneMapping) {
-                var define = this.defines.addDefine("TONE_MAPPING" /* TONE_MAPPING */);
-                if (define) {
-                    define.type = 2 /* Fragment */;
-                }
-                define = this.defines.addDefine(nameA, egret3d.ShaderChunk.tonemapping_pars_fragment, true);
-                if (define) {
-                    define.isCode = true;
-                    define.type = 2 /* Fragment */;
-                }
-                define = this.defines.addDefine(nameB, this._getToneMappingFunction(toneMapping), true);
-                if (define) {
-                    define.isCode = true;
-                    define.type = 2 /* Fragment */;
-                }
-            }
-            this._toneMapping = toneMapping;
-            this._toneMappingExposure = exposure;
-            this._toneMappingWhitePoint = whitePoint;
-            return this;
         };
         Object.defineProperty(RenderState.prototype, "logarithmicDepthBuffer", {
             /**
@@ -4793,23 +4167,148 @@ var egret3d;
                 if (this._logarithmicDepthBuffer === value) {
                     return;
                 }
+                var _a = this, defines = _a.defines, fragDepthEnabled = _a.fragDepthEnabled;
                 if (value) {
-                    this.defines.addDefine("USE_LOGDEPTHBUF" /* USE_LOGDEPTHBUF */);
-                    if (this.fragDepthEnabled) {
-                        this.defines.addDefine("USE_LOGDEPTHBUF_EXT" /* USE_LOGDEPTHBUF_EXT */);
+                    defines.addDefine("USE_LOGDEPTHBUF" /* USE_LOGDEPTHBUF */);
+                    if (fragDepthEnabled) {
+                        defines.addDefine("USE_LOGDEPTHBUF_EXT" /* USE_LOGDEPTHBUF_EXT */);
                     }
                     else {
-                        this.defines.removeDefine("USE_LOGDEPTHBUF_EXT" /* USE_LOGDEPTHBUF_EXT */);
+                        defines.removeDefine("USE_LOGDEPTHBUF_EXT" /* USE_LOGDEPTHBUF_EXT */);
                     }
                 }
                 else {
-                    this.defines.removeDefine("USE_LOGDEPTHBUF" /* USE_LOGDEPTHBUF */);
-                    this.defines.removeDefine("USE_LOGDEPTHBUF_EXT" /* USE_LOGDEPTHBUF_EXT */);
+                    defines.removeDefine("USE_LOGDEPTHBUF" /* USE_LOGDEPTHBUF */);
+                    defines.removeDefine("USE_LOGDEPTHBUF_EXT" /* USE_LOGDEPTHBUF_EXT */);
                 }
             },
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(RenderState.prototype, "gammaInput", {
+            /**
+             *
+             */
+            get: function () {
+                return this._gammaInput;
+            },
+            set: function (value) {
+                if (this._gammaInputLocked) {
+                    console.warn("The gamma input value has been locked.");
+                    return;
+                }
+                if (this._gammaInput === value) {
+                    return;
+                }
+                this._gammaInput = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "gammaOutput", {
+            /**
+             *
+             */
+            get: function () {
+                return this._gammaOutput;
+            },
+            set: function (value) {
+                if (this._gammaOutput === value) {
+                    return;
+                }
+                var define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */), true);
+                if (define) {
+                    define.isCode = true;
+                    define.type = 2 /* Fragment */;
+                }
+                this._gammaOutput = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "gammaFactor", {
+            /**
+             *
+             */
+            get: function () {
+                return this._gammaFactor;
+            },
+            set: function (value) {
+                if (value !== value || value < 1.0) {
+                    value = 1.0;
+                }
+                if (this._gammaFactor === value) {
+                    return;
+                }
+                var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, value, true);
+                if (define) {
+                    define.type = 2 /* Fragment */;
+                }
+                this._gammaFactor = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "toneMapping", {
+            /**
+             *
+             */
+            get: function () {
+                return this._toneMapping;
+            },
+            set: function (value) {
+                if (this._toneMapping === value) {
+                    return;
+                }
+                var defineName = "ToneMapping";
+                var defines = this.defines;
+                if (value === 0 /* None */) {
+                    defines.removeDefine("TONE_MAPPING" /* TONE_MAPPING */);
+                    defines.removeDefine(egret3d.ShaderChunk.tonemapping_pars_fragment);
+                    defines.removeDefine(defineName);
+                }
+                else {
+                    var define = defines.addDefine("TONE_MAPPING" /* TONE_MAPPING */);
+                    if (define) {
+                        define.type = 2 /* Fragment */;
+                    }
+                    define = defines.addDefine(egret3d.ShaderChunk.tonemapping_pars_fragment);
+                    if (define) {
+                        define.isCode = true;
+                        define.type = 2 /* Fragment */;
+                    }
+                    define = defines.addDefine(defineName, this._getToneMappingFunction(value), true);
+                    if (define) {
+                        define.isCode = true;
+                        define.type = 2 /* Fragment */;
+                    }
+                }
+                this._toneMapping = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
+        ], RenderState.prototype, "logarithmicDepthBuffer", null);
+        __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
+        ], RenderState.prototype, "gammaInput", null);
+        __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
+        ], RenderState.prototype, "gammaOutput", null);
+        __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */)
+        ], RenderState.prototype, "gammaFactor", null);
+        __decorate([
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(egret3d.ToneMapping) }) // TODO
+        ], RenderState.prototype, "toneMapping", null);
+        __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 10.0 })
+        ], RenderState.prototype, "toneMappingExposure", void 0);
+        __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 10.0 })
+        ], RenderState.prototype, "toneMappingWhitePoint", void 0);
         RenderState = __decorate([
             paper.singleton
         ], RenderState);
@@ -4822,333 +4321,6 @@ var egret3d;
      */
     egret3d.renderState = null;
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 渲染排序。
-     */
-    var RenderQueue;
-    (function (RenderQueue) {
-        RenderQueue[RenderQueue["Background"] = 1000] = "Background";
-        RenderQueue[RenderQueue["Geometry"] = 2000] = "Geometry";
-        RenderQueue[RenderQueue["Mask"] = 2450] = "Mask";
-        RenderQueue[RenderQueue["Blend"] = 3000] = "Blend";
-        RenderQueue[RenderQueue["Overlay"] = 4000] = "Overlay";
-    })(RenderQueue = egret3d.RenderQueue || (egret3d.RenderQueue = {}));
-    /**
-     * 混合模式。
-     */
-    var BlendMode;
-    (function (BlendMode) {
-        /**
-         * 不混合。
-         */
-        BlendMode[BlendMode["None"] = 0] = "None";
-        /**
-         * 正常。
-         */
-        BlendMode[BlendMode["Normal"] = 2] = "Normal";
-        /**
-         * 正常并预乘。
-         */
-        BlendMode[BlendMode["Normal_PreMultiply"] = 3] = "Normal_PreMultiply";
-        /**
-         * 相加。
-         */
-        BlendMode[BlendMode["Additive"] = 4] = "Additive";
-        /**
-         * 相加并预乘。
-         */
-        BlendMode[BlendMode["Additive_PreMultiply"] = 5] = "Additive_PreMultiply";
-        /**
-         * 相减。
-         */
-        BlendMode[BlendMode["Subtractive"] = 8] = "Subtractive";
-        /**
-         * 相减并预乘。
-         */
-        BlendMode[BlendMode["Subtractive_PreMultiply"] = 9] = "Subtractive_PreMultiply";
-        /**
-         * 相乘。
-         */
-        BlendMode[BlendMode["Multiply"] = 16] = "Multiply";
-        /**
-         * 相乘并预乘。
-         */
-        BlendMode[BlendMode["Multiply_PreMultiply"] = 17] = "Multiply_PreMultiply";
-        /**
-         * 自定义混合。
-         */
-        BlendMode[BlendMode["Custom"] = -1] = "Custom";
-    })(BlendMode = egret3d.BlendMode || (egret3d.BlendMode = {}));
-    /**
-     * 纹理编码。
-     */
-    var TextureEncoding;
-    (function (TextureEncoding) {
-        TextureEncoding[TextureEncoding["LinearEncoding"] = 1] = "LinearEncoding";
-        TextureEncoding[TextureEncoding["sRGBEncoding"] = 2] = "sRGBEncoding";
-        TextureEncoding[TextureEncoding["RGBEEncoding"] = 3] = "RGBEEncoding";
-        TextureEncoding[TextureEncoding["RGBM7Encoding"] = 4] = "RGBM7Encoding";
-        TextureEncoding[TextureEncoding["RGBM16Encoding"] = 5] = "RGBM16Encoding";
-        TextureEncoding[TextureEncoding["RGBDEncoding"] = 6] = "RGBDEncoding";
-        TextureEncoding[TextureEncoding["GammaEncoding"] = 7] = "GammaEncoding";
-    })(TextureEncoding = egret3d.TextureEncoding || (egret3d.TextureEncoding = {}));
-    /**
-     *
-     */
-    var ToneMapping;
-    (function (ToneMapping) {
-        ToneMapping[ToneMapping["None"] = 0] = "None";
-        ToneMapping[ToneMapping["LinearToneMapping"] = 1] = "LinearToneMapping";
-        ToneMapping[ToneMapping["ReinhardToneMapping"] = 2] = "ReinhardToneMapping";
-        ToneMapping[ToneMapping["Uncharted2ToneMapping"] = 3] = "Uncharted2ToneMapping";
-        ToneMapping[ToneMapping["CineonToneMapping"] = 4] = "CineonToneMapping";
-    })(ToneMapping = egret3d.ToneMapping || (egret3d.ToneMapping = {}));
-    /**
-     *
-     */
-    var TextureUVMapping;
-    (function (TextureUVMapping) {
-        TextureUVMapping[TextureUVMapping["UV"] = 0] = "UV";
-        TextureUVMapping[TextureUVMapping["Cube"] = 1] = "Cube";
-        TextureUVMapping[TextureUVMapping["CubeUV"] = 2] = "CubeUV";
-        TextureUVMapping[TextureUVMapping["Equirectangular"] = 3] = "Equirectangular";
-        TextureUVMapping[TextureUVMapping["Spherical"] = 4] = "Spherical";
-    })(TextureUVMapping = egret3d.TextureUVMapping || (egret3d.TextureUVMapping = {}));
-    /**
-     * 内置提供的全局 Attribute。
-     * @private
-     */
-    egret3d.globalAttributeSemantics = {
-        "position": "POSITION" /* POSITION */,
-        "normal": "NORMAL" /* NORMAL */,
-        "uv": "TEXCOORD_0" /* TEXCOORD_0 */,
-        "uv2": "TEXCOORD_1" /* TEXCOORD_1 */,
-        "color": "COLOR_0" /* COLOR_0 */,
-        // "morphTarget0": gltf.AttributeSemanticType.MORPHTARGET_0,
-        // "morphTarget1": gltf.AttributeSemanticType.MORPHTARGET_1,
-        // "morphTarget2": gltf.AttributeSemanticType.MORPHTARGET_2,
-        // "morphTarget3": gltf.AttributeSemanticType.MORPHTARGET_3,
-        // "morphTarget4": gltf.AttributeSemanticType.MORPHTARGET_4,
-        // "morphTarget5": gltf.AttributeSemanticType.MORPHTARGET_5,
-        // "morphTarget6": gltf.AttributeSemanticType.MORPHTARGET_6,
-        // "morphTarget7": gltf.AttributeSemanticType.MORPHTARGET_7,
-        // "morphNormal0": gltf.AttributeSemanticType.MORPHNORMAL_0,
-        // "morphNormal1": gltf.AttributeSemanticType.MORPHNORMAL_1,
-        // "morphNormal2": gltf.AttributeSemanticType.MORPHNORMAL_2,
-        // "morphNormal3": gltf.AttributeSemanticType.MORPHNORMAL_3,
-        "skinIndex": "JOINTS_0" /* JOINTS_0 */,
-        "skinWeight": "WEIGHTS_0" /* WEIGHTS_0 */,
-        "corner": "_CORNER" /* _CORNER */,
-        "startPosition": "_START_POSITION" /* _START_POSITION */,
-        "startVelocity": "_START_VELOCITY" /* _START_VELOCITY */,
-        "startColor": "_START_COLOR" /* _START_COLOR */,
-        "startSize": "_START_SIZE" /* _START_SIZE */,
-        "startRotation": "_START_ROTATION" /* _START_ROTATION */,
-        "time": "_TIME" /* _TIME */,
-        "random0": "_RANDOM0" /* _RANDOM0 */,
-        "random1": "_RANDOM1" /* _RANDOM1 */,
-        "startWorldPosition": "_WORLD_POSITION" /* _WORLD_POSITION */,
-        "startWorldRotation": "_WORLD_ROTATION" /* _WORLD_ROTATION */,
-        "lineDistance": "_INSTANCE_DISTANCE" /* _INSTANCE_DISTANCE */,
-        "instanceStart": "_INSTANCE_START" /* _INSTANCE_START */,
-        "instanceEnd": "_INSTANCE_END" /* _INSTANCE_END */,
-        "instanceColorStart": "_INSTANCE_COLOR_START" /* _INSTANCE_COLOR_START */,
-        "instanceColorEnd": "_INSTANCE_COLOR_END" /* _INSTANCE_COLOR_END */,
-        "instanceDistanceStart": "_INSTANCE_DISTANCE_START" /* _INSTANCE_DISTANCE_START */,
-        "instanceDistanceEnd": "_INSTANCE_DISTANCE_END" /* _INSTANCE_DISTANCE_END */,
-    };
-    /**
-     * 内置提供的全局 Uniform。
-     * @private
-     */
-    egret3d.globalUniformSemantics = {
-        "modelMatrix": "MODEL" /* MODEL */,
-        "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
-        "projectionMatrix": "PROJECTION" /* PROJECTION */,
-        "viewMatrix": "VIEW" /* VIEW */,
-        "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
-        "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
-        "clock": "_CLOCK" /* _CLOCK */,
-        "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
-        "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
-        "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
-        "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
-        "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
-        "ambientLightColor": "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */,
-        "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
-        "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
-        "rectAreaLights[0]": "_RECTAREALIGHTS" /* _RECTAREALIGHTS */,
-        "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
-        "hemisphereLights[0]": "_HEMILIGHTS" /* _HEMILIGHTS */,
-        "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
-        "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
-        "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
-        "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
-        "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
-        "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
-        "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
-        "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
-        "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
-        "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
-        "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
-        "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
-        "fogColor": "_FOG_COLOR" /* _FOG_COLOR */,
-        "fogDensity": "_FOG_DENSITY" /* _FOG_DENSITY */,
-        "fogNear": "_FOG_NEAR" /* _FOG_NEAR */,
-        "fogFar": "_FOG_FAR" /* _FOG_FAR */,
-        "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
-        "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
-        "logDepthBufFC": "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */,
-    };
-    /**
-     * @private
-     */
-    var AnimationBlendType;
-    (function (AnimationBlendType) {
-        AnimationBlendType[AnimationBlendType["E1D"] = 0] = "E1D";
-    })(AnimationBlendType = egret3d.AnimationBlendType || (egret3d.AnimationBlendType = {}));
-})(egret3d || (egret3d = {}));
-// For keep const enum.
-var gltf;
-(function (gltf) {
-    /**
-     * 绘制缓存掩码。
-     */
-    var BufferMask;
-    (function (BufferMask) {
-        BufferMask[BufferMask["None"] = 0] = "None";
-        BufferMask[BufferMask["Depth"] = 256] = "Depth";
-        BufferMask[BufferMask["Stencil"] = 1024] = "Stencil";
-        BufferMask[BufferMask["Color"] = 16384] = "Color";
-        BufferMask[BufferMask["DepthAndStencil"] = 1280] = "DepthAndStencil";
-        BufferMask[BufferMask["DepthAndColor"] = 16640] = "DepthAndColor";
-        BufferMask[BufferMask["StencilAndColor"] = 17408] = "StencilAndColor";
-        BufferMask[BufferMask["All"] = 17664] = "All";
-    })(BufferMask = gltf.BufferMask || (gltf.BufferMask = {}));
-    var BlendEquation;
-    (function (BlendEquation) {
-        BlendEquation[BlendEquation["Add"] = 32774] = "Add";
-        BlendEquation[BlendEquation["Subtract"] = 32778] = "Subtract";
-        BlendEquation[BlendEquation["ReverseSubtract"] = 32779] = "ReverseSubtract";
-    })(BlendEquation = gltf.BlendEquation || (gltf.BlendEquation = {}));
-    var BlendFactor;
-    (function (BlendFactor) {
-        BlendFactor[BlendFactor["ZERO"] = 0] = "ZERO";
-        BlendFactor[BlendFactor["ONE"] = 1] = "ONE";
-        BlendFactor[BlendFactor["SRC_COLOR"] = 768] = "SRC_COLOR";
-        BlendFactor[BlendFactor["ONE_MINUS_SRC_COLOR"] = 769] = "ONE_MINUS_SRC_COLOR";
-        BlendFactor[BlendFactor["DST_COLOR"] = 774] = "DST_COLOR";
-        BlendFactor[BlendFactor["ONE_MINUS_DST_COLOR"] = 775] = "ONE_MINUS_DST_COLOR";
-        BlendFactor[BlendFactor["SRC_ALPHA"] = 770] = "SRC_ALPHA";
-        BlendFactor[BlendFactor["ONE_MINUS_SRC_ALPHA"] = 771] = "ONE_MINUS_SRC_ALPHA";
-        BlendFactor[BlendFactor["DST_ALPHA"] = 772] = "DST_ALPHA";
-        BlendFactor[BlendFactor["ONE_MINUS_DST_ALPHA"] = 773] = "ONE_MINUS_DST_ALPHA";
-        BlendFactor[BlendFactor["CONSTANT_COLOR"] = 32769] = "CONSTANT_COLOR";
-        BlendFactor[BlendFactor["ONE_MINUS_CONSTANT_COLOR"] = 32770] = "ONE_MINUS_CONSTANT_COLOR";
-        BlendFactor[BlendFactor["CONSTANT_ALPHA"] = 32771] = "CONSTANT_ALPHA";
-        BlendFactor[BlendFactor["ONE_MINUS_CONSTANT_ALPHA"] = 32772] = "ONE_MINUS_CONSTANT_ALPHA";
-        BlendFactor[BlendFactor["SRC_ALPHA_SATURATE"] = 776] = "SRC_ALPHA_SATURATE";
-    })(BlendFactor = gltf.BlendFactor || (gltf.BlendFactor = {}));
-    var CullFace;
-    (function (CullFace) {
-        CullFace[CullFace["Front"] = 1028] = "Front";
-        CullFace[CullFace["Back"] = 1029] = "Back";
-        CullFace[CullFace["FrontAndBack"] = 1032] = "FrontAndBack";
-    })(CullFace = gltf.CullFace || (gltf.CullFace = {}));
-    var FrontFace;
-    (function (FrontFace) {
-        FrontFace[FrontFace["CW"] = 2304] = "CW";
-        FrontFace[FrontFace["CCW"] = 2305] = "CCW";
-    })(FrontFace = gltf.FrontFace || (gltf.FrontFace = {}));
-    var MeshPrimitiveMode;
-    (function (MeshPrimitiveMode) {
-        MeshPrimitiveMode[MeshPrimitiveMode["Points"] = 0] = "Points";
-        MeshPrimitiveMode[MeshPrimitiveMode["Lines"] = 1] = "Lines";
-        MeshPrimitiveMode[MeshPrimitiveMode["LineLoop"] = 2] = "LineLoop";
-        MeshPrimitiveMode[MeshPrimitiveMode["LineStrip"] = 3] = "LineStrip";
-        MeshPrimitiveMode[MeshPrimitiveMode["Triangles"] = 4] = "Triangles";
-        MeshPrimitiveMode[MeshPrimitiveMode["TrianglesStrip"] = 5] = "TrianglesStrip";
-        MeshPrimitiveMode[MeshPrimitiveMode["TrianglesFan"] = 6] = "TrianglesFan";
-    })(MeshPrimitiveMode = gltf.MeshPrimitiveMode || (gltf.MeshPrimitiveMode = {}));
-    /**
-     *
-     */
-    var DrawMode;
-    (function (DrawMode) {
-        DrawMode[DrawMode["Stream"] = 35040] = "Stream";
-        DrawMode[DrawMode["Static"] = 35044] = "Static";
-        DrawMode[DrawMode["Dynamic"] = 35048] = "Dynamic";
-    })(DrawMode = gltf.DrawMode || (gltf.DrawMode = {}));
-    /**
-     *
-     */
-    var TextureFormat;
-    (function (TextureFormat) {
-        TextureFormat[TextureFormat["RGB"] = 6407] = "RGB";
-        TextureFormat[TextureFormat["RGBA"] = 6408] = "RGBA";
-        TextureFormat[TextureFormat["Luminance"] = 6409] = "Luminance";
-        TextureFormat[TextureFormat["RGBA4"] = 32854] = "RGBA4";
-    })(TextureFormat = gltf.TextureFormat || (gltf.TextureFormat = {}));
-    /**
-     *
-     */
-    var TextureDataType;
-    (function (TextureDataType) {
-        TextureDataType[TextureDataType["UNSIGNED_BYTE"] = 5121] = "UNSIGNED_BYTE";
-        TextureDataType[TextureDataType["UNSIGNED_SHORT_5_6_5"] = 33635] = "UNSIGNED_SHORT_5_6_5";
-        TextureDataType[TextureDataType["UNSIGNED_SHORT_4_4_4_4"] = 32819] = "UNSIGNED_SHORT_4_4_4_4";
-        TextureDataType[TextureDataType["UNSIGNED_SHORT_5_5_5_1"] = 32820] = "UNSIGNED_SHORT_5_5_5_1";
-    })(TextureDataType = gltf.TextureDataType || (gltf.TextureDataType = {}));
-    /**
-     *
-     */
-    var TextureFilter;
-    (function (TextureFilter) {
-        TextureFilter[TextureFilter["Nearest"] = 9728] = "Nearest";
-        TextureFilter[TextureFilter["Linear"] = 9729] = "Linear";
-        TextureFilter[TextureFilter["NearestMipmapNearest"] = 9984] = "NearestMipmapNearest";
-        TextureFilter[TextureFilter["LinearMipmapNearest"] = 9985] = "LinearMipmapNearest";
-        TextureFilter[TextureFilter["NearestMipMapLinear"] = 9986] = "NearestMipMapLinear";
-        TextureFilter[TextureFilter["LinearMipMapLinear"] = 9987] = "LinearMipMapLinear";
-    })(TextureFilter = gltf.TextureFilter || (gltf.TextureFilter = {}));
-    /**
-     *
-     */
-    var TextureWrappingMode;
-    (function (TextureWrappingMode) {
-        TextureWrappingMode[TextureWrappingMode["Repeat"] = 10497] = "Repeat";
-        TextureWrappingMode[TextureWrappingMode["ClampToEdge"] = 33071] = "ClampToEdge";
-        TextureWrappingMode[TextureWrappingMode["MirroredRepeat"] = 33648] = "MirroredRepeat";
-    })(TextureWrappingMode = gltf.TextureWrappingMode || (gltf.TextureWrappingMode = {}));
-    /**
-     *
-     */
-    var EnableState;
-    (function (EnableState) {
-        EnableState[EnableState["Blend"] = 3042] = "Blend";
-        EnableState[EnableState["CullFace"] = 2884] = "CullFace";
-        EnableState[EnableState["DepthTest"] = 2929] = "DepthTest";
-        EnableState[EnableState["StencilTest"] = 2960] = "StencilTest";
-        EnableState[EnableState["PolygonOffsetFill"] = 32823] = "PolygonOffsetFill";
-        EnableState[EnableState["SampleAlphaToCoverage"] = 32926] = "SampleAlphaToCoverage";
-    })(EnableState = gltf.EnableState || (gltf.EnableState = {}));
-    /**
-     *
-     */
-    var DepthFunc;
-    (function (DepthFunc) {
-        DepthFunc[DepthFunc["Never"] = 512] = "Never";
-        DepthFunc[DepthFunc["Less"] = 513] = "Less";
-        DepthFunc[DepthFunc["Lequal"] = 515] = "Lequal";
-        DepthFunc[DepthFunc["Equal"] = 514] = "Equal";
-        DepthFunc[DepthFunc["Greater"] = 516] = "Greater";
-        DepthFunc[DepthFunc["NotEqual"] = 517] = "NotEqual";
-        DepthFunc[DepthFunc["GEqual"] = 518] = "GEqual";
-        DepthFunc[DepthFunc["Always"] = 519] = "Always";
-    })(DepthFunc = gltf.DepthFunc || (gltf.DepthFunc = {}));
-})(gltf || (gltf = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -5358,6 +4530,926 @@ var egret3d;
     }(paper.BaseRelease));
     egret3d.Vector4 = Vector4;
     __reflect(Vector4.prototype, "egret3d.Vector4", ["egret3d.IVector4", "egret3d.IVector3", "egret3d.IVector2", "paper.ICCS", "paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var _array = [
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    ];
+    /**
+     * 4x4 矩阵。
+     */
+    var Matrix4 = (function (_super) {
+        __extends(Matrix4, _super);
+        /**
+         * 请使用 `egret3d.Matrix4.create()` 创建实例。
+         * @see egret3d.Matrix4.create()
+         * @deprecated
+         */
+        function Matrix4(rawData, offsetOrByteOffset) {
+            if (offsetOrByteOffset === void 0) { offsetOrByteOffset = 0; }
+            var _this = _super.call(this) || this;
+            /**
+             * 矩阵原始数据。
+             * @readonly
+             */
+            _this.rawData = null;
+            if (rawData && rawData instanceof ArrayBuffer) {
+                _this.fromBuffer(rawData, offsetOrByteOffset);
+            }
+            else {
+                _this.rawData = new Float32Array(16);
+                _this.fromArray(rawData || _array);
+            }
+            return _this;
+        }
+        /**
+         * 创建一个矩阵。
+         * @param rawData
+         * @param offsetOrByteOffset
+         */
+        Matrix4.create = function (rawData, offsetOrByteOffset) {
+            if (offsetOrByteOffset === void 0) { offsetOrByteOffset = 0; }
+            if (this._instances.length > 0) {
+                var instance = this._instances.pop();
+                instance._released = false;
+                if (rawData) {
+                    if (rawData instanceof ArrayBuffer) {
+                        instance.fromBuffer(rawData, offsetOrByteOffset);
+                    }
+                    else {
+                        instance.fromArray(rawData, offsetOrByteOffset);
+                    }
+                }
+                else {
+                    instance.identity();
+                }
+                return instance;
+            }
+            return new Matrix4(rawData, offsetOrByteOffset);
+        };
+        Matrix4.prototype.serialize = function () {
+            return this.rawData;
+        };
+        Matrix4.prototype.deserialize = function (value) {
+            return this.fromArray(value);
+        };
+        Matrix4.prototype.copy = function (value) {
+            return this.fromArray(value.rawData);
+        };
+        Matrix4.prototype.clone = function () {
+            return Matrix4.create(this.rawData);
+        };
+        Matrix4.prototype.set = function (n11, n12, n13, n14, n21, n22, n23, n24, n31, n32, n33, n34, n41, n42, n43, n44) {
+            var rawData = this.rawData;
+            rawData[0] = n11;
+            rawData[4] = n12;
+            rawData[8] = n13;
+            rawData[12] = n14;
+            rawData[1] = n21;
+            rawData[5] = n22;
+            rawData[9] = n23;
+            rawData[13] = n24;
+            rawData[2] = n31;
+            rawData[6] = n32;
+            rawData[10] = n33;
+            rawData[14] = n34;
+            rawData[3] = n41;
+            rawData[7] = n42;
+            rawData[11] = n43;
+            rawData[15] = n44;
+            return this;
+        };
+        /**
+         * 将该矩阵转换为恒等矩阵。
+         */
+        Matrix4.prototype.identity = function () {
+            this.rawData[0] = 1.0;
+            this.rawData[1] = 0.0;
+            this.rawData[2] = 0.0;
+            this.rawData[3] = 0.0;
+            this.rawData[4] = 0.0;
+            this.rawData[5] = 1.0;
+            this.rawData[6] = 0.0;
+            this.rawData[7] = 0.0;
+            this.rawData[8] = 0.0;
+            this.rawData[9] = 0.0;
+            this.rawData[10] = 1.0;
+            this.rawData[11] = 0.0;
+            this.rawData[12] = 0.0;
+            this.rawData[13] = 0.0;
+            this.rawData[14] = 0.0;
+            this.rawData[15] = 1.0;
+            return this;
+        };
+        Matrix4.prototype.fromArray = function (array, offset) {
+            if (offset === void 0) { offset = 0; }
+            for (var i = 0; i < 16; ++i) {
+                this.rawData[i] = array[i + offset];
+            }
+            return this;
+        };
+        Matrix4.prototype.fromBuffer = function (buffer, byteOffset) {
+            if (byteOffset === void 0) { byteOffset = 0; }
+            this.rawData = new Float32Array(buffer, byteOffset, 16);
+            return this;
+        };
+        /**
+         * 通过平移向量设置该矩阵。
+         * @param translate 平移向量。
+         * @param rotationAndScaleStays 是否保留该矩阵的旋转和数据。
+         */
+        Matrix4.prototype.fromTranslate = function (translate, rotationAndScaleStays) {
+            if (rotationAndScaleStays === void 0) { rotationAndScaleStays = false; }
+            if (!rotationAndScaleStays) {
+                this.identity();
+            }
+            this.rawData[12] = translate.x;
+            this.rawData[13] = translate.y;
+            this.rawData[14] = translate.z;
+            return this;
+        };
+        /**
+         * 通过四元数旋转设置该矩阵。
+         * @param rotation 四元数旋转。
+         * @param translateStays 是否保留该矩阵的平移数据。
+         */
+        Matrix4.prototype.fromRotation = function (rotation, translateStays) {
+            if (translateStays === void 0) { translateStays = false; }
+            return this.compose(translateStays ? _helpVector3A.fromArray(this.rawData, 12) : egret3d.Vector3.ZERO, rotation, egret3d.Vector3.ONE);
+        };
+        /**
+         * 通过欧拉旋转设置该矩阵。
+         * @param euler 欧拉旋转。
+         * @param order 欧拉旋转顺序。
+         * @param translateStays 是否保留该矩阵的平移数据。
+         */
+        Matrix4.prototype.fromEuler = function (euler, order, translateStays) {
+            // http://www.mathworks.com/matlabcentral/fileexchange/
+            // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
+            //	content/SpinCalc.m
+            if (order === void 0) { order = 2 /* YXZ */; }
+            if (translateStays === void 0) { translateStays = false; }
+            var cos = Math.cos;
+            var sin = Math.sin;
+            var x = euler.x, y = euler.y, z = euler.z;
+            var a = cos(x), b = sin(x);
+            var c = cos(y), d = sin(y);
+            var e = cos(z), f = sin(z);
+            var rawData = this.rawData;
+            switch (order) {
+                case 0 /* XYZ */: {
+                    var ae = a * e, af = a * f, be = b * e, bf = b * f;
+                    rawData[0] = c * e;
+                    rawData[4] = -c * f;
+                    rawData[8] = d;
+                    rawData[1] = af + be * d;
+                    rawData[5] = ae - bf * d;
+                    rawData[9] = -b * c;
+                    rawData[2] = bf - ae * d;
+                    rawData[6] = be + af * d;
+                    rawData[10] = a * c;
+                    break;
+                }
+                case 1 /* XZY */: {
+                    var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
+                    rawData[0] = c * e;
+                    rawData[4] = -f;
+                    rawData[8] = d * e;
+                    rawData[1] = ac * f + bd;
+                    rawData[5] = a * e;
+                    rawData[9] = ad * f - bc;
+                    rawData[2] = bc * f - ad;
+                    rawData[6] = b * e;
+                    rawData[10] = bd * f + ac;
+                    break;
+                }
+                case 2 /* YXZ */: {
+                    var ce = c * e, cf = c * f, de = d * e, df = d * f;
+                    rawData[0] = ce + df * b;
+                    rawData[4] = de * b - cf;
+                    rawData[8] = a * d;
+                    rawData[1] = a * f;
+                    rawData[5] = a * e;
+                    rawData[9] = -b;
+                    rawData[2] = cf * b - de;
+                    rawData[6] = df + ce * b;
+                    rawData[10] = a * c;
+                    break;
+                }
+                case 3 /* YZX */: {
+                    var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
+                    rawData[0] = c * e;
+                    rawData[4] = bd - ac * f;
+                    rawData[8] = bc * f + ad;
+                    rawData[1] = f;
+                    rawData[5] = a * e;
+                    rawData[9] = -b * e;
+                    rawData[2] = -d * e;
+                    rawData[6] = ad * f + bc;
+                    rawData[10] = ac - bd * f;
+                    break;
+                }
+                case 4 /* ZXY */: {
+                    var ce = c * e, cf = c * f, de = d * e, df = d * f;
+                    rawData[0] = ce - df * b;
+                    rawData[4] = -a * f;
+                    rawData[8] = de + cf * b;
+                    rawData[1] = cf + de * b;
+                    rawData[5] = a * e;
+                    rawData[9] = df - ce * b;
+                    rawData[2] = -a * d;
+                    rawData[6] = b;
+                    rawData[10] = a * c;
+                    break;
+                }
+                case 5 /* ZYX */: {
+                    var ae = a * e, af = a * f, be = b * e, bf = b * f;
+                    rawData[0] = c * e;
+                    rawData[4] = be * d - af;
+                    rawData[8] = ae * d + bf;
+                    rawData[1] = c * f;
+                    rawData[5] = bf * d + ae;
+                    rawData[9] = af * d - be;
+                    rawData[2] = -d;
+                    rawData[6] = b * c;
+                    rawData[10] = a * c;
+                    break;
+                }
+            }
+            // bottom row
+            rawData[3] = 0.0;
+            rawData[7] = 0.0;
+            rawData[11] = 0.0;
+            if (!translateStays) {
+                // last column
+                rawData[12] = 0.0;
+                rawData[13] = 0.0;
+                rawData[14] = 0.0;
+                rawData[15] = 1.0;
+            }
+            return this;
+        };
+        /**
+         * 通过缩放向量设置该矩阵。
+         * @param scale 缩放向量。
+         * @param translateStays 是否保留该矩阵的平移数据。
+         */
+        Matrix4.prototype.fromScale = function (scale, translateStays) {
+            if (translateStays === void 0) { translateStays = false; }
+            if (translateStays) {
+                _helpVector3A.fromArray(this.rawData, 12);
+            }
+            this.identity();
+            this.rawData[0] = scale.x;
+            this.rawData[5] = scale.y;
+            this.rawData[10] = scale.z;
+            if (translateStays) {
+                this.rawData[12] = _helpVector3A.x;
+                this.rawData[13] = _helpVector3A.y;
+                this.rawData[14] = _helpVector3A.z;
+            }
+            return this;
+        };
+        /**
+         * 通过绕 X 轴的旋转角度设置该矩阵。
+         * @param angle 旋转角。（弧度制）
+         */
+        Matrix4.prototype.fromRotationX = function (angle) {
+            var c = Math.cos(angle), s = Math.sin(angle);
+            return this.set(1, 0, 0, 0, 0, c, -s, 0, 0, s, c, 0, 0, 0, 0, 1);
+        };
+        /**
+         * 通过绕 Y 轴的旋转角度设置该矩阵。
+         * @param theta 旋转角。（弧度制）
+         */
+        Matrix4.prototype.fromRotationY = function (theta) {
+            var c = Math.cos(theta), s = Math.sin(theta);
+            return this.set(c, 0, s, 0, 0, 1, 0, 0, -s, 0, c, 0, 0, 0, 0, 1);
+        };
+        /**
+         * 通过绕 Z 轴的旋转角度设置该矩阵。
+         * @param theta 旋转角。（弧度制）
+         */
+        Matrix4.prototype.fromRotationZ = function (theta) {
+            var c = Math.cos(theta), s = Math.sin(theta);
+            return this.set(c, -s, 0, 0, s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1);
+        };
+        /**
+         * 通过旋转轴设置该矩阵。
+         * - 假设旋转轴已被归一化。
+         * @param axis 旋转轴。
+         * @param angle 旋转角。（弧度制）
+         */
+        Matrix4.prototype.fromAxis = function (axis, angle) {
+            // Based on http://www.gamedev.net/reference/articles/article1199.asp
+            var c = Math.cos(angle);
+            var s = Math.sin(angle);
+            var t = 1.0 - c;
+            var x = axis.x, y = axis.y, z = axis.z;
+            var tx = t * x, ty = t * y;
+            return this.set(tx * x + c, tx * y - s * z, tx * z + s * y, 0.0, tx * y + s * z, ty * y + c, ty * z - s * x, 0.0, tx * z - s * y, ty * z + s * x, t * z * z + c, 0.0, 0.0, 0.0, 0.0, 1.0);
+        };
+        Matrix4.prototype.fromProjection = function (fov, near, far, size, opvalue, asp, matchFactor) {
+            var orthographicMatrix = _helpMatrix;
+            matchFactor = 1.0 - matchFactor;
+            if (opvalue > 0.0) {
+                var tan = Math.tan(fov * 0.5);
+                var topX = near * tan;
+                var heightX = 2.0 * topX;
+                var widthX = asp * heightX;
+                var leftX = -0.5 * widthX;
+                var leftY = -near * tan;
+                var widthY = 2.0 * -leftY;
+                var heightY = widthY / asp;
+                var topY = 0.5 * heightY;
+                var top_1 = topX + (topY - topX) * matchFactor;
+                var left = leftX + (leftY - leftX) * matchFactor;
+                var width = widthX + (widthY - widthX) * matchFactor;
+                var height = heightX + (heightY - heightX) * matchFactor;
+                Matrix4._perspectiveProjectMatrix(left, left + width, top_1, top_1 - height, near, far, this);
+            }
+            if (opvalue < 1.0) {
+                var widthX = size * asp;
+                var heightX = size;
+                var widthY = size;
+                var heightY = size / asp;
+                var width = widthX + (widthY - widthX) * matchFactor;
+                var height = heightX + (heightY - heightX) * matchFactor;
+                Matrix4._orthographicProjectLH(width, height, near, far, orthographicMatrix);
+            }
+            if (opvalue === 0.0) {
+                this.copy(orthographicMatrix);
+            }
+            else if (opvalue === 1.0) {
+                // this;
+            }
+            else {
+                this.lerp(orthographicMatrix, this, Math.pow(opvalue, 8));
+            }
+            return this;
+        };
+        /**
+         * 通过 X、Y、Z 轴设置该矩阵。
+         * @param axisX X 轴。
+         * @param axisY Y 轴。
+         * @param axisZ Z 轴。
+         */
+        Matrix4.prototype.fromAxises = function (axisX, axisY, axisZ) {
+            return this.set(axisX.x, axisY.x, axisZ.x, 0.0, axisX.y, axisY.y, axisZ.y, 0.0, axisX.z, axisY.z, axisZ.z, 0.0, 0.0, 0.0, 0.0, 1.0);
+        };
+        /**
+         * 通过平移向量、四元数旋转、缩放向量设置该矩阵。
+         * @param translation 平移向量。
+         * @param rotation 四元数旋转。
+         * @param scale 缩放向量。
+         */
+        Matrix4.prototype.compose = function (translation, rotation, scale) {
+            var rX = rotation.x, rY = rotation.y, rZ = rotation.z, rW = rotation.w;
+            var sX = scale.x, sY = scale.y, sZ = scale.z;
+            var x2 = rX + rX, y2 = rY + rY, z2 = rZ + rZ;
+            var xx = rX * x2, xy = rX * y2, xz = rX * z2;
+            var yy = rY * y2, yz = rY * z2, zz = rZ * z2;
+            var wx = rW * x2, wy = rW * y2, wz = rW * z2;
+            var rawData = this.rawData;
+            rawData[0] = (1.0 - (yy + zz)) * sX;
+            rawData[1] = (xy + wz) * sX;
+            rawData[2] = (xz - wy) * sX;
+            rawData[4] = (xy - wz) * sY;
+            rawData[5] = (1.0 - (xx + zz)) * sY;
+            rawData[6] = (yz + wx) * sY;
+            rawData[8] = (xz + wy) * sZ;
+            rawData[9] = (yz - wx) * sZ;
+            rawData[10] = (1.0 - (xx + yy)) * sZ;
+            rawData[12] = translation.x;
+            rawData[13] = translation.y;
+            rawData[14] = translation.z;
+            rawData[3] = rawData[7] = rawData[11] = 0.0, rawData[15] = 1.0;
+            return this;
+        };
+        /**
+         * 将该矩阵分解为平移向量、四元数旋转、缩放向量。
+         * @param translation 平移向量。
+         * @param rotation 四元数旋转。
+         * @param scale 缩放向量。
+         */
+        Matrix4.prototype.decompose = function (translation, rotation, scale) {
+            if (translation === void 0) { translation = null; }
+            if (rotation === void 0) { rotation = null; }
+            if (scale === void 0) { scale = null; }
+            var rawData = this.rawData;
+            if (translation) {
+                translation.x = rawData[12];
+                translation.y = rawData[13];
+                translation.z = rawData[14];
+            }
+            if (rotation || scale) {
+                var helpVector3A_1 = _helpVector3A;
+                var sx = helpVector3A_1.set(rawData[0], rawData[1], rawData[2]).length;
+                var sy = helpVector3A_1.set(rawData[4], rawData[5], rawData[6]).length;
+                var sz = helpVector3A_1.set(rawData[8], rawData[9], rawData[10]).length;
+                // if determine is negative, we need to invert one scale
+                var det = this.determinant;
+                if (det < 0.0)
+                    sx = -sx;
+                if (rotation) {
+                    // scale the rotation part
+                    var helpMatrix = _helpMatrix;
+                    helpMatrix.copy(this);
+                    var invSX = 1.0 / sx;
+                    var invSY = 1.0 / sy;
+                    var invSZ = 1.0 / sz;
+                    helpMatrix.rawData[0] *= invSX;
+                    helpMatrix.rawData[1] *= invSX;
+                    helpMatrix.rawData[2] *= invSX;
+                    helpMatrix.rawData[4] *= invSY;
+                    helpMatrix.rawData[5] *= invSY;
+                    helpMatrix.rawData[6] *= invSY;
+                    helpMatrix.rawData[8] *= invSZ;
+                    helpMatrix.rawData[9] *= invSZ;
+                    helpMatrix.rawData[10] *= invSZ;
+                    rotation.fromMatrix(helpMatrix);
+                }
+                if (scale) {
+                    scale.x = sx;
+                    scale.y = sy;
+                    scale.z = sz;
+                }
+            }
+            return this;
+        };
+        Matrix4.prototype.extractRotation = function (input) {
+            if (!input) {
+                input = this;
+            }
+            var rawData = this.rawData;
+            var inputRawData = input.rawData;
+            var helpVector = _helpVector3A;
+            var scaleX = 1.0 / helpVector.fromMatrixColumn(input, 0).length;
+            var scaleY = 1.0 / helpVector.fromMatrixColumn(input, 1).length;
+            var scaleZ = 1.0 / helpVector.fromMatrixColumn(input, 2).length;
+            rawData[0] = inputRawData[0] * scaleX;
+            rawData[1] = inputRawData[1] * scaleX;
+            rawData[2] = inputRawData[2] * scaleX;
+            rawData[3] = 0.0;
+            rawData[4] = inputRawData[4] * scaleY;
+            rawData[5] = inputRawData[5] * scaleY;
+            rawData[6] = inputRawData[6] * scaleY;
+            rawData[7] = 0.0;
+            rawData[8] = inputRawData[8] * scaleZ;
+            rawData[9] = inputRawData[9] * scaleZ;
+            rawData[10] = inputRawData[10] * scaleZ;
+            rawData[11] = 0.0;
+            rawData[12] = 0.0;
+            rawData[13] = 0.0;
+            rawData[14] = 0.0;
+            rawData[15] = 1.0;
+            return this;
+        };
+        Matrix4.prototype.transpose = function (input) {
+            if (!input) {
+                input = this;
+            }
+            var inputRawData = input.rawData;
+            var rawData = this.rawData;
+            var temp = 0.0;
+            temp = inputRawData[1];
+            rawData[1] = inputRawData[4];
+            rawData[4] = temp;
+            temp = inputRawData[2];
+            rawData[2] = inputRawData[8];
+            rawData[8] = temp;
+            temp = inputRawData[6];
+            rawData[6] = inputRawData[9];
+            rawData[9] = temp;
+            temp = inputRawData[3];
+            rawData[3] = inputRawData[12];
+            rawData[12] = temp;
+            temp = inputRawData[7];
+            rawData[7] = inputRawData[13];
+            rawData[13] = temp;
+            temp = inputRawData[11];
+            rawData[11] = inputRawData[14];
+            rawData[14] = temp;
+            return this;
+        };
+        Matrix4.prototype.inverse = function (input) {
+            if (!input) {
+                input = this;
+            }
+            var valueRawData = input.rawData;
+            var rawData = this.rawData;
+            var n11 = valueRawData[0], n21 = valueRawData[1], n31 = valueRawData[2], n41 = valueRawData[3], n12 = valueRawData[4], n22 = valueRawData[5], n32 = valueRawData[6], n42 = valueRawData[7], n13 = valueRawData[8], n23 = valueRawData[9], n33 = valueRawData[10], n43 = valueRawData[11], n14 = valueRawData[12], n24 = valueRawData[13], n34 = valueRawData[14], n44 = valueRawData[15], t11 = n23 * n34 * n42 - n24 * n33 * n42 + n24 * n32 * n43 - n22 * n34 * n43 - n23 * n32 * n44 + n22 * n33 * n44, t12 = n14 * n33 * n42 - n13 * n34 * n42 - n14 * n32 * n43 + n12 * n34 * n43 + n13 * n32 * n44 - n12 * n33 * n44, t13 = n13 * n24 * n42 - n14 * n23 * n42 + n14 * n22 * n43 - n12 * n24 * n43 - n13 * n22 * n44 + n12 * n23 * n44, t14 = n14 * n23 * n32 - n13 * n24 * n32 - n14 * n22 * n33 + n12 * n24 * n33 + n13 * n22 * n34 - n12 * n23 * n34;
+            var det = n11 * t11 + n21 * t12 + n31 * t13 + n41 * t14;
+            if (det === 0.0) {
+                console.warn("Cannot invert matrix, determinant is 0.");
+                return this.identity();
+            }
+            var detInv = 1.0 / det;
+            rawData[0] = t11 * detInv;
+            rawData[1] = (n24 * n33 * n41 - n23 * n34 * n41 - n24 * n31 * n43 + n21 * n34 * n43 + n23 * n31 * n44 - n21 * n33 * n44) * detInv;
+            rawData[2] = (n22 * n34 * n41 - n24 * n32 * n41 + n24 * n31 * n42 - n21 * n34 * n42 - n22 * n31 * n44 + n21 * n32 * n44) * detInv;
+            rawData[3] = (n23 * n32 * n41 - n22 * n33 * n41 - n23 * n31 * n42 + n21 * n33 * n42 + n22 * n31 * n43 - n21 * n32 * n43) * detInv;
+            rawData[4] = t12 * detInv;
+            rawData[5] = (n13 * n34 * n41 - n14 * n33 * n41 + n14 * n31 * n43 - n11 * n34 * n43 - n13 * n31 * n44 + n11 * n33 * n44) * detInv;
+            rawData[6] = (n14 * n32 * n41 - n12 * n34 * n41 - n14 * n31 * n42 + n11 * n34 * n42 + n12 * n31 * n44 - n11 * n32 * n44) * detInv;
+            rawData[7] = (n12 * n33 * n41 - n13 * n32 * n41 + n13 * n31 * n42 - n11 * n33 * n42 - n12 * n31 * n43 + n11 * n32 * n43) * detInv;
+            rawData[8] = t13 * detInv;
+            rawData[9] = (n14 * n23 * n41 - n13 * n24 * n41 - n14 * n21 * n43 + n11 * n24 * n43 + n13 * n21 * n44 - n11 * n23 * n44) * detInv;
+            rawData[10] = (n12 * n24 * n41 - n14 * n22 * n41 + n14 * n21 * n42 - n11 * n24 * n42 - n12 * n21 * n44 + n11 * n22 * n44) * detInv;
+            rawData[11] = (n13 * n22 * n41 - n12 * n23 * n41 - n13 * n21 * n42 + n11 * n23 * n42 + n12 * n21 * n43 - n11 * n22 * n43) * detInv;
+            rawData[12] = t14 * detInv;
+            rawData[13] = (n13 * n24 * n31 - n14 * n23 * n31 + n14 * n21 * n33 - n11 * n24 * n33 - n13 * n21 * n34 + n11 * n23 * n34) * detInv;
+            rawData[14] = (n14 * n22 * n31 - n12 * n24 * n31 - n14 * n21 * n32 + n11 * n24 * n32 + n12 * n21 * n34 - n11 * n22 * n34) * detInv;
+            rawData[15] = (n12 * n23 * n31 - n13 * n22 * n31 + n13 * n21 * n32 - n11 * n23 * n32 - n12 * n21 * n33 + n11 * n22 * n33) * detInv;
+            return this;
+        };
+        Matrix4.prototype.multiplyScalar = function (scalar, input) {
+            if (!input) {
+                input = this;
+            }
+            var sourceRawData = input.rawData;
+            var rawData = this.rawData;
+            rawData[0] = sourceRawData[0] * scalar;
+            rawData[1] = sourceRawData[1] * scalar;
+            rawData[2] = sourceRawData[2] * scalar;
+            rawData[3] = sourceRawData[3] * scalar;
+            rawData[4] = sourceRawData[4] * scalar;
+            rawData[5] = sourceRawData[5] * scalar;
+            rawData[6] = sourceRawData[6] * scalar;
+            rawData[7] = sourceRawData[7] * scalar;
+            rawData[8] = sourceRawData[8] * scalar;
+            rawData[9] = sourceRawData[9] * scalar;
+            rawData[10] = sourceRawData[10] * scalar;
+            rawData[11] = sourceRawData[11] * scalar;
+            rawData[12] = sourceRawData[12] * scalar;
+            rawData[13] = sourceRawData[13] * scalar;
+            rawData[14] = sourceRawData[14] * scalar;
+            rawData[15] = sourceRawData[15] * scalar;
+            return this;
+        };
+        Matrix4.prototype.multiply = function (matrixA, matrixB) {
+            if (!matrixB) {
+                matrixB = matrixA;
+                matrixA = this;
+            }
+            var rawDataA = matrixA.rawData;
+            var rawDataB = matrixB.rawData;
+            var rawData = this.rawData;
+            var a11 = rawDataA[0], a12 = rawDataA[4], a13 = rawDataA[8], a14 = rawDataA[12];
+            var a21 = rawDataA[1], a22 = rawDataA[5], a23 = rawDataA[9], a24 = rawDataA[13];
+            var a31 = rawDataA[2], a32 = rawDataA[6], a33 = rawDataA[10], a34 = rawDataA[14];
+            var a41 = rawDataA[3], a42 = rawDataA[7], a43 = rawDataA[11], a44 = rawDataA[15];
+            var b11 = rawDataB[0], b12 = rawDataB[4], b13 = rawDataB[8], b14 = rawDataB[12];
+            var b21 = rawDataB[1], b22 = rawDataB[5], b23 = rawDataB[9], b24 = rawDataB[13];
+            var b31 = rawDataB[2], b32 = rawDataB[6], b33 = rawDataB[10], b34 = rawDataB[14];
+            var b41 = rawDataB[3], b42 = rawDataB[7], b43 = rawDataB[11], b44 = rawDataB[15];
+            rawData[0] = a11 * b11 + a12 * b21 + a13 * b31 + a14 * b41;
+            rawData[4] = a11 * b12 + a12 * b22 + a13 * b32 + a14 * b42;
+            rawData[8] = a11 * b13 + a12 * b23 + a13 * b33 + a14 * b43;
+            rawData[12] = a11 * b14 + a12 * b24 + a13 * b34 + a14 * b44;
+            rawData[1] = a21 * b11 + a22 * b21 + a23 * b31 + a24 * b41;
+            rawData[5] = a21 * b12 + a22 * b22 + a23 * b32 + a24 * b42;
+            rawData[9] = a21 * b13 + a22 * b23 + a23 * b33 + a24 * b43;
+            rawData[13] = a21 * b14 + a22 * b24 + a23 * b34 + a24 * b44;
+            rawData[2] = a31 * b11 + a32 * b21 + a33 * b31 + a34 * b41;
+            rawData[6] = a31 * b12 + a32 * b22 + a33 * b32 + a34 * b42;
+            rawData[10] = a31 * b13 + a32 * b23 + a33 * b33 + a34 * b43;
+            rawData[14] = a31 * b14 + a32 * b24 + a33 * b34 + a34 * b44;
+            rawData[3] = a41 * b11 + a42 * b21 + a43 * b31 + a44 * b41;
+            rawData[7] = a41 * b12 + a42 * b22 + a43 * b32 + a44 * b42;
+            rawData[11] = a41 * b13 + a42 * b23 + a43 * b33 + a44 * b43;
+            rawData[15] = a41 * b14 + a42 * b24 + a43 * b34 + a44 * b44;
+            return this;
+        };
+        /**
+         * 将一个矩阵与该矩阵相乘的结果写入该矩阵。
+         * - v = matrix * v
+         * @param matrix 一个矩阵。
+         */
+        Matrix4.prototype.premultiply = function (matrix) {
+            return this.multiply(matrix, this);
+        };
+        Matrix4.prototype.lerp = function (p1, p2, p3) {
+            if (typeof p2 === "number") {
+                p3 = p2;
+                p2 = p1;
+                p1 = this;
+            }
+            if (p3 === 0.0) {
+                for (var i = 0; i < 16; i++) {
+                    this.rawData[i] = p1.rawData[i];
+                }
+                return this;
+            }
+            else if (p3 === 1.0) {
+                for (var i = 0; i < 16; i++) {
+                    this.rawData[i] = p2.rawData[i];
+                }
+                return this;
+            }
+            for (var i = 0; i < 16; i++) {
+                var fV = p1.rawData[i];
+                this.rawData[i] = fV + (p2.rawData[i] - fV) * p3;
+            }
+            return this;
+        };
+        /**
+         * 设置该矩阵，使其 Z 轴正方向与起始点到目标点的方向相一致。
+         * - 矩阵的缩放值将被覆盖。
+         * @param from 起始点。
+         * @param to 目标点。
+         * @param up
+         */
+        Matrix4.prototype.lookAt = function (from, to, up) {
+            this.lookRotation(_helpVector3C.subtract(to, from), up);
+            return this;
+        };
+        /**
+         * 设置该矩阵，使其 Z 轴正方向与目标方向相一致。
+         * - 矩阵的缩放值将被覆盖。
+         * @param vector 目标方向。
+         * @param up
+         */
+        Matrix4.prototype.lookRotation = function (vector, up) {
+            var z = _helpVector3C.normalize(vector);
+            var x = _helpVector3A.cross(up, z).normalize(_helpVector3A, egret3d.Vector3.RIGHT);
+            var y = _helpVector3B.cross(z, x);
+            var rawData = this.rawData;
+            rawData[0] = x.x;
+            rawData[4] = y.x;
+            rawData[8] = z.x;
+            rawData[1] = x.y;
+            rawData[5] = y.y;
+            rawData[9] = z.y;
+            rawData[2] = x.z;
+            rawData[6] = y.z;
+            rawData[10] = z.z;
+            return this;
+        };
+        /**
+         * 将该旋转矩阵转换为数组。
+         * @param array 数组。
+         * @param offset 数组偏移。
+         */
+        Matrix4.prototype.toArray = function (array, offset) {
+            if (offset === void 0) { offset = 0; }
+            if (!array) {
+                array = [];
+            }
+            for (var i = 0; i < 16; ++i) {
+                array[i + offset] = this.rawData[i];
+            }
+            return array;
+        };
+        /**
+         * 将该旋转矩阵转换为欧拉旋转。
+         * @param euler 欧拉旋转。（弧度制）
+         * @param order 欧拉旋转顺序。
+         */
+        Matrix4.prototype.toEuler = function (euler, order) {
+            if (order === void 0) { order = 2 /* YXZ */; }
+            if (!euler) {
+                euler = egret3d.Vector3.create();
+            }
+            // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
+            var rawData = this.rawData;
+            var m11 = rawData[0], m12 = rawData[4], m13 = rawData[8];
+            var m21 = rawData[1], m22 = rawData[5], m23 = rawData[9];
+            var m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
+            switch (order) {
+                case 0 /* XYZ */: {
+                    euler.y = Math.asin(egret3d.math.clamp(m13, -1.0, 1.0));
+                    if (Math.abs(m13) < 0.999999) {
+                        euler.x = Math.atan2(-m23, m33);
+                        euler.z = Math.atan2(-m12, m11);
+                    }
+                    else {
+                        euler.x = Math.atan2(m32, m22);
+                        euler.z = 0.0;
+                    }
+                    break;
+                }
+                case 1 /* XZY */: {
+                    euler.z = Math.asin(-egret3d.math.clamp(m12, -1.0, 1.0));
+                    if (Math.abs(m12) < 0.999999) {
+                        euler.x = Math.atan2(m32, m22);
+                        euler.y = Math.atan2(m13, m11);
+                    }
+                    else {
+                        euler.x = Math.atan2(-m23, m33);
+                        euler.y = 0.0;
+                    }
+                    break;
+                }
+                case 2 /* YXZ */: {
+                    euler.x = Math.asin(-egret3d.math.clamp(m23, -1.0, 1.0));
+                    if (Math.abs(m23) < 0.999999) {
+                        euler.y = Math.atan2(m13, m33);
+                        euler.z = Math.atan2(m21, m22);
+                    }
+                    else {
+                        euler.y = Math.atan2(-m31, m11);
+                        euler.z = 0.0;
+                    }
+                    break;
+                }
+                case 3 /* YZX */: {
+                    euler.z = Math.asin(egret3d.math.clamp(m21, -1.0, 1.0));
+                    if (Math.abs(m21) < 0.999999) {
+                        euler.x = Math.atan2(-m23, m22);
+                        euler.y = Math.atan2(-m31, m11);
+                    }
+                    else {
+                        euler.x = 0.0;
+                        euler.y = Math.atan2(m13, m33);
+                    }
+                    break;
+                }
+                case 4 /* ZXY */: {
+                    euler.x = Math.asin(egret3d.math.clamp(m32, -1.0, 1.0));
+                    if (Math.abs(m32) < 0.999999) {
+                        euler.y = Math.atan2(-m31, m33);
+                        euler.z = Math.atan2(-m12, m22);
+                    }
+                    else {
+                        euler.y = 0.0;
+                        euler.z = Math.atan2(m21, m11);
+                    }
+                    break;
+                }
+                case 5 /* ZYX */: {
+                    euler.y = Math.asin(-egret3d.math.clamp(m31, -1.0, 1.0));
+                    if (Math.abs(m31) < 0.999999) {
+                        euler.x = Math.atan2(m32, m33);
+                        euler.z = Math.atan2(m21, m11);
+                    }
+                    else {
+                        euler.x = 0.0;
+                        euler.z = Math.atan2(-m12, m22);
+                    }
+                    break;
+                }
+            }
+            return euler;
+        };
+        Object.defineProperty(Matrix4.prototype, "determinant", {
+            /**
+             * 获取该矩阵的行列式。
+             * - 该值是实时计算的。
+             */
+            get: function () {
+                var rawData = this.rawData;
+                var n11 = rawData[0], n12 = rawData[4], n13 = rawData[8], n14 = rawData[12];
+                var n21 = rawData[1], n22 = rawData[5], n23 = rawData[9], n24 = rawData[13];
+                var n31 = rawData[2], n32 = rawData[6], n33 = rawData[10], n34 = rawData[14];
+                var n41 = rawData[3], n42 = rawData[7], n43 = rawData[11], n44 = rawData[15];
+                //TODO: make this more efficient
+                //( based on https://github.com/mrdoob/three.js/blob/dev/src/math/Matrix4.js )
+                return (n41 * (+n14 * n23 * n32
+                    - n13 * n24 * n32
+                    - n14 * n22 * n33
+                    + n12 * n24 * n33
+                    + n13 * n22 * n34
+                    - n12 * n23 * n34) +
+                    n42 * (+n11 * n23 * n34
+                        - n11 * n24 * n33
+                        + n14 * n21 * n33
+                        - n13 * n21 * n34
+                        + n13 * n24 * n31
+                        - n14 * n23 * n31) +
+                    n43 * (+n11 * n24 * n32
+                        - n11 * n22 * n34
+                        - n14 * n21 * n32
+                        + n12 * n21 * n34
+                        + n14 * n22 * n31
+                        - n12 * n24 * n31) +
+                    n44 * (-n13 * n22 * n31
+                        - n11 * n23 * n32
+                        + n11 * n22 * n33
+                        + n13 * n21 * n32
+                        - n12 * n21 * n33
+                        + n12 * n23 * n31));
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Matrix4.prototype, "maxScaleOnAxis", {
+            /**
+             * 获取该矩阵的最大缩放值。
+             * - 该值是实时计算的。
+             */
+            get: function () {
+                var rawData = this.rawData;
+                var scaleXSq = rawData[0] * rawData[0] + rawData[1] * rawData[1] + rawData[2] * rawData[2];
+                var scaleYSq = rawData[4] * rawData[4] + rawData[5] * rawData[5] + rawData[6] * rawData[6];
+                var scaleZSq = rawData[8] * rawData[8] + rawData[9] * rawData[9] + rawData[10] * rawData[10];
+                return Math.sqrt(Math.max(scaleXSq, scaleYSq, scaleZSq));
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * @deprecated
+         */
+        Matrix4.prototype.transformVector3 = function (value, out) {
+            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]) + this.rawData[12];
+            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]) + this.rawData[13];
+            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]) + this.rawData[14];
+            var w = (value.x * this.rawData[3]) + (value.y * this.rawData[7]) + (value.z * this.rawData[11]) + this.rawData[15];
+            if (!out) {
+                out = value;
+            }
+            out.x = x / w;
+            out.y = y / w;
+            out.z = z / w;
+            return out;
+        };
+        /**
+         * @deprecated
+         */
+        Matrix4.prototype.transformNormal = function (value, out) {
+            var x = (value.x * this.rawData[0]) + (value.y * this.rawData[4]) + (value.z * this.rawData[8]);
+            var y = (value.x * this.rawData[1]) + (value.y * this.rawData[5]) + (value.z * this.rawData[9]);
+            var z = (value.x * this.rawData[2]) + (value.y * this.rawData[6]) + (value.z * this.rawData[10]);
+            if (!out) {
+                out = value;
+            }
+            out.x = x;
+            out.y = y;
+            out.z = z;
+            return out;
+        };
+        Matrix4._perspectiveProjectMatrix = function (left, right, top, bottom, near, far, out) {
+            var iDeltaZ = 1.0 / (near - far);
+            var doubleNear = 2.0 * near;
+            out.rawData[0] = doubleNear / (right - left);
+            out.rawData[1] = out.rawData[2] = out.rawData[3] = 0.0;
+            out.rawData[4] = out.rawData[6] = out.rawData[7] = 0.0;
+            out.rawData[5] = doubleNear / (top - bottom);
+            out.rawData[8] = out.rawData[9] = 0.0;
+            out.rawData[10] = (far + near) * -iDeltaZ;
+            out.rawData[11] = 1.0;
+            out.rawData[12] = out.rawData[13] = out.rawData[15] = 0.0;
+            out.rawData[14] = doubleNear * far * iDeltaZ;
+            return out;
+        };
+        Matrix4._orthographicProjectLH = function (width, height, znear, zfar, out) {
+            var hw = 2.0 / width;
+            var hh = 2.0 / height;
+            var id = 2.0 / (zfar - znear);
+            var nid = (znear + zfar) / (znear - zfar);
+            out.rawData[0] = hw;
+            out.rawData[1] = 0;
+            out.rawData[2] = 0;
+            out.rawData[3] = 0;
+            out.rawData[4] = 0;
+            out.rawData[5] = hh;
+            out.rawData[6] = 0;
+            out.rawData[7] = 0;
+            out.rawData[8] = 0;
+            out.rawData[9] = 0;
+            out.rawData[10] = id;
+            out.rawData[11] = 0;
+            out.rawData[12] = 0;
+            out.rawData[13] = 0;
+            out.rawData[14] = nid;
+            out.rawData[15] = 1;
+            return out;
+        };
+        /**
+         * 一个静态的恒等矩阵。
+         * - 请注意不要修改该值。
+         */
+        Matrix4.IDENTITY = new Matrix4();
+        Matrix4._instances = [];
+        return Matrix4;
+    }(paper.BaseRelease));
+    egret3d.Matrix4 = Matrix4;
+    __reflect(Matrix4.prototype, "egret3d.Matrix4", ["paper.ICCS", "paper.ISerializable"]);
+    var _helpVector3A = egret3d.Vector3.create();
+    var _helpVector3B = egret3d.Vector3.create();
+    var _helpVector3C = egret3d.Vector3.create();
+    var _helpMatrix = Matrix4.create();
+    /**
+     * @internal
+     */
+    egret3d.helpMatrixA = Matrix4.create();
+    /**
+     * @internal
+     */
+    egret3d.helpMatrixB = Matrix4.create();
+    /**
+     * @internal
+     */
+    egret3d.helpMatrixC = Matrix4.create();
+    /**
+     * @internal
+     */
+    egret3d.helpMatrixD = Matrix4.create();
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
@@ -8553,10 +8645,7 @@ var egret3d;
         var WebGLRenderState = (function (_super) {
             __extends(WebGLRenderState, _super);
             function WebGLRenderState() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._stateEnables = [3042 /* Blend */, 2884 /* CullFace */, 2929 /* DepthTest */]; // TODO
-                _this._cacheStateEnable = {};
-                return _this;
+                return _super !== null && _super.apply(this, arguments) || this;
             }
             WebGLRenderState.prototype.initialize = function (config) {
                 _super.prototype.initialize.call(this);
@@ -8666,11 +8755,6 @@ var egret3d;
                             webgl[k].apply(webgl, functions[k]);
                         }
                     }
-                }
-            };
-            WebGLRenderState.prototype.clearState = function () {
-                for (var key in this._cacheStateEnable) {
-                    delete this._cacheStateEnable[key];
                 }
             };
             /**
@@ -10602,33 +10686,6 @@ var egret3d;
         ShaderUniformName["Metalness"] = "metalness";
     })(ShaderUniformName = egret3d.ShaderUniformName || (egret3d.ShaderUniformName = {}));
     /**
-     * TODO
-     * @internal
-     */
-    egret3d.TextureDecodingFunction = {
-        "map": "mapTexelToLinear",
-        "envMap": "envMapTexelToLinear",
-        "emissiveMap": "emissiveMapTexelToLinear",
-    };
-    /**
-     * TODO
-     * @internal
-     */
-    egret3d.ShaderTextureDefine = {
-        "map": "USE_MAP" /* USE_MAP */,
-        "alphaMap": "USE_ALPHAMAP" /* USE_ALPHAMAP */,
-        "aoMap": "USE_AOMAP" /* USE_AOMAP */,
-        "bumpMap": "USE_BUMPMAP" /* USE_BUMPMAP */,
-        "normalMap": "USE_NORMALMAP" /* USE_NORMALMAP */,
-        "specularMap": "USE_SPECULARMAP" /* USE_SPECULARMAP */,
-        "gradientMap": "TOON" /* TOON */,
-        "roughnessMap": "USE_ROUGHNESSMAP" /* USE_ROUGHNESSMAP */,
-        "metalnessMap": "USE_METALNESSMAP" /* USE_METALNESSMAP */,
-        "displacementMap": "USE_DISPLACEMENTMAP" /* USE_DISPLACEMENTMAP */,
-        "envMap": "USE_ENVMAP" /* USE_ENVMAP */,
-        "emissiveMap": "USE_EMISSIVEMAP" /* USE_EMISSIVEMAP */,
-    };
-    /**
      *
      */
     var HumanoidMask;
@@ -10707,6 +10764,33 @@ var egret3d;
         HumanoidJoint["RightLittleIntermediate"] = "RH_LittleIntermediate";
         HumanoidJoint["RightLittleDistal"] = "RH_LittleDistal";
     })(HumanoidJoint = egret3d.HumanoidJoint || (egret3d.HumanoidJoint = {}));
+    /**
+     * TODO
+     * @internal
+     */
+    egret3d.TextureDecodingFunction = {
+        "map": "mapTexelToLinear",
+        "envMap": "envMapTexelToLinear",
+        "emissiveMap": "emissiveMapTexelToLinear",
+    };
+    /**
+     * TODO
+     * @internal
+     */
+    egret3d.ShaderTextureDefine = {
+        "map": "USE_MAP" /* USE_MAP */,
+        "alphaMap": "USE_ALPHAMAP" /* USE_ALPHAMAP */,
+        "aoMap": "USE_AOMAP" /* USE_AOMAP */,
+        "bumpMap": "USE_BUMPMAP" /* USE_BUMPMAP */,
+        "normalMap": "USE_NORMALMAP" /* USE_NORMALMAP */,
+        "specularMap": "USE_SPECULARMAP" /* USE_SPECULARMAP */,
+        "gradientMap": "TOON" /* TOON */,
+        "roughnessMap": "USE_ROUGHNESSMAP" /* USE_ROUGHNESSMAP */,
+        "metalnessMap": "USE_METALNESSMAP" /* USE_METALNESSMAP */,
+        "displacementMap": "USE_DISPLACEMENTMAP" /* USE_DISPLACEMENTMAP */,
+        "envMap": "USE_ENVMAP" /* USE_ENVMAP */,
+        "emissiveMap": "USE_EMISSIVEMAP" /* USE_EMISSIVEMAP */,
+    };
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -29041,10 +29125,10 @@ var egret3d;
                         var _a = globalUniforms[i], semantic = _a.semantic, location_3 = _a.location;
                         switch (semantic) {
                             case "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */:
-                                webgl.uniform1f(location_3, renderState._toneMappingExposure);
+                                webgl.uniform1f(location_3, renderState.toneMappingExposure);
                                 break;
                             case "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */:
-                                webgl.uniform1f(location_3, renderState._toneMappingWhitePoint);
+                                webgl.uniform1f(location_3, renderState.toneMappingWhitePoint);
                                 break;
                             case "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */:
                                 var currenAmbientColor = activeScene.ambientColor;
