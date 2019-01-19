@@ -102,13 +102,6 @@ namespace egret3d {
                 return;
             }
 
-            if (value >= 0) {
-                this.defines.addDefine(ShaderDefine.USE_LIGHTMAP);
-            }
-            else {
-                this.defines.removeDefine(ShaderDefine.USE_LIGHTMAP);
-            }
-
             this._lightmapIndex = value;
         }
         /**

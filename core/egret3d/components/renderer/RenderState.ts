@@ -71,6 +71,19 @@ namespace egret3d {
          */
         public _castShadows: boolean = false;
 
+        /**
+         * @internal
+         */
+        public _useLightMap: boolean = false;
+        /**
+         * @internal
+         */
+        public _receiveShadows: boolean = false;
+        /**
+         * @internal
+         */
+        public _boneCount: int = 0;
+
         protected _getCommonExtensions() {
             let extensions = ""; // fragmentExtensions.
 
@@ -155,9 +168,61 @@ namespace egret3d {
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         }
         /**
+         * 
+         */
+        public _updateDrawDefines(renderer: paper.BaseRenderer | null) {
+            let useLightMap = false;
+            let receiveShadows = false;
+            let boneCount = 0;
+            const defines = this.defines;
+
+            if (renderer) {
+                useLightMap = renderer.constructor === MeshRenderer && (renderer as MeshRenderer).lightmapIndex >= 0;
+                receiveShadows = this._castShadows && renderer.receiveShadows;
+                boneCount = renderer.constructor === SkinnedMeshRenderer ? Math.min(this.maxBoneCount, (renderer as SkinnedMeshRenderer).boneCount) : 0;
+            }
+
+            if (this._useLightMap !== useLightMap) {
+                if (useLightMap) {
+                    defines.addDefine(ShaderDefine.USE_LIGHTMAP);
+                }
+                else {
+                    defines.removeDefine(ShaderDefine.USE_LIGHTMAP);
+                }
+
+                this._useLightMap = useLightMap;
+            }
+
+            if (this._receiveShadows !== receiveShadows) {
+                if (receiveShadows) {
+                    defines.addDefine(ShaderDefine.USE_SHADOWMAP);
+                    defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                }
+                else {
+                    defines.removeDefine(ShaderDefine.USE_SHADOWMAP);
+                    defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                }
+
+                this._receiveShadows = receiveShadows;
+            }
+
+            if (this._boneCount !== boneCount) { // TODO 浮点纹理。
+                if (boneCount) {
+                    defines.addDefine(ShaderDefine.USE_SKINNING);
+                    defines.addDefine(ShaderDefine.MAX_BONES, boneCount, true); 
+                }
+                else {
+                    defines.removeDefine(ShaderDefine.USE_SKINNING);
+                    defines.removeDefine(ShaderDefine.MAX_BONES); 
+                }
+
+                this._boneCount = boneCount;
+            }
+        }
+        /**
          * @internal
          */
-        public _updateTextureDefine(mapName: string, texture: BaseTexture | null, defines: Defines | null = null) {
+        public _updateTextureDefines(mapName: string, texture: BaseTexture | null, defines: Defines | null = null) {
             defines = defines || this.defines;
             const mapNameDefine = (egret3d as any).ShaderTextureDefine[mapName];//TODO
             //
@@ -271,7 +336,7 @@ namespace egret3d {
 
             (renderState as RenderState) = this;
             //
-            this.logarithmicDepthBuffer = true;
+            // this.logarithmicDepthBuffer = true;
             this.setToneMapping(ToneMapping.LinearToneMapping, this._toneMappingExposure, this._toneMappingWhitePoint);
             this.setGamma(2.0, this._gammaInput, this._gammaOutput);
         }

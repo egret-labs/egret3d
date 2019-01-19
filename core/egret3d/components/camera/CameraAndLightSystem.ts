@@ -8,7 +8,7 @@ namespace egret3d {
                 { componentClass: Camera }
             ],
             [
-                { componentClass: [DirectionalLight, PointLight, SpotLight, HemisphereLight] }
+                { componentClass: [DirectionalLight, SpotLight, PointLight, HemisphereLight] }
             ]
         ];
 

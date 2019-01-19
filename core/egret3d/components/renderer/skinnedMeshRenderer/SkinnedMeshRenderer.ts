@@ -162,10 +162,6 @@ namespace egret3d {
                     this.forceCPUSkin = true;
                     console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
                 }
-                else {
-                    this.defines.addDefine(ShaderDefine.USE_SKINNING);
-                    this.defines.addDefine(ShaderDefine.MAX_BONES, Math.min(renderState.maxBoneCount, this.bones.length)); // TODO 浮点纹理。
-                }
             }
         }
         /**
@@ -188,7 +184,7 @@ namespace egret3d {
             this._mesh = null;
             this._skinnedVertices = null;
         }
-        
+
         public recalculateLocalBox() {
             // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
             const mesh = this._mesh;

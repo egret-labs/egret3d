@@ -254,7 +254,7 @@ namespace egret3d {
                     (uniform.type === gltf.UniformType.SAMPLER_2D || uniform.type === gltf.UniformType.SAMPLER_CUBE)
                 ) {
                     const texture = (uniform.value as BaseTexture);
-                    renderState._updateTextureDefine(k, add ? texture : null, this.defines);
+                    renderState._updateTextureDefines(k, add ? texture : null, this.defines);
                 }
             }
         }
@@ -895,7 +895,7 @@ namespace egret3d {
                             existingTexture.release();
                         }
 
-                        renderState._updateTextureDefine(p1, null, this.defines);
+                        renderState._updateTextureDefines(p1, null, this.defines);
                     }
 
                     if (p2) {
@@ -904,7 +904,7 @@ namespace egret3d {
                             p2.retain();
                         }
 
-                        renderState._updateTextureDefine(p1, p2, this.defines);
+                        renderState._updateTextureDefines(p1, p2, this.defines);
                     }
 
                     uniform.value = p2;

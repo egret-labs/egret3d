@@ -1809,10 +1809,6 @@ declare namespace paper {
          * 该组件是否开启视锥剔除。
          */
         frustumCulled: boolean;
-        /**
-         *
-         */
-        readonly defines: egret3d.Defines;
         private _boundingSphereDirty;
         protected _receiveShadows: boolean;
         protected _castShadows: boolean;
@@ -2053,6 +2049,10 @@ declare namespace egret3d {
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         protected _getTexelEncodingFunction(functionName: string, encoding?: TextureEncoding): string;
         protected _getTexelDecodingFunction(functionName: string, encoding?: TextureEncoding): string;
+        /**
+         *
+         */
+        _updateDrawDefines(renderer: paper.BaseRenderer | null): void;
         initialize(config?: any): void;
         /**
          *
@@ -7239,7 +7239,16 @@ declare namespace egret3d {
      * 天空盒组件。
      */
     class SkyBox extends paper.BaseComponent {
-        material: Material | null;
+        protected readonly _materials: (egret3d.Material | null)[];
+        uninitialize(): void;
+        /**
+         * 该组件的材质列表。
+         */
+        materials: ReadonlyArray<egret3d.Material | null>;
+        /**
+         * 该组件材质列表中的第一个材质。
+         */
+        material: egret3d.Material | null;
     }
 }
 declare namespace egret3d {

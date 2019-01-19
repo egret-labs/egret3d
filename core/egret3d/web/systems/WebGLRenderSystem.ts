@@ -61,15 +61,10 @@ namespace egret3d.webgl {
     export class WebGLRenderSystem extends paper.BaseSystem implements IRenderSystem {
         public readonly interests = [
             [
-                { componentClass: Camera }
-            ],
-            [
                 { componentClass: Egret2DRenderer }
-            ],
-            [
-                { componentClass: [DirectionalLight, SpotLight, PointLight] }
             ]
         ];
+
         private _egret2DOrderCount: number = 0;
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
@@ -86,7 +81,6 @@ namespace egret3d.webgl {
         private _cacheCamera: Camera | null = null;
         private _cacheSkyBoxTexture: BaseTexture | null = null;
         //
-        private _cacheReceiveShadows: boolean = false;
         private _cacheLight: BaseLight | null = null;
         //
         private _cacheMesh: Mesh | null = null;
@@ -101,8 +95,8 @@ namespace egret3d.webgl {
             const shader = webgl.createShader(gltfShader.type)!;
             let shaderContent = _parseIncludes(gltfShader.uri!);
             shaderContent = _replaceShaderNums(shaderContent);
-            shaderContent = _unrollLoops(shaderContent);
-            webgl.shaderSource(shader, defines + shaderContent);
+            shaderContent = defines + _unrollLoops(shaderContent);
+            webgl.shaderSource(shader, shaderContent);
             webgl.compileShader(shader);
 
             const parameter = webgl.getShaderParameter(shader, gltf.WebGL.CompileStatus);
@@ -131,7 +125,6 @@ namespace egret3d.webgl {
             //
             this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
             this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
-            this._inverseModelViewMatrix.getNormalMatrix(this._modelViewMatrix);
 
             // Global.
             if (forceUpdate) {
@@ -308,7 +301,7 @@ namespace egret3d.webgl {
                         break;
 
                     case gltf.UniformSemantics.MODELVIEWINVERSE:
-                        webgl.uniformMatrix3fv(location, false, this._inverseModelViewMatrix.rawData);
+                        webgl.uniformMatrix3fv(location, false, this._inverseModelViewMatrix.getNormalMatrix(this._modelViewMatrix).rawData);
                         break;
 
                     case gltf.UniformSemantics.JOINTMATRIX:
@@ -559,7 +552,7 @@ namespace egret3d.webgl {
                 const texture = material.getTexture(ShaderUniformName.CubeMap);
 
                 if (this._cacheSkyBoxTexture !== texture) {
-                    renderState._updateTextureDefine(ShaderUniformName.EnvMap, texture);
+                    renderState._updateTextureDefines(ShaderUniformName.EnvMap, texture);
                     this._cacheSkyBoxTexture = texture;
                 }
 
@@ -572,7 +565,7 @@ namespace egret3d.webgl {
                 this.draw(drawCall, material);
             }
             else if (this._cacheSkyBoxTexture) {
-                renderState._updateTextureDefine(ShaderUniformName.EnvMap, null);
+                renderState._updateTextureDefines(ShaderUniformName.EnvMap, null);
                 this._cacheSkyBoxTexture = null;
             }
             // Draw opaques.
@@ -591,7 +584,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); // TODO 解决字体模糊。
 
-            for (const gameObject of this.groups[1].gameObjects) {
+            for (const gameObject of this.groups[0].gameObjects) {
                 const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     if (egret2DRenderer._order < 0) {
@@ -712,22 +705,9 @@ namespace egret3d.webgl {
             const shader = material.shader as WebGLShader;
             const programs = shader.programs;
 
-            // TODO
-            const receiveShadows = (renderState._castShadows && renderer) ? renderer.receiveShadows : false;
-            if (this._cacheReceiveShadows !== receiveShadows) {
-                if (receiveShadows) {
-                    renderState.defines.addDefine(ShaderDefine.USE_SHADOWMAP);
-                    renderState.defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
-                }
-                else {
-                    renderState.defines.removeDefine(ShaderDefine.USE_SHADOWMAP);
-                    renderState.defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
-                }
+            renderState._updateDrawDefines(renderer);
 
-                this._cacheReceiveShadows = receiveShadows;
-            }
-
-            const programKey = renderState.defines.definesMask + material.defines.definesMask + (renderer ? renderer.defines.definesMask : "") + (currentScene || activeScene).defines.definesMask;
+            const programKey = renderState.defines.definesMask + material.defines.definesMask + (currentScene || activeScene).defines.definesMask;
             let program: WebGLProgramBinder | null = null;
 
             if (DEBUG) {
@@ -761,12 +741,10 @@ namespace egret3d.webgl {
                 const defines = [
                     renderState.defines,
                     (currentScene || activeScene).defines,
-                    renderer ? renderer.defines : null,
                     material.defines,
                 ];
-
                 renderState.customShaderChunks = shader.customs;
-
+                //
                 const vertexWebGLShader = this._getWebGLShader(extensions!.shaders[0], renderState.getPrefixVertex(Defines.link(defines, DefineLocation.Vertex)))!; // TODO 顺序依赖
                 const fragmentWebGLShader = this._getWebGLShader(extensions!.shaders[1], renderState.getPrefixFragment(Defines.link(defines, DefineLocation.Fragment)))!;  // TODO 顺序依赖
 
@@ -775,7 +753,7 @@ namespace egret3d.webgl {
                     webgl.attachShader(webGLProgram, vertexWebGLShader);
                     webgl.attachShader(webGLProgram, fragmentWebGLShader);
                     webgl.linkProgram(webGLProgram);
-
+                    //
                     const parameter = webgl.getProgramParameter(webGLProgram, gltf.WebGL.LinkStatus);
                     if (parameter) {
                         program = new WebGLProgramBinder(webGLProgram).extract(material.technique);
@@ -879,11 +857,10 @@ namespace egret3d.webgl {
                 const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
                 const clock = this.clock;
                 const editorScene = paper.Scene.editorScene;
-
+                //
                 this._egret2DOrderCount = 0;
                 this._clockBuffer[0] = clock.time;
                 this._activeScene = paper.Scene.activeScene;
-
                 // Render lights shadow.
                 if (lights.length > 0) {
                     for (const light of lights) {
@@ -894,7 +871,7 @@ namespace egret3d.webgl {
                         this._renderShadow(light);
                     }
                 }
-
+                //
                 for (const camera of cameras) {
                     const scene = camera.gameObject.scene;
 

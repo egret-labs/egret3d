@@ -14,10 +14,6 @@ namespace paper {
         @editor.property(editor.EditType.CHECKBOX)
         public frustumCulled: boolean = true;
         /**
-         * 
-         */
-        public readonly defines: egret3d.Defines = new egret3d.Defines();
-        /**
          * @internal
          */
         public _localBoundingBoxDirty: boolean = true;
@@ -28,7 +24,7 @@ namespace paper {
         protected _castShadows: boolean = false;
         protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
         protected readonly _localBoundingBox: egret3d.Box = egret3d.Box.create();
-        protected readonly _materials: (egret3d.Material | null)[] = [egret3d.DefaultMaterials.MESH_BASIC.retain()];
+        protected readonly _materials: (egret3d.Material | null)[] = [egret3d.DefaultMaterials.MESH_BASIC.retain()]; // TODO
 
         protected _recalculateSphere() {
             const localBoundingBox = this.localBoundingBox; // Update localBoundingBox.
@@ -57,8 +53,6 @@ namespace paper {
                     material.release();
                 }
             }
-
-            this.defines.clear();
 
             this._materials.length = 0;
         }
