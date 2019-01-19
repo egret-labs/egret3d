@@ -3,6 +3,14 @@ namespace examples {
     export class ToneMapping implements Example {
 
         async start() {
+            const renderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState)!;
+            renderState.gammaInput = true;
+            renderState.gammaOutput = true;
+            renderState.gammaFactor = 2.0;
+            renderState.toneMapping = egret3d.ToneMapping.Uncharted2ToneMapping;
+            renderState.toneMappingExposure = 3.0;
+            renderState.toneMappingWhitePoint = 5.0;
+
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
             //
@@ -20,14 +28,6 @@ namespace examples {
 
         public onAwake() {
             const mainCamera = this._mainCamera;
-
-            const renderState = this.gameObject.getComponent(egret3d.RenderState)!;
-            renderState.gammaInput = true;
-            renderState.gammaOutput = true;
-            renderState.gammaFactor = 2.0;
-            renderState.toneMapping = egret3d.ToneMapping.Uncharted2ToneMapping;
-            renderState.toneMappingExposure = 3.0;
-            renderState.toneMappingWhitePoint = 5.0;
 
             { // Main camera.
                 mainCamera.fov = 40.0 * egret3d.Const.DEG_RAD;

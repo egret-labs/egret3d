@@ -16,13 +16,13 @@ namespace egret3d {
 
         public static PARTICLE: Shader;
 
+        public static POINTS: Shader;
         public static CUBE: Shader;
+        public static EQUIRECT: Shader;
+        public static SPRITE: Shader;
         public static DEPTH: Shader;
         public static DISTANCE_RGBA: Shader;
-        public static EQUIRECT: Shader;
-        public static POINTS: Shader;
         public static SHADOW: Shader;
-        public static SPRITE: Shader;
         public static COPY: Shader;
 
         /**
@@ -159,8 +159,17 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", ShaderLib.particle as any, RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);
 
-            helpMaterial.clearStates().setDepth(false, false);
-            DefaultShaders.CUBE = this._createShader("builtin/cube.shader.json", ShaderLib.cube as any, RenderQueue.Geometry, helpStates);
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders.POINTS = this._createShader("builtin/points.shader.json", ShaderLib.points as any, RenderQueue.Geometry, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders.SPRITE = this._createShader("builtin/sprite.shader.json", ShaderLib.sprite as any, RenderQueue.Geometry, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front);
+            DefaultShaders.CUBE = this._createShader("builtin/cube.shader.json", ShaderLib.cube as any, RenderQueue.Background, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front);
+            DefaultShaders.EQUIRECT = this._createShader("builtin/equirect.shader.json", ShaderLib.equirect as any, RenderQueue.Background, helpStates);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.DEPTH = this._createShader("builtin/depth.shader.json", ShaderLib.depth as any, RenderQueue.Geometry, helpStates);
@@ -169,16 +178,7 @@ namespace egret3d {
             DefaultShaders.DISTANCE_RGBA = this._createShader("builtin/distance_rgba.shader.json", ShaderLib.distanceRGBA as any, RenderQueue.Geometry, helpStates);
 
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.EQUIRECT = this._createShader("builtin/equirect.shader.json", ShaderLib.equirect as any, RenderQueue.Geometry, helpStates);
-
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.POINTS = this._createShader("builtin/points.shader.json", ShaderLib.points as any, RenderQueue.Geometry, helpStates);
-
-            helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.SHADOW = this._createShader("builtin/shadow.shader.json", ShaderLib.shadow as any, RenderQueue.Geometry, helpStates);
-
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.SPRITE = this._createShader("builtin/sprite.shader.json", ShaderLib.sprite as any, RenderQueue.Geometry, helpStates);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.COPY = this._createShader("builtin/copy.shader.json", ShaderLib.copy as any, RenderQueue.Geometry, helpStates);

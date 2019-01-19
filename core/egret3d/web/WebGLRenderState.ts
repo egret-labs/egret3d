@@ -53,11 +53,11 @@ namespace egret3d.webgl {
          */
         public static webgl: WebGLRenderingContext | null = null;
 
-        public initialize(config: { canvas: HTMLCanvasElement, webgl: WebGLRenderingContext }) {
-            super.initialize();
+        public initialize(config: RunEgretOptions) {
+            super.initialize(config);
 
-            WebGLRenderState.canvas = config.canvas;
-            WebGLRenderState.webgl = config.webgl;
+            WebGLRenderState.canvas = config.canvas!;
+            WebGLRenderState.webgl = config.webgl!;
 
             const webgl = WebGLRenderState.webgl;
             if (!webgl) {

@@ -59,7 +59,7 @@ namespace egret3d {
         private _gammaOutput: boolean = true; //
         private _gammaFactor: number = 1.0;
         private _toneMapping: ToneMapping = ToneMapping.None;
-        
+
         private _useLightMap: boolean = false;
         /**
          * @internal
@@ -212,21 +212,23 @@ namespace egret3d {
          */
         public _updateTextureDefines(mapName: string, texture: BaseTexture | null, defines: Defines | null = null) {
             defines = defines || this.defines;
-            const mapNameDefine = (egret3d as any).ShaderTextureDefine[mapName];//TODO
             //
-            if (texture) {
-                defines.addDefine(mapNameDefine);
+            const mapNameDefine = (egret3d as any).ShaderTextureDefine[mapName];//TODO
+            if (mapNameDefine) {
+                if (texture) {
+                    defines.addDefine(mapNameDefine);
 
-                if (texture instanceof RenderTexture) {
-                    defines.addDefine(ShaderDefine.FLIP_V);
+                    if (texture instanceof RenderTexture) {
+                        defines.addDefine(ShaderDefine.FLIP_V);
+                    }
+                    else {
+                        defines.removeDefine(ShaderDefine.FLIP_V);
+                    }
                 }
                 else {
+                    defines.removeDefine(mapNameDefine);
                     defines.removeDefine(ShaderDefine.FLIP_V);
                 }
-            }
-            else {
-                defines.removeDefine(mapNameDefine);
-                defines.removeDefine(ShaderDefine.FLIP_V);
             }
             //
             const decodingFunName = (egret3d as any).TextureDecodingFunction[mapName]; // TODO
@@ -319,14 +321,14 @@ namespace egret3d {
             return prefixContext;
         }
 
-        public initialize(config?: any) {
+        public initialize(config: RunEgretOptions) {
             super.initialize();
 
             (renderState as RenderState) = this;
             //
             this.toneMapping = ToneMapping.LinearToneMapping;
             this.gammaFactor = 2.0;
-            this.gammaInput = false;
+            this.gammaInput = config.gammaInput ? true : false;
             this.gammaOutput = false;
         }
         /**
@@ -388,10 +390,6 @@ namespace egret3d {
         public set gammaInput(value: boolean) {
             if (this._gammaInputLocked) {
                 console.warn("The gamma input value has been locked.");
-                return;
-            }
-
-            if (this._gammaInput === value) {
                 return;
             }
 

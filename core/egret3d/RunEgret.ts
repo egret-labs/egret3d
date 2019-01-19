@@ -20,6 +20,10 @@ namespace egret3d {
          * 是否与画布背景色混合，默认不混合。
          */
         alpha?: boolean;
+        /**
+         * 
+         */
+        gammaInput?: boolean;
 
         antialiasSamples?: number;
 
