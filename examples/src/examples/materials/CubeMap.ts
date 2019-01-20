@@ -19,13 +19,15 @@ namespace examples.materials {
             const mainCamera = egret3d.Camera.main;
 
             { // Main camera.
+                const texture = RES.getRes("threejs/textures/cube/SwedishRoyalCastle/SwedishRoyalCastle.image.json") as egret3d.Texture;
+                
                 mainCamera.fov = 50.0 * egret3d.Const.DEG_RAD;
                 mainCamera.far = 5000.0;
                 mainCamera.near = 1.0;
                 mainCamera.backgroundColor.fromHex(0xFFFFFF);
                 mainCamera.transform.setLocalPosition(0.0, 0.0, -2000.0).lookAt(egret3d.Vector3.ZERO);
                 mainCamera.gameObject.addComponent(egret3d.SkyBox).material = egret3d.Material.create(egret3d.DefaultShaders.CUBE)
-                    .setTexture(egret3d.ShaderUniformName.CubeMap, RES.getRes("threejs/textures/cube/SwedishRoyalCastle/SwedishRoyalCastle.image.json"));
+                    .setTexture(egret3d.ShaderUniformName.CubeMap, texture);
                 mainCamera.gameObject.addComponent(behaviors.RotateAround);
             }
 
@@ -40,7 +42,6 @@ namespace examples.materials {
             }
 
             { // Create game objects.
-                const texture = RES.getRes("threejs/textures/cube/SwedishRoyalCastle/SwedishRoyalCastle.image.json");
 
                 const gameObjectA = paper.Prefab.create("Assets/Models/Threejs/WaltHead.prefab.json")!;
                 gameObjectA.transform.setLocalScale(15.0).translate(0.0, -500.0, 0.0);

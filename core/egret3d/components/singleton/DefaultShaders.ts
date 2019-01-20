@@ -17,9 +17,9 @@ namespace egret3d {
         public static PARTICLE: Shader;
 
         public static POINTS: Shader;
+        public static SPRITE: Shader;
         public static CUBE: Shader;
         public static EQUIRECT: Shader;
-        public static SPRITE: Shader;
         public static DEPTH: Shader;
         public static DISTANCE_RGBA: Shader;
         public static SHADOW: Shader;

@@ -406,7 +406,7 @@ namespace egret3d {
             if (this._gammaOutput === value) {
                 return;
             }
-
+            
             const define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding), true);
             if (define) {
                 define.isCode = true;

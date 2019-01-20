@@ -5,6 +5,7 @@ namespace egret3d {
 
     function _get(name: string, context?: number | string, isGlobal?: boolean): Define {
         let key = name;
+        let order: uint | undefined;
         const defines = _defines;
 
         if (isGlobal || !context) {
@@ -21,17 +22,23 @@ namespace egret3d {
 
         if (define) {
             if (isGlobal) {
-                (define.context as any) = context;
+                order = define.mask;
+            }
+            else {
+                return define;
             }
         }
-        else {
-            define = defines[key] = new Define(_index, _mask, name, context);
-            _mask >>>= 1;
 
-            if (_mask === 0) {
-                _index++;
-                _mask = 0x80000000;
-            }
+        define = defines[key] = new Define(_index, _mask, name, context);
+        if (order) {
+            define.order = order;
+        }
+
+        _mask >>>= 1;
+
+        if (_mask === 0) {
+            _index++;
+            _mask = 0x80000000;
         }
 
         return define;
@@ -66,11 +73,15 @@ namespace egret3d {
          */
         public readonly context?: number | string;
         /**
-         * @internal
+         * 
          */
         public isCode?: boolean;
         /**
-         * @internal
+         * 
+         */
+        public order?: uint;
+        /**
+         * 
          */
         public type?: DefineLocation;
 
@@ -134,7 +145,7 @@ namespace egret3d {
         private static _sortDefine(a: Define, b: Define) {
             let d = a.index - b.index;
             if (d === 0) {
-                d = b.mask - a.mask; // Define 顺序。
+                d = (b.order || b.mask) - (a.order || a.mask); // Define 顺序。
             }
 
             return d;
@@ -194,6 +205,10 @@ namespace egret3d {
          * 
          */
         public addDefine(name: string, context?: number | string, isGlobal?: boolean): Define | null {
+            if (isGlobal) {
+                this.removeDefine(name);
+            }
+
             const define = _get(name, context, isGlobal);
             const defines = this._defines;
 

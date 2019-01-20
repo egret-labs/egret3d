@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 户外光组件。
+     * 半球光组件。
      */
     export class HemisphereLight extends BaseLight {
         /**

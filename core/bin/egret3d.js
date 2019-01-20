@@ -1439,92 +1439,6 @@ var egret3d;
         TextureUVMapping[TextureUVMapping["Spherical"] = 4] = "Spherical";
     })(TextureUVMapping = egret3d.TextureUVMapping || (egret3d.TextureUVMapping = {}));
     /**
-     * 内置提供的全局 Attribute。
-     * @private
-     */
-    egret3d.globalAttributeSemantics = {
-        "position": "POSITION" /* POSITION */,
-        "normal": "NORMAL" /* NORMAL */,
-        "uv": "TEXCOORD_0" /* TEXCOORD_0 */,
-        "uv2": "TEXCOORD_1" /* TEXCOORD_1 */,
-        "color": "COLOR_0" /* COLOR_0 */,
-        // "morphTarget0": gltf.AttributeSemanticType.MORPHTARGET_0,
-        // "morphTarget1": gltf.AttributeSemanticType.MORPHTARGET_1,
-        // "morphTarget2": gltf.AttributeSemanticType.MORPHTARGET_2,
-        // "morphTarget3": gltf.AttributeSemanticType.MORPHTARGET_3,
-        // "morphTarget4": gltf.AttributeSemanticType.MORPHTARGET_4,
-        // "morphTarget5": gltf.AttributeSemanticType.MORPHTARGET_5,
-        // "morphTarget6": gltf.AttributeSemanticType.MORPHTARGET_6,
-        // "morphTarget7": gltf.AttributeSemanticType.MORPHTARGET_7,
-        // "morphNormal0": gltf.AttributeSemanticType.MORPHNORMAL_0,
-        // "morphNormal1": gltf.AttributeSemanticType.MORPHNORMAL_1,
-        // "morphNormal2": gltf.AttributeSemanticType.MORPHNORMAL_2,
-        // "morphNormal3": gltf.AttributeSemanticType.MORPHNORMAL_3,
-        "skinIndex": "JOINTS_0" /* JOINTS_0 */,
-        "skinWeight": "WEIGHTS_0" /* WEIGHTS_0 */,
-        "corner": "_CORNER" /* _CORNER */,
-        "startPosition": "_START_POSITION" /* _START_POSITION */,
-        "startVelocity": "_START_VELOCITY" /* _START_VELOCITY */,
-        "startColor": "_START_COLOR" /* _START_COLOR */,
-        "startSize": "_START_SIZE" /* _START_SIZE */,
-        "startRotation": "_START_ROTATION" /* _START_ROTATION */,
-        "time": "_TIME" /* _TIME */,
-        "random0": "_RANDOM0" /* _RANDOM0 */,
-        "random1": "_RANDOM1" /* _RANDOM1 */,
-        "startWorldPosition": "_WORLD_POSITION" /* _WORLD_POSITION */,
-        "startWorldRotation": "_WORLD_ROTATION" /* _WORLD_ROTATION */,
-        "lineDistance": "_INSTANCE_DISTANCE" /* _INSTANCE_DISTANCE */,
-        "instanceStart": "_INSTANCE_START" /* _INSTANCE_START */,
-        "instanceEnd": "_INSTANCE_END" /* _INSTANCE_END */,
-        "instanceColorStart": "_INSTANCE_COLOR_START" /* _INSTANCE_COLOR_START */,
-        "instanceColorEnd": "_INSTANCE_COLOR_END" /* _INSTANCE_COLOR_END */,
-        "instanceDistanceStart": "_INSTANCE_DISTANCE_START" /* _INSTANCE_DISTANCE_START */,
-        "instanceDistanceEnd": "_INSTANCE_DISTANCE_END" /* _INSTANCE_DISTANCE_END */,
-    };
-    /**
-     * 内置提供的全局 Uniform。
-     * @private
-     */
-    egret3d.globalUniformSemantics = {
-        "modelMatrix": "MODEL" /* MODEL */,
-        "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
-        "projectionMatrix": "PROJECTION" /* PROJECTION */,
-        "viewMatrix": "VIEW" /* VIEW */,
-        "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
-        "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
-        "clock": "_CLOCK" /* _CLOCK */,
-        "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
-        "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
-        "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
-        "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
-        "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
-        "ambientLightColor": "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */,
-        "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
-        "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
-        "rectAreaLights[0]": "_RECTAREALIGHTS" /* _RECTAREALIGHTS */,
-        "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
-        "hemisphereLights[0]": "_HEMILIGHTS" /* _HEMILIGHTS */,
-        "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
-        "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
-        "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
-        "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
-        "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
-        "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
-        "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
-        "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
-        "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
-        "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
-        "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
-        "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
-        "fogColor": "_FOG_COLOR" /* _FOG_COLOR */,
-        "fogDensity": "_FOG_DENSITY" /* _FOG_DENSITY */,
-        "fogNear": "_FOG_NEAR" /* _FOG_NEAR */,
-        "fogFar": "_FOG_FAR" /* _FOG_FAR */,
-        "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
-        "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
-        "logDepthBufFC": "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */,
-    };
-    /**
      * @private
      */
     var AnimationBlendType;
@@ -3876,11 +3790,11 @@ var egret3d;
             _this._gammaOutput = true; //
             _this._gammaFactor = 1.0;
             _this._toneMapping = 0 /* None */;
+            _this._useLightMap = false;
             /**
              * @internal
              */
             _this._castShadows = false;
-            _this._useLightMap = false;
             _this._receiveShadows = false;
             _this._boneCount = 0;
             _this._stateEnables = [3042 /* Blend */, 2884 /* CullFace */, 2929 /* DepthTest */]; // TODO
@@ -4017,20 +3931,22 @@ var egret3d;
         RenderState.prototype._updateTextureDefines = function (mapName, texture, defines) {
             if (defines === void 0) { defines = null; }
             defines = defines || this.defines;
-            var mapNameDefine = egret3d.ShaderTextureDefine[mapName]; //TODO
             //
-            if (texture) {
-                defines.addDefine(mapNameDefine);
-                if (texture instanceof egret3d.RenderTexture) {
-                    defines.addDefine("FLIP_V" /* FLIP_V */);
+            var mapNameDefine = egret3d.ShaderTextureDefine[mapName]; //TODO
+            if (mapNameDefine) {
+                if (texture) {
+                    defines.addDefine(mapNameDefine);
+                    if (texture instanceof egret3d.RenderTexture) {
+                        defines.addDefine("FLIP_V" /* FLIP_V */);
+                    }
+                    else {
+                        defines.removeDefine("FLIP_V" /* FLIP_V */);
+                    }
                 }
                 else {
+                    defines.removeDefine(mapNameDefine);
                     defines.removeDefine("FLIP_V" /* FLIP_V */);
                 }
-            }
-            else {
-                defines.removeDefine(mapNameDefine);
-                defines.removeDefine("FLIP_V" /* FLIP_V */);
             }
             //
             var decodingFunName = egret3d.TextureDecodingFunction[mapName]; // TODO
@@ -4122,7 +4038,7 @@ var egret3d;
             //
             this.toneMapping = 1 /* LinearToneMapping */;
             this.gammaFactor = 2.0;
-            this.gammaInput = false;
+            this.gammaInput = config.gammaInput ? true : false;
             this.gammaOutput = false;
         };
         /**
@@ -4186,9 +4102,6 @@ var egret3d;
             set: function (value) {
                 if (this._gammaInputLocked) {
                     console.warn("The gamma input value has been locked.");
-                    return;
-                }
-                if (this._gammaInput === value) {
                     return;
                 }
                 this._gammaInput = value;
@@ -8639,7 +8552,7 @@ var egret3d;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             WebGLRenderState.prototype.initialize = function (config) {
-                _super.prototype.initialize.call(this);
+                _super.prototype.initialize.call(this, config);
                 WebGLRenderState.canvas = config.canvas;
                 WebGLRenderState.webgl = config.webgl;
                 var webgl = WebGLRenderState.webgl;
@@ -10666,6 +10579,7 @@ var egret3d;
         ShaderUniformName["EnvMap"] = "envMap";
         ShaderUniformName["EmissiveMap"] = "emissiveMap";
         ShaderUniformName["CubeMap"] = "tCube";
+        ShaderUniformName["EquirectMap"] = "tEquirect";
         ShaderUniformName["Flip"] = "tFlip";
         ShaderUniformName["UVTransform"] = "uvTransform";
         ShaderUniformName["Reflectivity"] = "reflectivity";
@@ -10677,6 +10591,7 @@ var egret3d;
         ShaderUniformName["Metalness"] = "metalness";
         ShaderUniformName["Emissive"] = "emissive";
         ShaderUniformName["EmissiveIntensity"] = "emissiveIntensity";
+        ShaderUniformName["FlipEnvMap"] = "flipEnvMap";
     })(ShaderUniformName = egret3d.ShaderUniformName || (egret3d.ShaderUniformName = {}));
     /**
      *
@@ -10783,6 +10698,92 @@ var egret3d;
         "displacementMap": "USE_DISPLACEMENTMAP" /* USE_DISPLACEMENTMAP */,
         "envMap": "USE_ENVMAP" /* USE_ENVMAP */,
         "emissiveMap": "USE_EMISSIVEMAP" /* USE_EMISSIVEMAP */,
+    };
+    /**
+     * 内置提供的全局 Attribute。
+     * @private
+     */
+    egret3d.globalAttributeSemantics = {
+        "position": "POSITION" /* POSITION */,
+        "normal": "NORMAL" /* NORMAL */,
+        "uv": "TEXCOORD_0" /* TEXCOORD_0 */,
+        "uv2": "TEXCOORD_1" /* TEXCOORD_1 */,
+        "color": "COLOR_0" /* COLOR_0 */,
+        // "morphTarget0": gltf.AttributeSemanticType.MORPHTARGET_0,
+        // "morphTarget1": gltf.AttributeSemanticType.MORPHTARGET_1,
+        // "morphTarget2": gltf.AttributeSemanticType.MORPHTARGET_2,
+        // "morphTarget3": gltf.AttributeSemanticType.MORPHTARGET_3,
+        // "morphTarget4": gltf.AttributeSemanticType.MORPHTARGET_4,
+        // "morphTarget5": gltf.AttributeSemanticType.MORPHTARGET_5,
+        // "morphTarget6": gltf.AttributeSemanticType.MORPHTARGET_6,
+        // "morphTarget7": gltf.AttributeSemanticType.MORPHTARGET_7,
+        // "morphNormal0": gltf.AttributeSemanticType.MORPHNORMAL_0,
+        // "morphNormal1": gltf.AttributeSemanticType.MORPHNORMAL_1,
+        // "morphNormal2": gltf.AttributeSemanticType.MORPHNORMAL_2,
+        // "morphNormal3": gltf.AttributeSemanticType.MORPHNORMAL_3,
+        "skinIndex": "JOINTS_0" /* JOINTS_0 */,
+        "skinWeight": "WEIGHTS_0" /* WEIGHTS_0 */,
+        "corner": "_CORNER" /* _CORNER */,
+        "startPosition": "_START_POSITION" /* _START_POSITION */,
+        "startVelocity": "_START_VELOCITY" /* _START_VELOCITY */,
+        "startColor": "_START_COLOR" /* _START_COLOR */,
+        "startSize": "_START_SIZE" /* _START_SIZE */,
+        "startRotation": "_START_ROTATION" /* _START_ROTATION */,
+        "time": "_TIME" /* _TIME */,
+        "random0": "_RANDOM0" /* _RANDOM0 */,
+        "random1": "_RANDOM1" /* _RANDOM1 */,
+        "startWorldPosition": "_WORLD_POSITION" /* _WORLD_POSITION */,
+        "startWorldRotation": "_WORLD_ROTATION" /* _WORLD_ROTATION */,
+        "lineDistance": "_INSTANCE_DISTANCE" /* _INSTANCE_DISTANCE */,
+        "instanceStart": "_INSTANCE_START" /* _INSTANCE_START */,
+        "instanceEnd": "_INSTANCE_END" /* _INSTANCE_END */,
+        "instanceColorStart": "_INSTANCE_COLOR_START" /* _INSTANCE_COLOR_START */,
+        "instanceColorEnd": "_INSTANCE_COLOR_END" /* _INSTANCE_COLOR_END */,
+        "instanceDistanceStart": "_INSTANCE_DISTANCE_START" /* _INSTANCE_DISTANCE_START */,
+        "instanceDistanceEnd": "_INSTANCE_DISTANCE_END" /* _INSTANCE_DISTANCE_END */,
+    };
+    /**
+     * 内置提供的全局 Uniform。
+     * @private
+     */
+    egret3d.globalUniformSemantics = {
+        "modelMatrix": "MODEL" /* MODEL */,
+        "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
+        "projectionMatrix": "PROJECTION" /* PROJECTION */,
+        "viewMatrix": "VIEW" /* VIEW */,
+        "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
+        "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
+        "clock": "_CLOCK" /* _CLOCK */,
+        "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
+        "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
+        "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
+        "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
+        "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
+        "ambientLightColor": "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */,
+        "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
+        "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
+        "rectAreaLights[0]": "_RECTAREALIGHTS" /* _RECTAREALIGHTS */,
+        "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
+        "hemisphereLights[0]": "_HEMILIGHTS" /* _HEMILIGHTS */,
+        "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
+        "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
+        "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
+        "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
+        "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
+        "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
+        "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
+        "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
+        "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
+        "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
+        "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
+        "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
+        "fogColor": "_FOG_COLOR" /* _FOG_COLOR */,
+        "fogDensity": "_FOG_DENSITY" /* _FOG_DENSITY */,
+        "fogNear": "_FOG_NEAR" /* _FOG_NEAR */,
+        "fogFar": "_FOG_FAR" /* _FOG_FAR */,
+        "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
+        "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
+        "logDepthBufFC": "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */,
     };
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -12484,20 +12485,20 @@ var egret3d;
             DefaultShaders_1.MESH_STANDARD = this._createShader("builtin/meshstandard.shader.json", egret3d.ShaderLib.meshphysical, 2000 /* Geometry */, helpStates, ["STANDARD" /* STANDARD */]);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders_1.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle, 2000 /* Geometry */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
-            helpMaterial.clearStates().setDepth(false, false);
-            DefaultShaders_1.CUBE = this._createShader("builtin/cube.shader.json", egret3d.ShaderLib.cube, 2000 /* Geometry */, helpStates);
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders_1.POINTS = this._createShader("builtin/points.shader.json", egret3d.ShaderLib.points, 2000 /* Geometry */, helpStates);
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders_1.SPRITE = this._createShader("builtin/sprite.shader.json", egret3d.ShaderLib.sprite, 2000 /* Geometry */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1028 /* Front */);
+            DefaultShaders_1.CUBE = this._createShader("builtin/cube.shader.json", egret3d.ShaderLib.cube, 1000 /* Background */, helpStates);
+            helpMaterial.clearStates().setDepth(true, false).setCullFace(true, 2305 /* CCW */, 1028 /* Front */);
+            DefaultShaders_1.EQUIRECT = this._createShader("builtin/equirect.shader.json", egret3d.ShaderLib.equirect, 1000 /* Background */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders_1.DEPTH = this._createShader("builtin/depth.shader.json", egret3d.ShaderLib.depth, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders_1.DISTANCE_RGBA = this._createShader("builtin/distance_rgba.shader.json", egret3d.ShaderLib.distanceRGBA, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders_1.EQUIRECT = this._createShader("builtin/equirect.shader.json", egret3d.ShaderLib.equirect, 2000 /* Geometry */, helpStates);
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders_1.POINTS = this._createShader("builtin/points.shader.json", egret3d.ShaderLib.points, 2000 /* Geometry */, helpStates);
-            helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders_1.SHADOW = this._createShader("builtin/shadow.shader.json", egret3d.ShaderLib.shadow, 2000 /* Geometry */, helpStates);
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders_1.SPRITE = this._createShader("builtin/sprite.shader.json", egret3d.ShaderLib.sprite, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders_1.COPY = this._createShader("builtin/copy.shader.json", egret3d.ShaderLib.copy, 2000 /* Geometry */, helpStates);
             // deprecated
@@ -25109,6 +25110,7 @@ var egret3d;
     var _defines = {};
     function _get(name, context, isGlobal) {
         var key = name;
+        var order;
         var defines = _defines;
         if (isGlobal || !context) {
         }
@@ -25122,16 +25124,20 @@ var egret3d;
         var define = defines[key];
         if (define) {
             if (isGlobal) {
-                define.context = context;
+                order = define.mask;
+            }
+            else {
+                return define;
             }
         }
-        else {
-            define = defines[key] = new Define(_index, _mask, name, context);
-            _mask >>>= 1;
-            if (_mask === 0) {
-                _index++;
-                _mask = 0x80000000;
-            }
+        define = defines[key] = new Define(_index, _mask, name, context);
+        if (order) {
+            define.order = order;
+        }
+        _mask >>>= 1;
+        if (_mask === 0) {
+            _index++;
+            _mask = 0x80000000;
         }
         return define;
     }
@@ -25213,7 +25219,7 @@ var egret3d;
         Defines._sortDefine = function (a, b) {
             var d = a.index - b.index;
             if (d === 0) {
-                d = b.mask - a.mask; // Define 顺序。
+                d = (b.order || b.mask) - (a.order || a.mask); // Define 顺序。
             }
             return d;
         };
@@ -25260,6 +25266,9 @@ var egret3d;
          *
          */
         Defines.prototype.addDefine = function (name, context, isGlobal) {
+            if (isGlobal) {
+                this.removeDefine(name);
+            }
             var define = _get(name, context, isGlobal);
             var defines = this._defines;
             if (defines.indexOf(define) < 0) {
@@ -29341,7 +29350,8 @@ var egret3d;
                 var unifroms = technique.uniforms;
                 for (var _i = 0, _a = program.uniforms; _i < _a.length; _i++) {
                     var globalUniform = _a[_i];
-                    var uniform = unifroms[globalUniform.name];
+                    var uniformName = globalUniform.name;
+                    var uniform = unifroms[uniformName];
                     if (uniform.semantic) {
                         continue;
                     }
@@ -29400,7 +29410,15 @@ var egret3d;
                                 var unit = globalUniform.textureUnits[0];
                                 var texture = value;
                                 if (!texture || texture.isDisposed) {
-                                    texture = egret3d.DefaultTextures.WHITE; // TODO
+                                    // Uniform 定义顺序依赖。
+                                    if (uniformName === "envMap" /* EnvMap */) {
+                                        // flipEnvMap TODO
+                                        // levels
+                                        texture = this._cacheSkyBoxTexture || egret3d.DefaultTextures.WHITE; // TODO
+                                    }
+                                    else {
+                                        texture = egret3d.DefaultTextures.WHITE; // TODO
+                                    }
                                 }
                                 webgl.uniform1i(location_8, unit);
                                 texture.bindTexture(unit);
@@ -29414,7 +29432,12 @@ var egret3d;
                                 var unit = globalUniform.textureUnits[0];
                                 var texture = value;
                                 if (!texture || texture.isDisposed) {
-                                    texture = this._cacheSkyBoxTexture || egret3d.DefaultTextures.WHITE; // TODO
+                                    if (uniformName === "envMap" /* EnvMap */) {
+                                        texture = this._cacheSkyBoxTexture || egret3d.DefaultTextures.WHITE; // TODO
+                                    }
+                                    else {
+                                        texture = egret3d.DefaultTextures.WHITE; // TODO
+                                    }
                                 }
                                 webgl.uniform1i(location_8, unit);
                                 texture.bindTexture(unit);
@@ -29466,13 +29489,15 @@ var egret3d;
                 if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                     var drawCall = this._drawCallCollecter.skyBox;
                     var material_1 = skyBox.material;
-                    var texture = material_1.getTexture("tCube" /* CubeMap */);
+                    var texture = (material_1.shader === egret3d.DefaultShaders.CUBE) ? material_1.getTexture("tCube" /* CubeMap */) :
+                        ((material_1.shader === egret3d.DefaultShaders.EQUIRECT) ? material_1.getTexture("tEquirect" /* EquirectMap */) : material_1.getTexture());
                     if (this._cacheSkyBoxTexture !== texture) {
                         renderState._updateTextureDefines("envMap" /* EnvMap */, texture);
                         this._cacheSkyBoxTexture = texture;
                     }
                     if (!drawCall.mesh) {
-                        drawCall.mesh = material_1.shader === egret3d.DefaultShaders.CUBE ? egret3d.DefaultMeshes.CUBE : egret3d.DefaultMeshes.SPHERE;
+                        // drawCall.mesh = material.shader === DefaultShaders.CUBE ? DefaultMeshes.CUBE : DefaultMeshes.SPHERE;
+                        drawCall.mesh = egret3d.DefaultMeshes.CUBE;
                     }
                     drawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
                     this.draw(drawCall, material_1);

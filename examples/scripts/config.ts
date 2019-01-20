@@ -124,6 +124,7 @@ const config: ResourceManagerConfig = {
                 const typemap = {
                     ".png": "Texture",
                     ".jpg": "Texture",
+                    ".gif": "Texture",
                     ".json": "json",
 
                     ".scene.json": "Scene",

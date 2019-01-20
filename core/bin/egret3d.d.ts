@@ -941,20 +941,6 @@ declare namespace egret3d {
         Spherical = 4,
     }
     /**
-     * 内置提供的全局 Attribute。
-     * @private
-     */
-    const globalAttributeSemantics: {
-        [key: string]: gltf.AttributeSemantics;
-    };
-    /**
-     * 内置提供的全局 Uniform。
-     * @private
-     */
-    const globalUniformSemantics: {
-        [key: string]: gltf.UniformSemantics;
-    };
-    /**
      * 扩展 glTF。
      */
     interface GLTF extends gltf.GLTF {
@@ -3393,7 +3379,7 @@ declare namespace egret3d {
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         protected _getTexelEncodingFunction(functionName: string, encoding?: TextureEncoding): string;
         protected _getTexelDecodingFunction(functionName: string, encoding?: TextureEncoding): string;
-        initialize(config?: any): void;
+        initialize(config: RunEgretOptions): void;
         /**
          *
          */
@@ -5510,6 +5496,7 @@ declare namespace egret3d {
         EnvMap = "envMap",
         EmissiveMap = "emissiveMap",
         CubeMap = "tCube",
+        EquirectMap = "tEquirect",
         Flip = "tFlip",
         UVTransform = "uvTransform",
         Reflectivity = "reflectivity",
@@ -5521,6 +5508,7 @@ declare namespace egret3d {
         Metalness = "metalness",
         Emissive = "emissive",
         EmissiveIntensity = "emissiveIntensity",
+        FlipEnvMap = "flipEnvMap",
     }
     /**
      *
@@ -5599,6 +5587,20 @@ declare namespace egret3d {
         RightLittleIntermediate = "RH_LittleIntermediate",
         RightLittleDistal = "RH_LittleDistal",
     }
+    /**
+     * 内置提供的全局 Attribute。
+     * @private
+     */
+    const globalAttributeSemantics: {
+        [key: string]: gltf.AttributeSemantics;
+    };
+    /**
+     * 内置提供的全局 Uniform。
+     * @private
+     */
+    const globalUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
     /**
      *
      */
@@ -6139,13 +6141,13 @@ declare namespace egret3d {
         static MESH_PHYSICAL: Shader;
         static MESH_STANDARD: Shader;
         static PARTICLE: Shader;
+        static POINTS: Shader;
+        static SPRITE: Shader;
         static CUBE: Shader;
+        static EQUIRECT: Shader;
         static DEPTH: Shader;
         static DISTANCE_RGBA: Shader;
-        static EQUIRECT: Shader;
-        static POINTS: Shader;
         static SHADOW: Shader;
-        static SPRITE: Shader;
         static COPY: Shader;
         /**
          * @deprecated
@@ -9434,6 +9436,18 @@ declare namespace egret3d {
          * 内容。
          */
         readonly context?: number | string;
+        /**
+         *
+         */
+        isCode?: boolean;
+        /**
+         *
+         */
+        order?: uint;
+        /**
+         *
+         */
+        type?: DefineLocation;
         constructor(index: uint, mask: uint, name: string, context?: number | string);
     }
     /**
@@ -11214,6 +11228,10 @@ declare namespace egret3d {
          * 是否与画布背景色混合，默认不混合。
          */
         alpha?: boolean;
+        /**
+         *
+         */
+        gammaInput?: boolean;
         antialiasSamples?: number;
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
