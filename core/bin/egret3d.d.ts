@@ -7482,7 +7482,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 户外光组件。
+     * 半球光组件。
      */
     class HemisphereLight extends BaseLight {
         /**
