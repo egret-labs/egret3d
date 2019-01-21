@@ -1,12 +1,13 @@
 namespace egret3d {
     let _index: uint = 0;
     let _mask: uint = 0x80000000;
-    const _defines: { [key: string]: Define } = {};
+    const _allDefines: { [key: string]: Define } = {};
 
     function _get(name: string, context?: number | string, isGlobal?: boolean): Define {
         let key = name;
         let order: uint | undefined;
-        const defines = _defines;
+        let index = _index;
+        const defines = _allDefines;
 
         if (isGlobal || !context) {
         }
@@ -22,15 +23,15 @@ namespace egret3d {
 
         if (define) {
             if (isGlobal) {
-                order = define.mask;
-                // TODO 回收 define 或将原有的 define 修改。
+                order = define.order || define.mask;
+                index = define.index;
             }
             else {
                 return define;
             }
         }
-
-        define = defines[key] = new Define(_index, _mask, name, context);
+        
+        define = defines[key] = new Define(index, _mask, name, context);
         if (order) {
             define.order = order;
         }
@@ -166,8 +167,8 @@ namespace egret3d {
 
             for (const define of defines) {
                 if (define.index !== index) {
-                    definesMask += "0x" + mask.toString(16);
                     index = define.index;
+                    definesMask += index + mask.toString(16);
                     mask = 0;
                 }
 
@@ -178,7 +179,7 @@ namespace egret3d {
                 }
             }
 
-            definesMask += "0x" + mask.toString(16);
+            definesMask += index + mask.toString(16);
 
             this.definesMask = definesMask;
         }

@@ -3256,7 +3256,7 @@ declare namespace egret3d {
         protected static _createConfig(createTextureParameters: CreateTextureParameters): GLTF;
         type: gltf.TextureType;
         protected _sourceDirty: boolean;
-        protected _levels: int;
+        protected _levels: uint;
         protected _gltfTexture: GLTFTexture;
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
@@ -7603,11 +7603,6 @@ declare namespace paper {
          */
         isStatic: boolean;
         /**
-         * 层级。
-         * - 用于各种层遮罩。
-         */
-        layer: Layer;
-        /**
          * 名称。
          */
         name: string;
@@ -7615,6 +7610,11 @@ declare namespace paper {
          * 标签。
          */
         tag: string;
+        /**
+         * 层级。
+         * - 用于各种层遮罩。
+         */
+        layer: Layer;
         /**
          *
          */

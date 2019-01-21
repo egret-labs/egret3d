@@ -43,8 +43,8 @@ namespace egret3d.particle {
         private _worldPostionBuffer: Float32Array;
         private _worldRoationBuffer: Float32Array;
 
-        private _worldPostionCache: Vector3;
-        private _worldRotationCache: Quaternion;
+        private _worldPostionCache: Vector3 = egret3d.Vector3.create();
+        private _worldRotationCache: Quaternion = egret3d.Quaternion.create();
 
         private _comp: ParticleComponent;
         private _renderer: ParticleRenderer;
@@ -273,8 +273,8 @@ namespace egret3d.particle {
             this._worldPostionBuffer = null!;
             this._worldRoationBuffer = null!;
 
-            this._worldPostionCache = null!;
-            this._worldRotationCache = null!;
+            // this._worldPostionCache = null!;
+            // this._worldRotationCache = null!;
 
             this._comp = null!;
             this._renderer = null!;
@@ -315,7 +315,7 @@ namespace egret3d.particle {
             }
 
             renderer.batchMesh = mesh;
-            if(!renderer.batchMaterial){
+            if (!renderer.batchMaterial) {
                 renderer.batchMaterial = renderer.materials[0]!.clone().retain();
             }
             //刚创建的时候，vbo,ibo为空调用无效，只有active一直被交换设置，才会需要调用

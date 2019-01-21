@@ -16942,11 +16942,6 @@ var paper;
              */
             _this.isStatic = false;
             /**
-             * 层级。
-             * - 用于各种层遮罩。
-             */
-            _this.layer = 1 /* Default */;
-            /**
              * 名称。
              */
             _this.name = "";
@@ -16954,6 +16949,11 @@ var paper;
              * 标签。
              */
             _this.tag = "";
+            /**
+             * 层级。
+             * - 用于各种层遮罩。
+             */
+            _this.layer = 1 /* Default */;
             /**
              *
              */
@@ -17839,16 +17839,16 @@ var paper;
         ], GameObject.prototype, "isStatic", void 0);
         __decorate([
             paper.serializedField,
-            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) }) // TODO
-        ], GameObject.prototype, "layer", void 0);
-        __decorate([
-            paper.serializedField,
             paper.editor.property("TEXT" /* TEXT */)
         ], GameObject.prototype, "name", void 0);
         __decorate([
             paper.serializedField,
             paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.DefaultTags) }) // TODO
         ], GameObject.prototype, "tag", void 0);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) }) // TODO
+        ], GameObject.prototype, "layer", void 0);
         __decorate([
             paper.serializedField,
             paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.HideFlags) }) // TODO
@@ -23018,6 +23018,8 @@ var egret3d;
                 this._readEmitCount = 0;
                 //最终重力
                 this._finalGravity = new egret3d.Vector3();
+                this._worldPostionCache = egret3d.Vector3.create();
+                this._worldRotationCache = egret3d.Quaternion.create();
             }
             /**
             * 计算粒子爆发数量
@@ -23220,8 +23222,8 @@ var egret3d;
                 this._random1Buffer = null;
                 this._worldPostionBuffer = null;
                 this._worldRoationBuffer = null;
-                this._worldPostionCache = null;
-                this._worldRotationCache = null;
+                // this._worldPostionCache = null!;
+                // this._worldRotationCache = null!;
                 this._comp = null;
                 this._renderer = null;
             };
@@ -25145,11 +25147,12 @@ var egret3d;
 (function (egret3d) {
     var _index = 0;
     var _mask = 0x80000000;
-    var _defines = {};
+    var _allDefines = {};
     function _get(name, context, isGlobal) {
         var key = name;
         var order;
-        var defines = _defines;
+        var index = _index;
+        var defines = _allDefines;
         if (isGlobal || !context) {
         }
         else if (typeof context === "number") {
@@ -25162,14 +25165,14 @@ var egret3d;
         var define = defines[key];
         if (define) {
             if (isGlobal) {
-                order = define.mask;
-                // TODO 回收 define 或将原有的 define 修改。
+                order = define.order || define.mask;
+                index = define.index;
             }
             else {
                 return define;
             }
         }
-        define = defines[key] = new Define(_index, _mask, name, context);
+        define = defines[key] = new Define(index, _mask, name, context);
         if (order) {
             define.order = order;
         }
@@ -25271,8 +25274,8 @@ var egret3d;
             for (var _i = 0, defines_1 = defines; _i < defines_1.length; _i++) {
                 var define = defines_1[_i];
                 if (define.index !== index) {
-                    definesMask += "0x" + mask.toString(16);
                     index = define.index;
+                    definesMask += index + mask.toString(16);
                     mask = 0;
                 }
                 mask |= define.mask;
@@ -25280,7 +25283,7 @@ var egret3d;
                     mask = -mask;
                 }
             }
-            definesMask += "0x" + mask.toString(16);
+            definesMask += index + mask.toString(16);
             this.definesMask = definesMask;
         };
         /**
