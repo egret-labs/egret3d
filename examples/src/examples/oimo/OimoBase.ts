@@ -12,8 +12,9 @@ namespace examples.oimo {
 
                 const light = gameObject.addComponent(egret3d.DirectionalLight);
                 light.intensity = 0.5;
-                light.shadow.bias = -0.002;
                 light.castShadows = true;
+                light.shadow.bias = -0.001;
+                light.shadow.size = 20.0;
             }
 
             { // Create ground.

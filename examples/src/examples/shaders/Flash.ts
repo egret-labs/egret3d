@@ -49,11 +49,17 @@ namespace examples.shaders {
                         .setTexture(RES.getRes("logo.png")),
                     egret3d.Material.create(shader)
                         .setTexture(texture)
-                        .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.7)
+                        .setBlend(egret3d.BlendMode.Additive, egret3d.RenderQueue.Blend, 1.0)
                         .setColor(egret3d.Color.INDIGO)
                 ];
 
                 renderer.gameObject.addComponent(FlashEditor);
+                //
+                const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
+                if (modelComponent) {
+                    modelComponent.select(renderer.gameObject);
+                    paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(FlashEditor);
+                }
             }
 
             { // SkinnedMeshRenderer.
@@ -64,7 +70,7 @@ namespace examples.shaders {
                 const materials = renderer.materials.concat();
                 const material = egret3d.Material.create(shader)
                     .setTexture(texture)
-                    .setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.7)
+                    .setBlend(egret3d.BlendMode.Additive, egret3d.RenderQueue.Blend, 1.0)
                     .setColor(egret3d.Color.PURPLE);
                 materials.push(material);
                 renderer.materials = materials;
@@ -83,12 +89,15 @@ namespace examples.shaders {
         public readonly speed: egret3d.Vector2 = egret3d.Vector2.create(1.0, 0.0);
         @paper.editor.property(paper.editor.EditType.VECTOR2)
         public readonly scale: egret3d.Vector2 = egret3d.Vector2.create(1.0, 1.0);
+        @paper.editor.property(paper.editor.EditType.COLOR)
+        public readonly color: egret3d.Color = egret3d.Color.create().fromHex(0xFFFFFF);
 
         public onUpdate() {
             if (this.gameObject.renderer && this.gameObject.renderer!.materials[1]) {
                 this.gameObject.renderer!.materials[1]!
                     .setVector2("_speed", this.speed)
-                    .setVector2("_scale", this.scale);
+                    .setVector2("_scale", this.scale)
+                    .setColor(this.color);
             }
         }
     }

@@ -13,24 +13,20 @@ namespace egret3d {
         Spot = 16,
         Point = 16,
     }
-
-    const _helpVector3 = Vector3.create();
     /**
      * 相机渲染上下文。
      */
     export class CameraRenderContext {
         /**
+         * @internal
+         */
+        public static create(camera: Camera) {
+            return new CameraRenderContext(camera);
+        }
+        /**
          * 
          */
         public logDepthBufFC: number = 0.0;
-        /**
-         * 
-         */
-        public readonly defines: egret3d.Defines = new egret3d.Defines();
-        /**
-         * 
-         */
-        public readonly camera: Camera = null!;
         /**
          * 12: dirX, dirY, dirZ, colorR, colorG, colorB, shadow, shadowBias, shadowRadius, shadowMapSizeX, shadowMapSizeY
          * @internal
@@ -78,9 +74,6 @@ namespace egret3d {
          * @internal
          */
         public readonly pointShadowMaps: (WebGLTexture | null)[] = [];
-
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
-        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
         /**
          * 此帧的非透明绘制信息列表。
          * - 已进行视锥剔除的。
@@ -99,11 +92,15 @@ namespace egret3d {
          * @internal
          */
         public readonly shadowCalls: DrawCall[] = [];
+
+        private readonly _camera: Camera = null!;
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
         /**
          * 禁止实例化。
          */
-        public constructor(camera: Camera) {
-            this.camera = camera;
+        private constructor(camera: Camera) {
+            this._camera = camera;
         }
         /**
          * 所有非透明的, 按照从近到远排序
@@ -141,7 +138,7 @@ namespace egret3d {
         }
 
         private _shadowFrustumCulling() {
-            const camera = this.camera;
+            const camera = this._camera;
             const cameraFrustum = camera.frustum;
             const shadowDrawCalls = this.shadowCalls;
             shadowDrawCalls.length = 0;
@@ -161,7 +158,7 @@ namespace egret3d {
         }
 
         private _frustumCulling() {
-            const camera = this.camera;
+            const camera = this._camera;
             const cameraPosition = camera.gameObject.transform.position;
             const cameraFrustum = camera.frustum;
             const opaqueCalls = this.opaqueCalls;
@@ -188,7 +185,7 @@ namespace egret3d {
                 }
             }
 
-            opaqueCalls.sort(this._sortOpaque);
+            opaqueCalls.sort(this._sortOpaque); // TODO 优化，没必要一定每帧排序。
             transparentCalls.sort(this._sortFromFarToNear);
         }
 
@@ -252,8 +249,8 @@ namespace egret3d {
             }
 
             let index = 0, shadowIndex = 0, offset = 0;
-            const helpVector3 = _helpVector3;
-            const worldToCameraMatrix = this.camera.worldToCameraMatrix;
+            const helpVector3 = egret3d.Vector3.create().release();
+            const worldToCameraMatrix = this._camera.worldToCameraMatrix;
 
             for (const light of directionalLights) {
                 const intensity = light.intensity;
@@ -410,7 +407,7 @@ namespace egret3d {
          * @internal
          */
         public _update() {
-            this.logDepthBufFC = 2.0 / (Math.log(this.camera.far + 1.0) / Math.LN2);
+            this.logDepthBufFC = 2.0 / (Math.log(this._camera.far + 1.0) / Math.LN2);
 
             if (this._cameraAndLightCollecter.currentLight) {
                 this._shadowFrustumCulling();

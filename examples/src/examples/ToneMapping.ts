@@ -16,10 +16,8 @@ namespace examples {
     }
 
     class Start extends paper.Behaviour {
-        private readonly _mainCamera: egret3d.Camera = egret3d.Camera.main;
-
         public onAwake() {
-            const mainCamera = this._mainCamera;
+            const mainCamera = egret3d.Camera.main;
 
             {
                 const renderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState)!;
@@ -103,6 +101,12 @@ namespace examples {
                     ;
 
                 gameObject.transform.setLocalPosition(0.0, 50.0, 0.0).setLocalScale(200.0);
+            }
+            //
+            const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
+            if (modelComponent) {
+                modelComponent.select(paper.GameObject.globalGameObject);
+                paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(egret3d.RenderState);
             }
         }
     }

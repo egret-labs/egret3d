@@ -49,7 +49,8 @@ namespace paper {
     //  * @param componentClass 组件类。
     //  */
     // export function abstract(componentClass: IComponentClass<BaseComponent>) {
-    //     (componentClass.__isAbstract as boolean) = true;
+    //     (componentClass.__isAbstract as any) = componentClass;
+    //     console.log(componentClass);
     // }
     /**
      * 通过装饰器标记组件允许在同一实体上添加多个实例。
@@ -58,19 +59,19 @@ namespace paper {
     export function allowMultiple(componentClass: IComponentClass<BaseComponent>) {
         if (!componentClass.__isSingleton) {
             (componentClass.allowMultiple as boolean) = true;
-            // (componentClass.notAllowMultiple as boolean) = false;
+            (componentClass.notAllowMultiple as boolean) = false;
         }
     }
-    // /** TODO
-    //  * 通过装饰器标记组件（或子类）不允许在同一实体上添加多个实例。
-    //  * @param componentClass 组件类。
-    //  */
-    // export function notAllowMultiple(componentClass: IComponentClass<BaseComponent>) {
-    //     if (!componentClass.__isSingleton) {
-    //         (componentClass.allowMultiple as boolean) = false;
-    //         (componentClass.notAllowMultiple as boolean) = true;
-    //     }
-    // }
+    /**
+     * 通过装饰器标记组件（或子类）不允许在同一实体上添加多个实例。
+     * @param componentClass 组件类。
+     */
+    export function notAllowMultiple(componentClass: IComponentClass<BaseComponent>) {
+        if (!componentClass.__isSingleton) {
+            (componentClass.allowMultiple as boolean) = false;
+            (componentClass.notAllowMultiple as boolean) = true;
+        }
+    }
     /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
@@ -78,7 +79,7 @@ namespace paper {
     export function singleton(componentClass: IComponentClass<BaseComponent>) {
         (componentClass.__isSingleton as boolean) = true;
         (componentClass.allowMultiple as boolean) = false;
-        // (componentClass.notAllowMultiple as boolean) = false;
+        (componentClass.notAllowMultiple as boolean) = false;
     }
     // executionOrder: number; TODO
     // /**

@@ -54,19 +54,6 @@ namespace paper {
         @editor.property(editor.EditType.CHECKBOX)
         public isStatic: boolean = false;
         /**
-         * 
-         */
-        @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).HideFlags) }) // TODO
-        public hideFlags: HideFlags = HideFlags.None;
-        /**
-         * 层级。
-         * - 用于各种层遮罩。
-         */
-        @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
-        public layer: Layer = Layer.Default;
-        /**
          * 名称。
          */
         @serializedField
@@ -78,6 +65,19 @@ namespace paper {
         @serializedField
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
         public tag: string = "";
+        /**
+         * 层级。
+         * - 用于各种层遮罩。
+         */
+        @serializedField
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
+        public layer: Layer = Layer.Default;
+        /**
+         * 
+         */
+        @serializedField
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).HideFlags) }) // TODO
+        public hideFlags: HideFlags = HideFlags.None;
         /**
          * 变换组件。
          * @readonly

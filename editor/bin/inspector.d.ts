@@ -240,12 +240,13 @@ declare namespace paper.editor {
     /**
      *
      */
-    class GUIComponent extends SingletonComponent {
+    class GUIComponent extends BaseComponent {
         readonly hierarchy: dat.GUI;
         readonly inspector: dat.GUI;
         readonly stats: Stats;
         readonly renderPanel: Stats.Panel;
         initialize(): void;
+        openComponents(...args: IComponentClass<BaseComponent>[]): void;
     }
 }
 declare namespace paper.editor {
@@ -254,7 +255,7 @@ declare namespace paper.editor {
     /**
      *
      */
-    class ModelComponent extends SingletonComponent {
+    class ModelComponent extends BaseComponent {
         static readonly onSceneSelected: signals.Signal;
         static readonly onSceneUnselected: signals.Signal;
         static readonly onGameObjectHovered: signals.Signal;

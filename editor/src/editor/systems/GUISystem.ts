@@ -9,8 +9,6 @@ namespace paper.editor {
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = GameObject.globalGameObject.getOrAddComponent(GUIComponent);
         private readonly _bufferedGameObjects: (GameObject | null)[] = [];
-        private readonly _hierarchyFolders: { [key: string]: dat.GUI } = {};
-        private readonly _inspectorFolders: { [key: string]: dat.GUI } = {};
         private _selectFolder: dat.GUI | null = null;
 
         private _onSceneSelected = (_c: any, value: Scene) => {
@@ -101,8 +99,8 @@ namespace paper.editor {
             const inspector = this._guiComponent.inspector;
             inspector.instance = sceneOrGameObject;
 
-            for (const k in this._inspectorFolders) {
-                delete this._inspectorFolders[k];
+            for (const k in this._guiComponent._inspectorFolders) {
+                delete this._guiComponent._inspectorFolders[k];
             }
 
             if (inspector.__controllers) {
@@ -167,7 +165,7 @@ namespace paper.editor {
                         const folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
                         folder.instance = component;
                         folder.open();
-                        this._inspectorFolders[component.uuid] = folder;
+                        this._guiComponent._inspectorFolders[component.uuid] = folder;
                         this._addToInspector(folder);
                     }
                 }
@@ -176,14 +174,14 @@ namespace paper.editor {
 
         private _addToHierarchy(gameObject: GameObject) {
             if (
-                gameObject.uuid in this._hierarchyFolders ||
+                gameObject.uuid in this._guiComponent._hierarchyFolders ||
                 (gameObject.hideFlags & HideFlags.Hide) ||
                 gameObject.scene === Scene.editorScene
             ) {
                 return true;
             }
 
-            let parentFolder = this._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene.uuid];
+            let parentFolder = this._guiComponent._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene.uuid];
             if (!parentFolder) {
                 if (gameObject.transform.parent) {
                     // throw new Error(); // Never.
@@ -193,13 +191,13 @@ namespace paper.editor {
                 parentFolder = this._guiComponent.hierarchy.addFolder(gameObject.scene.uuid, gameObject.scene.name + " <Scene>");
                 parentFolder.instance = gameObject.scene;
                 parentFolder.onClick = this._sceneOrGameObjectGUIClickHandler;
-                this._hierarchyFolders[gameObject.scene.uuid] = parentFolder;
+                this._guiComponent._hierarchyFolders[gameObject.scene.uuid] = parentFolder;
             }
 
             const folder = parentFolder.addFolder(gameObject.uuid, gameObject.name);
             folder.instance = gameObject;
             folder.onClick = this._sceneOrGameObjectGUIClickHandler;
-            this._hierarchyFolders[gameObject.uuid] = folder;
+            this._guiComponent._hierarchyFolders[gameObject.uuid] = folder;
 
             return true;
         }
@@ -518,9 +516,9 @@ namespace paper.editor {
             ModelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
             ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectedChange, this);
 
-            for (const k in this._hierarchyFolders) {
-                const folder = this._hierarchyFolders[k];
-                delete this._hierarchyFolders[k];
+            for (const k in this._guiComponent._hierarchyFolders) {
+                const folder = this._guiComponent._hierarchyFolders[k];
+                delete this._guiComponent._hierarchyFolders[k];
 
                 if (folder && folder.parent) {
                     try {
@@ -531,8 +529,8 @@ namespace paper.editor {
                 }
             }
 
-            for (const k in this._inspectorFolders) {
-                delete this._inspectorFolders[k];
+            for (const k in this._guiComponent._inspectorFolders) {
+                delete this._guiComponent._inspectorFolders[k];
             }
 
             this._bufferedGameObjects.length = 0;
@@ -545,8 +543,8 @@ namespace paper.editor {
 
             { // Clear folders.
                 for (const scene of this._disposeCollecter.scenes) {
-                    const folder = this._hierarchyFolders[scene.uuid];
-                    delete this._hierarchyFolders[scene.uuid];
+                    const folder = this._guiComponent._hierarchyFolders[scene.uuid];
+                    delete this._guiComponent._hierarchyFolders[scene.uuid];
 
                     if (folder && folder.parent) {
                         try {
@@ -558,8 +556,8 @@ namespace paper.editor {
                 }
 
                 for (const gameObject of this._disposeCollecter.gameObjects) {
-                    const folder = this._hierarchyFolders[gameObject.uuid];
-                    delete this._hierarchyFolders[gameObject.uuid];
+                    const folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
+                    delete this._guiComponent._hierarchyFolders[gameObject.uuid];
 
                     if (folder && folder.parent) {
                         try {
@@ -571,8 +569,8 @@ namespace paper.editor {
                 }
 
                 for (const component of this._disposeCollecter.components) {
-                    const folder = this._inspectorFolders[component.uuid];
-                    delete this._inspectorFolders[component.uuid];
+                    const folder = this._guiComponent._inspectorFolders[component.uuid];
+                    delete this._guiComponent._inspectorFolders[component.uuid];
 
                     if (folder && folder.parent) {
                         try {
@@ -584,10 +582,10 @@ namespace paper.editor {
                 }
 
                 for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
-                    const folder = this._hierarchyFolders[gameObject.uuid];
+                    const folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
 
                     if (folder) {
-                        delete this._hierarchyFolders[gameObject.uuid];
+                        delete this._guiComponent._hierarchyFolders[gameObject.uuid];
 
                         if (folder && folder.parent) {
                             try {
@@ -619,8 +617,8 @@ namespace paper.editor {
 
                 if (!this._selectFolder) {  // Open and select folder.
                     const sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
-                    if (sceneOrGameObject && sceneOrGameObject.uuid in this._hierarchyFolders) {
-                        this._selectFolder = this._hierarchyFolders[sceneOrGameObject.uuid];
+                    if (sceneOrGameObject && sceneOrGameObject.uuid in this._guiComponent._hierarchyFolders) {
+                        this._selectFolder = this._guiComponent._hierarchyFolders[sceneOrGameObject.uuid];
                         this._selectFolder.selected = true;
                         this._openFolder(this._selectFolder);
                     }

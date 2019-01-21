@@ -4,6 +4,10 @@ namespace egret3d {
      */
     export abstract class BaseLight extends paper.BaseComponent {
         /**
+         * @internal
+         */
+        public static readonly __isAbstract: any = BaseLight;
+        /**
          * TODO
          */
         @paper.serializedField

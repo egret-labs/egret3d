@@ -12,16 +12,13 @@ namespace examples.animations {
             await RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin");
             await RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin");
 
-            paper.GameObject.globalGameObject.addComponent(Start);
+            paper.GameObject.globalGameObject.addComponent(Starter);
         }
     }
 
-    class Start extends paper.Behaviour {
+    class Starter extends paper.Behaviour {
 
         public onAwake() {
-            //
-            createGridRoom();
-            //
             const gameObject = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json")!;
             const animation = gameObject.getOrAddComponent(egret3d.Animation);
             animation.animations = [
@@ -38,6 +35,8 @@ namespace examples.animations {
             mask.createJoints(gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.mesh!).addJoint("mixamorig:Spine2");
             //
             egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
+            //
+            createGridRoom();
         }
     }
 }

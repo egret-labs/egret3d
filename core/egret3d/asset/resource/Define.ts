@@ -23,6 +23,7 @@ namespace egret3d {
         if (define) {
             if (isGlobal) {
                 order = define.mask;
+                // TODO 回收 define 或将原有的 define 修改。
             }
             else {
                 return define;

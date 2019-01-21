@@ -19,9 +19,6 @@ namespace examples.animations {
     class Starter extends paper.Behaviour {
 
         public onAwake() {
-            //
-            createGridRoom();
-            //
             const gameObject = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json")!;
             const animation = gameObject.getOrAddComponent(egret3d.Animation);
             gameObject.getOrAddComponent(Updater);
@@ -41,6 +38,8 @@ namespace examples.animations {
             animation.play("WalkAndRun");
             //
             egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
+            //
+            createGridRoom();
         }
     }
 

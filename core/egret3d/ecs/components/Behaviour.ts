@@ -10,7 +10,9 @@ namespace paper {
      * - onStart();
      * - onFixedUpdate();
      * - onUpdate();
+     * - onAnimationEvent();
      * - onLateUpdate();
+     * - onBeforeRender();
      * - onDisable();
      * - onDestroy();
      */

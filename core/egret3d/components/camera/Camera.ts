@@ -1,4 +1,5 @@
 namespace egret3d {
+
     const enum DirtyMask {
         ProjectionMatrix = 0b00000001,
 
@@ -100,9 +101,8 @@ namespace egret3d {
         public readonly backgroundColor: Color = Color.create(0.15, 0.25, 0.5, 1.0);
         /**
          * 该相机的渲染上下文。
-         * @private
          */
-        public readonly context: CameraRenderContext = new CameraRenderContext(this);
+        public readonly context: CameraRenderContext = CameraRenderContext.create(this);
 
         private _nativeCulling: boolean = false;
         private _nativeProjection: boolean = false;

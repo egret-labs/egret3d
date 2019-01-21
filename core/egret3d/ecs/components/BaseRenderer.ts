@@ -4,6 +4,10 @@ namespace paper {
      */
     export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast, egret3d.ITransformObserver {
         /**
+         * @internal
+         */
+        public static readonly __isAbstract: any = BaseRenderer;
+        /**
          * 当渲染组件的材质列表改变时派发事件。
          */
         public static readonly onMaterialsChanged: signals.Signal = new signals.Signal();

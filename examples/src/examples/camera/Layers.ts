@@ -6,11 +6,11 @@ namespace examples.camera {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
 
-            egret3d.Camera.main.gameObject.addComponent(Start);
+            egret3d.Camera.main.gameObject.addComponent(Starter);
         }
     }
 
-    class Start extends paper.Behaviour {
+    class Starter extends paper.Behaviour {
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public get red() {
             return this._red;
@@ -72,12 +72,16 @@ namespace examples.camera {
                 mainCamera.backgroundColor.fromHex(0xFFFFFF);
                 mainCamera.gameObject.addComponent(behaviors.RotateAround);
                 //
-                paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent)!.select(mainCamera.gameObject);
+                const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
+                if (modelComponent) {
+                    modelComponent.select(mainCamera.gameObject);
+                    paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(Starter);
+                }
             }
 
             { // Create lights.
                 const pointLight = paper.GameObject.create("Point Light").addComponent(egret3d.PointLight);
-                pointLight.distance = 10000;
+                pointLight.distance = 10000.0;
                 pointLight.color.fromHex(0xFFFFFF);
                 pointLight.transform.setParent(mainCamera.transform);
             }
@@ -109,6 +113,18 @@ namespace examples.camera {
                         );
                 }
             }
+        }
+
+        public onEnable() {
+            this.red = true;
+            this.green = true;
+            this.blue = true;
+        }
+
+        public onDisable() {
+            this.red = false;
+            this.green = false;
+            this.blue = false;
         }
     }
 }

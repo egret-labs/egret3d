@@ -384,6 +384,11 @@ declare namespace paper {
      */
     function allowMultiple(componentClass: IComponentClass<BaseComponent>): void;
     /**
+     * 通过装饰器标记组件（或子类）不允许在同一实体上添加多个实例。
+     * @param componentClass 组件类。
+     */
+    function notAllowMultiple(componentClass: IComponentClass<BaseComponent>): void;
+    /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
      */
@@ -3251,6 +3256,7 @@ declare namespace egret3d {
         protected static _createConfig(createTextureParameters: CreateTextureParameters): GLTF;
         type: gltf.TextureType;
         protected _sourceDirty: boolean;
+        protected _levels: int;
         protected _gltfTexture: GLTFTexture;
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
@@ -3274,15 +3280,19 @@ declare namespace egret3d {
         /**
          *
          */
+        readonly format: gltf.TextureFormat;
+        /**
+         *
+         */
+        readonly levels: uint;
+        /**
+         *
+         */
         readonly width: uint;
         /**
          *
          */
         readonly height: uint;
-        /**
-         *
-         */
-        readonly format: gltf.TextureFormat;
         /**
          *
          */
@@ -3377,8 +3387,8 @@ declare namespace egret3d {
         protected _getCommonDefines(): void;
         protected _getEncodingComponents(encoding: TextureEncoding): string[];
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
-        protected _getTexelEncodingFunction(functionName: string, encoding?: TextureEncoding): string;
-        protected _getTexelDecodingFunction(functionName: string, encoding?: TextureEncoding): string;
+        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding): string;
+        protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding): string;
         initialize(config: RunEgretOptions): void;
         /**
          *
@@ -4882,7 +4892,9 @@ declare namespace paper {
      * - onStart();
      * - onFixedUpdate();
      * - onUpdate();
+     * - onAnimationEvent();
      * - onLateUpdate();
+     * - onBeforeRender();
      * - onDisable();
      * - onDestroy();
      */
@@ -5509,6 +5521,7 @@ declare namespace egret3d {
         Emissive = "emissive",
         EmissiveIntensity = "emissiveIntensity",
         FlipEnvMap = "flipEnvMap",
+        MaxMipLevel = "maxMipLevel",
     }
     /**
      *
@@ -7017,7 +7030,6 @@ declare namespace egret3d {
         readonly backgroundColor: Color;
         /**
          * 该相机的渲染上下文。
-         * @private
          */
         readonly context: CameraRenderContext;
         private _nativeCulling;
@@ -7233,20 +7245,13 @@ declare namespace egret3d {
          *
          */
         logDepthBufFC: number;
-        /**
-         *
-         */
-        readonly defines: egret3d.Defines;
-        /**
-         *
-         */
-        readonly camera: Camera;
+        private readonly _camera;
         private readonly _drawCallCollecter;
         private readonly _cameraAndLightCollecter;
         /**
          * 禁止实例化。
          */
-        constructor(camera: Camera);
+        private constructor();
         /**
          * 所有非透明的, 按照从近到远排序
          */
@@ -7482,7 +7487,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 户外光组件。
+     * 半球光组件。
      */
     class HemisphereLight extends BaseLight {
         /**
@@ -7598,10 +7603,6 @@ declare namespace paper {
          */
         isStatic: boolean;
         /**
-         *
-         */
-        hideFlags: HideFlags;
-        /**
          * 层级。
          * - 用于各种层遮罩。
          */
@@ -7614,6 +7615,10 @@ declare namespace paper {
          * 标签。
          */
         tag: string;
+        /**
+         *
+         */
+        hideFlags: HideFlags;
         /**
          * 变换组件。
          * @readonly
