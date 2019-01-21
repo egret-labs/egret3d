@@ -1,0 +1,51 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "nightVision_vert",
+                    "type": 35633,
+                    "uri": "shaders/nightVision/nightVision_vert.glsl"
+                },
+                {
+                    "name": "nightVision_frag",
+                    "type": 35632,
+                    "uri": "shaders/nightVision/nightVision_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "nightVision",
+                    "attributes": {},
+                    "uniforms": {
+                        "map": {
+                            "type": 35678
+                        },
+                        "matrix9[0]": {
+                            "type": 35665
+                        },
+                        "fadeFX": {
+                            "type": 5126
+                        },
+                        "time": {
+                            "type": 5126
+                        }
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

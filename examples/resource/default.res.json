@@ -1,0 +1,1670 @@
+{
+	"groups": [],
+	"resources": [
+		{
+			"url": "logo.png",
+			"type": "Texture",
+			"name": "logo.png"
+		},
+		{
+			"url": "2d/default.thm.json",
+			"type": "json",
+			"name": "default_thm_json"
+		},
+		{
+			"url": "Assets/C_xiaohuangren_D_01_ANIM.prefab.json",
+			"type": "Prefab",
+			"name": "Assets/C_xiaohuangren_D_01_ANIM.prefab.json"
+		},
+		{
+			"url": "Assets/Motorcycle01.prefab.json",
+			"type": "Prefab",
+			"name": "Assets/Motorcycle01.prefab.json"
+		},
+		{
+			"url": "Assets/ninjaHead_Low.prefab.json",
+			"type": "Prefab",
+			"name": "Assets/ninjaHead_Low.prefab.json"
+		},
+		{
+			"url": "Assets/texiao_anhei13x13.prefab.json",
+			"type": "Prefab",
+			"name": "Assets/texiao_anhei13x13.prefab.json"
+		},
+		{
+			"url": "Assets/Materials/ninja.mat.json",
+			"type": "Material",
+			"name": "Assets/Materials/ninja.mat.json"
+		},
+		{
+			"url": "Assets/Animations/Mixamo/Female_Tough_Walk.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Animations/Mixamo/Female_Tough_Walk.ani.bin"
+		},
+		{
+			"url": "Assets/Animations/Mixamo/Looking_Around.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Animations/Mixamo/Looking_Around.ani.bin"
+		},
+		{
+			"url": "Assets/Animations/Mixamo/Pistol_Idle.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Animations/Mixamo/Pistol_Idle.ani.bin"
+		},
+		{
+			"url": "Assets/Animations/Mixamo/Running.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Animations/Mixamo/Running.ani.bin"
+		},
+		{
+			"url": "Assets/Animations/Mixamo/Walking.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Animations/Mixamo/Walking.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Motorbike_03.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/Motorcycle01/Motorbike_03.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_details_BaseColor_NONLOGO.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_details_BaseColor_NONLOGO.mat.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_engine_BaseColor.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_engine_BaseColor.mat.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_frame_BaseColor.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_frame_BaseColor.mat.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_lights_basecolor.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_lights_basecolor.mat.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_tire_BaseColor.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_tire_BaseColor.mat.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_wheel_BaseColor.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/Motorcycle01/Materials/bike_lowpoly_ve_motorcycle_wheel_BaseColor.mat.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Materials/Dical_d.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/Motorcycle01/Materials/Dical_d.mat.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Materials/lowpoly_bag_ve_motorcycle_bag_BaseColor.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/Motorcycle01/Materials/lowpoly_bag_ve_motorcycle_bag_BaseColor.mat.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_details_BaseColor.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_details_BaseColor.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_details_BaseColor.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_details_BaseColor.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_details_Normal.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_details_Normal.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_details_Normal.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_details_Normal.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_engine_BaseColor.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_engine_BaseColor.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_engine_BaseColor.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_engine_BaseColor.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_engine_Normal.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_engine_Normal.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_engine_Normal.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_engine_Normal.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_frame_BaseColor.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_frame_BaseColor.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_frame_BaseColor.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_frame_BaseColor.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_frame_Normal.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_frame_Normal.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_frame_Normal.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_frame_Normal.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_sidecar_frame_BaseColor.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_sidecar_frame_BaseColor.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_sidecar_frame_BaseColor.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_sidecar_frame_BaseColor.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_sidecar_frame_Normal.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_sidecar_frame_Normal.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_sidecar_frame_Normal.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_sidecar_frame_Normal.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_tire_BaseColor.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_tire_BaseColor.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_tire_BaseColor.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_tire_BaseColor.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_tire_Normal.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_tire_Normal.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_tire_Normal.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_tire_Normal.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_BaseColor.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_BaseColor.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_BaseColor.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_BaseColor.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_Normal.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_Normal.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_Normal.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_Normal.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/Dical_D.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/Dical_D.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/Dical_D.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/Dical_D.jpg"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/Dical_N.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Motorcycle01/Textures_01/Dical_N.image.json"
+		},
+		{
+			"url": "Assets/Art/Motorcycle01/Textures_01/Dical_N.jpg",
+			"type": "Texture",
+			"name": "Assets/Art/Motorcycle01/Textures_01/Dical_N.jpg"
+		},
+		{
+			"url": "Assets/Art/effect/animation/xuanzhuan_1_xuanzhuan_1.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/effect/animation/xuanzhuan_1_xuanzhuan_1.ani.bin"
+		},
+		{
+			"url": "Assets/Art/effect/animation/xuanzhuan_2_xuanzhuan_2.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/effect/animation/xuanzhuan_2_xuanzhuan_2.ani.bin"
+		},
+		{
+			"url": "Assets/Art/effect/Materials/daoguang01_5x10.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/effect/Materials/daoguang01_5x10.mat.json"
+		},
+		{
+			"url": "Assets/Art/effect/Materials/effect_huojiantong_hm_001.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/effect/Materials/effect_huojiantong_hm_001.mat.json"
+		},
+		{
+			"url": "Assets/Art/effect/Materials/light0066.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/effect/Materials/light0066.mat.json"
+		},
+		{
+			"url": "Assets/Art/effect/Materials/light0067.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/effect/Materials/light0067.mat.json"
+		},
+		{
+			"url": "Assets/Art/effect/Materials/xiangshangguangshu02.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/effect/Materials/xiangshangguangshu02.mat.json"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/effect_huojiantong_hm_001.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/effect/Textures/effect_huojiantong_hm_001.image.json"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/effect_huojiantong_hm_001.png",
+			"type": "Texture",
+			"name": "Assets/Art/effect/Textures/effect_huojiantong_hm_001.png"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/gui_3.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/effect/Textures/gui_3.image.json"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/gui_3.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/effect/Textures/gui_3.mat.json"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/gui_3.png",
+			"type": "Texture",
+			"name": "Assets/Art/effect/Textures/gui_3.png"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/light0066.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/effect/Textures/light0066.image.json"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/light0066.png",
+			"type": "Texture",
+			"name": "Assets/Art/effect/Textures/light0066.png"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/light_009_0777.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/effect/Textures/light_009_0777.image.json"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/light_009_0777.png",
+			"type": "Texture",
+			"name": "Assets/Art/effect/Textures/light_009_0777.png"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/xiangshangguangshu01.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/effect/Textures/xiangshangguangshu01.image.json"
+		},
+		{
+			"url": "Assets/Art/effect/Textures/xiangshangguangshu01.png",
+			"type": "Texture",
+			"name": "Assets/Art/effect/Textures/xiangshangguangshu01.png"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/L_shiqiao.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/L_shiqiao.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/Plane_01.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/Plane_01.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/Materials/L_dimian_1v1.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/changjing/FBX/Materials/L_dimian_1v1.mat.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/zhiwu/L_tree.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/zhiwu/L_tree.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_cao_01.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_cao_01.image.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_cao_01.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_cao_01.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_cao_01.png",
+			"type": "Texture",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_cao_01.png"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_cao_02.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_cao_02.image.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_cao_02.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_cao_02.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_cao_02.png",
+			"type": "Texture",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_cao_02.png"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_daoju.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_daoju.image.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_daoju.png",
+			"type": "Texture",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_daoju.png"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_heye.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_heye.image.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_heye.png",
+			"type": "Texture",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_heye.png"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_heye_01.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_heye_01.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_shuicao_01.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_shuicao_01.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_Sunflower.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_Sunflower.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_Sunflower_1.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_Sunflower_1.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_tizi.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_tizi.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_tree_02.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_tree_02.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_tree_03.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_tree_03.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_tree_04.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_tree_04.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_wujian.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_wujian.image.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/L_wujian.png",
+			"type": "Texture",
+			"name": "Assets/Art/changjing/FBX/GOOD/L_wujian.png"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/L_dibiao1v1.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/L_dibiao1v1.image.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/L_dibiao1v1.png",
+			"type": "Texture",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/L_dibiao1v1.png"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/L_dibiao_1v1.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/L_dibiao_1v1.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/L_dixing_1v1.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/L_dixing_1v1.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/Object001.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/Object001.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/Object002.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/Object002.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/Object003.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/Object003.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/Object004.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/Object004.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/Object005.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/Object005.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/Object006.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/Object006.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/1V1/Materials/GOOD_dibiao_1v1.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/changjing/FBX/GOOD/1V1/Materials/GOOD_dibiao_1v1.mat.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/Materials/L_cao_01.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/changjing/FBX/GOOD/Materials/L_cao_01.mat.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/Materials/L_cao_02.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/changjing/FBX/GOOD/Materials/L_cao_02.mat.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/Materials/L_daoju_diff.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/changjing/FBX/GOOD/Materials/L_daoju_diff.mat.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/Materials/L_heye_01.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/changjing/FBX/GOOD/Materials/L_heye_01.mat.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/Materials/L_weilan.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/changjing/FBX/GOOD/Materials/L_weilan.mat.json"
+		},
+		{
+			"url": "Assets/Art/changjing/FBX/GOOD/Materials/L_weilan_diff.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/changjing/FBX/GOOD/Materials/L_weilan_diff.mat.json"
+		},
+		{
+			"url": "Assets/Art/changjing/Textures/dimian.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/changjing/Textures/dimian.image.json"
+		},
+		{
+			"url": "Assets/Art/changjing/Textures/dimian.png",
+			"type": "Texture",
+			"name": "Assets/Art/changjing/Textures/dimian.png"
+		},
+		{
+			"url": "Assets/Art/changjing/Scenes/Scene_11X9.scene.json",
+			"type": "Scene",
+			"name": "Assets/Art/changjing/Scenes/Scene_11X9.scene.json"
+		},
+		{
+			"url": "Assets/Art/changjing/Scenes/Scene_11X9/Lightmap_0_comp_light.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/changjing/Scenes/Scene_11X9/Lightmap_0_comp_light.image.json"
+		},
+		{
+			"url": "Assets/Art/changjing/Scenes/Scene_11X9/Lightmap_0_comp_light.png",
+			"type": "Texture",
+			"name": "Assets/Art/changjing/Scenes/Scene_11X9/Lightmap_0_comp_light.png"
+		},
+		{
+			"url": "Assets/Art/changjing/Particles/Textures/Ripples.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/changjing/Particles/Textures/Ripples.image.json"
+		},
+		{
+			"url": "Assets/Art/changjing/Particles/Textures/Ripples.png",
+			"type": "Texture",
+			"name": "Assets/Art/changjing/Particles/Textures/Ripples.png"
+		},
+		{
+			"url": "Assets/Art/changjing/Particles/Textures/Ripples_lizi.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/changjing/Particles/Textures/Ripples_lizi.mat.json"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01.image.json"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01.mesh.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01.png",
+			"type": "Texture",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01.png"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_die01.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_die01.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_down01.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_down01.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_idle01.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_idle01.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_rise01.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_rise01.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_run01.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_run01.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_show05.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_show05.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_skill01.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_skill01.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_stun01.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_stun01.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_walk01.ani.bin",
+			"type": "Animation",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/C_xiaohuangren_D_01_ANIM_walk01.ani.bin"
+		},
+		{
+			"url": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/Materials/C_xiaohuangren_D_01_ANIM.mat.json",
+			"type": "Material",
+			"name": "Assets/Art/Models/Player/C_xiaohuangren_D_01_ANIM/Materials/C_xiaohuangren_D_01_ANIM.mat.json"
+		},
+		{
+			"url": "Assets/Models/Mixamo/xbot.prefab.json",
+			"type": "Prefab",
+			"name": "Assets/Models/Mixamo/xbot.prefab.json"
+		},
+		{
+			"url": "Assets/Models/Mixamo/ybot.prefab.json",
+			"type": "Prefab",
+			"name": "Assets/Models/Mixamo/ybot.prefab.json"
+		},
+		{
+			"url": "Assets/Models/Mixamo/xbot/Beta_Joints.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Models/Mixamo/xbot/Beta_Joints.mesh.bin"
+		},
+		{
+			"url": "Assets/Models/Mixamo/xbot/Beta_Surface.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Models/Mixamo/xbot/Beta_Surface.mesh.bin"
+		},
+		{
+			"url": "Assets/Models/Mixamo/xbot/xbot.fbx.asdf1_Beta_HighLimbsGeoSG2.mat.json",
+			"type": "Material",
+			"name": "Assets/Models/Mixamo/xbot/xbot.fbx.asdf1_Beta_HighLimbsGeoSG2.mat.json"
+		},
+		{
+			"url": "Assets/Models/Mixamo/xbot/xbot.fbx.Beta_Joints_MAT.mat.json",
+			"type": "Material",
+			"name": "Assets/Models/Mixamo/xbot/xbot.fbx.Beta_Joints_MAT.mat.json"
+		},
+		{
+			"url": "Assets/Models/Mixamo/ybot/Alpha_Joints.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Models/Mixamo/ybot/Alpha_Joints.mesh.bin"
+		},
+		{
+			"url": "Assets/Models/Mixamo/ybot/Alpha_Surface.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Models/Mixamo/ybot/Alpha_Surface.mesh.bin"
+		},
+		{
+			"url": "Assets/Models/Mixamo/ybot/ybot.fbx.Alpha_Body_MAT.mat.json",
+			"type": "Material",
+			"name": "Assets/Models/Mixamo/ybot/ybot.fbx.Alpha_Body_MAT.mat.json"
+		},
+		{
+			"url": "Assets/Models/Mixamo/ybot/ybot.fbx.Alpha_Joints_MAT.mat.json",
+			"type": "Material",
+			"name": "Assets/Models/Mixamo/ybot/ybot.fbx.Alpha_Joints_MAT.mat.json"
+		},
+		{
+			"url": "Assets/Models/ninja/ao.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Models/ninja/ao.image.json"
+		},
+		{
+			"url": "Assets/Models/ninja/ao.jpg",
+			"type": "Texture",
+			"name": "Assets/Models/ninja/ao.jpg"
+		},
+		{
+			"url": "Assets/Models/ninja/displacement.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Models/ninja/displacement.image.json"
+		},
+		{
+			"url": "Assets/Models/ninja/displacement.jpg",
+			"type": "Texture",
+			"name": "Assets/Models/ninja/displacement.jpg"
+		},
+		{
+			"url": "Assets/Models/ninja/ninjaHead_Low_default.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Models/ninja/ninjaHead_Low_default.mesh.bin"
+		},
+		{
+			"url": "Assets/Models/ninja/normal.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Models/ninja/normal.image.json"
+		},
+		{
+			"url": "Assets/Models/ninja/normal.jpg",
+			"type": "Texture",
+			"name": "Assets/Models/ninja/normal.jpg"
+		},
+		{
+			"url": "Assets/Models/Threejs/WaltHead.prefab.json",
+			"type": "Prefab",
+			"name": "Assets/Models/Threejs/WaltHead.prefab.json"
+		},
+		{
+			"url": "Assets/Models/Threejs/walt/WaltHead.obj.Mesh_Mesh_head_geo.001_lambert2SG.001Mat.mat.json",
+			"type": "Material",
+			"name": "Assets/Models/Threejs/walt/WaltHead.obj.Mesh_Mesh_head_geo.001_lambert2SG.001Mat.mat.json"
+		},
+		{
+			"url": "Assets/Models/Threejs/walt/WaltHead_Mesh_Mesh_head_geo.001_lambert2SG.001.mesh.bin",
+			"type": "Mesh",
+			"name": "Assets/Models/Threejs/walt/WaltHead_Mesh_Mesh_head_geo.001_lambert2SG.001.mesh.bin"
+		},
+		{
+			"url": "Assets/Z3_Water/Water/Tasharen_Water.image.json",
+			"type": "TextureDesc",
+			"name": "Assets/Z3_Water/Water/Tasharen_Water.image.json"
+		},
+		{
+			"url": "Assets/Z3_Water/Water/Tasharen_Water.png",
+			"type": "Texture",
+			"name": "Assets/Z3_Water/Water/Tasharen_Water.png"
+		},
+		{
+			"url": "Assets/Z3_Water/Water/water_juhunzhong.mat.json",
+			"type": "Material",
+			"name": "Assets/Z3_Water/Water/water_juhunzhong.mat.json"
+		},
+		{
+			"url": "shaders/luminosityhigh.shader.json",
+			"type": "Shader",
+			"name": "shaders/luminosityhigh.shader.json"
+		},
+		{
+			"url": "shaders/luminosityhigh_frag.glsl",
+			"type": "text",
+			"name": "shaders/luminosityhigh_frag.glsl"
+		},
+		{
+			"url": "shaders/luminosityhigh_vert.glsl",
+			"type": "text",
+			"name": "shaders/luminosityhigh_vert.glsl"
+		},
+		{
+			"url": "shaders/reflector.shader.json",
+			"type": "Shader",
+			"name": "shaders/reflector.shader.json"
+		},
+		{
+			"url": "shaders/reflector_frag.glsl",
+			"type": "text",
+			"name": "shaders/reflector_frag.glsl"
+		},
+		{
+			"url": "shaders/reflector_vert.glsl",
+			"type": "text",
+			"name": "shaders/reflector_vert.glsl"
+		},
+		{
+			"url": "shaders/xray.shader.json",
+			"type": "Shader",
+			"name": "shaders/xray.shader.json"
+		},
+		{
+			"url": "shaders/xray_frag.glsl",
+			"type": "text",
+			"name": "shaders/xray_frag.glsl"
+		},
+		{
+			"url": "shaders/xray_vert.glsl",
+			"type": "text",
+			"name": "shaders/xray_vert.glsl"
+		},
+		{
+			"url": "shaders/lensflare/a.shader.json",
+			"type": "Shader",
+			"name": "shaders/lensflare/a.shader.json"
+		},
+		{
+			"url": "shaders/lensflare/a_frag.glsl",
+			"type": "text",
+			"name": "shaders/lensflare/a_frag.glsl"
+		},
+		{
+			"url": "shaders/lensflare/a_vert.glsl",
+			"type": "text",
+			"name": "shaders/lensflare/a_vert.glsl"
+		},
+		{
+			"url": "shaders/lensflare/b.shader.json",
+			"type": "Shader",
+			"name": "shaders/lensflare/b.shader.json"
+		},
+		{
+			"url": "shaders/lensflare/b_frag.glsl",
+			"type": "text",
+			"name": "shaders/lensflare/b_frag.glsl"
+		},
+		{
+			"url": "shaders/lensflare/b_vert.glsl",
+			"type": "text",
+			"name": "shaders/lensflare/b_vert.glsl"
+		},
+		{
+			"url": "shaders/lensflare/lensflare.shader.json",
+			"type": "Shader",
+			"name": "shaders/lensflare/lensflare.shader.json"
+		},
+		{
+			"url": "shaders/lensflare/lensflare_frag.glsl",
+			"type": "text",
+			"name": "shaders/lensflare/lensflare_frag.glsl"
+		},
+		{
+			"url": "shaders/lensflare/lensflare_vert.glsl",
+			"type": "text",
+			"name": "shaders/lensflare/lensflare_vert.glsl"
+		},
+		{
+			"url": "shaders/motionBlur/blurDepth.shader.json",
+			"type": "Shader",
+			"name": "shaders/motionBlur/blurDepth.shader.json"
+		},
+		{
+			"url": "shaders/motionBlur/blurDepth_frag.glsl",
+			"type": "text",
+			"name": "shaders/motionBlur/blurDepth_frag.glsl"
+		},
+		{
+			"url": "shaders/motionBlur/blurDepth_vert.glsl",
+			"type": "text",
+			"name": "shaders/motionBlur/blurDepth_vert.glsl"
+		},
+		{
+			"url": "shaders/motionBlur/motionBlur.shader.json",
+			"type": "Shader",
+			"name": "shaders/motionBlur/motionBlur.shader.json"
+		},
+		{
+			"url": "shaders/motionBlur/motionBlur_frag.glsl",
+			"type": "text",
+			"name": "shaders/motionBlur/motionBlur_frag.glsl"
+		},
+		{
+			"url": "shaders/motionBlur/motionBlur_vert.glsl",
+			"type": "text",
+			"name": "shaders/motionBlur/motionBlur_vert.glsl"
+		},
+		{
+			"url": "shaders/nightVision/nightVision.shader.json",
+			"type": "Shader",
+			"name": "shaders/nightVision/nightVision.shader.json"
+		},
+		{
+			"url": "shaders/nightVision/nightVision_frag.glsl",
+			"type": "text",
+			"name": "shaders/nightVision/nightVision_frag.glsl"
+		},
+		{
+			"url": "shaders/nightVision/nightVision_vert.glsl",
+			"type": "text",
+			"name": "shaders/nightVision/nightVision_vert.glsl"
+		},
+		{
+			"url": "shaders/thermaVision/thermaVision.shader.json",
+			"type": "Shader",
+			"name": "shaders/thermaVision/thermaVision.shader.json"
+		},
+		{
+			"url": "shaders/thermaVision/thermaVision_frag.glsl",
+			"type": "text",
+			"name": "shaders/thermaVision/thermaVision_frag.glsl"
+		},
+		{
+			"url": "shaders/thermaVision/thermaVision_vert.glsl",
+			"type": "text",
+			"name": "shaders/thermaVision/thermaVision_vert.glsl"
+		},
+		{
+			"url": "shaders/unrealboom/composite.shader.json",
+			"type": "Shader",
+			"name": "shaders/unrealboom/composite.shader.json"
+		},
+		{
+			"url": "shaders/unrealboom/composite_frag.glsl",
+			"type": "text",
+			"name": "shaders/unrealboom/composite_frag.glsl"
+		},
+		{
+			"url": "shaders/unrealboom/composite_vert.glsl",
+			"type": "text",
+			"name": "shaders/unrealboom/composite_vert.glsl"
+		},
+		{
+			"url": "shaders/unrealboom/seperableblur.shader.json",
+			"type": "Shader",
+			"name": "shaders/unrealboom/seperableblur.shader.json"
+		},
+		{
+			"url": "shaders/unrealboom/seperableblur_frag.glsl",
+			"type": "text",
+			"name": "shaders/unrealboom/seperableblur_frag.glsl"
+		},
+		{
+			"url": "shaders/unrealboom/seperableblur_vert.glsl",
+			"type": "text",
+			"name": "shaders/unrealboom/seperableblur_vert.glsl"
+		},
+		{
+			"url": "shaders/water/water.shader.json",
+			"type": "Shader",
+			"name": "shaders/water/water.shader.json"
+		},
+		{
+			"url": "shaders/water/water_frag.glsl",
+			"type": "text",
+			"name": "shaders/water/water_frag.glsl"
+		},
+		{
+			"url": "shaders/water/water_vert.glsl",
+			"type": "text",
+			"name": "shaders/water/water_vert.glsl"
+		},
+		{
+			"url": "textures/grid_a.png",
+			"type": "Texture",
+			"name": "textures/grid_a.png"
+		},
+		{
+			"url": "textures/grid_b.png",
+			"type": "Texture",
+			"name": "textures/grid_b.png"
+		},
+		{
+			"url": "textures/test.png",
+			"type": "Texture",
+			"name": "textures/test.png"
+		},
+		{
+			"url": "textures/water/water_smallwave01_generic_n.image.json",
+			"type": "TextureDesc",
+			"name": "textures/water/water_smallwave01_generic_n.image.json"
+		},
+		{
+			"url": "textures/water/water_smallwave01_generic_n.png",
+			"type": "Texture",
+			"name": "textures/water/water_smallwave01_generic_n.png"
+		},
+		{
+			"url": "textures/water/water_surface03_generic_ab.image.json",
+			"type": "TextureDesc",
+			"name": "textures/water/water_surface03_generic_ab.image.json"
+		},
+		{
+			"url": "textures/water/water_surface03_generic_ab.png",
+			"type": "Texture",
+			"name": "textures/water/water_surface03_generic_ab.png"
+		},
+		{
+			"url": "2d/assets/bg.jpg",
+			"type": "image",
+			"name": "bg_jpg"
+		},
+		{
+			"url": "2d/assets/egret_icon.png",
+			"type": "image",
+			"name": "egret_icon_png"
+		},
+		{
+			"url": "threejs/textures/2294472375_24a3b8ef46_o.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/2294472375_24a3b8ef46_o.jpg"
+		},
+		{
+			"url": "threejs/textures/brick_bump.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/brick_bump.jpg"
+		},
+		{
+			"url": "threejs/textures/brick_diffuse.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/brick_diffuse.jpg"
+		},
+		{
+			"url": "threejs/textures/brick_roughness.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/brick_roughness.jpg"
+		},
+		{
+			"url": "threejs/textures/colors.png",
+			"type": "Texture",
+			"name": "threejs/textures/colors.png"
+		},
+		{
+			"url": "threejs/textures/crate.gif",
+			"type": "Texture",
+			"name": "threejs/textures/crate.gif"
+		},
+		{
+			"url": "threejs/textures/crate_b.gif",
+			"type": "Texture",
+			"name": "threejs/textures/crate_b.gif"
+		},
+		{
+			"url": "threejs/textures/disturb.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/disturb.jpg"
+		},
+		{
+			"url": "threejs/textures/equirectangular.png",
+			"type": "Texture",
+			"name": "threejs/textures/equirectangular.png"
+		},
+		{
+			"url": "threejs/textures/hardwood2_bump.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/hardwood2_bump.jpg"
+		},
+		{
+			"url": "threejs/textures/hardwood2_diffuse.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/hardwood2_diffuse.jpg"
+		},
+		{
+			"url": "threejs/textures/hardwood2_roughness.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/hardwood2_roughness.jpg"
+		},
+		{
+			"url": "threejs/textures/metal.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/metal.jpg"
+		},
+		{
+			"url": "threejs/textures/perlin-512.png",
+			"type": "Texture",
+			"name": "threejs/textures/perlin-512.png"
+		},
+		{
+			"url": "threejs/textures/roughness_map.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/roughness_map.jpg"
+		},
+		{
+			"url": "threejs/textures/sprite.png",
+			"type": "Texture",
+			"name": "threejs/textures/sprite.png"
+		},
+		{
+			"url": "threejs/textures/sprite0.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/sprite0.jpg"
+		},
+		{
+			"url": "threejs/textures/sprite0.png",
+			"type": "Texture",
+			"name": "threejs/textures/sprite0.png"
+		},
+		{
+			"url": "threejs/textures/sprite1.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/sprite1.jpg"
+		},
+		{
+			"url": "threejs/textures/sprite1.png",
+			"type": "Texture",
+			"name": "threejs/textures/sprite1.png"
+		},
+		{
+			"url": "threejs/textures/UV_Grid_Sm.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/UV_Grid_Sm.jpg"
+		},
+		{
+			"url": "threejs/textures/water.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/water.jpg"
+		},
+		{
+			"url": "threejs/textures/waterdudv.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/waterdudv.jpg"
+		},
+		{
+			"url": "threejs/textures/waternormals.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/waternormals.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/sun_temple_stripe.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/sun_temple_stripe.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/sun_temple_stripe_stereo.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/sun_temple_stripe_stereo.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Bridge2/Bridge2.image.json",
+			"type": "TextureDesc",
+			"name": "threejs/textures/cube/Bridge2/Bridge2.image.json"
+		},
+		{
+			"url": "threejs/textures/cube/Bridge2/negx.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Bridge2/negx.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Bridge2/negy.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Bridge2/negy.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Bridge2/negz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Bridge2/negz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Bridge2/posx.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Bridge2/posx.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Bridge2/posy.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Bridge2/posy.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Bridge2/posz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Bridge2/posz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Bridge2/readme.txt",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/Bridge2/readme.txt"
+		},
+		{
+			"url": "threejs/textures/cube/Park2/negx.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park2/negx.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park2/negy.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park2/negy.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park2/negz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park2/negz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park2/posx.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park2/posx.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park2/posy.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park2/posy.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park2/posz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park2/posz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park2/readme.txt",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/Park2/readme.txt"
+		},
+		{
+			"url": "threejs/textures/cube/MilkyWay/dark-s_nx.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/MilkyWay/dark-s_nx.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/MilkyWay/dark-s_ny.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/MilkyWay/dark-s_ny.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/MilkyWay/dark-s_nz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/MilkyWay/dark-s_nz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/MilkyWay/dark-s_px.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/MilkyWay/dark-s_px.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/MilkyWay/dark-s_py.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/MilkyWay/dark-s_py.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/MilkyWay/dark-s_pz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/MilkyWay/dark-s_pz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/MilkyWay/MilkyWay.image.json",
+			"type": "TextureDesc",
+			"name": "threejs/textures/cube/MilkyWay/MilkyWay.image.json"
+		},
+		{
+			"url": "threejs/textures/cube/Park3Med/nx.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park3Med/nx.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park3Med/ny.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park3Med/ny.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park3Med/nz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park3Med/nz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park3Med/px.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park3Med/px.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park3Med/py.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park3Med/py.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park3Med/pz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/Park3Med/pz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/Park3Med/readme.txt",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/Park3Med/readme.txt"
+		},
+		{
+			"url": "threejs/textures/cube/pisa/nx.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisa/nx.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisa/ny.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisa/ny.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisa/nz.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisa/nz.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisa/pisa.image.json",
+			"type": "TextureDesc",
+			"name": "threejs/textures/cube/pisa/pisa.image.json"
+		},
+		{
+			"url": "threejs/textures/cube/pisa/px.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisa/px.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisa/py.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisa/py.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisa/pz.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisa/pz.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisaRGBM16/nx.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisaRGBM16/nx.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisaRGBM16/ny.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisaRGBM16/ny.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisaRGBM16/nz.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisaRGBM16/nz.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisaRGBM16/px.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisaRGBM16/px.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisaRGBM16/py.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisaRGBM16/py.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisaRGBM16/pz.png",
+			"type": "Texture",
+			"name": "threejs/textures/cube/pisaRGBM16/pz.png"
+		},
+		{
+			"url": "threejs/textures/cube/pisaHDR/nx.hdr",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/pisaHDR/nx.hdr"
+		},
+		{
+			"url": "threejs/textures/cube/pisaHDR/ny.hdr",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/pisaHDR/ny.hdr"
+		},
+		{
+			"url": "threejs/textures/cube/pisaHDR/nz.hdr",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/pisaHDR/nz.hdr"
+		},
+		{
+			"url": "threejs/textures/cube/pisaHDR/px.hdr",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/pisaHDR/px.hdr"
+		},
+		{
+			"url": "threejs/textures/cube/pisaHDR/py.hdr",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/pisaHDR/py.hdr"
+		},
+		{
+			"url": "threejs/textures/cube/pisaHDR/pz.hdr",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/pisaHDR/pz.hdr"
+		},
+		{
+			"url": "threejs/textures/cube/skybox/nx.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skybox/nx.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skybox/ny.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skybox/ny.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skybox/nz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skybox/nz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skybox/px.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skybox/px.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skybox/py.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skybox/py.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skybox/pz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skybox/pz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skyboxsun25deg/nx.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skyboxsun25deg/nx.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skyboxsun25deg/ny.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skyboxsun25deg/ny.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skyboxsun25deg/nz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skyboxsun25deg/nz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skyboxsun25deg/px.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skyboxsun25deg/px.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skyboxsun25deg/py.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skyboxsun25deg/py.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skyboxsun25deg/pz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/skyboxsun25deg/pz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/skyboxsun25deg/skyboxsun25degtest.txt",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/skyboxsun25deg/skyboxsun25degtest.txt"
+		},
+		{
+			"url": "threejs/textures/cube/SwedishRoyalCastle/nx.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/SwedishRoyalCastle/nx.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/SwedishRoyalCastle/ny.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/SwedishRoyalCastle/ny.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/SwedishRoyalCastle/nz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/SwedishRoyalCastle/nz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/SwedishRoyalCastle/px.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/SwedishRoyalCastle/px.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/SwedishRoyalCastle/py.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/SwedishRoyalCastle/py.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/SwedishRoyalCastle/pz.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/cube/SwedishRoyalCastle/pz.jpg"
+		},
+		{
+			"url": "threejs/textures/cube/SwedishRoyalCastle/readme.txt",
+			"type": "Unknown",
+			"name": "threejs/textures/cube/SwedishRoyalCastle/readme.txt"
+		},
+		{
+			"url": "threejs/textures/cube/SwedishRoyalCastle/SwedishRoyalCastle.image.json",
+			"type": "TextureDesc",
+			"name": "threejs/textures/cube/SwedishRoyalCastle/SwedishRoyalCastle.image.json"
+		},
+		{
+			"url": "threejs/textures/lensflare/hexangle.png",
+			"type": "Texture",
+			"name": "threejs/textures/lensflare/hexangle.png"
+		},
+		{
+			"url": "threejs/textures/lensflare/lensflare0.png",
+			"type": "Texture",
+			"name": "threejs/textures/lensflare/lensflare0.png"
+		},
+		{
+			"url": "threejs/textures/lensflare/lensflare0_alpha.png",
+			"type": "Texture",
+			"name": "threejs/textures/lensflare/lensflare0_alpha.png"
+		},
+		{
+			"url": "threejs/textures/lensflare/lensflare1.png",
+			"type": "Texture",
+			"name": "threejs/textures/lensflare/lensflare1.png"
+		},
+		{
+			"url": "threejs/textures/lensflare/lensflare2.png",
+			"type": "Texture",
+			"name": "threejs/textures/lensflare/lensflare2.png"
+		},
+		{
+			"url": "threejs/textures/lensflare/lensflare3.png",
+			"type": "Texture",
+			"name": "threejs/textures/lensflare/lensflare3.png"
+		},
+		{
+			"url": "threejs/textures/lensflare/LICENSE.txt",
+			"type": "Unknown",
+			"name": "threejs/textures/lensflare/LICENSE.txt"
+		},
+		{
+			"url": "threejs/textures/planets/earth_atmos_2048.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/planets/earth_atmos_2048.jpg"
+		},
+		{
+			"url": "threejs/textures/planets/earth_atmos_4096.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/planets/earth_atmos_4096.jpg"
+		},
+		{
+			"url": "threejs/textures/planets/earth_clouds_1024.png",
+			"type": "Texture",
+			"name": "threejs/textures/planets/earth_clouds_1024.png"
+		},
+		{
+			"url": "threejs/textures/planets/earth_clouds_2048.png",
+			"type": "Texture",
+			"name": "threejs/textures/planets/earth_clouds_2048.png"
+		},
+		{
+			"url": "threejs/textures/planets/earth_lights_2048.png",
+			"type": "Texture",
+			"name": "threejs/textures/planets/earth_lights_2048.png"
+		},
+		{
+			"url": "threejs/textures/planets/earth_normal_2048.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/planets/earth_normal_2048.jpg"
+		},
+		{
+			"url": "threejs/textures/planets/earth_specular_2048.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/planets/earth_specular_2048.jpg"
+		},
+		{
+			"url": "threejs/textures/planets/moon_1024.jpg",
+			"type": "Texture",
+			"name": "threejs/textures/planets/moon_1024.jpg"
+		},
+		{
+			"url": "2d/assets/CheckBox/checkbox_select_disabled.png",
+			"type": "image",
+			"name": "checkbox_select_disabled_png"
+		},
+		{
+			"url": "2d/assets/CheckBox/checkbox_select_down.png",
+			"type": "image",
+			"name": "checkbox_select_down_png"
+		},
+		{
+			"url": "2d/assets/CheckBox/checkbox_select_up.png",
+			"type": "image",
+			"name": "checkbox_select_up_png"
+		},
+		{
+			"url": "2d/assets/CheckBox/checkbox_unselect.png",
+			"type": "image",
+			"name": "checkbox_unselect_png"
+		},
+		{
+			"url": "2d/assets/Button/button_down.png",
+			"type": "image",
+			"name": "button_down_png"
+		},
+		{
+			"url": "2d/assets/Button/button_up.png",
+			"type": "image",
+			"name": "button_up_png"
+		},
+		{
+			"url": "2d/assets/ItemRenderer/selected.png",
+			"type": "image",
+			"name": "selected_png"
+		},
+		{
+			"url": "2d/assets/Panel/border.png",
+			"type": "image",
+			"name": "border_png"
+		},
+		{
+			"url": "2d/assets/Panel/header.png",
+			"type": "image",
+			"name": "header_png"
+		},
+		{
+			"url": "2d/assets/ProgressBar/thumb_pb.png",
+			"type": "image",
+			"name": "thumb_pb_png"
+		},
+		{
+			"url": "2d/assets/ProgressBar/track_pb.png",
+			"type": "image",
+			"name": "track_pb_png"
+		},
+		{
+			"url": "2d/assets/RadioButton/radiobutton_select_disabled.png",
+			"type": "image",
+			"name": "radiobutton_select_disabled_png"
+		},
+		{
+			"url": "2d/assets/RadioButton/radiobutton_select_down.png",
+			"type": "image",
+			"name": "radiobutton_select_down_png"
+		},
+		{
+			"url": "2d/assets/RadioButton/radiobutton_select_up.png",
+			"type": "image",
+			"name": "radiobutton_select_up_png"
+		},
+		{
+			"url": "2d/assets/RadioButton/radiobutton_unselect.png",
+			"type": "image",
+			"name": "radiobutton_unselect_png"
+		},
+		{
+			"url": "2d/assets/ScrollBar/roundthumb.png",
+			"type": "image",
+			"name": "roundthumb_png"
+		},
+		{
+			"url": "2d/assets/ScrollBar/track_sb.png",
+			"type": "image",
+			"name": "track_sb_png"
+		},
+		{
+			"url": "2d/assets/Slider/thumb.png",
+			"type": "image",
+			"name": "thumb_png"
+		},
+		{
+			"url": "2d/assets/Slider/track.png",
+			"type": "image",
+			"name": "track_png"
+		},
+		{
+			"url": "2d/assets/Slider/tracklight.png",
+			"type": "image",
+			"name": "tracklight_png"
+		},
+		{
+			"url": "2d/assets/ToggleSwitch/handle.png",
+			"type": "image",
+			"name": "handle_png"
+		},
+		{
+			"url": "2d/assets/ToggleSwitch/off.png",
+			"type": "image",
+			"name": "off_png"
+		},
+		{
+			"url": "2d/assets/ToggleSwitch/on.png",
+			"type": "image",
+			"name": "on_png"
+		}
+	]
+}

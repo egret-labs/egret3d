@@ -1,0 +1,73 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "composite_vert",
+                    "type": 35633,
+                    "uri": "shaders/unrealboom/composite_vert.glsl"
+                },
+                {
+                    "name": "composite_frag",
+                    "type": 35632,
+                    "uri": "shaders/unrealboom/composite_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "composite",
+                    "attributes": {},
+                    "uniforms": {
+                        "blurTexture1": {
+                            "type": 35678
+                        },
+                        "blurTexture2": {
+                            "type": 35678
+                        },
+                        "blurTexture3": {
+                            "type": 35678
+                        },
+                        "blurTexture4": {
+                            "type": 35678
+                        },
+                        "blurTexture5": {
+                            "type": 35678
+                        },
+                        "dirtTexture": {
+                            "type": 35678
+                        },
+                        "bloomStrength": {
+                            "type": 5126
+                        },
+                        "bloomRadius": {
+                            "type": 5126
+                        },
+                        "bloomFactors[0]": {
+                            "type": 5126
+                        },
+                        "bloomTintColors[0]": {
+                            "type": 35665
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

@@ -1,0 +1,26 @@
+{    "asset":{        "version":2    },    "materials":[
+        {            "extensions":{                "KHR_techniques_webgl":{                    "technique":"builtin/meshphong.shader.json",                    "values":{                        "diffuse":[
+                            1,
+                            1,
+                            1
+                        ],                        "opacity":1,                        "map":"Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_BaseColor.image.json",                        "uvTransform":[
+                            1,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            1
+                        ],                        "normalMap":"Assets/Art/Motorcycle01/Textures_01/bike_lowpoly_ve_motorcycle_wheel_Normal.image.json"                    }                },                "paper":{                    "renderQueue":2000,                    "defines":[
+                        "USE_MAP",
+                        "USE_NORMALMAP"
+                    ]                }            }        }
+    ],    "extensionsRequired":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "extensionsUsed":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "version":4}

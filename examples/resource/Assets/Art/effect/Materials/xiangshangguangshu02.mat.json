@@ -1,0 +1,24 @@
+{    "asset":{        "version":2    },    "materials":[
+        {            "extensions":{                "KHR_techniques_webgl":{                    "technique":"builtin/particle_additive.shader.json",                    "values":{                        "diffuse":[
+                            1,
+                            1,
+                            1
+                        ],                        "opacity":1,                        "map":"Assets/Art/effect/Textures/xiangshangguangshu01.image.json",                        "uvTransform":[
+                            1,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            1
+                        ]                    }                },                "paper":{                    "renderQueue":3000,                    "defines":[
+                    ]                }            }        }
+    ],    "extensionsRequired":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "extensionsUsed":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "version":4}

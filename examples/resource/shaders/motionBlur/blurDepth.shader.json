@@ -1,0 +1,49 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "blurDepth_vert",
+                    "type": 35633,
+                    "uri": "shaders/motionBlur/blurDepth_vert.glsl"
+                },
+                {
+                    "name": "blurDepth_frag",
+                    "type": 35632,
+                    "uri": "shaders/motionBlur/blurDepth_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "blurDepth",
+                    "attributes": {},
+                    "uniforms": {
+                        "mNear": {
+                            "type": 5126
+                        },
+                        "mFar": {
+                            "type": 5126
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

@@ -1,0 +1,37 @@
+{
+    "asset": {
+        "version": 2
+    },
+    "materials": [
+        {
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "values": {
+                        "diffuse": [
+                            0.153552,
+                            0.212894,
+                            0.222217
+                        ],
+                        "opacity": 1
+                    },
+                    "technique": "builtin/meshphysical.shader.json"
+                },
+                "paper": {
+                    "renderQueue": 2000,
+                    "defines": [
+                        "ALPHATEST 0.5"
+                    ]
+                }
+            }
+        }
+    ],
+    "extensionsRequired": [
+        "KHR_techniques_webgl",
+        "paper"
+    ],
+    "extensionsUsed": [
+        "KHR_techniques_webgl",
+        "paper"
+    ],
+    "version": 4
+}

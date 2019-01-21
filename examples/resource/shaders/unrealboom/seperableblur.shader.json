@@ -1,0 +1,52 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "seperableblur_vert",
+                    "type": 35633,
+                    "uri": "shaders/unrealboom/seperableblur_vert.glsl"
+                },
+                {
+                    "name": "seperableblur_frag",
+                    "type": 35632,
+                    "uri": "shaders/unrealboom/seperableblur_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "seperableblur",
+                    "attributes": {},
+                    "uniforms": {
+                        "colorTexture": {
+                            "type": 35678
+                        },
+                        "texSize": {
+                            "type": 35664
+                        },
+                        "direction": {
+                            "type": 35664
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

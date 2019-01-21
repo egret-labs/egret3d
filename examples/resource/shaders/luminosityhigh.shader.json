@@ -1,0 +1,58 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "luminosityhigh_vert",
+                    "type": 35633,
+                    "uri": "shaders/luminosityhigh_vert.glsl"
+                },
+                {
+                    "name": "luminosityhigh_frag",
+                    "type": 35632,
+                    "uri": "shaders/luminosityhigh_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "luminosityhigh",
+                    "attributes": {},
+                    "uniforms": {
+                        "tDiffuse": {
+                            "type": 35678
+                        },
+                        "defaultColor": {
+                            "type": 35665
+                        },
+                        "defaultOpacity": {
+                            "type": 5126
+                        },
+                        "luminosityThreshold": {
+                            "type": 5126
+                        },
+                        "smoothWidth": {
+                            "type": 5126
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

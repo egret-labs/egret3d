@@ -1,0 +1,58 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "motionBlur_vert",
+                    "type": 35633,
+                    "uri": "shaders/motionBlur/motionBlur_vert.glsl"
+                },
+                {
+                    "name": "motionBlur_frag",
+                    "type": 35632,
+                    "uri": "shaders/motionBlur/motionBlur_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "motionBlur",
+                    "attributes": {},
+                    "uniforms": {
+                        "tDepth": {
+                            "type": 35678
+                        },
+                        "tColor": {
+                            "type": 35678
+                        },
+                        "viewProjectionInverseMatrix": {
+                            "type": 35676
+                        },
+                        "previousViewProjectionMatrix": {
+                            "type": 35676
+                        },
+                        "velocityFactor": {
+                            "type": 5126
+                        }
+                    },
+                    "states": {
+                        "enable": [],
+                        "functions": {}
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

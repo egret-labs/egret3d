@@ -1,0 +1,25 @@
+{    "asset":{        "version":2    },    "materials":[
+        {            "extensions":{                "KHR_techniques_webgl":{                    "technique":"builtin/meshbasic.shader.json",                    "values":{                        "diffuse":[
+                            1,
+                            1,
+                            1
+                        ],                        "opacity":1,                        "map":"Assets/Z3_Water/Water/Tasharen_Water.image.json",                        "uvTransform":[
+                            1,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            1
+                        ]                    }                },                "paper":{                    "renderQueue":2990,                    "defines":[
+                        "USE_MAP"
+                    ]                }            }        }
+    ],    "extensionsRequired":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "extensionsUsed":[
+        "KHR_techniques_webgl",
+        "paper"
+    ],    "version":4}
