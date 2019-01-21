@@ -269,6 +269,10 @@ namespace paper {
          */
         readonly allowMultiple: boolean;
         /**
+         * @internal
+         */
+        readonly notAllowMultiple: boolean;
+        /**
          * 该组件实例依赖的其他前置组件。
          * @internal
          */
@@ -283,6 +287,10 @@ namespace paper {
          * @internal
          */
         readonly onComponentDisabled: signals.Signal;
+        /**
+         * @internal
+         */
+        readonly __isAbstract: any;
         /**
          * 该组件实例是否为单例组件。
          * @internal

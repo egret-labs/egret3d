@@ -89,6 +89,7 @@ namespace egret3d {
         public type: gltf.TextureType = gltf.TextureType.Texture2D;
 
         protected _sourceDirty: boolean = true;
+        protected _levels: uint = 0;
         protected _gltfTexture: GLTFTexture = null!;
         protected _image: gltf.Image = null!;
         protected _sampler: gltf.Sampler = null!;
@@ -220,20 +221,39 @@ namespace egret3d {
         /**
          * 
          */
+        public get format(): gltf.TextureFormat {
+            return this._gltfTexture.extensions.paper.format || gltf.TextureFormat.RGBA;
+        }
+        /**
+         * 
+         */
+        public get levels(): uint {
+            if (this._levels > 0) {
+                return this._levels;
+            }
+
+            const { levels, width, height } = this._gltfTexture.extensions.paper;
+
+            if (levels === 0) {
+                return this._levels = Math.log(Math.max(width!, height!)) * Math.LOG2E;
+            }
+            else if (!levels) {
+                return 1.0;
+            }
+
+            return levels;
+        }
+        /**
+         * 
+         */
         public get width(): uint {
-            return this._gltfTexture!.extensions.paper!.width!;
+            return this._gltfTexture.extensions.paper.width!;
         }
         /**
          * 
          */
         public get height(): uint {
-            return this._gltfTexture!.extensions.paper!.height!;
-        }
-        /**
-         * 
-         */
-        public get format(): gltf.TextureFormat {
-            return this._gltfTexture!.extensions.paper!.format || gltf.TextureFormat.RGBA;
+            return this._gltfTexture.extensions.paper.height!;
         }
         // /**
         //  * 

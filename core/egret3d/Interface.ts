@@ -104,6 +104,7 @@ namespace egret3d {
         Emissive = "emissive",
         EmissiveIntensity = "emissiveIntensity",
         FlipEnvMap = "flipEnvMap",
+        MaxMipLevel = "maxMipLevel",
     }
     /**
      * 

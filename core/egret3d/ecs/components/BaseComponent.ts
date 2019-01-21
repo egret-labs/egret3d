@@ -16,6 +16,10 @@ namespace paper {
          * @internal
          */
         public static readonly allowMultiple: boolean = false;
+        /**。
+         * @internal
+         */
+        public static readonly notAllowMultiple: any = null;
         /**
          * 当该组件被激活时派发事件。
          * @internal
@@ -31,6 +35,10 @@ namespace paper {
          * @internal
          */
         public static readonly requireComponents: IComponentClass<BaseComponent>[] | null = null;
+        /**
+         * @internal
+         */
+        public static readonly __isAbstract: any = BaseComponent;
         /**
          * 该组件实例是否为单例组件。
          * @internal
@@ -58,7 +66,7 @@ namespace paper {
          * @internal
          */
         public static __onRegister() {
-            if (!BaseObject.__onRegister.call(this)) { // Super.
+            if (!BaseObject.__onRegister.call(this) || this.__isAbstract === this) { // Super.
                 return false;
             }
 

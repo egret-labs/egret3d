@@ -3,6 +3,11 @@ namespace egret3d {
      * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
     export abstract class CameraPostprocessing extends paper.BaseComponent {
+        /**
+         * @internal
+         */
+        public static readonly __isAbstract: any = CameraPostprocessing;
+
         public abstract onRender(camera: Camera): void;
 
         public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {

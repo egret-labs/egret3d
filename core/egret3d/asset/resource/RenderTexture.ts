@@ -49,6 +49,7 @@ namespace egret3d {
 
             this._sourceDirty = true;
             this._bufferDirty = true;
+            this._levels = 0;
             this._gltfTexture.extensions.paper.width = width;
             this._gltfTexture.extensions.paper.height = height;
 

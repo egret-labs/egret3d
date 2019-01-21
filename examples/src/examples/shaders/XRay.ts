@@ -8,11 +8,11 @@ namespace examples.shaders {
 
             await RES.getResAsync("Assets/C_xiaohuangren_D_01_ANIM.prefab.json");
 
-            paper.GameObject.globalGameObject.addComponent(Start);
+            paper.GameObject.globalGameObject.addComponent(Starter);
         }
     }
 
-    class Start extends paper.Behaviour {
+    class Starter extends paper.Behaviour {
 
         public onAwake() {
             // Create shader.
@@ -40,7 +40,7 @@ namespace examples.shaders {
                 .addUniform("_c", gltf.UniformType.FLOAT, 1.3)
                 .addUniform("_p", gltf.UniformType.FLOAT, 3.0);
 
-            { // MeshRenderer.
+            { // Create game object.
                 const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CYLINDER, "Cylinder");
                 gameObject.transform.setLocalPosition(2.0, 0.5, 0.0);
                 // 
@@ -48,8 +48,13 @@ namespace examples.shaders {
                 renderer.material = egret3d.Material.create(shader)
                     .setBlend(egret3d.BlendMode.Additive, egret3d.RenderQueue.Blend)
                     .setColor(egret3d.Color.INDIGO);
-
                 renderer.gameObject.addComponent(XRayEditor);
+                //
+                const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
+                if (modelComponent) {
+                    modelComponent.select(renderer.gameObject);
+                    paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(XRayEditor);
+                }
             }
 
             { // Create prefab.
@@ -61,7 +66,6 @@ namespace examples.shaders {
                 renderer.material = egret3d.Material.create(shader)
                     .setBlend(egret3d.BlendMode.Additive, egret3d.RenderQueue.Blend)
                     .setColor(egret3d.Color.INDIGO);
-
                 renderer.gameObject.addComponent(XRayEditor);
             }
             //

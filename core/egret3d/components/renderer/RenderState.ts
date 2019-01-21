@@ -144,12 +144,12 @@ namespace egret3d {
             return `vec3 toneMapping( vec3 color ) { return ${toneMappingName}ToneMapping( color ); } \n`;
         }
 
-        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding) {
             const components = this._getEncodingComponents(encoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
         }
 
-        protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding = TextureEncoding.LinearEncoding) {
+        protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding) {
             this._gammaInputLocked = true;
             const finialEncoding = (this._gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
             const components = this._getEncodingComponents(finialEncoding);
@@ -181,19 +181,6 @@ namespace egret3d {
                 this._useLightMap = useLightMap;
             }
 
-            if (this._receiveShadows !== receiveShadows) {
-                if (receiveShadows) {
-                    defines.addDefine(ShaderDefine.USE_SHADOWMAP);
-                    defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
-                }
-                else {
-                    defines.removeDefine(ShaderDefine.USE_SHADOWMAP);
-                    defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
-                }
-
-                this._receiveShadows = receiveShadows;
-            }
-
             if (this._boneCount !== boneCount) { // TODO 浮点纹理。
                 if (boneCount) {
                     defines.addDefine(ShaderDefine.USE_SKINNING);
@@ -205,6 +192,19 @@ namespace egret3d {
                 }
 
                 this._boneCount = boneCount;
+            }
+
+            if (this._receiveShadows !== receiveShadows) {
+                if (receiveShadows) {
+                    defines.addDefine(ShaderDefine.USE_SHADOWMAP);
+                    defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                }
+                else {
+                    defines.removeDefine(ShaderDefine.USE_SHADOWMAP);
+                    defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
+                }
+
+                this._receiveShadows = receiveShadows;
             }
         }
         /**
@@ -234,7 +234,7 @@ namespace egret3d {
             const decodingFunName = (egret3d as any).TextureDecodingFunction[mapName]; // TODO
             if (decodingFunName) {
                 if (texture) {
-                    const decodingCode = this._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding);
+                    const decodingCode = this._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding || TextureEncoding.LinearEncoding);
                     const define = defines.addDefine(decodingFunName, decodingCode);
                     if (define) {
                         define.isCode = true;
@@ -406,7 +406,7 @@ namespace egret3d {
             if (this._gammaOutput === value) {
                 return;
             }
-            
+
             const define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding), true);
             if (define) {
                 define.isCode = true;

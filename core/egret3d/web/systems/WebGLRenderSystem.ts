@@ -118,7 +118,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
-            const camera = context.camera;
+            const camera = Camera.current!;
             const matrix = drawCall.matrix;
             const globalUniforms = program.globalUniforms;
             let i = 0, l = globalUniforms.length;
@@ -396,15 +396,33 @@ namespace egret3d.webgl {
             }
         }
 
-        private _updateUniforms(program: WebGLProgramBinder, technique: gltf.Technique) {
+        private _updateUniforms(program: WebGLProgramBinder, material: Material) {
             const webgl = WebGLRenderState.webgl!;
+            const technique = material.technique;
+            const techniqueState = technique.states || null;
+            //
+            if (material._dirty) {
+                material._update();
+            }
+            // 
+            if (technique.program !== program.id) {
+                technique.program = program.id;
+            }
+            // Update states.
+            (renderState as WebGLRenderState).updateState(techniqueState);
+            //
             const unifroms = technique.uniforms;
 
-            for (const globalUniform of program.uniforms) {
+            for (const globalUniform of program.uniforms) { // TODO 
                 const uniformName = globalUniform.name;
                 const uniform = unifroms[uniformName];
 
-                if (uniform.semantic) {
+                if (!uniform) {
+                    console.warn(); // TODO 
+                    continue;
+                }
+
+                if (uniform.semantic) { // TODO 不需要
                     continue;
                 }
 
@@ -474,21 +492,22 @@ namespace egret3d.webgl {
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                             const unit = globalUniform.textureUnits[0];
                             let texture = value as (BaseTexture | null);
+                            const isInvalide = !texture || texture.isDisposed;
 
-                            if (!texture || texture.isDisposed) {
-                                // Uniform 定义顺序依赖。
-                                if (uniformName === ShaderUniformName.EnvMap) {
-                                    // flipEnvMap TODO
-                                    // levels
+                            if (uniformName === ShaderUniformName.EnvMap) {
+                                if (isInvalide) {
                                     texture = this._cacheSkyBoxTexture || DefaultTextures.WHITE; // TODO
                                 }
-                                else {
-                                    texture = DefaultTextures.WHITE; // TODO
-                                }
+
+                                material.setFloat(ShaderUniformName.FlipEnvMap, -1.0);
+                                material.setFloat(ShaderUniformName.MaxMipLevel, texture!.levels);
+                            }
+                            else if (isInvalide) {
+                                texture = DefaultTextures.WHITE; // TODO
                             }
 
                             webgl.uniform1i(location, unit);
-                            texture.bindTexture(unit);
+                            texture!.bindTexture(unit);
                         }
                         else {
                             console.error("Error texture unit");
@@ -499,18 +518,22 @@ namespace egret3d.webgl {
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                             const unit = globalUniform.textureUnits[0];
                             let texture = value as (BaseTexture | null);
+                            const isInvalide = !texture || texture.isDisposed;
 
-                            if (!texture || texture.isDisposed) {
-                                if (uniformName === ShaderUniformName.EnvMap) {
+                            if (uniformName === ShaderUniformName.EnvMap) {
+                                if (isInvalide) {
                                     texture = this._cacheSkyBoxTexture || DefaultTextures.WHITE; // TODO
                                 }
-                                else {
-                                    texture = DefaultTextures.WHITE; // TODO
-                                }
+
+                                material.setFloat(ShaderUniformName.FlipEnvMap, 1.0);
+                                material.setFloat(ShaderUniformName.MaxMipLevel, texture!.levels);
+                            }
+                            else if (isInvalide) {
+                                texture = DefaultTextures.WHITE; // TODO
                             }
 
                             webgl.uniform1i(location, unit);
-                            texture.bindTexture(unit);
+                            texture!.bindTexture(unit);
                         }
                         else {
                             console.error("Error texture unit");
@@ -819,21 +842,7 @@ namespace egret3d.webgl {
                 }
                 // Update uniforms.
                 if (this._cacheMaterial !== material) {
-                    const technique = material.technique;
-                    const techniqueState = technique.states || null;
-                    //
-                    if (material._dirty) {
-                        material._update();
-                    }
-                    // 
-                    if (technique.program !== program.id) {
-                        technique.program = program.id;
-                    }
-                    //
-                    this._updateUniforms(program, technique);
-                    // Update states.
-                    renderState.updateState(techniqueState);
-                    //
+                    this._updateUniforms(program, material);
                     this._cacheMaterial = material;
                 }
                 //  TODO
@@ -901,7 +910,7 @@ namespace egret3d.webgl {
                 }
             }
             else {
-                this._renderState.clearBuffer(gltf.BufferMask.Depth | gltf.BufferMask.Color, Color.BLACK);
+                this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.BLACK);
             }
         }
     }
