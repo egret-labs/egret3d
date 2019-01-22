@@ -3,35 +3,16 @@ namespace egret3d {
     let _mask: uint = 0x80000000;
     const _allDefines: { [key: string]: Define } = {};
 
-    function _get(name: string, context?: number | string, isGlobal?: boolean): Define {
-        let key = name;
-        let order: uint | undefined;
-        let index = _index;
+    function _get(name: string, context?: number | string, order?: number): Define {
+        const key = context ? (typeof context === "number" ? name + " " + context : context) : name;
         const defines = _allDefines;
 
-        if (isGlobal || !context) {
-        }
-        else if (typeof context === "number") {
-            key = name + " " + context;
-            context = undefined;
-        }
-        else {
-            key = context;
-        }
-
         let define = defines[key];
-
         if (define) {
-            if (isGlobal) {
-                order = define.order || define.mask;
-                index = define.index;
-            }
-            else {
-                return define;
-            }
+            return define;
         }
-        
-        define = defines[key] = new Define(index, _mask, name, context);
+
+        define = defines[key] = new Define(_index, _mask, name, context);
         if (order) {
             define.order = order;
         }
@@ -45,6 +26,8 @@ namespace egret3d {
 
         return define;
     }
+
+
     /**
      * @private
      */
@@ -145,6 +128,10 @@ namespace egret3d {
         }
 
         private static _sortDefine(a: Define, b: Define) {
+            if (a.order && b.order) {
+                return a.order - b.order;
+            }
+
             let d = a.index - b.index;
             if (d === 0) {
                 d = (b.order || b.mask) - (a.order || a.mask); // Define 顺序。
@@ -157,6 +144,7 @@ namespace egret3d {
 
         // mask, string, array,
         private readonly _defines: Array<Define> = [];
+        private readonly _defineLinks: { [key: string]: Define } = {};
 
         private _update() {
             let index = 0;
@@ -190,6 +178,9 @@ namespace egret3d {
             this.definesMask = "";
 
             this._defines.length = 0;
+            for (const k in this._defineLinks) {
+                delete this._defineLinks[k];
+            }
         }
         /**
          * 
@@ -202,20 +193,32 @@ namespace egret3d {
             for (const define of value._defines) {
                 this._defines.push(define);
             }
+
+            for (const k in value._defineLinks) {
+                this._defineLinks[k] = value._defineLinks[k];
+            }
         }
         /**
          * 
          */
-        public addDefine(name: string, context?: number | string, isGlobal?: boolean): Define | null {
-            if (isGlobal) {
-                this.removeDefine(name);
+        public addDefine(name: string, context?: number | string, order?: number): Define | null {
+            let define = this._defineLinks[name];
+            if (define) {
+                if (define.context === context) {
+                    return define;
+                }
+                else {
+                    this.removeDefine(name, false);
+                }
             }
 
-            const define = _get(name, context, isGlobal);
+            //
+            define = _get(name, context, order);
             const defines = this._defines;
 
             if (defines.indexOf(define) < 0) {
                 defines.push(define);
+                this._defineLinks[name] = define;
                 this._update();
 
                 return define;
@@ -223,37 +226,18 @@ namespace egret3d {
 
             return null;
         }
-        /**
-         * 
-         */
-        public removeDefine(name: string, isLocal?: boolean): Define | null {
-            const defines = this._defines;
-            let define: Define | null = null;
 
-            if (isLocal) {
-                for (define of defines) {
-                    if (define.name === name) {
-                        break;
-                    }
-
-                    define = null;
-                }
-            }
-            else {
-                define = _get(name);
-            }
-
+        public removeDefine(name: string, update: boolean = true): Define | null {
+            const define = this._defineLinks[name];
             if (define) {
-                const index = defines.indexOf(define);
-
+                const index = this._defines.indexOf(define);
                 if (index >= 0) {
-                    defines.splice(index, 1);
-                    this._update();
-
-                    return define;
+                    this._defines.splice(index, 1);
                 }
+                delete this._defineLinks[name];
+                //
+                update || this._update();
             }
-
             return null;
         }
     }

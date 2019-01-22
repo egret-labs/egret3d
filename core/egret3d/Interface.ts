@@ -107,6 +107,13 @@ namespace egret3d {
         MaxMipLevel = "maxMipLevel",
     }
     /**
+     * Shader宏定义排序。
+     */
+    export const enum ShaderDefineOrder {
+        GAMMA_FACTOR = 1,
+        Gamma_FUN  = 2,
+    }
+    /**
      * 
      */
     export const enum HumanoidMask {

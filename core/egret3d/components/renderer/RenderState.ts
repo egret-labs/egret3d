@@ -184,7 +184,7 @@ namespace egret3d {
             if (this._boneCount !== boneCount) { // TODO 浮点纹理。
                 if (boneCount) {
                     defines.addDefine(ShaderDefine.USE_SKINNING);
-                    defines.addDefine(ShaderDefine.MAX_BONES, boneCount, true);
+                    defines.addDefine(ShaderDefine.MAX_BONES, boneCount);
                 }
                 else {
                     defines.removeDefine(ShaderDefine.USE_SKINNING);
@@ -407,7 +407,7 @@ namespace egret3d {
                 return;
             }
 
-            const define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding), true);
+            const define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding), ShaderDefineOrder.Gamma_FUN);
             if (define) {
                 define.isCode = true;
                 define.type = DefineLocation.Fragment;
@@ -418,7 +418,7 @@ namespace egret3d {
         /**
          * 
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT)
+        @paper.editor.property(paper.editor.EditType.FLOAT, { step: 0.1 })
         public get gammaFactor(): number {
             return this._gammaFactor;
         }
@@ -431,7 +431,7 @@ namespace egret3d {
                 return;
             }
 
-            const define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, value, true);
+            const define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, value, ShaderDefineOrder.GAMMA_FACTOR);
             if (define) {
                 define.type = DefineLocation.Fragment;
             }
@@ -470,7 +470,7 @@ namespace egret3d {
                     define.type = DefineLocation.Fragment;
                 }
 
-                define = defines.addDefine(defineName, this._getToneMappingFunction(value), true);
+                define = defines.addDefine(defineName, this._getToneMappingFunction(value));
                 if (define) {
                     define.isCode = true;
                     define.type = DefineLocation.Fragment;
