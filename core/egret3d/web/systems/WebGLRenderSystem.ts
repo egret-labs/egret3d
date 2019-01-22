@@ -409,7 +409,7 @@ namespace egret3d.webgl {
                 technique.program = program.id;
             }
             // Update states.
-            (renderState as WebGLRenderState).updateState(techniqueState);
+            this._renderState.updateState(techniqueState);
             //
             const unifroms = technique.uniforms;
 

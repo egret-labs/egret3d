@@ -26,8 +26,6 @@ namespace egret3d {
 
         return define;
     }
-
-
     /**
      * @private
      */
@@ -155,19 +153,24 @@ namespace egret3d {
 
             for (const define of defines) {
                 if (define.index !== index) {
+                    if (mask < 0) {
+                        mask += 0xFFFFFFFF;
+                        mask += 1;
+                    }
+
+                    definesMask += index + "x" + mask.toString(16);
                     index = define.index;
-                    definesMask += index + mask.toString(16);
                     mask = 0;
                 }
 
                 mask |= define.mask;
-
-                if (mask < 0) {
-                    mask = -mask;
-                }
             }
 
-            definesMask += index + mask.toString(16);
+            if (mask < 0) {
+                mask += 0xFFFFFFFF;
+                mask += 1;
+            }
+            definesMask += index + "x" + mask.toString(32);
 
             this.definesMask = definesMask;
         }
@@ -227,7 +230,7 @@ namespace egret3d {
             return null;
         }
 
-        public removeDefine(name: string, update: boolean = true): Define | null {
+        public removeDefine(name: string, needUpdate: boolean = true): Define | null {
             const define = this._defineLinks[name];
             if (define) {
                 const index = this._defines.indexOf(define);
@@ -236,7 +239,7 @@ namespace egret3d {
                 }
                 delete this._defineLinks[name];
                 //
-                update || this._update();
+                needUpdate && this._update();
             }
             return null;
         }

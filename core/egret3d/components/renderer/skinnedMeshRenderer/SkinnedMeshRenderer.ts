@@ -80,7 +80,9 @@ namespace egret3d {
                     p1.toArray(this._skinnedVertices, vertexIndex);
                 }
 
-                this._skinnedDirty = false;
+                if (vertexCount === indices.length) {
+                    this._skinnedDirty = false;
+                }
             }
 
             return this._skinnedVertices!;
