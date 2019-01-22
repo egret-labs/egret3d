@@ -6,7 +6,6 @@ namespace egret3d {
 
     const enum TransformDirty {
         All = 0b111111,
-        EXT = 0b111110,
         PRS = 0b000111,
         MIM = 0b110000,
 
@@ -184,11 +183,13 @@ namespace egret3d {
             }
 
             if (!(this._worldDirty & dirty) || !(this._worldDirty & TransformDirty.Matrix)) {
-                if (dirty & TransformDirty.Position) {
-                    this._worldDirty |= dirty | TransformDirty.MIM;
+                this._worldDirty |= dirty | TransformDirty.MIM;
+
+                if (dirty & TransformDirty.Rotation) {
+                    this._worldDirty |= TransformDirty.Scale | TransformDirty.Euler;
                 }
-                else {
-                    this._worldDirty = TransformDirty.All;
+                else if (dirty & TransformDirty.Scale) {
+                    this._worldDirty |= TransformDirty.Rotation;
                 }
             }
 
@@ -373,6 +374,7 @@ namespace egret3d {
          */
         public registerObserver(observer: ITransformObserver): void {
             const observers = this._observers;
+
             if (observers.indexOf(observer) < 0) {
                 observers.push(observer);
             }
@@ -384,6 +386,7 @@ namespace egret3d {
         public unregisterObserver(observer: ITransformObserver): void {
             const observers = this._observers;
             const index = observers.indexOf(observer);
+
             if (index >= 0) {
                 observers.splice(index, 1);
             }
