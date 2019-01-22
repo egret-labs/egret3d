@@ -148,7 +148,7 @@ namespace egret3d {
 
             if (directLightCount !== directionalLights.length) {
                 if (directLightCount > 0) {
-                    const define = defines.addDefine(ShaderDefine.NUM_DIR_LIGHTS, directLightCount, true);
+                    const define = defines.addDefine(ShaderDefine.NUM_DIR_LIGHTS, directLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
@@ -172,7 +172,7 @@ namespace egret3d {
 
             if (spotLightCount !== spotLights.length) {
                 if (spotLightCount > 0) {
-                    const define = defines.addDefine(ShaderDefine.NUM_SPOT_LIGHTS, spotLightCount, true);
+                    const define = defines.addDefine(ShaderDefine.NUM_SPOT_LIGHTS, spotLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
@@ -196,7 +196,7 @@ namespace egret3d {
 
             if (rectangleAreaLightCount !== rectangleAreaLights.length) {
                 if (rectangleAreaLightCount > 0) {
-                    const define = defines.addDefine(ShaderDefine.NUM_RECT_AREA_LIGHTS, rectangleAreaLightCount, true);
+                    const define = defines.addDefine(ShaderDefine.NUM_RECT_AREA_LIGHTS, rectangleAreaLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
@@ -220,7 +220,7 @@ namespace egret3d {
 
             if (pointLightCount !== pointLights.length) {
                 if (pointLightCount > 0) {
-                    const define = defines.addDefine(ShaderDefine.NUM_POINT_LIGHTS, pointLightCount, true);
+                    const define = defines.addDefine(ShaderDefine.NUM_POINT_LIGHTS, pointLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
@@ -244,7 +244,7 @@ namespace egret3d {
 
             if (hemisphereLightCount !== hemisphereLights.length) {
                 if (hemisphereLightCount > 0) {
-                    const define = defines.addDefine(ShaderDefine.NUM_HEMI_LIGHTS, hemisphereLightCount, true);
+                    const define = defines.addDefine(ShaderDefine.NUM_HEMI_LIGHTS, hemisphereLightCount);
                     if (define) {
                         define.type = DefineLocation.None;
                     }
