@@ -35,6 +35,8 @@
 
 		sampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;
 
+		sampleUV.y = 1.0 - sampleUV.y;// modified by egret
+
 		sampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;
 
 		vec4 envColor = texture2D( envMap, sampleUV );
