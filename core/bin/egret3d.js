@@ -3938,7 +3938,7 @@ var egret3d;
             if (this._boneCount !== boneCount) {
                 if (boneCount) {
                     defines.addDefine("USE_SKINNING" /* USE_SKINNING */);
-                    defines.addDefine("MAX_BONES" /* MAX_BONES */, boneCount, true);
+                    defines.addDefine("MAX_BONES" /* MAX_BONES */, boneCount);
                 }
                 else {
                     defines.removeDefine("USE_SKINNING" /* USE_SKINNING */);
@@ -4153,7 +4153,7 @@ var egret3d;
                 if (this._gammaOutput === value) {
                     return;
                 }
-                var define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */), true);
+                var define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */), 2 /* Gamma_FUN */);
                 if (define) {
                     define.isCode = true;
                     define.type = 2 /* Fragment */;
@@ -4177,7 +4177,7 @@ var egret3d;
                 if (this._gammaFactor === value) {
                     return;
                 }
-                var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, value, true);
+                var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, value, 1 /* GAMMA_FACTOR */);
                 if (define) {
                     define.type = 2 /* Fragment */;
                 }
@@ -4214,7 +4214,7 @@ var egret3d;
                         define.isCode = true;
                         define.type = 2 /* Fragment */;
                     }
-                    define = defines.addDefine(defineName, this._getToneMappingFunction(value), true);
+                    define = defines.addDefine(defineName, this._getToneMappingFunction(value));
                     if (define) {
                         define.isCode = true;
                         define.type = 2 /* Fragment */;
@@ -4235,7 +4235,7 @@ var egret3d;
             paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], RenderState.prototype, "gammaOutput", null);
         __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */)
+            paper.editor.property("FLOAT" /* FLOAT */, { step: 0.1 })
         ], RenderState.prototype, "gammaFactor", null);
         __decorate([
             paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(egret3d.ToneMapping) }) // TODO
@@ -10635,6 +10635,14 @@ var egret3d;
         ShaderUniformName["MaxMipLevel"] = "maxMipLevel";
     })(ShaderUniformName = egret3d.ShaderUniformName || (egret3d.ShaderUniformName = {}));
     /**
+     * Shader宏定义排序。
+     */
+    var ShaderDefineOrder;
+    (function (ShaderDefineOrder) {
+        ShaderDefineOrder[ShaderDefineOrder["GAMMA_FACTOR"] = 1] = "GAMMA_FACTOR";
+        ShaderDefineOrder[ShaderDefineOrder["Gamma_FUN"] = 2] = "Gamma_FUN";
+    })(ShaderDefineOrder = egret3d.ShaderDefineOrder || (egret3d.ShaderDefineOrder = {}));
+    /**
      *
      */
     var HumanoidMask;
@@ -10836,7 +10844,6 @@ var egret3d;
     var TransformDirty;
     (function (TransformDirty) {
         TransformDirty[TransformDirty["All"] = 63] = "All";
-        TransformDirty[TransformDirty["EXT"] = 62] = "EXT";
         TransformDirty[TransformDirty["PRS"] = 7] = "PRS";
         TransformDirty[TransformDirty["MIM"] = 48] = "MIM";
         TransformDirty[TransformDirty["Position"] = 1] = "Position";
@@ -10987,11 +10994,12 @@ var egret3d;
                 child._dirtify(false, dirty);
             }
             if (!(this._worldDirty & dirty) || !(this._worldDirty & 16 /* Matrix */)) {
-                if (dirty & 1 /* Position */) {
-                    this._worldDirty |= dirty | 48 /* MIM */;
+                this._worldDirty |= dirty | 48 /* MIM */;
+                if (dirty & 2 /* Rotation */) {
+                    this._worldDirty |= 4 /* Scale */ | 8 /* Euler */;
                 }
-                else {
-                    this._worldDirty = 63 /* All */;
+                else if (dirty & 4 /* Scale */) {
+                    this._worldDirty |= 2 /* Rotation */;
                 }
             }
             var observers = this._observers;
@@ -12786,7 +12794,7 @@ var egret3d;
             var defines = egret3d.renderState.defines;
             if (directLightCount !== directionalLights.length) {
                 if (directLightCount > 0) {
-                    var define = defines.addDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */, directLightCount, true);
+                    var define = defines.addDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */, directLightCount);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -12807,7 +12815,7 @@ var egret3d;
             }
             if (spotLightCount !== spotLights.length) {
                 if (spotLightCount > 0) {
-                    var define = defines.addDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */, spotLightCount, true);
+                    var define = defines.addDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */, spotLightCount);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -12828,7 +12836,7 @@ var egret3d;
             }
             if (rectangleAreaLightCount !== rectangleAreaLights.length) {
                 if (rectangleAreaLightCount > 0) {
-                    var define = defines.addDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */, rectangleAreaLightCount, true);
+                    var define = defines.addDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */, rectangleAreaLightCount);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -12849,7 +12857,7 @@ var egret3d;
             }
             if (pointLightCount !== pointLights.length) {
                 if (pointLightCount > 0) {
-                    var define = defines.addDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLightCount, true);
+                    var define = defines.addDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLightCount);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -12870,7 +12878,7 @@ var egret3d;
             }
             if (hemisphereLightCount !== hemisphereLights.length) {
                 if (hemisphereLightCount > 0) {
-                    var define = defines.addDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLightCount, true);
+                    var define = defines.addDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLightCount);
                     if (define) {
                         define.type = 0 /* None */;
                     }
@@ -14642,7 +14650,8 @@ var egret3d;
              * - camera.cullingMask |= paper.Layer.UI;
              * - camera.cullingMask &= ~paper.Layer.UI;
              */
-            _this.cullingMask = 1 /* Default */ | 2 /* TransparentFX */ | 32 /* UI */;
+            _this.cullingMask = (~64 /* Editor */) | (~128 /* EditorUI */);
+            // public cullingMask: paper.Layer = paper.Layer.Default | paper.Layer.TransparentFX | paper.Layer.UI;
             /**
              * 该相机渲染排序。
              * - 该值越低的相机优先绘制。
@@ -18270,7 +18279,9 @@ var egret3d;
                     }
                     p1.toArray(this._skinnedVertices, vertexIndex);
                 }
-                this._skinnedDirty = false;
+                if (vertexCount === indices.length) {
+                    this._skinnedDirty = false;
+                }
             }
             return this._skinnedVertices;
         };
@@ -25148,31 +25159,14 @@ var egret3d;
     var _index = 0;
     var _mask = 0x80000000;
     var _allDefines = {};
-    function _get(name, context, isGlobal) {
-        var key = name;
-        var order;
-        var index = _index;
+    function _get(name, context, order) {
+        var key = context ? (typeof context === "number" ? name + " " + context : context) : name;
         var defines = _allDefines;
-        if (isGlobal || !context) {
-        }
-        else if (typeof context === "number") {
-            key = name + " " + context;
-            context = undefined;
-        }
-        else {
-            key = context;
-        }
         var define = defines[key];
         if (define) {
-            if (isGlobal) {
-                order = define.order || define.mask;
-                index = define.index;
-            }
-            else {
-                return define;
-            }
+            return define;
         }
-        define = defines[key] = new Define(index, _mask, name, context);
+        define = defines[key] = new Define(_index, _mask, name, context);
         if (order) {
             define.order = order;
         }
@@ -25215,6 +25209,7 @@ var egret3d;
             this.definesMask = "";
             // mask, string, array,
             this._defines = [];
+            this._defineLinks = {};
         }
         Defines.link = function (definess, location) {
             var linked = [];
@@ -25259,6 +25254,9 @@ var egret3d;
             return definesString;
         };
         Defines._sortDefine = function (a, b) {
+            if (a.order && b.order) {
+                return a.order - b.order;
+            }
             var d = a.index - b.index;
             if (d === 0) {
                 d = (b.order || b.mask) - (a.order || a.mask); // Define 顺序。
@@ -25274,16 +25272,21 @@ var egret3d;
             for (var _i = 0, defines_1 = defines; _i < defines_1.length; _i++) {
                 var define = defines_1[_i];
                 if (define.index !== index) {
+                    if (mask < 0) {
+                        mask += 0xFFFFFFFF;
+                        mask += 1;
+                    }
+                    definesMask += index + "x" + mask.toString(16);
                     index = define.index;
-                    definesMask += index + mask.toString(16);
                     mask = 0;
                 }
                 mask |= define.mask;
-                if (mask < 0) {
-                    mask = -mask;
-                }
             }
-            definesMask += index + mask.toString(16);
+            if (mask < 0) {
+                mask += 0xFFFFFFFF;
+                mask += 1;
+            }
+            definesMask += index + "x" + mask.toString(32);
             this.definesMask = definesMask;
         };
         /**
@@ -25292,6 +25295,9 @@ var egret3d;
         Defines.prototype.clear = function () {
             this.definesMask = "";
             this._defines.length = 0;
+            for (var k in this._defineLinks) {
+                delete this._defineLinks[k];
+            }
         };
         /**
          *
@@ -25303,48 +25309,45 @@ var egret3d;
                 var define = _a[_i];
                 this._defines.push(define);
             }
+            for (var k in value._defineLinks) {
+                this._defineLinks[k] = value._defineLinks[k];
+            }
         };
         /**
          *
          */
-        Defines.prototype.addDefine = function (name, context, isGlobal) {
-            if (isGlobal) {
-                this.removeDefine(name);
+        Defines.prototype.addDefine = function (name, context, order) {
+            var define = this._defineLinks[name];
+            if (define) {
+                if (define.context === context) {
+                    return define;
+                }
+                else {
+                    this.removeDefine(name, false);
+                }
             }
-            var define = _get(name, context, isGlobal);
+            //
+            define = _get(name, context, order);
             var defines = this._defines;
             if (defines.indexOf(define) < 0) {
                 defines.push(define);
+                this._defineLinks[name] = define;
                 this._update();
                 return define;
             }
             return null;
         };
-        /**
-         *
-         */
-        Defines.prototype.removeDefine = function (name, isLocal) {
-            var defines = this._defines;
-            var define = null;
-            if (isLocal) {
-                for (var _i = 0, defines_2 = defines; _i < defines_2.length; _i++) {
-                    define = defines_2[_i];
-                    if (define.name === name) {
-                        break;
-                    }
-                    define = null;
-                }
-            }
-            else {
-                define = _get(name);
-            }
+        Defines.prototype.removeDefine = function (name, needUpdate) {
+            if (needUpdate === void 0) { needUpdate = true; }
+            var define = this._defineLinks[name];
             if (define) {
-                var index = defines.indexOf(define);
+                var index = this._defines.indexOf(define);
                 if (index >= 0) {
-                    defines.splice(index, 1);
-                    this._update();
-                    return define;
+                    this._defines.splice(index, 1);
                 }
+                delete this._defineLinks[name];
+                //
+                needUpdate && this._update();
             }
             return null;
         };
@@ -29400,7 +29403,7 @@ var egret3d;
                     technique.program = program.id;
                 }
                 // Update states.
-                egret3d.renderState.updateState(techniqueState);
+                this._renderState.updateState(techniqueState);
                 //
                 var unifroms = technique.uniforms;
                 for (var _i = 0, _a = program.uniforms; _i < _a.length; _i++) {
@@ -30053,7 +30056,7 @@ var egret3d;
                     }
                     event.isPrimary = true; // TODO
                     event.pointerId = touch.identifier + 2;
-                    // (event as any).pressure = (touch as any).force || 0.5; // TODO egret build bug
+                    event.pressure = touch.force || 0.5; // TODO egret build bug
                     event.tangentialPressure = 0;
                     event.twist = 0;
                     event.width = (touch.radiusX || 0) * 2; // TODO egret build bug
@@ -30099,10 +30102,13 @@ var egret3d;
                                 egret3d.inputCollecter.onPointerMove.dispatch(pointer, egret3d.inputCollecter.onPointerMove);
                                 for (var i = 0, l = event.targetTouches.length; i < l; ++i) {
                                     var eachTouch = event.targetTouches[i];
-                                    if (eachTouch !== touch) {
+                                    if (eachTouch && eachTouch !== touch) {
                                         var eachPointer = egret3d.inputCollecter.getPointer(eachTouch.identifier + 2);
                                         var eachPointerEvent = eachPointer.event;
-                                        // (eachPointerEvent as any).pressure = (eachTouch as any).force || 0.5; // TODO egret build bug
+                                        if (!eachPointerEvent) {
+                                            continue;
+                                        }
+                                        eachPointerEvent.pressure = eachTouch.force || 0.5; // TODO egret build bug
                                         eachPointerEvent.width = (eachTouch.radiusX || 0) * 2; // TODO egret build bug
                                         eachPointerEvent.height = (eachTouch.radiusY || 0) * 2; // TODO egret build bug
                                         eachPointerEvent.clientX = eachTouch.clientX;

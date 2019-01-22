@@ -281,7 +281,7 @@ namespace egret3d.webgl {
 
             (event as any).isPrimary = true; // TODO
             (event as any).pointerId = touch.identifier + 2;
-            // (event as any).pressure = (touch as any).force || 0.5; // TODO egret build bug
+            (event as any).pressure = (touch as any).force || 0.5; // TODO egret build bug
             (event as any).tangentialPressure = 0;
             (event as any).twist = 0;
             (event as any).width = ((touch as any).radiusX || 0) * 2; // TODO egret build bug
@@ -336,11 +336,15 @@ namespace egret3d.webgl {
 
                         for (let i = 0, l = event.targetTouches.length; i < l; ++i) {
                             const eachTouch = event.targetTouches[i];
-                            if (eachTouch !== touch) {
+                            if (eachTouch && eachTouch !== touch) { // TODO 什么情况 eachTouch 可能为空。
                                 const eachPointer = inputCollecter.getPointer(eachTouch.identifier + 2);
-                                const eachPointerEvent = eachPointer.event!;
+                                const eachPointerEvent = eachPointer.event;
 
-                                // (eachPointerEvent as any).pressure = (eachTouch as any).force || 0.5; // TODO egret build bug
+                                if (!eachPointerEvent) { // TODO 什么情况 eachPointerEvent 可能为空。
+                                    continue;
+                                }
+
+                                (eachPointerEvent as any).pressure = (eachTouch as any).force || 0.5; // TODO egret build bug
                                 (eachPointerEvent as any).width = ((eachTouch as any).radiusX || 0) * 2; // TODO egret build bug
                                 (eachPointerEvent as any).height = ((eachTouch as any).radiusY || 0) * 2; // TODO egret build bug
 

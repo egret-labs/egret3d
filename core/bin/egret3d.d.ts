@@ -5524,6 +5524,13 @@ declare namespace egret3d {
         MaxMipLevel = "maxMipLevel",
     }
     /**
+     * Shader宏定义排序。
+     */
+    const enum ShaderDefineOrder {
+        GAMMA_FACTOR = 1,
+        Gamma_FUN = 2,
+    }
+    /**
      *
      */
     const enum HumanoidMask {
@@ -9463,6 +9470,7 @@ declare namespace egret3d {
         private static _sortDefine(a, b);
         definesMask: string;
         private readonly _defines;
+        private readonly _defineLinks;
         private _update();
         /**
          *
@@ -9475,11 +9483,8 @@ declare namespace egret3d {
         /**
          *
          */
-        addDefine(name: string, context?: number | string, isGlobal?: boolean): Define | null;
-        /**
-         *
-         */
-        removeDefine(name: string, isLocal?: boolean): Define | null;
+        addDefine(name: string, context?: number | string, order?: number): Define | null;
+        removeDefine(name: string, needUpdate?: boolean): Define | null;
     }
 }
 declare namespace egret3d {
