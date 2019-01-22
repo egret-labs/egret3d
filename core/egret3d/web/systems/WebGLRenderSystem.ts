@@ -599,7 +599,7 @@ namespace egret3d.webgl {
                 }
 
                 if (!drawCall.mesh) {
-                    // drawCall.mesh = material.shader === DefaultShaders.CUBE ? DefaultMeshes.CUBE : DefaultMeshes.SPHERE;
+                    // DefaultMeshes.SPHERE;
                     drawCall.mesh = DefaultMeshes.CUBE;
                 }
 
