@@ -795,14 +795,23 @@ namespace egret3d.webgl {
                     const webGLProgram = webgl.createProgram()!;
                     webgl.attachShader(webGLProgram, vertexWebGLShader);
                     webgl.attachShader(webGLProgram, fragmentWebGLShader);
+                    // TODO bindAttribLocation
                     webgl.linkProgram(webGLProgram);
-                    //
+
+                    const programLog = webgl.getProgramInfoLog(webGLProgram)!.trim();
+                    const vertexLog = webgl.getShaderInfoLog(vertexWebGLShader)!.trim();
+                    const fragmentLog = webgl.getShaderInfoLog(fragmentWebGLShader)!.trim();
+
                     const parameter = webgl.getProgramParameter(webGLProgram, gltf.WebGL.LinkStatus);
                     if (parameter) {
                         program = new WebGLProgramBinder(webGLProgram).extract(material.technique);
+
+                        if (programLog) {
+                            console.warn("getProgramInfoLog:", shader.name, programLog, vertexLog, fragmentLog);
+                        }
                     }
                     else {
-                        console.error("program compile: " + shader.name + " error! ->" + webgl.getProgramInfoLog(webGLProgram));
+                        console.error("getProgramInfoLog:", shader.name, programLog, vertexLog, fragmentLog);
                         webgl.deleteProgram(webGLProgram);
                     }
 
