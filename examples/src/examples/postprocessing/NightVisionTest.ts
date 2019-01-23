@@ -13,8 +13,8 @@ namespace examples.postprocessing {
             await RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin");
             await RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin");
             // Load textures.
-            await RES.getResAsync("textures/HeatLookup.image.json");
-            await RES.getResAsync("textures/HeatNoise.image.json");
+            await RES.getResAsync("textures/HeatLookup.png");
+            await RES.getResAsync("textures/HeatNoise.png");
             // Load shaders.
             await RES.getResAsync("shaders/nightVision/nightVision.shader.json");
             await RES.getResAsync("shaders/thermalVision/thermalVision.shader.json");

@@ -7,8 +7,8 @@ namespace components {
         public initialize() {
             super.initialize();
 
-            this._material.setTexture("heatLookupMap", RES.getRes("textures/HeatLookup.image.json"));
-            this._material.setTexture("noiseMap", RES.getRes("textures/HeatNoise.image.json"));
+            this._material.setTexture("heatLookupMap", RES.getRes("textures/HeatLookup.png"));
+            this._material.setTexture("noiseMap", RES.getRes("textures/HeatNoise.png"));
         }
 
         public uninitialize() {
