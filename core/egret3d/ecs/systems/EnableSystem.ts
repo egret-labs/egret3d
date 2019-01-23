@@ -28,18 +28,18 @@ namespace paper {
             component.onEnable && component.onEnable();
         }
 
-        public onUpdate() {
-            const { assets } = this._disposeCollecter;
+        // public onUpdate() {
+        //     const { assets } = this._disposeCollecter;
 
-            if (assets.length > 0) {
-                // for (const asset of assets) { // TODO
-                //     if (asset.onReferenceCountChange!(true)) {
-                //         console.debug("Auto dispose GPU memory.", asset.name);
-                //     }
-                // }
+        //     if (assets.length > 0) {
+        //         // for (const asset of assets) { // TODO
+        //         //     if (asset.onReferenceCountChange!(true)) {
+        //         //         console.debug("Auto dispose GPU memory.", asset.name);
+        //         //     }
+        //         // }
 
-                assets.length = 0;
-            }
-        }
+        //         assets.length = 0;
+        //     }
+        // }
     }
 }

@@ -135,9 +135,6 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", ShaderLib.meshbasic as any, RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);
 
-            helpMaterial.clearStates().setDepth(true, true);
-            DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", ShaderLib.meshbasic as any, RenderQueue.Geometry, helpStates);
-
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", ShaderLib.meshbasic as any, RenderQueue.Geometry, helpStates);
 
@@ -183,8 +180,10 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.COPY = this._createShader("builtin/copy.shader.json", ShaderLib.copy as any, RenderQueue.Geometry, helpStates);
 
-
             // deprecated
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", ShaderLib.meshbasic as any, RenderQueue.Geometry, helpStates);
+
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.MESH_BASIC_DOUBLESIDE = this._createShader("builtin/meshbasic_doubleside.shader.json", ShaderLib.meshbasic as any, RenderQueue.Geometry, helpStates);
 

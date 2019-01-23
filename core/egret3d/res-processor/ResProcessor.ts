@@ -208,20 +208,39 @@ namespace egret3d {
                         premultiplyAlpha = dataB.premultiply > 0 ? 1 : 0;
                     }
 
-                    const subAssets: paper.ISerializedData = { assets: [name] };
-                    _onlyImages[name as string] = true;
+                    // const subAssets: paper.ISerializedData = { assets: [name] };
+                    // _onlyImages[name as string] = true;
 
-                    return loadSubAssets(subAssets, resource).then((images: gltf.ImageSource[]) => {
-                        const texture = Texture
-                            .create({ name: resource.name, source: images[0], format: textureFormat, premultiplyAlpha, anisotropy })
-                            .setLiner(linear)
-                            .setMipmap(mipmap)
-                            .setRepeat(repeat);
-                        paper.Asset.register(texture);
-                        host.save((RES.host.resourceConfig as any)["getResource"](name), images[0]); // TODO
+                    // return loadSubAssets(subAssets, resource).then((images: gltf.ImageSource[]) => {
+                    //     const texture = Texture
+                    //         .create({ name: resource.name, source: images[0], format: textureFormat, premultiplyAlpha, anisotropy })
+                    //         .setLiner(linear)
+                    //         .setMipmap(mipmap)
+                    //         .setRepeat(repeat);
+                    //     paper.Asset.register(texture);
+                    //     host.save((RES.host.resourceConfig as any)["getResource"](name), images[0]); // TODO
 
-                        return texture;
-                    });
+                    //     return texture;
+                    // });
+
+                    const imgResource = (RES.host.resourceConfig as any)["getResource"](name);
+                    if (imgResource) {
+                        return host.load(imgResource, "bitmapdata").then((bitmapData: egret.BitmapData) => {
+                            const texture = Texture
+                                .create({ name: resource.name, source: bitmapData.source, format: textureFormat, premultiplyAlpha, anisotropy })
+                                .setLiner(linear)
+                                .setMipmap(mipmap)
+                                .setRepeat(repeat);
+                            paper.Asset.register(texture);
+                            host.save(imgResource, bitmapData);
+                            (texture as any)._bitmapData = bitmapData; // TODO
+
+                            return texture;
+                        });
+                    }
+                    else {
+                        throw new Error(); // TODO
+                    }
                 }
             });
         },

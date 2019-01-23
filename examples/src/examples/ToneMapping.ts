@@ -35,8 +35,6 @@ namespace examples {
                 mainCamera.near = 1.0;
                 mainCamera.backgroundColor.fromHex(0x000000);
                 mainCamera.transform.setLocalPosition(0.0, 40.0, -40 * 3.5).lookAt(egret3d.Vector3.ZERO);
-                //
-                // paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent)!.select(mainCamera.gameObject);
             }
 
             { // Create lights.
