@@ -806,9 +806,9 @@ namespace egret3d.webgl {
                     if (parameter) {
                         program = new WebGLProgramBinder(webGLProgram).extract(material.technique);
 
-                        if (programLog) {
-                            console.warn("getProgramInfoLog:", shader.name, programLog, vertexLog, fragmentLog);
-                        }
+                        // if (programLog) {
+                        //     console.warn("getProgramInfoLog:", shader.name, programLog, vertexLog, fragmentLog);
+                        // }
                     }
                     else {
                         console.error("getProgramInfoLog:", shader.name, programLog, vertexLog, fragmentLog);

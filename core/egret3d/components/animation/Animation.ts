@@ -345,6 +345,9 @@ namespace egret3d {
          * 
          */
         public get animationController(): AnimationController | null {
+            if (!this._animationController) {
+                this._animationController = AnimationController.create(paper.DefaultNames.Default).retain();
+            }
             return this._animationController;
         }
         /**

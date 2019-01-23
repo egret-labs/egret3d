@@ -45,6 +45,18 @@ namespace paper {
                 instances.push(instance);
             }
 
+            const { assets } = disposeCollecter;
+
+            if (assets.length > 0) {
+                for (const asset of assets) { // TODO
+                    if (asset.onReferenceCountChange!(true)) {
+                        console.debug("Auto dispose GPU memory.", asset.name);
+                    }
+                }
+
+                assets.length = 0;
+            }
+
             disposeCollecter.clear();
         }
     }

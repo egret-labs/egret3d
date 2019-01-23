@@ -9489,6 +9489,17 @@ var paper;
             ];
             _this._disposeCollecter = paper.GameObject.globalGameObject.getOrAddComponent(paper.DisposeCollecter);
             return _this;
+            // public onUpdate() {
+            //     const { assets } = this._disposeCollecter;
+            //     if (assets.length > 0) {
+            //         // for (const asset of assets) { // TODO
+            //         //     if (asset.onReferenceCountChange!(true)) {
+            //         //         console.debug("Auto dispose GPU memory.", asset.name);
+            //         //     }
+            //         // }
+            //         assets.length = 0;
+            //     }
+            // }
         }
         EnableSystem.prototype.onAddComponent = function (component) {
             if (!component) {
@@ -9504,17 +9515,6 @@ var paper;
                 }
             }
             component.onEnable && component.onEnable();
-        };
-        EnableSystem.prototype.onUpdate = function () {
-            var assets = this._disposeCollecter.assets;
-            if (assets.length > 0) {
-                // for (const asset of assets) { // TODO
-                //     if (asset.onReferenceCountChange!(true)) {
-                //         console.debug("Auto dispose GPU memory.", asset.name);
-                //     }
-                // }
-                assets.length = 0;
-            }
         };
         return EnableSystem;
     }(paper.BaseSystem));
@@ -9706,6 +9706,16 @@ var paper;
                 var instances = instance.constructor._instances; // TODO
                 instance.onClear && instance.onClear();
                 instances.push(instance);
+            }
+            var assets = disposeCollecter.assets;
+            if (assets.length > 0) {
+                for (var _f = 0, assets_1 = assets; _f < assets_1.length; _f++) {
+                    var asset = assets_1[_f];
+                    if (asset.onReferenceCountChange(true)) {
+                        console.debug("Auto dispose GPU memory.", asset.name);
+                    }
+                }
+                assets.length = 0;
             }
             disposeCollecter.clear();
         };
@@ -19896,6 +19906,9 @@ var egret3d;
              *
              */
             get: function () {
+                if (!this._animationController) {
+                    this._animationController = egret3d.AnimationController.create("Default" /* Default */).retain();
+                }
                 return this._animationController;
             },
             enumerable: true,
@@ -27710,18 +27723,35 @@ var egret3d;
                     if (dataB.premultiply !== undefined) {
                         premultiplyAlpha_1 = dataB.premultiply > 0 ? 1 : 0;
                     }
-                    var subAssets = { assets: [name_2] };
-                    _onlyImages[name_2] = true;
-                    return loadSubAssets(subAssets, resource).then(function (images) {
-                        var texture = egret3d.Texture
-                            .create({ name: resource.name, source: images[0], format: textureFormat_1, premultiplyAlpha: premultiplyAlpha_1, anisotropy: anisotropy_1 })
-                            .setLiner(linear_1)
-                            .setMipmap(mipmap_1)
-                            .setRepeat(repeat_1);
-                        paper.Asset.register(texture);
-                        host.save(RES.host.resourceConfig["getResource"](name_2), images[0]); // TODO
-                        return texture;
-                    });
+                    // const subAssets: paper.ISerializedData = { assets: [name] };
+                    // _onlyImages[name as string] = true;
+                    // return loadSubAssets(subAssets, resource).then((images: gltf.ImageSource[]) => {
+                    //     const texture = Texture
+                    //         .create({ name: resource.name, source: images[0], format: textureFormat, premultiplyAlpha, anisotropy })
+                    //         .setLiner(linear)
+                    //         .setMipmap(mipmap)
+                    //         .setRepeat(repeat);
+                    //     paper.Asset.register(texture);
+                    //     host.save((RES.host.resourceConfig as any)["getResource"](name), images[0]); // TODO
+                    //     return texture;
+                    // });
+                    var imgResource_1 = RES.host.resourceConfig["getResource"](name_2);
+                    if (imgResource_1) {
+                        return host.load(imgResource_1, "bitmapdata").then(function (bitmapData) {
+                            var texture = egret3d.Texture
+                                .create({ name: resource.name, source: bitmapData.source, format: textureFormat_1, premultiplyAlpha: premultiplyAlpha_1, anisotropy: anisotropy_1 })
+                                .setLiner(linear_1)
+                                .setMipmap(mipmap_1)
+                                .setRepeat(repeat_1);
+                            paper.Asset.register(texture);
+                            host.save(imgResource_1, bitmapData);
+                            texture._bitmapData = bitmapData; // TODO
+                            return texture;
+                        });
+                    }
+                    else {
+                        throw new Error(); // TODO
+                    }
                 }
             });
         },
@@ -29737,14 +29767,20 @@ var egret3d;
                         var webGLProgram = webgl.createProgram();
                         webgl.attachShader(webGLProgram, vertexWebGLShader);
                         webgl.attachShader(webGLProgram, fragmentWebGLShader);
+                        // TODO bindAttribLocation
                         webgl.linkProgram(webGLProgram);
-                        //
+                        var programLog = webgl.getProgramInfoLog(webGLProgram).trim();
+                        var vertexLog = webgl.getShaderInfoLog(vertexWebGLShader).trim();
+                        var fragmentLog = webgl.getShaderInfoLog(fragmentWebGLShader).trim();
                         var parameter = webgl.getProgramParameter(webGLProgram, 35714 /* LinkStatus */);
                         if (parameter) {
                             program = new webgl_14.WebGLProgramBinder(webGLProgram).extract(material.technique);
+                            // if (programLog) {
+                            //     console.warn("getProgramInfoLog:", shader.name, programLog, vertexLog, fragmentLog);
+                            // }
                         }
                         else {
-                            console.error("program compile: " + shader.name + " error! ->" + webgl.getProgramInfoLog(webGLProgram));
+                            console.error("getProgramInfoLog:", shader.name, programLog, vertexLog, fragmentLog);
                             webgl.deleteProgram(webGLProgram);
                         }
                         webgl.deleteShader(vertexWebGLShader);
