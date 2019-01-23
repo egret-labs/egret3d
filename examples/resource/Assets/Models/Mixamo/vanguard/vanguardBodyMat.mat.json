@@ -1,0 +1,34 @@
+{
+    "asset": {
+        "version": 2
+    },
+    "materials": [
+        {
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "values": {
+                        "metalness": 0,
+                        "map": "Assets/Models/Mixamo/vanguard/albedo.image.json",
+                        "normalMap": "Assets/Models/Mixamo/vanguard/normal.image.json"
+                    },
+                    "technique": "builtin/meshphysical.shader.json"
+                },
+                "paper": {
+                    "renderQueue": 2000,
+                    "defines": [
+                        "STANDARD"
+                    ]
+                }
+            }
+        }
+    ],
+    "extensionsRequired": [
+        "KHR_techniques_webgl",
+        "paper"
+    ],
+    "extensionsUsed": [
+        "KHR_techniques_webgl",
+        "paper"
+    ],
+    "version": 4
+}
