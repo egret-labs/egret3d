@@ -7,19 +7,19 @@
         "KHR_techniques_webgl": {
             "shaders": [
                 {
-                    "name": "thermaVision_vert",
+                    "name": "thermalVision_vert",
                     "type": 35633,
-                    "uri": "shaders/thermaVision/thermaVision_vert.glsl"
+                    "uri": "shaders/thermalVision/thermalVision_vert.glsl"
                 },
                 {
-                    "name": "thermaVision_frag",
+                    "name": "thermalVision_frag",
                     "type": 35632,
-                    "uri": "shaders/thermaVision/thermaVision_frag.glsl"
+                    "uri": "shaders/thermalVision/thermalVision_frag.glsl"
                 }
             ],
             "techniques": [
                 {
-                    "name": "thermaVision",
+                    "name": "thermalVision",
                     "attributes": {},
                     "uniforms": {
                         "map": {
