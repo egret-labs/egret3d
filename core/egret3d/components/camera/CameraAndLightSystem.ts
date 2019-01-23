@@ -12,7 +12,7 @@ namespace egret3d {
             ]
         ];
 
-        private readonly _drawCallCollecter: egret3d.DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
 
         public onAddGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup) {

@@ -276,7 +276,7 @@ namespace egret3d {
          */
         public getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3 {
             if (!out) {
-                out = egret3d.Vector3.create();
+                out = Vector3.create();
             }
 
             if (this.isEmpty) {

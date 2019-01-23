@@ -39,7 +39,7 @@ namespace egret3d {
             this.stage.addChild(this.root);
 
             if (!this._renderer) {
-                this._renderer = egret.web.Renderer.getInstance(egret3d.WebGLCapabilities.webgl! ||  Egret2DRendererSystem.webgl!);
+                this._renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl! ||  Egret2DRendererSystem.webgl!);
             }
 
             let stage = this.stage;
@@ -48,7 +48,7 @@ namespace egret3d {
             stage.$displayList = displayList;
 
             // TODO
-            const webInput = paper.Application.systemManager.getSystem(egret3d.Egret2DRendererSystem)!.webInput;
+            const webInput = paper.Application.systemManager.getSystem(Egret2DRendererSystem)!.webInput;
             if (webInput) {
                 egret.web.$cacheTextAdapter(webInput, stage, Egret2DRendererSystem.canvas!.parentNode as HTMLDivElement, Egret2DRendererSystem.canvas);
             }
@@ -62,10 +62,10 @@ namespace egret3d {
 
         public recalculateLocalBox() {
             // TODO
-            this._localBoundingBox.size = egret3d.Vector3.ZERO;
+            this._localBoundingBox.size = Vector3.ZERO;
         }
 
-        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
             // TODO
             return false;
         }

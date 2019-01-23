@@ -129,7 +129,7 @@ namespace egret3d.particle {
 
         @paper.serializedField
         private _renderMode: ParticleRenderMode = ParticleRenderMode.Billboard;
-        private _mesh: egret3d.Mesh | null = null;
+        private _mesh: Mesh | null = null;
         /**
          * @internal
          */
@@ -167,9 +167,9 @@ namespace egret3d.particle {
             this._localBoundingBox.copy(Box.ONE);
         }
 
-        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
             let raycastMesh = false;
-            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
+            let raycastInfo: RaycastInfo | undefined = undefined;
             const localRay = helpRay.applyMatrix(this.gameObject.transform.worldToLocalMatrix, p1);
             const localBoundingBox = this.localBoundingBox;
 

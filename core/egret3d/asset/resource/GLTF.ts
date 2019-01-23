@@ -289,6 +289,8 @@ namespace egret3d {
          * 持续时间。（以秒为单位）
          */
         duration: number;
+
+        root?: gltf.Index;
     }
     /**
      * @private

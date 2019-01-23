@@ -8222,6 +8222,10 @@ declare namespace egret3d {
          */
         autoPlay: boolean;
         /**
+         *
+         */
+        applyRootMotion: boolean;
+        /**
          * 动画速度。
          */
         timeScale: number;

@@ -11,7 +11,7 @@ namespace egret3d {
     export class MeshCollider extends paper.BaseComponent implements IMeshCollider, IRaycast {
         public readonly colliderType: ColliderType = ColliderType.Mesh;
 
-        protected readonly _localBoundingBox: egret3d.Box = egret3d.Box.create();
+        protected readonly _localBoundingBox: Box = Box.create();
         private _mesh: Mesh | null = null;
         /**
          * @internal

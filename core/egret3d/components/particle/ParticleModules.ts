@@ -767,7 +767,7 @@ namespace egret3d.particle {
          * 
          */
         @paper.serializedField
-        public readonly box: egret3d.Vector3 = Vector3.create();
+        public readonly box: Vector3 = Vector3.create();
         /**
          * 
          */

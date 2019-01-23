@@ -65,8 +65,8 @@ namespace egret3d {
             return;
         }
 
-        const meshFilter = target.getComponent(egret3d.MeshFilter);
-        const meshRenderer = target.getComponent(egret3d.MeshRenderer);
+        const meshFilter = target.getComponent(MeshFilter);
+        const meshRenderer = target.getComponent(MeshRenderer);
         //合并条件判断
         if (!meshFilter || !meshFilter.mesh || !meshRenderer || !meshRenderer.materials || meshRenderer.materials.length < 1) {
             return;
@@ -150,8 +150,8 @@ namespace egret3d {
         let startIndex = 0;
         let endIndex = 0;
         for (const instance of combineInstance.instances) {
-            const meshFilter = instance.getComponent(egret3d.MeshFilter)!;
-            const meshRenderer = instance.getComponent(egret3d.MeshRenderer)!;
+            const meshFilter = instance.getComponent(MeshFilter)!;
+            const meshRenderer = instance.getComponent(MeshRenderer)!;
             const worldMatrix = instance.transform.localToWorldMatrix;
             const mesh = meshFilter.mesh!;
             const orginLightmapScaleOffset = meshRenderer.lightmapScaleOffset;

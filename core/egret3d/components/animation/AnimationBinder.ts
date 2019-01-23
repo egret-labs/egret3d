@@ -22,7 +22,7 @@ namespace egret3d {
         public dirty: uint;
         public totalWeight: number;
         public weight: number;
-        public target: paper.BaseComponent | any | ReadonlyArray<paper.BaseComponent>;
+        public target: paper.BaseComponent | any;
         public bindPose: any;
         public layer: AnimationLayer | null;
         public updateTarget: () => void;
@@ -83,8 +83,7 @@ namespace egret3d {
 
         public onUpdateTranslation() {
             const transforms = this.target;
-            const isArray = Array.isArray(transforms);
-            const target = (isArray ? (transforms as Transform[])[0].localPosition : (transforms as Transform).localPosition) as Vector3;
+            const target = (transforms as Transform).localPosition as Vector3;
 
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
@@ -102,20 +101,12 @@ namespace egret3d {
                 }
             }
 
-            if (isArray) {
-                for (const component of transforms as Transform[]) {
-                    component.localPosition = target;
-                }
-            }
-            else {
-                target.update();
-            }
+            target.update();
         }
 
         public onUpdateRotation() {
             const transforms = this.target;
-            const isArray = Array.isArray(transforms);
-            const target = (isArray ? (transforms as Transform[])[0].localRotation : (transforms as Transform).localRotation) as Quaternion;
+            const target = (transforms as Transform).localRotation as Quaternion;
 
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
@@ -136,21 +127,12 @@ namespace egret3d {
             }
 
             target.normalize();
-
-            if (isArray) {
-                for (const component of transforms as Transform[]) {
-                    component.localRotation = target;
-                }
-            }
-            else {
-                target.update();
-            }
+            target.update();
         }
 
         public onUpdateScale() {
             const transforms = this.target;
-            const isArray = Array.isArray(transforms);
-            const target = (isArray ? (transforms as Transform[])[0].localScale : (transforms as Transform).localScale) as Vector3;
+            const target = (transforms as Transform).localScale as Vector3;
 
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
@@ -168,14 +150,7 @@ namespace egret3d {
                 }
             }
 
-            if (isArray) {
-                for (const component of transforms as Transform[]) {
-                    component.localScale = target;
-                }
-            }
-            else {
-                target.update();
-            }
+            target.update();
         }
     }
 }

@@ -158,6 +158,10 @@ namespace egret3d {
             // this._events; // TODO buffer event.
 
             if (prevPlayState === -1 && animationState._playState !== -1) {
+                if (animation.applyRootMotion) {
+                    animationState._recodeStartPosition();
+                }
+                
                 gameObject.sendMessage("onAnimationEvent", AnimationEvent.create(AnimationEventType.Start, animationState), false);
             }
 

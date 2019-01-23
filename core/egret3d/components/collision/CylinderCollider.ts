@@ -33,7 +33,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.VECTOR3)
-        public readonly center: Vector3 = egret3d.Vector3.create();
+        public readonly center: Vector3 = Vector3.create();
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
             const transform = this.gameObject.transform;

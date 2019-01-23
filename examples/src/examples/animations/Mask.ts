@@ -19,6 +19,11 @@ namespace examples.animations {
     class Starter extends paper.Behaviour {
 
         public onAwake() {
+            {
+                const renderState = this.gameObject.getComponent(egret3d.RenderState)!;
+                renderState.gammaOutput = true;
+            }
+
             const gameObject = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json")!;
             const animation = gameObject.getOrAddComponent(egret3d.Animation);
             animation.animations = [

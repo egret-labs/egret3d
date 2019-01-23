@@ -14660,7 +14660,7 @@ var egret3d;
              * - camera.cullingMask |= paper.Layer.UI;
              * - camera.cullingMask &= ~paper.Layer.UI;
              */
-            _this.cullingMask = (~64 /* Editor */) | (~128 /* EditorUI */);
+            _this.cullingMask = ~(64 /* Editor */ | 128 /* EditorUI */);
             // public cullingMask: paper.Layer = paper.Layer.Default | paper.Layer.TransparentFX | paper.Layer.UI;
             /**
              * 该相机渲染排序。
@@ -19576,6 +19576,10 @@ var egret3d;
              */
             _this.autoPlay = false;
             /**
+             *
+             */
+            _this.applyRootMotion = false;
+            /**
              * 动画速度。
              */
             _this.timeScale = 1.0;
@@ -19946,9 +19950,6 @@ var egret3d;
         __decorate([
             paper.editor.property("FLOAT" /* FLOAT */)
         ], Animation.prototype, "timeScale", void 0);
-        __decorate([
-            paper.serializedField
-        ], Animation.prototype, "_animationController", void 0);
         __decorate([
             paper.serializedField("_animations")
         ], Animation.prototype, "animations", null);

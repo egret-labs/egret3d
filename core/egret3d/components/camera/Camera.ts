@@ -85,7 +85,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).Layer) }) // TODO
-        public cullingMask: paper.Layer = (~paper.Layer.Editor) | (~paper.Layer.EditorUI);
+        public cullingMask: paper.Layer = ~(paper.Layer.Editor | paper.Layer.EditorUI);
         // public cullingMask: paper.Layer = paper.Layer.Default | paper.Layer.TransparentFX | paper.Layer.UI;
         /**
          * 该相机渲染排序。
@@ -238,8 +238,8 @@ namespace egret3d {
                 0.95,
             ).applyMatrix(clipToWorldMatrix);
 
-            const position = egret3d.Vector3.create().fromMatrixPosition(cameraToWorldMatrix).release();
-            const forward = egret3d.Vector3.create().fromMatrixColumn(cameraToWorldMatrix, 2).multiplyScalar(-1.0).release();
+            const position = Vector3.create().fromMatrixPosition(cameraToWorldMatrix).release();
+            const forward = Vector3.create().fromMatrixColumn(cameraToWorldMatrix, 2).multiplyScalar(-1.0).release();
             const distanceToPlane = worldPosition.subtract(position).dot(forward);
 
             if (distanceToPlane < -Const.EPSILON || Const.EPSILON < distanceToPlane) {

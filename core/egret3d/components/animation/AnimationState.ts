@@ -4,6 +4,7 @@ namespace egret3d {
      */
     export class AnimationFadeState extends paper.BaseRelease<AnimationFadeState> {
         private static readonly _instances: AnimationFadeState[] = [];
+
         public static create(): AnimationFadeState {
             let instance: AnimationFadeState;
             if (this._instances.length > 0) {
@@ -214,26 +215,15 @@ namespace egret3d {
          * @internal
          */
         public _currentTime: number;
+        /**
+         * @internal
+         */
+        public readonly _rootStartLocalPosition: Vector3 = Vector3.create();
+        /**
+         * @internal
+         */
+        public _recodeStartPosition() {
 
-        public onClear() {
-            super.onClear();
-
-            for (const channel of this.channels) {
-                channel.release();
-            }
-
-            this.playTimes = 0;
-            this.currentPlayTimes = 0;
-            this.channels.length = 0;
-            this.animationAsset = null!;
-            this.animation = null!;
-            this.animationClip = null!;
-
-            this._playheadEnabled = true;
-            this._playState = -1;
-            this._timeScale = 1.0;
-            this._time = 0.0;
-            this._currentTime = -1.0;
         }
         /**
          * @internal
@@ -277,8 +267,12 @@ namespace egret3d {
                         }
 
                         const channel = AnimationChannel.create();
-                        const transforms = children[nodeName];
+                        let transform = children[nodeName];
                         let binder: AnimationBinder | null = null;
+
+                        if (Array.isArray(transform)) {
+                            transform = transform[0];
+                        }
 
                         channel.glTFChannel = glTFChannel;
                         channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
@@ -288,14 +282,14 @@ namespace egret3d {
 
                         if (!extension) {
                             binder = channel.binder = animation._getBinder(nodeName, pathName);
-                            binder.target = transforms;
+                            binder.target = transform;
                         }
 
                         switch (pathName) {
                             case "translation":
                                 channel.updateTarget = channel.onUpdateTranslation;
                                 if (binder!.bindPose === null) {
-                                    binder!.bindPose = Vector3.create().copy((transforms as Transform).localPosition);
+                                    binder!.bindPose = Vector3.create().copy(transform.localPosition);
                                     binder!.updateTarget = binder!.onUpdateTranslation;
                                 }
                                 break;
@@ -303,7 +297,7 @@ namespace egret3d {
                             case "rotation":
                                 channel.updateTarget = channel.onUpdateRotation;
                                 if (binder!.bindPose === null) {
-                                    binder!.bindPose = Quaternion.create().copy((transforms as Transform).localRotation);
+                                    binder!.bindPose = Quaternion.create().copy(transform.localRotation);
                                     binder!.updateTarget = binder!.onUpdateRotation;
                                 }
                                 break;
@@ -311,7 +305,7 @@ namespace egret3d {
                             case "scale":
                                 channel.updateTarget = channel.onUpdateScale;
                                 if (binder!.bindPose === null) {
-                                    binder!.bindPose = Vector3.create().copy((transforms as Transform).localScale);
+                                    binder!.bindPose = Vector3.create().copy(transform.localScale);
                                     binder!.updateTarget = binder!.onUpdateScale;
                                 }
                                 break;
@@ -325,17 +319,17 @@ namespace egret3d {
                                     case "paper.GameObject":
                                         switch (extension!.property) {
                                             case "activeSelf":
-                                                channel.binder = transforms;
+                                                channel.binder = transform;
                                                 channel.updateTarget = channel.onUpdateActive;
                                                 break;
                                         }
                                         break;
 
                                     default:
-                                        const componentClass = egret.getDefinitionByName(extension!.type) as paper.IComponentClass<paper.BaseComponent> | undefined | null;
+                                        const componentClass = egret.getDefinitionByName(extension!.type) as paper.IComponentClass<paper.BaseComponent> | undefined | null; // TODO 不依赖 getDefinitionByName
 
                                         if (componentClass) {
-                                            const component = (transforms as Transform).gameObject.getComponent(componentClass);
+                                            const component = transform.gameObject.getComponent(componentClass);
                                             if (component) {
                                                 const uri = extension!.uri;
                                                 const needUpdate = extension!.needUpdate;
@@ -352,7 +346,7 @@ namespace egret3d {
                                                             continue;
                                                         }
 
-                                                        if (path === "$") {
+                                                        if (path === "$") { // 标识为拥有 needUpdate 接口的目标。
                                                             updateTarget = target;
                                                         }
                                                         else {
@@ -389,6 +383,27 @@ namespace egret3d {
                     }
                 }
             }
+        }
+
+        public onClear() {
+            super.onClear();
+
+            for (const channel of this.channels) {
+                channel.release();
+            }
+
+            this.playTimes = 0;
+            this.currentPlayTimes = 0;
+            this.channels.length = 0;
+            this.animationAsset = null!;
+            this.animation = null!;
+            this.animationClip = null!;
+
+            this._playheadEnabled = true;
+            this._playState = -1;
+            this._timeScale = 1.0;
+            this._time = 0.0;
+            this._currentTime = -1.0;
         }
         /**
          * 继续该动画状态的播放。

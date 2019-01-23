@@ -26,7 +26,7 @@ namespace egret3d {
         public glTFSampler: gltf.AnimationSampler;
         public inputBuffer: Float32Array;
         public outputBuffer: ArrayBufferView & ArrayLike<number>;
-        public binder: paper.BaseComponent | (paper.BaseComponent[]) | AnimationBinder | any;
+        public binder: paper.BaseComponent | AnimationBinder | any;
         public updateTarget: ((animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
         public needUpdate: ((dirty: int) => void) | null;
 

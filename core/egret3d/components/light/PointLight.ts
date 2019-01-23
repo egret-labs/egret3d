@@ -58,7 +58,7 @@ namespace egret3d {
             const lightPosition = this.gameObject.transform.position;
             //
             shadowCamera.viewport.copy(_viewPortsScale[face]).multiplyScalar(mapSize).update();
-            shadowCamera.projectionMatrix = egret3d.Matrix4.create().fromProjection(Const.PI_HALF, shadow.near, shadow.far, 0.0, 1.0, 1.0, 0.0).release();
+            shadowCamera.projectionMatrix = Matrix4.create().fromProjection(Const.PI_HALF, shadow.near, shadow.far, 0.0, 1.0, 1.0, 0.0).release();
             shadowCamera.transform
                 .setLocalPosition(lightPosition)
                 .lookAt(lightPosition.clone().add(_targets[face]).release(), _ups[face]);

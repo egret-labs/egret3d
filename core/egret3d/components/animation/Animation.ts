@@ -9,6 +9,11 @@ namespace egret3d {
         @paper.serializedField
         public autoPlay: boolean = false;
         /**
+         * 
+         */
+        public applyRootMotion: boolean = false;
+
+        /**
          * 动画速度。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
@@ -22,7 +27,6 @@ namespace egret3d {
          * @internal
          */
         public readonly _binders: { [key: string]: AnimationBinder } = {};
-        @paper.serializedField
         private _animationController: AnimationController | null = null;
         private _lastAnimationLayer: AnimationLayer | null = null;
         /**

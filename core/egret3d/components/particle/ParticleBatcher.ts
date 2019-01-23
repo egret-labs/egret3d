@@ -43,8 +43,8 @@ namespace egret3d.particle {
         private _worldPostionBuffer: Float32Array;
         private _worldRoationBuffer: Float32Array;
 
-        private _worldPostionCache: Vector3 = egret3d.Vector3.create();
-        private _worldRotationCache: Quaternion = egret3d.Quaternion.create();
+        private _worldPostionCache: Vector3 = Vector3.create();
+        private _worldRotationCache: Quaternion = Quaternion.create();
 
         private _comp: ParticleComponent;
         private _renderer: ParticleRenderer;

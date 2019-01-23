@@ -229,7 +229,7 @@ namespace egret3d {
             return out;
         }
 
-        public raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean) {
+        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
             const mesh = this._mesh;
             const boneMatrices = this.boneMatrices;
             if (!mesh || mesh.isDisposed || !boneMatrices) {
@@ -237,7 +237,7 @@ namespace egret3d {
             }
 
             let raycastMesh = false;
-            let raycastInfo: egret3d.RaycastInfo | undefined = undefined;
+            let raycastInfo: RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
             const boundingTransform = this.getBoundingTransform();
             const localRay = helpRay.applyMatrix(boundingTransform.worldToLocalMatrix, p1);

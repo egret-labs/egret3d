@@ -109,7 +109,7 @@ namespace egret3d {
                         value = paper.Asset.find<BaseTexture>(sourceValue) || DefaultTextures.WHITE; // Missing texture.
                     }
                     // else if (!value) {
-                    //     value = egret3d.DefaultTextures.WHITE; // 非法数据.
+                    //     value = DefaultTextures.WHITE; // 非法数据.
                     // }
                 }
                 else if (Array.isArray(sourceValue)) {

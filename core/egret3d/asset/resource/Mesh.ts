@@ -210,7 +210,7 @@ namespace egret3d {
          * 
          */
         public applyMatrix(matrix: Readonly<Matrix4>): this {
-            const helpVector3 = egret3d.Vector3.create().release();
+            const helpVector3 = Vector3.create().release();
             const vertices = this.getVertices()!;
             const normals = this.getNormals();
 
@@ -219,7 +219,7 @@ namespace egret3d {
             }
 
             if (normals) {
-                const normalMatrix = egret3d.Matrix3.create().getNormalMatrix(matrix).release();
+                const normalMatrix = Matrix3.create().getNormalMatrix(matrix).release();
 
                 for (let i = 0, l = normals.length; i < l; i += 3) {
                     helpVector3.fromArray(normals, i).applyMatrix3(normalMatrix).normalize().toArray(normals, i);
