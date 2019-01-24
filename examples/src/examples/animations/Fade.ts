@@ -11,8 +11,11 @@ namespace examples.animations {
             // Load animation resource.
             await RES.getResAsync("Assets/Animations/Mixamo/Looking_Around.ani.bin");
             await RES.getResAsync("Assets/Animations/Mixamo/Hip_Hop_Dancing.ani.bin");
+            const sambaAnimationAsset = await RES.getResAsync("Assets/Animations/Mixamo/Samba_Dancing.ani.bin") as egret3d.AnimationAsset;
             await RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin");
             await RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin");
+
+            sambaAnimationAsset.getAnimationClip("")!.root = 0;
 
             paper.GameObject.globalGameObject.addComponent(Starter);
         }
@@ -34,9 +37,11 @@ namespace examples.animations {
             animationX.animations = animationY.animations = [
                 RES.getRes("Assets/Animations/Mixamo/Looking_Around.ani.bin"),
                 RES.getRes("Assets/Animations/Mixamo/Hip_Hop_Dancing.ani.bin"),
+                RES.getRes("Assets/Animations/Mixamo/Samba_Dancing.ani.bin"),
                 RES.getRes("Assets/Animations/Mixamo/Walking.ani.bin"),
                 RES.getRes("Assets/Animations/Mixamo/Running.ani.bin"),
             ];
+            animationX.applyRootMotion = true;
             animationX.play("Hip_Hop_Dancing");
             animationY.play("Running");
             gameObjectX.transform.setLocalPosition(1.0, 0.0, 0.0);

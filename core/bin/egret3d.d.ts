@@ -1150,6 +1150,7 @@ declare namespace egret3d {
          * 持续时间。（以秒为单位）
          */
         duration: number;
+        root?: gltf.Index;
     }
     /**
      * @private
@@ -2610,14 +2611,14 @@ declare namespace egret3d {
          * - v *= matrix
          * @param matrix 一个 3x3 矩阵。
          */
-        applyMatrix3(matrix: Readonly<Matrix3>): this;
+        applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>): this;
         /**
          * 将输入向量与一个 3x3 矩阵相乘的结果写入该向量。
          * - v = input * matrix
          * @param matrix 一个 3x3 矩阵。
          * @param input 输入向量。
          */
-        applyMatrix3(matrix: Readonly<Matrix3>, input: Readonly<IVector3>): this;
+        applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>, input: Readonly<IVector3>): this;
         /**
          * 将该向量乘以一个矩阵。
          * - v *= matrix
@@ -6966,7 +6967,7 @@ declare namespace egret3d {
      */
     class MeshCollider extends paper.BaseComponent implements IMeshCollider, IRaycast {
         readonly colliderType: ColliderType;
-        protected readonly _localBoundingBox: egret3d.Box;
+        protected readonly _localBoundingBox: Box;
         private _mesh;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
         /**
@@ -7279,16 +7280,16 @@ declare namespace egret3d {
      * 天空盒组件。
      */
     class SkyBox extends paper.BaseComponent {
-        protected readonly _materials: (egret3d.Material | null)[];
+        protected readonly _materials: (Material | null)[];
         uninitialize(): void;
         /**
          * 该组件的材质列表。
          */
-        materials: ReadonlyArray<egret3d.Material | null>;
+        materials: ReadonlyArray<Material | null>;
         /**
          * 该组件材质列表中的第一个材质。
          */
-        material: egret3d.Material | null;
+        material: Material | null;
     }
 }
 declare namespace egret3d {
@@ -7917,7 +7918,7 @@ declare namespace egret3d {
          * - 采用 CPU 蒙皮指定顶点。
          */
         getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
-        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
         /**
          *
          */
@@ -7980,7 +7981,7 @@ declare namespace egret3d {
         initialize(): void;
         uninitialize(): void;
         recalculateLocalBox(): void;
-        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
         /**
          * screen position to ui position
          * @version paper 1.0
@@ -8352,17 +8353,18 @@ declare namespace egret3d {
          */
         readonly channels: AnimationChannel[];
         /**
-         * @private
+         * 播放的动画数据。
          */
         animationAsset: AnimationAsset;
         /**
-         * 播放的动画数据。
+         * @private
          */
         animation: GLTFAnimation;
         /**
          * 播放的动画剪辑。
          */
         animationClip: GLTFAnimationClip;
+        private readonly _lastMotionPosition;
         onClear(): void;
         /**
          * 继续该动画状态的播放。
@@ -8408,7 +8410,7 @@ declare namespace egret3d {
         dirty: uint;
         totalWeight: number;
         weight: number;
-        target: paper.BaseComponent | any | ReadonlyArray<paper.BaseComponent>;
+        target: paper.BaseComponent | any;
         bindPose: any;
         layer: AnimationLayer | null;
         updateTarget: () => void;
@@ -8433,7 +8435,7 @@ declare namespace egret3d {
         glTFSampler: gltf.AnimationSampler;
         inputBuffer: Float32Array;
         outputBuffer: ArrayBufferView & ArrayLike<number>;
-        binder: paper.BaseComponent | (paper.BaseComponent[]) | AnimationBinder | any;
+        binder: paper.BaseComponent | AnimationBinder | any;
         updateTarget: ((animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
         needUpdate: ((dirty: int) => void) | null;
         private constructor();
@@ -8901,7 +8903,7 @@ declare namespace egret3d.particle {
         /**
          *
          */
-        readonly box: egret3d.Vector3;
+        readonly box: Vector3;
         /**
          *
          */
@@ -9160,7 +9162,7 @@ declare namespace egret3d.particle {
         private _mesh;
         uninitialize(): void;
         recalculateLocalBox(): void;
-        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
         /**
          *
          */

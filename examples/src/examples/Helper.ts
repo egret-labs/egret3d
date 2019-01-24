@@ -3,10 +3,11 @@ namespace examples {
     export function createGridRoom() {
         { // Create light.
             const directionalLight = paper.GameObject.create("Directional Light").addComponent(egret3d.DirectionalLight);
-            directionalLight.intensity = 0.2;
+            directionalLight.intensity = 0.4;
             directionalLight.transform.setLocalPosition(0.0, 20.0, -10.0).lookAt(egret3d.Vector3.ZERO);
             //
             const pointLight = paper.GameObject.create("Point Light").addComponent(egret3d.PointLight);
+            pointLight.intensity = 0.6;
             pointLight.decay = 0.0;
             pointLight.distance = 0.0;
             pointLight.castShadows = true;

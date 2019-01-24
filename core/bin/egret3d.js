@@ -1965,9 +1965,16 @@ var egret3d;
             }
             var x = input.x, y = input.y, z = input.z;
             var rawData = matrix.rawData;
-            this.x = rawData[0] * x + rawData[3] * y + rawData[6] * z;
-            this.y = rawData[1] * x + rawData[4] * y + rawData[7] * z;
-            this.z = rawData[2] * x + rawData[5] * y + rawData[8] * z;
+            if (matrix.constructor === egret3d.Matrix3) {
+                this.x = rawData[0] * x + rawData[3] * y + rawData[6] * z;
+                this.y = rawData[1] * x + rawData[4] * y + rawData[7] * z;
+                this.z = rawData[2] * x + rawData[5] * y + rawData[8] * z;
+            }
+            else {
+                this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
+                this.y = rawData[1] * x + rawData[5] * y + rawData[9] * z;
+                this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
+            }
             return this;
         };
         Vector3.prototype.applyMatrix = function (matrix, input) {
@@ -20085,6 +20092,7 @@ var egret3d;
              * @private
              */
             _this.channels = [];
+            _this._lastMotionPosition = egret3d.Vector3.create();
             return _this;
         }
         /**
@@ -20102,23 +20110,19 @@ var egret3d;
             }
             return instance;
         };
-        AnimationState.prototype.onClear = function () {
-            _super.prototype.onClear.call(this);
-            for (var _i = 0, _a = this.channels; _i < _a.length; _i++) {
-                var channel = _a[_i];
-                channel.release();
+        /**
+         * @internal
+         */
+        AnimationState.prototype._applyRootMotion = function (x, y, z, weight) {
+            if (!this._animation.applyRootMotion) {
+                return;
             }
-            this.playTimes = 0;
-            this.currentPlayTimes = 0;
-            this.channels.length = 0;
-            this.animationAsset = null;
-            this.animation = null;
-            this.animationClip = null;
-            this._playheadEnabled = true;
-            this._playState = -1;
-            this._timeScale = 1.0;
-            this._time = 0.0;
-            this._currentTime = -1.0;
+            var transform = this._animation.gameObject.transform;
+            var position = egret3d.helpVector3A.set(x, y, z);
+            var lastMotionPosition = this._lastMotionPosition;
+            lastMotionPosition.subtract(position, lastMotionPosition).applyMatrix3(transform.localToParentMatrix).multiplyScalar(weight);
+            transform.translate(lastMotionPosition);
+            lastMotionPosition.copy(position);
         };
         /**
          * @internal
@@ -20130,6 +20134,7 @@ var egret3d;
             this.animationClip = animationClip;
             this.animationLayer = animationLayer;
             this.animationNode = animationNode;
+            this._animation = animation;
             if (this.animation.channels) {
                 var animationMask = animationLayer.mask;
                 var jointNames = animationMask ? animationMask.jointNames : null;
@@ -20157,8 +20162,11 @@ var egret3d;
                             continue;
                         }
                         var channel = egret3d.AnimationChannel.create();
-                        var transforms = children[nodeName];
+                        var transform = children[nodeName];
                         var binder = null;
+                        if (Array.isArray(transform)) {
+                            transform = transform[0];
+                        }
                         channel.glTFChannel = glTFChannel;
                         channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
                         channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
@@ -20166,27 +20174,27 @@ var egret3d;
                         this.channels.push(channel);
                         if (!extension) {
                             binder = channel.binder = animation._getBinder(nodeName, pathName);
-                            binder.target = transforms;
+                            binder.target = transform;
                         }
                         switch (pathName) {
                             case "translation":
                                 channel.updateTarget = channel.onUpdateTranslation;
                                 if (binder.bindPose === null) {
-                                    binder.bindPose = egret3d.Vector3.create().copy(transforms.localPosition);
+                                    binder.bindPose = egret3d.Vector3.create().copy(transform.localPosition);
                                     binder.updateTarget = binder.onUpdateTranslation;
                                 }
                                 break;
                             case "rotation":
                                 channel.updateTarget = channel.onUpdateRotation;
                                 if (binder.bindPose === null) {
-                                    binder.bindPose = egret3d.Quaternion.create().copy(transforms.localRotation);
+                                    binder.bindPose = egret3d.Quaternion.create().copy(transform.localRotation);
                                     binder.updateTarget = binder.onUpdateRotation;
                                 }
                                 break;
                             case "scale":
                                 channel.updateTarget = channel.onUpdateScale;
                                 if (binder.bindPose === null) {
-                                    binder.bindPose = egret3d.Vector3.create().copy(transforms.localScale);
+                                    binder.bindPose = egret3d.Vector3.create().copy(transform.localScale);
                                     binder.updateTarget = binder.onUpdateScale;
                                 }
                                 break;
@@ -20198,15 +20206,15 @@ var egret3d;
                                     case "paper.GameObject":
                                         switch (extension.property) {
                                             case "activeSelf":
-                                                channel.binder = transforms;
+                                                channel.binder = transform;
                                                 channel.updateTarget = channel.onUpdateActive;
                                                 break;
                                         }
                                         break;
                                     default:
-                                        var componentClass = egret.getDefinitionByName(extension.type);
+                                        var componentClass = egret.getDefinitionByName(extension.type); // TODO 不依赖 getDefinitionByName
                                         if (componentClass) {
-                                            var component = transforms.gameObject.getComponent(componentClass);
+                                            var component = transform.gameObject.getComponent(componentClass);
                                             if (component) {
                                                 var uri = extension.uri;
                                                 var needUpdate = extension.needUpdate;
@@ -20256,6 +20264,26 @@ var egret3d;
                     }
                 }
             }
+        };
+        AnimationState.prototype.onClear = function () {
+            _super.prototype.onClear.call(this);
+            for (var _i = 0, _a = this.channels; _i < _a.length; _i++) {
+                var channel = _a[_i];
+                channel.release();
+            }
+            this.playTimes = 0;
+            this.currentPlayTimes = 0;
+            this.channels.length = 0;
+            this.animationAsset = null;
+            this.animation = null;
+            this.animationClip = null;
+            this._playheadEnabled = true;
+            this._playState = -1;
+            this._timeScale = 1.0;
+            this._time = 0.0;
+            this._currentTime = -1.0;
+            this._lastMotionPosition.clear();
+            this._animation = null;
         };
         /**
          * 继续该动画状态的播放。
@@ -20406,8 +20434,7 @@ var egret3d;
         };
         AnimationBinder.prototype.onUpdateTranslation = function () {
             var transforms = this.target;
-            var isArray = Array.isArray(transforms);
-            var target = (isArray ? transforms[0].localPosition : transforms.localPosition);
+            var target = transforms.localPosition;
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
                 var bindPose = this.bindPose;
@@ -20422,20 +20449,11 @@ var egret3d;
                     target.z = bindPose.z * weight;
                 }
             }
-            if (isArray) {
-                for (var _i = 0, _a = transforms; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    component.localPosition = target;
-                }
-            }
-            else {
-                target.update();
-            }
+            target.update();
         };
         AnimationBinder.prototype.onUpdateRotation = function () {
             var transforms = this.target;
-            var isArray = Array.isArray(transforms);
-            var target = (isArray ? transforms[0].localRotation : transforms.localRotation);
+            var target = transforms.localRotation;
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
                 var bindPose = this.bindPose;
@@ -20453,20 +20471,11 @@ var egret3d;
                 }
             }
             target.normalize();
-            if (isArray) {
-                for (var _i = 0, _a = transforms; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    component.localRotation = target;
-                }
-            }
-            else {
-                target.update();
-            }
+            target.update();
         };
         AnimationBinder.prototype.onUpdateScale = function () {
             var transforms = this.target;
-            var isArray = Array.isArray(transforms);
-            var target = (isArray ? transforms[0].localScale : transforms.localScale);
+            var target = transforms.localScale;
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
                 var bindPose = this.bindPose;
@@ -20481,15 +20490,7 @@ var egret3d;
                     target.z = bindPose.z * weight;
                 }
             }
-            if (isArray) {
-                for (var _i = 0, _a = transforms; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    component.localScale = target;
-                }
-            }
-            else {
-                target.update();
-            }
+            target.update();
         };
         AnimationBinder._instances = [];
         return AnimationBinder;
@@ -20534,7 +20535,6 @@ var egret3d;
             var outputBuffer = this.outputBuffer;
             var binder = this.binder;
             var frameIndex = this.getFrameIndex(currentTime);
-            var transforms = binder.target;
             var x, y, z;
             if (frameIndex >= 0) {
                 var offset = frameIndex * 3;
@@ -20560,23 +20560,38 @@ var egret3d;
                 y -= outputBuffer[1];
                 z -= outputBuffer[2];
             }
-            var isArray = Array.isArray(transforms);
             var weight = binder.weight;
-            var target = (isArray ? transforms[0].localPosition : transforms.localPosition);
-            if (binder.dirty > 1) {
-                target.x += x * weight;
-                target.y += y * weight;
-                target.z += z * weight;
-            }
-            else if (weight === 1.0) {
-                target.x = x;
-                target.y = y;
-                target.z = z;
+            var target = binder.target.localPosition;
+            if (this.glTFChannel.target.node === animationState.animationClip.root) {
+                if (weight !== 1.0) {
+                    y *= weight;
+                }
+                if (binder.dirty > 1) {
+                    target.y += y;
+                }
+                else {
+                    target.x = outputBuffer[0];
+                    target.y = y;
+                    target.z = outputBuffer[2];
+                }
+                animationState._applyRootMotion(x, 0.0, z, weight);
             }
             else {
-                target.x = x * weight;
-                target.y = y * weight;
-                target.z = z * weight;
+                if (weight !== 1.0) {
+                    x *= weight;
+                    y *= weight;
+                    z *= weight;
+                }
+                if (binder.dirty > 1) {
+                    target.x += x;
+                    target.y += y;
+                    target.z += z;
+                }
+                else {
+                    target.x = x;
+                    target.y = y;
+                    target.z = z;
+                }
             }
         };
         AnimationChannel.prototype.onUpdateRotation = function (animationlayer, animationState) {
@@ -20588,7 +20603,6 @@ var egret3d;
             var outputBuffer = this.outputBuffer;
             var binder = this.binder;
             var frameIndex = this.getFrameIndex(currentTime);
-            var transforms = binder.target;
             var x, y, z, w;
             if (frameIndex >= 0) {
                 var offset = frameIndex * 4;
@@ -20615,9 +20629,8 @@ var egret3d;
             if (additive) {
                 helpQuaternionA.fromArray(outputBuffer).multiply(helpQuaternionB.set(x, y, z, w)).inverse();
             }
-            var isArray = Array.isArray(transforms);
             var weight = binder.weight;
-            var target = (isArray ? transforms[0].localRotation : transforms.localRotation);
+            var target = binder.target.localRotation;
             if (binder.dirty > 1) {
                 if (additive) {
                     target.multiply(helpQuaternionA.lerp(egret3d.Quaternion.IDENTITY, helpQuaternionA, weight));
@@ -20691,9 +20704,8 @@ var egret3d;
                 y -= outputBuffer[1];
                 z -= outputBuffer[2];
             }
-            var isArray = Array.isArray(transforms);
             var weight = binder.weight;
-            var target = (isArray ? transforms[0].localScale : transforms.localScale);
+            var target = binder.target.localScale;
             if (binder.dirty > 1) {
                 target.x += x * weight;
                 target.y += y * weight;
@@ -20714,18 +20726,8 @@ var egret3d;
             var currentTime = animationState._currentTime;
             var outputBuffer = this.outputBuffer;
             var frameIndex = this.getFrameIndex(currentTime);
-            var transforms = this.binder;
             //
-            var activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
-            if (Array.isArray(transforms)) {
-                for (var _i = 0, _a = transforms; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    component.gameObject.activeSelf = activeSelf;
-                }
-            }
-            else {
-                transforms.gameObject.activeSelf = activeSelf;
-            }
+            this.binder.gameObject.activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
         };
         AnimationChannel.prototype.onUpdateFloat = function (animationlayer, animationState) {
             var additive = animationlayer.additive;
@@ -25472,7 +25474,7 @@ var egret3d;
                         value = paper.Asset.find(sourceValue) || egret3d.DefaultTextures.WHITE; // Missing texture.
                     }
                     // else if (!value) {
-                    //     value = egret3d.DefaultTextures.WHITE; // 非法数据.
+                    //     value = DefaultTextures.WHITE; // 非法数据.
                     // }
                 }
                 else if (Array.isArray(sourceValue)) {

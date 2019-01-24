@@ -178,11 +178,11 @@ namespace egret3d {
          */
         public readonly channels: AnimationChannel[] = [];
         /**
-         * @private
+         * 播放的动画数据。
          */
         public animationAsset: AnimationAsset;
         /**
-         * 播放的动画数据。
+         * @private
          */
         public animation: GLTFAnimation;
         /**
@@ -215,15 +215,26 @@ namespace egret3d {
          * @internal
          */
         public _currentTime: number;
+        private readonly _lastMotionPosition: Vector3 = egret3d.Vector3.create();
         /**
          * @internal
          */
-        public readonly _rootStartLocalPosition: Vector3 = Vector3.create();
+        private _animation: Animation;
         /**
          * @internal
          */
-        public _recodeStartPosition() {
+        public _applyRootMotion(x: number, y: number, z: number, weight: number) {
+            if (!this._animation.applyRootMotion) {
+                return;
+            }
 
+            const transform = this._animation.gameObject.transform;
+            const position = helpVector3A.set(x, y, z);
+            const lastMotionPosition = this._lastMotionPosition;
+
+            lastMotionPosition.subtract(position, lastMotionPosition).applyMatrix3(transform.localToParentMatrix).multiplyScalar(weight);
+            transform.translate(lastMotionPosition);
+            lastMotionPosition.copy(position);
         }
         /**
          * @internal
@@ -236,6 +247,7 @@ namespace egret3d {
             this.animationClip = animationClip;
             this.animationLayer = animationLayer;
             this.animationNode = animationNode;
+            this._animation = animation;
 
             if (this.animation.channels) {
                 const animationMask = animationLayer.mask as AnimationMask | null;
@@ -404,6 +416,8 @@ namespace egret3d {
             this._timeScale = 1.0;
             this._time = 0.0;
             this._currentTime = -1.0;
+            this._lastMotionPosition.clear();
+            this._animation = null!;
         }
         /**
          * 继续该动画状态的播放。

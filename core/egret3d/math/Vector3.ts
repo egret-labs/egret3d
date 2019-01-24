@@ -253,15 +253,15 @@ namespace egret3d {
          * - v *= matrix
          * @param matrix 一个 3x3 矩阵。
          */
-        public applyMatrix3(matrix: Readonly<Matrix3>): this;
+        public applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>): this;
         /**
          * 将输入向量与一个 3x3 矩阵相乘的结果写入该向量。
          * - v = input * matrix
          * @param matrix 一个 3x3 矩阵。
          * @param input 输入向量。
          */
-        public applyMatrix3(matrix: Readonly<Matrix3>, input: Readonly<IVector3>): this;
-        public applyMatrix3(matrix: Readonly<Matrix3>, input?: Readonly<IVector3>) {
+        public applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>, input: Readonly<IVector3>): this;
+        public applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>, input?: Readonly<IVector3>) {
             if (!input) {
                 input = this;
             }
@@ -269,9 +269,16 @@ namespace egret3d {
             const x = input.x, y = input.y, z = input.z;
             const rawData = matrix.rawData;
 
-            this.x = rawData[0] * x + rawData[3] * y + rawData[6] * z;
-            this.y = rawData[1] * x + rawData[4] * y + rawData[7] * z;
-            this.z = rawData[2] * x + rawData[5] * y + rawData[8] * z;
+            if (matrix.constructor === Matrix3) {
+                this.x = rawData[0] * x + rawData[3] * y + rawData[6] * z;
+                this.y = rawData[1] * x + rawData[4] * y + rawData[7] * z;
+                this.z = rawData[2] * x + rawData[5] * y + rawData[8] * z;
+            }
+            else {
+                this.x = rawData[0] * x + rawData[4] * y + rawData[8] * z;
+                this.y = rawData[1] * x + rawData[5] * y + rawData[9] * z;
+                this.z = rawData[2] * x + rawData[6] * y + rawData[10] * z;
+            }
 
             return this;
         }

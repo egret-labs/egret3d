@@ -48,7 +48,6 @@ namespace egret3d {
             const outputBuffer = this.outputBuffer;
             const binder = this.binder as AnimationBinder;
             const frameIndex = this.getFrameIndex(currentTime);
-            const transforms = binder.target;
 
             let x: number, y: number, z: number;
 
@@ -73,30 +72,48 @@ namespace egret3d {
                 z = outputBuffer[2];
             }
 
-            if (additive) {
+            if (additive) { // TODO position
                 x -= outputBuffer[0];
                 y -= outputBuffer[1];
                 z -= outputBuffer[2];
             }
 
-            const isArray = Array.isArray(transforms);
             const weight = binder.weight;
-            const target = (isArray ? (transforms as Transform[])[0].localPosition : (transforms as Transform).localPosition) as Vector3;
+            const target = (binder.target as Transform).localPosition as Vector3;
 
-            if (binder.dirty > 1) {
-                target.x += x * weight;
-                target.y += y * weight;
-                target.z += z * weight;
-            }
-            else if (weight === 1.0) {
-                target.x = x;
-                target.y = y;
-                target.z = z;
+            if (this.glTFChannel.target.node === animationState.animationClip.root) {
+                if (weight !== 1.0) {
+                    y *= weight;
+                }
+
+                if (binder.dirty > 1) {
+                    target.y += y;
+                }
+                else {
+                    target.x = outputBuffer[0];
+                    target.y = y;
+                    target.z = outputBuffer[2];
+                }
+
+                animationState._applyRootMotion(x, 0.0, z, weight);
             }
             else {
-                target.x = x * weight;
-                target.y = y * weight;
-                target.z = z * weight;
+                if (weight !== 1.0) {
+                    x *= weight;
+                    y *= weight;
+                    z *= weight;
+                }
+
+                if (binder.dirty > 1) {
+                    target.x += x;
+                    target.y += y;
+                    target.z += z;
+                }
+                else {
+                    target.x = x;
+                    target.y = y;
+                    target.z = z;
+                }
             }
         }
 
@@ -109,7 +126,6 @@ namespace egret3d {
             const outputBuffer = this.outputBuffer;
             const binder = this.binder as AnimationBinder;
             const frameIndex = this.getFrameIndex(currentTime);
-            const transforms = binder.target;
 
             let x: number, y: number, z: number, w: number;
 
@@ -141,9 +157,8 @@ namespace egret3d {
                 helpQuaternionA.fromArray(outputBuffer).multiply(helpQuaternionB.set(x, y, z, w)).inverse();
             }
 
-            const isArray = Array.isArray(transforms);
             let weight = binder.weight;
-            const target = (isArray ? (transforms as Transform[])[0].localRotation : (transforms as Transform).localRotation) as Quaternion;
+            const target = (binder.target as Transform).localRotation as Quaternion;
 
             if (binder.dirty > 1) {
                 if (additive) {
@@ -226,9 +241,8 @@ namespace egret3d {
                 z -= outputBuffer[2];
             }
 
-            const isArray = Array.isArray(transforms);
             const weight = binder.weight;
-            const target = (isArray ? (transforms as Transform[])[0].localScale : (transforms as Transform).localScale) as Vector3;
+            const target = (binder.target as Transform).localScale as Vector3;
 
             if (binder.dirty > 1) {
                 target.x += x * weight;
@@ -251,18 +265,9 @@ namespace egret3d {
             const currentTime = animationState._currentTime;
             const outputBuffer = this.outputBuffer;
             const frameIndex = this.getFrameIndex(currentTime);
-            const transforms = this.binder as paper.BaseComponent | ReadonlyArray<paper.BaseComponent>;
             //
-            const activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
+            (this.binder as paper.BaseComponent).gameObject.activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
 
-            if (Array.isArray(transforms)) {
-                for (const component of transforms as Transform[]) {
-                    component.gameObject.activeSelf = activeSelf;
-                }
-            }
-            else {
-                (transforms as Transform).gameObject.activeSelf = activeSelf;
-            }
         }
 
         public onUpdateFloat(animationlayer: AnimationLayer, animationState: AnimationState) {
