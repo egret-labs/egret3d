@@ -19,7 +19,8 @@ namespace egret3d {
             const saveCamera = Camera.current!;
             //
             const camera = cameraAndLightCollecter.postprocessingCamera;
-            renderState.updateViewport(camera, dest);
+            renderState.updateRenderTarget(dest);
+            renderState.updateViewport(camera.viewport, dest);
             renderState.clearBuffer(saveCamera.bufferMask, saveCamera.backgroundColor);
             //
             Camera.current = camera;

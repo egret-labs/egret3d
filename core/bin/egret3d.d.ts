@@ -3405,7 +3405,11 @@ declare namespace egret3d {
         /**
          *
          */
-        updateViewport(camera: Camera, target: RenderTexture | null): void;
+        updateRenderTarget(renderTarget: RenderTexture | null): void;
+        /**
+         *
+         */
+        updateViewport(viewport: Rectangle, renderTarget: RenderTexture | null): void;
         /**
          *
          */
