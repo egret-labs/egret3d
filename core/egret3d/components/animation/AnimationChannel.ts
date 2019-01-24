@@ -80,22 +80,68 @@ namespace egret3d {
 
             const weight = binder.weight;
             const target = (binder.target as Transform).localPosition as Vector3;
+            const animationClip = animationState.animationClip;
 
-            if (this.glTFChannel.target.node === animationState.animationClip.root) {
+            if (this.glTFChannel.target.node === animationClip.root) {
+                const applyRootMotion = animationClip.applyRootMotion || ApplyRootMotion.XZ;
+
                 if (weight !== 1.0) {
-                    y *= weight;
+                    if ((applyRootMotion & ApplyRootMotion.X) === 0) {
+                        x *= weight;
+                    }
+
+                    if ((applyRootMotion & ApplyRootMotion.Y) === 0) {
+                        y *= weight;
+                    }
+
+                    if ((applyRootMotion & ApplyRootMotion.Z) === 0) {
+                        z *= weight;
+                    }
                 }
 
                 if (binder.dirty > 1) {
-                    target.y += y;
+                    if ((applyRootMotion & ApplyRootMotion.X) === 0) {
+                        target.x += x;
+                        x = 0.0;
+                    }
+
+                    if ((applyRootMotion & ApplyRootMotion.Y) === 0) {
+                        target.y += y;
+                        y = 0.0;
+                    }
+
+                    if ((applyRootMotion & ApplyRootMotion.Z) === 0) {
+                        target.z += z;
+                        z = 0.0;
+                    }
                 }
                 else {
-                    target.x = outputBuffer[0];
-                    target.y = y;
-                    target.z = outputBuffer[2];
+                    if (applyRootMotion & ApplyRootMotion.X) {
+                        target.x = outputBuffer[0];
+                    }
+                    else {
+                        target.x = x;
+                        x = 0.0;
+                    }
+
+                    if (applyRootMotion & ApplyRootMotion.Y) {
+                        target.y = outputBuffer[1];
+                    }
+                    else {
+                        target.y = y;
+                        y = 0.0;
+                    }
+
+                    if (applyRootMotion & ApplyRootMotion.Z) {
+                        target.z = outputBuffer[2];
+                    }
+                    else {
+                        target.z = z;
+                        z = 0.0;
+                    }
                 }
 
-                animationState._applyRootMotion(x, 0.0, z, weight);
+                animationState._applyRootMotion(x, y, z, weight, currentTime);
             }
             else {
                 if (weight !== 1.0) {
@@ -159,48 +205,56 @@ namespace egret3d {
 
             let weight = binder.weight;
             const target = (binder.target as Transform).localRotation as Quaternion;
+            // const animationClip = animationState.animationClip;
 
-            if (binder.dirty > 1) {
-                if (additive) {
-                    target.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, weight));
-                }
-                else {
-                    if (helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
-                        weight = -weight;
+            // if (this.glTFChannel.target.node === animationClip.root) {
+            //     const applyRootMotion = animationClip.applyRootMotion || ApplyRootMotion.XZ;
+            //     if (weight !== 1.0) {
+            //     }
+            // }
+            // else {
+                if (binder.dirty > 1) {
+                    if (additive) {
+                        target.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, weight));
                     }
+                    else {
+                        if (helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
+                            weight = -weight;
+                        }
 
-                    target.x += x * weight;
-                    target.y += y * weight;
-                    target.z += z * weight;
-                    target.w += w * weight;
+                        target.x += x * weight;
+                        target.y += y * weight;
+                        target.z += z * weight;
+                        target.w += w * weight;
+                    }
                 }
-            }
-            else if (additive) { // TODO
-                const bindPose = binder.bindPose as Quaternion;
-                target.x = bindPose.x;
-                target.y = bindPose.y;
-                target.z = bindPose.z;
-                target.w = bindPose.w;
+                else if (additive) { // TODO
+                    const bindPose = binder.bindPose as Quaternion;
+                    target.x = bindPose.x;
+                    target.y = bindPose.y;
+                    target.z = bindPose.z;
+                    target.w = bindPose.w;
 
-                if (weight !== 1.0) {
-                    target.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, weight));
+                    if (weight !== 1.0) {
+                        target.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, weight));
+                    }
+                    else {
+                        target.multiply(helpQuaternionA);
+                    }
+                }
+                else if (weight === 1.0) {
+                    target.x = x;
+                    target.y = y;
+                    target.z = z;
+                    target.w = w;
                 }
                 else {
-                    target.multiply(helpQuaternionA);
+                    target.x = x * weight;
+                    target.y = y * weight;
+                    target.z = z * weight;
+                    target.w = w * weight;
                 }
-            }
-            else if (weight === 1.0) {
-                target.x = x;
-                target.y = y;
-                target.z = z;
-                target.w = w;
-            }
-            else {
-                target.x = x * weight;
-                target.y = y * weight;
-                target.z = z * weight;
-                target.w = w * weight;
-            }
+            // }
         }
 
         public onUpdateScale(animationlayer: AnimationLayer, animationState: AnimationState) {

@@ -215,26 +215,33 @@ namespace egret3d {
          * @internal
          */
         public _currentTime: number;
-        private readonly _lastMotionPosition: Vector3 = egret3d.Vector3.create();
-        /**
-         * @internal
-         */
+        private _lastRootMotionRotation: number;
+        private _lastRootMotionPosition: Vector4 | null = null;
         private _animation: Animation;
         /**
          * @internal
          */
-        public _applyRootMotion(x: number, y: number, z: number, weight: number) {
+        public _applyRootMotion(x: number, y: number, z: number, weight: number, time: number) {
             if (!this._animation.applyRootMotion) {
                 return;
             }
 
-            const transform = this._animation.gameObject.transform;
-            const position = helpVector3A.set(x, y, z);
-            const lastMotionPosition = this._lastMotionPosition;
+            if (!this._lastRootMotionPosition) {
+                this._lastRootMotionPosition = Vector4.create();
+            }
 
-            lastMotionPosition.subtract(position, lastMotionPosition).applyMatrix3(transform.localToParentMatrix).multiplyScalar(weight);
-            transform.translate(lastMotionPosition);
-            lastMotionPosition.copy(position);
+            const transform = this._animation.gameObject.transform;
+            const lastPosition = this._lastRootMotionPosition!;
+
+            if (lastPosition.w > time) {
+                this._lastRootMotionRotation = 0.0;
+                lastPosition.clear();
+            }
+
+            const position = helpVector3A.set(x, y, z).subtract(lastPosition)
+                .applyMatrix3(transform.localToParentMatrix).multiplyScalar(weight);
+            transform.translate(position);
+            lastPosition.set(x, y, z, time);
         }
         /**
          * @internal
@@ -286,16 +293,16 @@ namespace egret3d {
                             transform = transform[0];
                         }
 
+                        if (!extension) {
+                            binder = channel.binder = animation._getBinder(nodeName, pathName);
+                            binder.target = transform;
+                        }
+
                         channel.glTFChannel = glTFChannel;
                         channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
                         channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input)) as Float32Array;
                         channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output)) as Float32Array;
                         this.channels.push(channel);
-
-                        if (!extension) {
-                            binder = channel.binder = animation._getBinder(nodeName, pathName);
-                            binder.target = transform;
-                        }
 
                         switch (pathName) {
                             case "translation":
@@ -404,6 +411,10 @@ namespace egret3d {
                 channel.release();
             }
 
+            if (this._lastRootMotionPosition) {
+                this._lastRootMotionPosition.release();
+            }
+
             this.playTimes = 0;
             this.currentPlayTimes = 0;
             this.channels.length = 0;
@@ -416,7 +427,8 @@ namespace egret3d {
             this._timeScale = 1.0;
             this._time = 0.0;
             this._currentTime = -1.0;
-            this._lastMotionPosition.clear();
+            this._lastRootMotionRotation = 0.0;
+            this._lastRootMotionPosition = null;
             this._animation = null!;
         }
         /**

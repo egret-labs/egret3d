@@ -946,6 +946,16 @@ declare namespace egret3d {
         Spherical = 4,
     }
     /**
+     *
+     */
+    const enum ApplyRootMotion {
+        X = 1,
+        Y = 2,
+        Z = 4,
+        R = 8,
+        XZR = 13,
+    }
+    /**
      * 扩展 glTF。
      */
     interface GLTF extends gltf.GLTF {
@@ -1151,6 +1161,7 @@ declare namespace egret3d {
          */
         duration: number;
         root?: gltf.Index;
+        applyRootMotion?: ApplyRootMotion;
     }
     /**
      * @private
@@ -8364,7 +8375,8 @@ declare namespace egret3d {
          * 播放的动画剪辑。
          */
         animationClip: GLTFAnimationClip;
-        private readonly _lastMotionPosition;
+        private _lastRootMotionPosition;
+        private _animation;
         onClear(): void;
         /**
          * 继续该动画状态的播放。

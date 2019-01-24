@@ -10,7 +10,6 @@ namespace examples.animations {
             // Load animation resource.
             await RES.getResAsync("Assets/Animations/Mixamo/Looking_Around.ani.bin");
             await RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin");
-            await RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin");
 
             paper.GameObject.globalGameObject.addComponent(Starter);
         }
@@ -29,15 +28,14 @@ namespace examples.animations {
             animation.animations = [
                 RES.getRes("Assets/Animations/Mixamo/Looking_Around.ani.bin"),
                 RES.getRes("Assets/Animations/Mixamo/Walking.ani.bin"),
-                RES.getRes("Assets/Animations/Mixamo/Running.ani.bin"),
             ];
             animation.fadeIn("Walking", 0.3, 0, 0);
-            animation.fadeIn("Looking_Around", 0.3, 0, 1)!.weight = 0.7;
+            animation.fadeIn("Looking_Around", 0.3, 0, 1);
             //
             const animationController = animation.animationController!;
             const layer = animationController.getOrAddLayer(1);
             const mask = layer.mask = egret3d.AnimationMask.create("UpperBody");
-            mask.createJoints(gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.mesh!).addJoint("mixamorig:Spine2");
+            mask.createJoints(gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.mesh!).addJoint("mixamorig:Spine1");
             //
             egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
             //

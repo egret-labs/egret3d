@@ -1441,6 +1441,17 @@ var egret3d;
         TextureUVMapping[TextureUVMapping["Spherical"] = 4] = "Spherical";
     })(TextureUVMapping = egret3d.TextureUVMapping || (egret3d.TextureUVMapping = {}));
     /**
+     *
+     */
+    var ApplyRootMotion;
+    (function (ApplyRootMotion) {
+        ApplyRootMotion[ApplyRootMotion["X"] = 1] = "X";
+        ApplyRootMotion[ApplyRootMotion["Y"] = 2] = "Y";
+        ApplyRootMotion[ApplyRootMotion["Z"] = 4] = "Z";
+        ApplyRootMotion[ApplyRootMotion["R"] = 8] = "R";
+        ApplyRootMotion[ApplyRootMotion["XZR"] = 13] = "XZR";
+    })(ApplyRootMotion = egret3d.ApplyRootMotion || (egret3d.ApplyRootMotion = {}));
+    /**
      * @private
      */
     var AnimationBlendType;
@@ -20092,7 +20103,7 @@ var egret3d;
              * @private
              */
             _this.channels = [];
-            _this._lastMotionPosition = egret3d.Vector3.create();
+            _this._lastRootMotionPosition = null;
             return _this;
         }
         /**
@@ -20113,16 +20124,22 @@ var egret3d;
         /**
          * @internal
          */
-        AnimationState.prototype._applyRootMotion = function (x, y, z, weight) {
+        AnimationState.prototype._applyRootMotion = function (x, y, z, weight, time) {
             if (!this._animation.applyRootMotion) {
                 return;
             }
+            if (!this._lastRootMotionPosition) {
+                this._lastRootMotionPosition = egret3d.Vector4.create();
+            }
             var transform = this._animation.gameObject.transform;
-            var position = egret3d.helpVector3A.set(x, y, z);
-            var lastMotionPosition = this._lastMotionPosition;
-            lastMotionPosition.subtract(position, lastMotionPosition).applyMatrix3(transform.localToParentMatrix).multiplyScalar(weight);
-            transform.translate(lastMotionPosition);
-            lastMotionPosition.copy(position);
+            var lastPosition = this._lastRootMotionPosition;
+            if (lastPosition.w > time) {
+                lastPosition.clear();
+            }
+            var position = egret3d.helpVector3A.set(x, y, z).subtract(lastPosition)
+                .applyMatrix3(transform.localToParentMatrix).multiplyScalar(weight);
+            transform.translate(position);
+            lastPosition.set(x, y, z, time);
         };
         /**
          * @internal
@@ -20167,15 +20184,15 @@ var egret3d;
                         if (Array.isArray(transform)) {
                             transform = transform[0];
                         }
+                        if (!extension) {
+                            binder = channel.binder = animation._getBinder(nodeName, pathName);
+                            binder.target = transform;
+                        }
                         channel.glTFChannel = glTFChannel;
                         channel.glTFSampler = this.animation.samplers[glTFChannel.sampler];
                         channel.inputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.input));
                         channel.outputBuffer = this.animationAsset.createTypeArrayFromAccessor(this.animationAsset.getAccessor(channel.glTFSampler.output));
                         this.channels.push(channel);
-                        if (!extension) {
-                            binder = channel.binder = animation._getBinder(nodeName, pathName);
-                            binder.target = transform;
-                        }
                         switch (pathName) {
                             case "translation":
                                 channel.updateTarget = channel.onUpdateTranslation;
@@ -20271,6 +20288,9 @@ var egret3d;
                 var channel = _a[_i];
                 channel.release();
             }
+            if (this._lastRootMotionPosition) {
+                this._lastRootMotionPosition.release();
+            }
             this.playTimes = 0;
             this.currentPlayTimes = 0;
             this.channels.length = 0;
@@ -20282,7 +20302,7 @@ var egret3d;
             this._timeScale = 1.0;
             this._time = 0.0;
             this._currentTime = -1.0;
-            this._lastMotionPosition.clear();
+            this._lastRootMotionPosition = null;
             this._animation = null;
         };
         /**
@@ -20562,19 +20582,50 @@ var egret3d;
             }
             var weight = binder.weight;
             var target = binder.target.localPosition;
-            if (this.glTFChannel.target.node === animationState.animationClip.root) {
+            var animationClip = animationState.animationClip;
+            if (this.glTFChannel.target.node === animationClip.root) {
+                var applyRootMotion = animationClip.applyRootMotion || 13 /* XZR */;
                 if (weight !== 1.0) {
                     y *= weight;
                 }
                 if (binder.dirty > 1) {
-                    target.y += y;
+                    if ((applyRootMotion & 1 /* X */) === 0) {
+                        target.x += x;
+                        x = 0.0;
+                    }
+                    if ((applyRootMotion & 2 /* Y */) === 0) {
+                        target.y += y;
+                        y = 0.0;
+                    }
+                    if ((applyRootMotion & 4 /* Z */) === 0) {
+                        target.z += z;
+                        z = 0.0;
+                    }
                 }
                 else {
-                    target.x = outputBuffer[0];
-                    target.y = y;
-                    target.z = outputBuffer[2];
+                    if (applyRootMotion & 1 /* X */) {
+                        target.x = outputBuffer[0];
+                    }
+                    else {
+                        target.x = x;
+                        x = 0.0;
+                    }
+                    if (applyRootMotion & 2 /* Y */) {
+                        target.y = outputBuffer[1];
+                    }
+                    else {
+                        target.y = y;
+                        y = 0.0;
+                    }
+                    if (applyRootMotion & 4 /* Z */) {
+                        target.z = outputBuffer[2];
+                    }
+                    else {
+                        target.z = z;
+                        z = 0.0;
+                    }
                 }
-                animationState._applyRootMotion(x, 0.0, z, weight);
+                animationState._applyRootMotion(x, y, z, weight, currentTime);
             }
             else {
                 if (weight !== 1.0) {

@@ -87,6 +87,16 @@ namespace egret3d {
         Spherical = 4,
     }
     /**
+     * 
+     */
+    export const enum ApplyRootMotion {
+        X = 0b000001,
+        Y = 0b000010,
+        Z = 0b000100,
+        RY = 0b010000,
+        XZ = X | Z,
+    }
+    /**
      * 扩展 glTF。
      */
     export interface GLTF extends gltf.GLTF {
@@ -291,6 +301,7 @@ namespace egret3d {
         duration: number;
 
         root?: gltf.Index;
+        applyRootMotion?: ApplyRootMotion;
     }
     /**
      * @private
