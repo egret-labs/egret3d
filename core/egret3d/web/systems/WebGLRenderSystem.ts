@@ -582,8 +582,8 @@ namespace egret3d.webgl {
 
         private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
             const renderState = this._renderState;
-            // const bufferMask = camera.bufferMask;
-            renderState.updateViewport(camera, renderTarget);
+            renderState.updateRenderTarget(renderTarget);
+            renderState.updateViewport(camera.viewport, renderTarget);
             renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
             // Skybox.
             const skyBox = camera.gameObject.getComponent(SkyBox);
@@ -649,30 +649,27 @@ namespace egret3d.webgl {
                 const webgl = WebGLRenderState.webgl!;
                 const renderState = this._renderState;
                 const shadow = light.shadow;
+                const shadowMapSize = shadow.mapSize;
                 const camera = Camera.current = cameraAndLightCollecter.shadowCamera;
                 const drawCalls = camera.context.shadowCalls;
+                const viewport = camera.viewport;
                 const isPoint = light.constructor === PointLight;
                 //generate depth map
                 const shadowMaterial = (isPoint) ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
 
+                renderState.updateRenderTarget(shadow._renderTarget);
+                renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
                 for (let i = 0, l = (isPoint ? 6 : 1); i < l; i++) {
                     //update shadowMatrix
                     shadow._onUpdate!(i);
                     //update draw call
                     camera._update();
-
-                    if (renderState.renderTarget !== shadow._renderTarget) {
-                        renderState.renderTarget = shadow._renderTarget;
-                        renderState.renderTarget.activateTexture();
-                        renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
-                    }
-                    // renderState.viewPort.copy(camera.viewport);//TODO
-                    webgl.viewport(camera.viewport.x, camera.viewport.y, camera.viewport.w, camera.viewport.h);
+                    webgl.viewport(viewport.x * shadowMapSize, viewport.y * shadowMapSize, viewport.w * shadowMapSize, viewport.h * shadowMapSize);
 
                     for (const drawCall of drawCalls) {
                         this.draw(drawCall, shadowMaterial);
                     }
-                    //
+                    //防止点光源camera因为缓存没有更新
                     this._cacheCamera = null;
                 }
             }

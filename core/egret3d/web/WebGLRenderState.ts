@@ -104,28 +104,37 @@ namespace egret3d.webgl {
             console.info("Maximum anisotropy:", this.maxAnisotropy);
         }
 
-        public updateViewport(camera: Camera, renderTarget: RenderTexture | null) { // TODO
+        public updateRenderTarget(renderTarget: RenderTexture | null) {
+            if (this.renderTarget !== renderTarget) {
+                this.renderTarget = renderTarget;
+
+                if (renderTarget) {
+                    renderTarget.activateTexture();
+                }
+                else {
+                    const webgl = WebGLRenderState.webgl!;
+                    webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
+                }
+            }
+        }
+
+        public updateViewport(viewport: Rectangle, renderTarget: RenderTexture | null) { // TODO
             const webgl = WebGLRenderState.webgl!;
+            const currentViewport = this.viewport;
             let w: number;
             let h: number;
-
-            const viewport = this.viewport.copy(camera.viewport);
-            this.renderTarget = renderTarget;
-
             if (renderTarget) {
                 w = renderTarget.width;
                 h = renderTarget.height;
-                renderTarget.activateTexture();
             }
             else {
                 const stageViewport = stage.viewport;
                 w = stageViewport.w;
                 h = stageViewport.h;
-                webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
             }
 
-            webgl.viewport(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);
-            webgl.depthRange(0.0, 1.0); // TODO
+            currentViewport.set(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);//TODO
+            webgl.viewport(currentViewport.x, currentViewport.y, currentViewport.w, currentViewport.h);
         }
 
         public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>) {
