@@ -7,7 +7,6 @@ namespace examples.animations {
             await RES.loadConfig("default.res.json", "resource/");
             // Load prefab resource.
             await RES.getResAsync("Assets/Models/Mixamo/xbot.prefab.json");
-            await RES.getResAsync("Assets/Models/Mixamo/ybot.prefab.json");
             // Load animation resource.
             await RES.getResAsync("Assets/Animations/Mixamo/Idle.ani.bin");
             await RES.getResAsync("Assets/Animations/Mixamo/Idle_1.ani.bin");
@@ -31,14 +30,11 @@ namespace examples.animations {
                 renderState.gammaOutput = true;
             }
 
-            const gameObjectX = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json")!;
-            const gameObjectY = paper.Prefab.create("Assets/Models/Mixamo/ybot.prefab.json")!;
-            const animationX = gameObjectX.getOrAddComponent(egret3d.Animation);
-            const animationY = gameObjectY.getOrAddComponent(egret3d.Animation);
-            animationX.applyRootMotion = true;
-            animationY.applyRootMotion = true;
+            const gameObject = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json")!;
+            const animation = gameObject.getOrAddComponent(egret3d.Animation);
+            animation.applyRootMotion = true;
             //
-            animationX.animations = animationY.animations = [
+            animation.animations = [
                 RES.getRes("Assets/Animations/Mixamo/Idle.ani.bin"),
                 RES.getRes("Assets/Animations/Mixamo/Idle_1.ani.bin"),
                 RES.getRes("Assets/Animations/Mixamo/Looking_Around.ani.bin"),
@@ -49,34 +45,25 @@ namespace examples.animations {
                 RES.getRes("Assets/Animations/Mixamo/Samba_Dancing.ani.bin"),
                 RES.getRes("Assets/Animations/Mixamo/Samba_Dancing_1.ani.bin"),
             ];
-            animationX.play("Samba_Dancing");
-            animationY.play("Samba_Dancing_1");
-            gameObjectX.transform.setLocalPosition(1.0, 0.0, 0.0);
-            gameObjectY.transform.setLocalPosition(-1.0, 0.0, 0.0);
+            animation.play("Samba_Dancing");
+            gameObject.transform.setLocalPosition(0.0, 0.0, 0.0).setLocalEulerAngles(0.0, 135.0, 0.0);
             //
-            gameObjectX.addComponent(behaviors.AnimationHelper);
-            gameObjectY.addComponent(behaviors.AnimationHelper);
-            gameObjectX.addComponent(behaviors.PositionReseter).box.copy(egret3d.Box.ONE).expand(19.0);
-            gameObjectY.addComponent(behaviors.PositionReseter).box.copy(egret3d.Box.ONE).expand(19.0);
+            gameObject.addComponent(behaviors.AnimationHelper);
+            gameObject.addComponent(behaviors.PositionReseter).box.copy(egret3d.Box.ONE).expand(19.0);
             //
-            for (const renderer of gameObjectX.getComponentsInChildren(egret3d.SkinnedMeshRenderer)) {
-                renderer.castShadows = true;
-                renderer.receiveShadows = true;
-            }
-
-            for (const renderer of gameObjectY.getComponentsInChildren(egret3d.SkinnedMeshRenderer)) {
+            for (const renderer of gameObject.getComponentsInChildren(egret3d.SkinnedMeshRenderer)) {
                 renderer.castShadows = true;
                 renderer.receiveShadows = true;
             }
             //
-            egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
+            egret3d.Camera.main.gameObject.addComponent(behaviors.LookAtTarget).target = gameObject;
             //
             createGridRoom();
             //
             const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
             if (modelComponent) {
                 setTimeout(() => {
-                    modelComponent.select(gameObjectX);
+                    modelComponent.select(gameObject);
                     paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(behaviors.AnimationHelper);
                 }, 1000.0);
             }

@@ -11,7 +11,7 @@ namespace behaviors {
         private _radius: number = 0.0;
         private _radian: number = 0.0;
 
-        public onUpdate(deltaTime: number): any {
+        public onLateUpdate(deltaTime: number): any {
             const transform = this.gameObject.transform;
             const position = transform.position;
             const target = this.lookAtPoint;

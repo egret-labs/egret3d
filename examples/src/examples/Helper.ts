@@ -2,6 +2,9 @@ namespace examples {
 
     export function createGridRoom() {
         { // Create light.
+            paper.Scene.activeScene.fog.mode = egret3d.FogMode.Fog;
+            paper.Scene.activeScene.fog.color.fromHex(0xFFFFFF);
+            //
             const directionalLight = paper.GameObject.create("Directional Light").addComponent(egret3d.DirectionalLight);
             directionalLight.intensity = 0.4;
             directionalLight.transform.setLocalPosition(0.0, 20.0, -10.0).lookAt(egret3d.Vector3.ZERO);

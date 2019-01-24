@@ -1448,8 +1448,8 @@ var egret3d;
         ApplyRootMotion[ApplyRootMotion["X"] = 1] = "X";
         ApplyRootMotion[ApplyRootMotion["Y"] = 2] = "Y";
         ApplyRootMotion[ApplyRootMotion["Z"] = 4] = "Z";
-        ApplyRootMotion[ApplyRootMotion["R"] = 8] = "R";
-        ApplyRootMotion[ApplyRootMotion["XZR"] = 13] = "XZR";
+        ApplyRootMotion[ApplyRootMotion["RY"] = 16] = "RY";
+        ApplyRootMotion[ApplyRootMotion["XZ"] = 5] = "XZ";
     })(ApplyRootMotion = egret3d.ApplyRootMotion || (egret3d.ApplyRootMotion = {}));
     /**
      * @private
@@ -20134,6 +20134,7 @@ var egret3d;
             var transform = this._animation.gameObject.transform;
             var lastPosition = this._lastRootMotionPosition;
             if (lastPosition.w > time) {
+                this._lastRootMotionRotation = 0.0;
                 lastPosition.clear();
             }
             var position = egret3d.helpVector3A.set(x, y, z).subtract(lastPosition)
@@ -20302,6 +20303,7 @@ var egret3d;
             this._timeScale = 1.0;
             this._time = 0.0;
             this._currentTime = -1.0;
+            this._lastRootMotionRotation = 0.0;
             this._lastRootMotionPosition = null;
             this._animation = null;
         };
@@ -20584,9 +20586,17 @@ var egret3d;
             var target = binder.target.localPosition;
             var animationClip = animationState.animationClip;
             if (this.glTFChannel.target.node === animationClip.root) {
-                var applyRootMotion = animationClip.applyRootMotion || 13 /* XZR */;
+                var applyRootMotion = animationClip.applyRootMotion || 5 /* XZ */;
                 if (weight !== 1.0) {
-                    y *= weight;
+                    if ((applyRootMotion & 1 /* X */) === 0) {
+                        x *= weight;
+                    }
+                    if ((applyRootMotion & 2 /* Y */) === 0) {
+                        y *= weight;
+                    }
+                    if ((applyRootMotion & 4 /* Z */) === 0) {
+                        z *= weight;
+                    }
                 }
                 if (binder.dirty > 1) {
                     if ((applyRootMotion & 1 /* X */) === 0) {
@@ -20682,6 +20692,13 @@ var egret3d;
             }
             var weight = binder.weight;
             var target = binder.target.localRotation;
+            // const animationClip = animationState.animationClip;
+            // if (this.glTFChannel.target.node === animationClip.root) {
+            //     const applyRootMotion = animationClip.applyRootMotion || ApplyRootMotion.XZ;
+            //     if (weight !== 1.0) {
+            //     }
+            // }
+            // else {
             if (binder.dirty > 1) {
                 if (additive) {
                     target.multiply(helpQuaternionA.lerp(egret3d.Quaternion.IDENTITY, helpQuaternionA, weight));
@@ -20721,6 +20738,7 @@ var egret3d;
                 target.z = z * weight;
                 target.w = w * weight;
             }
+            // }
         };
         AnimationChannel.prototype.onUpdateScale = function (animationlayer, animationState) {
             var additive = animationlayer.additive;
@@ -29552,27 +29570,6 @@ var egret3d;
                             webgl.uniformMatrix4fv(location_8, false, value);
                             break;
                         case 35678 /* SAMPLER_2D */:
-                            if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
-                                var unit = globalUniform.textureUnits[0];
-                                var texture = value;
-                                var isInvalide = !texture || texture.isDisposed;
-                                if (uniformName === "envMap" /* EnvMap */) {
-                                    if (isInvalide) {
-                                        texture = this._cacheSkyBoxTexture || egret3d.DefaultTextures.WHITE; // TODO
-                                    }
-                                    material.setFloat("flipEnvMap" /* FlipEnvMap */, -1.0);
-                                    material.setFloat("maxMipLevel" /* MaxMipLevel */, texture.levels);
-                                }
-                                else if (isInvalide) {
-                                    texture = egret3d.DefaultTextures.WHITE; // TODO
-                                }
-                                webgl.uniform1i(location_8, unit);
-                                texture.bindTexture(unit);
-                            }
-                            else {
-                                console.error("Error texture unit");
-                            }
-                            break;
                         case 35680 /* SAMPLER_CUBE */:
                             if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                                 var unit = globalUniform.textureUnits[0];
@@ -29582,7 +29579,7 @@ var egret3d;
                                     if (isInvalide) {
                                         texture = this._cacheSkyBoxTexture || egret3d.DefaultTextures.WHITE; // TODO
                                     }
-                                    material.setFloat("flipEnvMap" /* FlipEnvMap */, 1.0);
+                                    material.setFloat("flipEnvMap" /* FlipEnvMap */, texture.type === 34067 /* TextureCube */ ? 1.0 : -1.0);
                                     material.setFloat("maxMipLevel" /* MaxMipLevel */, texture.levels);
                                 }
                                 else if (isInvalide) {

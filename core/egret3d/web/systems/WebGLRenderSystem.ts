@@ -489,31 +489,6 @@ namespace egret3d.webgl {
                         break;
 
                     case gltf.UniformType.SAMPLER_2D:
-                        if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
-                            const unit = globalUniform.textureUnits[0];
-                            let texture = value as (BaseTexture | null);
-                            const isInvalide = !texture || texture.isDisposed;
-
-                            if (uniformName === ShaderUniformName.EnvMap) {
-                                if (isInvalide) {
-                                    texture = this._cacheSkyBoxTexture || DefaultTextures.WHITE; // TODO
-                                }
-
-                                material.setFloat(ShaderUniformName.FlipEnvMap, -1.0);
-                                material.setFloat(ShaderUniformName.MaxMipLevel, texture!.levels);
-                            }
-                            else if (isInvalide) {
-                                texture = DefaultTextures.WHITE; // TODO
-                            }
-
-                            webgl.uniform1i(location, unit);
-                            texture!.bindTexture(unit);
-                        }
-                        else {
-                            console.error("Error texture unit");
-                        }
-                        break;
-
                     case gltf.UniformType.SAMPLER_CUBE:
                         if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
                             const unit = globalUniform.textureUnits[0];
@@ -525,7 +500,7 @@ namespace egret3d.webgl {
                                     texture = this._cacheSkyBoxTexture || DefaultTextures.WHITE; // TODO
                                 }
 
-                                material.setFloat(ShaderUniformName.FlipEnvMap, 1.0);
+                                material.setFloat(ShaderUniformName.FlipEnvMap, texture!.type === gltf.TextureType.TextureCube ? 1.0 : -1.0);
                                 material.setFloat(ShaderUniformName.MaxMipLevel, texture!.levels);
                             }
                             else if (isInvalide) {
@@ -539,6 +514,31 @@ namespace egret3d.webgl {
                             console.error("Error texture unit");
                         }
                         break;
+
+                    // if (globalUniform.textureUnits && globalUniform.textureUnits.length === 1) {
+                    //     const unit = globalUniform.textureUnits[0];
+                    //     let texture = value as (BaseTexture | null);
+                    //     const isInvalide = !texture || texture.isDisposed;
+
+                    //     if (uniformName === ShaderUniformName.EnvMap) {
+                    //         if (isInvalide) {
+                    //             texture = this._cacheSkyBoxTexture || DefaultTextures.WHITE; // TODO
+                    //         }
+
+                    //         material.setFloat(ShaderUniformName.FlipEnvMap, 1.0);
+                    //         material.setFloat(ShaderUniformName.MaxMipLevel, texture!.levels);
+                    //     }
+                    //     else if (isInvalide) {
+                    //         texture = DefaultTextures.WHITE; // TODO
+                    //     }
+
+                    //     webgl.uniform1i(location, unit);
+                    //     texture!.bindTexture(unit);
+                    // }
+                    // else {
+                    //     console.error("Error texture unit");
+                    // }
+                    // break;
                 }
             }
         }

@@ -952,8 +952,8 @@ declare namespace egret3d {
         X = 1,
         Y = 2,
         Z = 4,
-        R = 8,
-        XZR = 13,
+        RY = 16,
+        XZ = 5,
     }
     /**
      * 扩展 glTF。
@@ -8375,6 +8375,7 @@ declare namespace egret3d {
          * 播放的动画剪辑。
          */
         animationClip: GLTFAnimationClip;
+        private _lastRootMotionRotation;
         private _lastRootMotionPosition;
         private _animation;
         onClear(): void;
