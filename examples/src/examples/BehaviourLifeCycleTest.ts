@@ -7,7 +7,7 @@ namespace examples {
             egret3d.Camera.main;
 
             {
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "CubeA");
+                const gameObject = egret3d.creater.createGameObject("CubeA", { mesh: egret3d.DefaultMeshes.CUBE });
                 gameObject.transform.setLocalPosition(2.0, 0.0, 0.0);
                 gameObject.activeSelf = false;
 
@@ -16,7 +16,7 @@ namespace examples {
             }
 
             {
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "CubeB");
+                const gameObject = egret3d.creater.createGameObject("CubeB", { mesh: egret3d.DefaultMeshes.CUBE });
                 gameObject.transform.setLocalPosition(-2.0, 0.0, 0.0);
 
                 gameObject.addComponent(BehaviourTest);

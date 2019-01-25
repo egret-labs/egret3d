@@ -241,12 +241,9 @@ namespace egret3d {
                 ]);
             }
         }
+
         /**
-         * 创建带有指定网格资源的实体。
-         * @param mesh 网格资源。
-         * @param name 实体的名称。
-         * @param tag 实体的标识。
-         * @param scene 实体的场景。
+         * @deprecated
          */
         public static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene) {
             const gameObject = paper.GameObject.create(name, tag, scene);

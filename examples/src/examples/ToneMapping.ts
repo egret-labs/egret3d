@@ -66,38 +66,37 @@ namespace examples {
                 textureBump.gltfTexture.extensions.paper.anisotropy = 4;
                 textureRoughness.gltfTexture.extensions.paper.anisotropy = 4;
 
-                const gameObject = egret3d.DefaultMeshes.createObject(torusKnotMesh, "Game Object");
-                const renderer = gameObject.renderer!;
-                renderer.castShadows = true;
-                renderer.receiveShadows = true;
-                renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
-                    .setFloat(egret3d.ShaderUniformName.BumpScale, -0.05)
-                    .setFloat(egret3d.ShaderUniformName.Metalness, 0.9)
-                    .setFloat(egret3d.ShaderUniformName.Roughness, 0.8)
-                    .setColor(egret3d.Color.WHITE)
-                    .setTexture(textureDiffue)
-                    .setTexture(egret3d.ShaderUniformName.BumpMap, textureBump)
-                    .setTexture(egret3d.ShaderUniformName.RoughnessMap, textureRoughness)
-                    .setTexture(egret3d.ShaderUniformName.EnvMap, textureEnv)
-                    .setUVTransform(egret3d.Matrix3.create().fromUVTransform(0.0, 0.0, 9.0, 0.5, 0.0, 0.0, 0.0).release())
-                    // .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, 1.0)
-                    .addDefine(egret3d.ShaderDefine.PREMULTIPLIED_ALPHA)
-                    ;
+                const gameObject = egret3d.creater.createGameObject("Torus Knot", {
+                    mesh: torusKnotMesh,
+                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
+                        .setFloat(egret3d.ShaderUniformName.BumpScale, -0.05)
+                        .setFloat(egret3d.ShaderUniformName.Metalness, 0.9)
+                        .setFloat(egret3d.ShaderUniformName.Roughness, 0.8)
+                        .setColor(egret3d.Color.WHITE)
+                        .setTexture(textureDiffue)
+                        .setTexture(egret3d.ShaderUniformName.BumpMap, textureBump)
+                        .setTexture(egret3d.ShaderUniformName.RoughnessMap, textureRoughness)
+                        .setTexture(egret3d.ShaderUniformName.EnvMap, textureEnv)
+                        .setUVTransform(egret3d.Matrix3.create().fromUVTransform(0.0, 0.0, 9.0, 0.5, 0.0, 0.0, 0.0).release())
+                        // .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, 1.0)
+                        .addDefine(egret3d.ShaderDefine.PREMULTIPLIED_ALPHA),
+                    castShadows: true,
+                    receiveShadows: true,
+                });
 
                 gameObject.addComponent(behaviors.Rotater).speed.set(0.0, -0.01, 0.0);
             }
 
             { // Create background.
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Background");
-                const renderer = gameObject.renderer!;
-                renderer.receiveShadows = true;
-                renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
-                    .setFloat(egret3d.ShaderUniformName.Metalness, 0.0)
-                    .setFloat(egret3d.ShaderUniformName.Roughness, 1.0)
-                    .setColor(0x888888)
-                    .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front)
-                    ;
-
+                const gameObject = egret3d.creater.createGameObject("Background", {
+                    mesh: egret3d.DefaultMeshes.CUBE,
+                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
+                        .setFloat(egret3d.ShaderUniformName.Metalness, 0.0)
+                        .setFloat(egret3d.ShaderUniformName.Roughness, 1.0)
+                        .setColor(0x888888)
+                        .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Front),
+                    receiveShadows: true,
+                });
                 gameObject.transform.setLocalPosition(0.0, 50.0, 0.0).setLocalScale(200.0);
             }
             //

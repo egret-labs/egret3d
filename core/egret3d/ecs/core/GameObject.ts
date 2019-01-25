@@ -10,7 +10,7 @@ namespace paper {
         public static readonly _instances: GameObject[] = [];
         private static _globalGameObject: GameObject | null = null;
         /**
-         * 创建 GameObject，并添加到当前场景中。
+         * 创建实体，并添加到当前场景中。
          */
         public static create(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
             let gameObect: GameObject;
@@ -64,7 +64,7 @@ namespace paper {
          */
         @serializedField
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
-        public tag: string = "";
+        public tag: paper.DefaultTags | string = "";
         /**
          * 层级。
          * - 用于各种层遮罩。

@@ -4899,127 +4899,6 @@ declare namespace egret3d.webgl {
 }
 declare namespace paper {
     /**
-     * 脚本组件。
-     * - 为了开发的便捷，允许使用脚本组件实现组件生命周期。
-     * - 生命周期的顺序如下：
-     * - onAwake();
-     * - onReset();
-     * - onEnable();
-     * - onStart();
-     * - onFixedUpdate();
-     * - onUpdate();
-     * - onAnimationEvent();
-     * - onLateUpdate();
-     * - onBeforeRender();
-     * - onDisable();
-     * - onDestroy();
-     */
-    abstract class Behaviour extends BaseComponent {
-        /**
-         * @private
-         */
-        _isReseted: boolean;
-        /**
-         * @private
-         */
-        _isAwaked: boolean;
-        /**
-         * @private
-         */
-        _isStarted: boolean;
-        /**
-         * @private
-         */
-        _dispatchEnabledEvent(value: boolean): void;
-        /**
-         * 该组件被初始化时执行。
-         * - 在该组件的整个生命周期中只执行一次。
-         * @param config 该组件被添加时可以传递的初始化数据。
-         * @see paper.GameObject#addComponent()
-         */
-        onAwake?(config?: any): void;
-        /**
-         * TODO
-         */
-        onReset?(): void;
-        /**
-         * 该组件或所属的实体被激活时调用。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onEnable?(): void;
-        /**
-         * 该组件开始运行时执行。
-         * - 在该组件的整个生命周期中只执行一次。
-         */
-        onStart?(): void;
-        /**
-         * 程序运行时以固定间隔被执行。
-         * @param currentTimes 本帧被执行的计数。
-         * @param totalTimes 本帧被执行的总数。
-         * @see paper.Clock
-         */
-        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
-        /**
-         *
-         */
-        onTriggerEnter?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerStay?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerExit?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionEnter?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionStay?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionExit?(collider: any): void;
-        /**
-         * 程序运行时每帧执行。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        onUpdate?(deltaTime: number): void;
-        /**
-         *
-         */
-        onAnimationEvent?(animationEvent: egret3d.AnimationEvent): void;
-        /**
-         * 程序运行时每帧执行。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        onLateUpdate?(deltaTime: number): void;
-        /**
-         * 该组件的实体拥有的渲染组件被渲染时执行。
-         * - 不能在该周期更改渲染组件的材质或其他可能引起绘制信息改变的操作。
-         */
-        onBeforeRender?(): boolean;
-        /**
-         * 该组件或所属的实体被禁用时执行。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onDisable?(): void;
-        /**
-         * 该组件或所属的实体被销毁时执行。
-         * - 在该组件的整个生命周期中只执行一次。
-         * @see paper.GameObject#removeComponent()
-         * @see paper.GameObject#destroy()
-         */
-        onDestroy?(): void;
-    }
-}
-declare namespace paper {
-    /**
      * 全局时钟信息组件。
      */
     class Clock extends BaseComponent {
@@ -5320,6 +5199,12 @@ declare namespace egret3d {
             wasPressed: (key: string | number) => boolean;
         };
     };
+    /**
+     * @deprecated
+     * @see paper.@singleton
+     */
+    class SingletonComponent extends paper.BaseComponent {
+    }
 }
 declare namespace paper {
 }
@@ -6159,11 +6044,7 @@ declare namespace egret3d {
         static CUBE_LINE: Mesh;
         initialize(): void;
         /**
-         * 创建带有指定网格资源的实体。
-         * @param mesh 网格资源。
-         * @param name 实体的名称。
-         * @param tag 实体的标识。
-         * @param scene 实体的场景。
+         * @deprecated
          */
         static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene): paper.GameObject;
     }
@@ -7253,6 +7134,15 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     */
+    abstract class CameraPostprocessing extends paper.BaseComponent {
+        abstract onRender(camera: Camera): void;
+        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
+    }
+}
+declare namespace egret3d {
+    /**
      *
      */
     class Spherical extends paper.BaseRelease<Spherical> implements paper.ICCS<Spherical>, paper.ISerializable {
@@ -7286,35 +7176,6 @@ declare namespace egret3d {
         fromCartesianCoords(vector3: Readonly<IVector3>): this;
         fromCartesianCoords(x: number, y: number, z: number): this;
         makeSafe(): this;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 相机渲染上下文。
-     */
-    class CameraRenderContext {
-        /**
-         *
-         */
-        logDepthBufFC: number;
-        private readonly _camera;
-        private readonly _drawCallCollecter;
-        private readonly _cameraAndLightCollecter;
-        /**
-         * 禁止实例化。
-         */
-        private constructor();
-        /**
-         * 所有非透明的, 按照从近到远排序
-         */
-        private _sortOpaque(a, b);
-        /**
-         * 所有透明的，按照从远到近排序
-         */
-        private _sortFromFarToNear(a, b);
-        private _shadowFrustumCulling();
-        private _frustumCulling();
-        private _updateLights();
     }
 }
 declare namespace egret3d {
@@ -7641,7 +7502,7 @@ declare namespace paper {
     class GameObject extends BaseObject {
         private static _globalGameObject;
         /**
-         * 创建 GameObject，并添加到当前场景中。
+         * 创建实体，并添加到当前场景中。
          */
         static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
         /**
@@ -7661,7 +7522,7 @@ declare namespace paper {
         /**
          * 标签。
          */
-        tag: string;
+        tag: paper.DefaultTags | string;
         /**
          * 层级。
          * - 用于各种层遮罩。
@@ -9296,6 +9157,20 @@ declare namespace egret3d {
      */
     function combine(instances: ReadonlyArray<paper.GameObject>): void;
 }
+declare namespace egret3d.creater {
+    /**
+     * 根据提供的参数，快速创建一个带有网格渲染组件的实体。
+     */
+    function createGameObject(name?: string, {tag, scene, mesh, material, materials, castShadows, receiveShadows}?: {
+        tag?: paper.DefaultTags | string;
+        scene?: paper.Scene | null;
+        mesh?: Mesh | null;
+        material?: Material | null;
+        materials?: ReadonlyArray<Material> | null;
+        castShadows?: boolean;
+        receiveShadows?: boolean;
+    }): paper.GameObject;
+}
 declare namespace egret3d {
     /**
      *
@@ -9730,14 +9605,6 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
-    /**
-     * @deprecated
-     * @see paper.@singleton
-     */
-    class SingletonComponent extends BaseComponent {
-    }
-}
-declare namespace paper {
 }
 declare namespace egret3d {
     /**
@@ -9766,6 +9633,21 @@ declare namespace egret3d {
         fromArray(array: ReadonlyArray<number>, offset?: number): this;
         fromMatrix(matrix: Readonly<Matrix4>): this;
         containsPoint(point: Readonly<IVector3>): boolean;
+    }
+}
+declare namespace paper {
+    /**
+     * 已丢失或不支持的组件数据备份。
+     */
+    class MissingComponent extends BaseComponent {
+        /**
+         * 丢失的组件类名
+         */
+        readonly missingClass: string;
+        /**
+         * 已丢失或不支持的组件数据。
+         */
+        missingObject: any | null;
     }
 }
 declare namespace egret3d {
@@ -11237,17 +11119,123 @@ declare namespace egret3d.webgl {
 }
 declare namespace paper {
     /**
-     * 已丢失或不支持的组件数据备份。
+     * 脚本组件。
+     * - 为了开发的便捷，允许使用脚本组件实现组件生命周期。
+     * - 生命周期的顺序如下：
+     * - onAwake();
+     * - onReset();
+     * - onEnable();
+     * - onStart();
+     * - onFixedUpdate();
+     * - onUpdate();
+     * - onAnimationEvent();
+     * - onLateUpdate();
+     * - onBeforeRender();
+     * - onDisable();
+     * - onDestroy();
      */
-    class MissingComponent extends BaseComponent {
+    abstract class Behaviour extends BaseComponent {
         /**
-         * 丢失的组件类名
+         * @private
          */
-        readonly missingClass: string;
+        _isReseted: boolean;
         /**
-         * 已丢失或不支持的组件数据。
+         * @private
          */
-        missingObject: any | null;
+        _isAwaked: boolean;
+        /**
+         * @private
+         */
+        _isStarted: boolean;
+        /**
+         * @private
+         */
+        _dispatchEnabledEvent(value: boolean): void;
+        /**
+         * 该组件被初始化时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         * @param config 该组件被添加时可以传递的初始化数据。
+         * @see paper.GameObject#addComponent()
+         */
+        onAwake?(config?: any): void;
+        /**
+         * TODO
+         */
+        onReset?(): void;
+        /**
+         * 该组件或所属的实体被激活时调用。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onEnable?(): void;
+        /**
+         * 该组件开始运行时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         */
+        onStart?(): void;
+        /**
+         * 程序运行时以固定间隔被执行。
+         * @param currentTimes 本帧被执行的计数。
+         * @param totalTimes 本帧被执行的总数。
+         * @see paper.Clock
+         */
+        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
+        /**
+         *
+         */
+        onTriggerEnter?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerStay?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerExit?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionEnter?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionStay?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionExit?(collider: any): void;
+        /**
+         * 程序运行时每帧执行。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onUpdate?(deltaTime: number): void;
+        /**
+         *
+         */
+        onAnimationEvent?(animationEvent: egret3d.AnimationEvent): void;
+        /**
+         * 程序运行时每帧执行。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onLateUpdate?(deltaTime: number): void;
+        /**
+         * 该组件的实体拥有的渲染组件被渲染时执行。
+         * - 不能在该周期更改渲染组件的材质或其他可能引起绘制信息改变的操作。
+         */
+        onBeforeRender?(): boolean;
+        /**
+         * 该组件或所属的实体被禁用时执行。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onDisable?(): void;
+        /**
+         * 该组件或所属的实体被销毁时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         * @see paper.GameObject#removeComponent()
+         * @see paper.GameObject#destroy()
+         */
+        onDestroy?(): void;
     }
 }
 declare namespace egret3d.webgl {
@@ -11312,10 +11300,30 @@ interface Window {
 }
 declare namespace egret3d {
     /**
-     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     * 相机渲染上下文。
      */
-    abstract class CameraPostprocessing extends paper.BaseComponent {
-        abstract onRender(camera: Camera): void;
-        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
+    class CameraRenderContext {
+        /**
+         *
+         */
+        logDepthBufFC: number;
+        private readonly _camera;
+        private readonly _drawCallCollecter;
+        private readonly _cameraAndLightCollecter;
+        /**
+         * 禁止实例化。
+         */
+        private constructor();
+        /**
+         * 所有非透明的, 按照从近到远排序
+         */
+        private _sortOpaque(a, b);
+        /**
+         * 所有透明的，按照从远到近排序
+         */
+        private _sortFromFarToNear(a, b);
+        private _shadowFrustumCulling();
+        private _frustumCulling();
+        private _updateLights();
     }
 }

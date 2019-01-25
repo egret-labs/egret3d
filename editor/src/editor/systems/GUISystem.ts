@@ -42,18 +42,6 @@ namespace paper.editor {
             }
         }
 
-        private _createGameObject = () => {
-            if (this._modelComponent.selectedScene) {
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, DefaultNames.NoName, DefaultTags.Untagged, this._modelComponent.selectedScene);
-                this._modelComponent.select(gameObject, true);
-            }
-            else {
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, DefaultNames.NoName, DefaultTags.Untagged, this._modelComponent.selectedGameObject!.scene);
-                gameObject.transform.parent = this._modelComponent.selectedGameObject!.transform;
-                this._modelComponent.select(gameObject, true);
-            }
-        }
-
         private _destroySceneOrGameObject = () => {
             const selectedSceneOrGameObject = this._guiComponent.inspector.instance as Scene | GameObject;
             if (selectedSceneOrGameObject) {
@@ -71,16 +59,48 @@ namespace paper.editor {
         }
 
         private _getAssets(type: string) {
-            const result = [{ label: "None", value: null }] as { label: string, value: ResData | null }[];
+            const added = [] as string[];
+            const result = [{ label: "None", value: null }] as { label: string, value: string | null }[];
+            const assets = (paper.Asset as any)._assets as { [key: string]: paper.Asset };
+
+            for (const k in assets) {
+                let flag = false;
+                const asset = assets[k];
+                switch (type) {
+                    case "Mesh":
+                        if (asset instanceof egret3d.Mesh) {
+                            flag = true;
+                        }
+                        break;
+
+                    case "Material":
+                        if (asset instanceof egret3d.Material) {
+                            flag = true;
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+
+                if (flag) {
+                    added.push(k);
+                    result.push({ label: k, value: k });
+                }
+            }
 
             if (RES.host.resourceConfig.config) {
                 const fileSystem = RES.host.resourceConfig.config.fileSystem as any;
                 if (fileSystem) {
                     const resFSDatas = fileSystem.fsData as { [key: string]: ResData };
                     for (const k in resFSDatas) {
+                        if (added.indexOf(k) >= 0) {
+                            continue;
+                        }
+
                         const data = resFSDatas[k];
                         if (data.type === type) {
-                            result.push({ label: k, value: data });
+                            result.push({ label: k, value: data.url });
                         }
                     }
                 }
@@ -124,30 +144,30 @@ namespace paper.editor {
                 prefabs: "None",
             };
 
-            inspector.add(options, "scenes", this._getAssets("Scene")).onChange(async (v: ResData | null) => {
+            inspector.add(options, "scenes", this._getAssets("Scene")).onChange(async (v: string | null) => {
                 if (!v) {
                     return;
                 }
 
-                await RES.getResAsync(v.url);
+                await RES.getResAsync(v);
                 Scene.activeScene.destroy();
-                this._modelComponent.select(Scene.create(v.url));
+                this._modelComponent.select(Scene.create(v));
             });
 
-            inspector.add(options, "prefabs", this._getAssets("Prefab")).onChange(async (v: ResData | null) => {
+            inspector.add(options, "prefabs", this._getAssets("Prefab")).onChange(async (v: string | null) => {
                 if (!v) {
                     return;
                 }
 
-                await RES.getResAsync(v.url);
+                await RES.getResAsync(v);
                 let gameObject: GameObject | null = null;
                 if (this._modelComponent.selectedGameObject) {
                     const parent = this._modelComponent.selectedGameObject!;
-                    gameObject = Prefab.create(v.url, parent.scene);
+                    gameObject = Prefab.create(v, parent.scene);
                     gameObject!.parent = parent;
                 }
                 else {
-                    gameObject = Prefab.create(v.url, this._modelComponent.selectedScene || Scene.activeScene);
+                    gameObject = Prefab.create(v, this._modelComponent.selectedScene || Scene.activeScene);
                 }
 
                 this._modelComponent.select(gameObject);
@@ -304,8 +324,8 @@ namespace paper.editor {
                         break;
 
                     case paper.editor.EditType.VECTOR2: {
-                        guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                        guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
+                        guiControllerA = gui.add(gui.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
 
                         if (this._propertyHasGetterSetter(gui.instance, info.name)) {
                             const onChange = () => {
@@ -335,8 +355,8 @@ namespace paper.editor {
                     }
 
                     case paper.editor.EditType.SIZE: {
-                        guiControllerA = gui.add(gui.instance[info.name], "w", `${info.name}: w`).step(0.1).listen();
-                        guiControllerB = gui.add(gui.instance[info.name], "h", `${info.name}: h`).step(0.1).listen();
+                        guiControllerA = gui.add(gui.instance[info.name], `${info.name}: w|w`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], `${info.name}: h|h`).step(0.1).listen();
 
                         if (this._propertyHasGetterSetter(gui.instance, info.name)) {
                             const onChange = () => {
@@ -366,9 +386,9 @@ namespace paper.editor {
                     }
 
                     case paper.editor.EditType.VECTOR3: {
-                        guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                        guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                        guiControllerC = gui.add(gui.instance[info.name], "z", `${info.name}: z`).step(0.1).listen();
+                        guiControllerA = gui.add(gui.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
+                        guiControllerC = gui.add(gui.instance[info.name], `${info.name}: z|z`).step(0.1).listen();
 
                         if (this._propertyHasGetterSetter(gui.instance, info.name)) {
                             const onChange = () => {
@@ -418,10 +438,10 @@ namespace paper.editor {
                     }
 
                     case paper.editor.EditType.RECT: {
-                        guiControllerA = gui.add(gui.instance[info.name], "x", `${info.name}: x`).step(0.1).listen();
-                        guiControllerB = gui.add(gui.instance[info.name], "y", `${info.name}: y`).step(0.1).listen();
-                        guiControllerC = gui.add(gui.instance[info.name], "w", `${info.name}: w`).step(0.1).listen();
-                        guiControllerD = gui.add(gui.instance[info.name], "h", `${info.name}: h`).step(0.1).listen();
+                        guiControllerA = gui.add(gui.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
+                        guiControllerB = gui.add(gui.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
+                        guiControllerC = gui.add(gui.instance[info.name], `${info.name}: w|w`).step(0.1).listen();
+                        guiControllerD = gui.add(gui.instance[info.name], `${info.name}: h|h`).step(0.1).listen();
 
                         if (this._propertyHasGetterSetter(gui.instance, info.name)) {
                             const onChange = () => {
@@ -457,6 +477,10 @@ namespace paper.editor {
                         }
                         break;
                     }
+
+                    case paper.editor.EditType.MESH:
+                        guiControllerA = gui.add(new AssetProxy(gui.instance, info.name), `${info.name}|uri`, this._getAssets("Mesh")).listen();
+                        break;
 
                     case paper.editor.EditType.GAMEOBJECT:
                         break;
@@ -637,6 +661,37 @@ namespace paper.editor {
 
                 if (this._modelComponent.selectedGameObject) {
                     this._modelComponent.selectedGameObject.transform.localEulerAngles; // TODO
+                }
+            }
+        }
+    }
+
+    class AssetProxy {
+        public constructor(private _instance: any, private _key: string) {
+        }
+
+        public get uri() {
+            const value = this._instance[this._key];
+            if (value) {
+                return value.name || paper.DefaultNames.NoName;
+            }
+
+            return value;
+        }
+
+        public set uri(value: any) {
+            if (!value) {
+                this._instance[this._key] = null;
+            }
+            else {
+                const asset = paper.Asset.find(value);
+                if (asset) {
+                    this._instance[this._key] = asset;
+                }
+                else {
+                    RES.getResAsync(value).then((r) => {
+                        this._instance[this._key] = r;
+                    });
                 }
             }
         }

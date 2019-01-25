@@ -115,7 +115,7 @@ UNIFORM_TEMPLATE["toneMappingWhitePoint"] = { semantic: gltf.UniformSemanticType
 //
 UNIFORM_TEMPLATE["logDepthBufFC"] = { semantic: gltf.UniformSemanticType._LOG_DEPTH_BUFFC };
 //
-UNIFORM_TEMPLATE["specular"] = { value: [1.0, 1.0, 1.0] };
+UNIFORM_TEMPLATE["specular"] = { value: [0.066666, 0.066666, 0.066666] };
 UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
 UNIFORM_TEMPLATE["opacity"] = { value: 1.0 };
 UNIFORM_TEMPLATE["normalScale"] = { value: [1.0, 1.0] };

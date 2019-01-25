@@ -30,19 +30,21 @@ namespace examples.materials {
             for (let i = 0; i < textures.length; i++) {
                 for (let j = 0; j < blends.length; j++) {
                     const texture = textures[i];
-                    const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.QUAD, texture.name.split("/").pop() + " " + blendNames[j]);
-                    const renderer = gameObject.getComponent(egret3d.MeshRenderer)!;
-                    renderer.material = egret3d.Material.create()
-                        .setTexture(texture)
-                        .setBlend(blends[j], egret3d.RenderQueue.Blend);
+                    const gameObject = egret3d.creater.createGameObject(texture.name.split("/").pop() + " " + blendNames[j], {
+                        mesh: egret3d.DefaultMeshes.QUAD,
+                        material: egret3d.Material.create()
+                            .setTexture(texture)
+                            .setBlend(blends[j], egret3d.RenderQueue.Blend)
+                    });
                     gameObject.transform.setLocalPosition((j - blends.length * 0.5 + 0.5) * 1.1, -(i - textures.length * 0.5 + 0.5) * 1.1, 0.0);
                 }
             }
 
             { // Background.
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.PLANE, "Background");
-                const renderer = gameObject.getComponent(egret3d.MeshRenderer)!;
-                renderer.material = egret3d.Material.create().setTexture(egret3d.DefaultTextures.GRID);
+                const gameObject = egret3d.creater.createGameObject("Background", {
+                    mesh: egret3d.DefaultMeshes.PLANE,
+                    material: egret3d.Material.create().setTexture(egret3d.DefaultTextures.GRID)
+                });
                 gameObject.transform.setLocalPosition(0.0, 0.0, 1.0).setLocalScale(2.0);
                 gameObject.addComponent(UVUpdater);
             }

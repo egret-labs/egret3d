@@ -27,13 +27,17 @@ namespace examples.materials {
             { // Create game objects.
                 const sphereMesh = egret3d.MeshBuilder.createSphere(100.0, 0.0, 0.0, 0.0, 20.0, 20.0);
                 const coneMesh = egret3d.MeshBuilder.createCylinder(0.0, 10.0, 100.0).applyMatrix(egret3d.Matrix4.create().fromRotationX(Math.PI * 0.5));
-                const sphere = egret3d.DefaultMeshes.createObject(sphereMesh, "Sphere");
-                sphere.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL);
+                const sphere = egret3d.creater.createGameObject("Sphere", {
+                    mesh: sphereMesh,
+                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL)
+                });
                 sphere.addComponent(behaviors.Wander).radius = 2000.0;
 
                 for (let i = 0; i < 1000; ++i) {
-                    const cone = egret3d.DefaultMeshes.createObject(coneMesh, `Cone ${i}`);
-                    cone.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL);
+                    const cone = egret3d.creater.createGameObject(`Cone ${i}`, {
+                        mesh: coneMesh,
+                        material: egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL)
+                    });
                     cone.transform
                         .setLocalPosition(
                             Math.random() * 4000.0 - 2000.0,
