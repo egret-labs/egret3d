@@ -5638,6 +5638,34 @@ declare namespace egret3d {
         [key: string]: gltf.UniformSemantics;
     };
     /**
+     * 内置提供的场景 Uniform。
+     * @private
+     */
+    const sceneUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的摄像机 Uniform。
+     * @private
+     */
+    const cameraUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的影子 Uniform。
+     * @private
+     */
+    const shadowUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的模型 Uniform。
+     * @private
+     */
+    const modelUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
      *
      */
     interface ITransformObserver {

@@ -276,52 +276,69 @@ namespace egret3d {
      * @private
      */
     export const globalUniformSemantics: { [key: string]: gltf.UniformSemantics } = {
-        "modelMatrix": gltf.UniformSemantics.MODEL,
-        "modelViewMatrix": gltf.UniformSemantics.MODELVIEW,
-        "projectionMatrix": gltf.UniformSemantics.PROJECTION,
+        "ambientLightColor": gltf.UniformSemantics._AMBIENTLIGHTCOLOR,
+        "fogColor": gltf.UniformSemantics._FOG_COLOR,
+        "fogDensity": gltf.UniformSemantics._FOG_DENSITY,
+        "fogNear": gltf.UniformSemantics._FOG_NEAR,
+        "fogFar": gltf.UniformSemantics._FOG_FAR,
+        "toneMappingExposure": gltf.UniformSemantics._TONE_MAPPING_EXPOSURE,
+        "toneMappingWhitePoint": gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT,
+    };
+    /**
+     * 内置提供的场景 Uniform。
+     * @private
+     */
+    export const sceneUniformSemantics: { [key: string]: gltf.UniformSemantics } = {
+        "lightMapIntensity": gltf.UniformSemantics._LIGHTMAPINTENSITY,
+    };
+    /**
+     * 内置提供的摄像机 Uniform。
+     * @private
+     */
+    export const cameraUniformSemantics: { [key: string]: gltf.UniformSemantics } = {
         "viewMatrix": gltf.UniformSemantics.VIEW,
-        "normalMatrix": gltf.UniformSemantics.MODELVIEWINVERSE,
-        "modelViewProjectionMatrix": gltf.UniformSemantics.MODELVIEWPROJECTION,
-
-        "clock": gltf.UniformSemantics._CLOCK,
+        "projectionMatrix": gltf.UniformSemantics.PROJECTION,
         "viewProjectionMatrix": gltf.UniformSemantics._VIEWPROJECTION,
-        "cameraPosition": gltf.UniformSemantics._CAMERA_POS,
         "cameraForward": gltf.UniformSemantics._CAMERA_FORWARD,
         "cameraUp": gltf.UniformSemantics._CAMERA_UP,
-
-        "boneMatrices[0]": gltf.UniformSemantics.JOINTMATRIX,
-
-        "ambientLightColor": gltf.UniformSemantics._AMBIENTLIGHTCOLOR,
+        "cameraPosition": gltf.UniformSemantics._CAMERA_POS,
         "directionalLights[0]": gltf.UniformSemantics._DIRECTLIGHTS,
         "spotLights[0]": gltf.UniformSemantics._SPOTLIGHTS,
         "rectAreaLights[0]": gltf.UniformSemantics._RECTAREALIGHTS,
         "pointLights[0]": gltf.UniformSemantics._POINTLIGHTS,
         "hemisphereLights[0]": gltf.UniformSemantics._HEMILIGHTS,
-
+        "logDepthBufFC": gltf.UniformSemantics._LOG_DEPTH_BUFFC,
+    };
+    /**
+     * 内置提供的影子 Uniform。
+     * @private
+     */
+    export const shadowUniformSemantics: { [key: string]: gltf.UniformSemantics } = {
+        "referencePosition": gltf.UniformSemantics._REFERENCEPOSITION,
+        "nearDistance": gltf.UniformSemantics._NEARDICTANCE,
+        "farDistance": gltf.UniformSemantics._FARDISTANCE,
+    };
+    /**
+     * 内置提供的模型 Uniform。
+     * @private
+     */
+    export const modelUniformSemantics: { [key: string]: gltf.UniformSemantics } = {
+        "modelMatrix": gltf.UniformSemantics.MODEL,
+        "modelViewMatrix": gltf.UniformSemantics.MODELVIEW,
+        "modelViewProjectionMatrix": gltf.UniformSemantics.MODELVIEWPROJECTION,
+        "normalMatrix": gltf.UniformSemantics.MODELVIEWINVERSE,
+        "boneMatrices[0]": gltf.UniformSemantics.JOINTMATRIX,
+        "clock": gltf.UniformSemantics._CLOCK,
+        "lightMap": gltf.UniformSemantics._LIGHTMAPTEX,
+        "lightMapScaleOffset": gltf.UniformSemantics._LIGHTMAP_SCALE_OFFSET,
         "directionalShadowMatrix[0]": gltf.UniformSemantics._DIRECTIONSHADOWMAT,
         "spotShadowMatrix[0]": gltf.UniformSemantics._SPOTSHADOWMAT,
         "pointShadowMatrix[0]": gltf.UniformSemantics._POINTSHADOWMAT,
         "directionalShadowMap[0]": gltf.UniformSemantics._DIRECTIONSHADOWMAP,
-        "spotShadowMap[0]": gltf.UniformSemantics._SPOTSHADOWMAP,
         "pointShadowMap[0]": gltf.UniformSemantics._POINTSHADOWMAP,
-        "lightMap": gltf.UniformSemantics._LIGHTMAPTEX,
-        "lightMapIntensity": gltf.UniformSemantics._LIGHTMAPINTENSITY,
-        "lightMapScaleOffset": gltf.UniformSemantics._LIGHTMAP_SCALE_OFFSET,
-
-        "referencePosition": gltf.UniformSemantics._REFERENCEPOSITION,
-        "nearDistance": gltf.UniformSemantics._NEARDICTANCE,
-        "farDistance": gltf.UniformSemantics._FARDISTANCE,
-
-        "fogColor": gltf.UniformSemantics._FOG_COLOR,
-        "fogDensity": gltf.UniformSemantics._FOG_DENSITY,
-        "fogNear": gltf.UniformSemantics._FOG_NEAR,
-        "fogFar": gltf.UniformSemantics._FOG_FAR,
-
-        "toneMappingExposure": gltf.UniformSemantics._TONE_MAPPING_EXPOSURE,
-        "toneMappingWhitePoint": gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT,
-
-        "logDepthBufFC": gltf.UniformSemantics._LOG_DEPTH_BUFFC,
+        "spotShadowMap[0]": gltf.UniformSemantics._SPOTSHADOWMAP,
     };
+
     /**
      * 
      */

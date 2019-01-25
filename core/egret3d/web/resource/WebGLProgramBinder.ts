@@ -34,6 +34,10 @@ namespace egret3d.webgl {
         public readonly id: uint = _hashCode++;
         public readonly attributes: WebGLActiveAttribute[] = [];
         public readonly globalUniforms: WebGLActiveUniform[] = [];
+        public readonly sceneUniforms: WebGLActiveUniform[] = [];
+        public readonly cameraUniforms: WebGLActiveUniform[] = [];
+        public readonly shadowUniforms: WebGLActiveUniform[] = [];
+        public readonly modelUniforms: WebGLActiveUniform[] = [];
         public readonly uniforms: WebGLActiveUniform[] = [];
         public readonly program: WebGLProgram;
 
@@ -73,6 +77,10 @@ namespace egret3d.webgl {
             }
             //
             const globalUniforms = this.globalUniforms;
+            const sceneUniforms = this.sceneUniforms;
+            const cameraUniforms = this.cameraUniforms;
+            const shadowUniforms = this.shadowUniforms;
+            const modelUniforms = this.modelUniforms;
             const uniforms = this.uniforms;
             const totalUniforms = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_UNIFORMS);
 
@@ -81,29 +89,58 @@ namespace egret3d.webgl {
                 const name = webglActiveInfo.name;
                 const location = webgl.getUniformLocation(webglProgram, name)!;
                 const gltfUniform = technique.uniforms[name];
-                let semantic: string | undefined = undefined;
 
                 if (!gltfUniform) {
-                    semantic = globalUniformSemantics[name];
-
-                    if (!semantic) {
+                    if (globalUniformSemantics[name]) {
+                        globalUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: globalUniformSemantics[name], location });
+                    }
+                    else if (sceneUniformSemantics[name]) {
+                        sceneUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: sceneUniformSemantics[name], location });
+                    }
+                    else if (cameraUniformSemantics[name]) {
+                        cameraUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: cameraUniformSemantics[name], location });
+                    }
+                    else if (shadowUniformSemantics[name]) {
+                        shadowUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: shadowUniformSemantics[name], location });
+                    }
+                    else if (modelUniformSemantics[name]) {
+                        modelUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: modelUniformSemantics[name], location });
+                    }
+                    else {
                         //不在自定义中，也不在全局Uniform中
                         console.error("未知Uniform定义：" + name);
                     }
                 }
                 else {
-                    semantic = gltfUniform.semantic;
+                    uniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: gltfUniform.semantic, location });
+                    if (DEBUG) {
+                        if (gltfUniform.semantic) {
+                            console.log("自定义Uniform语义:" + name);
+                        }
+                    }
                 }
 
-                if (semantic) {
-                    globalUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic, location });
-                }
-                else {
-                    uniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, location });
-                }
+                // if (!gltfUniform) {
+                //     semantic = globalUniformSemantics[name];
+
+                //     if (!semantic) {
+                //         //不在自定义中，也不在全局Uniform中
+                //         console.error("未知Uniform定义：" + name);
+                //     }
+                // }
+                // else {
+                //     semantic = gltfUniform.semantic;
+                // }
+
+                // if (semantic) {
+                //     globalUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic, location });
+                // }
+                // else {
+                //     uniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, location });
+                // }
             }
             //
-            const activeUniforms = globalUniforms.concat(uniforms);
+            const activeUniforms = globalUniforms.concat(sceneUniforms).concat(cameraUniforms).concat(shadowUniforms).concat(modelUniforms).concat(uniforms);
             const samplerArrayNames: string[] = [];
             const samplerNames: string[] = [];
             // Sort.
