@@ -1,6 +1,6 @@
-namespace examples {
+namespace examples.shaders {
 
-    export class WaterTest implements Example {
+    export class Water implements Example {
 
         async start() {
             // Load resource config.
