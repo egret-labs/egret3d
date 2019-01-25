@@ -19,6 +19,7 @@ attribute vec3 startWorldPosition;
 attribute vec4 startWorldRotation;
 
 #include <particle_common>
+#include <fog_pars_vertex>
 
 void main()
 {
@@ -30,9 +31,11 @@ void main()
   }
 	  
 	#include <particle_affector>
-	gl_Position=viewProjectionMatrix*vec4(center,1.0);
+	vec4 mvPosition = viewMatrix * vec4( center, 1.0 );
+	gl_Position = projectionMatrix * mvPosition;
 	v_color = computeColor(startColor, t);
-	v_texcoord =computeUV(uv, t);
+	v_texcoord = computeUV(uv, t);
 	v_discard=0.0;
+	#include <fog_vertex>
 }
 
