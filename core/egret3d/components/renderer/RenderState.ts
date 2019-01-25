@@ -235,7 +235,7 @@ namespace egret3d {
             if (decodingFunName) {
                 if (texture) {
                     const decodingCode = this._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding || TextureEncoding.LinearEncoding);
-                    const define = defines.addDefine(decodingFunName, decodingCode);
+                    const define = defines.addDefine(decodingFunName, decodingCode, ShaderDefineOrder.DecodingFun);
                     if (define) {
                         define.isCode = true;
                         define.type = DefineLocation.Fragment;
@@ -411,7 +411,7 @@ namespace egret3d {
                 return;
             }
 
-            const define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding), ShaderDefineOrder.Gamma_FUN);
+            const define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? TextureEncoding.GammaEncoding : TextureEncoding.LinearEncoding), ShaderDefineOrder.EncodingFun);
             if (define) {
                 define.isCode = true;
                 define.type = DefineLocation.Fragment;
@@ -435,7 +435,7 @@ namespace egret3d {
                 return;
             }
 
-            const define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, value, ShaderDefineOrder.GAMMA_FACTOR);
+            const define = this.defines.addDefine(ShaderDefine.GAMMA_FACTOR, value, ShaderDefineOrder.GammaFactor);
             if (define) {
                 define.type = DefineLocation.Fragment;
             }

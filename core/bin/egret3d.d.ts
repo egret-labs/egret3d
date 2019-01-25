@@ -5543,8 +5543,9 @@ declare namespace egret3d {
      * Shader宏定义排序。
      */
     const enum ShaderDefineOrder {
-        GAMMA_FACTOR = 1,
-        Gamma_FUN = 2,
+        GammaFactor = 1,
+        DecodingFun = 2,
+        EncodingFun = 3,
     }
     /**
      *

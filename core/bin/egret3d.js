@@ -4004,7 +4004,7 @@ var egret3d;
             if (decodingFunName) {
                 if (texture) {
                     var decodingCode = this._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding || 1 /* LinearEncoding */);
-                    var define = defines.addDefine(decodingFunName, decodingCode);
+                    var define = defines.addDefine(decodingFunName, decodingCode, 2 /* DecodingFun */);
                     if (define) {
                         define.isCode = true;
                         define.type = 2 /* Fragment */;
@@ -4175,7 +4175,7 @@ var egret3d;
                 if (this._gammaOutput === value) {
                     return;
                 }
-                var define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */), 2 /* Gamma_FUN */);
+                var define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */), 3 /* EncodingFun */);
                 if (define) {
                     define.isCode = true;
                     define.type = 2 /* Fragment */;
@@ -4199,7 +4199,7 @@ var egret3d;
                 if (this._gammaFactor === value) {
                     return;
                 }
-                var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, value, 1 /* GAMMA_FACTOR */);
+                var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, value, 1 /* GammaFactor */);
                 if (define) {
                     define.type = 2 /* Fragment */;
                 }
@@ -10680,8 +10680,9 @@ var egret3d;
      */
     var ShaderDefineOrder;
     (function (ShaderDefineOrder) {
-        ShaderDefineOrder[ShaderDefineOrder["GAMMA_FACTOR"] = 1] = "GAMMA_FACTOR";
-        ShaderDefineOrder[ShaderDefineOrder["Gamma_FUN"] = 2] = "Gamma_FUN";
+        ShaderDefineOrder[ShaderDefineOrder["GammaFactor"] = 1] = "GammaFactor";
+        ShaderDefineOrder[ShaderDefineOrder["DecodingFun"] = 2] = "DecodingFun";
+        ShaderDefineOrder[ShaderDefineOrder["EncodingFun"] = 3] = "EncodingFun";
     })(ShaderDefineOrder = egret3d.ShaderDefineOrder || (egret3d.ShaderDefineOrder = {}));
     /**
      *
