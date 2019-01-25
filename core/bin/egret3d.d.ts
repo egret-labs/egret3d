@@ -5428,8 +5428,9 @@ declare namespace egret3d {
      * Shader宏定义排序。
      */
     const enum ShaderDefineOrder {
-        GAMMA_FACTOR = 1,
-        Gamma_FUN = 2,
+        GammaFactor = 1,
+        DecodingFun = 2,
+        EncodingFun = 3,
     }
     /**
      *
@@ -5520,6 +5521,34 @@ declare namespace egret3d {
      * @private
      */
     const globalUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的场景 Uniform。
+     * @private
+     */
+    const sceneUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的摄像机 Uniform。
+     * @private
+     */
+    const cameraUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的影子 Uniform。
+     * @private
+     */
+    const shadowUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的模型 Uniform。
+     * @private
+     */
+    const modelUniformSemantics: {
         [key: string]: gltf.UniformSemantics;
     };
     /**

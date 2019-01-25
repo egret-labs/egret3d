@@ -121,16 +121,17 @@ namespace egret3d.webgl {
             const camera = Camera.current!;
             const matrix = drawCall.matrix;
             const globalUniforms = program.globalUniforms;
-            let i = 0, l = globalUniforms.length;
+            const modelUniforms = program.modelUniforms;
             //
             this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
             this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
 
+            let i = 0;
             // Global.
             if (forceUpdate) {
-                i = l;
                 const activeScene = this._activeScene!;
                 const fog = activeScene.fog;
+                i = globalUniforms.length;
 
                 while (i--) {
                     const { semantic, location } = globalUniforms[i];
@@ -171,10 +172,11 @@ namespace egret3d.webgl {
             // Scene.
             if (currentScene !== this._cacheScene) {
                 if (currentScene) {
-                    i = l;
+                    const sceneUniforms = program.sceneUniforms;
+                    i = sceneUniforms.length;
 
                     while (i--) {
-                        const { semantic, location } = globalUniforms[i];
+                        const { semantic, location } = sceneUniforms[i];
 
                         switch (semantic!) {
                             case gltf.UniformSemantics._LIGHTMAPINTENSITY:
@@ -188,11 +190,12 @@ namespace egret3d.webgl {
             }
             // Camera.
             if (camera !== this._cacheCamera) {
+                const cameraUniforms = program.cameraUniforms;
                 const rawData = camera.cameraToWorldMatrix.rawData;
-                i = l;
+                i = cameraUniforms.length;
 
                 while (i--) {
-                    const { semantic, location } = globalUniforms[i];
+                    const { semantic, location } = cameraUniforms[i];
 
                     switch (semantic!) {
                         case gltf.UniformSemantics.VIEW:
@@ -259,11 +262,12 @@ namespace egret3d.webgl {
             }
             // TODO
             if (cameraAndLightCollecter.currentLight && this._cacheLight !== cameraAndLightCollecter.currentLight) {
+                const shadowUniforms = program.shadowUniforms;
                 const light = this._cacheLight = cameraAndLightCollecter.currentLight;
-                i = l;
+                i = shadowUniforms.length;
 
                 while (i--) {
-                    const { semantic, location } = globalUniforms[i];
+                    const { semantic, location } = shadowUniforms[i];
 
                     switch (semantic!) {
                         case gltf.UniformSemantics._REFERENCEPOSITION:
@@ -282,9 +286,9 @@ namespace egret3d.webgl {
                 }
             }
             // Model.
-            i = l;
+            i = modelUniforms.length;
             while (i--) {
-                const uniform = globalUniforms[i];
+                const uniform = modelUniforms[i];
                 const { semantic, location } = uniform;
 
                 switch (semantic) {
@@ -416,16 +420,7 @@ namespace egret3d.webgl {
             for (const globalUniform of program.uniforms) { // TODO 
                 const uniformName = globalUniform.name;
                 const uniform = unifroms[uniformName];
-
-                if (!uniform) {
-                    console.warn(); // TODO 
-                    continue;
-                }
-
-                if (uniform.semantic) { // TODO 不需要
-                    continue;
-                }
-
+                
                 const location = globalUniform.location;
                 const value = uniform.value;
 

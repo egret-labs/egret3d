@@ -4004,7 +4004,7 @@ var egret3d;
             if (decodingFunName) {
                 if (texture) {
                     var decodingCode = this._getTexelDecodingFunction(decodingFunName, texture.gltfTexture.extensions.paper.encoding || 1 /* LinearEncoding */);
-                    var define = defines.addDefine(decodingFunName, decodingCode);
+                    var define = defines.addDefine(decodingFunName, decodingCode, 2 /* DecodingFun */);
                     if (define) {
                         define.isCode = true;
                         define.type = 2 /* Fragment */;
@@ -4175,7 +4175,7 @@ var egret3d;
                 if (this._gammaOutput === value) {
                     return;
                 }
-                var define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */), 2 /* Gamma_FUN */);
+                var define = this.defines.addDefine("Gamma", this._getTexelEncodingFunction("linearToOutputTexel", value ? 7 /* GammaEncoding */ : 1 /* LinearEncoding */), 3 /* EncodingFun */);
                 if (define) {
                     define.isCode = true;
                     define.type = 2 /* Fragment */;
@@ -4199,7 +4199,7 @@ var egret3d;
                 if (this._gammaFactor === value) {
                     return;
                 }
-                var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, value, 1 /* GAMMA_FACTOR */);
+                var define = this.defines.addDefine("GAMMA_FACTOR" /* GAMMA_FACTOR */, value, 1 /* GammaFactor */);
                 if (define) {
                     define.type = 2 /* Fragment */;
                 }
@@ -10639,8 +10639,9 @@ var egret3d;
      */
     var ShaderDefineOrder;
     (function (ShaderDefineOrder) {
-        ShaderDefineOrder[ShaderDefineOrder["GAMMA_FACTOR"] = 1] = "GAMMA_FACTOR";
-        ShaderDefineOrder[ShaderDefineOrder["Gamma_FUN"] = 2] = "Gamma_FUN";
+        ShaderDefineOrder[ShaderDefineOrder["GammaFactor"] = 1] = "GammaFactor";
+        ShaderDefineOrder[ShaderDefineOrder["DecodingFun"] = 2] = "DecodingFun";
+        ShaderDefineOrder[ShaderDefineOrder["EncodingFun"] = 3] = "EncodingFun";
     })(ShaderDefineOrder = egret3d.ShaderDefineOrder || (egret3d.ShaderDefineOrder = {}));
     /**
      *
@@ -10796,43 +10797,67 @@ var egret3d;
      * @private
      */
     egret3d.globalUniformSemantics = {
-        "modelMatrix": "MODEL" /* MODEL */,
-        "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
-        "projectionMatrix": "PROJECTION" /* PROJECTION */,
-        "viewMatrix": "VIEW" /* VIEW */,
-        "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
-        "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
-        "clock": "_CLOCK" /* _CLOCK */,
-        "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
-        "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
-        "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
-        "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
-        "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
         "ambientLightColor": "_AMBIENTLIGHTCOLOR" /* _AMBIENTLIGHTCOLOR */,
-        "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
-        "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
-        "rectAreaLights[0]": "_RECTAREALIGHTS" /* _RECTAREALIGHTS */,
-        "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
-        "hemisphereLights[0]": "_HEMILIGHTS" /* _HEMILIGHTS */,
-        "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
-        "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
-        "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
-        "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
-        "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
-        "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
-        "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
-        "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
-        "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
-        "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
-        "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
-        "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
         "fogColor": "_FOG_COLOR" /* _FOG_COLOR */,
         "fogDensity": "_FOG_DENSITY" /* _FOG_DENSITY */,
         "fogNear": "_FOG_NEAR" /* _FOG_NEAR */,
         "fogFar": "_FOG_FAR" /* _FOG_FAR */,
         "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
         "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
+    };
+    /**
+     * 内置提供的场景 Uniform。
+     * @private
+     */
+    egret3d.sceneUniformSemantics = {
+        "lightMapIntensity": "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */,
+    };
+    /**
+     * 内置提供的摄像机 Uniform。
+     * @private
+     */
+    egret3d.cameraUniformSemantics = {
+        "viewMatrix": "VIEW" /* VIEW */,
+        "projectionMatrix": "PROJECTION" /* PROJECTION */,
+        "viewProjectionMatrix": "_VIEWPROJECTION" /* _VIEWPROJECTION */,
+        "cameraForward": "_CAMERA_FORWARD" /* _CAMERA_FORWARD */,
+        "cameraUp": "_CAMERA_UP" /* _CAMERA_UP */,
+        "cameraPosition": "_CAMERA_POS" /* _CAMERA_POS */,
+        "directionalLights[0]": "_DIRECTLIGHTS" /* _DIRECTLIGHTS */,
+        "spotLights[0]": "_SPOTLIGHTS" /* _SPOTLIGHTS */,
+        "rectAreaLights[0]": "_RECTAREALIGHTS" /* _RECTAREALIGHTS */,
+        "pointLights[0]": "_POINTLIGHTS" /* _POINTLIGHTS */,
+        "hemisphereLights[0]": "_HEMILIGHTS" /* _HEMILIGHTS */,
         "logDepthBufFC": "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */,
+    };
+    /**
+     * 内置提供的影子 Uniform。
+     * @private
+     */
+    egret3d.shadowUniformSemantics = {
+        "referencePosition": "_REFERENCEPOSITION" /* _REFERENCEPOSITION */,
+        "nearDistance": "_NEARDICTANCE" /* _NEARDICTANCE */,
+        "farDistance": "_FARDISTANCE" /* _FARDISTANCE */,
+    };
+    /**
+     * 内置提供的模型 Uniform。
+     * @private
+     */
+    egret3d.modelUniformSemantics = {
+        "modelMatrix": "MODEL" /* MODEL */,
+        "modelViewMatrix": "MODELVIEW" /* MODELVIEW */,
+        "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
+        "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
+        "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
+        "clock": "_CLOCK" /* _CLOCK */,
+        "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
+        "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
+        "directionalShadowMatrix[0]": "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */,
+        "spotShadowMatrix[0]": "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */,
+        "pointShadowMatrix[0]": "_POINTSHADOWMAT" /* _POINTSHADOWMAT */,
+        "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
+        "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
+        "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
     };
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -28149,6 +28174,10 @@ var egret3d;
                 this.id = _hashCode++;
                 this.attributes = [];
                 this.globalUniforms = [];
+                this.sceneUniforms = [];
+                this.cameraUniforms = [];
+                this.shadowUniforms = [];
+                this.modelUniforms = [];
                 this.uniforms = [];
                 this.program = program;
             }
@@ -28180,6 +28209,10 @@ var egret3d;
                 }
                 //
                 var globalUniforms = this.globalUniforms;
+                var sceneUniforms = this.sceneUniforms;
+                var cameraUniforms = this.cameraUniforms;
+                var shadowUniforms = this.shadowUniforms;
+                var modelUniforms = this.modelUniforms;
                 var uniforms = this.uniforms;
                 var totalUniforms = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_UNIFORMS);
                 for (var i = 0; i < totalUniforms; i++) {
@@ -28187,26 +28220,54 @@ var egret3d;
                     var name_4 = webglActiveInfo.name;
                     var location_2 = webgl.getUniformLocation(webglProgram, name_4);
                     var gltfUniform = technique.uniforms[name_4];
-                    var semantic = undefined;
                     if (!gltfUniform) {
-                        semantic = egret3d.globalUniformSemantics[name_4];
-                        if (!semantic) {
+                        if (egret3d.globalUniformSemantics[name_4]) {
+                            globalUniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: egret3d.globalUniformSemantics[name_4], location: location_2 });
+                        }
+                        else if (egret3d.sceneUniformSemantics[name_4]) {
+                            sceneUniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: egret3d.sceneUniformSemantics[name_4], location: location_2 });
+                        }
+                        else if (egret3d.cameraUniformSemantics[name_4]) {
+                            cameraUniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: egret3d.cameraUniformSemantics[name_4], location: location_2 });
+                        }
+                        else if (egret3d.shadowUniformSemantics[name_4]) {
+                            shadowUniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: egret3d.shadowUniformSemantics[name_4], location: location_2 });
+                        }
+                        else if (egret3d.modelUniformSemantics[name_4]) {
+                            modelUniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: egret3d.modelUniformSemantics[name_4], location: location_2 });
+                        }
+                        else {
                             //不在自定义中，也不在全局Uniform中
                             console.error("未知Uniform定义：" + name_4);
                         }
                     }
                     else {
-                        semantic = gltfUniform.semantic;
+                        uniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: gltfUniform.semantic, location: location_2 });
+                        if (true) {
+                            if (gltfUniform.semantic) {
+                                console.log("自定义Uniform语义:" + name_4);
+                            }
+                        }
                     }
-                    if (semantic) {
-                        globalUniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: semantic, location: location_2 });
-                    }
-                    else {
-                        uniforms.push({ name: name_4, type: webglActiveInfo.type, size: webglActiveInfo.size, location: location_2 });
-                    }
+                    // if (!gltfUniform) {
+                    //     semantic = globalUniformSemantics[name];
+                    //     if (!semantic) {
+                    //         //不在自定义中，也不在全局Uniform中
+                    //         console.error("未知Uniform定义：" + name);
+                    //     }
+                    // }
+                    // else {
+                    //     semantic = gltfUniform.semantic;
+                    // }
+                    // if (semantic) {
+                    //     globalUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic, location });
+                    // }
+                    // else {
+                    //     uniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, location });
+                    // }
                 }
                 //
-                var activeUniforms = globalUniforms.concat(uniforms);
+                var activeUniforms = globalUniforms.concat(sceneUniforms).concat(cameraUniforms).concat(shadowUniforms).concat(modelUniforms).concat(uniforms);
                 var samplerArrayNames = [];
                 var samplerNames = [];
                 // Sort.
@@ -28939,15 +29000,16 @@ var egret3d;
                 var camera = egret3d.Camera.current;
                 var matrix = drawCall.matrix;
                 var globalUniforms = program.globalUniforms;
-                var i = 0, l = globalUniforms.length;
+                var modelUniforms = program.modelUniforms;
                 //
                 this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
                 this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
+                var i = 0;
                 // Global.
                 if (forceUpdate) {
-                    i = l;
                     var activeScene = this._activeScene;
                     var fog = activeScene.fog;
+                    i = globalUniforms.length;
                     while (i--) {
                         var _a = globalUniforms[i], semantic = _a.semantic, location_3 = _a.location;
                         switch (semantic) {
@@ -28980,9 +29042,10 @@ var egret3d;
                 // Scene.
                 if (currentScene !== this._cacheScene) {
                     if (currentScene) {
-                        i = l;
+                        var sceneUniforms = program.sceneUniforms;
+                        i = sceneUniforms.length;
                         while (i--) {
-                            var _b = globalUniforms[i], semantic = _b.semantic, location_4 = _b.location;
+                            var _b = sceneUniforms[i], semantic = _b.semantic, location_4 = _b.location;
                             switch (semantic) {
                                 case "_LIGHTMAPINTENSITY" /* _LIGHTMAPINTENSITY */:
                                     webgl.uniform1f(location_4, currentScene.lightmapIntensity);
@@ -28994,10 +29057,11 @@ var egret3d;
                 }
                 // Camera.
                 if (camera !== this._cacheCamera) {
+                    var cameraUniforms = program.cameraUniforms;
                     var rawData = camera.cameraToWorldMatrix.rawData;
-                    i = l;
+                    i = cameraUniforms.length;
                     while (i--) {
-                        var _c = globalUniforms[i], semantic = _c.semantic, location_5 = _c.location;
+                        var _c = cameraUniforms[i], semantic = _c.semantic, location_5 = _c.location;
                         switch (semantic) {
                             case "VIEW" /* VIEW */:
                                 webgl.uniformMatrix4fv(location_5, false, camera.worldToCameraMatrix.rawData);
@@ -29051,10 +29115,11 @@ var egret3d;
                 }
                 // TODO
                 if (cameraAndLightCollecter.currentLight && this._cacheLight !== cameraAndLightCollecter.currentLight) {
+                    var shadowUniforms = program.shadowUniforms;
                     var light = this._cacheLight = cameraAndLightCollecter.currentLight;
-                    i = l;
+                    i = shadowUniforms.length;
                     while (i--) {
-                        var _d = globalUniforms[i], semantic = _d.semantic, location_6 = _d.location;
+                        var _d = shadowUniforms[i], semantic = _d.semantic, location_6 = _d.location;
                         switch (semantic) {
                             case "_REFERENCEPOSITION" /* _REFERENCEPOSITION */:
                                 var rawData = light.transform.localToWorldMatrix.rawData;
@@ -29070,9 +29135,9 @@ var egret3d;
                     }
                 }
                 // Model.
-                i = l;
+                i = modelUniforms.length;
                 while (i--) {
-                    var uniform = globalUniforms[i];
+                    var uniform = modelUniforms[i];
                     var semantic = uniform.semantic, location_7 = uniform.location;
                     switch (semantic) {
                         case "MODEL" /* MODEL */:
@@ -29127,7 +29192,7 @@ var egret3d;
                             if (directShadowLen > 0 && uniform.textureUnits) {
                                 var units = uniform.textureUnits;
                                 webgl.uniform1iv(location_7, units);
-                                for (var i_4 = 0, l_3 = units.length; i_4 < l_3; i_4++) {
+                                for (var i_4 = 0, l = units.length; i_4 < l; i_4++) {
                                     if (context.directShadowMaps[i_4]) {
                                         var unit = units[i_4];
                                         var texture = context.directShadowMaps[i_4];
@@ -29141,7 +29206,7 @@ var egret3d;
                             if (pointShadowLen > 0 && uniform.textureUnits) {
                                 var units = uniform.textureUnits;
                                 webgl.uniform1iv(location_7, units);
-                                for (var i_5 = 0, l_4 = units.length; i_5 < l_4; i_5++) {
+                                for (var i_5 = 0, l = units.length; i_5 < l; i_5++) {
                                     if (context.pointShadowMaps[i_5]) {
                                         var unit = units[i_5];
                                         var texture = context.pointShadowMaps[i_5];
@@ -29155,7 +29220,7 @@ var egret3d;
                             if (spotShadowLen > 0 && uniform.textureUnits) {
                                 var units = uniform.textureUnits;
                                 webgl.uniform1iv(location_7, units);
-                                for (var i_6 = 0, l_5 = units.length; i_6 < l_5; i_6++) {
+                                for (var i_6 = 0, l = units.length; i_6 < l; i_6++) {
                                     if (context.spotShadowMaps[i_6]) {
                                         var unit = units[i_6];
                                         var texture = context.spotShadowMaps[i_6];
@@ -29187,13 +29252,6 @@ var egret3d;
                     var globalUniform = _a[_i];
                     var uniformName = globalUniform.name;
                     var uniform = unifroms[uniformName];
-                    if (!uniform) {
-                        console.warn(); // TODO 
-                        continue;
-                    }
-                    if (uniform.semantic) {
-                        continue;
-                    }
                     var location_8 = globalUniform.location;
                     var value = uniform.value;
                     switch (uniform.type) {

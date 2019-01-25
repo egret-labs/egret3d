@@ -360,6 +360,7 @@ namespace egret3d {
                 wrapS: gltf.TextureWrappingMode.Repeat, wrapT: gltf.TextureWrappingMode.Repeat,
                 magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.LinearMipMapLinear,
                 levels: 0,
+                anisotropy: 4,
             });
 
             return texture;
