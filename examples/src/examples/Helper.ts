@@ -14,6 +14,7 @@ namespace examples {
             pointLight.decay = 0.0;
             pointLight.distance = 0.0;
             pointLight.castShadows = true;
+            pointLight.shadow.mapSize = 1024;
             pointLight.transform.setLocalPosition(0.0, 10.0, 5.0).lookAt(egret3d.Vector3.ZERO);
         }
 
@@ -24,7 +25,7 @@ namespace examples {
         );
         mesh.name = "custom/gridroom.mesh.bin";
 
-        const gameObject = egret3d.DefaultMeshes.createObject(mesh, "Background");
+        const gameObject = egret3d.creater.createGameObject("Grid Room", { mesh });
         // gameObject.hideFlags = paper.HideFlags.NotTouchable;
         gameObject.activeSelf = false;
 
@@ -54,5 +55,19 @@ namespace examples {
         loadResource();
 
         return gameObject;
+    }
+
+    export function selectGameObjectAndComponents(gameObject: paper.GameObject, ...args: paper.IComponentClass<paper.BaseComponent>[]) {
+        const globalGameObject = paper.GameObject.globalGameObject;
+        const modelComponent = globalGameObject.getComponent(paper.editor.ModelComponent);
+        const guiComponent = globalGameObject.getComponent(paper.editor.GUIComponent);
+
+        if (modelComponent) {
+            modelComponent.select(gameObject);
+
+            if (guiComponent) {
+                guiComponent.openComponents.apply(guiComponent, args);
+            }
+        }
     }
 }

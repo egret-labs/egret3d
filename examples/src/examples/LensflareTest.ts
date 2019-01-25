@@ -24,10 +24,9 @@ namespace examples {
             const lensflare2 = RES.getRes("threejs/textures/lensflare/lensflare2.png");
             const lensflare3 = RES.getRes("threejs/textures/lensflare/lensflare3.png");
 
-            const cube = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "cube");
+            const cube = egret3d.creater.createGameObject("cube", { mesh: egret3d.DefaultMeshes.CUBE });
             cube.transform.setLocalPosition(0, -1, 0);
-            cube.renderer!.material = cube.renderer!.material!.clone();
-            cube.renderer!.material!.setTexture(RES.getRes("logo.png"));
+            cube.renderer!.material = cube.renderer!.material!.clone().setTexture(RES.getRes("logo.png"));
 
             const lensflareObj = paper.GameObject.create("Lensflare");
             const lensflareCom = lensflareObj.addComponent(behaviors.LensflareEffect);

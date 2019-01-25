@@ -92,9 +92,11 @@ namespace examples.camera {
 
                 for (let i = 0; i < 300; ++i) {
                     const layer = (i % 3);
-                    const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, `Cube ${i}`);
+                    const gameObject = egret3d.creater.createGameObject(`Cube ${i}`, {
+                        mesh: egret3d.DefaultMeshes.CUBE,
+                        material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT).setColor(colors[layer]),
+                    });
                     gameObject.layer = layers[layer];
-                    gameObject.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT).setColor(colors[layer]);
                     gameObject.transform
                         .setLocalPosition(
                             Math.random() * 800.0 - 400.0,

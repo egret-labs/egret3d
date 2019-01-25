@@ -7,8 +7,8 @@ namespace behaviors {
         protected _lineMesh: egret3d.Mesh | null = null;
         protected _normalMesh: egret3d.Mesh | null = null;
 
-        protected readonly _line: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
-        protected readonly _normal: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Normal");
+        protected readonly _line: paper.GameObject = egret3d.creater.createGameObject("Line", { mesh: egret3d.DefaultMeshes.LINE_Z, material: egret3d.DefaultMaterials.LINEDASHED });
+        protected readonly _normal: paper.GameObject = egret3d.creater.createGameObject("Normal", { mesh: egret3d.DefaultMeshes.LINE_Z, material: egret3d.DefaultMaterials.LINEDASHED });
 
         public onAwake() {
             const meshFilter = this._line.getComponent(egret3d.MeshFilter)!;

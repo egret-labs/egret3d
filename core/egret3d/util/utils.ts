@@ -1,8 +1,5 @@
 namespace egret3d.utils {
-
-
-
-
+    
     export function getRelativePath(targetPath: string, sourcePath: string) {
         let relPath = "";
         targetPath = targetPath.replace("\\", "/");

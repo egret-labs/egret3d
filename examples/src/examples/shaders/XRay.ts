@@ -41,18 +41,18 @@ namespace examples.shaders {
                 .addUniform("_p", gltf.UniformType.FLOAT, 3.0);
 
             { // Create game object.
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CYLINDER, "Cylinder");
+                const gameObject = egret3d.creater.createGameObject("Cylinder", {
+                    mesh: egret3d.DefaultMeshes.CYLINDER,
+                    material: egret3d.Material.create(shader)
+                        .setBlend(egret3d.BlendMode.Additive, egret3d.RenderQueue.Blend)
+                        .setColor(egret3d.Color.INDIGO)
+                });
                 gameObject.transform.setLocalPosition(2.0, 0.5, 0.0);
-                // 
-                const renderer = gameObject.renderer!;
-                renderer.material = egret3d.Material.create(shader)
-                    .setBlend(egret3d.BlendMode.Additive, egret3d.RenderQueue.Blend)
-                    .setColor(egret3d.Color.INDIGO);
-                renderer.gameObject.addComponent(XRayEditor);
+                gameObject.addComponent(XRayEditor);
                 //
                 const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
                 if (modelComponent) {
-                    modelComponent.select(renderer.gameObject);
+                    modelComponent.select(gameObject);
                     paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(XRayEditor);
                 }
             }

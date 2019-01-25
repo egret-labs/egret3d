@@ -108,7 +108,7 @@ exports.UNIFORM_TEMPLATE["toneMappingWhitePoint"] = { semantic: "_TONE_MAPPING_W
 //
 exports.UNIFORM_TEMPLATE["logDepthBufFC"] = { semantic: "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */ };
 //
-exports.UNIFORM_TEMPLATE["specular"] = { value: [1.0, 1.0, 1.0] };
+exports.UNIFORM_TEMPLATE["specular"] = { value: [0.066666, 0.066666, 0.066666] };
 exports.UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
 exports.UNIFORM_TEMPLATE["opacity"] = { value: 1.0 };
 exports.UNIFORM_TEMPLATE["normalScale"] = { value: [1.0, 1.0] };

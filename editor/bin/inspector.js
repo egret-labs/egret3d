@@ -1172,11 +1172,19 @@ var OptionController = function (_Controller) {
       var opt = document.createElement('option');
       opt.innerHTML = key;
       opt.setAttribute('value', value);
+      switch (typeof value === 'undefined' ? 'undefined' : _typeof(value)) {
+        case "string":
+          break;
+        default:
+          opt._value = value;
+          break;
+      }
       _this.__select.appendChild(opt);
     });
     _this2.updateDisplay();
     dom.bind(_this2.__select, 'change', function () {
-      var desiredValue = options[this.options[this.selectedIndex].innerHTML];
+      var option = this.options[this.selectedIndex];
+      var desiredValue = option._value !== undefined ? option._value : options[option.innerHTML];
       _this.setValue(desiredValue);
     });
     _this2.domElement.appendChild(_this2.__select);
@@ -2159,9 +2167,15 @@ dom.bind(window, 'keydown', GUI._keydownHandler, false);
 Common.extend(GUI.prototype,
 {
   add: function add(object, property, label) {
-    var hasLabel = typeof label === "string";
+    var hasLabel = false;
+    if (property.indexOf("|") >= 0) {
+      hasLabel = true;
+      var temp = property.split("|");
+      label = temp[0];
+      property = temp[1];
+    }
     return _add(this, object, property, {
-      factoryArgs: Array.prototype.slice.call(arguments, hasLabel ? 3 : 2),
+      factoryArgs: Array.prototype.slice.call(arguments, 2),
       label: hasLabel ? label : null
     });
   },
@@ -3249,7 +3263,7 @@ var paper;
             function CameraViewportDrawer() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._cameraRenderTexture = egret3d.RenderTexture.create({ width: 512, height: 512 });
-                _this._editorUI = editor.EditorMeshHelper.createGameObject("Editor UI Camera").addComponent(egret3d.Camera);
+                _this._editorUICamera = editor.EditorMeshHelper.createGameObject("Editor UI Camera").addComponent(egret3d.Camera);
                 _this._drawer = editor.EditorMeshHelper.createGameObject("Plane", egret3d.DefaultMeshes.PLANE, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 _this._camera = null;
                 return _this;
@@ -3267,27 +3281,27 @@ var paper;
                 this._camera = camera;
             };
             CameraViewportDrawer.prototype._onStageResize = function () {
-                var editorUI = this._editorUI;
+                var editorUICamera = this._editorUICamera;
                 var drawer = this._drawer;
                 egret3d.stage.matchFactor;
-                drawer.transform.setLocalScale(editorUI.pixelViewport.w * 0.1);
+                drawer.transform.setLocalScale(editorUICamera.pixelViewport.w * 0.1);
                 // this._cameraRenderTexture.uploadTexture(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
             };
             CameraViewportDrawer.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
-                var editorUI = this._editorUI;
+                var editorUICamera = this._editorUICamera;
                 var drawer = this._drawer;
                 drawer.layer = 128 /* EditorUI */;
                 drawer.parent = this.gameObject;
                 drawer.renderer.material.setTexture(this._cameraRenderTexture);
                 drawer.transform.setLocalPosition(0.0, 100.0, 100.0);
-                editorUI.order = 1;
-                editorUI.bufferMask = 256 /* Depth */;
-                editorUI.cullingMask = 128 /* EditorUI */;
-                editorUI.opvalue = 0.0;
-                editorUI.size = 10.0;
-                editorUI.viewport.set(0.0, 0.0, 0.2, 0.2).update();
-                editorUI.gameObject.transform.setLocalPosition(0.0, 100.0, 0.0);
+                editorUICamera.order = 1;
+                editorUICamera.bufferMask = 256 /* Depth */;
+                editorUICamera.cullingMask = 128 /* EditorUI */;
+                editorUICamera.opvalue = 0.0;
+                editorUICamera.size = 10.0;
+                editorUICamera.viewport.set(0.0, 0.0, 0.2, 0.2).update();
+                editorUICamera.gameObject.transform.setLocalPosition(0.0, 100.0, 0.0);
                 egret3d.stage.onResize.add(this._onStageResize, this);
             };
             CameraViewportDrawer.prototype.uninitialize = function () {
@@ -8509,15 +8523,42 @@ var paper;
                 this._openFolder(folder.parent);
             };
             GUISystem.prototype._getAssets = function (type) {
+                var added = [];
                 var result = [{ label: "None", value: null }];
+                var assets = paper.Asset._assets;
+                for (var k in assets) {
+                    var flag = false;
+                    var asset = assets[k];
+                    switch (type) {
+                        case "Mesh":
+                            if (asset instanceof egret3d.Mesh) {
+                                flag = true;
+                            }
+                            break;
+                        case "Material":
+                            if (asset instanceof egret3d.Material) {
+                                flag = true;
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    if (flag) {
+                        added.push(k);
+                        result.push({ label: k, value: k });
+                    }
+                }
                 if (RES.host.resourceConfig.config) {
                     var fileSystem = RES.host.resourceConfig.config.fileSystem;
                     if (fileSystem) {
                         var resFSDatas = fileSystem.fsData;
                         for (var k in resFSDatas) {
+                            if (added.indexOf(k) >= 0) {
+                                continue;
+                            }
                             var data = resFSDatas[k];
                             if (data.type === type) {
-                                result.push({ label: k, value: data });
+                                result.push({ label: k, value: data.url });
                             }
                         }
                     }
@@ -8562,11 +8603,11 @@ var paper;
                                 if (!v) {
                                     return [2 /*return*/];
                                 }
-                                return [4 /*yield*/, RES.getResAsync(v.url)];
+                                return [4 /*yield*/, RES.getResAsync(v)];
                             case 1:
                                 _a.sent();
                                 paper.Scene.activeScene.destroy();
-                                this._modelComponent.select(paper.Scene.create(v.url));
+                                this._modelComponent.select(paper.Scene.create(v));
                                 return [2 /*return*/];
                         }
                     });
@@ -8579,17 +8620,17 @@ var paper;
                                 if (!v) {
                                     return [2 /*return*/];
                                 }
-                                return [4 /*yield*/, RES.getResAsync(v.url)];
+                                return [4 /*yield*/, RES.getResAsync(v)];
                             case 1:
                                 _a.sent();
                                 gameObject = null;
                                 if (this._modelComponent.selectedGameObject) {
                                     parent_5 = this._modelComponent.selectedGameObject;
-                                    gameObject = paper.Prefab.create(v.url, parent_5.scene);
+                                    gameObject = paper.Prefab.create(v, parent_5.scene);
                                     gameObject.parent = parent_5;
                                 }
                                 else {
-                                    gameObject = paper.Prefab.create(v.url, this._modelComponent.selectedScene || paper.Scene.activeScene);
+                                    gameObject = paper.Prefab.create(v, this._modelComponent.selectedScene || paper.Scene.activeScene);
                                 }
                                 this._modelComponent.select(gameObject);
                                 return [2 /*return*/];
@@ -8718,8 +8759,8 @@ var paper;
                             }
                             break;
                         case "VECTOR2" /* VECTOR2 */: {
-                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
+                            guiControllerA = gui.add(gui.instance[info.name], info.name + ": x|x").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], info.name + ": y|y").step(0.1).listen();
                             if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
                                 var onChange = function () {
                                     gui.instance[info.name] = gui.instance[info.name];
@@ -8744,8 +8785,8 @@ var paper;
                             break;
                         }
                         case "SIZE" /* SIZE */: {
-                            guiControllerA = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
+                            guiControllerA = gui.add(gui.instance[info.name], info.name + ": w|w").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], info.name + ": h|h").step(0.1).listen();
                             if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
                                 var onChange = function () {
                                     gui.instance[info.name] = gui.instance[info.name];
@@ -8770,9 +8811,9 @@ var paper;
                             break;
                         }
                         case "VECTOR3" /* VECTOR3 */: {
-                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
-                            guiControllerC = gui.add(gui.instance[info.name], "z", info.name + ": z").step(0.1).listen();
+                            guiControllerA = gui.add(gui.instance[info.name], info.name + ": x|x").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], info.name + ": y|y").step(0.1).listen();
+                            guiControllerC = gui.add(gui.instance[info.name], info.name + ": z|z").step(0.1).listen();
                             if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
                                 var onChange = function () {
                                     gui.instance[info.name] = gui.instance[info.name];
@@ -8814,10 +8855,10 @@ var paper;
                             break;
                         }
                         case "RECT" /* RECT */: {
-                            guiControllerA = gui.add(gui.instance[info.name], "x", info.name + ": x").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], "y", info.name + ": y").step(0.1).listen();
-                            guiControllerC = gui.add(gui.instance[info.name], "w", info.name + ": w").step(0.1).listen();
-                            guiControllerD = gui.add(gui.instance[info.name], "h", info.name + ": h").step(0.1).listen();
+                            guiControllerA = gui.add(gui.instance[info.name], info.name + ": x|x").step(0.1).listen();
+                            guiControllerB = gui.add(gui.instance[info.name], info.name + ": y|y").step(0.1).listen();
+                            guiControllerC = gui.add(gui.instance[info.name], info.name + ": w|w").step(0.1).listen();
+                            guiControllerD = gui.add(gui.instance[info.name], info.name + ": h|h").step(0.1).listen();
                             if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
                                 var onChange = function () {
                                     gui.instance[info.name] = gui.instance[info.name];
@@ -8849,6 +8890,9 @@ var paper;
                             }
                             break;
                         }
+                        case "MESH" /* MESH */:
+                            guiControllerA = gui.add(new AssetProxy(gui.instance, info.name), info.name + "|uri", this_2._getAssets("Mesh")).listen();
+                            break;
                         case "GAMEOBJECT" /* GAMEOBJECT */:
                             break;
                         case "BUTTON" /* BUTTON */:
@@ -9015,5 +9059,41 @@ var paper;
         }(paper.BaseSystem));
         editor.GUISystem = GUISystem;
         __reflect(GUISystem.prototype, "paper.editor.GUISystem");
+        var AssetProxy = (function () {
+            function AssetProxy(_instance, _key) {
+                this._instance = _instance;
+                this._key = _key;
+            }
+            Object.defineProperty(AssetProxy.prototype, "uri", {
+                get: function () {
+                    var value = this._instance[this._key];
+                    if (value) {
+                        return value.name || "NoName" /* NoName */;
+                    }
+                    return value;
+                },
+                set: function (value) {
+                    var _this = this;
+                    if (!value) {
+                        this._instance[this._key] = null;
+                    }
+                    else {
+                        var asset = paper.Asset.find(value);
+                        if (asset) {
+                            this._instance[this._key] = asset;
+                        }
+                        else {
+                            RES.getResAsync(value).then(function (r) {
+                                _this._instance[_this._key] = r;
+                            });
+                        }
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            return AssetProxy;
+        }());
+        __reflect(AssetProxy.prototype, "AssetProxy");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));

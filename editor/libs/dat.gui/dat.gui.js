@@ -988,11 +988,19 @@ var OptionController = function (_Controller) {
       var opt = document.createElement('option');
       opt.innerHTML = key;
       opt.setAttribute('value', value);
+      switch (typeof value === 'undefined' ? 'undefined' : _typeof(value)) {
+        case "string":
+          break;
+        default:
+          opt._value = value;
+          break;
+      }
       _this.__select.appendChild(opt);
     });
     _this2.updateDisplay();
     dom.bind(_this2.__select, 'change', function () {
-      var desiredValue = options[this.options[this.selectedIndex].innerHTML];
+      var option = this.options[this.selectedIndex];
+      var desiredValue = option._value !== undefined ? option._value : options[option.innerHTML];
       _this.setValue(desiredValue);
     });
     _this2.domElement.appendChild(_this2.__select);
@@ -1975,9 +1983,15 @@ dom.bind(window, 'keydown', GUI._keydownHandler, false);
 Common.extend(GUI.prototype,
 {
   add: function add(object, property, label) {
-    var hasLabel = typeof label === "string";
+    var hasLabel = false;
+    if (property.indexOf("|") >= 0) {
+      hasLabel = true;
+      var temp = property.split("|");
+      label = temp[0];
+      property = temp[1];
+    }
     return _add(this, object, property, {
-      factoryArgs: Array.prototype.slice.call(arguments, hasLabel ? 3 : 2),
+      factoryArgs: Array.prototype.slice.call(arguments, 2),
       label: hasLabel ? label : null
     });
   },

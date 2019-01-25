@@ -50,26 +50,28 @@ namespace examples.clipping {
             }
 
             { // Create game object.
-                const gameObject = this._gameObject = egret3d.DefaultMeshes.createObject(egret3d.MeshBuilder.createTorusKnot(0.4, 0.08, 95, 20), "Object");
-                const renderer = gameObject.renderer!;
-                renderer.castShadows = true;
-                renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
-                    .setColor(0x80EE10)
-                    .setFloat(egret3d.ShaderUniformName.Shininess, 100.0)
-                    .setCullFace(false);
+                const gameObject = this._gameObject = egret3d.creater.createGameObject("Object", {
+                    mesh: egret3d.MeshBuilder.createTorusKnot(0.4, 0.08, 95, 20),
+                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
+                        .setColor(0x80EE10)
+                        .setFloat(egret3d.ShaderUniformName.Shininess, 100.0)
+                        .setCullFace(false),
+                    castShadows: true,
+                });
                 gameObject.transform.setLocalPosition(0.0, 0.8, 0.0);
                 //
                 mainCamera.transform.lookAt(gameObject.transform);
             }
 
             { // Create background.
-                const gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.QUAD, "Background");
-                const renderer = gameObject.renderer!;
-                renderer.receiveShadows = true;
-                renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
-                    .setColor(0xA0ADAF)
-                    .setFloat(egret3d.ShaderUniformName.Shininess, 150.0)
-                    .setCullFace(false);
+                const gameObject = egret3d.creater.createGameObject("Background", {
+                    mesh: egret3d.DefaultMeshes.QUAD,
+                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG)
+                        .setColor(0xA0ADAF)
+                        .setFloat(egret3d.ShaderUniformName.Shininess, 150.0)
+                        .setCullFace(false),
+                    receiveShadows: true,
+                });
                 gameObject.transform.setLocalEulerAngles(90.0, 0.0, 0.0).setLocalScale(9.0);
             }
         }

@@ -32,7 +32,10 @@ namespace examples.materials {
         private readonly _textureA: egret3d.BaseTexture = RES.getRes("threejs/textures/cube/Bridge2/Bridge2.image.json");
         private readonly _textureB: egret3d.BaseTexture = RES.getRes("threejs/textures/2294472375_24a3b8ef46_o.jpg");
         private readonly _textureC: egret3d.BaseTexture = RES.getRes("threejs/textures/metal.jpg");
-        private readonly _gameObject: paper.GameObject = egret3d.DefaultMeshes.createObject(egret3d.MeshBuilder.createSphere(400.0, 0.0, 0.0, 0.0, 48, 24), "Sphere");
+        private readonly _gameObject: paper.GameObject = egret3d.creater.createGameObject("Sphere", {
+            mesh: egret3d.MeshBuilder.createSphere(400.0, 0.0, 0.0, 0.0, 48, 24),
+            material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT),
+        });
 
         private _updateEnvMap() {
             const mainCamera = egret3d.Camera.main;
@@ -102,10 +105,6 @@ namespace examples.materials {
 
             { // Create lights.
                 paper.Scene.activeScene.ambientColor.fromHex(0xFFFFFF);
-            }
-
-            { // Create game object.
-                this._gameObject.renderer!.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
             }
         }
 

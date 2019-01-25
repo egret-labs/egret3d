@@ -197,4 +197,11 @@ namespace egret3d {
             },
         },
     };
+    /**
+     * @deprecated
+     * @see paper.@singleton
+     */
+    @paper.singleton
+    export class SingletonComponent extends paper.BaseComponent {
+    }
 }

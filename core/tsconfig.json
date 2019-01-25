@@ -58,7 +58,6 @@
         "egret3d/ecs/core/Application.ts",
 
         "egret3d/ecs/components/BaseComponent.ts",
-        "egret3d/ecs/components/SingletonComponent.ts",
         "egret3d/ecs/components/GroupComponent.ts",
         "egret3d/ecs/components/BaseRenderer.ts",
         "egret3d/ecs/components/MissingComponent.ts",
@@ -144,6 +143,7 @@
         "egret3d/components/audio/Audio.ts",
 
         "egret3d/components/StaticBatchingUtility.ts",
+        "egret3d/components/Creater.ts",
 
         "egret3d/asset/resource/GLTF.ts",
         "egret3d/asset/resource/GLTFAsset.ts",
