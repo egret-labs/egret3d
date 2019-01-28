@@ -19842,9 +19842,9 @@ var egret3d;
                                     binder.bindPose = egret3d.Quaternion.create().copy(transform.localRotation);
                                     binder.updateTarget = binder.onUpdateRotation;
                                 }
-                                if (animationLayer.additive && !binder.results) {
-                                    binder.results = [];
-                                    binder.resultWeight = [];
+                                if (animationLayer.additive && !binder.quaternions) {
+                                    binder.quaternions = [];
+                                    binder.quaternionWeights = [];
                                 }
                                 break;
                             case "scale":
@@ -20039,10 +20039,7 @@ var egret3d;
     var AnimationBinder = (function (_super) {
         __extends(AnimationBinder, _super);
         function AnimationBinder() {
-            var _this = _super.call(this) || this;
-            _this.results = null;
-            _this.resultWeight = null;
-            return _this;
+            return _super.call(this) || this;
         }
         AnimationBinder.create = function () {
             var instance;
@@ -20058,20 +20055,32 @@ var egret3d;
         };
         AnimationBinder.prototype.onClear = function () {
             this.clear();
+            if (this.quaternions) {
+                for (var _i = 0, _a = this.quaternions; _i < _a.length; _i++) {
+                    var quaternion = _a[_i];
+                    quaternion.release();
+                }
+            }
             if (this.bindPose && this.bindPose.release) {
                 this.bindPose.release();
             }
             this.target = null;
             this.bindPose = null;
             this.updateTarget = null;
-            this.results = null;
-            this.resultWeight = null;
+            this.quaternions = null;
+            this.quaternionWeights = null;
         };
         AnimationBinder.prototype.clear = function () {
             this.dirty = 0;
             this.weight = 1.0;
             this.totalWeight = 0.0;
             this.layer = null;
+            var quaternionWeights = this.quaternionWeights;
+            if (quaternionWeights) {
+                for (var i = 0, l = quaternionWeights.length; i < l; ++i) {
+                    quaternionWeights[i] = 0.0;
+                }
+            }
         };
         AnimationBinder.prototype.updateBlend = function (animationlayer, animationState) {
             var globalWeight = animationState._globalWeight;
@@ -20126,9 +20135,66 @@ var egret3d;
         AnimationBinder.prototype.onUpdateRotation = function () {
             var transforms = this.target;
             var target = transforms.localRotation;
+            var bindPose = this.bindPose;
+            var quaternions = this.quaternions;
+            if (quaternions) {
+                var posed = false;
+                var i = quaternions.length;
+                while (i--) {
+                    var quaternion = quaternions[i];
+                    var weight = this.quaternionWeights[i];
+                    if (weight === 0.0) {
+                        continue;
+                    }
+                    if (weight < 0.0) {
+                        if (weight !== -1.0) {
+                            if (quaternion.w >= 0.0) {
+                                weight = -weight;
+                            }
+                            quaternion.x *= weight;
+                            quaternion.y *= weight;
+                            quaternion.z *= weight;
+                            quaternion.w *= weight;
+                        }
+                        if (!posed) {
+                            target.x = bindPose.x;
+                            target.y = bindPose.y;
+                            target.z = bindPose.z;
+                            target.w = bindPose.w;
+                        }
+                        target.multiply(quaternion);
+                    }
+                    else {
+                        if (weight !== 1.0) {
+                            if (quaternion.dot(target) < 0.0) {
+                                weight = -weight;
+                            }
+                            quaternion.x *= weight;
+                            quaternion.y *= weight;
+                            quaternion.z *= weight;
+                            quaternion.w *= weight;
+                        }
+                        if (posed) {
+                            target.x += quaternion.x;
+                            target.y += quaternion.y;
+                            target.z += quaternion.z;
+                            target.w += quaternion.w;
+                        }
+                        else {
+                            target.x = quaternion.x;
+                            target.y = quaternion.y;
+                            target.z = quaternion.z;
+                            target.w = quaternion.w;
+                        }
+                    }
+                    posed = true;
+                }
+            }
             if (this.totalWeight < 1.0 - 2.220446049250313e-16 /* EPSILON */) {
                 var weight = 1.0 - this.totalWeight;
-                var bindPose = this.bindPose;
+                if (bindPose.dot(target) < 0.0) {
+                    weight = -weight;
+                }
                 if (this.dirty > 0) {
                     target.x += bindPose.x * weight;
                     target.y += bindPose.y * weight;
@@ -20338,73 +20404,53 @@ var egret3d;
             }
             var weight = binder.weight;
             var target = binder.target.localRotation;
-            // const results = binder.results;
-            // if (results) {
-            //     let result: Quaternion;
-            //     const resultIndex = binder.dirty - 1;
-            //     if (results.length <= resultIndex + 1) {
-            //         results.push(Quaternion.create());
-            //     }
-            //     result = results[resultIndex];
-            //     if (additive) {
-            //         result.fromArray(outputBuffer).inverse().premultiply(_helpQuaternion.set(x, y, z, w));
-            //     }
-            //     else {
-            //         result.set(x, y, z, w);
-            //     }
-            //     binder.resultWeight![resultIndex] = weight;
-            // }
-            // else {
-            var frameResult = _helpQuaternionA;
-            if (additive) {
-                frameResult.fromArray(outputBuffer).inverse().premultiply(_helpQuaternionB.set(x, y, z, w));
-            }
-            else {
-                frameResult.x = x;
-                frameResult.y = y;
-                frameResult.z = z;
-                frameResult.w = w;
-            }
-            if (binder.dirty > 1) {
+            var quaternions = binder.quaternions;
+            if (quaternions) {
+                var quaternion = void 0;
+                var index = binder.dirty - 1;
+                if (quaternions.length <= index + 1) {
+                    quaternions.push(egret3d.Quaternion.create());
+                }
+                quaternion = quaternions[index];
                 if (additive) {
-                    target.multiply(frameResult.lerp(egret3d.Quaternion.IDENTITY, frameResult, weight));
+                    quaternion.x = -outputBuffer[0];
+                    quaternion.y = -outputBuffer[1];
+                    quaternion.z = -outputBuffer[2];
+                    quaternion.w = outputBuffer[3];
+                    quaternion.multiply(_helpQuaternionA.set(x, y, z, w), quaternion);
+                    binder.quaternionWeights[index] = -weight;
                 }
                 else {
-                    if (frameResult.set(x, y, z, w).dot(target) < 0.0) {
+                    quaternion.x = x;
+                    quaternion.y = y;
+                    quaternion.z = z;
+                    quaternion.w = w;
+                    binder.quaternionWeights[index] = weight;
+                }
+            }
+            else {
+                if (weight !== 1.0) {
+                    if (_helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
                         weight = -weight;
                     }
-                    target.x += x * weight;
-                    target.y += y * weight;
-                    target.z += z * weight;
-                    target.w += w * weight;
+                    x *= weight;
+                    y *= weight;
+                    z *= weight;
+                    w *= weight;
                 }
-            }
-            else if (additive) {
-                var bindPose = binder.bindPose;
-                target.x = bindPose.x;
-                target.y = bindPose.y;
-                target.z = bindPose.z;
-                target.w = bindPose.w;
-                if (weight !== 1.0) {
-                    target.multiply(frameResult.lerp(egret3d.Quaternion.IDENTITY, frameResult, weight));
+                if (binder.dirty > 1) {
+                    target.x += x;
+                    target.y += y;
+                    target.z += z;
+                    target.w += w;
                 }
                 else {
-                    target.multiply(frameResult);
+                    target.x = x;
+                    target.y = y;
+                    target.z = z;
+                    target.w = w;
                 }
             }
-            else if (weight === 1.0) {
-                target.x = x;
-                target.y = y;
-                target.z = z;
-                target.w = w;
-            }
-            else {
-                target.x = x * weight;
-                target.y = y * weight;
-                target.z = z * weight;
-                target.w = w * weight;
-            }
-            // }
         };
         AnimationChannel.prototype.onUpdateScale = function (animationlayer, animationState) {
             var additive = animationlayer.additive;
@@ -20440,20 +20486,20 @@ var egret3d;
             }
             var weight = binder.weight;
             var target = binder.target.localScale;
-            if (binder.dirty > 1) {
-                target.x += x * weight;
-                target.y += y * weight;
-                target.z += z * weight;
+            if (weight !== 1.0) {
+                x *= weight;
+                y *= weight;
+                z *= weight;
             }
-            else if (weight === 1.0) {
+            if (binder.dirty > 1) {
+                target.x += x;
+                target.y += y;
+                target.z += z;
+            }
+            else {
                 target.x = x;
                 target.y = y;
                 target.z = z;
-            }
-            else {
-                target.x = x * weight;
-                target.y = y * weight;
-                target.z = z * weight;
             }
         };
         AnimationChannel.prototype.onUpdateActive = function (animationlayer, animationState) {

@@ -320,9 +320,9 @@ namespace egret3d {
                                     binder!.updateTarget = binder!.onUpdateRotation;
                                 }
 
-                                if (animationLayer.additive && !binder!.results) {
-                                    binder!.results = [];
-                                    binder!.resultWeight = [];
+                                if (animationLayer.additive && !binder!.quaternions) {
+                                    binder!.quaternions = [];
+                                    binder!.quaternionWeights = [];
                                 }
                                 break;
 

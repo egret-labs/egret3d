@@ -8320,8 +8320,8 @@ declare namespace egret3d {
         target: paper.BaseComponent | any;
         bindPose: any;
         layer: AnimationLayer | null;
-        results: any[] | null;
-        resultWeight: number[] | null;
+        quaternions: Quaternion[] | null;
+        quaternionWeights: number[] | null;
         updateTarget: () => void;
         private constructor();
         onClear(): void;

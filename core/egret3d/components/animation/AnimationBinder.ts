@@ -26,8 +26,8 @@ namespace egret3d {
         public bindPose: any;
         public layer: AnimationLayer | null;
 
-        public results: any[] | null;
-        public resultWeight: number[] | null;
+        public quaternions: Quaternion[] | null;
+        public quaternionWeights: number[] | null;
 
         public updateTarget: () => void;
 
@@ -38,6 +38,12 @@ namespace egret3d {
         public onClear() {
             this.clear();
 
+            if (this.quaternions) {
+                for (const quaternion of this.quaternions) {
+                    quaternion.release();
+                }
+            }
+
             if (this.bindPose && this.bindPose.release) { // TODO
                 this.bindPose.release();
             }
@@ -45,8 +51,8 @@ namespace egret3d {
             this.target = null!;
             this.bindPose = null;
             this.updateTarget = null!;
-            this.results = null;
-            this.resultWeight = null;
+            this.quaternions = null;
+            this.quaternionWeights = null;
         }
 
         public clear() {
@@ -54,6 +60,13 @@ namespace egret3d {
             this.weight = 1.0;
             this.totalWeight = 0.0;
             this.layer = null;
+
+            const quaternionWeights = this.quaternionWeights;
+            if (quaternionWeights) {
+                for (let i = 0, l = quaternionWeights.length; i < l; ++i) {
+                    quaternionWeights[i] = 0.0;
+                }
+            }
         }
 
         public updateBlend(animationlayer: AnimationLayer, animationState: AnimationState) {
@@ -123,53 +136,77 @@ namespace egret3d {
             const transforms = this.target;
             const target = (transforms as Transform).localRotation as Quaternion;
             const bindPose = this.bindPose as Quaternion;
-            const results = this.results;
+            const quaternions = this.quaternions;
 
-            // if (results) {
-            //     let posed = false;
-            //     let i = results.length;
+            if (quaternions) {
+                let posed = false;
+                let i = quaternions.length;
 
-            //     while (i--) {
-            //         const result = results[i];
-            //         let weight = this.resultWeight![i];
+                while (i--) {
+                    const quaternion = quaternions[i];
+                    let weight = this.quaternionWeights![i];
 
-            //         if (weight < 0.0) {
-            //             if (!posed) {
-            //                 target.x = bindPose.x;
-            //                 target.y = bindPose.y;
-            //                 target.z = bindPose.z;
-            //                 target.w = bindPose.w;
-            //             }
+                    if (weight === 0.0) {
+                        continue;
+                    }
 
-            //             if (weight === -1.0) {
-            //                 target.multiply(result);
-            //             }
-            //             else {
-            //                 target.multiply(result.lerp(Quaternion.IDENTITY, result, -weight));
-            //             }
-            //         }
-            //         else if (!posed) {
-            //             if (weight === 1.0) {
-            //                 target.x = result.x;
-            //                 target.y = result.y;
-            //                 target.z = result.z;
-            //                 target.w = result.w;
-            //             }
-            //             else {
-            //                 target.lerp(target, result, weight);
-            //             }
-            //         }
-            //         else {
-            //             target.lerp(target, result, weight);
-            //             target.x
-            //         }
+                    if (weight < 0.0) {
+                        if (weight !== -1.0) {
+                            if (quaternion.w >= 0.0) {
+                                weight = -weight;
+                            }
 
-            //         posed = true;
-            //     }
-            // }
+                            quaternion.x *= weight;
+                            quaternion.y *= weight;
+                            quaternion.z *= weight;
+                            quaternion.w *= weight;
+                        }
+
+                        if (!posed) {
+                            target.x = bindPose.x;
+                            target.y = bindPose.y;
+                            target.z = bindPose.z;
+                            target.w = bindPose.w;
+                        }
+
+                        target.multiply(quaternion);
+                    }
+                    else {
+                        if (weight !== 1.0) {
+                            if (quaternion.dot(target) < 0.0) {
+                                weight = -weight;
+                            }
+
+                            quaternion.x *= weight;
+                            quaternion.y *= weight;
+                            quaternion.z *= weight;
+                            quaternion.w *= weight;
+                        }
+
+                        if (posed) {
+                            target.x += quaternion.x;
+                            target.y += quaternion.y;
+                            target.z += quaternion.z;
+                            target.w += quaternion.w;
+                        }
+                        else {
+                            target.x = quaternion.x;
+                            target.y = quaternion.y;
+                            target.z = quaternion.z;
+                            target.w = quaternion.w;
+                        }
+                    }
+
+                    posed = true;
+                }
+            }
 
             if (this.totalWeight < 1.0 - Const.EPSILON) {
-                const weight = 1.0 - this.totalWeight;
+                let weight = 1.0 - this.totalWeight;
+
+                if (bindPose.dot(target) < 0.0) {
+                    weight = -weight;
+                }
 
                 if (this.dirty > 0) {
                     target.x += bindPose.x * weight;

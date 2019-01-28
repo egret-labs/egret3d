@@ -200,82 +200,59 @@ namespace egret3d {
 
             let weight = binder.weight;
             const target = (binder.target as Transform).localRotation as Quaternion;
-            // const results = binder.results;
+            const quaternions = binder.quaternions;
 
-            // if (results) {
-            //     let result: Quaternion;
-            //     const resultIndex = binder.dirty - 1;
+            if (quaternions) {
+                let quaternion: Quaternion;
+                const index = binder.dirty - 1;
 
-            //     if (results.length <= resultIndex + 1) {
-            //         results.push(Quaternion.create());
-            //     }
+                if (quaternions.length <= index + 1) {
+                    quaternions.push(Quaternion.create());
+                }
 
-            //     result = results[resultIndex];
+                quaternion = quaternions[index];
 
-            //     if (additive) {
-            //         result.fromArray(outputBuffer).inverse().premultiply(_helpQuaternion.set(x, y, z, w));
-            //     }
-            //     else {
-            //         result.set(x, y, z, w);
-            //     }
-
-            //     binder.resultWeight![resultIndex] = weight;
-            // }
-            // else {
-            const frameResult = _helpQuaternionA;
-
-            if (additive) {
-                frameResult.fromArray(outputBuffer).inverse().premultiply(_helpQuaternionB.set(x, y, z, w));
-            }
-            else {
-                frameResult.x = x;
-                frameResult.y = y;
-                frameResult.z = z;
-                frameResult.w = w;
-            }
-
-            if (binder.dirty > 1) {
                 if (additive) {
-                    target.multiply(frameResult.lerp(Quaternion.IDENTITY, frameResult, weight));
+                    quaternion.x = -outputBuffer[0];
+                    quaternion.y = -outputBuffer[1];
+                    quaternion.z = -outputBuffer[2];
+                    quaternion.w = outputBuffer[3];
+                    quaternion.multiply(_helpQuaternionA.set(x, y, z, w), quaternion);
+                    binder.quaternionWeights![index] = -weight;
                 }
                 else {
-                    if (frameResult.set(x, y, z, w).dot(target) < 0.0) {
+                    quaternion.x = x;
+                    quaternion.y = y;
+                    quaternion.z = z;
+                    quaternion.w = w;
+                    binder.quaternionWeights![index] = weight;
+                }
+            }
+            else {
+                if (weight !== 1.0) {
+                    if (_helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
                         weight = -weight;
                     }
 
-                    target.x += x * weight;
-                    target.y += y * weight;
-                    target.z += z * weight;
-                    target.w += w * weight;
+                    x *= weight;
+                    y *= weight;
+                    z *= weight;
+                    w *= weight;
                 }
-            }
-            else if (additive) {
-                const bindPose = binder.bindPose as Quaternion;
-                target.x = bindPose.x;
-                target.y = bindPose.y;
-                target.z = bindPose.z;
-                target.w = bindPose.w;
 
-                if (weight !== 1.0) {
-                    target.multiply(frameResult.lerp(Quaternion.IDENTITY, frameResult, weight));
+                if (binder.dirty > 1) {
+                    target.x += x;
+                    target.y += y;
+                    target.z += z;
+                    target.w += w;
                 }
                 else {
-                    target.multiply(frameResult);
+                    target.x = x;
+                    target.y = y;
+                    target.z = z;
+                    target.w = w;
                 }
             }
-            else if (weight === 1.0) {
-                target.x = x;
-                target.y = y;
-                target.z = z;
-                target.w = w;
-            }
-            else {
-                target.x = x * weight;
-                target.y = y * weight;
-                target.z = z * weight;
-                target.w = w * weight;
-            }
-            // }
         }
 
         public onUpdateScale(animationlayer: AnimationLayer, animationState: AnimationState) {
@@ -318,20 +295,21 @@ namespace egret3d {
             const weight = binder.weight;
             const target = (binder.target as Transform).localScale as Vector3;
 
-            if (binder.dirty > 1) {
-                target.x += x * weight;
-                target.y += y * weight;
-                target.z += z * weight;
+            if (weight !== 1.0) {
+                x *= weight;
+                y *= weight;
+                z *= weight;
             }
-            else if (weight === 1.0) {
+
+            if (binder.dirty > 1) {
+                target.x += x;
+                target.y += y;
+                target.z += z;
+            }
+            else {
                 target.x = x;
                 target.y = y;
                 target.z = z;
-            }
-            else {
-                target.x = x * weight;
-                target.y = y * weight;
-                target.z = z * weight;
             }
         }
 
