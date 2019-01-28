@@ -9,7 +9,6 @@ uniform bool u_startRotation3D;
 uniform int u_scalingMode;
 uniform vec3 u_positionScale;
 uniform vec3 u_sizeScale;
-uniform mat4 viewProjectionMatrix;
 
 uniform vec3 cameraForward;
 uniform vec3 cameraUp;

@@ -76,7 +76,7 @@ namespace egret3d.particle {
 
                 if (orginUVBuffer) {
                     uvBuffer[vector2Offset] = orginUVBuffer[orginVertexIndex * 2];
-                    uvBuffer[vector2Offset + 1] = orginUVBuffer[orginVertexIndex * 2 + 1];
+                    uvBuffer[vector2Offset + 1] = 1.0 - orginUVBuffer[orginVertexIndex * 2 + 1];
                 }
 
                 if (orginColorBuffer) {
