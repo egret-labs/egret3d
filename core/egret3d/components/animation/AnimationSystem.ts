@@ -145,7 +145,7 @@ namespace egret3d {
 
                     const binder = channel.binder;
                     if (binder.constructor === AnimationBinder) {
-                        if ((binder as AnimationBinder).updateBlend(animationState)) {
+                        if ((binder as AnimationBinder).updateBlend(animationLayer, animationState)) {
                             channel.updateTarget(animationLayer, animationState);
                         }
                     }

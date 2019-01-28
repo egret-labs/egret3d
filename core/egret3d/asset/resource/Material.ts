@@ -721,7 +721,8 @@ namespace egret3d {
             return this;
         }
         /**
-         * 清除该材质的所有图形 API 状态。
+         * TODO
+         * @private
          */
         public clearStates(): this {
             const { enable, functions } = this._technique.states!;

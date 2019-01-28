@@ -218,7 +218,7 @@ namespace egret3d {
                 quaternionA = this;
             }
 
-            // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+		    // from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
             const ax = quaternionA.x, ay = quaternionA.y, az = quaternionA.z, aw = quaternionA.w;
             const bx = quaternionB.x, by = quaternionB.y, bz = quaternionB.z, bw = quaternionB.w;
 

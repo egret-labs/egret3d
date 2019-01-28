@@ -8315,16 +8315,18 @@ declare namespace egret3d {
         private static _instances;
         static create(): AnimationBinder;
         dirty: uint;
-        totalWeight: number;
         weight: number;
+        totalWeight: number;
         target: paper.BaseComponent | any;
         bindPose: any;
         layer: AnimationLayer | null;
+        results: any[] | null;
+        resultWeight: number[] | null;
         updateTarget: () => void;
         private constructor();
         onClear(): void;
         clear(): void;
-        updateBlend(animationState: AnimationState): boolean;
+        updateBlend(animationlayer: AnimationLayer, animationState: AnimationState): boolean;
         onUpdateTranslation(): void;
         onUpdateRotation(): void;
         onUpdateScale(): void;
@@ -9523,7 +9525,8 @@ declare namespace egret3d {
          */
         setStencil(value: boolean): this;
         /**
-         * 清除该材质的所有图形 API 状态。
+         * TODO
+         * @private
          */
         clearStates(): this;
         /**

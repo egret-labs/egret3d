@@ -20,11 +20,15 @@ namespace egret3d {
         }
 
         public dirty: uint;
-        public totalWeight: number;
         public weight: number;
+        public totalWeight: number;
         public target: paper.BaseComponent | any;
         public bindPose: any;
         public layer: AnimationLayer | null;
+
+        public results: any[] | null;
+        public resultWeight: number[] | null;
+
         public updateTarget: () => void;
 
         private constructor() {
@@ -41,20 +45,28 @@ namespace egret3d {
             this.target = null!;
             this.bindPose = null;
             this.updateTarget = null!;
+            this.results = null;
+            this.resultWeight = null;
         }
 
         public clear() {
             this.dirty = 0;
-            this.totalWeight = 0.0;
             this.weight = 1.0;
+            this.totalWeight = 0.0;
             this.layer = null;
         }
 
-        public updateBlend(animationState: AnimationState) {
+        public updateBlend(animationlayer: AnimationLayer, animationState: AnimationState) {
             const globalWeight = animationState._globalWeight;
 
             if (this.dirty > 0) {
-                if (this.layer === animationState.animationLayer) {
+                if (animationlayer.additive) {
+                    this.dirty++;
+                    this.weight = globalWeight;
+
+                    return true;
+                }
+                else if (this.layer === animationState.animationLayer) {
                     this.dirty++;
                     this.weight = globalWeight;
                     this.totalWeight += this.weight;
@@ -74,9 +86,12 @@ namespace egret3d {
             }
 
             this.dirty++;
-            this.totalWeight += globalWeight;
             this.weight = globalWeight;
             this.layer = animationState.animationLayer;
+
+            if (!animationlayer.additive) {
+                this.totalWeight += globalWeight;
+            }
 
             return true;
         }
@@ -107,10 +122,54 @@ namespace egret3d {
         public onUpdateRotation() {
             const transforms = this.target;
             const target = (transforms as Transform).localRotation as Quaternion;
+            const bindPose = this.bindPose as Quaternion;
+            const results = this.results;
+
+            // if (results) {
+            //     let posed = false;
+            //     let i = results.length;
+
+            //     while (i--) {
+            //         const result = results[i];
+            //         let weight = this.resultWeight![i];
+
+            //         if (weight < 0.0) {
+            //             if (!posed) {
+            //                 target.x = bindPose.x;
+            //                 target.y = bindPose.y;
+            //                 target.z = bindPose.z;
+            //                 target.w = bindPose.w;
+            //             }
+
+            //             if (weight === -1.0) {
+            //                 target.multiply(result);
+            //             }
+            //             else {
+            //                 target.multiply(result.lerp(Quaternion.IDENTITY, result, -weight));
+            //             }
+            //         }
+            //         else if (!posed) {
+            //             if (weight === 1.0) {
+            //                 target.x = result.x;
+            //                 target.y = result.y;
+            //                 target.z = result.z;
+            //                 target.w = result.w;
+            //             }
+            //             else {
+            //                 target.lerp(target, result, weight);
+            //             }
+            //         }
+            //         else {
+            //             target.lerp(target, result, weight);
+            //             target.x
+            //         }
+
+            //         posed = true;
+            //     }
+            // }
 
             if (this.totalWeight < 1.0 - Const.EPSILON) {
                 const weight = 1.0 - this.totalWeight;
-                const bindPose = this.bindPose as Quaternion;
 
                 if (this.dirty > 0) {
                     target.x += bindPose.x * weight;

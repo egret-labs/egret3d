@@ -164,8 +164,6 @@ namespace egret3d {
         }
 
         public onUpdateRotation(animationlayer: AnimationLayer, animationState: AnimationState) {
-            const helpQuaternionA = _helpQuaternionA;
-            const helpQuaternionB = _helpQuaternionB;
             const additive = animationlayer.additive;
             const currentTime = animationState._currentTime;
             const interpolation = this.glTFSampler.interpolation;
@@ -186,6 +184,7 @@ namespace egret3d {
                     const inputBuffer = this.inputBuffer;
                     const frameStart = inputBuffer[frameIndex];
                     const progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
+                    // TODO lerp?.set(x, y, z, w).dot(target) < 0.0
                     x += (outputBuffer[offset++] - x) * progress;
                     y += (outputBuffer[offset++] - y) * progress;
                     z += (outputBuffer[offset++] - z) * progress;
@@ -199,61 +198,83 @@ namespace egret3d {
                 w = outputBuffer[3];
             }
 
-            if (additive) {
-                helpQuaternionA.fromArray(outputBuffer).multiply(helpQuaternionB.set(x, y, z, w)).inverse();
-            }
-
             let weight = binder.weight;
             const target = (binder.target as Transform).localRotation as Quaternion;
-            // const animationClip = animationState.animationClip;
+            // const results = binder.results;
 
-            // if (this.glTFChannel.target.node === animationClip.root) {
-            //     const applyRootMotion = animationClip.applyRootMotion || ApplyRootMotion.XZ;
-            //     if (weight !== 1.0) {
+            // if (results) {
+            //     let result: Quaternion;
+            //     const resultIndex = binder.dirty - 1;
+
+            //     if (results.length <= resultIndex + 1) {
+            //         results.push(Quaternion.create());
             //     }
+
+            //     result = results[resultIndex];
+
+            //     if (additive) {
+            //         result.fromArray(outputBuffer).inverse().premultiply(_helpQuaternion.set(x, y, z, w));
+            //     }
+            //     else {
+            //         result.set(x, y, z, w);
+            //     }
+
+            //     binder.resultWeight![resultIndex] = weight;
             // }
             // else {
-                if (binder.dirty > 1) {
-                    if (additive) {
-                        target.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, weight));
-                    }
-                    else {
-                        if (helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
-                            weight = -weight;
-                        }
+            const frameResult = _helpQuaternionA;
 
-                        target.x += x * weight;
-                        target.y += y * weight;
-                        target.z += z * weight;
-                        target.w += w * weight;
-                    }
-                }
-                else if (additive) { // TODO
-                    const bindPose = binder.bindPose as Quaternion;
-                    target.x = bindPose.x;
-                    target.y = bindPose.y;
-                    target.z = bindPose.z;
-                    target.w = bindPose.w;
+            if (additive) {
+                frameResult.fromArray(outputBuffer).inverse().premultiply(_helpQuaternionB.set(x, y, z, w));
+            }
+            else {
+                frameResult.x = x;
+                frameResult.y = y;
+                frameResult.z = z;
+                frameResult.w = w;
+            }
 
-                    if (weight !== 1.0) {
-                        target.multiply(helpQuaternionA.lerp(Quaternion.IDENTITY, helpQuaternionA, weight));
-                    }
-                    else {
-                        target.multiply(helpQuaternionA);
-                    }
-                }
-                else if (weight === 1.0) {
-                    target.x = x;
-                    target.y = y;
-                    target.z = z;
-                    target.w = w;
+            if (binder.dirty > 1) {
+                if (additive) {
+                    target.multiply(frameResult.lerp(Quaternion.IDENTITY, frameResult, weight));
                 }
                 else {
-                    target.x = x * weight;
-                    target.y = y * weight;
-                    target.z = z * weight;
-                    target.w = w * weight;
+                    if (frameResult.set(x, y, z, w).dot(target) < 0.0) {
+                        weight = -weight;
+                    }
+
+                    target.x += x * weight;
+                    target.y += y * weight;
+                    target.z += z * weight;
+                    target.w += w * weight;
                 }
+            }
+            else if (additive) {
+                const bindPose = binder.bindPose as Quaternion;
+                target.x = bindPose.x;
+                target.y = bindPose.y;
+                target.z = bindPose.z;
+                target.w = bindPose.w;
+
+                if (weight !== 1.0) {
+                    target.multiply(frameResult.lerp(Quaternion.IDENTITY, frameResult, weight));
+                }
+                else {
+                    target.multiply(frameResult);
+                }
+            }
+            else if (weight === 1.0) {
+                target.x = x;
+                target.y = y;
+                target.z = z;
+                target.w = w;
+            }
+            else {
+                target.x = x * weight;
+                target.y = y * weight;
+                target.z = z * weight;
+                target.w = w * weight;
+            }
             // }
         }
 
@@ -264,7 +285,6 @@ namespace egret3d {
             const outputBuffer = this.outputBuffer;
             const binder = this.binder as AnimationBinder;
             const frameIndex = this.getFrameIndex(currentTime);
-            const transforms = binder.target;
 
             let x: number, y: number, z: number;
 

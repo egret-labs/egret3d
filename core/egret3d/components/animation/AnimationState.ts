@@ -319,6 +319,11 @@ namespace egret3d {
                                     binder!.bindPose = Quaternion.create().copy(transform.localRotation);
                                     binder!.updateTarget = binder!.onUpdateRotation;
                                 }
+
+                                if (animationLayer.additive && !binder!.results) {
+                                    binder!.results = [];
+                                    binder!.resultWeight = [];
+                                }
                                 break;
 
                             case "scale":

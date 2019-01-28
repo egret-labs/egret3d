@@ -3779,6 +3779,7 @@ var egret3d;
                 wrapS: 10497 /* Repeat */, wrapT: 10497 /* Repeat */,
                 magFilter: 9729 /* Linear */, minFilter: 9987 /* LinearMipMapLinear */,
                 levels: 0,
+                anisotropy: 4,
             });
             return texture;
         };
@@ -7399,7 +7400,7 @@ var egret3d;
                 quaternionB = quaternionA;
                 quaternionA = this;
             }
-            // http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/slerp/
+            // from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
             var ax = quaternionA.x, ay = quaternionA.y, az = quaternionA.z, aw = quaternionA.w;
             var bx = quaternionB.x, by = quaternionB.y, bz = quaternionB.z, bw = quaternionB.w;
             this.x = ax * bw + aw * bx + ay * bz - az * by;
@@ -19841,6 +19842,10 @@ var egret3d;
                                     binder.bindPose = egret3d.Quaternion.create().copy(transform.localRotation);
                                     binder.updateTarget = binder.onUpdateRotation;
                                 }
+                                if (animationLayer.additive && !binder.results) {
+                                    binder.results = [];
+                                    binder.resultWeight = [];
+                                }
                                 break;
                             case "scale":
                                 channel.updateTarget = channel.onUpdateScale;
@@ -20034,7 +20039,10 @@ var egret3d;
     var AnimationBinder = (function (_super) {
         __extends(AnimationBinder, _super);
         function AnimationBinder() {
-            return _super.call(this) || this;
+            var _this = _super.call(this) || this;
+            _this.results = null;
+            _this.resultWeight = null;
+            return _this;
         }
         AnimationBinder.create = function () {
             var instance;
@@ -20056,17 +20064,24 @@ var egret3d;
             this.target = null;
             this.bindPose = null;
             this.updateTarget = null;
+            this.results = null;
+            this.resultWeight = null;
         };
         AnimationBinder.prototype.clear = function () {
             this.dirty = 0;
-            this.totalWeight = 0.0;
             this.weight = 1.0;
+            this.totalWeight = 0.0;
             this.layer = null;
         };
-        AnimationBinder.prototype.updateBlend = function (animationState) {
+        AnimationBinder.prototype.updateBlend = function (animationlayer, animationState) {
             var globalWeight = animationState._globalWeight;
             if (this.dirty > 0) {
-                if (this.layer === animationState.animationLayer) {
+                if (animationlayer.additive) {
+                    this.dirty++;
+                    this.weight = globalWeight;
+                    return true;
+                }
+                else if (this.layer === animationState.animationLayer) {
                     this.dirty++;
                     this.weight = globalWeight;
                     this.totalWeight += this.weight;
@@ -20082,9 +20097,11 @@ var egret3d;
                 return false;
             }
             this.dirty++;
-            this.totalWeight += globalWeight;
             this.weight = globalWeight;
             this.layer = animationState.animationLayer;
+            if (!animationlayer.additive) {
+                this.totalWeight += globalWeight;
+            }
             return true;
         };
         AnimationBinder.prototype.onUpdateTranslation = function () {
@@ -20289,8 +20306,6 @@ var egret3d;
             }
         };
         AnimationChannel.prototype.onUpdateRotation = function (animationlayer, animationState) {
-            var helpQuaternionA = _helpQuaternionA;
-            var helpQuaternionB = _helpQuaternionB;
             var additive = animationlayer.additive;
             var currentTime = animationState._currentTime;
             var interpolation = this.glTFSampler.interpolation;
@@ -20308,6 +20323,7 @@ var egret3d;
                     var inputBuffer = this.inputBuffer;
                     var frameStart = inputBuffer[frameIndex];
                     var progress = (currentTime - frameStart) / (inputBuffer[frameIndex + 1] - frameStart);
+                    // TODO lerp?.set(x, y, z, w).dot(target) < 0.0
                     x += (outputBuffer[offset++] - x) * progress;
                     y += (outputBuffer[offset++] - y) * progress;
                     z += (outputBuffer[offset++] - z) * progress;
@@ -20320,24 +20336,41 @@ var egret3d;
                 z = outputBuffer[2];
                 w = outputBuffer[3];
             }
-            if (additive) {
-                helpQuaternionA.fromArray(outputBuffer).multiply(helpQuaternionB.set(x, y, z, w)).inverse();
-            }
             var weight = binder.weight;
             var target = binder.target.localRotation;
-            // const animationClip = animationState.animationClip;
-            // if (this.glTFChannel.target.node === animationClip.root) {
-            //     const applyRootMotion = animationClip.applyRootMotion || ApplyRootMotion.XZ;
-            //     if (weight !== 1.0) {
+            // const results = binder.results;
+            // if (results) {
+            //     let result: Quaternion;
+            //     const resultIndex = binder.dirty - 1;
+            //     if (results.length <= resultIndex + 1) {
+            //         results.push(Quaternion.create());
             //     }
+            //     result = results[resultIndex];
+            //     if (additive) {
+            //         result.fromArray(outputBuffer).inverse().premultiply(_helpQuaternion.set(x, y, z, w));
+            //     }
+            //     else {
+            //         result.set(x, y, z, w);
+            //     }
+            //     binder.resultWeight![resultIndex] = weight;
             // }
             // else {
+            var frameResult = _helpQuaternionA;
+            if (additive) {
+                frameResult.fromArray(outputBuffer).inverse().premultiply(_helpQuaternionB.set(x, y, z, w));
+            }
+            else {
+                frameResult.x = x;
+                frameResult.y = y;
+                frameResult.z = z;
+                frameResult.w = w;
+            }
             if (binder.dirty > 1) {
                 if (additive) {
-                    target.multiply(helpQuaternionA.lerp(egret3d.Quaternion.IDENTITY, helpQuaternionA, weight));
+                    target.multiply(frameResult.lerp(egret3d.Quaternion.IDENTITY, frameResult, weight));
                 }
                 else {
-                    if (helpQuaternionA.set(x, y, z, w).dot(target) < 0.0) {
+                    if (frameResult.set(x, y, z, w).dot(target) < 0.0) {
                         weight = -weight;
                     }
                     target.x += x * weight;
@@ -20353,10 +20386,10 @@ var egret3d;
                 target.z = bindPose.z;
                 target.w = bindPose.w;
                 if (weight !== 1.0) {
-                    target.multiply(helpQuaternionA.lerp(egret3d.Quaternion.IDENTITY, helpQuaternionA, weight));
+                    target.multiply(frameResult.lerp(egret3d.Quaternion.IDENTITY, frameResult, weight));
                 }
                 else {
-                    target.multiply(helpQuaternionA);
+                    target.multiply(frameResult);
                 }
             }
             else if (weight === 1.0) {
@@ -20380,7 +20413,6 @@ var egret3d;
             var outputBuffer = this.outputBuffer;
             var binder = this.binder;
             var frameIndex = this.getFrameIndex(currentTime);
-            var transforms = binder.target;
             var x, y, z;
             if (frameIndex >= 0) {
                 var offset = frameIndex * 3;
@@ -20672,7 +20704,7 @@ var egret3d;
                     }
                     var binder = channel.binder;
                     if (binder.constructor === egret3d.AnimationBinder) {
-                        if (binder.updateBlend(animationState)) {
+                        if (binder.updateBlend(animationLayer, animationState)) {
                             channel.updateTarget(animationLayer, animationState);
                         }
                     }
@@ -25721,7 +25753,8 @@ var egret3d;
             return this;
         };
         /**
-         * 清除该材质的所有图形 API 状态。
+         * TODO
+         * @private
          */
         Material.prototype.clearStates = function () {
             var _a = this._technique.states, enable = _a.enable, functions = _a.functions;

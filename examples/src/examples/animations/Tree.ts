@@ -31,7 +31,6 @@ namespace examples.animations {
                 RES.getRes("Assets/Animations/Mixamo/Walking.ani.bin"),
                 RES.getRes("Assets/Animations/Mixamo/Running.ani.bin"),
             ];
-            animation.play("Looking_Around");
             //
             const animationController = animation.animationController!;
             const layer = animationController.getOrAddLayer(0);
