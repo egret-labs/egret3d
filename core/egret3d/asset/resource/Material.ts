@@ -247,7 +247,7 @@ namespace egret3d {
             // isRatain ? this._shader.retain() : this._shader.release(); TODO
         }
 
-        private _addOrRemoveTexturesDefine(add: boolean) {
+        private _addOrRemoveTexturesDefine(add: boolean = true) {
             const uniforms = this._technique.uniforms;
             for (const k in uniforms) {
                 const uniform = uniforms[k];
@@ -267,6 +267,15 @@ namespace egret3d {
                 this.setUVTransform(_uvTransformMatrix.fromUVTransform.apply(_uvTransformMatrix, this._uvTransform as any));
                 this._dirty &= ~MaterialDirty.UVTransform;
             }
+        }
+
+        public initialize(
+            name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
+            ...args: Array<any>
+        ) {
+            super.initialize(name, config, buffers, args);
+
+            RenderState.onGammaInputChanged.add(this._addOrRemoveTexturesDefine, this);
         }
 
         public retain(): this {
@@ -297,6 +306,8 @@ namespace egret3d {
             this.defines.clear();
             this._technique = null!;
             this._shader = null!;
+
+            RenderState.onGammaInputChanged.remove(this._addOrRemoveTexturesDefine, this);
 
             return true;
         }

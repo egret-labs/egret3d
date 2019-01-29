@@ -79,7 +79,6 @@ namespace egret3d.webgl {
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheScene: paper.Scene | null = null;
         private _cacheCamera: Camera | null = null;
-        private _cacheSkyBoxTexture: BaseTexture | null = null;
         //
         private _cacheLight: BaseLight | null = null;
         //
@@ -404,6 +403,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const technique = material.technique;
             const techniqueState = technique.states || null;
+            const renderState = this._renderState;
             //
             if (material._dirty) {
                 material._update();
@@ -413,7 +413,7 @@ namespace egret3d.webgl {
                 technique.program = program.id;
             }
             // Update states.
-            this._renderState.updateState(techniqueState);
+            renderState.updateState(techniqueState);
             //
             const unifroms = technique.uniforms;
 
@@ -492,7 +492,7 @@ namespace egret3d.webgl {
 
                             if (uniformName === ShaderUniformName.EnvMap) {
                                 if (isInvalide) {
-                                    texture = this._cacheSkyBoxTexture || DefaultTextures.WHITE; // TODO
+                                    texture = renderState._skyBoxTexture || DefaultTextures.WHITE; // TODO
                                 }
 
                                 material.setFloat(ShaderUniformName.FlipEnvMap, texture!.type === gltf.TextureType.TextureCube ? 1.0 : -1.0);
@@ -588,9 +588,9 @@ namespace egret3d.webgl {
                 const texture = (material.shader === egret3d.DefaultShaders.CUBE) ? material.getTexture(ShaderUniformName.CubeMap) :
                     ((material.shader === egret3d.DefaultShaders.EQUIRECT) ? material.getTexture(ShaderUniformName.EquirectMap) : material.getTexture());
 
-                if (this._cacheSkyBoxTexture !== texture) {
+                if (renderState._skyBoxTexture !== texture) {
                     renderState._updateTextureDefines(ShaderUniformName.EnvMap, texture);
-                    this._cacheSkyBoxTexture = texture;
+                    renderState._skyBoxTexture = texture;
                 }
 
                 if (!drawCall.mesh) {
@@ -602,9 +602,9 @@ namespace egret3d.webgl {
 
                 this.draw(drawCall, material);
             }
-            else if (this._cacheSkyBoxTexture) {
+            else if (renderState._skyBoxTexture) {
                 renderState._updateTextureDefines(ShaderUniformName.EnvMap, null);
-                this._cacheSkyBoxTexture = null;
+                renderState._skyBoxTexture = null;
             }
             // Draw opaques.
             for (const drawCall of camera.context.opaqueCalls) {
