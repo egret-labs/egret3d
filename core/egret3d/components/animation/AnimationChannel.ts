@@ -206,13 +206,14 @@ namespace egret3d {
                 let quaternion: Quaternion;
                 const index = binder.dirty - 1;
 
-                if (quaternions.length <= index + 1) {
+                if (quaternions.length <= index) {
                     quaternions.push(Quaternion.create());
                 }
 
                 quaternion = quaternions[index];
 
                 if (additive) {
+                    // quaternion.fromArray(outputBuffer).inverse().premultiply(_helpQuaternionA.set(x, y, z, w));
                     quaternion.x = -outputBuffer[0];
                     quaternion.y = -outputBuffer[1];
                     quaternion.z = -outputBuffer[2];

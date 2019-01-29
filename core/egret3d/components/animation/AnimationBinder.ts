@@ -151,16 +151,17 @@ namespace egret3d {
                     }
 
                     if (weight < 0.0) {
-                        if (weight !== -1.0) {
-                            if (quaternion.w >= 0.0) {
-                                weight = -weight;
-                            }
+                        quaternion.lerp(Quaternion.IDENTITY, quaternion, -weight);
+                        // if (weight !== -1.0) { // TODO
+                        //     if (quaternion.w >= 0.0) {
+                        //         weight = -weight;
+                        //     }
 
-                            quaternion.x *= weight;
-                            quaternion.y *= weight;
-                            quaternion.z *= weight;
-                            quaternion.w *= weight;
-                        }
+                        //     quaternion.x *= weight;
+                        //     quaternion.y *= weight;
+                        //     quaternion.z *= weight;
+                        //     quaternion.w *= weight;
+                        // }
 
                         if (!posed) {
                             target.x = bindPose.x;
@@ -169,10 +170,10 @@ namespace egret3d {
                             target.w = bindPose.w;
                         }
 
-                        target.multiply(quaternion);
+                        target.multiply(quaternion, target);
                     }
                     else {
-                        if (weight !== 1.0) {
+                        if (weight !== 1.0) { // TODO
                             if (quaternion.dot(target) < 0.0) {
                                 weight = -weight;
                             }

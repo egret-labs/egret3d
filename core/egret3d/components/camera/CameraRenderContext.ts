@@ -109,8 +109,8 @@ namespace egret3d {
             const materialA = a.material!;
             const materialB = b.material!;
 
-            if (materialA.renderQueue !== materialB.renderQueue) {
-                return materialA.renderQueue - materialB.renderQueue;
+            if (materialA._renderQueue !== materialB._renderQueue) {
+                return materialA._renderQueue - materialB._renderQueue;
             }
             else if (materialA._technique.program !== materialB._technique.program) {
                 return materialA._technique.program! - materialB._technique.program!;
@@ -129,11 +129,11 @@ namespace egret3d {
             const materialA = a.material!;
             const materialB = b.material!;
 
-            if (materialA.renderQueue === materialB.renderQueue) {
+            if (materialA._renderQueue === materialB._renderQueue) {
                 return b.zdist - a.zdist;
             }
             else {
-                return materialA.renderQueue - materialB.renderQueue;
+                return materialA._renderQueue - materialB._renderQueue;
             }
         }
 
@@ -174,7 +174,7 @@ namespace egret3d {
                     (!renderer.frustumCulled || math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))
                 ) {
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
-                    if (drawCall!.material!.renderQueue >= RenderQueue.Mask) {
+                    if (drawCall!.material!._renderQueue >= RenderQueue.Mask) {
                         transparentCalls.push(drawCall!);
                     }
                     else {

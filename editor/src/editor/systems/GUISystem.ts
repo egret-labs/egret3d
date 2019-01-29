@@ -73,6 +73,12 @@ namespace paper.editor {
                         }
                         break;
 
+                    case "TextureDesc":
+                        if (asset instanceof egret3d.Texture) {
+                            flag = true;
+                        }
+                        break;
+
                     case "Material":
                         if (asset instanceof egret3d.Material) {
                             flag = true;
@@ -174,8 +180,8 @@ namespace paper.editor {
             });
 
             if (sceneOrGameObject) {
-                inspector.add(this, "_destroySceneOrGameObject", "destroy");
-                inspector.add(this, "_saveSceneOrGameObject", "save");
+                inspector.add(this, "destroy|_destroySceneOrGameObject", "destroy");
+                inspector.add(this, "save|_saveSceneOrGameObject", "save");
                 this._addToInspector(inspector);
 
                 if (sceneOrGameObject instanceof Scene) { // Update scene.
@@ -239,262 +245,344 @@ namespace paper.editor {
 
         private _addToInspector(gui: dat.GUI) {
             const infos = editor.getEditInfo(gui.instance);
-            let guiControllerA: dat.GUIController;
-            let guiControllerB: dat.GUIController;
-            let guiControllerC: dat.GUIController;
-            let guiControllerD: dat.GUIController;
 
             if (gui !== this._guiComponent.inspector) {
                 gui.onClick = this._componentOrPropertyGUIClickHandler;
             }
 
             for (const info of infos) {
-                switch (info.editType) {
-                    case paper.editor.EditType.UINT:
-                        guiControllerA = gui.add(gui.instance, info.name).min(0).step(1).listen();
+                this._addItemToInspector(info.editType, gui, info);
+            }
 
-                        if (info.option) {
-                            if (info.option.minimum !== undefined) {
-                                guiControllerA.min(info.option.minimum);
-                            }
+            if (gui.instance instanceof egret3d.Material) {
+                const techniqueUniforms = gui.instance.technique.uniforms;
+                for (const k in techniqueUniforms) {
+                    const uniform = techniqueUniforms[k];
 
-                            if (info.option.maximum !== undefined) {
-                                guiControllerA.max(info.option.maximum);
-                            }
-
-                            if (info.option.step !== undefined) {
-                                guiControllerA.step(info.option.step);
-                            }
-                        }
-                        break;
-
-                    case paper.editor.EditType.INT:
-                        guiControllerA = gui.add(gui.instance, info.name).step(1).listen();
-
-                        if (info.option) {
-                            if (info.option.minimum !== undefined) {
-                                guiControllerA.min(info.option.minimum);
-                            }
-
-                            if (info.option.maximum !== undefined) {
-                                guiControllerA.max(info.option.maximum);
-                            }
-
-                            if (info.option.step !== undefined) {
-                                guiControllerA.step(info.option.step);
-                            }
-                        }
-                        break;
-
-                    case paper.editor.EditType.FLOAT:
-                        guiControllerA = gui.add(gui.instance, info.name).step(0.1).listen();
-
-                        if (info.option) {
-                            if (info.option.minimum !== undefined) {
-                                guiControllerA.min(info.option.minimum);
-                            }
-
-                            if (info.option.maximum !== undefined) {
-                                guiControllerA.max(info.option.maximum);
-                            }
-
-                            if (info.option.step !== undefined) {
-                                guiControllerA.step(info.option.step);
-                            }
-                        }
-                        break;
-
-                    case paper.editor.EditType.CHECKBOX:
-                    case paper.editor.EditType.TEXT:
-                        gui.add(gui.instance, info.name).listen();
-                        break;
-
-                    case paper.editor.EditType.LIST:
-                        let listItems = info.option!.listItems;
-                        if (listItems) {
-                            if (typeof listItems === "string") {
-                                listItems = gui.instance[listItems] as paper.editor.ListItem[];
-                            }
-                            else if (listItems instanceof Function) {
-                                listItems = listItems(gui.instance);
-                            }
-
-                            gui.add(gui.instance, info.name, listItems).listen();
-                        }
-                        break;
-
-                    case paper.editor.EditType.VECTOR2: {
-                        guiControllerA = gui.add(gui.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
-                        guiControllerB = gui.add(gui.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
-
-                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
-                            const onChange = () => {
-                                gui.instance[info.name] = gui.instance[info.name];
-                            };
-                            guiControllerA.onChange(onChange);
-                            guiControllerB.onChange(onChange);
-                        }
-
-                        if (info.option) {
-                            if (info.option.minimum !== undefined) {
-                                guiControllerA.min(info.option.minimum);
-                                guiControllerB.min(info.option.minimum);
-                            }
-
-                            if (info.option.maximum !== undefined) {
-                                guiControllerA.max(info.option.maximum);
-                                guiControllerB.max(info.option.maximum);
-                            }
-
-                            if (info.option.step !== undefined) {
-                                guiControllerA.step(info.option.step);
-                                guiControllerB.step(info.option.step);
-                            }
-                        }
-                        break;
+                    if (!uniform.name) { //
+                        uniform.name = k;
                     }
 
-                    case paper.editor.EditType.SIZE: {
-                        guiControllerA = gui.add(gui.instance[info.name], `${info.name}: w|w`).step(0.1).listen();
-                        guiControllerB = gui.add(gui.instance[info.name], `${info.name}: h|h`).step(0.1).listen();
+                    this._addUniformItemToInspector(uniform, gui);
+                }
+            }
+        }
 
-                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
-                            const onChange = () => {
-                                gui.instance[info.name] = gui.instance[info.name];
-                            };
-                            guiControllerA.onChange(onChange);
-                            guiControllerB.onChange(onChange);
+        private _addItemToInspector(type: paper.editor.EditType, parent: dat.GUI, info: paper.editor.PropertyInfo) {
+            if (parent !== this._guiComponent.inspector) {
+                parent.onClick = this._componentOrPropertyGUIClickHandler;
+            }
+
+            let guiControllerA: dat.GUIController;
+            let guiControllerB: dat.GUIController;
+            let guiControllerC: dat.GUIController;
+            let guiControllerD: dat.GUIController;
+
+            switch (type) {
+                case paper.editor.EditType.UINT:
+                    guiControllerA = parent.add(parent.instance, info!.name).min(0).step(1).listen();
+
+                    if (info.option) {
+                        if (info.option.minimum !== undefined) {
+                            guiControllerA.min(info.option.minimum);
                         }
 
-                        if (info.option) {
-                            if (info.option.minimum !== undefined) {
-                                guiControllerA.min(info.option.minimum);
-                                guiControllerB.min(info.option.minimum);
-                            }
-
-                            if (info.option.maximum !== undefined) {
-                                guiControllerA.max(info.option.maximum);
-                                guiControllerB.max(info.option.maximum);
-                            }
-
-                            if (info.option.step !== undefined) {
-                                guiControllerA.step(info.option.step);
-                                guiControllerB.step(info.option.step);
-                            }
+                        if (info.option.maximum !== undefined) {
+                            guiControllerA.max(info.option.maximum);
                         }
-                        break;
+
+                        if (info.option.step !== undefined) {
+                            guiControllerA.step(info.option.step);
+                        }
+                    }
+                    break;
+
+                case paper.editor.EditType.INT:
+                    guiControllerA = parent.add(parent.instance, info.name).step(1).listen();
+
+                    if (info.option) {
+                        if (info.option.minimum !== undefined) {
+                            guiControllerA.min(info.option.minimum);
+                        }
+
+                        if (info.option.maximum !== undefined) {
+                            guiControllerA.max(info.option.maximum);
+                        }
+
+                        if (info.option.step !== undefined) {
+                            guiControllerA.step(info.option.step);
+                        }
+                    }
+                    break;
+
+                case paper.editor.EditType.FLOAT:
+                    guiControllerA = parent.add(parent.instance, info.name).step(0.1).listen();
+
+                    if (info.option) {
+                        if (info.option.minimum !== undefined) {
+                            guiControllerA.min(info.option.minimum);
+                        }
+
+                        if (info.option.maximum !== undefined) {
+                            guiControllerA.max(info.option.maximum);
+                        }
+
+                        if (info.option.step !== undefined) {
+                            guiControllerA.step(info.option.step);
+                        }
+                    }
+                    break;
+
+                case paper.editor.EditType.CHECKBOX:
+                case paper.editor.EditType.TEXT:
+                    parent.add(parent.instance, info.name).listen();
+                    break;
+
+                case paper.editor.EditType.LIST:
+                    let listItems = info.option!.listItems;
+                    if (listItems) {
+                        if (typeof listItems === "string") {
+                            listItems = parent.instance[listItems] as paper.editor.ListItem[];
+                        }
+                        else if (listItems instanceof Function) {
+                            listItems = listItems(parent.instance);
+                        }
+
+                        parent.add(parent.instance, info.name, listItems).listen();
+                    }
+                    break;
+
+                case paper.editor.EditType.VECTOR2: {
+                    guiControllerA = parent.add(parent.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
+                    guiControllerB = parent.add(parent.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
+
+                    if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                        const onChange = () => {
+                            parent.instance[info.name] = parent.instance[info.name];
+                        };
+                        guiControllerA.onChange(onChange);
+                        guiControllerB.onChange(onChange);
                     }
 
-                    case paper.editor.EditType.VECTOR3: {
-                        guiControllerA = gui.add(gui.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
-                        guiControllerB = gui.add(gui.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
-                        guiControllerC = gui.add(gui.instance[info.name], `${info.name}: z|z`).step(0.1).listen();
-
-                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
-                            const onChange = () => {
-                                gui.instance[info.name] = gui.instance[info.name];
-                            };
-                            guiControllerA.onChange(onChange);
-                            guiControllerB.onChange(onChange);
-                            guiControllerC.onChange(onChange);
+                    if (info.option) {
+                        if (info.option.minimum !== undefined) {
+                            guiControllerA.min(info.option.minimum);
+                            guiControllerB.min(info.option.minimum);
                         }
 
-                        if (info.option) {
-                            if (info.option.minimum !== undefined) {
-                                guiControllerA.min(info.option.minimum);
-                                guiControllerB.min(info.option.minimum);
-                                guiControllerC.min(info.option.minimum);
-                            }
-
-                            if (info.option.maximum !== undefined) {
-                                guiControllerA.max(info.option.maximum);
-                                guiControllerB.max(info.option.maximum);
-                                guiControllerC.max(info.option.maximum);
-                            }
-
-                            if (info.option.step !== undefined) {
-                                guiControllerA.step(info.option.step);
-                                guiControllerB.step(info.option.step);
-                                guiControllerC.step(info.option.step);
-                            }
+                        if (info.option.maximum !== undefined) {
+                            guiControllerA.max(info.option.maximum);
+                            guiControllerB.max(info.option.maximum);
                         }
-                        break;
+
+                        if (info.option.step !== undefined) {
+                            guiControllerA.step(info.option.step);
+                            guiControllerB.step(info.option.step);
+                        }
+                    }
+                    break;
+                }
+
+                case paper.editor.EditType.SIZE: {
+                    guiControllerA = parent.add(parent.instance[info.name], `${info.name}: w|w`).step(0.1).listen();
+                    guiControllerB = parent.add(parent.instance[info.name], `${info.name}: h|h`).step(0.1).listen();
+
+                    if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                        const onChange = () => {
+                            parent.instance[info.name] = parent.instance[info.name];
+                        };
+                        guiControllerA.onChange(onChange);
+                        guiControllerB.onChange(onChange);
                     }
 
-                    case paper.editor.EditType.VECTOR4:
-                    case paper.editor.EditType.QUATERNION:
-                        break;
-
-                    case paper.editor.EditType.COLOR: {
-                        guiControllerA = gui.addColor(gui.instance, info.name).listen();
-
-                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
-                            const onChange = () => {
-                                gui.instance[info.name] = gui.instance[info.name];
-                            };
-                            guiControllerA.onChange(onChange);
+                    if (info.option) {
+                        if (info.option.minimum !== undefined) {
+                            guiControllerA.min(info.option.minimum);
+                            guiControllerB.min(info.option.minimum);
                         }
-                        break;
+
+                        if (info.option.maximum !== undefined) {
+                            guiControllerA.max(info.option.maximum);
+                            guiControllerB.max(info.option.maximum);
+                        }
+
+                        if (info.option.step !== undefined) {
+                            guiControllerA.step(info.option.step);
+                            guiControllerB.step(info.option.step);
+                        }
+                    }
+                    break;
+                }
+
+                case paper.editor.EditType.VECTOR3: {
+                    guiControllerA = parent.add(parent.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
+                    guiControllerB = parent.add(parent.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
+                    guiControllerC = parent.add(parent.instance[info.name], `${info.name}: z|z`).step(0.1).listen();
+
+                    if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                        const onChange = () => {
+                            parent.instance[info.name] = parent.instance[info.name];
+                        };
+                        guiControllerA.onChange(onChange);
+                        guiControllerB.onChange(onChange);
+                        guiControllerC.onChange(onChange);
                     }
 
-                    case paper.editor.EditType.RECT: {
-                        guiControllerA = gui.add(gui.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
-                        guiControllerB = gui.add(gui.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
-                        guiControllerC = gui.add(gui.instance[info.name], `${info.name}: w|w`).step(0.1).listen();
-                        guiControllerD = gui.add(gui.instance[info.name], `${info.name}: h|h`).step(0.1).listen();
-
-                        if (this._propertyHasGetterSetter(gui.instance, info.name)) {
-                            const onChange = () => {
-                                gui.instance[info.name] = gui.instance[info.name];
-                            };
-                            guiControllerA.onChange(onChange);
-                            guiControllerB.onChange(onChange);
-                            guiControllerC.onChange(onChange);
-                            guiControllerD.onChange(onChange);
+                    if (info.option) {
+                        if (info.option.minimum !== undefined) {
+                            guiControllerA.min(info.option.minimum);
+                            guiControllerB.min(info.option.minimum);
+                            guiControllerC.min(info.option.minimum);
                         }
 
-                        if (info.option) {
-                            if (info.option.minimum !== undefined) {
-                                guiControllerA.min(info.option.minimum);
-                                guiControllerB.min(info.option.minimum);
-                                guiControllerC.min(info.option.minimum);
-                                guiControllerD.min(info.option.minimum);
-                            }
-
-                            if (info.option.maximum !== undefined) {
-                                guiControllerA.max(info.option.maximum);
-                                guiControllerB.max(info.option.maximum);
-                                guiControllerC.max(info.option.maximum);
-                                guiControllerD.min(info.option.maximum);
-                            }
-
-                            if (info.option.step !== undefined) {
-                                guiControllerA.step(info.option.step);
-                                guiControllerB.step(info.option.step);
-                                guiControllerC.step(info.option.step);
-                                guiControllerD.step(info.option.step);
-                            }
+                        if (info.option.maximum !== undefined) {
+                            guiControllerA.max(info.option.maximum);
+                            guiControllerB.max(info.option.maximum);
+                            guiControllerC.max(info.option.maximum);
                         }
-                        break;
+
+                        if (info.option.step !== undefined) {
+                            guiControllerA.step(info.option.step);
+                            guiControllerB.step(info.option.step);
+                            guiControllerC.step(info.option.step);
+                        }
+                    }
+                    break;
+                }
+
+                case paper.editor.EditType.VECTOR4:
+                case paper.editor.EditType.QUATERNION:
+                    break;
+
+                case paper.editor.EditType.COLOR: {
+                    guiControllerA = parent.addColor(parent.instance, info.name).listen();
+
+                    if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                        const onChange = () => {
+                            parent.instance[info.name] = parent.instance[info.name];
+                        };
+                        guiControllerA.onChange(onChange);
+                    }
+                    break;
+                }
+
+                case paper.editor.EditType.RECT: {
+                    guiControllerA = parent.add(parent.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
+                    guiControllerB = parent.add(parent.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
+                    guiControllerC = parent.add(parent.instance[info.name], `${info.name}: w|w`).step(0.1).listen();
+                    guiControllerD = parent.add(parent.instance[info.name], `${info.name}: h|h`).step(0.1).listen();
+
+                    if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                        const onChange = () => {
+                            parent.instance[info.name] = parent.instance[info.name];
+                        };
+                        guiControllerA.onChange(onChange);
+                        guiControllerB.onChange(onChange);
+                        guiControllerC.onChange(onChange);
+                        guiControllerD.onChange(onChange);
                     }
 
-                    case paper.editor.EditType.MESH:
-                        guiControllerA = gui.add(new AssetProxy(gui.instance, info.name), `${info.name}|uri`, this._getAssets("Mesh")).listen();
-                        break;
+                    if (info.option) {
+                        if (info.option.minimum !== undefined) {
+                            guiControllerA.min(info.option.minimum);
+                            guiControllerB.min(info.option.minimum);
+                            guiControllerC.min(info.option.minimum);
+                            guiControllerD.min(info.option.minimum);
+                        }
 
-                    case paper.editor.EditType.GAMEOBJECT:
-                        break;
+                        if (info.option.maximum !== undefined) {
+                            guiControllerA.max(info.option.maximum);
+                            guiControllerB.max(info.option.maximum);
+                            guiControllerC.max(info.option.maximum);
+                            guiControllerD.min(info.option.maximum);
+                        }
 
-                    case paper.editor.EditType.BUTTON:
-                        guiControllerA = gui.add(gui.instance, info.name);
-                        break;
+                        if (info.option.step !== undefined) {
+                            guiControllerA.step(info.option.step);
+                            guiControllerB.step(info.option.step);
+                            guiControllerC.step(info.option.step);
+                            guiControllerD.step(info.option.step);
+                        }
+                    }
+                    break;
+                }
 
-                    case paper.editor.EditType.NESTED: {
-                        const folder = gui.addFolder(info.name);
-                        folder.instance = gui.instance[info.name];
+                case paper.editor.EditType.MESH:
+                    parent.add(new AssetProxy(parent.instance, info.name), `${info.name}|uri`, this._getAssets("Mesh")).listen();
+                    break;
+
+                case paper.editor.EditType.MATERIAL: {
+                    const folder = parent.addFolder(info.name);
+                    folder.instance = parent.instance[info.name];
+                    this._addToInspector(folder);
+                    break;
+                }
+
+                case paper.editor.EditType.MATERIAL_ARRAY: {
+                    const folder = parent.addFolder(info.name);
+                    folder.instance = parent.instance[info.name];
+                    this._addToArray(folder, egret3d.Material);
+                    break;
+                }
+
+                case paper.editor.EditType.GAMEOBJECT:
+                    break;
+
+                case paper.editor.EditType.BUTTON:
+                    parent.add(parent.instance, info.name);
+                    break;
+
+                case paper.editor.EditType.NESTED: {
+                    const folder = parent.addFolder(info.name);
+                    folder.instance = parent.instance[info.name];
+                    this._addToInspector(folder);
+                    break;
+                }
+            }
+        }
+
+        private _addUniformItemToInspector(uniform: gltf.Uniform, parent: dat.GUI) {
+            if (parent !== this._guiComponent.inspector) {
+                parent.onClick = this._componentOrPropertyGUIClickHandler;
+            }
+
+            let guiControllerA: dat.GUIController;
+            let guiControllerB: dat.GUIController;
+            let guiControllerC: dat.GUIController;
+            let guiControllerD: dat.GUIController;
+
+            switch (uniform.type) {
+                case gltf.UniformType.FLOAT:
+                    if (typeof uniform.value === "number") {
+                        guiControllerA = parent.add(uniform, `${uniform.name!}|value`).step(0.1).listen();
+                        guiControllerA.onChange((v: number) => {
+                            (parent.instance as egret3d.Material).setFloat(uniform.name!, v);
+                        });
+                    }
+                    break;
+
+                case gltf.UniformType.SAMPLER_2D:
+                    // parent.add(new AssetProxy(parent.instance, uniform.name, "getTexture", "setTexture"), `${uniform.name}|uri`, this._getAssets("TextureDesc")).listen();
+                    guiControllerA = parent.add(new AssetProxy(parent.instance, uniform.name, "getTexture", "setTexture"), `${uniform.name}|uri`).listen();
+                    break;
+            }
+        }
+
+        private _addToArray(gui: dat.GUI, type: any) {
+            if (gui !== this._guiComponent.inspector) {
+                gui.onClick = this._componentOrPropertyGUIClickHandler;
+            }
+
+            switch (type) {
+                case egret3d.Material: {
+                    const materials = gui.instance as egret3d.Material[];
+                    let index = 0;
+                    for (const material of materials) {
+                        const folder = gui.addFolder(`<${index++}>`);
+                        folder.instance = material;
                         this._addToInspector(folder);
-                        break;
                     }
+                    break;
                 }
             }
         }
@@ -650,14 +738,13 @@ namespace paper.editor {
             }
 
             if (isInspectorShowed) { // Update folder.
-                this._guiComponent.inspector.updateDisplay();
-
-                const inspectorFolders = this._guiComponent.inspector.__folders;
-                if (inspectorFolders) {
-                    for (const k in inspectorFolders) {
-                        inspectorFolders[k].updateDisplay();
-                    }
-                }
+                // this._guiComponent.inspector.updateDisplay();
+                // const inspectorFolders = this._guiComponent.inspector.__folders;
+                // if (inspectorFolders) {
+                //     for (const k in inspectorFolders) {
+                //         inspectorFolders[k].updateDisplay();
+                //     }
+                // }
 
                 if (this._modelComponent.selectedGameObject) {
                     this._modelComponent.selectedGameObject.transform.localEulerAngles; // TODO
@@ -667,30 +754,45 @@ namespace paper.editor {
     }
 
     class AssetProxy {
-        public constructor(private _instance: any, private _key: string) {
+        public constructor(
+            private _instance: any,
+            private _key: string | null = null,
+            private _get: string | null = null,
+            private _set: string | null = null,
+        ) {
+        }
+
+        private _setValue(value: any) {
+            if (this._set) {
+                this._instance[this._set](this._key, value);
+            }
+            else {
+                this._instance[this._key!] = value;
+            }
         }
 
         public get uri() {
-            const value = this._instance[this._key];
+            const value = this._get ? this._instance[this._get](this._key) : this._instance[this._key!];
             if (value) {
                 return value.name || paper.DefaultNames.NoName;
             }
 
-            return value;
+            return "";
+            // return null;
         }
 
         public set uri(value: any) {
             if (!value) {
-                this._instance[this._key] = null;
+                this._setValue(null);
             }
             else {
                 const asset = paper.Asset.find(value);
                 if (asset) {
-                    this._instance[this._key] = asset;
+                    this._setValue(asset);
                 }
                 else {
                     RES.getResAsync(value).then((r) => {
-                        this._instance[this._key] = r;
+                        this._setValue(r);
                     });
                 }
             }

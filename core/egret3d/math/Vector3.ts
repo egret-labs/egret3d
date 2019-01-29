@@ -12,12 +12,12 @@ namespace egret3d {
      * 欧拉旋转顺序。
      */
     export const enum EulerOrder {
-        XYZ,
-        XZY,
-        YXZ,
-        YZX,
-        ZXY,
-        ZYX,
+        XYZ = 1,
+        XZY = 2,
+        YXZ = 3,
+        YZX = 4,
+        ZXY = 5,
+        ZYX = 6,
     }
     /**
      * 三维向量。

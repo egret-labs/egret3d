@@ -8496,17 +8496,6 @@ var paper;
                         console.info(json);
                     }
                 };
-                _this._createGameObject = function () {
-                    if (_this._modelComponent.selectedScene) {
-                        var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "Untagged" /* Untagged */, _this._modelComponent.selectedScene);
-                        _this._modelComponent.select(gameObject, true);
-                    }
-                    else {
-                        var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "NoName" /* NoName */, "Untagged" /* Untagged */, _this._modelComponent.selectedGameObject.scene);
-                        gameObject.transform.parent = _this._modelComponent.selectedGameObject.transform;
-                        _this._modelComponent.select(gameObject, true);
-                    }
-                };
                 _this._destroySceneOrGameObject = function () {
                     var selectedSceneOrGameObject = _this._guiComponent.inspector.instance;
                     if (selectedSceneOrGameObject) {
@@ -8532,6 +8521,11 @@ var paper;
                     switch (type) {
                         case "Mesh":
                             if (asset instanceof egret3d.Mesh) {
+                                flag = true;
+                            }
+                            break;
+                        case "TextureDesc":
+                            if (asset instanceof egret3d.Texture) {
                                 flag = true;
                             }
                             break;
@@ -8638,8 +8632,8 @@ var paper;
                     });
                 }); });
                 if (sceneOrGameObject) {
-                    inspector.add(this, "_destroySceneOrGameObject", "destroy");
-                    inspector.add(this, "_saveSceneOrGameObject", "save");
+                    inspector.add(this, "destroy|_destroySceneOrGameObject", "destroy");
+                    inspector.add(this, "save|_saveSceneOrGameObject", "save");
                     this._addToInspector(inspector);
                     if (sceneOrGameObject instanceof paper.Scene) {
                     }
@@ -8691,225 +8685,290 @@ var paper;
             };
             GUISystem.prototype._addToInspector = function (gui) {
                 var infos = editor.getEditInfo(gui.instance);
+                if (gui !== this._guiComponent.inspector) {
+                    gui.onClick = this._componentOrPropertyGUIClickHandler;
+                }
+                for (var _i = 0, infos_1 = infos; _i < infos_1.length; _i++) {
+                    var info = infos_1[_i];
+                    this._addItemToInspector(info.editType, gui, info);
+                }
+                if (gui.instance instanceof egret3d.Material) {
+                    var techniqueUniforms = gui.instance.technique.uniforms;
+                    for (var k in techniqueUniforms) {
+                        var uniform = techniqueUniforms[k];
+                        if (!uniform.name) {
+                            uniform.name = k;
+                        }
+                        this._addUniformItemToInspector(uniform, gui);
+                    }
+                }
+            };
+            GUISystem.prototype._addItemToInspector = function (type, parent, info) {
+                if (parent !== this._guiComponent.inspector) {
+                    parent.onClick = this._componentOrPropertyGUIClickHandler;
+                }
                 var guiControllerA;
                 var guiControllerB;
                 var guiControllerC;
                 var guiControllerD;
+                switch (type) {
+                    case "UINT" /* UINT */:
+                        guiControllerA = parent.add(parent.instance, info.name).min(0).step(1).listen();
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                            }
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                            }
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                            }
+                        }
+                        break;
+                    case "INT" /* INT */:
+                        guiControllerA = parent.add(parent.instance, info.name).step(1).listen();
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                            }
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                            }
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                            }
+                        }
+                        break;
+                    case "FLOAT" /* FLOAT */:
+                        guiControllerA = parent.add(parent.instance, info.name).step(0.1).listen();
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                            }
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                            }
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                            }
+                        }
+                        break;
+                    case "CHECKBOX" /* CHECKBOX */:
+                    case "TEXT" /* TEXT */:
+                        parent.add(parent.instance, info.name).listen();
+                        break;
+                    case "LIST" /* LIST */:
+                        var listItems = info.option.listItems;
+                        if (listItems) {
+                            if (typeof listItems === "string") {
+                                listItems = parent.instance[listItems];
+                            }
+                            else if (listItems instanceof Function) {
+                                listItems = listItems(parent.instance);
+                            }
+                            parent.add(parent.instance, info.name, listItems).listen();
+                        }
+                        break;
+                    case "VECTOR2" /* VECTOR2 */: {
+                        guiControllerA = parent.add(parent.instance[info.name], info.name + ": x|x").step(0.1).listen();
+                        guiControllerB = parent.add(parent.instance[info.name], info.name + ": y|y").step(0.1).listen();
+                        if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                            var onChange = function () {
+                                parent.instance[info.name] = parent.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                        }
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
+                            }
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                            }
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
+                            }
+                        }
+                        break;
+                    }
+                    case "SIZE" /* SIZE */: {
+                        guiControllerA = parent.add(parent.instance[info.name], info.name + ": w|w").step(0.1).listen();
+                        guiControllerB = parent.add(parent.instance[info.name], info.name + ": h|h").step(0.1).listen();
+                        if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                            var onChange = function () {
+                                parent.instance[info.name] = parent.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                        }
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
+                            }
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                            }
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
+                            }
+                        }
+                        break;
+                    }
+                    case "VECTOR3" /* VECTOR3 */: {
+                        guiControllerA = parent.add(parent.instance[info.name], info.name + ": x|x").step(0.1).listen();
+                        guiControllerB = parent.add(parent.instance[info.name], info.name + ": y|y").step(0.1).listen();
+                        guiControllerC = parent.add(parent.instance[info.name], info.name + ": z|z").step(0.1).listen();
+                        if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                            var onChange = function () {
+                                parent.instance[info.name] = parent.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                            guiControllerC.onChange(onChange);
+                        }
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
+                                guiControllerC.min(info.option.minimum);
+                            }
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                                guiControllerC.max(info.option.maximum);
+                            }
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
+                                guiControllerC.step(info.option.step);
+                            }
+                        }
+                        break;
+                    }
+                    case "VECTOR4" /* VECTOR4 */:
+                    case "QUATERNION" /* QUATERNION */:
+                        break;
+                    case "COLOR" /* COLOR */: {
+                        guiControllerA = parent.addColor(parent.instance, info.name).listen();
+                        if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                            var onChange = function () {
+                                parent.instance[info.name] = parent.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                        }
+                        break;
+                    }
+                    case "RECT" /* RECT */: {
+                        guiControllerA = parent.add(parent.instance[info.name], info.name + ": x|x").step(0.1).listen();
+                        guiControllerB = parent.add(parent.instance[info.name], info.name + ": y|y").step(0.1).listen();
+                        guiControllerC = parent.add(parent.instance[info.name], info.name + ": w|w").step(0.1).listen();
+                        guiControllerD = parent.add(parent.instance[info.name], info.name + ": h|h").step(0.1).listen();
+                        if (this._propertyHasGetterSetter(parent.instance, info.name)) {
+                            var onChange = function () {
+                                parent.instance[info.name] = parent.instance[info.name];
+                            };
+                            guiControllerA.onChange(onChange);
+                            guiControllerB.onChange(onChange);
+                            guiControllerC.onChange(onChange);
+                            guiControllerD.onChange(onChange);
+                        }
+                        if (info.option) {
+                            if (info.option.minimum !== undefined) {
+                                guiControllerA.min(info.option.minimum);
+                                guiControllerB.min(info.option.minimum);
+                                guiControllerC.min(info.option.minimum);
+                                guiControllerD.min(info.option.minimum);
+                            }
+                            if (info.option.maximum !== undefined) {
+                                guiControllerA.max(info.option.maximum);
+                                guiControllerB.max(info.option.maximum);
+                                guiControllerC.max(info.option.maximum);
+                                guiControllerD.min(info.option.maximum);
+                            }
+                            if (info.option.step !== undefined) {
+                                guiControllerA.step(info.option.step);
+                                guiControllerB.step(info.option.step);
+                                guiControllerC.step(info.option.step);
+                                guiControllerD.step(info.option.step);
+                            }
+                        }
+                        break;
+                    }
+                    case "MESH" /* MESH */:
+                        parent.add(new AssetProxy(parent.instance, info.name), info.name + "|uri", this._getAssets("Mesh")).listen();
+                        break;
+                    case "MATERIAL" /* MATERIAL */: {
+                        var folder = parent.addFolder(info.name);
+                        folder.instance = parent.instance[info.name];
+                        this._addToInspector(folder);
+                        break;
+                    }
+                    case "MATERIAL_ARRAY" /* MATERIAL_ARRAY */: {
+                        var folder = parent.addFolder(info.name);
+                        folder.instance = parent.instance[info.name];
+                        this._addToArray(folder, egret3d.Material);
+                        break;
+                    }
+                    case "GAMEOBJECT" /* GAMEOBJECT */:
+                        break;
+                    case "BUTTON" /* BUTTON */:
+                        parent.add(parent.instance, info.name);
+                        break;
+                    case "NESTED" /* NESTED */: {
+                        var folder = parent.addFolder(info.name);
+                        folder.instance = parent.instance[info.name];
+                        this._addToInspector(folder);
+                        break;
+                    }
+                }
+            };
+            GUISystem.prototype._addUniformItemToInspector = function (uniform, parent) {
+                if (parent !== this._guiComponent.inspector) {
+                    parent.onClick = this._componentOrPropertyGUIClickHandler;
+                }
+                var guiControllerA;
+                var guiControllerB;
+                var guiControllerC;
+                var guiControllerD;
+                switch (uniform.type) {
+                    case 5126 /* FLOAT */:
+                        if (typeof uniform.value === "number") {
+                            guiControllerA = parent.add(uniform, uniform.name + "|value").step(0.1).listen();
+                            guiControllerA.onChange(function (v) {
+                                parent.instance.setFloat(uniform.name, v);
+                            });
+                        }
+                        break;
+                    case 35678 /* SAMPLER_2D */:
+                        // parent.add(new AssetProxy(parent.instance, uniform.name, "getTexture", "setTexture"), `${uniform.name}|uri`, this._getAssets("TextureDesc")).listen();
+                        guiControllerA = parent.add(new AssetProxy(parent.instance, uniform.name, "getTexture", "setTexture"), uniform.name + "|uri").listen();
+                        break;
+                }
+            };
+            GUISystem.prototype._addToArray = function (gui, type) {
                 if (gui !== this._guiComponent.inspector) {
                     gui.onClick = this._componentOrPropertyGUIClickHandler;
                 }
-                var _loop_4 = function (info) {
-                    switch (info.editType) {
-                        case "UINT" /* UINT */:
-                            guiControllerA = gui.add(gui.instance, info.name).min(0).step(1).listen();
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                }
-                            }
-                            break;
-                        case "INT" /* INT */:
-                            guiControllerA = gui.add(gui.instance, info.name).step(1).listen();
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                }
-                            }
-                            break;
-                        case "FLOAT" /* FLOAT */:
-                            guiControllerA = gui.add(gui.instance, info.name).step(0.1).listen();
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                }
-                            }
-                            break;
-                        case "CHECKBOX" /* CHECKBOX */:
-                        case "TEXT" /* TEXT */:
-                            gui.add(gui.instance, info.name).listen();
-                            break;
-                        case "LIST" /* LIST */:
-                            var listItems = info.option.listItems;
-                            if (listItems) {
-                                if (typeof listItems === "string") {
-                                    listItems = gui.instance[listItems];
-                                }
-                                else if (listItems instanceof Function) {
-                                    listItems = listItems(gui.instance);
-                                }
-                                gui.add(gui.instance, info.name, listItems).listen();
-                            }
-                            break;
-                        case "VECTOR2" /* VECTOR2 */: {
-                            guiControllerA = gui.add(gui.instance[info.name], info.name + ": x|x").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], info.name + ": y|y").step(0.1).listen();
-                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                            }
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                }
-                            }
-                            break;
+                switch (type) {
+                    case egret3d.Material: {
+                        var materials = gui.instance;
+                        var index = 0;
+                        for (var _i = 0, materials_1 = materials; _i < materials_1.length; _i++) {
+                            var material = materials_1[_i];
+                            var folder = gui.addFolder("<" + index++ + ">");
+                            folder.instance = material;
+                            this._addToInspector(folder);
                         }
-                        case "SIZE" /* SIZE */: {
-                            guiControllerA = gui.add(gui.instance[info.name], info.name + ": w|w").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], info.name + ": h|h").step(0.1).listen();
-                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                            }
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                }
-                            }
-                            break;
-                        }
-                        case "VECTOR3" /* VECTOR3 */: {
-                            guiControllerA = gui.add(gui.instance[info.name], info.name + ": x|x").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], info.name + ": y|y").step(0.1).listen();
-                            guiControllerC = gui.add(gui.instance[info.name], info.name + ": z|z").step(0.1).listen();
-                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                                guiControllerC.onChange(onChange);
-                            }
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                    guiControllerC.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                    guiControllerC.max(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                    guiControllerC.step(info.option.step);
-                                }
-                            }
-                            break;
-                        }
-                        case "VECTOR4" /* VECTOR4 */:
-                        case "QUATERNION" /* QUATERNION */:
-                            break;
-                        case "COLOR" /* COLOR */: {
-                            guiControllerA = gui.addColor(gui.instance, info.name).listen();
-                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                            }
-                            break;
-                        }
-                        case "RECT" /* RECT */: {
-                            guiControllerA = gui.add(gui.instance[info.name], info.name + ": x|x").step(0.1).listen();
-                            guiControllerB = gui.add(gui.instance[info.name], info.name + ": y|y").step(0.1).listen();
-                            guiControllerC = gui.add(gui.instance[info.name], info.name + ": w|w").step(0.1).listen();
-                            guiControllerD = gui.add(gui.instance[info.name], info.name + ": h|h").step(0.1).listen();
-                            if (this_2._propertyHasGetterSetter(gui.instance, info.name)) {
-                                var onChange = function () {
-                                    gui.instance[info.name] = gui.instance[info.name];
-                                };
-                                guiControllerA.onChange(onChange);
-                                guiControllerB.onChange(onChange);
-                                guiControllerC.onChange(onChange);
-                                guiControllerD.onChange(onChange);
-                            }
-                            if (info.option) {
-                                if (info.option.minimum !== undefined) {
-                                    guiControllerA.min(info.option.minimum);
-                                    guiControllerB.min(info.option.minimum);
-                                    guiControllerC.min(info.option.minimum);
-                                    guiControllerD.min(info.option.minimum);
-                                }
-                                if (info.option.maximum !== undefined) {
-                                    guiControllerA.max(info.option.maximum);
-                                    guiControllerB.max(info.option.maximum);
-                                    guiControllerC.max(info.option.maximum);
-                                    guiControllerD.min(info.option.maximum);
-                                }
-                                if (info.option.step !== undefined) {
-                                    guiControllerA.step(info.option.step);
-                                    guiControllerB.step(info.option.step);
-                                    guiControllerC.step(info.option.step);
-                                    guiControllerD.step(info.option.step);
-                                }
-                            }
-                            break;
-                        }
-                        case "MESH" /* MESH */:
-                            guiControllerA = gui.add(new AssetProxy(gui.instance, info.name), info.name + "|uri", this_2._getAssets("Mesh")).listen();
-                            break;
-                        case "GAMEOBJECT" /* GAMEOBJECT */:
-                            break;
-                        case "BUTTON" /* BUTTON */:
-                            guiControllerA = gui.add(gui.instance, info.name);
-                            break;
-                        case "NESTED" /* NESTED */: {
-                            var folder = gui.addFolder(info.name);
-                            folder.instance = gui.instance[info.name];
-                            this_2._addToInspector(folder);
-                            break;
-                        }
+                        break;
                     }
-                };
-                var this_2 = this;
-                for (var _i = 0, infos_1 = infos; _i < infos_1.length; _i++) {
-                    var info = infos_1[_i];
-                    _loop_4(info);
                 }
             };
             GUISystem.prototype.onAwake = function () {
@@ -9043,13 +9102,13 @@ var paper;
                     }
                 }
                 if (isInspectorShowed) {
-                    this._guiComponent.inspector.updateDisplay();
-                    var inspectorFolders = this._guiComponent.inspector.__folders;
-                    if (inspectorFolders) {
-                        for (var k in inspectorFolders) {
-                            inspectorFolders[k].updateDisplay();
-                        }
-                    }
+                    // this._guiComponent.inspector.updateDisplay();
+                    // const inspectorFolders = this._guiComponent.inspector.__folders;
+                    // if (inspectorFolders) {
+                    //     for (const k in inspectorFolders) {
+                    //         inspectorFolders[k].updateDisplay();
+                    //     }
+                    // }
                     if (this._modelComponent.selectedGameObject) {
                         this._modelComponent.selectedGameObject.transform.localEulerAngles; // TODO
                     }
@@ -9060,31 +9119,45 @@ var paper;
         editor.GUISystem = GUISystem;
         __reflect(GUISystem.prototype, "paper.editor.GUISystem");
         var AssetProxy = (function () {
-            function AssetProxy(_instance, _key) {
+            function AssetProxy(_instance, _key, _get, _set) {
+                if (_key === void 0) { _key = null; }
+                if (_get === void 0) { _get = null; }
+                if (_set === void 0) { _set = null; }
                 this._instance = _instance;
                 this._key = _key;
+                this._get = _get;
+                this._set = _set;
             }
+            AssetProxy.prototype._setValue = function (value) {
+                if (this._set) {
+                    this._instance[this._set](this._key, value);
+                }
+                else {
+                    this._instance[this._key] = value;
+                }
+            };
             Object.defineProperty(AssetProxy.prototype, "uri", {
                 get: function () {
-                    var value = this._instance[this._key];
+                    var value = this._get ? this._instance[this._get](this._key) : this._instance[this._key];
                     if (value) {
                         return value.name || "NoName" /* NoName */;
                     }
-                    return value;
+                    return "";
+                    // return null;
                 },
                 set: function (value) {
                     var _this = this;
                     if (!value) {
-                        this._instance[this._key] = null;
+                        this._setValue(null);
                     }
                     else {
                         var asset = paper.Asset.find(value);
                         if (asset) {
-                            this._instance[this._key] = asset;
+                            this._setValue(asset);
                         }
                         else {
                             RES.getResAsync(value).then(function (r) {
-                                _this._instance[_this._key] = r;
+                                _this._setValue(r);
                             });
                         }
                     }

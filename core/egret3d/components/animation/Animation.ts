@@ -9,8 +9,10 @@ namespace egret3d {
         @paper.serializedField
         public autoPlay: boolean = false;
         /**
-         * 
+         * 是否将动画数据中根节点的变换动画应用到该组件实体的变换组件上。
          */
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        @paper.serializedField
         public applyRootMotion: boolean = false;
 
         /**

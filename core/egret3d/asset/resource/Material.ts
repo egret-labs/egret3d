@@ -48,11 +48,7 @@ namespace egret3d {
             return material;
         }
         /**
-         * 该材质的渲染排序。
-         */
-        public renderQueue: RenderQueue | uint = RenderQueue.Geometry;
-        /**
-         * 
+         * @private
          */
         public readonly defines: Defines = new Defines();
         /**
@@ -63,6 +59,11 @@ namespace egret3d {
          * @internal
          */
         public _dirty: MaterialDirty = MaterialDirty.None;
+        /**
+         * 仅为更高的访问性能，该值存在于 config 中，是否有必要保留该值。
+         * @internal
+         */
+        public _renderQueue: RenderQueue | uint = RenderQueue.Geometry;
         private readonly _uvTransform: Array<number> = [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0];
         /**
          * @internal
@@ -216,7 +217,7 @@ namespace egret3d {
                 shader = paper.Asset.find<Shader>(glTFMaterial.extensions.KHR_techniques_webgl.technique) || DefaultShaders.MESH_BASIC;
             }
             //
-            this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
+            this._renderQueue = glTFMaterial.extensions.paper.renderQueue;
             this._technique = this._createTechnique(shader, glTFMaterial);
             this._shader = shader;
             this._retainOrReleaseTextures(true, false);
@@ -301,11 +302,12 @@ namespace egret3d {
         }
         /**
          * 拷贝。
+         * TODO
          */
         public copy(value: Material): this {
             this._retainOrReleaseTextures(false, false);
             //
-            this.renderQueue = value.renderQueue;
+            this._renderQueue = value.renderQueue;
             this._shader = value._shader;
             this.defines.copy(value.defines);
             // Copy uniforms.
@@ -918,6 +920,21 @@ namespace egret3d {
             return this;
         }
         /**
+         * 该材质的渲染排序。
+         */
+        @paper.editor.property(paper.editor.EditType.UINT)
+        public get renderQueue(): RenderQueue | uint {
+            return this._renderQueue;
+        }
+        public set renderQueue(value: RenderQueue | uint) {
+            if (this._renderQueue === value) {
+                return;
+            }
+
+            this.config.materials![0].extensions.paper.renderQueue = value;
+            this._renderQueue = value;
+        }
+        /**
          * 该材质的透明度。
          */
         public get opacity(): number {
@@ -939,6 +956,7 @@ namespace egret3d {
         /**
          * 该材质的 shader。
          */
+        @paper.editor.property(paper.editor.EditType.SHADER)
         public get shader(): Shader {
             return this._shader;
         }

@@ -11,7 +11,6 @@ namespace egret3d.webgl {
      */
     export interface WebGLActiveAttribute {
         name: string;
-        size: uint;
         type: uint;
         location: uint;
         semantic: string;
@@ -73,7 +72,7 @@ namespace egret3d.webgl {
                     semantic = technique.attributes[name].semantic;
                 }
 
-                attributes.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, location, semantic });
+                attributes.push({ name, type: webglActiveInfo.type, location, semantic });
             }
             //
             const globalUniforms = this.globalUniforms;

@@ -12,7 +12,7 @@ namespace egret3d {
         /**
          * 创建一个四元数。
          */
-        public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
+        public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0): Quaternion {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(x, y, z, w);
                 instance._released = false;
@@ -30,7 +30,7 @@ namespace egret3d {
          * - 旋转矩阵不应包含缩放值。
          * @param rotateMatrix 旋转矩阵。
          */
-        public fromMatrix(rotateMatrix: Readonly<Matrix4>) {
+        public fromMatrix(rotateMatrix: Readonly<Matrix4>): this {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm
 
             // assumes the upper 3x3 of m is a pure rotation matrix (i.e, unscaled)
@@ -76,12 +76,34 @@ namespace egret3d {
             return this;
         }
         /**
-         * 通过欧拉旋转设置该四元数。
-         * @param euler 欧拉旋转。（弧度制）
+         * 通过欧拉旋转（弧度制）设置该四元数。
+         * @param euler 欧拉旋转。
          * @param order 欧拉旋转顺序。
          */
-        public fromEuler(euler: Readonly<IVector3>, order: EulerOrder = EulerOrder.YXZ) {
-            const { x, y, z } = euler;
+        public fromEuler(euler: Readonly<IVector3>, order?: EulerOrder): this;
+        /**
+         * 通过欧拉旋转（弧度制）设置该四元数。
+         * @param eulerX 欧拉旋转 X 轴分量。
+         * @param eulerY 欧拉旋转 Y 轴分量。
+         * @param eulerZ 欧拉旋转 Z 轴分量。
+         * @param order 欧拉旋转顺序。
+         */
+        public fromEuler(eulerX: number, eulerY: number, eulerZ: number, order?: EulerOrder): this;
+        public fromEuler(eulerOrX: Readonly<IVector3> | number, orderOrY?: EulerOrder | number, eulerZ?: number, order?: EulerOrder) {
+            let x: number, y: number, z: number;
+
+            if (eulerOrX.hasOwnProperty("x")) {
+                x = (eulerOrX as Readonly<IVector3>).x;
+                y = (eulerOrX as Readonly<IVector3>).y;
+                z = (eulerOrX as Readonly<IVector3>).z;
+                order = orderOrY || EulerOrder.YXZ;
+            }
+            else {
+                x = eulerOrX as number;
+                y = orderOrY as number;
+                z = eulerZ as number;
+                order = order || EulerOrder.YXZ;
+            }
 
             // http://www.mathworks.com/matlabcentral/fileexchange/20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/content/SpinCalc.m
 
@@ -148,7 +170,7 @@ namespace egret3d {
          * @param axis 旋转轴。
          * @param angle 旋转角。（弧度制）
          */
-        public fromAxis(axis: Readonly<IVector3>, angle: number) {
+        public fromAxis(axis: Readonly<IVector3>, angle: number): this {
             // http://www.euclideanspace.com/maths/geometry/rotations/conversions/angleToQuaternion/index.htm
 
             const halfAngle = angle * 0.5, s = Math.sin(halfAngle);
@@ -165,7 +187,7 @@ namespace egret3d {
          * @param from 起始方向。
          * @param to 目标方向。
          */
-        public fromVectors(from: Readonly<IVector3>, to: Readonly<IVector3>) {
+        public fromVectors(from: Readonly<IVector3>, to: Readonly<IVector3>): this {
             let r = (from as Vector3).dot(to) + 1.0;
             const v1 = helpVector3A;
 
@@ -218,7 +240,7 @@ namespace egret3d {
                 quaternionA = this;
             }
 
-		    // from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
+            // from http://www.euclideanspace.com/maths/algebra/realNormedAlgebra/quaternions/code/index.htm
             const ax = quaternionA.x, ay = quaternionA.y, az = quaternionA.z, aw = quaternionA.w;
             const bx = quaternionB.x, by = quaternionB.y, bz = quaternionB.z, bw = quaternionB.w;
 
@@ -234,11 +256,11 @@ namespace egret3d {
          * - v = quaternion * v
          * @param quaternion 一个四元数。
          */
-        public premultiply(quaternion: Readonly<IVector4>) {
+        public premultiply(quaternion: Readonly<IVector4>): this {
             return this.multiply(quaternion, this);
         }
 
-        public lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>) {
+        public lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>): this {
             if (typeof p1 === "number") {
                 if (!p3) {
                     p3 = p1;
