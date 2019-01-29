@@ -58,7 +58,6 @@
 		"bin-debug/examples/oimo/OimoBase.js",
 		"bin-debug/examples/postprocessing/MotionBlurTest.js",
 		"bin-debug/examples/postprocessing/NightVisionTest.js",
-		"bin-debug/examples/postprocessing/ThermalVisionTest.js",
 		"bin-debug/examples/postprocessing/UnrealBloom.js",
 		"bin-debug/examples/shaders/Decal.js",
 		"bin-debug/examples/shaders/Flash.js",
