@@ -1,0 +1,38 @@
+{
+    "asset": {
+        "version": 2
+    },
+    "materials": [
+        {
+            "extensions": {
+                "KHR_techniques_webgl": {
+                    "values": {
+                        "emissive": [
+                            0,
+                            0,
+                            0
+                        ],
+                        "roughness": 1,
+                        "metalness": 0
+                    },
+                    "technique": "builtin/meshphysical.shader.json"
+                },
+                "paper": {
+                    "renderQueue": 2000,
+                    "defines": [
+                        "STANDARD"
+                    ]
+                }
+            }
+        }
+    ],
+    "extensionsRequired": [
+        "KHR_techniques_webgl",
+        "paper"
+    ],
+    "extensionsUsed": [
+        "KHR_techniques_webgl",
+        "paper"
+    ],
+    "version": 4
+}
