@@ -3383,7 +3383,6 @@ declare namespace egret3d {
          */
         draw: (drawCall: DrawCall, material?: Material | null) => void;
         private _logarithmicDepthBuffer;
-        private _gammaInputLocked;
         private _gammaInput;
         private _gammaOutput;
         private _gammaFactor;
@@ -9457,7 +9456,8 @@ declare namespace egret3d {
         private _createTechnique(shader, glTFMaterial);
         private _reset(shaderOrConfig);
         private _retainOrReleaseTextures(isRatain, isOnce);
-        private _addOrRemoveTexturesDefine(add);
+        private _addOrRemoveTexturesDefine(add?);
+        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, ...args: Array<any>): void;
         retain(): this;
         release(): this;
         dispose(): boolean;

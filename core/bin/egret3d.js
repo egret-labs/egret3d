@@ -3839,7 +3839,6 @@ var egret3d;
              */
             _this.draw = null;
             _this._logarithmicDepthBuffer = false;
-            _this._gammaInputLocked = false;
             _this._gammaInput = true; //
             _this._gammaOutput = true; //
             _this._gammaFactor = 1.0;
@@ -3849,6 +3848,10 @@ var egret3d;
              * @internal
              */
             _this._castShadows = false;
+            /**
+             * @internal
+             */
+            _this._skyBoxTexture = null;
             _this._receiveShadows = false;
             _this._boneCount = 0;
             _this._stateEnables = [3042 /* Blend */, 2884 /* CullFace */, 2929 /* DepthTest */]; // TODO
@@ -3863,6 +3866,7 @@ var egret3d;
             _this.toneMappingWhitePoint = 1.0;
             return _this;
         }
+        RenderState_1 = RenderState;
         RenderState.prototype._getCommonExtensions = function () {
             var extensions = ""; // fragmentExtensions.
             if (this.standardDerivativesEnabled) {
@@ -3927,7 +3931,6 @@ var egret3d;
             return 'vec4 ' + functionName + '( vec4 value ) { return LinearTo' + components[0] + components[1] + '; }';
         };
         RenderState.prototype._getTexelDecodingFunction = function (functionName, encoding) {
-            this._gammaInputLocked = true;
             var finialEncoding = (this._gammaInput && encoding === 1 /* LinearEncoding */) ? 7 /* GammaEncoding */ : encoding;
             var components = this._getEncodingComponents(finialEncoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
@@ -4156,11 +4159,12 @@ var egret3d;
                 return this._gammaInput;
             },
             set: function (value) {
-                if (this._gammaInputLocked) {
-                    console.warn("The gamma input value has been locked.");
+                if (this._gammaInput === value) {
                     return;
                 }
                 this._gammaInput = value;
+                this._updateTextureDefines("envMap" /* EnvMap */, this._skyBoxTexture);
+                RenderState_1.onGammaInputChanged.dispatch();
             },
             enumerable: true,
             configurable: true
@@ -4248,6 +4252,10 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        /**
+         * @internal
+         */
+        RenderState.onGammaInputChanged = new signals.Signal();
         __decorate([
             paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], RenderState.prototype, "logarithmicDepthBuffer", null);
@@ -4269,10 +4277,11 @@ var egret3d;
         __decorate([
             paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 10.0 })
         ], RenderState.prototype, "toneMappingWhitePoint", void 0);
-        RenderState = __decorate([
+        RenderState = RenderState_1 = __decorate([
             paper.singleton
         ], RenderState);
         return RenderState;
+        var RenderState_1;
     }(paper.BaseComponent));
     egret3d.RenderState = RenderState;
     __reflect(RenderState.prototype, "egret3d.RenderState");
@@ -25038,6 +25047,7 @@ var egret3d;
         }
         Defines.link = function (definess, location) {
             var linked = [];
+            var linkedName = {};
             for (var _i = 0, definess_1 = definess; _i < definess_1.length; _i++) {
                 var defines = definess_1[_i];
                 if (!defines) {
@@ -25046,12 +25056,16 @@ var egret3d;
                 for (var _a = 0, _b = defines._defines; _a < _b.length; _a++) {
                     var define = _b[_a];
                     if (define.type === undefined || (define.type & location)) {
-                        var index = linked.indexOf(define);
-                        if (index >= 0) {
-                            linked[index] = define;
+                        var already = linkedName[define.name];
+                        if (!already) {
+                            linkedName[define.name] = define;
+                            linked.push(define);
                         }
                         else {
-                            linked.push(define);
+                            var index = linked.indexOf(already);
+                            if (index >= 0) {
+                                linked[index] = define;
+                            }
                         }
                     }
                 }
@@ -25410,6 +25424,7 @@ var egret3d;
             // isRatain ? this._shader.retain() : this._shader.release(); TODO
         };
         Material.prototype._addOrRemoveTexturesDefine = function (add) {
+            if (add === void 0) { add = true; }
             var uniforms = this._technique.uniforms;
             for (var k in uniforms) {
                 var uniform = uniforms[k];
@@ -25428,6 +25443,14 @@ var egret3d;
                 this.setUVTransform(_uvTransformMatrix.fromUVTransform.apply(_uvTransformMatrix, this._uvTransform));
                 this._dirty &= ~1 /* UVTransform */;
             }
+        };
+        Material.prototype.initialize = function (name, config, buffers) {
+            var args = [];
+            for (var _i = 3; _i < arguments.length; _i++) {
+                args[_i - 3] = arguments[_i];
+            }
+            _super.prototype.initialize.call(this, name, config, buffers, args);
+            egret3d.RenderState.onGammaInputChanged.add(this._addOrRemoveTexturesDefine, this);
         };
         Material.prototype.retain = function () {
             _super.prototype.retain.call(this);
@@ -25450,6 +25473,7 @@ var egret3d;
             this.defines.clear();
             this._technique = null;
             this._shader = null;
+            egret3d.RenderState.onGammaInputChanged.remove(this._addOrRemoveTexturesDefine, this);
             return true;
         };
         /**
@@ -29041,7 +29065,6 @@ var egret3d;
                 _this._cacheProgram = null;
                 _this._cacheScene = null;
                 _this._cacheCamera = null;
-                _this._cacheSkyBoxTexture = null;
                 //
                 _this._cacheLight = null;
                 //
@@ -29315,6 +29338,7 @@ var egret3d;
                 var webgl = webgl_15.WebGLRenderState.webgl;
                 var technique = material.technique;
                 var techniqueState = technique.states || null;
+                var renderState = this._renderState;
                 //
                 if (material._dirty) {
                     material._update();
@@ -29324,7 +29348,7 @@ var egret3d;
                     technique.program = program.id;
                 }
                 // Update states.
-                this._renderState.updateState(techniqueState);
+                renderState.updateState(techniqueState);
                 //
                 var unifroms = technique.uniforms;
                 for (var _i = 0, _a = program.uniforms; _i < _a.length; _i++) {
@@ -29389,7 +29413,7 @@ var egret3d;
                                 var isInvalide = !texture || texture.isDisposed;
                                 if (uniformName === "envMap" /* EnvMap */) {
                                     if (isInvalide) {
-                                        texture = this._cacheSkyBoxTexture || egret3d.DefaultTextures.WHITE; // TODO
+                                        texture = renderState._skyBoxTexture || egret3d.DefaultTextures.WHITE; // TODO
                                     }
                                     material.setFloat("flipEnvMap" /* FlipEnvMap */, texture.type === 34067 /* TextureCube */ ? 1.0 : -1.0);
                                     material.setFloat("maxMipLevel" /* MaxMipLevel */, texture.levels);
@@ -29449,9 +29473,9 @@ var egret3d;
                     var material_1 = skyBox.material;
                     var texture = (material_1.shader === egret3d.DefaultShaders.CUBE) ? material_1.getTexture("tCube" /* CubeMap */) :
                         ((material_1.shader === egret3d.DefaultShaders.EQUIRECT) ? material_1.getTexture("tEquirect" /* EquirectMap */) : material_1.getTexture());
-                    if (this._cacheSkyBoxTexture !== texture) {
+                    if (renderState._skyBoxTexture !== texture) {
                         renderState._updateTextureDefines("envMap" /* EnvMap */, texture);
-                        this._cacheSkyBoxTexture = texture;
+                        renderState._skyBoxTexture = texture;
                     }
                     if (!drawCall.mesh) {
                         // DefaultMeshes.SPHERE;
@@ -29460,9 +29484,9 @@ var egret3d;
                     drawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
                     this.draw(drawCall, material_1);
                 }
-                else if (this._cacheSkyBoxTexture) {
+                else if (renderState._skyBoxTexture) {
                     renderState._updateTextureDefines("envMap" /* EnvMap */, null);
-                    this._cacheSkyBoxTexture = null;
+                    renderState._skyBoxTexture = null;
                 }
                 // Draw opaques.
                 for (var _i = 0, _a = camera.context.opaqueCalls; _i < _a.length; _i++) {

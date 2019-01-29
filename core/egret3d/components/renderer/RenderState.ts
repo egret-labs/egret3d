@@ -7,6 +7,10 @@ namespace egret3d {
      */
     @paper.singleton
     export class RenderState extends paper.BaseComponent {
+        /**
+         * @internal
+         */
+        public static readonly onGammaInputChanged: signals.Signal = new signals.Signal();
         public version: number;
         public standardDerivativesEnabled: boolean;
         public textureFloatEnabled: boolean;
@@ -54,7 +58,6 @@ namespace egret3d {
         public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;
 
         private _logarithmicDepthBuffer: boolean = false;
-        private _gammaInputLocked: boolean = false;
         private _gammaInput: boolean = true; //
         private _gammaOutput: boolean = true; //
         private _gammaFactor: number = 1.0;
@@ -65,6 +68,10 @@ namespace egret3d {
          * @internal
          */
         public _castShadows: boolean = false;
+        /**
+         * @internal
+         */
+        public _skyBoxTexture: BaseTexture | null = null;
         private _receiveShadows: boolean = false;
         private _boneCount: int = 0;
         protected readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
@@ -150,7 +157,6 @@ namespace egret3d {
         }
 
         protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding) {
-            this._gammaInputLocked = true;
             const finialEncoding = (this._gammaInput && encoding === TextureEncoding.LinearEncoding) ? TextureEncoding.GammaEncoding : encoding;
             const components = this._getEncodingComponents(finialEncoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
@@ -392,12 +398,12 @@ namespace egret3d {
             return this._gammaInput;
         }
         public set gammaInput(value: boolean) {
-            if (this._gammaInputLocked) {
-                console.warn("The gamma input value has been locked.");
+            if (this._gammaInput === value) {
                 return;
             }
-
             this._gammaInput = value;
+            this._updateTextureDefines(ShaderUniformName.EnvMap, this._skyBoxTexture);
+            RenderState.onGammaInputChanged.dispatch();
         }
         /**
          * 

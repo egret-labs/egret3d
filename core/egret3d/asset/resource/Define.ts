@@ -81,6 +81,7 @@ namespace egret3d {
     export class Defines {
         public static link(definess: (Defines | null)[], location: DefineLocation) {
             const linked = [] as Define[];
+            const linkedName: { [key: string]: Define } = {};
 
             for (const defines of definess) {
                 if (!defines) {
@@ -89,12 +90,16 @@ namespace egret3d {
 
                 for (const define of defines._defines) {
                     if (define.type === undefined || (define.type & location)) {
-                        const index = linked.indexOf(define);
-                        if (index >= 0) {
-                            linked[index] = define;
+                        const already = linkedName[define.name];
+                        if (!already) {
+                            linkedName[define.name] = define;
+                            linked.push(define);
                         }
                         else {
-                            linked.push(define);
+                            const index = linked.indexOf(already);
+                            if (index >= 0) {
+                                linked[index] = define;
+                            }
                         }
                     }
                 }
