@@ -48,10 +48,10 @@ var examples;
 (function (examples) {
     var animations;
     (function (animations) {
-        var Fade = (function () {
-            function Fade() {
+        var ApplyRootMotion = (function () {
+            function ApplyRootMotion() {
             }
-            Fade.prototype.start = function () {
+            ApplyRootMotion.prototype.start = function () {
                 return __awaiter(this, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
@@ -66,48 +66,45 @@ var examples;
                             case 2:
                                 // Load prefab resource.
                                 _a.sent();
-                                return [4 /*yield*/, RES.getResAsync("Assets/Models/Mixamo/ybot.prefab.json")];
-                            case 3:
-                                _a.sent();
                                 // Load animation resource.
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Idle.ani.bin")];
-                            case 4:
+                            case 3:
                                 // Load animation resource.
                                 _a.sent();
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Idle_1.ani.bin")];
-                            case 5:
+                            case 4:
                                 _a.sent();
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Looking_Around.ani.bin")];
-                            case 6:
+                            case 5:
                                 _a.sent();
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin")];
-                            case 7:
+                            case 6:
                                 _a.sent();
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin")];
-                            case 8:
+                            case 7:
                                 _a.sent();
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Hip_Hop_Dancing.ani.bin")];
-                            case 9:
-                                _a.sent();
+                            case 8:
+                                (_a.sent()).getAnimationClip("").root = 0;
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Hip_Hop_Dancing_1.ani.bin")];
-                            case 10:
-                                _a.sent();
+                            case 9:
+                                (_a.sent()).getAnimationClip("").root = 0;
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Samba_Dancing.ani.bin")];
-                            case 11:
-                                _a.sent();
+                            case 10:
+                                (_a.sent()).getAnimationClip("").root = 0;
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Samba_Dancing_1.ani.bin")];
-                            case 12:
-                                _a.sent();
+                            case 11:
+                                (_a.sent()).getAnimationClip("").root = 0;
                                 paper.GameObject.globalGameObject.addComponent(Starter);
                                 return [2 /*return*/];
                         }
                     });
                 });
             };
-            return Fade;
+            return ApplyRootMotion;
         }());
-        animations.Fade = Fade;
-        __reflect(Fade.prototype, "examples.animations.Fade", ["examples.Example"]);
+        animations.ApplyRootMotion = ApplyRootMotion;
+        __reflect(ApplyRootMotion.prototype, "examples.animations.ApplyRootMotion", ["examples.Example"]);
         var Starter = (function (_super) {
             __extends(Starter, _super);
             function Starter() {
@@ -118,12 +115,11 @@ var examples;
                     var renderState = this.gameObject.getComponent(egret3d.RenderState);
                     renderState.gammaOutput = true;
                 }
-                var gameObjectX = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json");
-                var gameObjectY = paper.Prefab.create("Assets/Models/Mixamo/ybot.prefab.json");
-                var animationX = gameObjectX.getOrAddComponent(egret3d.Animation);
-                var animationY = gameObjectY.getOrAddComponent(egret3d.Animation);
+                var gameObject = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json");
+                var animation = gameObject.getOrAddComponent(egret3d.Animation);
+                animation.applyRootMotion = true;
                 //
-                animationX.animations = animationY.animations = [
+                animation.animations = [
                     RES.getRes("Assets/Animations/Mixamo/Idle.ani.bin"),
                     RES.getRes("Assets/Animations/Mixamo/Idle_1.ani.bin"),
                     RES.getRes("Assets/Animations/Mixamo/Looking_Around.ani.bin"),
@@ -134,33 +130,26 @@ var examples;
                     RES.getRes("Assets/Animations/Mixamo/Samba_Dancing.ani.bin"),
                     RES.getRes("Assets/Animations/Mixamo/Samba_Dancing_1.ani.bin"),
                 ];
-                animationX.play("Hip_Hop_Dancing");
-                animationY.play("Hip_Hop_Dancing_1");
-                gameObjectX.transform.setLocalPosition(1.0, 0.0, 0.0);
-                gameObjectY.transform.setLocalPosition(-1.0, 0.0, 0.0);
+                animation.play("Samba_Dancing");
+                gameObject.transform.setLocalPosition(0.0, 0.0, 0.0).setLocalEulerAngles(0.0, 135.0, 0.0);
                 //
-                gameObjectX.addComponent(behaviors.AnimationHelper);
-                gameObjectY.addComponent(behaviors.AnimationHelper);
+                gameObject.addComponent(behaviors.AnimationHelper);
+                gameObject.addComponent(behaviors.PositionReseter).box.copy(egret3d.Box.ONE).expand(19.0);
                 //
-                for (var _i = 0, _a = gameObjectX.getComponentsInChildren(egret3d.SkinnedMeshRenderer); _i < _a.length; _i++) {
+                for (var _i = 0, _a = gameObject.getComponentsInChildren(egret3d.SkinnedMeshRenderer); _i < _a.length; _i++) {
                     var renderer = _a[_i];
                     renderer.castShadows = true;
                     renderer.receiveShadows = true;
                 }
-                for (var _b = 0, _c = gameObjectY.getComponentsInChildren(egret3d.SkinnedMeshRenderer); _b < _c.length; _b++) {
-                    var renderer = _c[_b];
-                    renderer.castShadows = true;
-                    renderer.receiveShadows = true;
-                }
                 //
-                egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
+                egret3d.Camera.main.gameObject.addComponent(behaviors.LookAtTarget).target = gameObject;
                 //
                 examples.createGridRoom();
                 //
                 var modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
                 if (modelComponent) {
                     setTimeout(function () {
-                        modelComponent.select(gameObjectX);
+                        modelComponent.select(gameObject);
                         paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent).openComponents(behaviors.AnimationHelper);
                     }, 1000.0);
                 }

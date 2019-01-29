@@ -67,15 +67,12 @@ var examples;
                                 // Load prefab resource.
                                 _a.sent();
                                 // Load animation resource.
-                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Looking_Around.ani.bin")];
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin")];
                             case 3:
                                 // Load animation resource.
                                 _a.sent();
-                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin")];
-                            case 4:
-                                _a.sent();
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin")];
-                            case 5:
+                            case 4:
                                 _a.sent();
                                 paper.GameObject.globalGameObject.addComponent(Starter);
                                 return [2 /*return*/];
@@ -93,15 +90,17 @@ var examples;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             Starter.prototype.onAwake = function () {
+                {
+                    var renderState = this.gameObject.getComponent(egret3d.RenderState);
+                    renderState.gammaOutput = true;
+                }
                 var gameObject = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json");
                 var animation = gameObject.getOrAddComponent(egret3d.Animation);
                 gameObject.getOrAddComponent(Updater);
                 animation.animations = [
-                    RES.getRes("Assets/Animations/Mixamo/Looking_Around.ani.bin"),
                     RES.getRes("Assets/Animations/Mixamo/Walking.ani.bin"),
                     RES.getRes("Assets/Animations/Mixamo/Running.ani.bin"),
                 ];
-                animation.play("Looking_Around");
                 //
                 var animationController = animation.animationController;
                 var layer = animationController.getOrAddLayer(0);
@@ -131,8 +130,8 @@ var examples;
             Updater.prototype._blending1DStates = function (a, b, lerp) {
                 a.weight = 1.0 - lerp;
                 b.weight = lerp;
-                a.timeScale = egret3d.math.lerp(1.0, b.totalTime / a.totalTime, lerp);
-                b.timeScale = egret3d.math.lerp(a.totalTime / b.totalTime, 1.0, lerp);
+                a.timeScale = egret3d.math.lerp(a.totalTime / b.totalTime, 1.0, a.weight);
+                b.timeScale = egret3d.math.lerp(b.totalTime / a.totalTime, 1.0, b.weight);
             };
             return Updater;
         }(paper.Behaviour));

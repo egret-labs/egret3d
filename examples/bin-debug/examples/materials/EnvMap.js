@@ -9,6 +9,12 @@ var __extends = this && this.__extends || function __extends(t, e) {
 for (var i in e) e.hasOwnProperty(i) && (t[i] = e[i]);
 r.prototype = e.prototype, t.prototype = new r();
 };
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -53,6 +59,7 @@ var examples;
             }
             EnvMap.prototype.start = function () {
                 return __awaiter(this, void 0, void 0, function () {
+                    var modelComponent;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: 
@@ -73,7 +80,12 @@ var examples;
                             case 4:
                                 _a.sent();
                                 //
-                                paper.GameObject.globalGameObject.addComponent(Starter);
+                                egret3d.Camera.main.gameObject.addComponent(Starter);
+                                modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
+                                if (modelComponent) {
+                                    modelComponent.select(egret3d.Camera.main.gameObject);
+                                    paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent).openComponents(Starter);
+                                }
                                 return [2 /*return*/];
                         }
                     });
@@ -83,27 +95,66 @@ var examples;
         }());
         materials.EnvMap = EnvMap;
         __reflect(EnvMap.prototype, "examples.materials.EnvMap", ["examples.Example"]);
+        var EnvMapType;
+        (function (EnvMapType) {
+            EnvMapType["Cube"] = "Cube";
+            EnvMapType["EquiRect"] = "EquiRect";
+            EnvMapType["Spherical"] = "Spherical";
+        })(EnvMapType || (EnvMapType = {}));
         var Starter = (function (_super) {
             __extends(Starter, _super);
             function Starter() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._refraction = false;
+                _this._envMapType = EnvMapType.Cube;
                 _this._textureA = RES.getRes("threejs/textures/cube/Bridge2/Bridge2.image.json");
                 _this._textureB = RES.getRes("threejs/textures/2294472375_24a3b8ef46_o.jpg");
                 _this._textureC = RES.getRes("threejs/textures/metal.jpg");
+                _this._gameObject = egret3d.creater.createGameObject("Sphere", {
+                    mesh: egret3d.MeshBuilder.createSphere(400.0, 0.0, 0.0, 0.0, 48, 24),
+                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT),
+                });
                 return _this;
             }
+            Starter.prototype._updateEnvMap = function () {
+                var mainCamera = egret3d.Camera.main;
+                switch (this._envMapType) {
+                    case EnvMapType.Cube:
+                        mainCamera.gameObject.getOrAddComponent(egret3d.SkyBox).material = egret3d.Material.create(egret3d.DefaultShaders.CUBE)
+                            .setTexture("tCube" /* CubeMap */, this._textureA);
+                        this._gameObject.renderer.material.setTexture("envMap" /* EnvMap */, null);
+                        break;
+                    case EnvMapType.EquiRect:
+                        mainCamera.gameObject.getOrAddComponent(egret3d.SkyBox).material = egret3d.Material.create(egret3d.DefaultShaders.EQUIRECT)
+                            .setTexture("tEquirect" /* EquirectMap */, this._textureB);
+                        this._gameObject.renderer.material.setTexture("envMap" /* EnvMap */, null);
+                        break;
+                    case EnvMapType.Spherical:
+                        mainCamera.gameObject.removeComponent(egret3d.SkyBox);
+                        this._gameObject.renderer.material.setTexture("envMap" /* EnvMap */, this._textureC);
+                        break;
+                }
+                if (this._refraction) {
+                    this._gameObject.renderer.material.addDefine("ENVMAP_MODE_REFRACTION" /* ENVMAP_MODE_REFRACTION */);
+                }
+                else {
+                    this._gameObject.renderer.material.removeDefine("ENVMAP_MODE_REFRACTION" /* ENVMAP_MODE_REFRACTION */);
+                }
+            };
             Starter.prototype.onAwake = function () {
                 var mainCamera = egret3d.Camera.main;
                 {
                     var renderState = this.gameObject.getComponent(egret3d.RenderState);
                     renderState.gammaOutput = true;
-                    renderState.gammaFactor = 2.0;
                 }
                 {
                     var sampler = this._textureB.sampler;
                     var extensions = this._textureB.gltfTexture.extensions.paper;
+                    sampler.wrapS = 33648 /* MirroredRepeat */;
+                    sampler.wrapT = 33648 /* MirroredRepeat */;
                     sampler.magFilter = 9729 /* Linear */;
                     sampler.minFilter = 9987 /* LinearMipMapLinear */;
+                    extensions.levels = 0;
                     extensions.encoding = 2 /* sRGBEncoding */;
                     extensions.mapping = 3 /* Equirectangular */;
                 }
@@ -118,21 +169,47 @@ var examples;
                     mainCamera.near = 1.0;
                     mainCamera.backgroundColor.fromHex(0x000000);
                     mainCamera.transform.setLocalPosition(0.0, 0.0, -1000.0).lookAt(egret3d.Vector3.ZERO);
-                    mainCamera.gameObject.addComponent(egret3d.SkyBox).material = egret3d.Material.create(egret3d.DefaultShaders.CUBE)
-                        .setTexture("tCube" /* CubeMap */, this._textureA);
-                    // mainCamera.gameObject.addComponent(egret3d.SkyBox).material = egret3d.Material.create(egret3d.DefaultShaders.EQUIRECT)
-                    //     .setTexture(egret3d.ShaderUniformName.EquirectMap, this._textureB);
                     mainCamera.gameObject.addComponent(behaviors.RotateAround);
+                    this._updateEnvMap();
                 }
                 {
                     paper.Scene.activeScene.ambientColor.fromHex(0xFFFFFF);
                 }
-                {
-                    var mesh = egret3d.MeshBuilder.createSphere(400.0, 0.0, 0.0, 0.0, 48, 24);
-                    var gameObject = egret3d.DefaultMeshes.createObject(mesh);
-                    gameObject.renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
-                }
             };
+            Object.defineProperty(Starter.prototype, "refraction", {
+                get: function () {
+                    return this._refraction;
+                },
+                set: function (value) {
+                    if (this._refraction === value) {
+                        return;
+                    }
+                    this._refraction = value;
+                    this._updateEnvMap();
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(Starter.prototype, "envMapType", {
+                get: function () {
+                    return this._envMapType;
+                },
+                set: function (value) {
+                    if (this._envMapType === value) {
+                        return;
+                    }
+                    this._envMapType = value;
+                    this._updateEnvMap();
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.editor.property("CHECKBOX" /* CHECKBOX */)
+            ], Starter.prototype, "refraction", null);
+            __decorate([
+                paper.editor.property("LIST" /* LIST */, { listItems: EnvMapType })
+            ], Starter.prototype, "envMapType", null);
             return Starter;
         }(paper.Behaviour));
         __reflect(Starter.prototype, "Starter");

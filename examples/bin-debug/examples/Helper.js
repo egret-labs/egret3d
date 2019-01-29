@@ -38,17 +38,24 @@ var examples;
 (function (examples) {
     function createGridRoom() {
         {
+            paper.Scene.activeScene.fog.mode = 1 /* Fog */;
+            paper.Scene.activeScene.fog.color.fromHex(0xFFFFFF);
+            //
+            var directionalLight = paper.GameObject.create("Directional Light").addComponent(egret3d.DirectionalLight);
+            directionalLight.intensity = 0.4;
+            directionalLight.transform.setLocalPosition(0.0, 20.0, -10.0).lookAt(egret3d.Vector3.ZERO);
+            //
             var pointLight = paper.GameObject.create("Point Light").addComponent(egret3d.PointLight);
+            pointLight.intensity = 0.6;
             pointLight.decay = 0.0;
             pointLight.distance = 0.0;
             pointLight.castShadows = true;
-            pointLight.transform.setLocalPosition(0.0, 5.0, -10.0);
-            //
-            pointLight.gameObject.addComponent(behaviors.RotateAround).rotateSpeed *= -2.0;
+            pointLight.shadow.mapSize = 1024;
+            pointLight.transform.setLocalPosition(0.0, 10.0, 5.0).lookAt(egret3d.Vector3.ZERO);
         }
         var mesh = egret3d.MeshBuilder.createCube(40.0, 40.0, 40.0, 0.0, 20.0, 0.0, 40, 40, 40);
         mesh.name = "custom/gridroom.mesh.bin";
-        var gameObject = egret3d.DefaultMeshes.createObject(mesh, "Background");
+        var gameObject = egret3d.creater.createGameObject("Grid Room", { mesh: mesh });
         // gameObject.hideFlags = paper.HideFlags.NotTouchable;
         gameObject.activeSelf = false;
         function loadResource() {
@@ -86,4 +93,20 @@ var examples;
         return gameObject;
     }
     examples.createGridRoom = createGridRoom;
+    function selectGameObjectAndComponents(gameObject) {
+        var args = [];
+        for (var _i = 1; _i < arguments.length; _i++) {
+            args[_i - 1] = arguments[_i];
+        }
+        var globalGameObject = paper.GameObject.globalGameObject;
+        var modelComponent = globalGameObject.getComponent(paper.editor.ModelComponent);
+        var guiComponent = globalGameObject.getComponent(paper.editor.GUIComponent);
+        if (modelComponent) {
+            modelComponent.select(gameObject);
+            if (guiComponent) {
+                guiComponent.openComponents.apply(guiComponent, args);
+            }
+        }
+    }
+    examples.selectGameObjectAndComponents = selectGameObjectAndComponents;
 })(examples || (examples = {}));

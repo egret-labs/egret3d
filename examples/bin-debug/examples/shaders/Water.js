@@ -2,13 +2,6 @@
 var __reflect = (this && this.__reflect) || function (p, c, t) {
     p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
 };
-var __extends = this && this.__extends || function __extends(t, e) { 
- function r() { 
- this.constructor = t;
-}
-for (var i in e) e.hasOwnProperty(i) && (t[i] = e[i]);
-r.prototype = e.prototype, t.prototype = new r();
-};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -46,13 +39,14 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var examples;
 (function (examples) {
-    var materials;
-    (function (materials) {
-        var MeshNormal = (function () {
-            function MeshNormal() {
+    var shaders;
+    (function (shaders) {
+        var Water = (function () {
+            function Water() {
             }
-            MeshNormal.prototype.start = function () {
+            Water.prototype.start = function () {
                 return __awaiter(this, void 0, void 0, function () {
+                    var camera, waterImg, waterNormal, light, lightDir, water, effect, meshFilter, meshRender;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: 
@@ -60,54 +54,44 @@ var examples;
                             return [4 /*yield*/, RES.loadConfig("default.res.json", "resource/")];
                             case 1:
                                 // Load resource config.
+                                _a.sent(); // Load scene resource.
+                                return [4 /*yield*/, RES.getResAsync("textures/water/water_surface03_generic_ab.image.json")];
+                            case 2:
                                 _a.sent();
-                                paper.GameObject.globalGameObject.addComponent(Start);
+                                return [4 /*yield*/, RES.getResAsync("textures/water/water_smallwave01_generic_n.image.json")];
+                            case 3:
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("shaders/water/water.shader.json")];
+                            case 4:
+                                _a.sent();
+                                camera = egret3d.Camera.main;
+                                waterImg = RES.getRes("textures/water/water_surface03_generic_ab.image.json");
+                                waterNormal = RES.getRes("textures/water/water_smallwave01_generic_n.image.json");
+                                light = paper.GameObject.create("ligth");
+                                light.transform.setPosition(0.0, 1.0, 0.0);
+                                light.transform.setLocalEulerAngles(50.0, -30.0, 0.0);
+                                lightDir = egret3d.Vector3.create();
+                                light.transform.getForward(lightDir);
+                                water = paper.GameObject.create("water");
+                                effect = water.addComponent(behaviors.WaterEffect);
+                                effect.lightDir.copy(lightDir);
+                                water.transform.setEulerAngles(90.0, 0.0, 0.0);
+                                meshFilter = water.getOrAddComponent(egret3d.MeshFilter);
+                                meshFilter.mesh = egret3d.MeshBuilder.createPlane(10, 10);
+                                meshRender = water.getOrAddComponent(egret3d.MeshRenderer);
+                                meshRender.material = egret3d.Material.create(RES.getRes("shaders/water/water.shader.json"));
+                                meshRender.material
+                                    .setTexture("_MainTex", waterImg).setTexture("_NormalTex1", waterNormal).setTexture("_NormalTex2", waterNormal)
+                                    .setVector4v("_NormalTex1_ST", [20, 12, 0.95, -0.24]).setVector4v("_NormalTex2_ST", [8, 6, -0.07, -0.01])
+                                    .setVector3("lightDir", lightDir).setColor("lightColor", egret3d.Color.WHITE);
                                 return [2 /*return*/];
                         }
                     });
                 });
             };
-            return MeshNormal;
+            return Water;
         }());
-        materials.MeshNormal = MeshNormal;
-        __reflect(MeshNormal.prototype, "examples.materials.MeshNormal", ["examples.Example"]);
-        var Start = (function (_super) {
-            __extends(Start, _super);
-            function Start() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            Start.prototype.onAwake = function () {
-                var mainCamera = egret3d.Camera.main;
-                {
-                    mainCamera.fov = 40.0 * 0.017453292519943295 /* DEG_RAD */;
-                    mainCamera.far = 10000.0;
-                    mainCamera.near = 1.0;
-                    mainCamera.backgroundColor.fromHex(0xFFFFFF);
-                    mainCamera.transform.setLocalPosition(0.0, 0.0, -3200.0);
-                    mainCamera.gameObject.addComponent(behaviors.FollowTouch);
-                }
-                {
-                    var sphereMesh = egret3d.MeshBuilder.createSphere(100.0, 0.0, 0.0, 0.0, 20.0, 20.0);
-                    var coneMesh = egret3d.MeshBuilder.createCylinder(0.0, 10.0, 100.0).applyMatrix(egret3d.Matrix4.create().fromRotationX(Math.PI * 0.5));
-                    var sphere = egret3d.creater.createGameObject("Sphere", {
-                        mesh: sphereMesh,
-                        material: egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL)
-                    });
-                    sphere.addComponent(behaviors.Wander).radius = 2000.0;
-                    for (var i = 0; i < 1000; ++i) {
-                        var cone = egret3d.creater.createGameObject("Cone " + i, {
-                            mesh: coneMesh,
-                            material: egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL)
-                        });
-                        cone.transform
-                            .setLocalPosition(Math.random() * 4000.0 - 2000.0, Math.random() * 4000.0 - 2000.0, Math.random() * 4000.0 - 2000.0)
-                            .setLocalScale(Math.random() * 4.0 + 2.0);
-                        cone.addComponent(behaviors.LookAtTarget).target = sphere;
-                    }
-                }
-            };
-            return Start;
-        }(paper.Behaviour));
-        __reflect(Start.prototype, "Start");
-    })(materials = examples.materials || (examples.materials = {}));
+        shaders.Water = Water;
+        __reflect(Water.prototype, "examples.shaders.Water", ["examples.Example"]);
+    })(shaders = examples.shaders || (examples.shaders = {}));
 })(examples || (examples = {}));

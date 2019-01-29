@@ -51,7 +51,6 @@ var examples;
         }
         InputTest.prototype.start = function () {
             return __awaiter(this, void 0, void 0, function () {
-                var gameObject, light;
                 return __generator(this, function (_a) {
                     switch (_a.label) {
                         case 0: 
@@ -60,16 +59,6 @@ var examples;
                         case 1:
                             // Load resource config.
                             _a.sent();
-                            // Create camera.
-                            egret3d.Camera.main;
-                            {
-                                gameObject = paper.GameObject.create("Light");
-                                gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
-                                gameObject.transform.lookAt(egret3d.Vector3.ZERO);
-                                light = gameObject.addComponent(egret3d.DirectionalLight);
-                                light.intensity = 0.5;
-                                light.castShadows = true;
-                            }
                             paper.GameObject.globalGameObject.addComponent(Updater);
                             return [2 /*return*/];
                     }
@@ -79,27 +68,39 @@ var examples;
         return InputTest;
     }());
     examples.InputTest = InputTest;
-    __reflect(InputTest.prototype, "examples.InputTest");
+    __reflect(InputTest.prototype, "examples.InputTest", ["examples.Example"]);
     var Updater = (function (_super) {
         __extends(Updater, _super);
         function Updater() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._cubeLeft = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
-            _this._cubeMiddle = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
-            _this._cubeRight = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
-            _this._cubeBack = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
-            _this._cubeForward = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
-            _this._cubeEraser = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
+            _this._cubeLeft = egret3d.creater.createGameObject("Left Mouse Or Touch");
+            _this._cubeMiddle = egret3d.creater.createGameObject("Middle Moush");
+            _this._cubeRight = egret3d.creater.createGameObject("Right Mouse");
+            _this._cubeBack = egret3d.creater.createGameObject("Back");
+            _this._cubeForward = egret3d.creater.createGameObject("Forward");
+            _this._cubeEraser = egret3d.creater.createGameObject("Eraser");
             _this._holdCubes = {};
             return _this;
         }
         Updater.prototype.onAwake = function () {
-            this._cubeLeft.transform.setLocalPosition(-2.0, 1.0, 0.0).gameObject.renderer.material = egret3d.DefaultMaterials.MESH_LAMBERT;
-            this._cubeMiddle.transform.setLocalPosition(0.0, 1.0, 0.0).gameObject.renderer.material = egret3d.DefaultMaterials.MESH_LAMBERT;
-            this._cubeRight.transform.setLocalPosition(2.0, 1.0, 0.0).gameObject.renderer.material = egret3d.DefaultMaterials.MESH_LAMBERT;
-            this._cubeBack.transform.setLocalPosition(-2.0, -1.0, 0.0).gameObject.renderer.material = egret3d.DefaultMaterials.MESH_LAMBERT;
-            this._cubeForward.transform.setLocalPosition(0.0, -1.0, 0.0).gameObject.renderer.material = egret3d.DefaultMaterials.MESH_LAMBERT;
-            this._cubeEraser.transform.setLocalPosition(2.0, -1.0, 0.0).gameObject.renderer.material = egret3d.DefaultMaterials.MESH_LAMBERT;
+            //
+            examples.createGridRoom();
+            for (var _i = 0, _a = [
+                this._cubeLeft.transform.setLocalPosition(-2.0, 0.5, 1.0),
+                this._cubeMiddle.transform.setLocalPosition(0.0, 0.5, 1.0),
+                this._cubeRight.transform.setLocalPosition(2.0, 0.5, 1.0),
+                this._cubeBack.transform.setLocalPosition(-2.0, 0.5, -1.0),
+                this._cubeForward.transform.setLocalPosition(0.0, 0.5, -1.0),
+                this._cubeEraser.transform.setLocalPosition(2.0, 0.5, -1.0),
+            ]; _i < _a.length; _i++) {
+                var transform = _a[_i];
+                var meshFilter = transform.gameObject.getComponent(egret3d.MeshFilter);
+                var renderer = transform.gameObject.renderer;
+                meshFilter.mesh = egret3d.DefaultMeshes.CUBE;
+                renderer.castShadows = true;
+                renderer.receiveShadows = true;
+                renderer.material = egret3d.DefaultMaterials.MESH_PHONG;
+            }
         };
         Updater.prototype.onUpdate = function () {
             var camera = egret3d.Camera.main;
@@ -117,78 +118,76 @@ var examples;
             }
             // Mouse key or default touch.
             if (defaultPointer.isDown()) {
-                this._cubeLeft.transform.setLocalScale(2.0, 2.0, 2.0);
+                this._cubeLeft.transform.translate(0.0, 1.0, 0.0);
             }
             else if (defaultPointer.isHold()) {
                 this._cubeLeft.transform.rotate(0.0, 0.05, 0.0);
             }
             else if (defaultPointer.isUp()) {
-                this._cubeLeft.transform.setLocalScale(1.0, 1.0, 1.0);
-                this._cubeLeft.transform.setLocalEuler(0.0, 0.0, 0.0);
+                this._cubeLeft.transform.translate(0.0, -1.0, 0.0).setLocalEuler(0.0, 0.0, 0.0);
             }
             //
             if (defaultPointer.isDown(4 /* MiddleMouse */)) {
-                this._cubeMiddle.transform.setLocalScale(2.0, 2.0, 2.0);
+                this._cubeMiddle.transform.translate(0.0, 1.0, 0.0);
             }
             else if (defaultPointer.isHold(4 /* MiddleMouse */)) {
                 this._cubeMiddle.transform.rotate(0.0, 0.05, 0.0);
             }
             else if (defaultPointer.isUp(4 /* MiddleMouse */)) {
-                this._cubeMiddle.transform.setLocalScale(1.0, 1.0, 1.0);
-                this._cubeMiddle.transform.setLocalEuler(0.0, 0.0, 0.0);
+                this._cubeMiddle.transform.translate(0.0, -1.0, 0.0).setLocalEuler(0.0, 0.0, 0.0);
             }
             //
             if (defaultPointer.isDown(2 /* RightMouse */)) {
-                this._cubeRight.transform.setLocalScale(2.0, 2.0, 2.0);
-                this._cubeLeft.transform.setLocalEuler(0.0, 0.0, 0.0);
+                this._cubeRight.transform.translate(0.0, 1.0, 0.0);
             }
             else if (defaultPointer.isHold(2 /* RightMouse */)) {
                 this._cubeRight.transform.rotate(0.0, 0.05, 0.0);
             }
             else if (defaultPointer.isUp(2 /* RightMouse */)) {
-                this._cubeRight.transform.setLocalScale(1.0, 1.0, 1.0);
-                this._cubeRight.transform.setLocalEuler(0.0, 0.0, 0.0);
+                this._cubeRight.transform.translate(0.0, -1.0, 0.0).setLocalEuler(0.0, 0.0, 0.0);
             }
             //
             if (defaultPointer.isDown(8 /* Back */)) {
-                this._cubeBack.transform.setLocalScale(2.0, 2.0, 2.0);
+                this._cubeBack.transform.translate(0.0, 1.0, 0.0);
             }
             else if (defaultPointer.isHold(8 /* Back */)) {
                 this._cubeBack.transform.rotate(0.0, 0.05, 0.0);
             }
             else if (defaultPointer.isUp(8 /* Back */)) {
-                this._cubeBack.transform.setLocalScale(1.0, 1.0, 1.0);
-                this._cubeBack.transform.setLocalEuler(0.0, 0.0, 0.0);
+                this._cubeBack.transform.translate(0.0, -1.0, 0.0).setLocalEuler(0.0, 0.0, 0.0);
             }
             //
             if (defaultPointer.isDown(16 /* Forward */)) {
-                this._cubeForward.transform.setLocalScale(2.0, 2.0, 2.0);
+                this._cubeForward.transform.translate(0.0, 1.0, 0.0);
             }
             else if (defaultPointer.isHold(16 /* Forward */)) {
                 this._cubeForward.transform.rotate(0.0, 0.05, 0.0);
             }
             else if (defaultPointer.isUp(16 /* Forward */)) {
-                this._cubeForward.transform.setLocalScale(1.0, 1.0, 1.0);
-                this._cubeForward.transform.setLocalEuler(0.0, 0.0, 0.0);
+                this._cubeForward.transform.translate(0.0, -1.0, 0.0).setLocalEuler(0.0, 0.0, 0.0);
             }
             //
             if (defaultPointer.isDown(32 /* PenEraser */)) {
-                this._cubeEraser.transform.setLocalScale(2.0, 2.0, 2.0);
+                this._cubeEraser.transform.translate(0.0, 1.0, 0.0);
             }
             else if (defaultPointer.isHold(32 /* PenEraser */)) {
                 this._cubeEraser.transform.rotate(0.0, 0.05, 0.0);
             }
             else if (defaultPointer.isUp(32 /* PenEraser */)) {
-                this._cubeEraser.transform.setLocalScale(1.0, 1.0, 1.0);
-                this._cubeEraser.transform.setLocalEuler(0.0, 0.0, 0.0);
+                this._cubeEraser.transform.translate(0.0, -1.0, 0.0).setLocalEuler(0.0, 0.0, 0.0);
             }
             // Muti-touch.
             for (var _i = 0, _a = inputCollecter.getDownPointers(); _i < _a.length; _i++) {
                 var pointer = _a[_i];
-                if (!(pointer.event.pointerId in this._holdCubes)) {
-                    var cube = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE);
-                    cube.renderer.material = egret3d.DefaultMaterials.MESH_LAMBERT;
-                    this._holdCubes[pointer.event.pointerId] = cube;
+                var pointerId = pointer.event.pointerId;
+                if (!(pointerId in this._holdCubes)) {
+                    var cube = egret3d.creater.createGameObject("Touch " + pointerId, {
+                        mesh: egret3d.DefaultMeshes.CUBE,
+                        material: egret3d.DefaultMaterials.MESH_PHONG,
+                        castShadows: true,
+                        receiveShadows: true,
+                    });
+                    this._holdCubes[pointerId] = cube;
                 }
             }
             for (var _b = 0, _c = inputCollecter.getHoldPointers(); _b < _c.length; _b++) {
@@ -196,7 +195,7 @@ var examples;
                 var cube = this._holdCubes[pointer.event.pointerId];
                 if (cube) {
                     var ray = camera.createRayByScreen(pointer.position.x, pointer.position.y).release();
-                    var plane = egret3d.Plane.create().fromPoint(egret3d.Vector3.ZERO, egret3d.Vector3.UP).release();
+                    var plane = egret3d.Plane.create(egret3d.Vector3.UP, -2.5).release();
                     var raycastInfo = egret3d.RaycastInfo.create().release();
                     if (plane.raycast(ray, raycastInfo)) {
                         cube.transform.localPosition = raycastInfo.position;
@@ -205,10 +204,11 @@ var examples;
             }
             for (var _d = 0, _e = inputCollecter.getUpPointers(); _d < _e.length; _d++) {
                 var pointer = _e[_d];
-                var cube = this._holdCubes[pointer.event.pointerId];
+                var pointerId = pointer.event.pointerId;
+                var cube = this._holdCubes[pointerId];
                 if (cube) {
                     cube.destroy();
-                    delete this._holdCubes[pointer.event.pointerId];
+                    delete this._holdCubes[pointerId];
                 }
             }
             // Key board.

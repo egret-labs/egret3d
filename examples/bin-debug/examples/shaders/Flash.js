@@ -102,24 +102,24 @@ var examples;
                     .addUniform("_scale", 35664 /* FLOAT_VEC2 */, [1.0, 1.0]);
                 var texture = RES.getRes("textures/test.png");
                 {
-                    var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Cube");
+                    var gameObject = egret3d.creater.createGameObject("Cube", {
+                        mesh: egret3d.DefaultMeshes.CUBE,
+                        materials: [
+                            egret3d.Material
+                                .create()
+                                .setTexture(RES.getRes("logo.png")),
+                            egret3d.Material.create(shader)
+                                .setTexture(texture)
+                                .setBlend(4 /* Additive */, 3000 /* Blend */, 1.0)
+                                .setColor(egret3d.Color.INDIGO)
+                        ],
+                    });
                     gameObject.transform.setLocalPosition(2.0, 0.5, 0.0);
-                    // 
-                    var renderer = gameObject.renderer;
-                    renderer.materials = [
-                        egret3d.Material
-                            .create()
-                            .setTexture(RES.getRes("logo.png")),
-                        egret3d.Material.create(shader)
-                            .setTexture(texture)
-                            .setBlend(4 /* Additive */, 3000 /* Blend */, 1.0)
-                            .setColor(egret3d.Color.INDIGO)
-                    ];
-                    renderer.gameObject.addComponent(FlashEditor);
+                    gameObject.addComponent(FlashEditor);
                     //
                     var modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
                     if (modelComponent) {
-                        modelComponent.select(renderer.gameObject);
+                        modelComponent.select(gameObject);
                         paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent).openComponents(FlashEditor);
                     }
                 }

@@ -97,18 +97,18 @@ var examples;
                     .addUniform("_c", 5126 /* FLOAT */, 1.3)
                     .addUniform("_p", 5126 /* FLOAT */, 3.0);
                 {
-                    var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CYLINDER, "Cylinder");
+                    var gameObject = egret3d.creater.createGameObject("Cylinder", {
+                        mesh: egret3d.DefaultMeshes.CYLINDER,
+                        material: egret3d.Material.create(shader)
+                            .setBlend(4 /* Additive */, 3000 /* Blend */)
+                            .setColor(egret3d.Color.INDIGO)
+                    });
                     gameObject.transform.setLocalPosition(2.0, 0.5, 0.0);
-                    // 
-                    var renderer = gameObject.renderer;
-                    renderer.material = egret3d.Material.create(shader)
-                        .setBlend(4 /* Additive */, 3000 /* Blend */)
-                        .setColor(egret3d.Color.INDIGO);
-                    renderer.gameObject.addComponent(XRayEditor);
+                    gameObject.addComponent(XRayEditor);
                     //
                     var modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
                     if (modelComponent) {
-                        modelComponent.select(renderer.gameObject);
+                        modelComponent.select(gameObject);
                         paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent).openComponents(XRayEditor);
                     }
                 }
