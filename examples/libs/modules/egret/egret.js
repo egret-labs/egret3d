@@ -8405,10 +8405,6 @@ var egret;
             if (this.source && this.source.dispose) {
                 this.source.dispose();
             }
-            // 微信显存泄漏的 bug。
-            if (this.source && this.source.src) {
-                this.source.src = "";
-            }
             this.source = null;
             BitmapData.$dispose(this);
         };
