@@ -23,7 +23,6 @@ namespace examples.materials {
     }
 
     class Starter extends paper.Behaviour {
-        private readonly _cubeTexture: egret3d.BaseTexture = RES.getRes("threejs/textures/cube/pisa/pisa.image.json");
 
         public onAwake() {
             const mainCamera = egret3d.Camera.main;
@@ -37,8 +36,9 @@ namespace examples.materials {
             }
 
             {
+                const cubeTexture = RES.getRes("threejs/textures/cube/pisa/pisa.image.json");
                 const skyBox = mainCamera.gameObject.getOrAddComponent(egret3d.SkyBox);
-                skyBox.material = egret3d.Material.create(egret3d.DefaultShaders.CUBE).setTexture(egret3d.ShaderUniformName.CubeMap, this._cubeTexture);
+                skyBox.material = egret3d.Material.create(egret3d.DefaultShaders.CUBE).setTexture(egret3d.ShaderUniformName.CubeMap, cubeTexture);
             }
 
             { // Main camera.
@@ -62,14 +62,11 @@ namespace examples.materials {
                 directionalLight.transform.setLocalPosition(1.0, -0.5, 1.0).lookAt(egret3d.Vector3.ZERO);
             }
 
-            { //Create model
+            { // Create model.
                 const cerberus_mesh = RES.getRes("threejs/models/cerberus/Cerberus_default.mesh.bin");
                 const map = RES.getRes("threejs/models/cerberus/Cerberus_A.jpg") as egret3d.Texture;
                 const normalMap = RES.getRes("threejs/models/cerberus/Cerberus_N.jpg") as egret3d.Texture;
                 const rmMap = RES.getRes("threejs/models/cerberus/Cerberus_RM.jpg") as egret3d.Texture;
-                map.sampler.wrapS = gltf.TextureWrappingMode.Repeat;
-                rmMap.sampler.wrapS = gltf.TextureWrappingMode.Repeat;
-                normalMap.sampler.wrapS = gltf.TextureWrappingMode.Repeat;
 
                 egret3d.creater.createGameObject("cerberus", {
                     mesh: cerberus_mesh,
@@ -80,8 +77,7 @@ namespace examples.materials {
                         .setTexture(egret3d.ShaderUniformName.NormalMap, normalMap)
                         .setTexture(egret3d.ShaderUniformName.MetalnessMap, rmMap)
                         .setTexture(egret3d.ShaderUniformName.RoughnessMap, rmMap)
-                        .setTexture(egret3d.ShaderUniformName.EnvMap, this._cubeTexture),
-                });
+                }).transform.setLocalPosition(0.45, 0.0, 0.0).setLocalEulerAngles(0.0, 90.0, 0.0);
             }
         }
     }

@@ -1,6 +1,6 @@
 namespace examples.animations {
 
-    export class Additve implements Example {
+    export class Additive implements Example {
 
         async start() {
             // Load resource config.
@@ -34,36 +34,20 @@ namespace examples.animations {
                 RES.getRes("Assets/Animations/Mixamo/Head_Hit.ani.bin"),
             ];
             animation.play("Running");
+            gameObject.addComponent(behaviors.AnimationHelper);
             //
             const animationController = animation.animationController!;
             const mask = egret3d.AnimationMask.create("UpperBody");
             mask.createJoints(gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.mesh!).addJoint("mixamorig:Spine");
             //
             const layer1 = animationController.getOrAddLayer(1);
+            layer1.additive = true;
             layer1.mask = mask;
-            animation.fadeIn("Head_Hit", 1.3, 0, 1, true);
+            animation.fadeIn("Head_Hit", 1.3, 0, 1);
             //
             egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
             //
             createGridRoom();
-        }
-    }
-
-    class Updater extends paper.Behaviour {
-
-        public onUpdate() {
-            const animation = this.gameObject.getComponent(egret3d.Animation)!;
-            const walkState = animation.getState("Walking") as egret3d.AnimationState;
-            const runningState = animation.getState("Running") as egret3d.AnimationState;
-
-            this._blending1DStates(walkState, runningState, (Math.sin(paper.clock.time) + 1.0) * 0.5);
-        }
-
-        private _blending1DStates(a: egret3d.AnimationState, b: egret3d.AnimationState, lerp: number) {
-            a.weight = 1.0 - lerp;
-            b.weight = lerp;
-            a.timeScale = egret3d.math.lerp(a.totalTime / b.totalTime, 1.0, a.weight);
-            b.timeScale = egret3d.math.lerp(b.totalTime / a.totalTime, 1.0, b.weight);
         }
     }
 }

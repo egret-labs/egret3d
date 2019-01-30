@@ -85,8 +85,7 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).Layer) }) // TODO
-        public cullingMask: paper.Layer = ~(paper.Layer.Editor | paper.Layer.EditorUI);
-        // public cullingMask: paper.Layer = paper.Layer.Default | paper.Layer.TransparentFX | paper.Layer.UI;
+        public cullingMask: paper.Layer = paper.Layer.Default | paper.Layer.TransparentFX | paper.Layer.UI;
         /**
          * 该相机渲染排序。
          * - 该值越低的相机优先绘制。
@@ -181,6 +180,11 @@ namespace egret3d {
 
             this._viewport.onUpdateTarget = this._pixelViewport.onUpdateTarget = this;
             this._viewport.onUpdate = this._pixelViewport.onUpdate = this._onViewportUpdate;
+
+            // TODO 兼容
+            this.cullingMask = paper.Layer.Everything;
+            this.cullingMask &= ~paper.Layer.Editor;
+            this.cullingMask &= ~paper.Layer.EditorUI;
         }
 
         public uninitialize() {

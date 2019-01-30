@@ -5935,7 +5935,7 @@ var paper;
                 if (enabled) {
                     this.onEnable && this.onEnable();
                     if (true) {
-                        console.info(egret.getQualifiedClassName(this), "enabled.");
+                        console.debug(egret.getQualifiedClassName(this), "enabled.");
                     }
                 }
             }
@@ -5975,7 +5975,7 @@ var paper;
                 if (!enabled) {
                     this.onDisable && this.onDisable();
                     if (true) {
-                        console.info(egret.getQualifiedClassName(this), "disabled.");
+                        console.debug(egret.getQualifiedClassName(this), "disabled.");
                     }
                 }
             }
@@ -14687,8 +14687,7 @@ var egret3d;
              * - camera.cullingMask |= paper.Layer.UI;
              * - camera.cullingMask &= ~paper.Layer.UI;
              */
-            _this.cullingMask = ~(64 /* Editor */ | 128 /* EditorUI */);
-            // public cullingMask: paper.Layer = paper.Layer.Default | paper.Layer.TransparentFX | paper.Layer.UI;
+            _this.cullingMask = 1 /* Default */ | 2 /* TransparentFX */ | 32 /* UI */;
             /**
              * 该相机渲染排序。
              * - 该值越低的相机优先绘制。
@@ -14815,6 +14814,10 @@ var egret3d;
             egret3d.stage.onResize.add(this._onStageResize, this);
             this._viewport.onUpdateTarget = this._pixelViewport.onUpdateTarget = this;
             this._viewport.onUpdate = this._pixelViewport.onUpdate = this._onViewportUpdate;
+            // TODO 兼容
+            this.cullingMask = 4294967295 /* Everything */;
+            this.cullingMask &= ~64 /* Editor */;
+            this.cullingMask &= ~128 /* EditorUI */;
         };
         Camera.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
@@ -20167,7 +20170,7 @@ var egret3d;
                     }
                     if (weight < 0.0) {
                         quaternion.lerp(egret3d.Quaternion.IDENTITY, quaternion, -weight);
-                        // if (weight !== -1.0) {
+                        // if (weight !== -1.0) { // TODO
                         //     if (quaternion.w >= 0.0) {
                         //         weight = -weight;
                         //     }
