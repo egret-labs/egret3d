@@ -98,9 +98,7 @@ var examples;
         var Starter = (function (_super) {
             __extends(Starter, _super);
             function Starter() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._cubeTexture = RES.getRes("threejs/textures/cube/pisa/pisa.image.json");
-                return _this;
+                return _super !== null && _super.apply(this, arguments) || this;
             }
             Starter.prototype.onAwake = function () {
                 var mainCamera = egret3d.Camera.main;
@@ -112,8 +110,9 @@ var examples;
                     renderState.toneMappingExposure = 3.0;
                 }
                 {
+                    var cubeTexture = RES.getRes("threejs/textures/cube/pisa/pisa.image.json");
                     var skyBox = mainCamera.gameObject.getOrAddComponent(egret3d.SkyBox);
-                    skyBox.material = egret3d.Material.create(egret3d.DefaultShaders.CUBE).setTexture("tCube" /* CubeMap */, this._cubeTexture);
+                    skyBox.material = egret3d.Material.create(egret3d.DefaultShaders.CUBE).setTexture("tCube" /* CubeMap */, cubeTexture);
                 }
                 {
                     mainCamera.fov = 50.0 * 0.017453292519943295 /* DEG_RAD */;
@@ -138,9 +137,6 @@ var examples;
                     var map = RES.getRes("threejs/models/cerberus/Cerberus_A.jpg");
                     var normalMap = RES.getRes("threejs/models/cerberus/Cerberus_N.jpg");
                     var rmMap = RES.getRes("threejs/models/cerberus/Cerberus_RM.jpg");
-                    map.sampler.wrapS = 10497 /* Repeat */;
-                    rmMap.sampler.wrapS = 10497 /* Repeat */;
-                    normalMap.sampler.wrapS = 10497 /* Repeat */;
                     egret3d.creater.createGameObject("cerberus", {
                         mesh: cerberus_mesh,
                         material: egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
@@ -150,8 +146,7 @@ var examples;
                             .setTexture("normalMap" /* NormalMap */, normalMap)
                             .setTexture("metalnessMap" /* MetalnessMap */, rmMap)
                             .setTexture("roughnessMap" /* RoughnessMap */, rmMap)
-                            .setTexture("envMap" /* EnvMap */, this._cubeTexture),
-                    });
+                    }).transform.setLocalPosition(0.45, 0.0, 0.0).setLocalEulerAngles(0.0, 90.0, 0.0);
                 }
             };
             return Starter;

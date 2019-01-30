@@ -2496,12 +2496,12 @@ declare namespace egret3d {
      * 欧拉旋转顺序。
      */
     const enum EulerOrder {
-        XYZ = 0,
-        XZY = 1,
-        YXZ = 2,
-        YZX = 3,
-        ZXY = 4,
-        ZYX = 5,
+        XYZ = 1,
+        XZY = 2,
+        YXZ = 3,
+        YZX = 4,
+        ZXY = 5,
+        ZYX = 6,
     }
     /**
      * 三维向量。
@@ -4516,11 +4516,19 @@ declare namespace egret3d {
          */
         fromMatrix(rotateMatrix: Readonly<Matrix4>): this;
         /**
-         * 通过欧拉旋转设置该四元数。
-         * @param euler 欧拉旋转。（弧度制）
+         * 通过欧拉旋转（弧度制）设置该四元数。
+         * @param euler 欧拉旋转。
          * @param order 欧拉旋转顺序。
          */
         fromEuler(euler: Readonly<IVector3>, order?: EulerOrder): this;
+        /**
+         * 通过欧拉旋转（弧度制）设置该四元数。
+         * @param eulerX 欧拉旋转 X 轴分量。
+         * @param eulerY 欧拉旋转 Y 轴分量。
+         * @param eulerZ 欧拉旋转 Z 轴分量。
+         * @param order 欧拉旋转顺序。
+         */
+        fromEuler(eulerX: number, eulerY: number, eulerZ: number, order?: EulerOrder): this;
         /**
          * 通过旋转轴设置该四元数。
          * - 假设旋转轴已被归一化。
@@ -8127,7 +8135,7 @@ declare namespace egret3d {
          */
         autoPlay: boolean;
         /**
-         *
+         * 是否将动画数据中根节点的变换动画应用到该组件实体的变换组件上。
          */
         applyRootMotion: boolean;
         /**
@@ -9445,11 +9453,7 @@ declare namespace egret3d {
          */
         static create(name: string, config: GLTF): Material;
         /**
-         * 该材质的渲染排序。
-         */
-        renderQueue: RenderQueue | uint;
-        /**
-         *
+         * @private
          */
         readonly defines: Defines;
         private readonly _uvTransform;
@@ -9463,6 +9467,7 @@ declare namespace egret3d {
         dispose(): boolean;
         /**
          * 拷贝。
+         * TODO
          */
         copy(value: Material): this;
         /**
@@ -9581,6 +9586,10 @@ declare namespace egret3d {
          * @param texture 贴图纹理。
          */
         setTexture(uniformName: string, texture: BaseTexture | null): this;
+        /**
+         * 该材质的渲染排序。
+         */
+        renderQueue: RenderQueue | uint;
         /**
          * 该材质的透明度。
          */

@@ -1831,12 +1831,12 @@ var egret3d;
      */
     var EulerOrder;
     (function (EulerOrder) {
-        EulerOrder[EulerOrder["XYZ"] = 0] = "XYZ";
-        EulerOrder[EulerOrder["XZY"] = 1] = "XZY";
-        EulerOrder[EulerOrder["YXZ"] = 2] = "YXZ";
-        EulerOrder[EulerOrder["YZX"] = 3] = "YZX";
-        EulerOrder[EulerOrder["ZXY"] = 4] = "ZXY";
-        EulerOrder[EulerOrder["ZYX"] = 5] = "ZYX";
+        EulerOrder[EulerOrder["XYZ"] = 1] = "XYZ";
+        EulerOrder[EulerOrder["XZY"] = 2] = "XZY";
+        EulerOrder[EulerOrder["YXZ"] = 3] = "YXZ";
+        EulerOrder[EulerOrder["YZX"] = 4] = "YZX";
+        EulerOrder[EulerOrder["ZXY"] = 5] = "ZXY";
+        EulerOrder[EulerOrder["ZYX"] = 6] = "ZYX";
     })(EulerOrder = egret3d.EulerOrder || (egret3d.EulerOrder = {}));
     /**
      * 三维向量。
@@ -4660,7 +4660,7 @@ var egret3d;
             // http://www.mathworks.com/matlabcentral/fileexchange/
             // 	20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/
             //	content/SpinCalc.m
-            if (order === void 0) { order = 2 /* YXZ */; }
+            if (order === void 0) { order = 3 /* YXZ */; }
             if (translateStays === void 0) { translateStays = false; }
             var cos = Math.cos;
             var sin = Math.sin;
@@ -4670,7 +4670,7 @@ var egret3d;
             var e = cos(z), f = sin(z);
             var rawData = this.rawData;
             switch (order) {
-                case 0 /* XYZ */: {
+                case 1 /* XYZ */: {
                     var ae = a * e, af = a * f, be = b * e, bf = b * f;
                     rawData[0] = c * e;
                     rawData[4] = -c * f;
@@ -4683,7 +4683,7 @@ var egret3d;
                     rawData[10] = a * c;
                     break;
                 }
-                case 1 /* XZY */: {
+                case 2 /* XZY */: {
                     var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
                     rawData[0] = c * e;
                     rawData[4] = -f;
@@ -4696,7 +4696,7 @@ var egret3d;
                     rawData[10] = bd * f + ac;
                     break;
                 }
-                case 2 /* YXZ */: {
+                case 3 /* YXZ */: {
                     var ce = c * e, cf = c * f, de = d * e, df = d * f;
                     rawData[0] = ce + df * b;
                     rawData[4] = de * b - cf;
@@ -4709,7 +4709,7 @@ var egret3d;
                     rawData[10] = a * c;
                     break;
                 }
-                case 3 /* YZX */: {
+                case 4 /* YZX */: {
                     var ac = a * c, ad = a * d, bc = b * c, bd = b * d;
                     rawData[0] = c * e;
                     rawData[4] = bd - ac * f;
@@ -4722,7 +4722,7 @@ var egret3d;
                     rawData[10] = ac - bd * f;
                     break;
                 }
-                case 4 /* ZXY */: {
+                case 5 /* ZXY */: {
                     var ce = c * e, cf = c * f, de = d * e, df = d * f;
                     rawData[0] = ce - df * b;
                     rawData[4] = -a * f;
@@ -4735,7 +4735,7 @@ var egret3d;
                     rawData[10] = a * c;
                     break;
                 }
-                case 5 /* ZYX */: {
+                case 6 /* ZYX */: {
                     var ae = a * e, af = a * f, be = b * e, bf = b * f;
                     rawData[0] = c * e;
                     rawData[4] = be * d - af;
@@ -5180,7 +5180,7 @@ var egret3d;
          * @param order 欧拉旋转顺序。
          */
         Matrix4.prototype.toEuler = function (euler, order) {
-            if (order === void 0) { order = 2 /* YXZ */; }
+            if (order === void 0) { order = 3 /* YXZ */; }
             if (!euler) {
                 euler = egret3d.Vector3.create();
             }
@@ -5190,7 +5190,7 @@ var egret3d;
             var m21 = rawData[1], m22 = rawData[5], m23 = rawData[9];
             var m31 = rawData[2], m32 = rawData[6], m33 = rawData[10];
             switch (order) {
-                case 0 /* XYZ */: {
+                case 1 /* XYZ */: {
                     euler.y = Math.asin(egret3d.math.clamp(m13, -1.0, 1.0));
                     if (Math.abs(m13) < 0.999999) {
                         euler.x = Math.atan2(-m23, m33);
@@ -5202,7 +5202,7 @@ var egret3d;
                     }
                     break;
                 }
-                case 1 /* XZY */: {
+                case 2 /* XZY */: {
                     euler.z = Math.asin(-egret3d.math.clamp(m12, -1.0, 1.0));
                     if (Math.abs(m12) < 0.999999) {
                         euler.x = Math.atan2(m32, m22);
@@ -5214,7 +5214,7 @@ var egret3d;
                     }
                     break;
                 }
-                case 2 /* YXZ */: {
+                case 3 /* YXZ */: {
                     euler.x = Math.asin(-egret3d.math.clamp(m23, -1.0, 1.0));
                     if (Math.abs(m23) < 0.999999) {
                         euler.y = Math.atan2(m13, m33);
@@ -5226,7 +5226,7 @@ var egret3d;
                     }
                     break;
                 }
-                case 3 /* YZX */: {
+                case 4 /* YZX */: {
                     euler.z = Math.asin(egret3d.math.clamp(m21, -1.0, 1.0));
                     if (Math.abs(m21) < 0.999999) {
                         euler.x = Math.atan2(-m23, m22);
@@ -5238,7 +5238,7 @@ var egret3d;
                     }
                     break;
                 }
-                case 4 /* ZXY */: {
+                case 5 /* ZXY */: {
                     euler.x = Math.asin(egret3d.math.clamp(m32, -1.0, 1.0));
                     if (Math.abs(m32) < 0.999999) {
                         euler.y = Math.atan2(-m31, m33);
@@ -5250,7 +5250,7 @@ var egret3d;
                     }
                     break;
                 }
-                case 5 /* ZYX */: {
+                case 6 /* ZYX */: {
                     euler.y = Math.asin(-egret3d.math.clamp(m31, -1.0, 1.0));
                     if (Math.abs(m31) < 0.999999) {
                         euler.x = Math.atan2(m32, m33);
@@ -5935,7 +5935,7 @@ var paper;
                 if (enabled) {
                     this.onEnable && this.onEnable();
                     if (true) {
-                        console.info(egret.getQualifiedClassName(this), "enabled.");
+                        console.debug(egret.getQualifiedClassName(this), "enabled.");
                     }
                 }
             }
@@ -5975,7 +5975,7 @@ var paper;
                 if (!enabled) {
                     this.onDisable && this.onDisable();
                     if (true) {
-                        console.info(egret.getQualifiedClassName(this), "disabled.");
+                        console.debug(egret.getQualifiedClassName(this), "disabled.");
                     }
                 }
             }
@@ -7297,14 +7297,20 @@ var egret3d;
             }
             return this;
         };
-        /**
-         * 通过欧拉旋转设置该四元数。
-         * @param euler 欧拉旋转。（弧度制）
-         * @param order 欧拉旋转顺序。
-         */
-        Quaternion.prototype.fromEuler = function (euler, order) {
-            if (order === void 0) { order = 2 /* YXZ */; }
-            var x = euler.x, y = euler.y, z = euler.z;
+        Quaternion.prototype.fromEuler = function (eulerOrX, orderOrY, eulerZ, order) {
+            var x, y, z;
+            if (eulerOrX.hasOwnProperty("x")) {
+                x = eulerOrX.x;
+                y = eulerOrX.y;
+                z = eulerOrX.z;
+                order = orderOrY || 3 /* YXZ */;
+            }
+            else {
+                x = eulerOrX;
+                y = orderOrY;
+                z = eulerZ;
+                order = order || 3 /* YXZ */;
+            }
             // http://www.mathworks.com/matlabcentral/fileexchange/20696-function-to-convert-between-dcm-euler-angles-quaternions-and-euler-vectors/content/SpinCalc.m
             var cos = Math.cos;
             var sin = Math.sin;
@@ -7315,37 +7321,37 @@ var egret3d;
             var s2 = sin(y * 0.5);
             var s3 = sin(z * 0.5);
             switch (order) {
-                case 0 /* XYZ */:
+                case 1 /* XYZ */:
                     this.x = s1 * c2 * c3 + c1 * s2 * s3;
                     this.y = c1 * s2 * c3 - s1 * c2 * s3;
                     this.z = c1 * c2 * s3 + s1 * s2 * c3;
                     this.w = c1 * c2 * c3 - s1 * s2 * s3;
                     break;
-                case 1 /* XZY */:
+                case 2 /* XZY */:
                     this.x = s1 * c2 * c3 - c1 * s2 * s3;
                     this.y = c1 * s2 * c3 - s1 * c2 * s3;
                     this.z = c1 * c2 * s3 + s1 * s2 * c3;
                     this.w = c1 * c2 * c3 + s1 * s2 * s3;
                     break;
-                case 2 /* YXZ */:
+                case 3 /* YXZ */:
                     this.x = s1 * c2 * c3 + c1 * s2 * s3;
                     this.y = c1 * s2 * c3 - s1 * c2 * s3;
                     this.z = c1 * c2 * s3 - s1 * s2 * c3;
                     this.w = c1 * c2 * c3 + s1 * s2 * s3;
                     break;
-                case 3 /* YZX */:
+                case 4 /* YZX */:
                     this.x = s1 * c2 * c3 + c1 * s2 * s3;
                     this.y = c1 * s2 * c3 + s1 * c2 * s3;
                     this.z = c1 * c2 * s3 - s1 * s2 * c3;
                     this.w = c1 * c2 * c3 - s1 * s2 * s3;
                     break;
-                case 4 /* ZXY */:
+                case 5 /* ZXY */:
                     this.x = s1 * c2 * c3 - c1 * s2 * s3;
                     this.y = c1 * s2 * c3 + s1 * c2 * s3;
                     this.z = c1 * c2 * s3 + s1 * s2 * c3;
                     this.w = c1 * c2 * c3 - s1 * s2 * s3;
                     break;
-                case 5 /* ZYX */:
+                case 6 /* ZYX */:
                     this.x = s1 * c2 * c3 - c1 * s2 * s3;
                     this.y = c1 * s2 * c3 + s1 * c2 * s3;
                     this.z = c1 * c2 * s3 - s1 * s2 * c3;
@@ -7548,7 +7554,7 @@ var egret3d;
          * @param order 欧拉旋转顺序。
          */
         Quaternion.prototype.toEuler = function (out, order) {
-            if (order === void 0) { order = 2 /* YXZ */; }
+            if (order === void 0) { order = 3 /* YXZ */; }
             if (!out) {
                 out = egret3d.Vector3.create();
             }
@@ -14681,8 +14687,7 @@ var egret3d;
              * - camera.cullingMask |= paper.Layer.UI;
              * - camera.cullingMask &= ~paper.Layer.UI;
              */
-            _this.cullingMask = ~(64 /* Editor */ | 128 /* EditorUI */);
-            // public cullingMask: paper.Layer = paper.Layer.Default | paper.Layer.TransparentFX | paper.Layer.UI;
+            _this.cullingMask = 1 /* Default */ | 2 /* TransparentFX */ | 32 /* UI */;
             /**
              * 该相机渲染排序。
              * - 该值越低的相机优先绘制。
@@ -14809,6 +14814,10 @@ var egret3d;
             egret3d.stage.onResize.add(this._onStageResize, this);
             this._viewport.onUpdateTarget = this._pixelViewport.onUpdateTarget = this;
             this._viewport.onUpdate = this._pixelViewport.onUpdate = this._onViewportUpdate;
+            // TODO 兼容
+            this.cullingMask = 4294967295 /* Everything */;
+            this.cullingMask &= ~64 /* Editor */;
+            this.cullingMask &= ~128 /* EditorUI */;
         };
         Camera.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
@@ -19237,7 +19246,7 @@ var egret3d;
              */
             _this.autoPlay = false;
             /**
-             *
+             * 是否将动画数据中根节点的变换动画应用到该组件实体的变换组件上。
              */
             _this.applyRootMotion = false;
             /**
@@ -19608,6 +19617,10 @@ var egret3d;
         __decorate([
             paper.serializedField
         ], Animation.prototype, "autoPlay", void 0);
+        __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */),
+            paper.serializedField
+        ], Animation.prototype, "applyRootMotion", void 0);
         __decorate([
             paper.editor.property("FLOAT" /* FLOAT */)
         ], Animation.prototype, "timeScale", void 0);
@@ -20156,22 +20169,23 @@ var egret3d;
                         continue;
                     }
                     if (weight < 0.0) {
-                        if (weight !== -1.0) {
-                            if (quaternion.w >= 0.0) {
-                                weight = -weight;
-                            }
-                            quaternion.x *= weight;
-                            quaternion.y *= weight;
-                            quaternion.z *= weight;
-                            quaternion.w *= weight;
-                        }
+                        quaternion.lerp(egret3d.Quaternion.IDENTITY, quaternion, -weight);
+                        // if (weight !== -1.0) { // TODO
+                        //     if (quaternion.w >= 0.0) {
+                        //         weight = -weight;
+                        //     }
+                        //     quaternion.x *= weight;
+                        //     quaternion.y *= weight;
+                        //     quaternion.z *= weight;
+                        //     quaternion.w *= weight;
+                        // }
                         if (!posed) {
                             target.x = bindPose.x;
                             target.y = bindPose.y;
                             target.z = bindPose.z;
                             target.w = bindPose.w;
                         }
-                        target.multiply(quaternion);
+                        target.multiply(quaternion, target);
                     }
                     else {
                         if (weight !== 1.0) {
@@ -20417,11 +20431,12 @@ var egret3d;
             if (quaternions) {
                 var quaternion = void 0;
                 var index = binder.dirty - 1;
-                if (quaternions.length <= index + 1) {
+                if (quaternions.length <= index) {
                     quaternions.push(egret3d.Quaternion.create());
                 }
                 quaternion = quaternions[index];
                 if (additive) {
+                    // quaternion.fromArray(outputBuffer).inverse().premultiply(_helpQuaternionA.set(x, y, z, w));
                     quaternion.x = -outputBuffer[0];
                     quaternion.y = -outputBuffer[1];
                     quaternion.z = -outputBuffer[2];
@@ -25217,11 +25232,7 @@ var egret3d;
         function Material() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
-             * 该材质的渲染排序。
-             */
-            _this.renderQueue = 2000 /* Geometry */;
-            /**
-             *
+             * @private
              */
             _this.defines = new egret3d.Defines();
             /**
@@ -25232,6 +25243,11 @@ var egret3d;
              * @internal
              */
             _this._dirty = 0 /* None */;
+            /**
+             * 仅为更高的访问性能，该值存在于 config 中，是否有必要保留该值。
+             * @internal
+             */
+            _this._renderQueue = 2000 /* Geometry */;
             _this._uvTransform = [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0];
             /**
              * @internal
@@ -25398,7 +25414,7 @@ var egret3d;
                 shader = paper.Asset.find(glTFMaterial.extensions.KHR_techniques_webgl.technique) || egret3d.DefaultShaders.MESH_BASIC;
             }
             //
-            this.renderQueue = glTFMaterial.extensions.paper.renderQueue;
+            this._renderQueue = glTFMaterial.extensions.paper.renderQueue;
             this._technique = this._createTechnique(shader, glTFMaterial);
             this._shader = shader;
             this._retainOrReleaseTextures(true, false);
@@ -25478,11 +25494,12 @@ var egret3d;
         };
         /**
          * 拷贝。
+         * TODO
          */
         Material.prototype.copy = function (value) {
             this._retainOrReleaseTextures(false, false);
             //
-            this.renderQueue = value.renderQueue;
+            this._renderQueue = value.renderQueue;
             this._shader = value._shader;
             this.defines.copy(value.defines);
             // Copy uniforms.
@@ -25955,6 +25972,23 @@ var egret3d;
             }
             return this;
         };
+        Object.defineProperty(Material.prototype, "renderQueue", {
+            /**
+             * 该材质的渲染排序。
+             */
+            get: function () {
+                return this._renderQueue;
+            },
+            set: function (value) {
+                if (this._renderQueue === value) {
+                    return;
+                }
+                this.config.materials[0].extensions.paper.renderQueue = value;
+                this._renderQueue = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Material.prototype, "opacity", {
             /**
              * 该材质的透明度。
@@ -26036,6 +26070,12 @@ var egret3d;
             this._reset(value);
             return this;
         };
+        __decorate([
+            paper.editor.property("UINT" /* UINT */)
+        ], Material.prototype, "renderQueue", null);
+        __decorate([
+            paper.editor.property("SHADER" /* SHADER */)
+        ], Material.prototype, "shader", null);
         return Material;
     }(egret3d.GLTFAsset));
     egret3d.Material = Material;
@@ -28308,7 +28348,7 @@ var egret3d;
                     else {
                         semantic = technique.attributes[name_3].semantic;
                     }
-                    attributes.push({ name: name_3, type: webglActiveInfo.type, size: webglActiveInfo.size, location: location_1, semantic: semantic });
+                    attributes.push({ name: name_3, type: webglActiveInfo.type, location: location_1, semantic: semantic });
                 }
                 //
                 var globalUniforms = this.globalUniforms;
@@ -30450,8 +30490,8 @@ var egret3d;
         CameraRenderContext.prototype._sortOpaque = function (a, b) {
             var materialA = a.material;
             var materialB = b.material;
-            if (materialA.renderQueue !== materialB.renderQueue) {
-                return materialA.renderQueue - materialB.renderQueue;
+            if (materialA._renderQueue !== materialB._renderQueue) {
+                return materialA._renderQueue - materialB._renderQueue;
             }
             else if (materialA._technique.program !== materialB._technique.program) {
                 return materialA._technique.program - materialB._technique.program;
@@ -30469,11 +30509,11 @@ var egret3d;
         CameraRenderContext.prototype._sortFromFarToNear = function (a, b) {
             var materialA = a.material;
             var materialB = b.material;
-            if (materialA.renderQueue === materialB.renderQueue) {
+            if (materialA._renderQueue === materialB._renderQueue) {
                 return b.zdist - a.zdist;
             }
             else {
-                return materialA.renderQueue - materialB.renderQueue;
+                return materialA._renderQueue - materialB._renderQueue;
             }
         };
         CameraRenderContext.prototype._shadowFrustumCulling = function () {
@@ -30506,7 +30546,7 @@ var egret3d;
                 if ((camera.cullingMask & renderer.gameObject.layer) !== 0 &&
                     (!renderer.frustumCulled || egret3d.math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))) {
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
-                    if (drawCall.material.renderQueue >= 2450 /* Mask */) {
+                    if (drawCall.material._renderQueue >= 2450 /* Mask */) {
                         transparentCalls.push(drawCall);
                     }
                     else {

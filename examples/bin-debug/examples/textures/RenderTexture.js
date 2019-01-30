@@ -46,80 +46,93 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var examples;
 (function (examples) {
-    var sniper;
-    (function (sniper) {
-        var AnimationTest = (function () {
-            function AnimationTest() {
+    var textures;
+    (function (textures) {
+        var RenderTexture = (function () {
+            function RenderTexture() {
             }
-            AnimationTest.prototype.start = function () {
+            RenderTexture.prototype.start = function () {
                 return __awaiter(this, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: 
                             // Load resource config.
-                            return [4 /*yield*/, RES.loadConfig("default.res.json", "resource/sniper/")];
+                            return [4 /*yield*/, RES.loadConfig("default.res.json", "resource/")];
                             case 1:
                                 // Load resource config.
                                 _a.sent();
-                                return [4 /*yield*/, RES.getResAsync("Assets/Prefab/Actor/female1.prefab.json")];
+                                //
+                                return [4 /*yield*/, RES.getResAsync("Assets/Models/Mixamo/ybot.prefab.json")];
                             case 2:
+                                //
                                 _a.sent();
-                                egret3d.Camera.main.gameObject.addComponent(Starter);
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin")];
+                            case 3:
+                                _a.sent();
+                                //
+                                paper.GameObject.globalGameObject.addComponent(Starter);
                                 return [2 /*return*/];
                         }
                     });
                 });
             };
-            return AnimationTest;
+            return RenderTexture;
         }());
-        sniper.AnimationTest = AnimationTest;
-        __reflect(AnimationTest.prototype, "examples.sniper.AnimationTest", ["examples.Example"]);
+        textures.RenderTexture = RenderTexture;
+        __reflect(RenderTexture.prototype, "examples.textures.RenderTexture", ["examples.Example"]);
         var Starter = (function (_super) {
             __extends(Starter, _super);
             function Starter() {
-                return _super !== null && _super.apply(this, arguments) || this;
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._mainCamera = egret3d.Camera.main;
+                _this._subCamera = paper.GameObject.create("Sub Camera").addComponent(egret3d.Camera);
+                return _this;
             }
             Starter.prototype.onAwake = function () {
-                var gameObject = paper.Prefab.create("Assets/Prefab/Actor/female1.prefab.json");
-                gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
-                gameObject.addComponent(behaviors.AnimationHelper);
-                setTimeout(function () {
+                var mainCamera = this._mainCamera;
+                var subCamera = this._subCamera;
+                {
+                    mainCamera.order = 1;
+                    mainCamera.cullingMask = 1024 /* UserLayer10 */;
+                    mainCamera.transform.setLocalPosition(0.0, 10.0, -10.0).lookAt(egret3d.Vector3.ZERO);
+                }
+                {
+                    subCamera.order = 0;
+                    subCamera.cullingMask = 2048 /* UserLayer11 */;
+                    subCamera.renderTarget = egret3d.RenderTexture.create({ width: 1024, height: 1024 });
+                    subCamera.transform.setLocalPosition(0.0, 10.0, -10.0).lookAt(egret3d.Vector3.ZERO);
+                }
+                {
+                    paper.Scene.activeScene.ambientColor.fromHex(0xFFFFFF);
                     //
-                    var animation = gameObject.getComponentInChildren(egret3d.Animation);
-                    var animationController = animation.animationController;
-                    animation.fadeIn("shoot_c", 0.3, 0, 0);
-                    var layer = animationController.getOrAddLayer(1);
-                    var tree = animationController.createAnimationTree(layer.machine, "aim");
-                    // // const mask = layer.mask = egret3d.AnimationMask.create("UpperBody");
-                    // // mask.createJoints(gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.mesh!).addJoint("Bip002 Spine1");
-                    // // animationController.createAnimationNode(tree, "Assets/Res/Actor/Male/Models/male_anim_shoot_c_down.ani.bin", "shoot_c_down");
-                    animationController.createAnimationNode(tree, "Assets/Res/Actor/Male/Models/male_anim_shoot_c_up.ani.bin", "shoot_c_up");
-                    // // animationController.createAnimationNode(tree, "Assets/Res/Actor/Male/Models/male_anim_shoot_c_down.ani.bin", "shoot_c");
-                    animation.fadeIn("aim", 0.3, 1, 1, true);
-                    // gameObject.addComponent(Updater);
-                }, 1000);
-                egret3d.creater.createGameObject("XXXXXX");
+                    var directionalLight = paper.GameObject.create("Directional Light").addComponent(egret3d.DirectionalLight);
+                    directionalLight.transform.setLocalPosition(0.0, 20.0, -10.0).lookAt(egret3d.Vector3.ZERO);
+                }
+                {
+                    var plane = egret3d.creater.createGameObject("Plane", {
+                        mesh: egret3d.DefaultMeshes.PLANE,
+                        material: egret3d.Material.create(egret3d.DefaultShaders.MESH_PHONG).setCullFace(false).setTexture(subCamera.renderTarget),
+                    });
+                    plane.layer = 1024 /* UserLayer10 */;
+                    plane.transform.setLocalPosition(0.0, 0.0, 1.0);
+                    plane.addComponent(behaviors.Rotater);
+                    //
+                    var gameObject = paper.Prefab.create("Assets/Models/Mixamo/ybot.prefab.json");
+                    var animation = gameObject.getOrAddComponent(egret3d.Animation);
+                    animation.animations = [
+                        RES.getRes("Assets/Animations/Mixamo/Running.ani.bin"),
+                    ];
+                    animation.play("Running");
+                    gameObject.transform.setLocalPosition(0.0, 0.0, -1.0);
+                    gameObject.addComponent(behaviors.Rotater);
+                    for (var _i = 0, _a = gameObject.getComponentsInChildren(egret3d.SkinnedMeshRenderer); _i < _a.length; _i++) {
+                        var renderer = _a[_i];
+                        renderer.gameObject.layer = 2048 /* UserLayer11 */;
+                    }
+                }
             };
             return Starter;
         }(paper.Behaviour));
         __reflect(Starter.prototype, "Starter");
-        var Updater = (function (_super) {
-            __extends(Updater, _super);
-            function Updater() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            Updater.prototype.onUpdate = function () {
-                var animation = this.gameObject.getComponent(egret3d.Animation);
-                var up = animation.getState("shoot_c");
-                // const down = animation.getState("shoot_c_down") as egret3d.AnimationState;
-                this._blending1DStates(up, (Math.sin(paper.clock.time) + 1.0) * 0.5);
-            };
-            Updater.prototype._blending1DStates = function (a, lerp) {
-                a.weight = 1.0;
-                // b.weight = lerp;
-            };
-            return Updater;
-        }(paper.Behaviour));
-        __reflect(Updater.prototype, "Updater");
-    })(sniper = examples.sniper || (examples.sniper = {}));
+    })(textures = examples.textures || (examples.textures = {}));
 })(examples || (examples = {}));

@@ -46,80 +46,87 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 var examples;
 (function (examples) {
-    var sniper;
-    (function (sniper) {
-        var AnimationTest = (function () {
-            function AnimationTest() {
+    var animations;
+    (function (animations) {
+        var Additive = (function () {
+            function Additive() {
             }
-            AnimationTest.prototype.start = function () {
+            Additive.prototype.start = function () {
                 return __awaiter(this, void 0, void 0, function () {
                     return __generator(this, function (_a) {
                         switch (_a.label) {
                             case 0: 
                             // Load resource config.
-                            return [4 /*yield*/, RES.loadConfig("default.res.json", "resource/sniper/")];
+                            return [4 /*yield*/, RES.loadConfig("default.res.json", "resource/")];
                             case 1:
                                 // Load resource config.
                                 _a.sent();
-                                return [4 /*yield*/, RES.getResAsync("Assets/Prefab/Actor/female1.prefab.json")];
+                                // Load prefab resource.
+                                return [4 /*yield*/, RES.getResAsync("Assets/Models/Mixamo/ybot.prefab.json")];
                             case 2:
+                                // Load prefab resource.
                                 _a.sent();
-                                egret3d.Camera.main.gameObject.addComponent(Starter);
+                                // Load animation resource.
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Idle.ani.bin")];
+                            case 3:
+                                // Load animation resource.
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin")];
+                            case 4:
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin")];
+                            case 5:
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Head_Hit.ani.bin")];
+                            case 6:
+                                _a.sent();
+                                paper.GameObject.globalGameObject.addComponent(Starter);
                                 return [2 /*return*/];
                         }
                     });
                 });
             };
-            return AnimationTest;
+            return Additive;
         }());
-        sniper.AnimationTest = AnimationTest;
-        __reflect(AnimationTest.prototype, "examples.sniper.AnimationTest", ["examples.Example"]);
+        animations.Additive = Additive;
+        __reflect(Additive.prototype, "examples.animations.Additive", ["examples.Example"]);
         var Starter = (function (_super) {
             __extends(Starter, _super);
             function Starter() {
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             Starter.prototype.onAwake = function () {
-                var gameObject = paper.Prefab.create("Assets/Prefab/Actor/female1.prefab.json");
-                gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
+                {
+                    var renderState = this.gameObject.getComponent(egret3d.RenderState);
+                    renderState.gammaOutput = true;
+                }
+                //
+                var gameObject = paper.Prefab.create("Assets/Models/Mixamo/ybot.prefab.json");
+                var animation = gameObject.getOrAddComponent(egret3d.Animation);
+                animation.animations = [
+                    RES.getRes("Assets/Animations/Mixamo/Idle.ani.bin"),
+                    RES.getRes("Assets/Animations/Mixamo/Walking.ani.bin"),
+                    RES.getRes("Assets/Animations/Mixamo/Running.ani.bin"),
+                    RES.getRes("Assets/Animations/Mixamo/Head_Hit.ani.bin"),
+                ];
+                animation.play("Running");
                 gameObject.addComponent(behaviors.AnimationHelper);
-                setTimeout(function () {
-                    //
-                    var animation = gameObject.getComponentInChildren(egret3d.Animation);
-                    var animationController = animation.animationController;
-                    animation.fadeIn("shoot_c", 0.3, 0, 0);
-                    var layer = animationController.getOrAddLayer(1);
-                    var tree = animationController.createAnimationTree(layer.machine, "aim");
-                    // // const mask = layer.mask = egret3d.AnimationMask.create("UpperBody");
-                    // // mask.createJoints(gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.mesh!).addJoint("Bip002 Spine1");
-                    // // animationController.createAnimationNode(tree, "Assets/Res/Actor/Male/Models/male_anim_shoot_c_down.ani.bin", "shoot_c_down");
-                    animationController.createAnimationNode(tree, "Assets/Res/Actor/Male/Models/male_anim_shoot_c_up.ani.bin", "shoot_c_up");
-                    // // animationController.createAnimationNode(tree, "Assets/Res/Actor/Male/Models/male_anim_shoot_c_down.ani.bin", "shoot_c");
-                    animation.fadeIn("aim", 0.3, 1, 1, true);
-                    // gameObject.addComponent(Updater);
-                }, 1000);
-                egret3d.creater.createGameObject("XXXXXX");
+                //
+                var animationController = animation.animationController;
+                var mask = egret3d.AnimationMask.create("UpperBody");
+                mask.createJoints(gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer).mesh).addJoint("mixamorig:Spine");
+                //
+                var layer1 = animationController.getOrAddLayer(1);
+                layer1.additive = true;
+                layer1.mask = mask;
+                animation.fadeIn("Head_Hit", 1.3, 0, 1);
+                //
+                egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
+                //
+                examples.createGridRoom();
             };
             return Starter;
         }(paper.Behaviour));
         __reflect(Starter.prototype, "Starter");
-        var Updater = (function (_super) {
-            __extends(Updater, _super);
-            function Updater() {
-                return _super !== null && _super.apply(this, arguments) || this;
-            }
-            Updater.prototype.onUpdate = function () {
-                var animation = this.gameObject.getComponent(egret3d.Animation);
-                var up = animation.getState("shoot_c");
-                // const down = animation.getState("shoot_c_down") as egret3d.AnimationState;
-                this._blending1DStates(up, (Math.sin(paper.clock.time) + 1.0) * 0.5);
-            };
-            Updater.prototype._blending1DStates = function (a, lerp) {
-                a.weight = 1.0;
-                // b.weight = lerp;
-            };
-            return Updater;
-        }(paper.Behaviour));
-        __reflect(Updater.prototype, "Updater");
-    })(sniper = examples.sniper || (examples.sniper = {}));
+    })(animations = examples.animations || (examples.animations = {}));
 })(examples || (examples = {}));
