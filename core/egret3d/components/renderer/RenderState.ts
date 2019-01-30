@@ -7,10 +7,6 @@ namespace egret3d {
      */
     @paper.singleton
     export class RenderState extends paper.BaseComponent {
-        /**
-         * @internal
-         */
-        public static readonly onGammaInputChanged: signals.Signal = new signals.Signal();
         public version: number;
         public standardDerivativesEnabled: boolean;
         public textureFloatEnabled: boolean;
@@ -34,7 +30,10 @@ namespace egret3d {
         public commonDefines: string = "";
         public vertexDefines: string = "";
         public fragmentDefines: string = "";
-
+        /**
+         * @internal
+         */
+        public readonly onGammaInputChanged: signals.Signal = new signals.Signal();
         public readonly clearColor: Color = Color.create();
         public readonly viewport: Rectangle = Rectangle.create();
         public readonly defines: Defines = new Defines();
@@ -45,6 +44,19 @@ namespace egret3d {
             custom_fragment: "",
             custom_begin_fragment: "",
             custom_end_fragment: "",
+        };
+        /**
+         * 
+         */
+        public readonly caches = {
+            useLightMap: false,
+            castShadows: false,
+            receiveShadows: false,
+            cullingMask: paper.Layer.Nothing,
+            boneCount: 0,
+            egret2DOrderCount: 0,
+            clockBuffer: new Float32Array(4),
+            skyBoxTexture: null as (BaseTexture | null),
         };
         public renderTarget: RenderTexture | null = null;
         public customShaderChunks: { [key: string]: string } | null = null;
@@ -63,17 +75,6 @@ namespace egret3d {
         private _gammaFactor: number = 1.0;
         private _toneMapping: ToneMapping = ToneMapping.None;
 
-        private _useLightMap: boolean = false;
-        /**
-         * @internal
-         */
-        public _castShadows: boolean = false;
-        /**
-         * @internal
-         */
-        public _skyBoxTexture: BaseTexture | null = null;
-        private _receiveShadows: boolean = false;
-        private _boneCount: int = 0;
         protected readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
         protected readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
 
@@ -169,14 +170,15 @@ namespace egret3d {
             let receiveShadows = false;
             let boneCount = 0;
             const defines = this.defines;
+            const caches = this.caches;
 
             if (renderer) {
                 useLightMap = renderer.constructor === MeshRenderer && (renderer as MeshRenderer).lightmapIndex >= 0;
-                receiveShadows = this._castShadows && renderer.receiveShadows;
+                receiveShadows = caches.castShadows && renderer.receiveShadows;
                 boneCount = renderer.constructor === SkinnedMeshRenderer ? Math.min(this.maxBoneCount, (renderer as SkinnedMeshRenderer).boneCount) : 0;
             }
 
-            if (this._useLightMap !== useLightMap) {
+            if (caches.useLightMap !== useLightMap) {
                 if (useLightMap) {
                     defines.addDefine(ShaderDefine.USE_LIGHTMAP);
                 }
@@ -184,10 +186,10 @@ namespace egret3d {
                     defines.removeDefine(ShaderDefine.USE_LIGHTMAP);
                 }
 
-                this._useLightMap = useLightMap;
+                caches.useLightMap = useLightMap;
             }
 
-            if (this._boneCount !== boneCount) { // TODO 浮点纹理。
+            if (caches.boneCount !== boneCount) { // TODO 浮点纹理。
                 if (boneCount) {
                     defines.addDefine(ShaderDefine.USE_SKINNING);
                     defines.addDefine(ShaderDefine.MAX_BONES, boneCount);
@@ -197,10 +199,10 @@ namespace egret3d {
                     defines.removeDefine(ShaderDefine.MAX_BONES);
                 }
 
-                this._boneCount = boneCount;
+                caches.boneCount = boneCount;
             }
 
-            if (this._receiveShadows !== receiveShadows) {
+            if (caches.receiveShadows !== receiveShadows) {
                 if (receiveShadows) {
                     defines.addDefine(ShaderDefine.USE_SHADOWMAP);
                     defines.addDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
@@ -210,7 +212,7 @@ namespace egret3d {
                     defines.removeDefine(ShaderDefine.SHADOWMAP_TYPE_PCF);
                 }
 
-                this._receiveShadows = receiveShadows;
+                caches.receiveShadows = receiveShadows;
             }
         }
         /**
@@ -401,9 +403,10 @@ namespace egret3d {
             if (this._gammaInput === value) {
                 return;
             }
+
             this._gammaInput = value;
-            this._updateTextureDefines(ShaderUniformName.EnvMap, this._skyBoxTexture);
-            RenderState.onGammaInputChanged.dispatch();
+            this._updateTextureDefines(ShaderUniformName.EnvMap, this.caches.skyBoxTexture);
+            this.onGammaInputChanged.dispatch();
         }
         /**
          * 

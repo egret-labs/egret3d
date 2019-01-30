@@ -3307,6 +3307,7 @@ var paper;
             CameraViewportDrawer.prototype.uninitialize = function () {
                 _super.prototype.uninitialize.call(this);
                 this._cameraRenderTexture.dispose();
+                this._editorUICamera.gameObject.destroy();
                 this._updateCamera(null);
                 egret3d.stage.onResize.remove(this._onStageResize, this);
             };

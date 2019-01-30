@@ -17,7 +17,7 @@ namespace egret3d {
         /**
          * 该阴影的贴图偏差。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: -0.02, maximum: 0.02, step: 0.0001 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: -0.0002, maximum: 0.0002, step: 0.000001 })
         public bias: number = 0.0; // TODO
         /**
          * 产生该阴影的灯光位置到近裁剪面距离。

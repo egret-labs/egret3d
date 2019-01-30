@@ -15,17 +15,17 @@ namespace egret3d {
                 material = DefaultMaterials.COPY;
                 material.setTexture(src);
             }
-
-            const saveCamera = Camera.current!;
+            const camerasAndLights = cameraAndLightCollecter;
+            const saveCamera = camerasAndLights.currentCamera!; // TODO
             //
             const camera = cameraAndLightCollecter.postprocessingCamera;
             renderState.updateRenderTarget(dest);
             renderState.updateViewport(camera.viewport, dest);
             renderState.clearBuffer(saveCamera.bufferMask, saveCamera.backgroundColor);
             //
-            Camera.current = camera;
+            camerasAndLights.currentCamera = camera; // TODO
             renderState.draw(drawCallCollecter.postprocessing, material);
-            Camera.current = saveCamera;
+            camerasAndLights.currentCamera = saveCamera; // TODO
         }
     }
 }

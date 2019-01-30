@@ -138,23 +138,37 @@ namespace egret3d {
         }
 
         private _shadowFrustumCulling() {
+            const cullingMask = cameraAndLightCollecter.currentCamera!.cullingMask; // TODO 全局相机
             const camera = this._camera;
             const cameraFrustum = camera.frustum;
-            const shadowDrawCalls = this.shadowCalls;
-            shadowDrawCalls.length = 0;
+            const shadowCalls = this.shadowCalls;
+
+            let shadowIndex = 0;
 
             for (const drawCall of this._drawCallCollecter.drawCalls) {
                 const renderer = drawCall!.renderer!;
+
+                if (!renderer.castShadows) {
+                    continue;
+                }
+
+                const layer = renderer.gameObject.layer;
+
                 if (
                     renderer.castShadows &&
-                    (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
+                    (cullingMask & layer) !== 0 &&
+                    // (camera.cullingMask & layer) !== 0 && TODO light cullingMask
                     (!renderer.frustumCulled || math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))
                 ) {
-                    shadowDrawCalls.push(drawCall!);
+                    shadowCalls[shadowIndex++] = drawCall!;
                 }
             }
 
-            shadowDrawCalls.sort(this._sortFromFarToNear);
+            if (shadowCalls.length !== shadowIndex) {
+                shadowCalls.length = shadowIndex;
+            }
+
+            shadowCalls.sort(this._sortFromFarToNear);
         }
 
         private _frustumCulling() {
@@ -164,8 +178,8 @@ namespace egret3d {
             const opaqueCalls = this.opaqueCalls;
             const transparentCalls = this.transparentCalls;
 
-            opaqueCalls.length = 0;
-            transparentCalls.length = 0;
+            let opaqueIndex = 0;
+            let transparentIndex = 0;
 
             for (const drawCall of this._drawCallCollecter.drawCalls) {
                 const renderer = drawCall!.renderer!;
@@ -175,14 +189,22 @@ namespace egret3d {
                 ) {
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
                     if (drawCall!.material!._renderQueue >= RenderQueue.Mask) {
-                        transparentCalls.push(drawCall!);
+                        transparentCalls[transparentIndex++] = drawCall!;
                     }
                     else {
-                        opaqueCalls.push(drawCall!);
+                        opaqueCalls[opaqueIndex++] = drawCall!;
                     }
 
-                    drawCall!.zdist = renderer.gameObject.transform.position.getDistance(cameraPosition);
+                    drawCall!.zdist = renderer.gameObject.transform.position.getSquaredDistance(cameraPosition);
                 }
+            }
+
+            if (opaqueCalls.length !== opaqueIndex) {
+                opaqueCalls.length = opaqueIndex;
+            }
+
+            if (transparentCalls.length !== transparentIndex) {
+                transparentCalls.length = transparentIndex;
             }
 
             opaqueCalls.sort(this._sortOpaque); // TODO 优化，没必要一定每帧排序。
@@ -196,7 +218,8 @@ namespace egret3d {
             const rectangleAreaLightCount = rectangleAreaLights.length;
             const pointLightCount = pointLights.length;
             const hemisphereLightCount = hemisphereLights.length;
-            renderState._castShadows = false;
+            const renderStateCaches = renderState.caches;
+            renderStateCaches.castShadows = false;
             //
             if (this.directLightBuffer.length !== directLightCount * LightSize.Directional) {
                 this.directLightBuffer = new Float32Array(directLightCount * LightSize.Directional);
@@ -275,7 +298,7 @@ namespace egret3d {
                     directLightBuffer[offset++] = shadow.mapSize;
                     directShadowMatrix.set(shadow._matrix.rawData, shadowIndex * ShadowSize.Directional);
                     directShadowMaps[shadowIndex++] = shadow._renderTarget;
-                    renderState._castShadows = true;
+                    renderStateCaches.castShadows = true;
                 }
                 else {
                     directLightBuffer[offset++] = 0;
@@ -317,7 +340,7 @@ namespace egret3d {
                     spotLightBuffer[offset++] = shadow.mapSize;
                     spotShadowMatrix.set(shadow._matrix.rawData, shadowIndex * ShadowSize.Spot);
                     spotShadowMaps[shadowIndex++] = shadow._renderTarget;
-                    renderState._castShadows = true;
+                    renderStateCaches.castShadows = true;
                 }
                 else {
                     spotLightBuffer[offset++] = 0;
@@ -338,8 +361,8 @@ namespace egret3d {
                 rectangleAreaLightBuffer[offset++] = color.r * intensity;
                 rectangleAreaLightBuffer[offset++] = color.g * intensity;
                 rectangleAreaLightBuffer[offset++] = color.b * intensity;
-                // TODO
-                light.castShadows = false;//TODO 不支持阴影，防止贴图报错
+                // TODO 不支持阴影，防止贴图报错
+                light.castShadows = false;
             }
 
             index = shadowIndex = 0;
@@ -373,7 +396,7 @@ namespace egret3d {
 
                     pointShadowMatrix.set(shadow._matrix.rawData, shadowIndex * ShadowSize.Point);
                     pointShadowMaps[shadowIndex++] = shadow._renderTarget;
-                    renderState._castShadows = true;
+                    renderStateCaches.castShadows = true;
                 }
                 else {
                     pointLightBuffer[offset++] = 0;
@@ -409,7 +432,7 @@ namespace egret3d {
         public _update() {
             this.logDepthBufFC = 2.0 / (Math.log(this._camera.far + 1.0) / Math.LN2);
 
-            if (this._cameraAndLightCollecter.currentLight) {
+            if (this._cameraAndLightCollecter.currentShadowLight) {
                 this._shadowFrustumCulling();
             }
             else {

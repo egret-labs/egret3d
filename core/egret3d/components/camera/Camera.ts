@@ -24,11 +24,6 @@ namespace egret3d {
      */
     export class Camera extends paper.BaseComponent implements ITransformObserver {
         /**
-         * 在渲染阶段正在执行渲染的相机。
-         * - 通常在后期渲染和渲染前生命周期中使用。
-         */
-        public static current: Camera | null = null;
-        /**
          * 当前场景的主相机。
          * - 如果没有则创建一个。
          */
@@ -69,6 +64,15 @@ namespace egret3d {
             }
 
             return gameObject.getOrAddComponent(Camera);
+        }
+        /**
+         * 
+         */
+        public static get current(): Camera | null {
+            return cameraAndLightCollecter.currentCamera;
+        }
+        public static set current(value: Camera | null) {
+            cameraAndLightCollecter.currentCamera = value;
         }
         /**
          * 该相机的绘制缓冲掩码。

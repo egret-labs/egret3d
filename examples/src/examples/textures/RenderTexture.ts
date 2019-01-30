@@ -63,6 +63,9 @@ namespace examples.textures {
                     renderer.gameObject.layer = paper.Layer.UserLayer11;
                 }
             }
+
+            // const room = createGridRoom();
+            // room.layer = paper.Layer.UserLayer10;
         }
     }
 }

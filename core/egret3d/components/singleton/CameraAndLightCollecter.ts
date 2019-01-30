@@ -56,9 +56,14 @@ namespace egret3d {
          */
         public readonly hemisphereLights: HemisphereLight[] = [];
         /**
-         * 
+         * 在渲染阶段正在执行渲染的相机组件。
+         * - 通常在后期渲染和渲染前生命周期中使用。
          */
-        public currentLight: BaseLight | null = null;
+        public currentCamera: Camera | null = null;
+        /**
+         * 在渲染阶段正在执行阴影渲染的灯光组件。
+         */
+        public currentShadowLight: BaseLight | null = null;
 
         private _sortCameras(a: Camera, b: Camera) {
             // renderTarget 相机应优先渲染。

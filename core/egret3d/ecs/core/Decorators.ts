@@ -62,16 +62,16 @@ namespace paper {
             (componentClass.notAllowMultiple as boolean) = false;
         }
     }
-    /**
-     * 通过装饰器标记组件（或子类）不允许在同一实体上添加多个实例。
-     * @param componentClass 组件类。
-     */
-    export function notAllowMultiple(componentClass: IComponentClass<BaseComponent>) {
-        if (!componentClass.__isSingleton) {
-            (componentClass.allowMultiple as boolean) = false;
-            (componentClass.notAllowMultiple as boolean) = true;
-        }
-    }
+    // /** TODO
+    //  * 通过装饰器标记组件（或子类）不允许在同一实体上添加多个实例。
+    //  * @param componentClass 组件类。
+    //  */
+    // export function notAllowMultiple(componentClass: IComponentClass<BaseComponent>) {
+    //     if (!componentClass.__isSingleton) {
+    //         (componentClass.allowMultiple as boolean) = false;
+    //         (componentClass.notAllowMultiple as boolean) = true;
+    //     }
+    // }
     /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。

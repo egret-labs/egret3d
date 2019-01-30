@@ -3370,6 +3370,19 @@ declare namespace egret3d {
         readonly defaultCustomShaderChunks: Readonly<{
             [key: string]: string;
         }>;
+        /**
+         *
+         */
+        readonly caches: {
+            useLightMap: boolean;
+            castShadows: boolean;
+            receiveShadows: boolean;
+            cullingMask: paper.Layer;
+            boneCount: number;
+            egret2DOrderCount: number;
+            clockBuffer: Float32Array;
+            skyBoxTexture: BaseTexture | null;
+        };
         renderTarget: RenderTexture | null;
         customShaderChunks: {
             [key: string]: string;
@@ -3387,9 +3400,6 @@ declare namespace egret3d {
         private _gammaOutput;
         private _gammaFactor;
         private _toneMapping;
-        private _useLightMap;
-        private _receiveShadows;
-        private _boneCount;
         protected readonly _stateEnables: ReadonlyArray<gltf.EnableState>;
         protected readonly _cacheStateEnable: {
             [key: string]: boolean | undefined;
@@ -6284,9 +6294,14 @@ declare namespace egret3d {
          */
         readonly hemisphereLights: HemisphereLight[];
         /**
-         *
+         * 在渲染阶段正在执行渲染的相机组件。
+         * - 通常在后期渲染和渲染前生命周期中使用。
          */
-        currentLight: BaseLight | null;
+        currentCamera: Camera | null;
+        /**
+         * 在渲染阶段正在执行阴影渲染的灯光组件。
+         */
+        currentShadowLight: BaseLight | null;
         private _sortCameras(a, b);
         /**
          * 更新相机。
@@ -6933,11 +6948,6 @@ declare namespace egret3d {
      */
     class Camera extends paper.BaseComponent implements ITransformObserver {
         /**
-         * 在渲染阶段正在执行渲染的相机。
-         * - 通常在后期渲染和渲染前生命周期中使用。
-         */
-        static current: Camera | null;
-        /**
          * 当前场景的主相机。
          * - 如果没有则创建一个。
          */
@@ -6947,6 +6957,10 @@ declare namespace egret3d {
          * - 如果没有则创建一个。
          */
         static readonly editor: Camera;
+        /**
+         *
+         */
+        static current: Camera | null;
         /**
          * 该相机的绘制缓冲掩码。
          */

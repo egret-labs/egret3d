@@ -58,6 +58,7 @@ namespace paper.editor {
             super.uninitialize();
 
             this._cameraRenderTexture.dispose();
+            this._editorUICamera.gameObject.destroy();
             this._updateCamera(null);
             egret3d.stage.onResize.remove(this._onStageResize, this);
         }

@@ -275,7 +275,7 @@ namespace egret3d {
         ) {
             super.initialize(name, config, buffers, args);
 
-            RenderState.onGammaInputChanged.add(this._addOrRemoveTexturesDefine, this);
+            renderState.onGammaInputChanged.add(this._addOrRemoveTexturesDefine, this);
         }
 
         public retain(): this {
@@ -301,13 +301,12 @@ namespace egret3d {
                 return false;
             }
 
+            renderState.onGammaInputChanged.remove(this._addOrRemoveTexturesDefine, this);
             this._retainOrReleaseTextures(false, false);
             //
             this.defines.clear();
             this._technique = null!;
             this._shader = null!;
-
-            RenderState.onGammaInputChanged.remove(this._addOrRemoveTexturesDefine, this);
 
             return true;
         }
