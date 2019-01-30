@@ -1,0 +1,45 @@
+{
+    "version": "3",
+    "asset": {
+        "version": "2.0"
+    },
+    "extensions": {
+        "KHR_techniques_webgl": {
+            "shaders": [
+                {
+                    "name": "thermalVision_vert",
+                    "type": 35633,
+                    "uri": "shaders/thermalVision/thermalVision_vert.glsl"
+                },
+                {
+                    "name": "thermalVision_frag",
+                    "type": 35632,
+                    "uri": "shaders/thermalVision/thermalVision_frag.glsl"
+                }
+            ],
+            "techniques": [
+                {
+                    "name": "thermalVision",
+                    "attributes": {},
+                    "uniforms": {
+                        "map": {
+                            "type": 35678
+                        },
+                        "thermaValue": {
+                            "type": 5126
+                        }
+                    }
+                }
+            ]
+        },
+        "paper": {}
+    },
+    "extensionsRequired": [
+        "paper",
+        "KHR_techniques_webgl"
+    ],
+    "extensionsUsed": [
+        "paper",
+        "KHR_techniques_webgl"
+    ]
+}

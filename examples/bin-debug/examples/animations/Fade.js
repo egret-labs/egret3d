@@ -66,16 +66,37 @@ var examples;
                             case 2:
                                 // Load prefab resource.
                                 _a.sent();
-                                // Load animation resource.
-                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Looking_Around.ani.bin")];
+                                return [4 /*yield*/, RES.getResAsync("Assets/Models/Mixamo/ybot.prefab.json")];
                             case 3:
+                                _a.sent();
                                 // Load animation resource.
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Idle.ani.bin")];
+                            case 4:
+                                // Load animation resource.
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Idle_1.ani.bin")];
+                            case 5:
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Looking_Around.ani.bin")];
+                            case 6:
                                 _a.sent();
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Walking.ani.bin")];
-                            case 4:
+                            case 7:
                                 _a.sent();
                                 return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Running.ani.bin")];
-                            case 5:
+                            case 8:
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Hip_Hop_Dancing.ani.bin")];
+                            case 9:
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Hip_Hop_Dancing_1.ani.bin")];
+                            case 10:
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Samba_Dancing.ani.bin")];
+                            case 11:
+                                _a.sent();
+                                return [4 /*yield*/, RES.getResAsync("Assets/Animations/Mixamo/Samba_Dancing_1.ani.bin")];
+                            case 12:
                                 _a.sent();
                                 paper.GameObject.globalGameObject.addComponent(Starter);
                                 return [2 /*return*/];
@@ -93,18 +114,41 @@ var examples;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             Starter.prototype.onAwake = function () {
-                var gameObject = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json");
-                var animation = gameObject.getOrAddComponent(egret3d.Animation);
-                animation.animations = [
+                {
+                    var renderState = this.gameObject.getComponent(egret3d.RenderState);
+                    renderState.gammaOutput = true;
+                }
+                var gameObjectX = paper.Prefab.create("Assets/Models/Mixamo/xbot.prefab.json");
+                var gameObjectY = paper.Prefab.create("Assets/Models/Mixamo/ybot.prefab.json");
+                var animationX = gameObjectX.getOrAddComponent(egret3d.Animation);
+                var animationY = gameObjectY.getOrAddComponent(egret3d.Animation);
+                //
+                animationX.animations = animationY.animations = [
+                    RES.getRes("Assets/Animations/Mixamo/Idle.ani.bin"),
+                    RES.getRes("Assets/Animations/Mixamo/Idle_1.ani.bin"),
                     RES.getRes("Assets/Animations/Mixamo/Looking_Around.ani.bin"),
                     RES.getRes("Assets/Animations/Mixamo/Walking.ani.bin"),
                     RES.getRes("Assets/Animations/Mixamo/Running.ani.bin"),
+                    RES.getRes("Assets/Animations/Mixamo/Hip_Hop_Dancing.ani.bin"),
+                    RES.getRes("Assets/Animations/Mixamo/Hip_Hop_Dancing_1.ani.bin"),
+                    RES.getRes("Assets/Animations/Mixamo/Samba_Dancing.ani.bin"),
+                    RES.getRes("Assets/Animations/Mixamo/Samba_Dancing_1.ani.bin"),
                 ];
-                animation.play("Running");
+                animationX.play("Hip_Hop_Dancing");
+                animationY.play("Hip_Hop_Dancing_1");
+                gameObjectX.transform.setLocalPosition(1.0, 0.0, 0.0);
+                gameObjectY.transform.setLocalPosition(-1.0, 0.0, 0.0);
                 //
-                gameObject.addComponent(behaviors.AnimationHelper);
-                for (var _i = 0, _a = gameObject.getComponentsInChildren(egret3d.SkinnedMeshRenderer); _i < _a.length; _i++) {
+                gameObjectX.addComponent(behaviors.AnimationHelper);
+                gameObjectY.addComponent(behaviors.AnimationHelper);
+                //
+                for (var _i = 0, _a = gameObjectX.getComponentsInChildren(egret3d.SkinnedMeshRenderer); _i < _a.length; _i++) {
                     var renderer = _a[_i];
+                    renderer.castShadows = true;
+                    renderer.receiveShadows = true;
+                }
+                for (var _b = 0, _c = gameObjectY.getComponentsInChildren(egret3d.SkinnedMeshRenderer); _b < _c.length; _b++) {
+                    var renderer = _c[_b];
                     renderer.castShadows = true;
                     renderer.receiveShadows = true;
                 }
@@ -116,7 +160,7 @@ var examples;
                 var modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
                 if (modelComponent) {
                     setTimeout(function () {
-                        modelComponent.select(gameObject);
+                        modelComponent.select(gameObjectX);
                         paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent).openComponents(behaviors.AnimationHelper);
                     }, 1000.0);
                 }

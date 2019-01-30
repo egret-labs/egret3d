@@ -62,14 +62,14 @@ var examples;
                     // Create camera.
                     egret3d.Camera.main;
                     {
-                        gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "CubeA");
+                        gameObject = egret3d.creater.createGameObject("CubeA", { mesh: egret3d.DefaultMeshes.CUBE });
                         gameObject.transform.setLocalPosition(2.0, 0.0, 0.0);
                         gameObject.activeSelf = false;
                         gameObject.addComponent(BehaviourTest);
                         gameObject.addComponent(BehaviourTest);
                     }
                     {
-                        gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "CubeB");
+                        gameObject = egret3d.creater.createGameObject("CubeB", { mesh: egret3d.DefaultMeshes.CUBE });
                         gameObject.transform.setLocalPosition(-2.0, 0.0, 0.0);
                         gameObject.addComponent(BehaviourTest);
                         gameObject.addComponent(BehaviourTest);

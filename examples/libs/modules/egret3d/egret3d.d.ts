@@ -946,6 +946,16 @@ declare namespace egret3d {
         Spherical = 4,
     }
     /**
+     *
+     */
+    const enum ApplyRootMotion {
+        X = 1,
+        Y = 2,
+        Z = 4,
+        RY = 16,
+        XZ = 5,
+    }
+    /**
      * 扩展 glTF。
      */
     interface GLTF extends gltf.GLTF {
@@ -1150,6 +1160,8 @@ declare namespace egret3d {
          * 持续时间。（以秒为单位）
          */
         duration: number;
+        root?: gltf.Index;
+        applyRootMotion?: ApplyRootMotion;
     }
     /**
      * @private
@@ -2610,14 +2622,14 @@ declare namespace egret3d {
          * - v *= matrix
          * @param matrix 一个 3x3 矩阵。
          */
-        applyMatrix3(matrix: Readonly<Matrix3>): this;
+        applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>): this;
         /**
          * 将输入向量与一个 3x3 矩阵相乘的结果写入该向量。
          * - v = input * matrix
          * @param matrix 一个 3x3 矩阵。
          * @param input 输入向量。
          */
-        applyMatrix3(matrix: Readonly<Matrix3>, input: Readonly<IVector3>): this;
+        applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>, input: Readonly<IVector3>): this;
         /**
          * 将该向量乘以一个矩阵。
          * - v *= matrix
@@ -3256,6 +3268,7 @@ declare namespace egret3d {
         protected static _createConfig(createTextureParameters: CreateTextureParameters): GLTF;
         type: gltf.TextureType;
         protected _sourceDirty: boolean;
+        protected _levels: uint;
         protected _gltfTexture: GLTFTexture;
         protected _image: gltf.Image;
         protected _sampler: gltf.Sampler;
@@ -3279,15 +3292,19 @@ declare namespace egret3d {
         /**
          *
          */
+        readonly format: gltf.TextureFormat;
+        /**
+         *
+         */
+        readonly levels: uint;
+        /**
+         *
+         */
         readonly width: uint;
         /**
          *
          */
         readonly height: uint;
-        /**
-         *
-         */
-        readonly format: gltf.TextureFormat;
         /**
          *
          */
@@ -3366,7 +3383,6 @@ declare namespace egret3d {
          */
         draw: (drawCall: DrawCall, material?: Material | null) => void;
         private _logarithmicDepthBuffer;
-        private _gammaInputLocked;
         private _gammaInput;
         private _gammaOutput;
         private _gammaFactor;
@@ -3388,7 +3404,11 @@ declare namespace egret3d {
         /**
          *
          */
-        updateViewport(camera: Camera, target: RenderTexture | null): void;
+        updateRenderTarget(renderTarget: RenderTexture | null): void;
+        /**
+         *
+         */
+        updateViewport(viewport: Rectangle, renderTarget: RenderTexture | null): void;
         /**
          *
          */
@@ -4878,125 +4898,6 @@ declare namespace egret3d.webgl {
 }
 declare namespace paper {
     /**
-     * 脚本组件。
-     * - 为了开发的便捷，允许使用脚本组件实现组件生命周期。
-     * - 生命周期的顺序如下：
-     * - onAwake();
-     * - onReset();
-     * - onEnable();
-     * - onStart();
-     * - onFixedUpdate();
-     * - onUpdate();
-     * - onLateUpdate();
-     * - onDisable();
-     * - onDestroy();
-     */
-    abstract class Behaviour extends BaseComponent {
-        /**
-         * @private
-         */
-        _isReseted: boolean;
-        /**
-         * @private
-         */
-        _isAwaked: boolean;
-        /**
-         * @private
-         */
-        _isStarted: boolean;
-        /**
-         * @private
-         */
-        _dispatchEnabledEvent(value: boolean): void;
-        /**
-         * 该组件被初始化时执行。
-         * - 在该组件的整个生命周期中只执行一次。
-         * @param config 该组件被添加时可以传递的初始化数据。
-         * @see paper.GameObject#addComponent()
-         */
-        onAwake?(config?: any): void;
-        /**
-         * TODO
-         */
-        onReset?(): void;
-        /**
-         * 该组件或所属的实体被激活时调用。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onEnable?(): void;
-        /**
-         * 该组件开始运行时执行。
-         * - 在该组件的整个生命周期中只执行一次。
-         */
-        onStart?(): void;
-        /**
-         * 程序运行时以固定间隔被执行。
-         * @param currentTimes 本帧被执行的计数。
-         * @param totalTimes 本帧被执行的总数。
-         * @see paper.Clock
-         */
-        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
-        /**
-         *
-         */
-        onTriggerEnter?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerStay?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerExit?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionEnter?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionStay?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionExit?(collider: any): void;
-        /**
-         * 程序运行时每帧执行。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        onUpdate?(deltaTime: number): void;
-        /**
-         *
-         */
-        onAnimationEvent?(animationEvent: egret3d.AnimationEvent): void;
-        /**
-         * 程序运行时每帧执行。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        onLateUpdate?(deltaTime: number): void;
-        /**
-         * 该组件的实体拥有的渲染组件被渲染时执行。
-         * - 不能在该周期更改渲染组件的材质或其他可能引起绘制信息改变的操作。
-         */
-        onBeforeRender?(): boolean;
-        /**
-         * 该组件或所属的实体被禁用时执行。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onDisable?(): void;
-        /**
-         * 该组件或所属的实体被销毁时执行。
-         * - 在该组件的整个生命周期中只执行一次。
-         * @see paper.GameObject#removeComponent()
-         * @see paper.GameObject#destroy()
-         */
-        onDestroy?(): void;
-    }
-}
-declare namespace paper {
-    /**
      * 全局时钟信息组件。
      */
     class Clock extends BaseComponent {
@@ -5297,6 +5198,12 @@ declare namespace egret3d {
             wasPressed: (key: string | number) => boolean;
         };
     };
+    /**
+     * @deprecated
+     * @see paper.@singleton
+     */
+    class SingletonComponent extends paper.BaseComponent {
+    }
 }
 declare namespace paper {
 }
@@ -5514,6 +5421,15 @@ declare namespace egret3d {
         Emissive = "emissive",
         EmissiveIntensity = "emissiveIntensity",
         FlipEnvMap = "flipEnvMap",
+        MaxMipLevel = "maxMipLevel",
+    }
+    /**
+     * Shader宏定义排序。
+     */
+    const enum ShaderDefineOrder {
+        GammaFactor = 1,
+        DecodingFun = 2,
+        EncodingFun = 3,
     }
     /**
      *
@@ -5604,6 +5520,34 @@ declare namespace egret3d {
      * @private
      */
     const globalUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的场景 Uniform。
+     * @private
+     */
+    const sceneUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的摄像机 Uniform。
+     * @private
+     */
+    const cameraUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的影子 Uniform。
+     * @private
+     */
+    const shadowUniformSemantics: {
+        [key: string]: gltf.UniformSemantics;
+    };
+    /**
+     * 内置提供的模型 Uniform。
+     * @private
+     */
+    const modelUniformSemantics: {
         [key: string]: gltf.UniformSemantics;
     };
     /**
@@ -6099,11 +6043,7 @@ declare namespace egret3d {
         static CUBE_LINE: Mesh;
         initialize(): void;
         /**
-         * 创建带有指定网格资源的实体。
-         * @param mesh 网格资源。
-         * @param name 实体的名称。
-         * @param tag 实体的标识。
-         * @param scene 实体的场景。
+         * @deprecated
          */
         static createObject(mesh: Mesh, name?: string, tag?: string, scene?: paper.Scene): paper.GameObject;
     }
@@ -6951,7 +6891,7 @@ declare namespace egret3d {
      */
     class MeshCollider extends paper.BaseComponent implements IMeshCollider, IRaycast {
         readonly colliderType: ColliderType;
-        protected readonly _localBoundingBox: egret3d.Box;
+        protected readonly _localBoundingBox: Box;
         private _mesh;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
         /**
@@ -7193,6 +7133,15 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     */
+    abstract class CameraPostprocessing extends paper.BaseComponent {
+        abstract onRender(camera: Camera): void;
+        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
+    }
+}
+declare namespace egret3d {
+    /**
      *
      */
     class Spherical extends paper.BaseRelease<Spherical> implements paper.ICCS<Spherical>, paper.ISerializable {
@@ -7229,51 +7178,22 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    /**
-     * 相机渲染上下文。
-     */
-    class CameraRenderContext {
-        /**
-         *
-         */
-        logDepthBufFC: number;
-        private readonly _camera;
-        private readonly _drawCallCollecter;
-        private readonly _cameraAndLightCollecter;
-        /**
-         * 禁止实例化。
-         */
-        private constructor();
-        /**
-         * 所有非透明的, 按照从近到远排序
-         */
-        private _sortOpaque(a, b);
-        /**
-         * 所有透明的，按照从远到近排序
-         */
-        private _sortFromFarToNear(a, b);
-        private _shadowFrustumCulling();
-        private _frustumCulling();
-        private _updateLights();
-    }
-}
-declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
      * 天空盒组件。
      */
     class SkyBox extends paper.BaseComponent {
-        protected readonly _materials: (egret3d.Material | null)[];
+        protected readonly _materials: (Material | null)[];
         uninitialize(): void;
         /**
          * 该组件的材质列表。
          */
-        materials: ReadonlyArray<egret3d.Material | null>;
+        materials: ReadonlyArray<Material | null>;
         /**
          * 该组件材质列表中的第一个材质。
          */
-        material: egret3d.Material | null;
+        material: Material | null;
     }
 }
 declare namespace egret3d {
@@ -7581,7 +7501,7 @@ declare namespace paper {
     class GameObject extends BaseObject {
         private static _globalGameObject;
         /**
-         * 创建 GameObject，并添加到当前场景中。
+         * 创建实体，并添加到当前场景中。
          */
         static create(name?: string, tag?: string, scene?: Scene | null): GameObject;
         /**
@@ -7595,18 +7515,18 @@ declare namespace paper {
          */
         isStatic: boolean;
         /**
-         * 层级。
-         * - 用于各种层遮罩。
-         */
-        layer: Layer;
-        /**
          * 名称。
          */
         name: string;
         /**
          * 标签。
          */
-        tag: string;
+        tag: paper.DefaultTags | string;
+        /**
+         * 层级。
+         * - 用于各种层遮罩。
+         */
+        layer: Layer;
         /**
          *
          */
@@ -7902,7 +7822,7 @@ declare namespace egret3d {
          * - 采用 CPU 蒙皮指定顶点。
          */
         getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
-        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
         /**
          *
          */
@@ -7965,7 +7885,7 @@ declare namespace egret3d {
         initialize(): void;
         uninitialize(): void;
         recalculateLocalBox(): void;
-        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
         /**
          * screen position to ui position
          * @version paper 1.0
@@ -8207,6 +8127,10 @@ declare namespace egret3d {
          */
         autoPlay: boolean;
         /**
+         *
+         */
+        applyRootMotion: boolean;
+        /**
          * 动画速度。
          */
         timeScale: number;
@@ -8333,17 +8257,20 @@ declare namespace egret3d {
          */
         readonly channels: AnimationChannel[];
         /**
-         * @private
+         * 播放的动画数据。
          */
         animationAsset: AnimationAsset;
         /**
-         * 播放的动画数据。
+         * @private
          */
         animation: GLTFAnimation;
         /**
          * 播放的动画剪辑。
          */
         animationClip: GLTFAnimationClip;
+        private _lastRootMotionRotation;
+        private _lastRootMotionPosition;
+        private _animation;
         onClear(): void;
         /**
          * 继续该动画状态的播放。
@@ -8387,16 +8314,18 @@ declare namespace egret3d {
         private static _instances;
         static create(): AnimationBinder;
         dirty: uint;
-        totalWeight: number;
         weight: number;
-        target: paper.BaseComponent | any | ReadonlyArray<paper.BaseComponent>;
+        totalWeight: number;
+        target: paper.BaseComponent | any;
         bindPose: any;
         layer: AnimationLayer | null;
+        quaternions: Quaternion[] | null;
+        quaternionWeights: number[] | null;
         updateTarget: () => void;
         private constructor();
         onClear(): void;
         clear(): void;
-        updateBlend(animationState: AnimationState): boolean;
+        updateBlend(animationlayer: AnimationLayer, animationState: AnimationState): boolean;
         onUpdateTranslation(): void;
         onUpdateRotation(): void;
         onUpdateScale(): void;
@@ -8414,7 +8343,7 @@ declare namespace egret3d {
         glTFSampler: gltf.AnimationSampler;
         inputBuffer: Float32Array;
         outputBuffer: ArrayBufferView & ArrayLike<number>;
-        binder: paper.BaseComponent | (paper.BaseComponent[]) | AnimationBinder | any;
+        binder: paper.BaseComponent | AnimationBinder | any;
         updateTarget: ((animationlayer: AnimationLayer, animationState: AnimationState) => void) | null;
         needUpdate: ((dirty: int) => void) | null;
         private constructor();
@@ -8882,7 +8811,7 @@ declare namespace egret3d.particle {
         /**
          *
          */
-        readonly box: egret3d.Vector3;
+        readonly box: Vector3;
         /**
          *
          */
@@ -9141,7 +9070,7 @@ declare namespace egret3d.particle {
         private _mesh;
         uninitialize(): void;
         recalculateLocalBox(): void;
-        raycast(p1: Readonly<egret3d.Ray>, p2?: boolean | egret3d.RaycastInfo, p3?: boolean): boolean;
+        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
         /**
          *
          */
@@ -9228,6 +9157,20 @@ declare namespace egret3d {
      * @param root
      */
     function combine(instances: ReadonlyArray<paper.GameObject>): void;
+}
+declare namespace egret3d.creater {
+    /**
+     * 根据提供的参数，快速创建一个带有网格渲染组件的实体。
+     */
+    function createGameObject(name?: string, {tag, scene, mesh, material, materials, castShadows, receiveShadows}?: {
+        tag?: paper.DefaultTags | string;
+        scene?: paper.Scene | null;
+        mesh?: Mesh | null;
+        material?: Material | null;
+        materials?: ReadonlyArray<Material> | null;
+        castShadows?: boolean;
+        receiveShadows?: boolean;
+    }): paper.GameObject;
 }
 declare namespace egret3d {
     /**
@@ -9455,6 +9398,7 @@ declare namespace egret3d {
         private static _sortDefine(a, b);
         definesMask: string;
         private readonly _defines;
+        private readonly _defineLinks;
         private _update();
         /**
          *
@@ -9467,11 +9411,8 @@ declare namespace egret3d {
         /**
          *
          */
-        addDefine(name: string, context?: number | string, isGlobal?: boolean): Define | null;
-        /**
-         *
-         */
-        removeDefine(name: string, isLocal?: boolean): Define | null;
+        addDefine(name: string, context?: number | string, order?: number): Define | null;
+        removeDefine(name: string, needUpdate?: boolean): Define | null;
     }
 }
 declare namespace egret3d {
@@ -9515,7 +9456,8 @@ declare namespace egret3d {
         private _createTechnique(shader, glTFMaterial);
         private _reset(shaderOrConfig);
         private _retainOrReleaseTextures(isRatain, isOnce);
-        private _addOrRemoveTexturesDefine(add);
+        private _addOrRemoveTexturesDefine(add?);
+        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, ...args: Array<any>): void;
         retain(): this;
         release(): this;
         dispose(): boolean;
@@ -9583,7 +9525,8 @@ declare namespace egret3d {
          */
         setStencil(value: boolean): this;
         /**
-         * 清除该材质的所有图形 API 状态。
+         * TODO
+         * @private
          */
         clearStates(): this;
         /**
@@ -9665,14 +9608,6 @@ declare namespace egret3d {
     }
 }
 declare namespace paper {
-    /**
-     * @deprecated
-     * @see paper.@singleton
-     */
-    class SingletonComponent extends BaseComponent {
-    }
-}
-declare namespace paper {
 }
 declare namespace egret3d {
     /**
@@ -9701,6 +9636,21 @@ declare namespace egret3d {
         fromArray(array: ReadonlyArray<number>, offset?: number): this;
         fromMatrix(matrix: Readonly<Matrix4>): this;
         containsPoint(point: Readonly<IVector3>): boolean;
+    }
+}
+declare namespace paper {
+    /**
+     * 已丢失或不支持的组件数据备份。
+     */
+    class MissingComponent extends BaseComponent {
+        /**
+         * 丢失的组件类名
+         */
+        readonly missingClass: string;
+        /**
+         * 已丢失或不支持的组件数据。
+         */
+        missingObject: any | null;
     }
 }
 declare namespace egret3d {
@@ -11002,10 +10952,10 @@ declare namespace egret3d.ShaderChunk {
     const emissivemap_pars_fragment = "#ifdef USE_EMISSIVEMAP\n\tuniform sampler2D emissiveMap;\n#endif\n";
     const encodings_fragment = "  gl_FragColor = linearToOutputTexel( gl_FragColor );\n";
     const encodings_pars_fragment = "\nvec4 LinearToLinear( in vec4 value ) {\n\treturn value;\n}\nvec4 GammaToLinear( in vec4 value, in float gammaFactor ) {\n\treturn vec4( pow( value.xyz, vec3( gammaFactor ) ), value.w );\n}\nvec4 LinearToGamma( in vec4 value, in float gammaFactor ) {\n\treturn vec4( pow( value.xyz, vec3( 1.0 / gammaFactor ) ), value.w );\n}\nvec4 sRGBToLinear( in vec4 value ) {\n\treturn vec4( mix( pow( value.rgb * 0.9478672986 + vec3( 0.0521327014 ), vec3( 2.4 ) ), value.rgb * 0.0773993808, vec3( lessThanEqual( value.rgb, vec3( 0.04045 ) ) ) ), value.w );\n}\nvec4 LinearTosRGB( in vec4 value ) {\n\treturn vec4( mix( pow( value.rgb, vec3( 0.41666 ) ) * 1.055 - vec3( 0.055 ), value.rgb * 12.92, vec3( lessThanEqual( value.rgb, vec3( 0.0031308 ) ) ) ), value.w );\n}\nvec4 RGBEToLinear( in vec4 value ) {\n\treturn vec4( value.rgb * exp2( value.a * 255.0 - 128.0 ), 1.0 );\n}\nvec4 LinearToRGBE( in vec4 value ) {\n\tfloat maxComponent = max( max( value.r, value.g ), value.b );\n\tfloat fExp = clamp( ceil( log2( maxComponent ) ), -128.0, 127.0 );\n\treturn vec4( value.rgb / exp2( fExp ), ( fExp + 128.0 ) / 255.0 );\n}\nvec4 RGBMToLinear( in vec4 value, in float maxRange ) {\n\treturn vec4( value.xyz * value.w * maxRange, 1.0 );\n}\nvec4 LinearToRGBM( in vec4 value, in float maxRange ) {\n\tfloat maxRGB = max( value.x, max( value.g, value.b ) );\n\tfloat M      = clamp( maxRGB / maxRange, 0.0, 1.0 );\n\tM            = ceil( M * 255.0 ) / 255.0;\n\treturn vec4( value.rgb / ( M * maxRange ), M );\n}\nvec4 RGBDToLinear( in vec4 value, in float maxRange ) {\n\treturn vec4( value.rgb * ( ( maxRange / 255.0 ) / value.a ), 1.0 );\n}\nvec4 LinearToRGBD( in vec4 value, in float maxRange ) {\n\tfloat maxRGB = max( value.x, max( value.g, value.b ) );\n\tfloat D      = max( maxRange / maxRGB, 1.0 );\n\tD            = min( floor( D ) / 255.0, 1.0 );\n\treturn vec4( value.rgb * ( D * ( 255.0 / maxRange ) ), D );\n}\nconst mat3 cLogLuvM = mat3( 0.2209, 0.3390, 0.4184, 0.1138, 0.6780, 0.7319, 0.0102, 0.1130, 0.2969 );\nvec4 LinearToLogLuv( in vec4 value )  {\n\tvec3 Xp_Y_XYZp = value.rgb * cLogLuvM;\n\tXp_Y_XYZp = max(Xp_Y_XYZp, vec3(1e-6, 1e-6, 1e-6));\n\tvec4 vResult;\n\tvResult.xy = Xp_Y_XYZp.xy / Xp_Y_XYZp.z;\n\tfloat Le = 2.0 * log2(Xp_Y_XYZp.y) + 127.0;\n\tvResult.w = fract(Le);\n\tvResult.z = (Le - (floor(vResult.w*255.0))/255.0)/255.0;\n\treturn vResult;\n}\nconst mat3 cLogLuvInverseM = mat3( 6.0014, -2.7008, -1.7996, -1.3320, 3.1029, -5.7721, 0.3008, -1.0882, 5.6268 );\nvec4 LogLuvToLinear( in vec4 value ) {\n\tfloat Le = value.z * 255.0 + value.w;\n\tvec3 Xp_Y_XYZp;\n\tXp_Y_XYZp.y = exp2((Le - 127.0) / 2.0);\n\tXp_Y_XYZp.z = Xp_Y_XYZp.y / value.y;\n\tXp_Y_XYZp.x = value.x * Xp_Y_XYZp.z;\n\tvec3 vRGB = Xp_Y_XYZp.rgb * cLogLuvInverseM;\n\treturn vec4( max(vRGB, 0.0), 1.0 );\n}\n";
-    const envmap_fragment = "#ifdef USE_ENVMAP\n\t#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\t\tvec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\t\tvec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\t\t#ifndef ENVMAP_MODE_REFRACTION\n\t\t\tvec3 reflectVec = reflect( cameraToVertex, worldNormal );\n\t\t#else\n\t\t\tvec3 reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\t\t#endif\n\t#else\n\t\tvec3 reflectVec = vReflect;\n\t#endif\n\t#ifdef ENVMAP_TYPE_CUBE\n\t\tvec4 envColor = textureCube( envMap, vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\t#elif defined( ENVMAP_TYPE_EQUIREC )\n\t\tvec2 sampleUV;\n\t\treflectVec = normalize( reflectVec );\n\t\tsampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\t\tsampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\t\tvec4 envColor = texture2D( envMap, sampleUV );\n\t#elif defined( ENVMAP_TYPE_SPHERE )\n\t\treflectVec = normalize( reflectVec );\n\t\tvec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0, 0.0, 1.0 ) );\n\t\tvec4 envColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5 );\n\t#else\n\t\tvec4 envColor = vec4( 0.0 );\n\t#endif\n\tenvColor = envMapTexelToLinear( envColor );\n\t#ifdef ENVMAP_BLENDING_MULTIPLY\n\t\toutgoingLight = mix( outgoingLight, outgoingLight * envColor.xyz, specularStrength * reflectivity );\n\t#elif defined( ENVMAP_BLENDING_MIX )\n\t\toutgoingLight = mix( outgoingLight, envColor.xyz, specularStrength * reflectivity );\n\t#elif defined( ENVMAP_BLENDING_ADD )\n\t\toutgoingLight += envColor.xyz * specularStrength * reflectivity;\n\t#endif\n#endif\n";
+    const envmap_fragment = "#ifdef USE_ENVMAP\n\t#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\t\tvec3 cameraToVertex = normalize( vWorldPosition - cameraPosition );\n\t\tvec3 worldNormal = inverseTransformDirection( normal, viewMatrix );\n\t\t#ifndef ENVMAP_MODE_REFRACTION\n\t\t\tvec3 reflectVec = reflect( cameraToVertex, worldNormal );\n\t\t#else\n\t\t\tvec3 reflectVec = refract( cameraToVertex, worldNormal, refractionRatio );\n\t\t#endif\n\t#else\n\t\tvec3 reflectVec = vReflect;\n\t#endif\n\t#ifdef ENVMAP_TYPE_CUBE\n\t\tvec4 envColor = textureCube( envMap, vec3( flipEnvMap * reflectVec.x, reflectVec.yz ) );\n\t#elif defined( ENVMAP_TYPE_EQUIREC )\n\t\tvec2 sampleUV;\n\t\treflectVec = normalize( reflectVec );\n\t\tsampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\t\tsampleUV.y = 1.0 - sampleUV.y;\n\t\tsampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\t\tvec4 envColor = texture2D( envMap, sampleUV );\n\t#elif defined( ENVMAP_TYPE_SPHERE )\n\t\treflectVec = normalize( reflectVec );\n\t\t\n\t\tvec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0, 0.0, -1.0 ) );\n\t\treflectView = vec3(reflectView.x * 0.5 + 0.5, 1.0 - (reflectView.y * 0.5 + 0.5), 0.0);\n\t\tvec4 envColor = texture2D( envMap, reflectView.xy);\n\t#else\n\t\tvec4 envColor = vec4( 0.0 );\n\t#endif\n\tenvColor = envMapTexelToLinear( envColor );\n\t#ifdef ENVMAP_BLENDING_MULTIPLY\n\t\toutgoingLight = mix( outgoingLight, outgoingLight * envColor.xyz, specularStrength * reflectivity );\n\t#elif defined( ENVMAP_BLENDING_MIX )\n\t\toutgoingLight = mix( outgoingLight, envColor.xyz, specularStrength * reflectivity );\n\t#elif defined( ENVMAP_BLENDING_ADD )\n\t\toutgoingLight += envColor.xyz * specularStrength * reflectivity;\n\t#endif\n#endif\n";
     const envmap_pars_fragment = "#if defined( USE_ENVMAP ) || defined( PHYSICAL )\n\tuniform float reflectivity;\n\tuniform float envMapIntensity;\n#endif\n#ifdef USE_ENVMAP\n\t#if ! defined( PHYSICAL ) && ( defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) )\n\t\tvarying vec3 vWorldPosition;\n\t#endif\n\t#ifdef ENVMAP_TYPE_CUBE\n\t\tuniform samplerCube envMap;\n\t#else\n\t\tuniform sampler2D envMap;\n\t#endif\n\tuniform float flipEnvMap;\n\tuniform int maxMipLevel;\n\t#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) || defined( PHYSICAL )\n\t\tuniform float refractionRatio;\n\t#else\n\t\tvarying vec3 vReflect;\n\t#endif\n#endif\n";
     const envmap_pars_vertex = "#ifdef USE_ENVMAP\n\t#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\t\tvarying vec3 vWorldPosition;\n\t#else\n\t\tvarying vec3 vReflect;\n\t\tuniform float refractionRatio;\n\t#endif\n#endif\n";
-    const envmap_physical_pars_fragment = "#if defined( USE_ENVMAP ) && defined( PHYSICAL )\n\tvec3 getLightProbeIndirectIrradiance(\n const in GeometricContext geometry, const in int maxMIPLevel ) {\n\t\tvec3 worldNormal = inverseTransformDirection( geometry.normal, viewMatrix );\n\t\t#ifdef ENVMAP_TYPE_CUBE\n\t\t\tvec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = textureCubeLodEXT( envMap, queryVec, float( maxMIPLevel ) );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = textureCube( envMap, queryVec, float( maxMIPLevel ) );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\t\tvec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\t\t\tvec4 envMapColor = textureCubeUV( envMap, queryVec, 1.0 );\n\t\t#else\n\t\t\tvec4 envMapColor = vec4( 0.0 );\n\t\t#endif\n\t\treturn PI * envMapColor.rgb * envMapIntensity;\n\t}\n\tfloat getSpecularMIPLevel( const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\t\tfloat maxMIPLevelScalar = float( maxMIPLevel );\n\t\tfloat desiredMIPLevel = maxMIPLevelScalar + 0.79248 - 0.5 * log2( pow2( blinnShininessExponent ) + 1.0 );\n\t\treturn clamp( desiredMIPLevel, 0.0, maxMIPLevelScalar );\n\t}\n\tvec3 getLightProbeIndirectRadiance(\n const in GeometricContext geometry, const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\t\t#ifndef ENVMAP_MODE_REFRACTION\n\t\t\tvec3 reflectVec = reflect( -geometry.viewDir, geometry.normal );\n\t\t#else\n\t\t\tvec3 reflectVec = refract( -geometry.viewDir, geometry.normal, refractionRatio );\n\t\t#endif\n\t\treflectVec = inverseTransformDirection( reflectVec, viewMatrix );\n\t\tfloat specularMIPLevel = getSpecularMIPLevel( blinnShininessExponent, maxMIPLevel );\n\t\t#ifdef ENVMAP_TYPE_CUBE\n\t\t\tvec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = textureCubeLodEXT( envMap, queryReflectVec, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = textureCube( envMap, queryReflectVec, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\t\tvec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\t\t\tvec4 envMapColor = textureCubeUV( envMap, queryReflectVec, BlinnExponentToGGXRoughness(blinnShininessExponent ));\n\t\t#elif defined( ENVMAP_TYPE_EQUIREC )\n\t\t\tvec2 sampleUV;\n\t\t\tsampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\t\t\tsampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = texture2DLodEXT( envMap, sampleUV, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = texture2D( envMap, sampleUV, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_SPHERE )\n\t\t\tvec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0,0.0,1.0 ) );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = texture2DLodEXT( envMap, reflectView.xy * 0.5 + 0.5, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#endif\n\t\treturn envMapColor.rgb * envMapIntensity;\n\t}\n#endif\n";
+    const envmap_physical_pars_fragment = "#if defined( USE_ENVMAP ) && defined( PHYSICAL )\n\tvec3 getLightProbeIndirectIrradiance(\n const in GeometricContext geometry, const in int maxMIPLevel ) {\n\t\tvec3 worldNormal = inverseTransformDirection( geometry.normal, viewMatrix );\n\t\t#ifdef ENVMAP_TYPE_CUBE\n\t\t\tvec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = textureCubeLodEXT( envMap, queryVec, float( maxMIPLevel ) );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = textureCube( envMap, queryVec, float( maxMIPLevel ) );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\t\tvec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\t\t\tvec4 envMapColor = textureCubeUV( envMap, queryVec, 1.0 );\n\t\t#else\n\t\t\tvec4 envMapColor = vec4( 0.0 );\n\t\t#endif\n\t\treturn PI * envMapColor.rgb * envMapIntensity;\n\t}\n\tfloat getSpecularMIPLevel( const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\t\tfloat maxMIPLevelScalar = float( maxMIPLevel );\n\t\tfloat desiredMIPLevel = maxMIPLevelScalar + 0.79248 - 0.5 * log2( pow2( blinnShininessExponent ) + 1.0 );\n\t\treturn clamp( desiredMIPLevel, 0.0, maxMIPLevelScalar );\n\t}\n\tvec3 getLightProbeIndirectRadiance(\n const in GeometricContext geometry, const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\t\t#ifndef ENVMAP_MODE_REFRACTION\n\t\t\tvec3 reflectVec = reflect( -geometry.viewDir, geometry.normal );\n\t\t#else\n\t\t\tvec3 reflectVec = refract( -geometry.viewDir, geometry.normal, refractionRatio );\n\t\t#endif\n\t\treflectVec = inverseTransformDirection( reflectVec, viewMatrix );\n\t\tfloat specularMIPLevel = getSpecularMIPLevel( blinnShininessExponent, maxMIPLevel );\n\t\t#ifdef ENVMAP_TYPE_CUBE\n\t\t\tvec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = textureCubeLodEXT( envMap, queryReflectVec, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = textureCube( envMap, queryReflectVec, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\t\tvec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\t\t\tvec4 envMapColor = textureCubeUV( envMap, queryReflectVec, BlinnExponentToGGXRoughness(blinnShininessExponent ));\n\t\t#elif defined( ENVMAP_TYPE_EQUIREC )\n\t\t\tvec2 sampleUV;\n\t\t\tsampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\t\t\tsampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = texture2DLodEXT( envMap, sampleUV, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = texture2D( envMap, sampleUV, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_SPHERE )\n\t\t\t\n\t\t\tvec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0, 0.0, -1.0 ) );\n\t\t\treflectView = vec3(reflectView.x * 0.5 + 0.5, 1.0 - (reflectView.y * 0.5 + 0.5), 0.0);\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = texture2DLodEXT( envMap, reflectView.xy, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = texture2D( envMap, reflectView.xy, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#endif\n\t\treturn envMapColor.rgb * envMapIntensity;\n\t}\n#endif\n";
     const envmap_vertex = "#ifdef USE_ENVMAP\n\t#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )\n\t\tvWorldPosition = worldPosition.xyz;\n\t#else\n\t\tvec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );\n\t\tvec3 worldNormal = inverseTransformDirection( transformedNormal, viewMatrix );\n\t\t#ifndef ENVMAP_MODE_REFRACTION\n\t\t\tvReflect = reflect( cameraToVertex, worldNormal );\n\t\t#else\n\t\t\tvReflect = refract( cameraToVertex, worldNormal, refractionRatio );\n\t\t#endif\n\t#endif\n#endif\n";
     const fog_fragment = "#ifdef USE_FOG\n\tfloat fogDepth = length( vFogPosition );\n\t#ifdef FOG_EXP2\n\t\tfloat fogFactor = whiteCompliment( exp2( - fogDensity * fogDensity * fogDepth * fogDepth * LOG2 ) );\n\t#else\n\t\tfloat fogFactor = smoothstep( fogNear, fogFar, fogDepth );\n\t#endif\n\tgl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );\n#endif\n";
     const fog_pars_fragment = "#ifdef USE_FOG\n\tuniform vec3 fogColor;\n\tvarying vec3 vFogPosition;\n\t#ifdef FOG_EXP2\n\t\tuniform float fogDensity;\n\t#else\n\t\tuniform float fogNear;\n\t\tuniform float fogFar;\n\t#endif\n#endif\n";
@@ -11019,7 +10969,7 @@ declare namespace egret3d.ShaderChunk {
     const lights_fragment_maps = "#if defined( RE_IndirectDiffuse )\n\t#ifdef USE_LIGHTMAP\n\t\tvec3 lightMapIrradiance = texture2D( lightMap, vUv2 ).xyz * lightMapIntensity;\n\t\t#ifndef PHYSICALLY_CORRECT_LIGHTS\n\t\t\tlightMapIrradiance *= PI;\n\t\t#endif\n\t\tirradiance += lightMapIrradiance;\n\t#endif\n\t#if defined( USE_ENVMAP ) && defined( PHYSICAL ) && defined( ENVMAP_TYPE_CUBE_UV )\n\t\tirradiance += getLightProbeIndirectIrradiance(\n geometry, maxMipLevel );\n\t#endif\n#endif\n#if defined( USE_ENVMAP ) && defined( RE_IndirectSpecular )\n\tradiance += getLightProbeIndirectRadiance(\n geometry, Material_BlinnShininessExponent( material ), maxMipLevel );\n\t#ifndef STANDARD\n\t\tclearCoatRadiance += getLightProbeIndirectRadiance(\n geometry, Material_ClearCoat_BlinnShininessExponent( material ), maxMipLevel );\n\t#endif\n#endif\n";
     const lights_lambert_vertex = "vec3 diffuse = vec3( 1.0 );\nGeometricContext geometry;\ngeometry.position = mvPosition.xyz;\ngeometry.normal = normalize( transformedNormal );\ngeometry.viewDir = normalize( -mvPosition.xyz );\nGeometricContext backGeometry;\nbackGeometry.position = geometry.position;\nbackGeometry.normal = -geometry.normal;\nbackGeometry.viewDir = geometry.viewDir;\nvLightFront = vec3( 0.0 );\n#ifdef DOUBLE_SIDED\n\tvLightBack = vec3( 0.0 );\n#endif\nIncidentLight directLight;\nfloat dotNL;\nvec3 directLightColor_Diffuse;\n#if NUM_POINT_LIGHTS > 0\n\tPointLight pointLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tpointLight.position = vec3(pointLights[ i  * 15 + 0], pointLights[ i  * 15 + 1], pointLights[ i  * 15 + 2]);\n\t\tpointLight.color = vec3(pointLights[ i  * 15 + 3], pointLights[ i  * 15 + 4], pointLights[ i  * 15 + 5]);\n\t\tpointLight.distance = pointLights[ i  * 15 + 6];\n\t\tpointLight.decay = pointLights[ i  * 15 + 7];\n\t\tgetPointDirectLightIrradiance( pointLight, geometry, directLight );\n\t\tdotNL = dot( geometry.normal, directLight.direction );\n\t\tdirectLightColor_Diffuse = PI * directLight.color;\n\t\tvLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\t\t#ifdef DOUBLE_SIDED\n\t\t\tvLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\t\t#endif\n\t}\n#endif\n#if NUM_SPOT_LIGHTS > 0\n\tSpotLight spotLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tspotLight.position = vec3(spotLights[ i  * 18 + 0], spotLights[ i  * 18 + 1], spotLights[ i  * 18 + 2]);\n\t\tspotLight.direction = vec3(spotLights[ i  * 18 + 3], spotLights[ i  * 18 + 4], spotLights[ i  * 18 + 5]);\n\t\tspotLight.color = vec3(spotLights[ i  * 18 + 6], spotLights[ i  * 18 + 7], spotLights[ i  * 18 + 8]);\n\t\tspotLight.distance = spotLights[ i  * 18 + 9];\n\t\tspotLight.decay = spotLights[ i  * 18 + 10];\n\t\tspotLight.coneCos = spotLights[ i  * 18 + 11];\n\t\tspotLight.penumbraCos = spotLights[ i  * 18 + 12];\n\t\tgetSpotDirectLightIrradiance( spotLight, geometry, directLight );\n\t\tdotNL = dot( geometry.normal, directLight.direction );\n\t\tdirectLightColor_Diffuse = PI * directLight.color;\n\t\tvLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\t\t#ifdef DOUBLE_SIDED\n\t\t\tvLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\t\t#endif\n\t}\n#endif\n#if NUM_DIR_LIGHTS > 0\n\tDirectionalLight directionalLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\t\tdirectionalLight.direction = vec3(directionalLights[ i  * 11 + 0], directionalLights[ i  * 11 + 1], directionalLights[ i  * 11 + 2]);\n\t\tdirectionalLight.color = vec3(directionalLights[ i  * 11 + 3], directionalLights[ i  * 11 + 4], directionalLights[ i  * 11 + 5]);\n\t\tgetDirectionalDirectLightIrradiance( directionalLight, geometry, directLight );\n\t\tdotNL = dot( geometry.normal, directLight.direction );\n\t\tdirectLightColor_Diffuse = PI * directLight.color;\n\t\tvLightFront += saturate( dotNL ) * directLightColor_Diffuse;\n\t\t#ifdef DOUBLE_SIDED\n\t\t\tvLightBack += saturate( -dotNL ) * directLightColor_Diffuse;\n\t\t#endif\n\t}\n#endif\n#if NUM_HEMI_LIGHTS > 0\n\tHemisphereLight hemisphereLight;\n\t\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {\n\t\themisphereLight.direction = vec3(hemisphereLights[ i  * 9 + 0], hemisphereLights[ i  * 9 + 1], hemisphereLights[ i  * 9 + 2]);\n\t\themisphereLight.skyColor = vec3(hemisphereLights[ i  * 9 + 3], hemisphereLights[ i  * 9 + 4], hemisphereLights[ i  * 9 + 5]);\n\t\themisphereLight.groundColor = vec3(hemisphereLights[ i  * 9 + 6], hemisphereLights[ i  * 9 + 7], hemisphereLights[ i  * 9 + 8]);\n\t\tvLightFront += getHemisphereLightIrradiance( hemisphereLight, geometry );\n\t\t#ifdef DOUBLE_SIDED\n\t\t\tvLightBack += getHemisphereLightIrradiance( hemisphereLight, backGeometry );\n\t\t#endif\n\t}\n#endif\n";
     const lights_pars_begin = "uniform vec3 ambientLightColor;\nvec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {\n\tvec3 irradiance = ambientLightColor;\n\t#ifndef PHYSICALLY_CORRECT_LIGHTS\n\t\tirradiance *= PI;\n\t#endif\n\treturn irradiance;\n}\n#if NUM_DIR_LIGHTS > 0\n\tstruct DirectionalLight {\n\t\tvec3 direction;\n\t\tvec3 color;\n\t\tint shadow;\n\t\tfloat shadowBias;\n\t\tfloat shadowRadius;\n\t\tvec2 shadowMapSize;\n\t};\n\tuniform float directionalLights[NUM_DIR_LIGHTS * 11];\n\tvoid getDirectionalDirectLightIrradiance( const in DirectionalLight directionalLight, const in GeometricContext geometry, out IncidentLight directLight ) {\n\t\tdirectLight.direction = directionalLight.direction;\n\t\tdirectLight.color = directionalLight.color;\n\t\tdirectLight.visible = true;\n\t}\n#endif\n#if NUM_POINT_LIGHTS > 0\n\tstruct PointLight {\n\t\tvec3 position;\n\t\tvec3 color;\n\t\tfloat distance;\n\t\tfloat decay;\n\t\tint shadow;\n\t\tfloat shadowBias;\n\t\tfloat shadowRadius;\n\t\tvec2 shadowMapSize;\n\t\tfloat shadowCameraNear;\n\t\tfloat shadowCameraFar;\n\t};\n\tuniform float pointLights[NUM_POINT_LIGHTS * 15 ];\n\tvoid getPointDirectLightIrradiance( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight directLight ) {\n\t\tvec3 lVector = pointLight.position - geometry.position;\n\t\tdirectLight.direction = normalize( lVector );\n\t\tfloat lightDistance = length( lVector );\n\t\tdirectLight.color = pointLight.color;\n\t\tdirectLight.color *= punctualLightIntensityToIrradianceFactor( lightDistance, pointLight.distance, pointLight.decay );\n\t\tdirectLight.visible = ( directLight.color != vec3( 0.0 ) );\n\t}\n#endif\n#if NUM_SPOT_LIGHTS > 0\n\tstruct SpotLight {\n\t\tvec3 position;\n\t\tvec3 direction;\n\t\tvec3 color;\n\t\tfloat distance;\n\t\tfloat decay;\n\t\tfloat coneCos;\n\t\tfloat penumbraCos;\n\t\tint shadow;\n\t\tfloat shadowBias;\n\t\tfloat shadowRadius;\n\t\tvec2 shadowMapSize;\n\t};\n\tuniform float spotLights[NUM_SPOT_LIGHTS * 18];\n\tvoid getSpotDirectLightIrradiance( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight directLight  ) {\n\t\tvec3 lVector = spotLight.position - geometry.position;\n\t\tdirectLight.direction = normalize( lVector );\n\t\tfloat lightDistance = length( lVector );\n\t\tfloat angleCos = dot( directLight.direction, spotLight.direction );\n\t\tif ( angleCos > spotLight.coneCos ) {\n\t\t\tfloat spotEffect = smoothstep( spotLight.coneCos, spotLight.penumbraCos, angleCos );\n\t\t\tdirectLight.color = spotLight.color;\n\t\t\tdirectLight.color *= spotEffect * punctualLightIntensityToIrradianceFactor( lightDistance, spotLight.distance, spotLight.decay );\n\t\t\tdirectLight.visible = true;\n\t\t} else {\n\t\t\tdirectLight.color = vec3( 0.0 );\n\t\t\tdirectLight.visible = false;\n\t\t}\n\t}\n#endif\n#if NUM_RECT_AREA_LIGHTS > 0\n\tstruct RectAreaLight {\n\t\tvec3 color;\n\t\tvec3 position;\n\t\tvec3 halfWidth;\n\t\tvec3 halfHeight;\n\t};\n\tuniform sampler2D ltc_1;\n\tuniform sampler2D ltc_2;\n\tuniform float rectAreaLights[ NUM_RECT_AREA_LIGHTS * 12 ];\n#endif\n#if NUM_HEMI_LIGHTS > 0\n\tstruct HemisphereLight {\n\t\tvec3 direction;\n\t\tvec3 skyColor;\n\t\tvec3 groundColor;\n\t};\n\tuniform float hemisphereLights[ NUM_HEMI_LIGHTS * 9 ];\n\tvec3 getHemisphereLightIrradiance( const in HemisphereLight hemiLight, const in GeometricContext geometry ) {\n\t\tfloat dotNL = dot( geometry.normal, hemiLight.direction );\n\t\tfloat hemiDiffuseWeight = 0.5 * dotNL + 0.5;\n\t\tvec3 irradiance = mix( hemiLight.groundColor, hemiLight.skyColor, hemiDiffuseWeight );\n\t\t#ifndef PHYSICALLY_CORRECT_LIGHTS\n\t\t\tirradiance *= PI;\n\t\t#endif\n\t\treturn irradiance;\n\t}\n#endif\n";
-    const lights_pars_maps = "#if defined( USE_ENVMAP ) && defined( PHYSICAL )\n\tvec3 getLightProbeIndirectIrradiance(\n const in GeometricContext geometry, const in int maxMIPLevel ) {\n\t\tvec3 worldNormal = inverseTransformDirection( geometry.normal, viewMatrix );\n\t\t#ifdef ENVMAP_TYPE_CUBE\n\t\t\tvec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = textureCubeLodEXT( envMap, queryVec, float( maxMIPLevel ) );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = textureCube( envMap, queryVec, float( maxMIPLevel ) );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\t\tvec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\t\t\tvec4 envMapColor = textureCubeUV( queryVec, 1.0 );\n\t\t#else\n\t\t\tvec4 envMapColor = vec4( 0.0 );\n\t\t#endif\n\t\treturn PI * envMapColor.rgb * envMapIntensity;\n\t}\n\tfloat getSpecularMIPLevel( const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\t\tfloat maxMIPLevelScalar = float( maxMIPLevel );\n\t\tfloat desiredMIPLevel = maxMIPLevelScalar + 0.79248 - 0.5 * log2( pow2( blinnShininessExponent ) + 1.0 );\n\t\treturn clamp( desiredMIPLevel, 0.0, maxMIPLevelScalar );\n\t}\n\tvec3 getLightProbeIndirectRadiance(\n const in GeometricContext geometry, const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\t\t#ifndef ENVMAP_MODE_REFRACTION\n\t\t\tvec3 reflectVec = reflect( -geometry.viewDir, geometry.normal );\n\t\t#else\n\t\t\tvec3 reflectVec = refract( -geometry.viewDir, geometry.normal, refractionRatio );\n\t\t#endif\n\t\treflectVec = inverseTransformDirection( reflectVec, viewMatrix );\n\t\tfloat specularMIPLevel = getSpecularMIPLevel( blinnShininessExponent, maxMIPLevel );\n\t\t#ifdef ENVMAP_TYPE_CUBE\n\t\t\tvec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = textureCubeLodEXT( envMap, queryReflectVec, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = textureCube( envMap, queryReflectVec, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\t\tvec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\t\t\tvec4 envMapColor = textureCubeUV(queryReflectVec, BlinnExponentToGGXRoughness(blinnShininessExponent));\n\t\t#elif defined( ENVMAP_TYPE_EQUIREC )\n\t\t\tvec2 sampleUV;\n\t\t\tsampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\t\t\tsampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = texture2DLodEXT( envMap, sampleUV, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = texture2D( envMap, sampleUV, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_SPHERE )\n\t\t\tvec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0,0.0,1.0 ) );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = texture2DLodEXT( envMap, reflectView.xy * 0.5 + 0.5, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = texture2D( envMap, reflectView.xy * 0.5 + 0.5, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#endif\n\t\treturn envMapColor.rgb * envMapIntensity;\n\t}\n#endif\n";
+    const lights_pars_maps = "#if defined( USE_ENVMAP ) && defined( PHYSICAL )\n\tvec3 getLightProbeIndirectIrradiance(\n const in GeometricContext geometry, const in int maxMIPLevel ) {\n\t\tvec3 worldNormal = inverseTransformDirection( geometry.normal, viewMatrix );\n\t\t#ifdef ENVMAP_TYPE_CUBE\n\t\t\tvec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = textureCubeLodEXT( envMap, queryVec, float( maxMIPLevel ) );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = textureCube( envMap, queryVec, float( maxMIPLevel ) );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\t\tvec3 queryVec = vec3( flipEnvMap * worldNormal.x, worldNormal.yz );\n\t\t\tvec4 envMapColor = textureCubeUV( queryVec, 1.0 );\n\t\t#else\n\t\t\tvec4 envMapColor = vec4( 0.0 );\n\t\t#endif\n\t\treturn PI * envMapColor.rgb * envMapIntensity;\n\t}\n\tfloat getSpecularMIPLevel( const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\t\tfloat maxMIPLevelScalar = float( maxMIPLevel );\n\t\tfloat desiredMIPLevel = maxMIPLevelScalar + 0.79248 - 0.5 * log2( pow2( blinnShininessExponent ) + 1.0 );\n\t\treturn clamp( desiredMIPLevel, 0.0, maxMIPLevelScalar );\n\t}\n\tvec3 getLightProbeIndirectRadiance(\n const in GeometricContext geometry, const in float blinnShininessExponent, const in int maxMIPLevel ) {\n\t\t#ifndef ENVMAP_MODE_REFRACTION\n\t\t\tvec3 reflectVec = reflect( -geometry.viewDir, geometry.normal );\n\t\t#else\n\t\t\tvec3 reflectVec = refract( -geometry.viewDir, geometry.normal, refractionRatio );\n\t\t#endif\n\t\treflectVec = inverseTransformDirection( reflectVec, viewMatrix );\n\t\tfloat specularMIPLevel = getSpecularMIPLevel( blinnShininessExponent, maxMIPLevel );\n\t\t#ifdef ENVMAP_TYPE_CUBE\n\t\t\tvec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = textureCubeLodEXT( envMap, queryReflectVec, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = textureCube( envMap, queryReflectVec, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_CUBE_UV )\n\t\t\tvec3 queryReflectVec = vec3( flipEnvMap * reflectVec.x, reflectVec.yz );\n\t\t\tvec4 envMapColor = textureCubeUV(queryReflectVec, BlinnExponentToGGXRoughness(blinnShininessExponent));\n\t\t#elif defined( ENVMAP_TYPE_EQUIREC )\n\t\t\tvec2 sampleUV;\n\t\t\tsampleUV.y = asin( clamp( reflectVec.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\t\t\tsampleUV.x = atan( reflectVec.z, reflectVec.x ) * RECIPROCAL_PI2 + 0.5;\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = texture2DLodEXT( envMap, sampleUV, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = texture2D( envMap, sampleUV, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#elif defined( ENVMAP_TYPE_SPHERE )\n\t\t\tvec3 reflectView = normalize( ( viewMatrix * vec4( reflectVec, 0.0 ) ).xyz + vec3( 0.0, 0.0, -1.0 ) );\n\t\t\treflectView = vec3(reflectView.x * 0.5 + 0.5, 1.0 - (reflectView.y * 0.5 + 0.5), 0.0);\n\t\t\t#ifdef TEXTURE_LOD_EXT\n\t\t\t\tvec4 envMapColor = texture2DLodEXT( envMap, reflectView.xy, specularMIPLevel );\n\t\t\t#else\n\t\t\t\tvec4 envMapColor = texture2D( envMap, reflectView.xy, specularMIPLevel );\n\t\t\t#endif\n\t\t\tenvMapColor.rgb = envMapTexelToLinear( envMapColor ).rgb;\n\t\t#endif\n\t\treturn envMapColor.rgb * envMapIntensity;\n\t}\n#endif\n";
     const lights_phong_fragment = "BlinnPhongMaterial material;\nmaterial.diffuseColor = diffuseColor.rgb;\nmaterial.specularColor = specular;\nmaterial.specularShininess = shininess;\nmaterial.specularStrength = specularStrength;\n";
     const lights_phong_pars_fragment = "varying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\nstruct BlinnPhongMaterial {\n\tvec3\tdiffuseColor;\n\tvec3\tspecularColor;\n\tfloat\tspecularShininess;\n\tfloat\tspecularStrength;\n};\nvoid RE_Direct_BlinnPhong( const in IncidentLight directLight, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {\n\t#ifdef TOON\n\t\tvec3 irradiance = getGradientIrradiance( geometry.normal, directLight.direction ) * directLight.color;\n\t#else\n\t\tfloat dotNL = saturate( dot( geometry.normal, directLight.direction ) );\n\t\tvec3 irradiance = dotNL * directLight.color;\n\t#endif\n\t#ifndef PHYSICALLY_CORRECT_LIGHTS\n\t\tirradiance *= PI;\n\t#endif\n\treflectedLight.directDiffuse += irradiance * BRDF_Diffuse_Lambert( material.diffuseColor );\n\treflectedLight.directSpecular += irradiance * BRDF_Specular_BlinnPhong( directLight, geometry, material.specularColor, material.specularShininess ) * material.specularStrength;\n}\nvoid RE_IndirectDiffuse_BlinnPhong( const in vec3 irradiance, const in GeometricContext geometry, const in BlinnPhongMaterial material, inout ReflectedLight reflectedLight ) {\n\treflectedLight.indirectDiffuse += irradiance * BRDF_Diffuse_Lambert( material.diffuseColor );\n}\n#define RE_Direct\t\t\t\tRE_Direct_BlinnPhong\n#define RE_IndirectDiffuse\t\tRE_IndirectDiffuse_BlinnPhong\n#define Material_LightProbeLOD( material )\t(0)\n";
     const lights_physical_fragment = "PhysicalMaterial material;\nmaterial.diffuseColor = diffuseColor.rgb * ( 1.0 - metalnessFactor );\nmaterial.specularRoughness = clamp( roughnessFactor, 0.04, 1.0 );\n#ifdef STANDARD\n\tmaterial.specularColor = mix( vec3( DEFAULT_SPECULAR_COEFFICIENT ), diffuseColor.rgb, metalnessFactor );\n#else\n\tmaterial.specularColor = mix( vec3( MAXIMUM_SPECULAR_COEFFICIENT * pow2( reflectivity ) ), diffuseColor.rgb, metalnessFactor );\n\tmaterial.clearCoat = saturate( clearCoat );\n\tmaterial.clearCoatRoughness = clamp( clearCoatRoughness, 0.04, 1.0 );\n#endif\n";
@@ -11042,7 +10992,7 @@ declare namespace egret3d.ShaderChunk {
     const normal_fragment_maps = "#ifdef USE_NORMALMAP\n\t#ifdef OBJECTSPACE_NORMALMAP\n\t\tnormal = texture2D( normalMap, vUv ).xyz * 2.0 - 1.0;\n\t\t#ifdef FLIP_SIDED\n\t\t\tnormal = - normal;\n\t\t#endif\n\t\t#ifdef DOUBLE_SIDED\n\t\t\tnormal = normal * ( float( gl_FrontFacing ) * 2.0 - 1.0 );\n\t\t#endif\n\t\tnormal = normalize( normalMatrix * normal );\n\t#else\n\t\tnormal = perturbNormal2Arb( -vViewPosition, normal );\n\t#endif\n#elif defined( USE_BUMPMAP )\n\tnormal = perturbNormalArb( -vViewPosition, normal, dHdxy_fwd() );\n#endif\n";
     const packing = "vec3 packNormalToRGB( const in vec3 normal ) {\n\treturn normalize( normal ) * 0.5 + 0.5;\n}\nvec3 unpackRGBToNormal( const in vec3 rgb ) {\n\treturn 2.0 * rgb.xyz - 1.0;\n}\nconst float PackUpscale = 256. / 255.;\nconst float UnpackDownscale = 255. / 256.;\nconst vec3 PackFactors = vec3( 256. * 256. * 256., 256. * 256.,  256. );\nconst vec4 UnpackFactors = UnpackDownscale / vec4( PackFactors, 1. );\nconst float ShiftRight8 = 1. / 256.;\nvec4 packDepthToRGBA( const in float v ) {\n\tvec4 r = vec4( fract( v * PackFactors ), v );\n\tr.yzw -= r.xyz * ShiftRight8;\n\treturn r * PackUpscale;\n}\nfloat unpackRGBAToDepth( const in vec4 v ) {\n\treturn dot( v, UnpackFactors );\n}\nfloat viewZToOrthographicDepth( const in float viewZ, const in float near, const in float far ) {\n\treturn ( viewZ + near ) / ( near - far );\n}\nfloat orthographicDepthToViewZ( const in float linearClipZ, const in float near, const in float far ) {\n\treturn linearClipZ * ( near - far ) - near;\n}\nfloat viewZToPerspectiveDepth( const in float viewZ, const in float near, const in float far ) {\n\treturn (( near + viewZ ) * far ) / (( far - near ) * viewZ );\n}\nfloat perspectiveDepthToViewZ( const in float invClipZ, const in float near, const in float far ) {\n\treturn ( near * far ) / ( ( far - near ) * invClipZ - far );\n}\n";
     const particle_affector = "vec3 lifeVelocity = computeVelocity(t);\nvec4 worldRotation;\nif(u_simulationSpace==1)\n\tworldRotation=startWorldRotation;\nelse\n\tworldRotation=u_worldRotation;\nvec3 gravity=u_gravity*age;\nvec3 center=computePosition(startVelocity, lifeVelocity, age, t,gravity,worldRotation); \n#ifdef SPHERHBILLBOARD\n\t\t  vec2 corner=corner.xy;\n\t     vec3 cameraUpVector =normalize(cameraUp);\n\t     vec3 sideVector = normalize(cross(cameraForward,cameraUpVector));\n\t     vec3 upVector = normalize(cross(sideVector,cameraForward));\n\t   \tcorner*=computeBillbardSize(startSize.xy,t);\n\t\t#if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n\t\t\tif(u_startRotation3D){\n\t\t\t\tvec3 rotation=vec3(startRotation.xy,computeRotation(startRotation.z,age,t));\n\t\t\t\tcenter += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,rotation);\n\t\t\t}\n\t\t\telse{\n\t\t\t\tfloat rot = computeRotation(startRotation.x, age,t);\n\t\t\t\tfloat c = cos(rot);\n\t\t\t\tfloat s = sin(rot);\n\t\t\t\tmat2 rotation= mat2(c, -s, s, c);\n\t\t\t\tcorner=rotation*corner;\n\t\t\t\tcenter += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n\t\t\t}\n\t\t#else\n\t\t\tif(u_startRotation3D){\n\t\t\t\tcenter += u_sizeScale.xzy*rotation_euler(corner.x*sideVector+corner.y*upVector,startRotation);\n\t\t\t}\n\t\t\telse{\n\t\t\t\tfloat c = cos(startRotation.x);\n\t\t\t\tfloat s = sin(startRotation.x);\n\t\t\t\tmat2 rotation= mat2(c, -s, s, c);\n\t\t\t\tcorner=rotation*corner;\n\t\t\t\tcenter += u_sizeScale.xzy*(corner.x*sideVector+corner.y*upVector);\n\t\t\t}\n\t\t#endif\n\t#endif\n\t#ifdef STRETCHEDBILLBOARD\n\t\tvec2 corner=corner.xy;\n\t\tvec3 velocity;\n\t\t#if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n\t   \t\tif(u_spaceType==0)\n\t  \t\t\t\tvelocity=rotation_quaternions(u_sizeScale*(startVelocity+lifeVelocity),worldRotation)+gravity;\n\t   \t\telse\n\t  \t\t\t\tvelocity=rotation_quaternions(u_sizeScale*startVelocity,worldRotation)+lifeVelocity+gravity;\n\t \t#else\n\t   \t\tvelocity= rotation_quaternions(u_sizeScale*startVelocity,worldRotation)+gravity;\n\t \t#endif\t\n\t\tvec3 cameraUpVector = normalize(velocity);\n\t\tvec3 direction = normalize(center-cameraPosition);\n\t   vec3 sideVector = normalize(cross(direction,cameraUpVector));\n\t\tsideVector=u_sizeScale.xzy*sideVector;\n\t\tcameraUpVector=length(vec3(u_sizeScale.x,0.0,0.0))*cameraUpVector;\n\t   vec2 size=computeBillbardSize(startSize.xy,t);\n\t   const mat2 rotaionZHalfPI=mat2(0.0, -1.0, 1.0, 0.0);\n\t   corner=rotaionZHalfPI*corner;\n\t   corner.y=corner.y-abs(corner.y);\n\t   float speed=length(velocity);\n\t   center +=sign(u_sizeScale.x)*(sign(u_lengthScale)*size.x*corner.x*sideVector+(speed*u_speeaScale+size.y*u_lengthScale)*corner.y*cameraUpVector);\n\t#endif\n\t#ifdef HORIZONTALBILLBOARD\n\t\tvec2 corner=corner.xy;\n\t   const vec3 cameraUpVector=vec3(0.0,0.0,1.0);\n\t   const vec3 sideVector = vec3(-1.0,0.0,0.0);\n\t\tfloat rot = computeRotation(startRotation.x, age,t);\n\t   float c = cos(rot);\n\t   float s = sin(rot);\n\t   mat2 rotation= mat2(c, -s, s, c);\n\t   corner=rotation*corner;\n\t\tcorner*=computeBillbardSize(startSize.xy,t);\n\t   center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n\t#endif\n\t#ifdef VERTICALBILLBOARD\n\t\tvec2 corner=corner.xy;\n\t   const vec3 cameraUpVector =vec3(0.0,1.0,0.0);\n\t   vec3 sideVector = normalize(cross(cameraForward,cameraUpVector));\n\t\tfloat rot = computeRotation(startRotation.x, age,t);\n\t   float c = cos(rot);\n\t   float s = sin(rot);\n\t   mat2 rotation= mat2(c, -s, s, c);\n\t   corner=rotation*corner;\n\t\tcorner*=computeBillbardSize(startSize.xy,t);\n\t   center +=u_sizeScale.xzy*(corner.x*sideVector+ corner.y*cameraUpVector);\n\t#endif\n\t#ifdef RENDERMESH\n\t   vec3 size=computeMeshSize(startSize,t);\n\t\t#if defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE)\n\t\t\t\tif(u_startRotation3D){\n\t\t\t\t\tvec3 rotation=vec3(startRotation.xy,-computeRotation(startRotation.z, age,t));\n\t\t\t\t\tcenter+= rotation_quaternions(u_sizeScale*rotation_euler(position*size,rotation),worldRotation);\n\t\t\t\t}\n\t\t\t\telse{\n\t\t\t\t\t#ifdef ROTATIONOVERLIFETIME\n\t\t\t\t\t\tfloat angle=computeRotation(startRotation.x, age,t);\n\t\t\t\t\t\tif(startPosition.x>0.1 || startPosition.x < -0.1||startPosition.y>0.1 || startPosition.y < -0.1){\n\t\t\t\t\t\t\tcenter+= (rotation_quaternions(rotation_axis(u_sizeScale*position*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(startPosition.xy,0.0))),angle),worldRotation));\n\t\t\t\t\t\t}\n\t\t\t\t\t\telse{\n\t\t\t\t\t\t\t#ifdef SHAPE\n\t\t\t\t\t\t\t\tcenter+= u_sizeScale.xzy*(rotation_quaternions(rotation_axis(position*size,vec3(0.0,-1.0,0.0),angle),worldRotation));\n\t\t\t\t\t\t\t#else\n\t\t\t\t\t\t\t\tif(u_simulationSpace==1)\n\t\t\t\t\t\t\t\t\tcenter+=rotation_axis(u_sizeScale*position*size,vec3(0.0,0.0,-1.0),angle);\n\t\t\t\t\t\t\t\telse if(u_simulationSpace==0)\n\t\t\t\t\t\t\t\t\tcenter+=rotation_quaternions(u_sizeScale*rotation_axis(position*size,vec3(0.0,0.0,-1.0),angle),worldRotation);\n\t\t\t\t\t\t\t#endif\n\t\t\t\t\t\t}\n\t\t\t\t\t#endif\n\t\t\t\t\t#ifdef ROTATIONSEPERATE\n\t\t\t\t\t\tvec3 angle=compute3DRotation(vec3(0.0,0.0,startRotation.z), age,t);\n\t\t\t\t\t\tcenter+= (rotation_quaternions(rotation_euler(u_sizeScale*position*size,vec3(angle.x,angle.y,angle.z)),worldRotation));\n\t\t\t\t\t#endif\t\n\t\t\t\t}\n\t\t#else\n\t\tif(u_startRotation3D){\n\t\t\tcenter+= rotation_quaternions(u_sizeScale*rotation_euler(position*size,startRotation),worldRotation);\n\t\t}\n\t\telse{\n\t\t\tif(startPosition.x>0.1 || startPosition.x < -0.1||startPosition.y>0.1 || startPosition.y < -0.1){\n\t\t\t\tif(u_simulationSpace==1)\n\t\t\t\t\tcenter+= rotation_axis(u_sizeScale*position*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(startPosition.xy,0.0))),startRotation.x);\n\t\t\t\telse if(u_simulationSpace==0)\n\t\t\t\t\tcenter+= (rotation_quaternions(u_sizeScale*rotation_axis(position*size,normalize(cross(vec3(0.0,0.0,1.0),vec3(startPosition.xy,0.0))),startRotation.x),worldRotation));\n\t\t\t}\n\t\t\telse{\n\t\t\t\t#ifdef SHAPE\n\t\t\t\t\tif(u_simulationSpace==1)\n\t\t\t\t\t\tcenter+= u_sizeScale*rotation_axis(position*size,vec3(0.0,-1.0,0.0),startRotation.x);\n\t\t\t\t\telse if(u_simulationSpace==0)\n\t\t\t\t\t\tcenter+= rotation_quaternions(u_sizeScale*rotation_axis(position*size,vec3(0.0,-1.0,0.0),startRotation.x),worldRotation);\t\n\t\t\t\t#else\n\t\t\t\t\tif(u_simulationSpace==1)\n\t\t\t\t\t\tcenter+= rotation_axis(u_sizeScale*position*size,vec3(0.0,0.0,-1.0),startRotation.x);\n\t\t\t\t\telse if(u_simulationSpace==0)\n\t\t\t\t\t\tcenter+= rotation_quaternions(u_sizeScale*rotation_axis(position*size,vec3(0.0,0.0,-1.0),startRotation.x),worldRotation);\n\t\t\t\t#endif\n\t\t\t}\n\t\t}\n\t\t#endif\n\t\tv_mesh_color=vec4(color, 1.0);\n\t #endif";
-    const particle_common = "\nuniform float u_currentTime;\nuniform vec3 u_gravity;\nuniform vec3 u_worldPosition;\nuniform vec4 u_worldRotation;\nuniform bool u_startRotation3D;\nuniform int u_scalingMode;\nuniform vec3 u_positionScale;\nuniform vec3 u_sizeScale;\nuniform mat4 viewProjectionMatrix;\nuniform vec3 cameraForward;\nuniform vec3 cameraUp;\nuniform float u_lengthScale;\nuniform float u_speeaScale;\nuniform int u_simulationSpace;\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n  uniform int u_spaceType;\n#endif\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYTWOCONSTANT)\n  uniform vec3 u_velocityConst;\n#endif\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)\n  uniform vec2 u_velocityCurveX[4];\n  uniform vec2 u_velocityCurveY[4];\n  uniform vec2 u_velocityCurveZ[4];\n#endif\n#ifdef VELOCITYTWOCONSTANT\n  uniform vec3 u_velocityConstMax;\n#endif\n#ifdef VELOCITYTWOCURVE\n  uniform vec2 u_velocityCurveMaxX[4];\n  uniform vec2 u_velocityCurveMaxY[4];\n  uniform vec2 u_velocityCurveMaxZ[4];\n#endif\n#ifdef COLOROGRADIENT\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n#endif\n#ifdef COLORTWOGRADIENTS\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n  uniform vec4 u_colorGradientMax[4];\n  uniform vec2 u_alphaGradientMax[4];\n#endif\n#if defined(SIZECURVE)||defined(SIZETWOCURVES)\n  uniform vec2 u_sizeCurve[4];\n#endif\n#ifdef SIZETWOCURVES\n  uniform vec2 u_sizeCurveMax[4];\n#endif\n#if defined(SIZECURVESEPERATE)||defined(SIZETWOCURVESSEPERATE)\n  uniform vec2 u_sizeCurveX[4];\n  uniform vec2 u_sizeCurveY[4];\n  uniform vec2 u_sizeCurveZ[4];\n#endif\n#ifdef SIZETWOCURVESSEPERATE\n  uniform vec2 u_sizeCurveMaxX[4];\n  uniform vec2 u_sizeCurveMaxY[4];\n  uniform vec2 u_sizeCurveMaxZ[4];\n#endif\n#ifdef ROTATIONOVERLIFETIME\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform float u_rotationConst;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform float u_rotationConstMax;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurve[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMax[4];\n  #endif\n#endif\n#ifdef ROTATIONSEPERATE\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform vec3 u_rotationConstSeprarate;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform vec3 u_rotationConstMaxSeprarate;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurveX[4];\n    uniform vec2 u_rotationCurveY[4];\n    uniform vec2 u_rotationCurveZ[4];\n\t\tuniform vec2 u_rotationCurveW[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMaxX[4];\n    uniform vec2 u_rotationCurveMaxY[4];\n    uniform vec2 u_rotationCurveMaxZ[4];\n\t\tuniform vec2 u_rotationCurveMaxW[4];\n  #endif\n#endif\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\n  uniform float u_cycles;\n  uniform vec4 u_subUV;\n  uniform vec2 u_uvCurve[4];\n#endif\n#ifdef TEXTURESHEETANIMATIONTWOCURVE\n  uniform vec2 u_uvCurveMax[4];\n#endif\nvarying float v_discard;\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\n#ifdef RENDERMESH\n\tvarying vec4 v_mesh_color;\n#endif\nvec3 rotation_euler(in vec3 vector,in vec3 euler)\n{\n  float halfPitch = euler.x * 0.5;\n\tfloat halfYaw = euler.y * 0.5;\n\tfloat halfRoll = euler.z * 0.5;\n\tfloat sinPitch = sin(halfPitch);\n\tfloat cosPitch = cos(halfPitch);\n\tfloat sinYaw = sin(halfYaw);\n\tfloat cosYaw = cos(halfYaw);\n\tfloat sinRoll = sin(halfRoll);\n\tfloat cosRoll = cos(halfRoll);\n\tfloat quaX = (cosYaw * sinPitch * cosRoll) + (sinYaw * cosPitch * sinRoll);\n\tfloat quaY = (sinYaw * cosPitch * cosRoll) - (cosYaw * sinPitch * sinRoll);\n\tfloat quaZ = (cosYaw * cosPitch * sinRoll) - (sinYaw * sinPitch * cosRoll);\n\tfloat quaW = (cosYaw * cosPitch * cosRoll) + (sinYaw * sinPitch * sinRoll);\n\t\n\tfloat x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n\tfloat xx = quaX * x;\n  float xy = quaX * y;\n\tfloat xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n\t\n}\nvec3 rotation_axis(in vec3 vector,in vec3 axis, in float angle)\n{\n\tfloat halfAngle = angle * 0.5;\n\tfloat sin = sin(halfAngle);\n\t\n\tfloat quaX = axis.x * sin;\n\tfloat quaY = axis.y * sin;\n\tfloat quaZ = axis.z * sin;\n\tfloat quaW = cos(halfAngle);\n\t\n\tfloat x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n\tfloat xx = quaX * x;\n  float xy = quaX * y;\n\tfloat xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n}\nvec3 rotation_quaternions(in vec3 v,in vec4 q) \n{\n\treturn v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);\n}\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(SIZECURVE)||defined(SIZECURVESEPERATE)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)\nfloat evaluate_curve_float(in vec2 curves[4],in float t)\n{\n\tfloat res;\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec2 curve=curves[i];\n\t\tfloat curTime=curve.x;\n\t\tif(curTime>=t)\n\t\t{\n\t\t\tvec2 lastCurve=curves[i-1];\n\t\t\tfloat lastTime=lastCurve.x;\n\t\t\tfloat tt=(t-lastTime)/(curTime-lastTime);\n\t\t\tres=mix(lastCurve.y,curve.y,tt);\n\t\t\tbreak;\n\t\t}\n\t}\n\treturn res;\n}\n#endif\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\nfloat evaluate_curve_total(in vec2 curves[4],in float t)\n{\n\tfloat res=0.0;\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec2 curve=curves[i];\n\t\tfloat curTime=curve.x;\n\t\tvec2 lastCurve=curves[i-1];\n\t\tfloat lastValue=lastCurve.y;\n\t\t\n\t\tif(curTime>=t){\n\t\t\tfloat lastTime=lastCurve.x;\n\t\t\tfloat tt=(t-lastTime)/(curTime-lastTime);\n\t\t\tres+=(lastValue+mix(lastValue,curve.y,tt))/2.0*time.x*(t-lastTime);\n\t\t\tbreak;\n\t\t}\n\t\telse{\n\t\t\tres+=(lastValue+curve.y)/2.0*time.x*(curTime-lastCurve.x);\n\t\t}\n\t}\n\treturn res;\n}\n#endif\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)\nvec4 evaluate_curve_color(in vec2 gradientAlphas[4],in vec4 gradientColors[4],in float t)\n{\n\tvec4 overTimeColor;\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec2 gradientAlpha=gradientAlphas[i];\n\t\tfloat alphaKey=gradientAlpha.x;\n\t\tif(alphaKey>=t)\n\t\t{\n\t\t\tvec2 lastGradientAlpha=gradientAlphas[i-1];\n\t\t\tfloat lastAlphaKey=lastGradientAlpha.x;\n\t\t\tfloat age=(t-lastAlphaKey)/(alphaKey-lastAlphaKey);\n\t\t\toverTimeColor.a=mix(lastGradientAlpha.y,gradientAlpha.y,age);\n\t\t\tbreak;\n\t\t}\n\t}\n\t\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec4 gradientColor=gradientColors[i];\n\t\tfloat colorKey=gradientColor.x;\n\t\tif(colorKey>=t)\n\t\t{\n\t\t\tvec4 lastGradientColor=gradientColors[i-1];\n\t\t\tfloat lastColorKey=lastGradientColor.x;\n\t\t\tfloat age=(t-lastColorKey)/(colorKey-lastColorKey);\n\t\t\toverTimeColor.rgb=mix(gradientColors[i-1].yzw,gradientColor.yzw,age);\n\t\t\tbreak;\n\t\t}\n\t}\n\treturn overTimeColor;\n}\n#endif\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\nfloat evaluate_curve_frame(in vec2 gradientFrames[4],in float t)\n{\n\tfloat overTimeFrame;\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec2 gradientFrame=gradientFrames[i];\n\t\tfloat key=gradientFrame.x;\n\t\tif(key>=t)\n\t\t{\n\t\t\tvec2 lastGradientFrame=gradientFrames[i-1];\n\t\t\tfloat lastKey=lastGradientFrame.x;\n\t\t\tfloat age=(t-lastKey)/(key-lastKey);\n\t\t\toverTimeFrame=mix(lastGradientFrame.y,gradientFrame.y,age);\n\t\t\tbreak;\n\t\t}\n\t}\n\treturn floor(overTimeFrame);\n}\n#endif\nvec3 computeVelocity(in float t)\n{\n  vec3 res;\n  #ifdef VELOCITYCONSTANT\n\t res=u_velocityConst; \n  #endif\n  #ifdef VELOCITYCURVE\n     res= vec3(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveZ,t));\n  #endif\n  #ifdef VELOCITYTWOCONSTANT\n\t res=mix(u_velocityConst,u_velocityConstMax,vec3(random1.y,random1.z,random1.w)); \n  #endif\n  #ifdef VELOCITYTWOCURVE\n     res=vec3(mix(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveMaxX,t),random1.y),\n\t            mix(evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveMaxY,t),random1.z),\n\t\t\t\t\t \t\tmix(evaluate_curve_float(u_velocityCurveZ,t),evaluate_curve_float(u_velocityCurveMaxZ,t),random1.w));\n  #endif\n\t\t\t\t\t\n  return res;\n} \nvec3 computePosition(in vec3 startVelocity, in vec3 lifeVelocity,in float age,in float t,vec3 gravityVelocity,vec4 worldRotation)\n{\n   \tvec3 position;\n   \tvec3 lifePosition;\n\t\t#if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n\t\t\t#ifdef VELOCITYCONSTANT\n\t\t\t\t  position=startVelocity*age;\n\t\t\t\t  lifePosition=lifeVelocity*age;\n\t\t\t#endif\n\t\t\t#ifdef VELOCITYCURVE\n\t\t\t\t  position=startVelocity*age;\n\t\t\t\t  lifePosition=vec3(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveZ,t));\n\t\t\t#endif\n\t\t\t#ifdef VELOCITYTWOCONSTANT\n\t\t\t\t  position=startVelocity*age;\n\t\t\t\t  lifePosition=lifeVelocity*age;\n\t\t\t#endif\n\t\t\t#ifdef VELOCITYTWOCURVE\n\t\t\t\t  position=startVelocity*age;\n\t\t\t\t  lifePosition=vec3(mix(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveMaxX,t),random1.y)\n\t\t\t      \t\t\t\t\t\t\t\t,mix(evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveMaxY,t),random1.z)\n\t\t\t      \t\t\t\t\t\t\t\t,mix(evaluate_curve_total(u_velocityCurveZ,t),evaluate_curve_total(u_velocityCurveMaxZ,t),random1.w));\n\t\t\t#endif\n\t\t\tvec3 finalPosition;\n\t\t\tif(u_spaceType==0){\n\t\t\t  if(u_scalingMode!=2)\n\t\t\t   finalPosition =rotation_quaternions(u_positionScale*(startPosition.xyz+position+lifePosition),worldRotation);\n\t\t\t  else\n\t\t\t   finalPosition =rotation_quaternions(u_positionScale*startPosition.xyz+position+lifePosition,worldRotation);\n\t\t\t}\n\t\t\telse{\n\t\t\t  if(u_scalingMode!=2)\n\t\t\t    finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+position),worldRotation)+lifePosition;\n\t\t\t  else\n\t\t\t    finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+position,worldRotation)+lifePosition;\n\t\t\t}\n\t\t  #else\n\t\t\t position=startVelocity*age;\n\t\t\t vec3 finalPosition;\n\t\t\t if(u_scalingMode!=2)\n\t\t\t   finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+position),worldRotation);\n\t\t\t else\n\t\t\t   finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+position,worldRotation);\n\t\t#endif\n  \n  if(u_simulationSpace==1)\n    finalPosition=finalPosition+startWorldPosition;\n  else if(u_simulationSpace==0) \n    finalPosition=finalPosition+u_worldPosition;\n  \n  finalPosition+=0.5*gravityVelocity*age;\n \n  return finalPosition;\n}\nvec4 computeColor(in vec4 color,in float t)\n{\n\t#ifdef COLOROGRADIENT\n\t  color*=evaluate_curve_color(u_alphaGradient,u_colorGradient,t);\n\t#endif\t\n\t#ifdef COLORTWOGRADIENTS\n\t  color*=mix(evaluate_curve_color(u_alphaGradient,u_colorGradient,t),evaluate_curve_color(u_alphaGradientMax,u_colorGradientMax,t),random0.y);\n\t#endif\n  return color;\n}\nvec2 computeBillbardSize(in vec2 size,in float t)\n{\n\t#ifdef SIZECURVE\n\t\tsize*=evaluate_curve_float(u_sizeCurve,t);\n\t#endif\n\t#ifdef SIZETWOCURVES\n\t  size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),random0.z); \n\t#endif\n\t#ifdef SIZECURVESEPERATE\n\t\tsize*=vec2(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t));\n\t#endif\n\t#ifdef SIZETWOCURVESSEPERATE\n\t  size*=vec2(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),random0.z)\n\t    \t\t\t\t,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),random0.z));\n\t#endif\n\treturn size;\n}\n#ifdef RENDERMESH\nvec3 computeMeshSize(in vec3 size,in float t)\n{\n\t#ifdef SIZECURVE\n\t\tsize*=evaluate_curve_float(u_sizeCurve,t);\n\t#endif\n\t#ifdef SIZETWOCURVES\n\t  size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),random0.z); \n\t#endif\n\t#ifdef SIZECURVESEPERATE\n\t\tsize*=vec3(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveZ,t));\n\t#endif\n\t#ifdef SIZETWOCURVESSEPERATE\n\t  size*=vec3(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),random0.z)\n\t  \t\t\t  \t,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),random0.z)\n\t\t\t\t\t\t\t,mix(evaluate_curve_float(u_sizeCurveZ,t),evaluate_curve_float(u_sizeCurveMaxZ,t),random0.z));\n\t#endif\n\treturn size;\n}\n#endif\nfloat computeRotation(in float rotation,in float age,in float t)\n{ \n\t#ifdef ROTATIONOVERLIFETIME\n\t\t#ifdef ROTATIONCONSTANT\n\t\t\tfloat ageRot=u_rotationConst*age;\n\t        rotation+=ageRot;\n\t\t#endif\n\t\t#ifdef ROTATIONCURVE\n\t\t\trotation+=evaluate_curve_total(u_rotationCurve,t);\n\t\t#endif\n\t\t#ifdef ROTATIONTWOCONSTANTS\n\t\t\tfloat ageRot=mix(u_rotationConst,u_rotationConstMax,random0.w)*age;\n\t    rotation+=ageRot;\n\t  #endif\n\t\t#ifdef ROTATIONTWOCURVES\n\t\t\trotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),random0.w);\n\t\t#endif\n\t#endif\n\t#ifdef ROTATIONSEPERATE\n\t\t#ifdef ROTATIONCONSTANT\n\t\t\tfloat ageRot=u_rotationConstSeprarate.z*age;\n\t        rotation+=ageRot;\n\t\t#endif\n\t\t#ifdef ROTATIONCURVE\n\t\t\trotation+=evaluate_curve_total(u_rotationCurveZ,t);\n\t\t#endif\n\t\t#ifdef ROTATIONTWOCONSTANTS\n\t\t\tfloat ageRot=mix(u_rotationConstSeprarate.z,u_rotationConstMaxSeprarate.z,random0.w)*age;\n\t        rotation+=ageRot;\n\t    #endif\n\t\t#ifdef ROTATIONTWOCURVES\n\t\t\trotation+=mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),random0.w));\n\t\t#endif\n\t#endif\n\treturn rotation;\n}\n#if defined(RENDERMESH)&&(defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE))\nvec3 compute3DRotation(in vec3 rotation,in float age,in float t)\n{ \n\t#ifdef ROTATIONOVERLIFETIME\n\t\t\t#ifdef ROTATIONCONSTANT\n\t\t\t\t\tfloat ageRot=u_rotationConst*age;\n\t\t\t    rotation+=ageRot;\n\t\t\t#endif\n\t\t\t#ifdef ROTATIONCURVE\n\t\t\t\t\trotation+=evaluate_curve_total(u_rotationCurve,t);\n\t\t\t#endif\n\t\t\t#ifdef ROTATIONTWOCONSTANTS\n\t\t\t\t\tfloat ageRot=mix(u_rotationConst,u_rotationConstMax,random0.w)*age;\n\t\t\t    rotation+=ageRot;\n\t\t\t#endif\n\t\t\t#ifdef ROTATIONTWOCURVES\n\t\t\t\t\trotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),random0.w);\n\t\t\t#endif\n\t#endif\n\t#ifdef ROTATIONSEPERATE\n\t\t\t\t#ifdef ROTATIONCONSTANT\n\t\t\t\t\tvec3 ageRot=u_rotationConstSeprarate*age;\n\t\t\t        rotation+=ageRot;\n\t\t\t\t#endif\n\t\t\t\t#ifdef ROTATIONCURVE\n\t\t\t\t\trotation+=vec3(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveZ,t));\n\t\t\t\t#endif\n\t\t\t\t#ifdef ROTATIONTWOCONSTANTS\n\t\t\t\t\tvec3 ageRot=mix(u_rotationConstSeprarate,u_rotationConstMaxSeprarate,random0.w)*age;\n\t\t\t        rotation+=ageRot;\n\t\t\t  #endif\n\t\t\t\t#ifdef ROTATIONTWOCURVES\n\t\t\t\t\trotation+=vec3(mix(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveMaxX,t),random0.w)\n\t\t\t        ,mix(evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveMaxY,t),random0.w)\n\t\t\t        ,mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),random0.w));\n\t\t\t\t#endif\n\t#endif\n\treturn rotation;\n}\n#endif\nvec2 computeUV(in vec2 uv,in float t)\n{ \n\t#ifdef TEXTURESHEETANIMATIONCURVE\n\t\tfloat cycleNormalizedAge=t*u_cycles;\n\t\tfloat uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n\t\tfloat frame=evaluate_curve_frame(u_uvCurve,uvNormalizedAge);\n\t\tuv.x *= u_subUV.x + u_subUV.z;\n\t\tuv.y *= u_subUV.y + u_subUV.w;\n\t\tfloat totalULength=frame*u_subUV.x;\n\t\tfloat floorTotalULength=floor(totalULength);\n\t  uv.x+=totalULength-floorTotalULength;\n\t\tuv.y+=floorTotalULength*u_subUV.y;\n    #endif\n\t#ifdef TEXTURESHEETANIMATIONTWOCURVE\n\t\tfloat cycleNormalizedAge=t*u_cycles;\n\t\tfloat uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n\t  float frame=floor(mix(evaluate_curve_frame(u_uvCurve,uvNormalizedAge),evaluate_curve_frame(u_uvCurveMax,uvNormalizedAge),random1.x));\n\t\tuv.x *= u_subUV.x + u_subUV.z;\n\t\tuv.y *= u_subUV.y + u_subUV.w;\n\t\tfloat totalULength=frame*u_subUV.x;\n\t\tfloat floorTotalULength=floor(totalULength);\n\t  uv.x+=totalULength-floorTotalULength;\n\t\tuv.y+=floorTotalULength*u_subUV.y;\n    #endif\n\treturn uv;\n}";
+    const particle_common = "\nuniform float u_currentTime;\nuniform vec3 u_gravity;\nuniform vec3 u_worldPosition;\nuniform vec4 u_worldRotation;\nuniform bool u_startRotation3D;\nuniform int u_scalingMode;\nuniform vec3 u_positionScale;\nuniform vec3 u_sizeScale;\nuniform vec3 cameraForward;\nuniform vec3 cameraUp;\nuniform float u_lengthScale;\nuniform float u_speeaScale;\nuniform int u_simulationSpace;\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n  uniform int u_spaceType;\n#endif\n#if defined(VELOCITYCONSTANT)||defined(VELOCITYTWOCONSTANT)\n  uniform vec3 u_velocityConst;\n#endif\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)\n  uniform vec2 u_velocityCurveX[4];\n  uniform vec2 u_velocityCurveY[4];\n  uniform vec2 u_velocityCurveZ[4];\n#endif\n#ifdef VELOCITYTWOCONSTANT\n  uniform vec3 u_velocityConstMax;\n#endif\n#ifdef VELOCITYTWOCURVE\n  uniform vec2 u_velocityCurveMaxX[4];\n  uniform vec2 u_velocityCurveMaxY[4];\n  uniform vec2 u_velocityCurveMaxZ[4];\n#endif\n#ifdef COLOROGRADIENT\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n#endif\n#ifdef COLORTWOGRADIENTS\n  uniform vec4 u_colorGradient[4];\n  uniform vec2 u_alphaGradient[4];\n  uniform vec4 u_colorGradientMax[4];\n  uniform vec2 u_alphaGradientMax[4];\n#endif\n#if defined(SIZECURVE)||defined(SIZETWOCURVES)\n  uniform vec2 u_sizeCurve[4];\n#endif\n#ifdef SIZETWOCURVES\n  uniform vec2 u_sizeCurveMax[4];\n#endif\n#if defined(SIZECURVESEPERATE)||defined(SIZETWOCURVESSEPERATE)\n  uniform vec2 u_sizeCurveX[4];\n  uniform vec2 u_sizeCurveY[4];\n  uniform vec2 u_sizeCurveZ[4];\n#endif\n#ifdef SIZETWOCURVESSEPERATE\n  uniform vec2 u_sizeCurveMaxX[4];\n  uniform vec2 u_sizeCurveMaxY[4];\n  uniform vec2 u_sizeCurveMaxZ[4];\n#endif\n#ifdef ROTATIONOVERLIFETIME\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform float u_rotationConst;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform float u_rotationConstMax;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurve[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMax[4];\n  #endif\n#endif\n#ifdef ROTATIONSEPERATE\n  #if defined(ROTATIONCONSTANT)||defined(ROTATIONTWOCONSTANTS)\n    uniform vec3 u_rotationConstSeprarate;\n  #endif\n  #ifdef ROTATIONTWOCONSTANTS\n    uniform vec3 u_rotationConstMaxSeprarate;\n  #endif\n  #if defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\n    uniform vec2 u_rotationCurveX[4];\n    uniform vec2 u_rotationCurveY[4];\n    uniform vec2 u_rotationCurveZ[4];\n\t\tuniform vec2 u_rotationCurveW[4];\n  #endif\n  #ifdef ROTATIONTWOCURVES\n    uniform vec2 u_rotationCurveMaxX[4];\n    uniform vec2 u_rotationCurveMaxY[4];\n    uniform vec2 u_rotationCurveMaxZ[4];\n\t\tuniform vec2 u_rotationCurveMaxW[4];\n  #endif\n#endif\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\n  uniform float u_cycles;\n  uniform vec4 u_subUV;\n  uniform vec2 u_uvCurve[4];\n#endif\n#ifdef TEXTURESHEETANIMATIONTWOCURVE\n  uniform vec2 u_uvCurveMax[4];\n#endif\nvarying float v_discard;\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\n#ifdef RENDERMESH\n\tvarying vec4 v_mesh_color;\n#endif\nvec3 rotation_euler(in vec3 vector,in vec3 euler)\n{\n  float halfPitch = euler.x * 0.5;\n\tfloat halfYaw = euler.y * 0.5;\n\tfloat halfRoll = euler.z * 0.5;\n\tfloat sinPitch = sin(halfPitch);\n\tfloat cosPitch = cos(halfPitch);\n\tfloat sinYaw = sin(halfYaw);\n\tfloat cosYaw = cos(halfYaw);\n\tfloat sinRoll = sin(halfRoll);\n\tfloat cosRoll = cos(halfRoll);\n\tfloat quaX = (cosYaw * sinPitch * cosRoll) + (sinYaw * cosPitch * sinRoll);\n\tfloat quaY = (sinYaw * cosPitch * cosRoll) - (cosYaw * sinPitch * sinRoll);\n\tfloat quaZ = (cosYaw * cosPitch * sinRoll) - (sinYaw * sinPitch * cosRoll);\n\tfloat quaW = (cosYaw * cosPitch * cosRoll) + (sinYaw * sinPitch * sinRoll);\n\t\n\tfloat x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n\tfloat xx = quaX * x;\n  float xy = quaX * y;\n\tfloat xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n\t\n}\nvec3 rotation_axis(in vec3 vector,in vec3 axis, in float angle)\n{\n\tfloat halfAngle = angle * 0.5;\n\tfloat sin = sin(halfAngle);\n\t\n\tfloat quaX = axis.x * sin;\n\tfloat quaY = axis.y * sin;\n\tfloat quaZ = axis.z * sin;\n\tfloat quaW = cos(halfAngle);\n\t\n\tfloat x = quaX + quaX;\n  float y = quaY + quaY;\n  float z = quaZ + quaZ;\n  float wx = quaW * x;\n  float wy = quaW * y;\n  float wz = quaW * z;\n\tfloat xx = quaX * x;\n  float xy = quaX * y;\n\tfloat xz = quaX * z;\n  float yy = quaY * y;\n  float yz = quaY * z;\n  float zz = quaZ * z;\n  return vec3(((vector.x * ((1.0 - yy) - zz)) + (vector.y * (xy - wz))) + (vector.z * (xz + wy)),\n              ((vector.x * (xy + wz)) + (vector.y * ((1.0 - xx) - zz))) + (vector.z * (yz - wx)),\n              ((vector.x * (xz - wy)) + (vector.y * (yz + wx))) + (vector.z * ((1.0 - xx) - yy)));\n}\nvec3 rotation_quaternions(in vec3 v,in vec4 q) \n{\n\treturn v + 2.0 * cross(q.xyz, cross(q.xyz, v) + q.w * v);\n}\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(SIZECURVE)||defined(SIZECURVESEPERATE)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)\nfloat evaluate_curve_float(in vec2 curves[4],in float t)\n{\n\tfloat res;\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec2 curve=curves[i];\n\t\tfloat curTime=curve.x;\n\t\tif(curTime>=t)\n\t\t{\n\t\t\tvec2 lastCurve=curves[i-1];\n\t\t\tfloat lastTime=lastCurve.x;\n\t\t\tfloat tt=(t-lastTime)/(curTime-lastTime);\n\t\t\tres=mix(lastCurve.y,curve.y,tt);\n\t\t\tbreak;\n\t\t}\n\t}\n\treturn res;\n}\n#endif\n#if defined(VELOCITYCURVE)||defined(VELOCITYTWOCURVE)||defined(ROTATIONCURVE)||defined(ROTATIONTWOCURVES)\nfloat evaluate_curve_total(in vec2 curves[4],in float t)\n{\n\tfloat res=0.0;\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec2 curve=curves[i];\n\t\tfloat curTime=curve.x;\n\t\tvec2 lastCurve=curves[i-1];\n\t\tfloat lastValue=lastCurve.y;\n\t\t\n\t\tif(curTime>=t){\n\t\t\tfloat lastTime=lastCurve.x;\n\t\t\tfloat tt=(t-lastTime)/(curTime-lastTime);\n\t\t\tres+=(lastValue+mix(lastValue,curve.y,tt))/2.0*time.x*(t-lastTime);\n\t\t\tbreak;\n\t\t}\n\t\telse{\n\t\t\tres+=(lastValue+curve.y)/2.0*time.x*(curTime-lastCurve.x);\n\t\t}\n\t}\n\treturn res;\n}\n#endif\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)\nvec4 evaluate_curve_color(in vec2 gradientAlphas[4],in vec4 gradientColors[4],in float t)\n{\n\tvec4 overTimeColor;\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec2 gradientAlpha=gradientAlphas[i];\n\t\tfloat alphaKey=gradientAlpha.x;\n\t\tif(alphaKey>=t)\n\t\t{\n\t\t\tvec2 lastGradientAlpha=gradientAlphas[i-1];\n\t\t\tfloat lastAlphaKey=lastGradientAlpha.x;\n\t\t\tfloat age=(t-lastAlphaKey)/(alphaKey-lastAlphaKey);\n\t\t\toverTimeColor.a=mix(lastGradientAlpha.y,gradientAlpha.y,age);\n\t\t\tbreak;\n\t\t}\n\t}\n\t\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec4 gradientColor=gradientColors[i];\n\t\tfloat colorKey=gradientColor.x;\n\t\tif(colorKey>=t)\n\t\t{\n\t\t\tvec4 lastGradientColor=gradientColors[i-1];\n\t\t\tfloat lastColorKey=lastGradientColor.x;\n\t\t\tfloat age=(t-lastColorKey)/(colorKey-lastColorKey);\n\t\t\toverTimeColor.rgb=mix(gradientColors[i-1].yzw,gradientColor.yzw,age);\n\t\t\tbreak;\n\t\t}\n\t}\n\treturn overTimeColor;\n}\n#endif\n#if defined(TEXTURESHEETANIMATIONCURVE)||defined(TEXTURESHEETANIMATIONTWOCURVE)\nfloat evaluate_curve_frame(in vec2 gradientFrames[4],in float t)\n{\n\tfloat overTimeFrame;\n\tfor(int i=1;i<4;i++)\n\t{\n\t\tvec2 gradientFrame=gradientFrames[i];\n\t\tfloat key=gradientFrame.x;\n\t\tif(key>=t)\n\t\t{\n\t\t\tvec2 lastGradientFrame=gradientFrames[i-1];\n\t\t\tfloat lastKey=lastGradientFrame.x;\n\t\t\tfloat age=(t-lastKey)/(key-lastKey);\n\t\t\toverTimeFrame=mix(lastGradientFrame.y,gradientFrame.y,age);\n\t\t\tbreak;\n\t\t}\n\t}\n\treturn floor(overTimeFrame);\n}\n#endif\nvec3 computeVelocity(in float t)\n{\n  vec3 res;\n  #ifdef VELOCITYCONSTANT\n\t res=u_velocityConst; \n  #endif\n  #ifdef VELOCITYCURVE\n     res= vec3(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveZ,t));\n  #endif\n  #ifdef VELOCITYTWOCONSTANT\n\t res=mix(u_velocityConst,u_velocityConstMax,vec3(random1.y,random1.z,random1.w)); \n  #endif\n  #ifdef VELOCITYTWOCURVE\n     res=vec3(mix(evaluate_curve_float(u_velocityCurveX,t),evaluate_curve_float(u_velocityCurveMaxX,t),random1.y),\n\t            mix(evaluate_curve_float(u_velocityCurveY,t),evaluate_curve_float(u_velocityCurveMaxY,t),random1.z),\n\t\t\t\t\t \t\tmix(evaluate_curve_float(u_velocityCurveZ,t),evaluate_curve_float(u_velocityCurveMaxZ,t),random1.w));\n  #endif\n\t\t\t\t\t\n  return res;\n} \nvec3 computePosition(in vec3 startVelocity, in vec3 lifeVelocity,in float age,in float t,vec3 gravityVelocity,vec4 worldRotation)\n{\n   \tvec3 position;\n   \tvec3 lifePosition;\n\t\t#if defined(VELOCITYCONSTANT)||defined(VELOCITYCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n\t\t\t#ifdef VELOCITYCONSTANT\n\t\t\t\t  position=startVelocity*age;\n\t\t\t\t  lifePosition=lifeVelocity*age;\n\t\t\t#endif\n\t\t\t#ifdef VELOCITYCURVE\n\t\t\t\t  position=startVelocity*age;\n\t\t\t\t  lifePosition=vec3(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveZ,t));\n\t\t\t#endif\n\t\t\t#ifdef VELOCITYTWOCONSTANT\n\t\t\t\t  position=startVelocity*age;\n\t\t\t\t  lifePosition=lifeVelocity*age;\n\t\t\t#endif\n\t\t\t#ifdef VELOCITYTWOCURVE\n\t\t\t\t  position=startVelocity*age;\n\t\t\t\t  lifePosition=vec3(mix(evaluate_curve_total(u_velocityCurveX,t),evaluate_curve_total(u_velocityCurveMaxX,t),random1.y)\n\t\t\t      \t\t\t\t\t\t\t\t,mix(evaluate_curve_total(u_velocityCurveY,t),evaluate_curve_total(u_velocityCurveMaxY,t),random1.z)\n\t\t\t      \t\t\t\t\t\t\t\t,mix(evaluate_curve_total(u_velocityCurveZ,t),evaluate_curve_total(u_velocityCurveMaxZ,t),random1.w));\n\t\t\t#endif\n\t\t\tvec3 finalPosition;\n\t\t\tif(u_spaceType==0){\n\t\t\t  if(u_scalingMode!=2)\n\t\t\t   finalPosition =rotation_quaternions(u_positionScale*(startPosition.xyz+position+lifePosition),worldRotation);\n\t\t\t  else\n\t\t\t   finalPosition =rotation_quaternions(u_positionScale*startPosition.xyz+position+lifePosition,worldRotation);\n\t\t\t}\n\t\t\telse{\n\t\t\t  if(u_scalingMode!=2)\n\t\t\t    finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+position),worldRotation)+lifePosition;\n\t\t\t  else\n\t\t\t    finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+position,worldRotation)+lifePosition;\n\t\t\t}\n\t\t  #else\n\t\t\t position=startVelocity*age;\n\t\t\t vec3 finalPosition;\n\t\t\t if(u_scalingMode!=2)\n\t\t\t   finalPosition = rotation_quaternions(u_positionScale*(startPosition.xyz+position),worldRotation);\n\t\t\t else\n\t\t\t   finalPosition = rotation_quaternions(u_positionScale*startPosition.xyz+position,worldRotation);\n\t\t#endif\n  \n  if(u_simulationSpace==1)\n    finalPosition=finalPosition+startWorldPosition;\n  else if(u_simulationSpace==0) \n    finalPosition=finalPosition+u_worldPosition;\n  \n  finalPosition+=0.5*gravityVelocity*age;\n \n  return finalPosition;\n}\nvec4 computeColor(in vec4 color,in float t)\n{\n\t#ifdef COLOROGRADIENT\n\t  color*=evaluate_curve_color(u_alphaGradient,u_colorGradient,t);\n\t#endif\t\n\t#ifdef COLORTWOGRADIENTS\n\t  color*=mix(evaluate_curve_color(u_alphaGradient,u_colorGradient,t),evaluate_curve_color(u_alphaGradientMax,u_colorGradientMax,t),random0.y);\n\t#endif\n  return color;\n}\nvec2 computeBillbardSize(in vec2 size,in float t)\n{\n\t#ifdef SIZECURVE\n\t\tsize*=evaluate_curve_float(u_sizeCurve,t);\n\t#endif\n\t#ifdef SIZETWOCURVES\n\t  size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),random0.z); \n\t#endif\n\t#ifdef SIZECURVESEPERATE\n\t\tsize*=vec2(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t));\n\t#endif\n\t#ifdef SIZETWOCURVESSEPERATE\n\t  size*=vec2(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),random0.z)\n\t    \t\t\t\t,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),random0.z));\n\t#endif\n\treturn size;\n}\n#ifdef RENDERMESH\nvec3 computeMeshSize(in vec3 size,in float t)\n{\n\t#ifdef SIZECURVE\n\t\tsize*=evaluate_curve_float(u_sizeCurve,t);\n\t#endif\n\t#ifdef SIZETWOCURVES\n\t  size*=mix(evaluate_curve_float(u_sizeCurve,t),evaluate_curve_float(u_sizeCurveMax,t),random0.z); \n\t#endif\n\t#ifdef SIZECURVESEPERATE\n\t\tsize*=vec3(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveZ,t));\n\t#endif\n\t#ifdef SIZETWOCURVESSEPERATE\n\t  size*=vec3(mix(evaluate_curve_float(u_sizeCurveX,t),evaluate_curve_float(u_sizeCurveMaxX,t),random0.z)\n\t  \t\t\t  \t,mix(evaluate_curve_float(u_sizeCurveY,t),evaluate_curve_float(u_sizeCurveMaxY,t),random0.z)\n\t\t\t\t\t\t\t,mix(evaluate_curve_float(u_sizeCurveZ,t),evaluate_curve_float(u_sizeCurveMaxZ,t),random0.z));\n\t#endif\n\treturn size;\n}\n#endif\nfloat computeRotation(in float rotation,in float age,in float t)\n{ \n\t#ifdef ROTATIONOVERLIFETIME\n\t\t#ifdef ROTATIONCONSTANT\n\t\t\tfloat ageRot=u_rotationConst*age;\n\t        rotation+=ageRot;\n\t\t#endif\n\t\t#ifdef ROTATIONCURVE\n\t\t\trotation+=evaluate_curve_total(u_rotationCurve,t);\n\t\t#endif\n\t\t#ifdef ROTATIONTWOCONSTANTS\n\t\t\tfloat ageRot=mix(u_rotationConst,u_rotationConstMax,random0.w)*age;\n\t    rotation+=ageRot;\n\t  #endif\n\t\t#ifdef ROTATIONTWOCURVES\n\t\t\trotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),random0.w);\n\t\t#endif\n\t#endif\n\t#ifdef ROTATIONSEPERATE\n\t\t#ifdef ROTATIONCONSTANT\n\t\t\tfloat ageRot=u_rotationConstSeprarate.z*age;\n\t        rotation+=ageRot;\n\t\t#endif\n\t\t#ifdef ROTATIONCURVE\n\t\t\trotation+=evaluate_curve_total(u_rotationCurveZ,t);\n\t\t#endif\n\t\t#ifdef ROTATIONTWOCONSTANTS\n\t\t\tfloat ageRot=mix(u_rotationConstSeprarate.z,u_rotationConstMaxSeprarate.z,random0.w)*age;\n\t        rotation+=ageRot;\n\t    #endif\n\t\t#ifdef ROTATIONTWOCURVES\n\t\t\trotation+=mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),random0.w));\n\t\t#endif\n\t#endif\n\treturn rotation;\n}\n#if defined(RENDERMESH)&&(defined(ROTATIONOVERLIFETIME)||defined(ROTATIONSEPERATE))\nvec3 compute3DRotation(in vec3 rotation,in float age,in float t)\n{ \n\t#ifdef ROTATIONOVERLIFETIME\n\t\t\t#ifdef ROTATIONCONSTANT\n\t\t\t\t\tfloat ageRot=u_rotationConst*age;\n\t\t\t    rotation+=ageRot;\n\t\t\t#endif\n\t\t\t#ifdef ROTATIONCURVE\n\t\t\t\t\trotation+=evaluate_curve_total(u_rotationCurve,t);\n\t\t\t#endif\n\t\t\t#ifdef ROTATIONTWOCONSTANTS\n\t\t\t\t\tfloat ageRot=mix(u_rotationConst,u_rotationConstMax,random0.w)*age;\n\t\t\t    rotation+=ageRot;\n\t\t\t#endif\n\t\t\t#ifdef ROTATIONTWOCURVES\n\t\t\t\t\trotation+=mix(evaluate_curve_total(u_rotationCurve,t),evaluate_curve_total(u_rotationCurveMax,t),random0.w);\n\t\t\t#endif\n\t#endif\n\t#ifdef ROTATIONSEPERATE\n\t\t\t\t#ifdef ROTATIONCONSTANT\n\t\t\t\t\tvec3 ageRot=u_rotationConstSeprarate*age;\n\t\t\t        rotation+=ageRot;\n\t\t\t\t#endif\n\t\t\t\t#ifdef ROTATIONCURVE\n\t\t\t\t\trotation+=vec3(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveZ,t));\n\t\t\t\t#endif\n\t\t\t\t#ifdef ROTATIONTWOCONSTANTS\n\t\t\t\t\tvec3 ageRot=mix(u_rotationConstSeprarate,u_rotationConstMaxSeprarate,random0.w)*age;\n\t\t\t        rotation+=ageRot;\n\t\t\t  #endif\n\t\t\t\t#ifdef ROTATIONTWOCURVES\n\t\t\t\t\trotation+=vec3(mix(evaluate_curve_total(u_rotationCurveX,t),evaluate_curve_total(u_rotationCurveMaxX,t),random0.w)\n\t\t\t        ,mix(evaluate_curve_total(u_rotationCurveY,t),evaluate_curve_total(u_rotationCurveMaxY,t),random0.w)\n\t\t\t        ,mix(evaluate_curve_total(u_rotationCurveZ,t),evaluate_curve_total(u_rotationCurveMaxZ,t),random0.w));\n\t\t\t\t#endif\n\t#endif\n\treturn rotation;\n}\n#endif\nvec2 computeUV(in vec2 uv,in float t)\n{ \n\t#ifdef TEXTURESHEETANIMATIONCURVE\n\t\tfloat cycleNormalizedAge=t*u_cycles;\n\t\tfloat uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n\t\tfloat frame=evaluate_curve_frame(u_uvCurve,uvNormalizedAge);\n\t\tuv.x *= u_subUV.x + u_subUV.z;\n\t\tuv.y *= u_subUV.y + u_subUV.w;\n\t\tfloat totalULength=frame*u_subUV.x;\n\t\tfloat floorTotalULength=floor(totalULength);\n\t  uv.x+=totalULength-floorTotalULength;\n\t\tuv.y+=floorTotalULength*u_subUV.y;\n    #endif\n\t#ifdef TEXTURESHEETANIMATIONTWOCURVE\n\t\tfloat cycleNormalizedAge=t*u_cycles;\n\t\tfloat uvNormalizedAge=cycleNormalizedAge-floor(cycleNormalizedAge);\n\t  float frame=floor(mix(evaluate_curve_frame(u_uvCurve,uvNormalizedAge),evaluate_curve_frame(u_uvCurveMax,uvNormalizedAge),random1.x));\n\t\tuv.x *= u_subUV.x + u_subUV.z;\n\t\tuv.y *= u_subUV.y + u_subUV.w;\n\t\tfloat totalULength=frame*u_subUV.x;\n\t\tfloat floorTotalULength=floor(totalULength);\n\t  uv.x+=totalULength-floorTotalULength;\n\t\tuv.y+=floorTotalULength*u_subUV.y;\n    #endif\n\treturn uv;\n}";
     const premultiplied_alpha_fragment = "#ifdef PREMULTIPLIED_ALPHA\n\tgl_FragColor.rgb *= gl_FragColor.a;\n#endif\n";
     const project_vertex = "vec4 mvPosition = modelViewMatrix * vec4( transformed, 1.0 );\ngl_Position = projectionMatrix * mvPosition;\n";
     const roughnessmap_fragment = "float roughnessFactor = roughness;\n#ifdef USE_ROUGHNESSMAP\n\tvec4 texelRoughness = texture2D( roughnessMap, vUv );\n\troughnessFactor *= texelRoughness.g;\n#endif\n";
@@ -11172,17 +11122,123 @@ declare namespace egret3d.webgl {
 }
 declare namespace paper {
     /**
-     * 已丢失或不支持的组件数据备份。
+     * 脚本组件。
+     * - 为了开发的便捷，允许使用脚本组件实现组件生命周期。
+     * - 生命周期的顺序如下：
+     * - onAwake();
+     * - onReset();
+     * - onEnable();
+     * - onStart();
+     * - onFixedUpdate();
+     * - onUpdate();
+     * - onAnimationEvent();
+     * - onLateUpdate();
+     * - onBeforeRender();
+     * - onDisable();
+     * - onDestroy();
      */
-    class MissingComponent extends BaseComponent {
+    abstract class Behaviour extends BaseComponent {
         /**
-         * 丢失的组件类名
+         * @private
          */
-        readonly missingClass: string;
+        _isReseted: boolean;
         /**
-         * 已丢失或不支持的组件数据。
+         * @private
          */
-        missingObject: any | null;
+        _isAwaked: boolean;
+        /**
+         * @private
+         */
+        _isStarted: boolean;
+        /**
+         * @private
+         */
+        _dispatchEnabledEvent(value: boolean): void;
+        /**
+         * 该组件被初始化时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         * @param config 该组件被添加时可以传递的初始化数据。
+         * @see paper.GameObject#addComponent()
+         */
+        onAwake?(config?: any): void;
+        /**
+         * TODO
+         */
+        onReset?(): void;
+        /**
+         * 该组件或所属的实体被激活时调用。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onEnable?(): void;
+        /**
+         * 该组件开始运行时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         */
+        onStart?(): void;
+        /**
+         * 程序运行时以固定间隔被执行。
+         * @param currentTimes 本帧被执行的计数。
+         * @param totalTimes 本帧被执行的总数。
+         * @see paper.Clock
+         */
+        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
+        /**
+         *
+         */
+        onTriggerEnter?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerStay?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerExit?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionEnter?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionStay?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionExit?(collider: any): void;
+        /**
+         * 程序运行时每帧执行。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onUpdate?(deltaTime: number): void;
+        /**
+         *
+         */
+        onAnimationEvent?(animationEvent: egret3d.AnimationEvent): void;
+        /**
+         * 程序运行时每帧执行。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onLateUpdate?(deltaTime: number): void;
+        /**
+         * 该组件的实体拥有的渲染组件被渲染时执行。
+         * - 不能在该周期更改渲染组件的材质或其他可能引起绘制信息改变的操作。
+         */
+        onBeforeRender?(): boolean;
+        /**
+         * 该组件或所属的实体被禁用时执行。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onDisable?(): void;
+        /**
+         * 该组件或所属的实体被销毁时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         * @see paper.GameObject#removeComponent()
+         * @see paper.GameObject#destroy()
+         */
+        onDestroy?(): void;
     }
 }
 declare namespace egret3d.webgl {
@@ -11247,10 +11303,30 @@ interface Window {
 }
 declare namespace egret3d {
     /**
-     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     * 相机渲染上下文。
      */
-    abstract class CameraPostprocessing extends paper.BaseComponent {
-        abstract onRender(camera: Camera): void;
-        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
+    class CameraRenderContext {
+        /**
+         *
+         */
+        logDepthBufFC: number;
+        private readonly _camera;
+        private readonly _drawCallCollecter;
+        private readonly _cameraAndLightCollecter;
+        /**
+         * 禁止实例化。
+         */
+        private constructor();
+        /**
+         * 所有非透明的, 按照从近到远排序
+         */
+        private _sortOpaque(a, b);
+        /**
+         * 所有透明的，按照从远到近排序
+         */
+        private _sortFromFarToNear(a, b);
+        private _shadowFrustumCulling();
+        private _frustumCulling();
+        private _updateLights();
     }
 }

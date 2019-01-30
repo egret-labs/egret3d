@@ -137,7 +137,6 @@ var examples;
                     var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.SPHERE, "Bulb");
                     gameObject.renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
                         .setColor("emissive" /* Emissive */, 0xFFFFEE)
-                        .setFloat("emissiveIntensity" /* EmissiveIntensity */, 1.0)
                         .setColor(0x000000);
                     gameObject.transform.setLocalScale(0.04).setParent(pointLight.gameObject.transform);
                     //

@@ -105,8 +105,6 @@ var examples;
                 mainCamera.near = 1.0;
                 mainCamera.backgroundColor.fromHex(0x000000);
                 mainCamera.transform.setLocalPosition(0.0, 40.0, -40 * 3.5).lookAt(egret3d.Vector3.ZERO);
-                //
-                // paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent)!.select(mainCamera.gameObject);
             }
             {
                 paper.Scene.activeScene.ambientColor.fromHex(0x000000);
@@ -133,32 +131,34 @@ var examples;
                 textureDiffue.gltfTexture.extensions.paper.anisotropy = 4;
                 textureBump.gltfTexture.extensions.paper.anisotropy = 4;
                 textureRoughness.gltfTexture.extensions.paper.anisotropy = 4;
-                var gameObject = egret3d.DefaultMeshes.createObject(torusKnotMesh, "Game Object");
-                var renderer = gameObject.renderer;
-                renderer.castShadows = true;
-                renderer.receiveShadows = true;
-                renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
-                    .setFloat("bumpScale" /* BumpScale */, -0.05)
-                    .setFloat("metalness" /* Metalness */, 0.9)
-                    .setFloat("roughness" /* Roughness */, 0.8)
-                    .setColor(egret3d.Color.WHITE)
-                    .setTexture(textureDiffue)
-                    .setTexture("bumpMap" /* BumpMap */, textureBump)
-                    .setTexture("roughnessMap" /* RoughnessMap */, textureRoughness)
-                    .setTexture("envMap" /* EnvMap */, textureEnv)
-                    .setUVTransform(egret3d.Matrix3.create().fromUVTransform(0.0, 0.0, 9.0, 0.5, 0.0, 0.0, 0.0).release())
-                    .addDefine("PREMULTIPLIED_ALPHA" /* PREMULTIPLIED_ALPHA */);
+                var gameObject = egret3d.creater.createGameObject("Torus Knot", {
+                    mesh: torusKnotMesh,
+                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
+                        .setFloat("bumpScale" /* BumpScale */, -0.05)
+                        .setFloat("metalness" /* Metalness */, 0.9)
+                        .setFloat("roughness" /* Roughness */, 0.8)
+                        .setColor(egret3d.Color.WHITE)
+                        .setTexture(textureDiffue)
+                        .setTexture("bumpMap" /* BumpMap */, textureBump)
+                        .setTexture("roughnessMap" /* RoughnessMap */, textureRoughness)
+                        .setTexture("envMap" /* EnvMap */, textureEnv)
+                        .setUVTransform(egret3d.Matrix3.create().fromUVTransform(0.0, 0.0, 9.0, 0.5, 0.0, 0.0, 0.0).release())
+                        .addDefine("PREMULTIPLIED_ALPHA" /* PREMULTIPLIED_ALPHA */),
+                    castShadows: true,
+                    receiveShadows: true,
+                });
                 gameObject.addComponent(behaviors.Rotater).speed.set(0.0, -0.01, 0.0);
             }
             {
-                var gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Background");
-                var renderer = gameObject.renderer;
-                renderer.receiveShadows = true;
-                renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
-                    .setFloat("metalness" /* Metalness */, 0.0)
-                    .setFloat("roughness" /* Roughness */, 1.0)
-                    .setColor(0x888888)
-                    .setCullFace(true, 2305 /* CCW */, 1028 /* Front */);
+                var gameObject = egret3d.creater.createGameObject("Background", {
+                    mesh: egret3d.DefaultMeshes.CUBE,
+                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_STANDARD)
+                        .setFloat("metalness" /* Metalness */, 0.0)
+                        .setFloat("roughness" /* Roughness */, 1.0)
+                        .setColor(0x888888)
+                        .setCullFace(true, 2305 /* CCW */, 1028 /* Front */),
+                    receiveShadows: true,
+                });
                 gameObject.transform.setLocalPosition(0.0, 50.0, 0.0).setLocalScale(200.0);
             }
             //

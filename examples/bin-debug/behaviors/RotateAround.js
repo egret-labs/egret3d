@@ -28,7 +28,7 @@ var behaviors;
             _this._radian = 0.0;
             return _this;
         }
-        RotateAround.prototype.onUpdate = function (deltaTime) {
+        RotateAround.prototype.onLateUpdate = function (deltaTime) {
             var transform = this.gameObject.transform;
             var position = transform.position;
             var target = this.lookAtPoint;

@@ -26,8 +26,8 @@ var behaviors;
             _this.raycastInfo = egret3d.RaycastInfo.create();
             _this._lineMesh = null;
             _this._normalMesh = null;
-            _this._line = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Line");
-            _this._normal = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.LINE_Z, "Normal");
+            _this._line = egret3d.creater.createGameObject("Line", { mesh: egret3d.DefaultMeshes.LINE_Z, material: egret3d.DefaultMaterials.LINEDASHED });
+            _this._normal = egret3d.creater.createGameObject("Normal", { mesh: egret3d.DefaultMeshes.LINE_Z, material: egret3d.DefaultMaterials.LINEDASHED });
             return _this;
         }
         BaseRaycast.prototype.onAwake = function () {

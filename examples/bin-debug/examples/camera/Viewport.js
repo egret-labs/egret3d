@@ -120,17 +120,18 @@ var examples;
                         vertices[i + 2] = egret3d.math.randFloatSpread(2000.0);
                     }
                     //
-                    var gameObject = egret3d.DefaultMeshes.createObject(mesh, "Stars");
-                    gameObject.renderer.material = egret3d.Material.create(egret3d.DefaultShaders.POINTS)
-                        .setColor(0x888888);
+                    egret3d.creater.createGameObject("Stars", {
+                        mesh: mesh,
+                        material: egret3d.Material.create(egret3d.DefaultShaders.POINTS).setColor(0x888888)
+                    });
                 }
                 {
                     var meshA = egret3d.MeshBuilder.createSphere(100.0, 0.0, 0.0, 0.0, 16, 8).addWireframeSubMesh(1);
                     var meshB = egret3d.MeshBuilder.createSphere(50.0, 0.0, 0.0, 0.0, 16, 8).addWireframeSubMesh(1);
                     var meshC = egret3d.MeshBuilder.createSphere(5.0, 0.0, 0.0, 0.0, 16, 8).addWireframeSubMesh(1);
-                    var gameObjectA = this._gameObjectA = egret3d.DefaultMeshes.createObject(meshA, "Object A");
-                    var gameObjectB = this._gameObjectB = egret3d.DefaultMeshes.createObject(meshB, "Object B");
-                    var gameObjectC = this._gameObjectC = egret3d.DefaultMeshes.createObject(meshC, "Object C");
+                    var gameObjectA = this._gameObjectA = egret3d.creater.createGameObject("Object A", { mesh: meshA });
+                    var gameObjectB = this._gameObjectB = egret3d.creater.createGameObject("Object B", { mesh: meshB });
+                    var gameObjectC = this._gameObjectC = egret3d.creater.createGameObject("Object C", { mesh: meshC });
                     gameObjectA.renderer.materials = [null, egret3d.DefaultMaterials.MESH_BASIC.clone().setColor(egret3d.Color.WHITE)];
                     gameObjectB.renderer.materials = [null, egret3d.DefaultMaterials.MESH_BASIC.clone().setColor(egret3d.Color.GREEN)];
                     gameObjectC.renderer.materials = [null, egret3d.DefaultMaterials.MESH_BASIC.clone().setColor(egret3d.Color.BLUE)];

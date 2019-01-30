@@ -17,32 +17,37 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 };
 var components;
 (function (components) {
-    var ThermaVisionPostProcess = (function (_super) {
-        __extends(ThermaVisionPostProcess, _super);
-        function ThermaVisionPostProcess() {
+    var ThermalVisionPostProcess2 = (function (_super) {
+        __extends(ThermalVisionPostProcess2, _super);
+        function ThermalVisionPostProcess2() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.thermaValue = 0.5;
-            _this._material = egret3d.Material.create(RES.getRes("shaders/thermaVision/thermaVision.shader.json"));
+            _this.hotLight = 3.0;
+            _this._material = egret3d.Material.create(RES.getRes("shaders/thermalVision2/thermalVision2.shader.json"));
+            _this._rnd = egret3d.Vector2.create();
             return _this;
         }
-        ThermaVisionPostProcess.prototype.initialize = function () {
+        ThermalVisionPostProcess2.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
+            this._material.setTexture("heatLookupMap", RES.getRes("textures/HeatLookup.png"));
+            this._material.setTexture("noiseMap", RES.getRes("textures/HeatNoise.png"));
         };
-        ThermaVisionPostProcess.prototype.uninitialize = function () {
+        ThermalVisionPostProcess2.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
         };
-        ThermaVisionPostProcess.prototype.onRender = function (camera) {
+        ThermalVisionPostProcess2.prototype.onRender = function (camera) {
             //
+            this._rnd.set(Math.random(), Math.random());
             var material = this._material;
-            material.setFloat("thermaValue", this.thermaValue);
+            material.setVector2("rnd", this._rnd);
+            material.setFloat("hotLight", this.hotLight);
             material.setTexture(camera.postprocessingRenderTarget);
             this.blit(camera.postprocessingRenderTarget, material);
         };
         __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0, maximum: 1 })
-        ], ThermaVisionPostProcess.prototype, "thermaValue", void 0);
-        return ThermaVisionPostProcess;
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0, maximum: 5 })
+        ], ThermalVisionPostProcess2.prototype, "hotLight", void 0);
+        return ThermalVisionPostProcess2;
     }(egret3d.CameraPostprocessing));
-    components.ThermaVisionPostProcess = ThermaVisionPostProcess;
-    __reflect(ThermaVisionPostProcess.prototype, "components.ThermaVisionPostProcess");
+    components.ThermalVisionPostProcess2 = ThermalVisionPostProcess2;
+    __reflect(ThermalVisionPostProcess2.prototype, "components.ThermalVisionPostProcess2");
 })(components || (components = {}));

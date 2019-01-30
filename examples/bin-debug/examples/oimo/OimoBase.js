@@ -53,7 +53,7 @@ var examples;
             }
             OimoBase.prototype.start = function () {
                 return __awaiter(this, void 0, void 0, function () {
-                    var gameObject, light, groundSize, gameObject, renderer, rigidbody, boxCollider, i, gameObject, cubeSize, renderer, rigidbody, boxCollider;
+                    var gameObject, light, groundSize, gameObject, rigidbody, boxCollider, i, cubeSize, gameObject, rigidbody, boxCollider;
                     return __generator(this, function (_a) {
                         // Create camera.
                         egret3d.Camera.main;
@@ -69,12 +69,12 @@ var examples;
                         }
                         {
                             groundSize = egret3d.Vector3.create(10.0, 0.1, 10.0);
-                            gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Ground");
+                            gameObject = egret3d.creater.createGameObject("Ground", {
+                                mesh: egret3d.DefaultMeshes.CUBE,
+                                material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT),
+                                receiveShadows: true,
+                            });
                             gameObject.transform.setLocalScale(groundSize);
-                            renderer = gameObject.getComponent(egret3d.MeshRenderer);
-                            // renderer.castShadows = true;
-                            renderer.receiveShadows = true;
-                            renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
                             rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);
                             boxCollider = gameObject.addComponent(egret3d.oimo.BoxCollider);
                             rigidbody.type = 1 /* STATIC */;
@@ -83,14 +83,15 @@ var examples;
                         }
                         {
                             for (i = 0; i < 100; i++) {
-                                gameObject = egret3d.DefaultMeshes.createObject(egret3d.DefaultMeshes.CUBE, "Cube_" + i);
-                                gameObject.transform.setLocalPosition(Math.random() * 8.0 - 4.0, Math.random() * 8.0 + 4.0, Math.random() * 8.0 - 4.0);
                                 cubeSize = egret3d.Vector3.create(Math.random() * 1.5 + 0.5, Math.random() * 1.5 + 0.5, Math.random() * 1.5 + 0.5).release();
+                                gameObject = egret3d.creater.createGameObject("Cube_" + i, {
+                                    mesh: egret3d.DefaultMeshes.CUBE,
+                                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT),
+                                    castShadows: true,
+                                    receiveShadows: true,
+                                });
+                                gameObject.transform.setLocalPosition(Math.random() * 8.0 - 4.0, Math.random() * 8.0 + 4.0, Math.random() * 8.0 - 4.0);
                                 gameObject.transform.setLocalScale(cubeSize);
-                                renderer = gameObject.getComponent(egret3d.MeshRenderer);
-                                renderer.castShadows = true;
-                                renderer.receiveShadows = true;
-                                renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
                                 rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);
                                 boxCollider = gameObject.addComponent(egret3d.oimo.BoxCollider);
                                 boxCollider.size = cubeSize;

@@ -89,12 +89,16 @@ var examples;
                 {
                     var sphereMesh = egret3d.MeshBuilder.createSphere(100.0, 0.0, 0.0, 0.0, 20.0, 20.0);
                     var coneMesh = egret3d.MeshBuilder.createCylinder(0.0, 10.0, 100.0).applyMatrix(egret3d.Matrix4.create().fromRotationX(Math.PI * 0.5));
-                    var sphere = egret3d.DefaultMeshes.createObject(sphereMesh, "Sphere");
-                    sphere.renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL);
+                    var sphere = egret3d.creater.createGameObject("Sphere", {
+                        mesh: sphereMesh,
+                        material: egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL)
+                    });
                     sphere.addComponent(behaviors.Wander).radius = 2000.0;
                     for (var i = 0; i < 1000; ++i) {
-                        var cone = egret3d.DefaultMeshes.createObject(coneMesh, "Cone " + i);
-                        cone.renderer.material = egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL);
+                        var cone = egret3d.creater.createGameObject("Cone " + i, {
+                            mesh: coneMesh,
+                            material: egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL)
+                        });
                         cone.transform
                             .setLocalPosition(Math.random() * 4000.0 - 2000.0, Math.random() * 4000.0 - 2000.0, Math.random() * 4000.0 - 2000.0)
                             .setLocalScale(Math.random() * 4.0 + 2.0);
