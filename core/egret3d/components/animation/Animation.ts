@@ -171,6 +171,8 @@ namespace egret3d {
                         }
                     }
                 }
+                //
+                this._lastAnimationLayer = animationLayer;
 
                 return null;
             }

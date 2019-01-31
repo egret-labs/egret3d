@@ -630,17 +630,16 @@ var paper;
         }
     }
     paper.allowMultiple = allowMultiple;
-    /**
-     * 通过装饰器标记组件（或子类）不允许在同一实体上添加多个实例。
-     * @param componentClass 组件类。
-     */
-    function notAllowMultiple(componentClass) {
-        if (!componentClass.__isSingleton) {
-            componentClass.allowMultiple = false;
-            componentClass.notAllowMultiple = true;
-        }
-    }
-    paper.notAllowMultiple = notAllowMultiple;
+    // /** TODO
+    //  * 通过装饰器标记组件（或子类）不允许在同一实体上添加多个实例。
+    //  * @param componentClass 组件类。
+    //  */
+    // export function notAllowMultiple(componentClass: IComponentClass<BaseComponent>) {
+    //     if (!componentClass.__isSingleton) {
+    //         (componentClass.allowMultiple as boolean) = false;
+    //         (componentClass.notAllowMultiple as boolean) = true;
+    //     }
+    // }
     /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
@@ -19409,6 +19408,8 @@ var egret3d;
                         }
                     }
                 }
+                //
+                this._lastAnimationLayer = animationLayer;
                 return null;
             }
             //
@@ -29149,8 +29150,8 @@ var egret3d;
             };
             WebGLRenderSystem.prototype._updateGlobalUniforms = function (program, camera, drawCall, renderer, currentScene, forceUpdate) {
                 var webgl = webgl_15.WebGLRenderState.webgl;
-                var renderState = this._renderState;
                 var cameraAndLightCollecter = this._cameraAndLightCollecter;
+                var renderState = this._renderState;
                 var globalUniforms = program.globalUniforms;
                 var modelUniforms = program.modelUniforms;
                 var context = camera.context;
@@ -29520,7 +29521,7 @@ var egret3d;
                 // Skybox.
                 var skyBox = camera.gameObject.getComponent(egret3d.SkyBox);
                 if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
-                    var drawCall = this._drawCallCollecter.skyBox;
+                    var skyBoxDrawCall = this._drawCallCollecter.skyBox;
                     var material_1 = skyBox.material;
                     var texture = (material_1.shader === egret3d.DefaultShaders.CUBE) ? material_1.getTexture("tCube" /* CubeMap */) :
                         ((material_1.shader === egret3d.DefaultShaders.EQUIRECT) ? material_1.getTexture("tEquirect" /* EquirectMap */) : material_1.getTexture());
@@ -29528,12 +29529,12 @@ var egret3d;
                         renderState._updateTextureDefines("envMap" /* EnvMap */, texture);
                         renderState.caches.skyBoxTexture = texture;
                     }
-                    if (!drawCall.mesh) {
+                    if (!skyBoxDrawCall.mesh) {
                         // DefaultMeshes.SPHERE;
-                        drawCall.mesh = egret3d.DefaultMeshes.CUBE;
+                        skyBoxDrawCall.mesh = egret3d.DefaultMeshes.CUBE;
                     }
-                    drawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
-                    this.draw(drawCall, material_1);
+                    skyBoxDrawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
+                    this.draw(skyBoxDrawCall, material_1);
                 }
                 else if (renderState.caches.skyBoxTexture) {
                     renderState._updateTextureDefines("envMap" /* EnvMap */, null);
