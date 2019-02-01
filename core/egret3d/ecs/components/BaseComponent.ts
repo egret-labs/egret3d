@@ -5,7 +5,7 @@ namespace paper {
      * - 所有组件的基类。
      * - 在纯粹的实体组件系统中，组件通常应只包含数据，不应有业务逻辑、行为和生命周期。
      */
-    export abstract class BaseComponent extends BaseObject {
+    export abstract class BaseComponent extends BaseObject implements IComponent {
         /**
          * 该组件的实例是否在编辑模式拥有生命周期。
          * @internal
@@ -34,11 +34,7 @@ namespace paper {
          * 该组件实例依赖的其他前置组件。
          * @internal
          */
-        public static readonly requireComponents: IComponentClass<BaseComponent>[] | null = null;
-        /**
-         * @internal
-         */
-        public static readonly __isAbstract: any = BaseComponent;
+        public static readonly requireComponents: IComponentClass<IComponent>[] | null = null;
         /**
          * 该组件实例是否为单例组件。
          * @internal
@@ -55,18 +51,22 @@ namespace paper {
          */
         public static readonly __index: int = -1;
         /**
+         * @internal
+         */
+        public static readonly __isAbstract: IComponentClass<IComponent> = BaseComponent as any;
+        /**
          * 所有已注册的组件类。
          */
-        private static readonly _allComponents: IComponentClass<BaseComponent>[] = [];
+        private static readonly _allComponents: IComponentClass<IComponent>[] = [];
         /**
          * 所有已注册的单例组件类。
          */
-        private static readonly _allSingletonComponents: IComponentClass<BaseComponent>[] = [];
+        private static readonly _allSingletonComponents: IComponentClass<IComponent>[] = [];
         /**
          * @internal
          */
         public static __onRegister() {
-            if (!BaseObject.__onRegister.call(this) || this.__isAbstract === this) { // Super.
+            if (!BaseObject.__onRegister.call(this) || this.__isAbstract === this as any) { // Super.
                 return false;
             }
 
@@ -147,17 +147,10 @@ namespace paper {
                 componentClass.onComponentDisabled.dispatch(this);
             }
         }
-        /**
-         * 添加组件后，组件内部初始化时执行。
-         * - 重写此方法时，必须调用 `super.initialize()`。
-         * @param config 实体添加该组件时可以传递的初始化数据。（注意：如果添加该组件时，实体未处于激活状态，则该属性无效）
-         */
-        public initialize(config?: any): void {
+
+        public initialize(): void {
         }
-        /**
-         * 移除组件后，组件内部卸载时执行。
-         * - 重写此方法时，必须调用 `super.uninitialize()`。
-         */
+
         public uninitialize(): void {
         }
         /**

@@ -158,7 +158,7 @@ namespace paper {
                 else {
                     if (hasLink) {
                         const componentExtras = componentSource[KEY_EXTRAS] as ComponentExtras;
-                        const extras = source![KEY_EXTRAS] as GameObjectExtras;
+                        const extras = source![KEY_EXTRAS] as EntityExtras;
                         const linkedID = componentExtras.linkedID!;
                         const prefabDeserializer = this._deserializers[extras.prefab ? source!.uuid : extras.rootID!];
                         componentTarget = prefabDeserializer.components[linkedID];
@@ -365,9 +365,9 @@ namespace paper {
                             this._rootTarget = paper.Application.sceneManager.activeScene; // TODO
                         }
 
-                        const hasLink = KEY_EXTRAS in source && (source[KEY_EXTRAS] as GameObjectExtras).linkedID;
+                        const hasLink = KEY_EXTRAS in source && (source[KEY_EXTRAS] as EntityExtras).linkedID;
                         if (hasLink) {
-                            const extras = source[KEY_EXTRAS] as GameObjectExtras;
+                            const extras = source[KEY_EXTRAS] as EntityExtras;
                             const linkedID = extras.linkedID!;
                             const prefab = extras.prefab;
 

@@ -13,6 +13,14 @@ declare namespace paper {
         //Layer-auto-replace-start
         //Layer-auto-replace-end
     }
+    /**
+     * 
+     */
+    export const enum Flag {
+        DEBUG = 0,
+        RELEASE = 0,
+        CHECKER = 0,
+    }
 }
 
 declare namespace egret3d {

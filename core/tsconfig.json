@@ -25,7 +25,7 @@
 
         "libs/paper/customenum.ts",
 
-        "egret3d/ecs/core/InterFace.ts",
+        "egret3d/ecs/core/Interface.ts",
         "egret3d/ecs/core/Decorators.ts",
         "egret3d/ecs/core/BaseObject.ts",
         "egret3d/editor/EditorDecorators.ts",
@@ -52,6 +52,7 @@
         "egret3d/ecs/core/Prefab.ts",
         "egret3d/ecs/core/RawScene.ts",
         "egret3d/ecs/core/Scene.ts",
+        "egret3d/ecs/core/Entity.ts",
         "egret3d/ecs/core/GameObject.ts",
         "egret3d/ecs/core/SystemManager.ts",
         "egret3d/ecs/core/ScenesManager.ts",

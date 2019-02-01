@@ -1,58 +1,26 @@
 namespace paper {
-    Layer.Default; // egret build bug.
+
+    const _singletonEntity: IEntity = null!;
     /**
      * 实体。
      */
-    export class GameObject extends BaseObject implements IEntity {
+    export class Entity extends BaseObject implements IEntity {
         /**
-         * @internal
+         * 当实体的组件被激活时派发事件。
          */
-        public static readonly _instances: GameObject[] = [];
-        private static _globalGameObject: GameObject | null = null;
+        public static readonly onComponentEnabled: signals.Signal = new signals.Signal();
         /**
-         * 创建实体，并添加到当前场景中。
+         * 当实体的组件被禁用时派发事件。
          */
-        public static create(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
-            let gameObect: GameObject;
-            // if (this._instances.length > 0) {
-            //     gameObect = this._instances.pop()!;
-
-            //     gameObect.name = name;
-            //     gameObect.tag = tag;
-            //     gameObect._addToScene(scene);
-            //     gameObect.addComponent(egret3d.Transform);
-            // }
-            // else {
-            gameObect = new GameObject(name, tag, scene);
-            // gameObect = new GameObject();
-            // }
-
-            // gameObect.name = name;
-            // gameObect.tag = tag;
-            // gameObect._addToScene(Application.sceneManager.activeScene);
-            // gameObect.addComponent(egret3d.Transform);
-
-            return gameObect;
-        }
+        public static readonly onComponentDisabled: signals.Signal = new signals.Signal();
         /**
-         * 全局实体。
-         * - 全局实体不可被销毁。
-         * - 静态组件都会添加到全局实体上。
+         * 当实体被创建时派发事件。
          */
-        public static get globalGameObject() {
-            if (!this._globalGameObject) {
-                this._globalGameObject = GameObject.create(DefaultNames.Global, DefaultTags.Global, Scene.globalScene);
-                this._globalGameObject.dontDestroy = true;
-            }
-
-            return this._globalGameObject;
-        }
+        public static readonly onCreated: signals.Signal = new signals.Signal();
         /**
-         * 是否是静态模式。
+         * 当实体将要被销毁时派发事件。
          */
-        @serializedField
-        @editor.property(editor.EditType.CHECKBOX)
-        public isStatic: boolean = false;
+        public static readonly onDestroy: signals.Signal = new signals.Signal();
         /**
          * 名称。
          */
@@ -66,73 +34,36 @@ namespace paper {
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
         public tag: paper.DefaultTags | string = "";
         /**
-         * 层级。
-         * - 用于各种层遮罩。
-         */
-        @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
-        public layer: Layer = Layer.Default;
-        /**
          * 
          */
         @serializedField
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).HideFlags) }) // TODO
         public hideFlags: HideFlags = HideFlags.None;
         /**
-         * 变换组件。
-         * @readonly
-         */
-        public transform: egret3d.Transform = null!;
-        /**
-         * 渲染组件。
-         * @readonly
-         */
-        public renderer: BaseRenderer | null = null;
-        /**
          * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
          */
         @serializedField
         public extras?: EntityExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
-        @serializedField // TODO 反序列化 bug
-        private _activeSelf: boolean = true;
-        /**
-         * @internal
-         */
-        public _activeInHierarchy: boolean = true;
-        /**
-         * @internal
-         */
-        public _activeDirty: boolean = true;
-        private readonly _components: (IComponent | undefined)[] = [];
-        /**
-         * @internal
-         */
-        public readonly _beforeRenderBehaviors: Behaviour[] = [];
-        private readonly _cachedComponents: IComponent[] = [];
-        private _scene: Scene | null = null;
+        protected _componentsDirty: boolean = false;
+        @serializedField("_activeSelf") // TODO 反序列化 bug
+        protected _enabled: boolean = true;
+        protected readonly _components: (IComponent | undefined)[] = [];
+        protected readonly _cachedComponents: (IComponent)[] = [];
+        protected _scene: IScene | null = null;
         /**
          * 请使用 `paper.GameObject.create()` 创建实例。
          * @see paper.GameObject.create()
-         * @deprecated
          */
-        public constructor(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null) {
+        protected constructor(name: string, tag: string) {
             super();
 
             this.name = name;
             this.tag = tag;
-            //
-            this._addToScene(scene || Application.sceneManager.activeScene);
-            //
-            this.addComponent(egret3d.Transform);
         }
 
-        private _destroy() {
-            this._scene!.removeGameObject(this);
-
-            for (const child of this.transform.children) {
-                child.gameObject._destroy();
-            }
+        protected _destroy() {
+            this._scene!._removeEntity(this);
 
             for (const component of this._components) {
                 if (!component) {
@@ -148,13 +79,17 @@ namespace paper {
             disposeCollecter.gameObjects.push(this);
         }
 
-        private _addToScene(value: Scene): any {
+        protected _addToScene(value: IScene): any {
             if (this._scene) {
-                this._scene.removeGameObject(this);
+                this._scene._removeEntity(this);
             }
 
             this._scene = value;
-            this._scene.addGameObject(this);
+            this._scene._addEntity(this);
+        }
+
+        protected _setDontDestroy(value: boolean) {
+            this._addToScene(value ? Scene.globalScene : Scene.activeScene);
         }
 
         private _canRemoveComponent(value: BaseComponent) {
@@ -498,17 +433,11 @@ namespace paper {
                 }
             }
         }
-        /**
-         * 移除全部指定组件的实例。
-         * - 通常只有该组件类允许同一个实体添加多个组件实例时才需要此操作。
-         * @param componentClass 组件类。
-         * @param isExtends 是否尝试移除全部派生自此组件的实例。
-         */
-        public removeAllComponents<T extends BaseComponent>(componentClass?: IComponentClass<T>, isExtends: boolean = false) {
+
+        public removeAllComponents<T extends IComponent>(componentClass?: IComponentClass<T>, isExtends: boolean = false): boolean {
             if (componentClass) {
-                if (componentClass.__isSingleton && this !== GameObject._globalGameObject) { // SingletonComponent.
-                    GameObject.globalGameObject.removeAllComponents(componentClass, isExtends);
-                    return;
+                if (componentClass.__isSingleton && this !== _singletonEntity) { // SingletonComponent.
+                    return _singletonEntity.removeAllComponents(componentClass, isExtends);
                 }
 
                 if (isExtends) {
@@ -536,17 +465,17 @@ namespace paper {
                 else {
                     const component = this._getComponent(componentClass);
                     if (!component) {
-                        return;
+                        return false;
                     }
 
                     if (component.constructor === GroupComponent) {
                         const groupComponent = component as GroupComponent;
                         if (!this._canRemoveComponent(groupComponent.components[0])) {
-                            return;
+                            return false;
                         }
                     }
                     else if (!this._canRemoveComponent(component)) {
-                        return;
+                        return false;
                     }
 
                     this._removeComponent(component, null);
@@ -554,22 +483,20 @@ namespace paper {
             }
             else {
                 for (const component of this._components) {
-                    if (!component || component.constructor === egret3d.Transform) {
+                    if (!component) {
                         continue;
                     }
 
                     this._removeComponent(component, null);
                 }
             }
+
+            return true;
         }
-        /**
-         * 获取一个指定组件实例。
-         * @param componentClass 组件类。
-         * @param isExtends 是否尝试获取全部派生自此组件的实例。
-         */
-        public getComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
-            if (componentClass.__isSingleton && this !== GameObject._globalGameObject) { // SingletonComponent.
-                return GameObject.globalGameObject.getComponent(componentClass, isExtends);
+
+        public getComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
+            if (componentClass.__isSingleton && this !== _singletonEntity) { // SingletonComponent.
+                return _singletonEntity.getComponent(componentClass, isExtends);
             }
 
             if (isExtends) {
@@ -585,7 +512,7 @@ namespace paper {
                         }
                     }
                     else if (component instanceof componentClass) {
-                        return component as T;
+                        return component;
                     }
                 }
 
@@ -608,14 +535,10 @@ namespace paper {
 
             return component as T;
         }
-        /**
-         * 获取全部指定组件实例。
-         * @param componentClass 组件类。
-         * @param isExtends 是否尝试获取全部派生自此组件的实例。
-         */
-        public getComponents<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T[] {
-            if (componentClass.__isSingleton && this !== GameObject._globalGameObject) { // SingletonComponent.
-                return GameObject.globalGameObject.getComponents(componentClass, isExtends);
+
+        public getComponents<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T[] {
+            if (componentClass.__isSingleton && this !== _singletonEntity) { // SingletonComponent.
+                return _singletonEntity.getComponents(componentClass, isExtends);
             }
 
             const components: T[] = [];
@@ -632,7 +555,7 @@ namespace paper {
                         }
                     }
                     else if (component instanceof componentClass) {
-                        components.push(component as T);
+                        components.push(component);
                     }
                 }
             }
@@ -645,303 +568,75 @@ namespace paper {
                         }
                     }
                     else if (component instanceof componentClass) {
-                        components.push(component as T);
+                        components.push(component);
                     }
                 }
             }
 
             return components;
         }
-        /**
-         * 获取一个自己或父级中指定的组件实例。
-         * @param componentClass 组件类。
-         * @param isExtends 是否尝试获取全部派生自此组件的实例。
-         */
-        public getComponentInParent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false) {
-            let result: T | null = null;
-            let parent = this.transform.parent;
 
-            while (!result && parent) {
-                result = parent.gameObject.getComponent(componentClass, isExtends) as T | null; // 
-                parent = parent.parent;
-            }
-
-            return result;
-        }
-        /**
-         * 获取一个自己或子（孙）级中指定的组件实例。
-         * @param componentClass 组件类。
-         * @param isExtends 是否尝试获取全部派生自此组件的实例。
-         */
-        public getComponentInChildren<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
-            let component = this.getComponent(componentClass, isExtends);
-            if (!component) {
-                for (const child of this.transform.children) {
-                    component = child.gameObject.getComponentInChildren(componentClass, isExtends);
-                    if (component) {
-                        break;
-                    }
-                }
-            }
-
-            return component;
-        }
-        /**
-         * 获取全部自己和子（孙）级中指定的组件实例。
-         * @param componentClass 组件类。
-         * @param isExtends 是否尝试获取全部派生自此组件的实例。
-         */
-        public getComponentsInChildren<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
-            components = components || [];
-
-            for (const component of this._components) {
-                if (!component) {
-                    continue;
-                }
-
-                if (component.constructor === GroupComponent) {
-                    const groupComponent = component as GroupComponent;
-                    if (isExtends ? groupComponent.components[0] instanceof componentClass : groupComponent.componentClass === componentClass) {
-                        for (const componentInGroup of groupComponent.components) {
-                            components.push(componentInGroup as T);
-                        }
-                    }
-                }
-                else if (isExtends ? component instanceof componentClass : component.constructor === componentClass) {
-                    components.push(component as T);
-                }
-            }
-
-            for (const child of this.transform.children) {
-                child.gameObject.getComponentsInChildren(componentClass, isExtends, components);
-            }
-
-            return components;
-        }
-        /**
-         * 从该实体已注册的全部组件中获取一个指定组件实例，如果未添加该组件，则添加该组件。
-         * @param componentClass 组件类。
-         * @param isExtends 是否尝试获取全部派生自此组件的实例。
-         * @param config BaseComponent 组件 `initialize(config?: any)` 方法或 Behaviour 组件 `onAwake(config?: any)` 方法的可选参数。
-         */
-        public getOrAddComponent<T extends BaseComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, config?: any) {
-            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass, config);
-        }
-        /**
-         * 向该实体已激活的全部 Behaviour 组件发送消息。
-         * @param methodName 
-         * @param parameter
-         */
-        public sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
-            for (const component of this._components) {
-                if (component && (component.constructor as IComponentClass<T>).__isBehaviour && component.isActiveAndEnabled) {
-                    if (methodName in component) {
-                        (component as any)[methodName](parameter);
-                    }
-                    else if (DEBUG && requireReceiver) {
-                        console.warn(this.name, egret.getQualifiedClassName(component), methodName); // TODO
-                    }
-                }
-            }
-        }
-        /**
-         * 向该实体和其父级的 Behaviour 组件发送消息。
-         * @param methodName 
-         * @param parameter 
-         */
-        public sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
-            this.sendMessage(methodName as any, parameter, requireReceiver);
-            //
-            const parent = this.transform.parent;
-            if (parent && parent.gameObject.activeInHierarchy) {
-                parent.gameObject.sendMessage(methodName as any, parameter, requireReceiver);
-            }
-        }
-        /**
-         * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
-         * @param methodName 
-         * @param parameter 
-         */
-        public broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
-            this.sendMessage(methodName as any, parameter, requireReceiver);
-
-            for (const child of this.transform.children) {
-                if (child.gameObject.activeInHierarchy) {
-                    child.gameObject.broadcastMessage(methodName as any, parameter, requireReceiver);
-                }
-            }
-        }
-        /**
-         * 该实体是否已经被销毁。
-         */
         public get isDestroyed() {
             return !this._scene;
         }
-        /**
-         * 该实体是否可以被销毁。
-         * - 当此值为 `true` 时，将会被添加到全局场景，反之将被添加到激活场景。
-         * - 设置此属性时，可能改变该实体的父级。
-         */
-        public get dontDestroy() {
-            return this._scene === Scene.globalScene;
+
+        public get dontDestroy(): boolean {
+            return this._scene === Scene.globalScene as any;
         }
         public set dontDestroy(value: boolean) {
-            if (this.dontDestroy === value || this === GameObject._globalGameObject) {
+            if (this.dontDestroy === value) {
                 return;
             }
 
-            if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
-                this.transform.parent = null;
-            }
-
-            if (value) {
-                this._addToScene(Scene.globalScene);
-            }
-            else {
-                this._addToScene(Scene.activeScene);
-            }
-
-            for (const child of this.transform.children) {
-                child.gameObject.dontDestroy = value;
-            }
+            this._setDontDestroy(value);
         }
-        /**
-         * 该实体自身的激活状态。
-         */
+
         @editor.property(editor.EditType.CHECKBOX)
-        public get activeSelf() {
-            return this._activeSelf;
+        public get enabled(): boolean {
+            return this._enabled;
         }
-        public set activeSelf(value: boolean) {
-            if (this._activeSelf === value || this === GameObject._globalGameObject) {
+        public set enabled(value: boolean) {
+            if (this._enabled === value) {
                 return;
             }
 
-            const parent = this.transform.parent;
-            if (!parent || parent.gameObject.activeInHierarchy) {
-                const prevActive = this._activeSelf;
-                this._activeSelf = value;
-                this._activeInHierarchyDirty(prevActive);
-            }
-            else {
-                this._activeSelf = value;//TODO
-            }
+            this._activeInHierarchyDirty(this._enabled);
+            this._enabled = value;
         }
-        /**
-         * 该实体在场景中的激活状态。
-         */
-        public get activeInHierarchy() {
-            if (this._activeDirty) {
-                const parent = this.transform.parent;
 
-                if (!parent || parent.gameObject.activeInHierarchy) {
-                    this._activeInHierarchy = this._activeSelf;
-                }
-                else {
-                    this._activeInHierarchy = false;
-                }
-
-                this._activeDirty = false;
-            }
-
-            return this._activeInHierarchy;
-        }
-        /**
-         * 该实体的路径。
-         */
-        public get path(): string {
-            let path = this.name;
-
-            if (this.transform) {
-                let parent: egret3d.Transform | null = this.transform.parent;
-                while (parent) {
-                    path = parent.gameObject.name + "/" + path;
-                    parent = parent.parent;
-                }
-
-                return this._scene!.name + "/" + path;
-            }
-
-            return path;
-        }
-        /**
-         * 该实体已添加的全部组件。
-         */
         @serializedField
         @deserializedIgnore
-        public get components(): ReadonlyArray<BaseComponent> {
-            this._cachedComponents.length = 0;
+        public get components(): ReadonlyArray<IComponent> {
+            const cachedComponents = this._cachedComponents;
 
-            for (const component of this._components) {
-                if (!component) {
-                    continue;
-                }
+            if (this._componentsDirty) {
+                let index = 0;
 
-                if (component.constructor === GroupComponent) {
-                    for (const componentInGroup of (component as GroupComponent).components) {
-                        this._cachedComponents.push(componentInGroup);
+                for (const component of this._components) {
+                    if (component) {
+                        if (component.constructor === GroupComponent) {
+                            for (const componentInGroup of (component as GroupComponent).components) {
+                                cachedComponents[index++] = componentInGroup;
+                            }
+                        }
+                        else {
+                            cachedComponents[index++] = component;
+                        }
                     }
                 }
-                else {
-                    this._cachedComponents.push(component);
+
+                if (cachedComponents.length !== index) {
+                    cachedComponents.length = index;
                 }
+
+                this._componentsDirty = false;
             }
 
-            return this._cachedComponents;
-        }
-        /**
-         * 该实体的父级实体。
-         */
-        public get parent() {
-            return this.transform.parent ? this.transform.parent.gameObject : null;
-        }
-        public set parent(gameObject: GameObject | null) {
-            this.transform.parent = gameObject ? gameObject.transform : null;
-        }
-        /**
-         * 该实体所属的场景。
-         */
-        public get scene() {
-            return this._scene!;
-        }
-        /**
-         * 全局实体。
-         * - 全局实体不可被销毁。
-         * - 静态组件都会添加到全局实体上。
-         */
-        public get globalGameObject() {
-            return GameObject.globalGameObject;
+            return cachedComponents;
         }
 
-        /**
-         * @deprecated
-         * @see paper.Scene#find()
-         */
-        public static find(name: string, scene: Scene | null = null) {
-            return (scene || Application.sceneManager.activeScene).find(name);
-        }
-        /**
-         * @deprecated
-         * @see paper.Scene#findWithTag()
-         */
-        public static findWithTag(tag: string, scene: Scene | null = null) {
-            return (scene || Application.sceneManager.activeScene).findWithTag(tag);
-        }
-        /**
-         * @deprecated
-         * @see paper.Scene#findGameObjectsWithTag()
-         */
-        public static findGameObjectsWithTag(tag: string, scene: Scene | null = null) {
-            return (scene || Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
-        }
-        /**
-         * @deprecated
-         */
-        public static raycast(
-            ray: Readonly<egret3d.Ray>, gameObjects: ReadonlyArray<GameObject>,
-            maxDistance: number = 0.0, cullingMask: Layer = Layer.Everything, raycastMesh: boolean = false
-        ) {
-            return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
+        public get scene(): IScene {
+            return this._scene!; // TODO
         }
     }
 }
