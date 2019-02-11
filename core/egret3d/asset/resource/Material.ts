@@ -58,6 +58,10 @@ namespace egret3d {
         /**
          * @internal
          */
+        public _version: uint = 0;
+        /**
+         * @internal
+         */
         public _dirty: MaterialDirty = MaterialDirty.None;
         /**
          * 仅为更高的访问性能，该值存在于 config 中，是否有必要保留该值。
@@ -363,6 +367,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -375,6 +380,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -387,6 +393,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -399,6 +406,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -411,6 +419,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -424,6 +433,7 @@ namespace egret3d {
             if (uniform !== undefined) {
                 uniform.value[0] = value.x;
                 uniform.value[1] = value.y;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -436,6 +446,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -450,6 +461,7 @@ namespace egret3d {
                 uniform.value[0] = value.x;
                 uniform.value[1] = value.y;
                 uniform.value[2] = value.z;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -462,6 +474,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -477,6 +490,7 @@ namespace egret3d {
                 uniform.value[1] = value.y;
                 uniform.value[2] = value.z;
                 uniform.value[3] = value.w;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -489,6 +503,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -501,6 +516,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value.rawData;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -513,6 +529,7 @@ namespace egret3d {
             const uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -921,6 +938,7 @@ namespace egret3d {
                     }
 
                     uniform.value = p2;
+                    this._version++;
                 }
             }
             else {

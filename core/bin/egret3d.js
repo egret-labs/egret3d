@@ -9311,6 +9311,22 @@ var paper;
      * @see paper.clock
      */
     paper.Time = null;
+    /**
+     * @deprecated
+     * @see paper.@singleton
+     */
+    var SingletonComponent = (function (_super) {
+        __extends(SingletonComponent, _super);
+        function SingletonComponent() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        SingletonComponent = __decorate([
+            paper.singleton
+        ], SingletonComponent);
+        return SingletonComponent;
+    }(paper.BaseComponent));
+    paper.SingletonComponent = SingletonComponent;
+    __reflect(SingletonComponent.prototype, "paper.SingletonComponent");
 })(paper || (paper = {}));
 var gltf;
 (function (gltf) {
@@ -9464,22 +9480,6 @@ var egret3d;
             },
         },
     };
-    /**
-     * @deprecated
-     * @see paper.@singleton
-     */
-    var SingletonComponent = (function (_super) {
-        __extends(SingletonComponent, _super);
-        function SingletonComponent() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        SingletonComponent = __decorate([
-            paper.singleton
-        ], SingletonComponent);
-        return SingletonComponent;
-    }(paper.BaseComponent));
-    egret3d.SingletonComponent = SingletonComponent;
-    __reflect(SingletonComponent.prototype, "egret3d.SingletonComponent");
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
@@ -25258,6 +25258,10 @@ var egret3d;
             /**
              * @internal
              */
+            _this._version = 0;
+            /**
+             * @internal
+             */
             _this._dirty = 0 /* None */;
             /**
              * 仅为更高的访问性能，该值存在于 config 中，是否有必要保留该值。
@@ -25552,6 +25556,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25562,6 +25567,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25572,6 +25578,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25582,6 +25589,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25592,6 +25600,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25603,6 +25612,7 @@ var egret3d;
             if (uniform !== undefined) {
                 uniform.value[0] = value.x;
                 uniform.value[1] = value.y;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25613,6 +25623,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25625,6 +25636,7 @@ var egret3d;
                 uniform.value[0] = value.x;
                 uniform.value[1] = value.y;
                 uniform.value[2] = value.z;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25635,6 +25647,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25648,6 +25661,7 @@ var egret3d;
                 uniform.value[1] = value.y;
                 uniform.value[2] = value.z;
                 uniform.value[3] = value.w;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25658,6 +25672,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25668,6 +25683,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value.rawData;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25678,6 +25694,7 @@ var egret3d;
             var uniform = this._technique.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
+                this._version++;
             }
             else {
                 console.warn("尝试设置不存在的Uniform值:" + id);
@@ -25981,6 +25998,7 @@ var egret3d;
                         egret3d.renderState._updateTextureDefines(p1, p2, this.defines);
                     }
                     uniform.value = p2;
+                    this._version++;
                 }
             }
             else {
@@ -29125,6 +29143,7 @@ var egret3d;
                 _this._cacheSubMeshIndex = -1;
                 //
                 _this._cacheMaterial = null;
+                _this._cacheMaterialVersion = -1;
                 //
                 _this._cacheLightmapIndex = -1;
                 return _this;
@@ -29754,8 +29773,9 @@ var egret3d;
                         this._cacheMesh = mesh;
                     }
                     // Update uniforms.
-                    if (this._cacheMaterial !== material) {
+                    if (this._cacheMaterial !== material || this._cacheMaterialVersion !== material._version) {
                         this._updateUniforms(program, material);
+                        this._cacheMaterialVersion = material._version;
                         this._cacheMaterial = material;
                     }
                     //  TODO

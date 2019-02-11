@@ -5094,6 +5094,12 @@ declare namespace paper {
      * @see paper.clock
      */
     const Time: Clock;
+    /**
+     * @deprecated
+     * @see paper.@singleton
+     */
+    class SingletonComponent extends paper.BaseComponent {
+    }
 }
 declare namespace gltf {
     /**
@@ -5211,12 +5217,6 @@ declare namespace egret3d {
             wasPressed: (key: string | number) => boolean;
         };
     };
-    /**
-     * @deprecated
-     * @see paper.@singleton
-     */
-    class SingletonComponent extends paper.BaseComponent {
-    }
 }
 declare namespace paper {
 }

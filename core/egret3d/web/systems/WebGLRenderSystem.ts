@@ -83,6 +83,7 @@ namespace egret3d.webgl {
         private _cacheSubMeshIndex: int = -1;
         //
         private _cacheMaterial: Material | null = null;
+        private _cacheMaterialVersion:int = -1;
         //
         private _cacheLightmapIndex: int = -1;
 
@@ -813,8 +814,9 @@ namespace egret3d.webgl {
                     this._cacheMesh = mesh;
                 }
                 // Update uniforms.
-                if (this._cacheMaterial !== material) {
+                if (this._cacheMaterial !== material || this._cacheMaterialVersion !== material._version) {
                     this._updateUniforms(program, material);
+                    this._cacheMaterialVersion = material._version;
                     this._cacheMaterial = material;
                 }
                 //  TODO
