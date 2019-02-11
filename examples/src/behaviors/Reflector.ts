@@ -131,12 +131,11 @@ namespace behaviors {
             const saveCamera = egret3d.Camera.current!;
             renderState.render(reflectorCamera);
             renderState.updateRenderTarget(backupRenderTarget);
+            renderState.updateViewport(saveCamera.viewport, backupRenderTarget);
             egret3d.Camera.current = saveCamera;
 
             const reflectorMaterial = this.gameObject.renderer!.material!;
             reflectorMaterial.setTexture("tDiffuse", this._renderTarget).setColor("color", this.color);
-
-            renderState.updateViewport(saveCamera.viewport, backupRenderTarget);
 
             return true;
         }

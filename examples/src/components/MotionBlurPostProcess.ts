@@ -70,8 +70,6 @@ namespace components {
             camera.renderTarget = this._depthRenderTarget;
             renderState.render(camera, depthMaterial);
             camera.renderTarget = null;
-            egret3d.cameraAndLightCollecter.currentCamera = camera;
-
 
             material.setTexture("tDepth", this._depthRenderTarget);
 

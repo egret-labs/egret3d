@@ -83,9 +83,12 @@ namespace egret3d.webgl {
         private _cacheSubMeshIndex: int = -1;
         //
         private _cacheMaterial: Material | null = null;
-        private _cacheMaterialVersion:int = -1;
+        private _cacheMaterialVersion: int = -1;
         //
         private _cacheLightmapIndex: int = -1;
+
+        //
+        private _backupCamera: Camera | null = null;
 
         private _getWebGLShader(gltfShader: gltf.Shader, defines: string) {
             const webgl = WebGLRenderState.webgl!;
@@ -646,8 +649,7 @@ namespace egret3d.webgl {
         public render(camera: Camera, material: Material | null = null) {
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
             const renderTarget = camera.renderTarget || camera._previewRenderTarget;
-
-            if (cameraAndLightCollecter.currentCamera !== camera) { //
+            if (cameraAndLightCollecter.currentCamera !== camera) { //如果相等，没必要在更新摄像机
                 cameraAndLightCollecter.currentCamera = camera;
                 camera._update();
                 //
@@ -664,6 +666,7 @@ namespace egret3d.webgl {
                 }
 
                 if (!isPostprocessing) {
+                    this._backupCamera = null;
                     this._render(camera, renderTarget, material);
                 }
                 else {
@@ -671,7 +674,9 @@ namespace egret3d.webgl {
 
                     for (const postprocessing of postprocessings) {
                         if (postprocessing.isActiveAndEnabled) {
+                            this._backupCamera = camera;
                             postprocessing.onRender(camera);
+                            this._backupCamera = null;
                         }
                     }
 
@@ -682,7 +687,7 @@ namespace egret3d.webgl {
                 this._render(camera, renderTarget, material);
             }
             //
-            cameraAndLightCollecter.currentCamera = null;
+            cameraAndLightCollecter.currentCamera = this._backupCamera;
         }
 
         public draw(drawCall: DrawCall, material: Material | null = null) {

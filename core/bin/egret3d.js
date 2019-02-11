@@ -29146,6 +29146,8 @@ var egret3d;
                 _this._cacheMaterialVersion = -1;
                 //
                 _this._cacheLightmapIndex = -1;
+                //
+                _this._backupCamera = null;
                 return _this;
             }
             WebGLRenderSystem.prototype._getWebGLShader = function (gltfShader, defines) {
@@ -29641,6 +29643,7 @@ var egret3d;
                         }
                     }
                     if (!isPostprocessing) {
+                        this._backupCamera = null;
                         this._render(camera, renderTarget, material);
                     }
                     else {
@@ -29648,7 +29651,9 @@ var egret3d;
                         for (var _a = 0, postprocessings_2 = postprocessings; _a < postprocessings_2.length; _a++) {
                             var postprocessing = postprocessings_2[_a];
                             if (postprocessing.isActiveAndEnabled) {
+                                this._backupCamera = camera;
                                 postprocessing.onRender(camera);
+                                this._backupCamera = null;
                             }
                         }
                         camera.swapPostprocessingRenderTarget();
@@ -29658,7 +29663,7 @@ var egret3d;
                     this._render(camera, renderTarget, material);
                 }
                 //
-                cameraAndLightCollecter.currentCamera = null;
+                cameraAndLightCollecter.currentCamera = this._backupCamera;
             };
             WebGLRenderSystem.prototype.draw = function (drawCall, material) {
                 if (material === void 0) { material = null; }
