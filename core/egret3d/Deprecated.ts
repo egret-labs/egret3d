@@ -20,6 +20,13 @@ namespace paper {
      * @see paper.clock
      */
     export const Time: Clock = null!;
+    /**
+     * @deprecated
+     * @see paper.@singleton
+     */
+    @paper.singleton
+    export class SingletonComponent extends paper.BaseComponent {
+    }
 }
 
 namespace gltf {
@@ -197,11 +204,4 @@ namespace egret3d {
             },
         },
     };
-    /**
-     * @deprecated
-     * @see paper.@singleton
-     */
-    @paper.singleton
-    export class SingletonComponent extends paper.BaseComponent {
-    }
 }
