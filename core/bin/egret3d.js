@@ -3853,7 +3853,7 @@ var egret3d;
             /**
              *
              */
-            _this.draw = null;
+            _this.draw = null; //开发者一般不会手动调用,通常是后期渲染调用
             _this._logarithmicDepthBuffer = false;
             _this._gammaInput = true; //
             _this._gammaOutput = true; //
@@ -29339,7 +29339,7 @@ var egret3d;
                             var lightmapIndex = renderer.lightmapIndex;
                             if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {
                                 if (uniform.textureUnits && uniform.textureUnits.length === 1) {
-                                    var texture = currentScene.lightmaps[lightmapIndex]; //TODO可能有空
+                                    var texture = currentScene.lightmaps[lightmapIndex] || egret3d.DefaultTextures.WHITE; //TODO可能有空
                                     var unit = uniform.textureUnits[0];
                                     webgl.uniform1i(location_7, unit);
                                     texture.bindTexture(unit);
@@ -29369,11 +29369,10 @@ var egret3d;
                                 var units = uniform.textureUnits;
                                 webgl.uniform1iv(location_7, units);
                                 for (var i_4 = 0, l = units.length; i_4 < l; i_4++) {
-                                    if (context.directShadowMaps[i_4]) {
-                                        var unit = units[i_4];
-                                        var texture = context.directShadowMaps[i_4];
-                                        texture.bindTexture(unit);
-                                    }
+                                    var directShadowMap = context.directShadowMaps[i_4] || egret3d.DefaultTextures.WHITE;
+                                    var unit = units[i_4];
+                                    var texture = directShadowMap;
+                                    texture.bindTexture(unit);
                                 }
                             }
                             break;
@@ -29383,11 +29382,10 @@ var egret3d;
                                 var units = uniform.textureUnits;
                                 webgl.uniform1iv(location_7, units);
                                 for (var i_5 = 0, l = units.length; i_5 < l; i_5++) {
-                                    if (context.pointShadowMaps[i_5]) {
-                                        var unit = units[i_5];
-                                        var texture = context.pointShadowMaps[i_5];
-                                        texture.bindTexture(unit);
-                                    }
+                                    var pointShadowMap = context.pointShadowMaps[i_5] || egret3d.DefaultTextures.WHITE;
+                                    var unit = units[i_5];
+                                    var texture = pointShadowMap;
+                                    texture.bindTexture(unit);
                                 }
                             }
                             break;
@@ -29397,11 +29395,10 @@ var egret3d;
                                 var units = uniform.textureUnits;
                                 webgl.uniform1iv(location_7, units);
                                 for (var i_6 = 0, l = units.length; i_6 < l; i_6++) {
-                                    if (context.spotShadowMaps[i_6]) {
-                                        var unit = units[i_6];
-                                        var texture = context.spotShadowMaps[i_6];
-                                        texture.bindTexture(unit);
-                                    }
+                                    var spotShadowMaps = context.spotShadowMaps[i_6] || egret3d.DefaultTextures.WHITE;
+                                    var unit = units[i_6];
+                                    var texture = spotShadowMaps;
+                                    texture.bindTexture(unit);
                                 }
                             }
                             break;

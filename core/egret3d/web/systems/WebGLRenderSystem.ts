@@ -320,7 +320,7 @@ namespace egret3d.webgl {
                         const lightmapIndex = (renderer as MeshRenderer).lightmapIndex;
                         if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {
                             if (uniform.textureUnits && uniform.textureUnits.length === 1) {
-                                const texture = currentScene!.lightmaps[lightmapIndex]!;//TODO可能有空
+                                const texture = currentScene!.lightmaps[lightmapIndex] || DefaultTextures.WHITE;//TODO可能有空
                                 const unit = uniform.textureUnits[0];
                                 webgl.uniform1i(location, unit);
                                 texture.bindTexture(unit);
@@ -355,11 +355,10 @@ namespace egret3d.webgl {
                             webgl.uniform1iv(location, units);
 
                             for (let i = 0, l = units.length; i < l; i++) {
-                                if (context.directShadowMaps[i]) {
-                                    const unit = units[i];
-                                    const texture = context.directShadowMaps[i] as WebGLTexture;
-                                    texture.bindTexture(unit);
-                                }
+                                const directShadowMap = context.directShadowMaps[i] || DefaultTextures.WHITE;//对应灯光可能不产生投影，但是阴影贴图数量是全局值，这里使用默认贴图防止报错
+                                const unit = units[i];
+                                const texture = directShadowMap as WebGLTexture;
+                                texture.bindTexture(unit);
                             }
                         }
                         break;
@@ -371,11 +370,10 @@ namespace egret3d.webgl {
                             webgl.uniform1iv(location, units);
 
                             for (let i = 0, l = units.length; i < l; i++) {
-                                if (context.pointShadowMaps[i]) {
-                                    const unit = units[i];
-                                    const texture = context.pointShadowMaps[i] as WebGLTexture;
-                                    texture.bindTexture(unit);
-                                }
+                                const pointShadowMap = context.pointShadowMaps[i] || DefaultTextures.WHITE;
+                                const unit = units[i];
+                                const texture = pointShadowMap as WebGLTexture;
+                                texture.bindTexture(unit);
                             }
                         }
                         break;
@@ -387,11 +385,10 @@ namespace egret3d.webgl {
                             webgl.uniform1iv(location, units);
 
                             for (let i = 0, l = units.length; i < l; i++) {
-                                if (context.spotShadowMaps[i]) {
-                                    const unit = units[i];
-                                    const texture = context.spotShadowMaps[i] as WebGLTexture;
-                                    texture.bindTexture(unit);
-                                }
+                                const spotShadowMaps = context.spotShadowMaps[i] || DefaultTextures.WHITE;
+                                const unit = units[i];
+                                const texture = spotShadowMaps as WebGLTexture;
+                                texture.bindTexture(unit);
                             }
                         }
                         break;
