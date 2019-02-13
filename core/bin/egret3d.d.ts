@@ -7215,6 +7215,9 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     *
+     */
+    /**
      * 灯光的阴影。
      */
     class LightShadow implements paper.ISerializable {
@@ -7238,6 +7241,12 @@ declare namespace egret3d {
          * 该阴影的范围。（仅用于平行光产生的阴影）
          */
         size: number;
+        /**
+         *
+         */
+        /**
+         *
+         */
         private _mapSize;
         private readonly _light;
         private constructor();

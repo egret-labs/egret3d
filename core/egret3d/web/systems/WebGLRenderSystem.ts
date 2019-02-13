@@ -619,7 +619,7 @@ namespace egret3d.webgl {
                 const viewport = camera.viewport;
                 const isPoint = light.constructor === PointLight;
                 //generate depth map
-                const shadowMaterial = (isPoint) ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH;
+                const shadowMaterial = (isPoint) ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH_3201;
 
                 renderState.updateRenderTarget(shadow._renderTarget);
                 renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);

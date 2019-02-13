@@ -12668,7 +12668,11 @@ var egret3d;
             DefaultMaterials_1.CUBE = this._createMaterial("builtin/cube.mat.json", egret3d.DefaultShaders.CUBE);
             DefaultMaterials_1.MISSING = this._createMaterial("builtin/missing.mat.json", egret3d.DefaultShaders.MESH_BASIC)
                 .setColor(egret3d.Color.PURPLE);
-            DefaultMaterials_1.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", egret3d.DefaultShaders.DEPTH)
+            DefaultMaterials_1.SHADOW_DEPTH_3200 = this._createMaterial("builtin/shadow_depth_3200.mat.json", egret3d.DefaultShaders.DEPTH)
+                .setDepth(true, true)
+                .setCullFace(true, 2305 /* CCW */, 1029 /* Back */)
+                .addDefine("DEPTH_PACKING 3200" /* DEPTH_PACKING_3200 */);
+            DefaultMaterials_1.SHADOW_DEPTH_3201 = this._createMaterial("builtin/shadow_depth_3201.mat.json", egret3d.DefaultShaders.DEPTH)
                 .setDepth(true, true)
                 .setCullFace(true, 2305 /* CCW */, 1029 /* Back */)
                 .addDefine("DEPTH_PACKING 3201" /* DEPTH_PACKING_3201 */);
@@ -15783,6 +15787,14 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
+     *
+     */
+    // export const enum ShadowFilteringType {
+    //     None,
+    //     PCF,
+    //     PCF_SOFT
+    // }
+    /**
      * 灯光的阴影。
      */
     var LightShadow = (function () {
@@ -15807,6 +15819,14 @@ var egret3d;
              * 该阴影的范围。（仅用于平行光产生的阴影）
              */
             this.size = 10.0;
+            /**
+             *
+             */
+            // public filteringType: ShadowFilteringType = ShadowFilteringType.PCF;//TODO
+            /**
+             *
+             */
+            // public rgbaDepthPacking: boolean = true;
             this._mapSize = 512;
             /**
              * @internal
@@ -29369,7 +29389,7 @@ var egret3d;
                                 var units = uniform.textureUnits;
                                 webgl.uniform1iv(location_7, units);
                                 for (var i_4 = 0, l = units.length; i_4 < l; i_4++) {
-                                    var directShadowMap = context.directShadowMaps[i_4] || egret3d.DefaultTextures.WHITE;
+                                    var directShadowMap = context.directShadowMaps[i_4] || egret3d.DefaultTextures.WHITE; //对应灯光可能不产生投影，但是阴影贴图数量是全局值，这里使用默认贴图防止报错
                                     var unit = units[i_4];
                                     var texture = directShadowMap;
                                     texture.bindTexture(unit);
@@ -29600,7 +29620,7 @@ var egret3d;
                     var viewport = camera.viewport;
                     var isPoint = light.constructor === egret3d.PointLight;
                     //generate depth map
-                    var shadowMaterial = (isPoint) ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH;
+                    var shadowMaterial = (isPoint) ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH_3201;
                     renderState_1.updateRenderTarget(shadow._renderTarget);
                     renderState_1.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.WHITE);
                     for (var i = 0, l = (isPoint ? 6 : 1); i < l; i++) {

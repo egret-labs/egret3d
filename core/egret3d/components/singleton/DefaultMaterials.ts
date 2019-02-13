@@ -43,7 +43,11 @@ namespace egret3d {
         /**
          * @internal
          */
-        public static SHADOW_DEPTH: Material;
+        public static SHADOW_DEPTH_3201: Material;
+        /**
+         * @internal
+         */
+        public static SHADOW_DEPTH_3200: Material;
         /**
          * @internal
          */
@@ -89,7 +93,12 @@ namespace egret3d {
             DefaultMaterials.MISSING = this._createMaterial("builtin/missing.mat.json", DefaultShaders.MESH_BASIC)
                 .setColor(Color.PURPLE);
 
-            DefaultMaterials.SHADOW_DEPTH = this._createMaterial("builtin/shadow_depth.mat.json", DefaultShaders.DEPTH)
+            DefaultMaterials.SHADOW_DEPTH_3200 = this._createMaterial("builtin/shadow_depth_3200.mat.json", DefaultShaders.DEPTH)
+                .setDepth(true, true)
+                .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back)
+                .addDefine(ShaderDefine.DEPTH_PACKING_3200);
+
+            DefaultMaterials.SHADOW_DEPTH_3201 = this._createMaterial("builtin/shadow_depth_3201.mat.json", DefaultShaders.DEPTH)
                 .setDepth(true, true)
                 .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back)
                 .addDefine(ShaderDefine.DEPTH_PACKING_3201);
