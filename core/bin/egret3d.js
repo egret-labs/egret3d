@@ -24305,7 +24305,7 @@ var egret3d;
                 afterCombineCount++;
             }
         }
-        console.log("combine", beforeCombineCount, "to", beforeCombineCount - afterCombineCount);
+        console.log("combine", beforeCombineCount, "to", afterCombineCount, "save", beforeCombineCount - afterCombineCount);
         cacheInstances.length = 0;
     }
     egret3d.combine = combine;
@@ -24340,9 +24340,9 @@ var egret3d;
         beforeCombineCount++;
         var materials = meshRenderer.materials;
         var meshData = meshFilter.mesh;
-        //合并筛选的条件:光照贴图_材质0_材质1... ：0_234_532...
-        var key = meshRenderer.lightmapIndex + "_";
-        materials.forEach(function (element) { key = key + "_" + element.uuid; });
+        //合并筛选的条件:层级_光照贴图_材质0_材质1... ：0_234_532...
+        var key = target.layer + "_" + meshRenderer.lightmapIndex + "_";
+        materials.forEach(function (e) { key = key + "_" + e.uuid; });
         if (!out[key]) {
             out[key] = [];
             out[key].push(new CombineInstance());
