@@ -22,9 +22,6 @@ namespace paper {
 
             return this._instance;
         }
-
-        private constructor() {
-        }
         /**
          * 当应用程序的播放模式改变时派发事件。
          */
@@ -33,6 +30,10 @@ namespace paper {
          * 引擎版本。
          */
         public readonly version: string = "1.4.0.001";
+        /**
+         * 
+         */
+        public readonly gameObjectContext:Context<GameObject> = Context.create();
         /**
          * 系统管理器。
          */
@@ -45,7 +46,11 @@ namespace paper {
         private _isFocused = false;
         private _isRunning = false;
         private _playerMode: PlayerMode = PlayerMode.Player;
+
         private _bindUpdate: FrameRequestCallback | null = null;
+
+        private constructor() {
+        }
 
         private _update() {
             if (this._isRunning) {
@@ -67,6 +72,9 @@ namespace paper {
             this.systemManager.register(UpdateSystem, SystemOrder.Update);
             this.systemManager.register(LateUpdateSystem, SystemOrder.LateUpdate);
             this.systemManager.register(DisableSystem, SystemOrder.Disable);
+
+            this.onComponentEnabled.add(this._onComponentEnabled, this);
+            this.onComponentEnabled.add(this._onComponentDisabled, this);
         }
         /**
          * TODO

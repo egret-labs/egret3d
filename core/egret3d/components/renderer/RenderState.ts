@@ -7,6 +7,11 @@ namespace egret3d {
      */
     @paper.singleton
     export class RenderState extends paper.BaseComponent {
+        /**
+         * @internal
+         */
+        public readonly onGammaInputChanged: signals.Signal = new signals.Signal();
+        
         public version: number;
         public standardDerivativesEnabled: boolean;
         public textureFloatEnabled: boolean;
@@ -30,10 +35,6 @@ namespace egret3d {
         public commonDefines: string = "";
         public vertexDefines: string = "";
         public fragmentDefines: string = "";
-        /**
-         * @internal
-         */
-        public readonly onGammaInputChanged: signals.Signal = new signals.Signal();
         public readonly clearColor: Color = Color.create();
         public readonly viewport: Rectangle = Rectangle.create();
         public readonly defines: Defines = new Defines();

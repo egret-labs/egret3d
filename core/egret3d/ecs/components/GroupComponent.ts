@@ -2,21 +2,32 @@ namespace paper {
     /**
      * @internal
      */
-    export class GroupComponent extends paper.BaseComponent {
-        public componentIndex: int = -1;
-        public componentClass: IComponentClass<IComponent> = null!;
+    export class GroupComponent extends Component {
+        public readonly componentIndex: uint;
         public readonly components: IComponent[] = [];
 
-        public addComponent(component: IComponent) {
-            this.components.push(component);
+        public initialize(componentIndex: uint): void {
+            super.initialize();
+
+            (this.componentIndex as uint) = componentIndex;
         }
 
-        public removeComponent(component: IComponent) {
+        public addComponent(component: IComponent): this {
+            this.components.push(component);
+
+            return this;
+        }
+
+        public removeComponent(component: IComponent): boolean {
             const index = this.components.indexOf(component);
 
             if (index >= 0) {
                 this.components.splice(index, 1);
+
+                return true;
             }
+
+            return false;
         }
     }
 }

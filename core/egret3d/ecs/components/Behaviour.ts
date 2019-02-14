@@ -22,30 +22,17 @@ namespace paper {
          */
         public static readonly __isBehaviour: boolean = true;
         /**
-         * @private
+         * @internal
          */
         public _isReseted: boolean = false;
         /**
-         * @private
+         * @internal
          */
         public _isAwaked: boolean = false;
         /**
-         * @private
+         * @internal
          */
         public _isStarted: boolean = false;
-        /**
-         * @private
-         */
-        public _dispatchEnabledEvent(value: boolean) {
-            super._dispatchEnabledEvent(value);
-
-            if (value) {
-                Behaviour.onComponentEnabled.dispatch(this);
-            }
-            else {
-                Behaviour.onComponentDisabled.dispatch(this);
-            }
-        }
         /**
          * 该组件被初始化时执行。
          * - 在该组件的整个生命周期中只执行一次。

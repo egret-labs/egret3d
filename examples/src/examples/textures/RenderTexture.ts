@@ -64,8 +64,8 @@ namespace examples.textures {
                 }
             }
 
-            // const room = createGridRoom();
-            // room.layer = paper.Layer.UserLayer10;
+            const room = createGridRoom();
+            room.layer = paper.Layer.UserLayer10;
         }
     }
 }

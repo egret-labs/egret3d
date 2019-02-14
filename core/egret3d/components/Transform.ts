@@ -252,7 +252,7 @@ namespace egret3d {
         private _onParentChange(newParent: Transform | null, oldParent: Transform | null) {
             const prevActive = oldParent ? oldParent.gameObject.activeInHierarchy : this.gameObject.activeSelf;
             if ((newParent ? newParent.gameObject.activeInHierarchy : this.gameObject.activeSelf) !== prevActive) {
-                this.gameObject._activeInHierarchyDirty(prevActive);
+                this.gameObject._updateGlobalEnabledDitry(prevActive);
             }
 
             this._dirtify(false, TransformDirty.PRS);

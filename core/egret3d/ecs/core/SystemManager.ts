@@ -15,15 +15,19 @@ namespace paper {
             return this._instance;
         }
 
+        private readonly _preSystems: { systemClass: { new(): BaseSystem<IEntity> }, order: number }[] = [];
+        private readonly _systems: BaseSystem<IEntity>[] = [];
+        private readonly _enableOrDisableSystems: BaseSystem<IEntity>[] = [];
+        private readonly _startSystems: BaseSystem<IEntity>[] = [];
+        private readonly _reactiveSystems: BaseSystem<IEntity>[] = [];
+        private readonly _updateSystems: BaseSystem<IEntity>[] = [];
+        private readonly _lateUpdateSystems: BaseSystem<IEntity>[] = [];
+
         private constructor() {
         }
 
-        private readonly _preSystems: { systemClass: { new(): BaseSystem }, order: number }[] = [];
-        private readonly _systems: BaseSystem[] = [];
-
-        private _getSystemInsertIndex(order: SystemOrder) {
+        private _getSystemInsertIndex(systems: BaseSystem<IEntity>[], order: SystemOrder) {
             let index = -1;
-            const systems = this._systems;
             const systemCount = systems.length;
 
             if (systemCount > 0) {
@@ -44,22 +48,10 @@ namespace paper {
 
             return index < 0 ? systems.length : index;
         }
-
-        private _checkRegister<T extends BaseSystem>(systemClass: { new(): T }) {
-            const system = this.getSystem(systemClass);
-            if (system) {
-                console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
-
-                return system;
-            }
-
-            return system;
-        }
         /**
-         * TODO
-         * @internal
+         * 
          */
-        public _preRegisterSystems() {
+        public preRegisterSystems() {
             const preSystems = this._preSystems;
             preSystems.sort((a, b) => { return a.order - b.order; });
 
@@ -70,37 +62,132 @@ namespace paper {
             preSystems.length = 0;
         }
         /**
-         * @internal
+         * 
          */
         public update() {
-            const systems = this._systems;
+            for (const system of this._enableOrDisableSystems) {
+                if (system._enabled === system.enabled || !system.enabled || !system.onEnable) {
+                    continue;
+                }
 
-            for (const system of systems) {
-                if (system && system.enabled && !system._started) {
-                    system._started = true;
-                    system.onStart && system.onStart();
+                system.onEnable();
+
+                if (DEBUG) {
+                    console.debug(egret.getQualifiedClassName(this), "enabled.");
                 }
             }
 
-            for (const system of systems) {
-                if (system) {
-                    system.update();
+            for (const system of this._startSystems) {
+                if (!system._started) {
+                    continue;
+                }
+
+                system.onStart!();
+                system._started = true;
+            }
+
+            for (const system of this._reactiveSystems) {
+                if (!system.enabled) {
+                    continue;
+                }
+
+                const collectors = system.collectors;
+
+                if (system.onEntityAdded) {
+                    for (const collector of collectors) {
+                        for (const entity of collector.addedEntities) {
+                            system.onEntityAdded(entity, collector);
+                        }
+                    }
+                }
+
+                if (system.onComponentAdded) {
+                    for (const collector of collectors) {
+                        for (const component of collector.addedComponentes) {
+                            system.onComponentAdded(component, collector);
+                        }
+                    }
+                }
+
+                if (system.onComponentRemoved) {
+                    for (const collector of collectors) {
+                        for (const component of collector.removedComponentes) {
+                            system.onComponentRemoved(component, collector);
+                        }
+                    }
+                }
+
+                if (system.onEntityRemoved) {
+                    for (const collector of collectors) {
+                        for (const entity of collector.removedEntities) {
+                            system.onEntityRemoved(entity, collector);
+                        }
+                    }
                 }
             }
 
-            for (const system of systems) {
-                if (system) {
-                    system.lateUpdate();
+            for (const system of this._updateSystems) {
+                let startTime = 0;
+
+                if (DEBUG) {
+                    (system.deltaTime as uint) = 0;
+                    startTime = clock.now;
+                }
+
+                if (!system.enabled) {
+                    continue;
+                }
+
+                system.onUpdate!(clock.deltaTime);
+
+                if (DEBUG) {
+                    (system.deltaTime as uint) += clock.now - startTime;
+                }
+            }
+
+            for (const system of this._lateUpdateSystems) {
+                if (!system.enabled) {
+                    continue;
+                }
+
+                let startTime = 0;
+
+                if (DEBUG) {
+                    startTime = clock.now;
+                }
+
+                system.onLateUpdate!(clock.deltaTime);
+
+                if (DEBUG) {
+                    (system.deltaTime as uint) += clock.now - startTime;
+                }
+            }
+
+            for (const system of this._enableOrDisableSystems) {
+                if (system._enabled === system.enabled) {
+                    continue;
+                }
+
+                system._enabled = system.enabled;
+
+                if (system.enabled || !system.onDisable) {
+                    continue;
+                }
+
+                system.onDisable();
+
+                if (DEBUG) {
+                    console.debug(egret.getQualifiedClassName(this), "disabled.");
                 }
             }
         }
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
-        public preRegister<T extends BaseSystem>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update) {
+        public preRegister<T extends BaseSystem<IEntity>>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update) {
             if (this._systems.length > 0) {
                 this.register(systemClass, order);
-                
+
                 return this;
             }
 
@@ -111,14 +198,39 @@ namespace paper {
         /**
          * 为程序注册一个指定的系统。
          */
-        public register<T extends BaseSystem>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update, config?: any) {
-            let system = this._checkRegister(systemClass);
+        public register<T extends BaseSystem<IEntity>>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update, config?: any) {
+            let system = this.getSystem(systemClass);
+
             if (system) {
+                console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
+
                 return system;
             }
 
-            system = BaseSystem.create(systemClass, order) as T;
-            this._systems.splice(this._getSystemInsertIndex(order), 0, system);
+            system = BaseSystem.create(systemClass, order);
+
+            if (system.onEnable || system.onDisable) {
+                this._enableOrDisableSystems.splice(this._getSystemInsertIndex(this._enableOrDisableSystems, order), 0, system);
+            }
+
+            if (system.onStart) {
+                this._startSystems.splice(this._getSystemInsertIndex(this._startSystems, order), 0, system);
+            }
+
+            if (system.onEntityAdded || system.onComponentAdded || system.onComponentRemoved || system.onEntityRemoved) {
+                this._reactiveSystems.splice(this._getSystemInsertIndex(this._reactiveSystems, order), 0, system);
+            }
+
+            if (system.onUpdate) {
+                this._updateSystems.splice(this._getSystemInsertIndex(this._updateSystems, order), 0, system);
+            }
+
+            if (system.onLateUpdate) {
+                this._lateUpdateSystems.splice(this._getSystemInsertIndex(this._lateUpdateSystems, order), 0, system);
+            }
+
+            this._systems.splice(this._getSystemInsertIndex(this._systems, order), 0, system);
+
             system.initialize(config);
 
             return system;
@@ -126,30 +238,19 @@ namespace paper {
         /**
          * 从程序已注册的全部系统中获取一个指定的系统。
          */
-        public getSystem<T extends BaseSystem>(systemClass: { new(): T }) {
+        public getSystem<T extends BaseSystem<IEntity>>(systemClass: { new(): T }) {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
-                    return system as T;
+                    return system;
                 }
             }
 
             return null;
         }
         /**
-         * 从程序已注册的全部系统中获取一个指定的系统，如果尚未注册，则注册该系统。
-         */
-        public getOrRegisterSystem<T extends BaseSystem>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update) {
-            let system = this.getSystem(systemClass);
-            if (!system) {
-                system = this.register(systemClass, order);
-            }
-
-            return system;
-        }
-        /**
          * 程序已注册的全部系统。
          */
-        public get systems(): ReadonlyArray<BaseSystem> {
+        public get systems(): ReadonlyArray<BaseSystem<IEntity>> {
             return this._systems;
         }
     }
