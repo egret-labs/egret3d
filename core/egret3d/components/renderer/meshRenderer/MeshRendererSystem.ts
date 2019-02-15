@@ -3,7 +3,7 @@ namespace egret3d {
      * 网格渲染组件系统。
      * - 为网格渲染组件生成绘制信息。
      */
-    export class MeshRendererSystem extends paper.BaseSystem {
+    export class MeshRendererSystem extends paper.BaseSystem<paper.GameObject> {
         public readonly interests = [
             {
                 componentClass: MeshFilter,

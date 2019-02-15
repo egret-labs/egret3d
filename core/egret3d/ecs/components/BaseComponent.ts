@@ -4,18 +4,36 @@ namespace paper {
      */
     export abstract class BaseComponent extends Component {
         /**
+         * @internal
+         */
+        public static readonly isAbstract: IComponentClass<IComponent> = BaseComponent as any;
+        /**
          * 该组件的游戏实体。
          */
-        public readonly gameObject: GameObject = null!; // 该属性由 GameObject 设置。
+        public readonly gameObject: GameObject = null!;
+        /**
+         * @internal
+         */
+        public _destroy() {
+            super._destroy();
+
+            (this.gameObject as GameObject) = null!;
+        }
+
+        public initialize(config?: any): void {
+            super.initialize(config);
+
+            (this.gameObject as GameObject) = this.entity as GameObject;
+        }
 
         public set enabled(value: boolean) {
-            if (this._isDestroyed || this._enabled === value) {
+            if (this._enabled === value || this.isDestroyed) {
                 return;
             }
 
             this._enabled = value;
 
-            if (this.gameObject.activeInHierarchy) {
+            if ((this._lifeStates & ComponentLifeState.Initialized) && this.gameObject.activeInHierarchy) {
                 Component.dispatchEnabledEvent(this, value);
             }
         }

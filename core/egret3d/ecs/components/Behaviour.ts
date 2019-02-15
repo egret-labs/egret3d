@@ -20,19 +20,36 @@ namespace paper {
         /**
          * @internal
          */
-        public static readonly __isBehaviour: boolean = true;
+        public static readonly isAbstract: IComponentClass<IComponent> = Behaviour as any;
         /**
          * @internal
          */
-        public _isReseted: boolean = false;
+        public static readonly isBehaviour: boolean = true;
         /**
          * @internal
          */
-        public _isAwaked: boolean = false;
-        /**
-         * @internal
-         */
-        public _isStarted: boolean = false;
+        public _destroy() {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
+                if (this._lifeStates & ComponentLifeState.Awaked) {
+                    this.onDestroy && this.onDestroy();
+                }
+            }
+
+            super._destroy();
+        }
+
+        public initialize(config?: any): void {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
+                (this.gameObject as GameObject) = this.entity as GameObject; //
+
+                if (this._enabled && this.gameObject.activeInHierarchy) {
+                    this.onAwake && this.onAwake!(config);
+                    this._lifeStates |= ComponentLifeState.Awaked;
+                }
+            }
+
+            super.initialize(config);
+        }
         /**
          * 该组件被初始化时执行。
          * - 在该组件的整个生命周期中只执行一次。

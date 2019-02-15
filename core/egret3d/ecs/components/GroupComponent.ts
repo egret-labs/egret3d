@@ -12,10 +12,8 @@ namespace paper {
             (this.componentIndex as uint) = componentIndex;
         }
 
-        public addComponent(component: IComponent): this {
+        public addComponent(component: IComponent): void {
             this.components.push(component);
-
-            return this;
         }
 
         public removeComponent(component: IComponent): boolean {

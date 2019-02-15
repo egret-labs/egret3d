@@ -7,18 +7,13 @@ namespace paper {
          * 创建一个空场景。
          * @param name 场景的名称。
          */
-        public static createEmpty(name: string = DefaultNames.NoName, isActive: boolean = true) {
-            // const exScene = Application.sceneManager.getSceneByName(name); TODO
-            // if (exScene) {
-            //     console.warn("The scene with the same name already exists.");
-            //     return exScene;
-            // }
-
-            const scene = new Scene();
+        public static createEmpty<TScene extends Scene>(name: string = DefaultNames.NoName, isActive: boolean = true): TScene {
+            const scene = new paper.Scene();
+            scene._isDestroyed = false;
             scene.name = name;
-            SceneManager.getInstance().onSceneCreated.dispatch([scene, isActive]);
+            SceneManager.getInstance<TScene>().onSceneCreated.dispatch([scene as TScene, isActive]);
 
-            return scene;
+            return scene as TScene;
         }
         /**
          * 通过指定的场景资源创建一个场景。
@@ -40,7 +35,7 @@ namespace paper {
 
                 if (scene) {
                     if (combineStaticObjects && Application.playerMode !== PlayerMode.Editor) {
-                        egret3d.combine(scene.gameObjects);
+                        // egret3d.combine(scene.gameObjects); // TODO
                     }
 
                     return scene;
@@ -64,34 +59,10 @@ namespace paper {
         public extras?: any = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         private _isDestroyed: boolean = true;
-        private readonly _entities: IEntity[] = [];
+        private readonly _entities: Entity[] = [];
 
         private constructor() {
             super();
-        }
-        /**
-         * @internal
-         */
-        public addGameObject(gameObject: GameObject) {
-            if (this._gameObjects.indexOf(gameObject) >= 0) {
-                console.warn("Add game object error.", gameObject.path);
-                return;
-            }
-
-            this._gameObjects.push(gameObject);
-        }
-        /**
-         * @internal
-         */
-        public removeGameObject(gameObject: GameObject) {
-            const index = this._gameObjects.indexOf(gameObject);
-
-            if (index < 0) {
-                console.warn("Remove game object error.", gameObject.path);
-                return;
-            }
-
-            this._gameObjects.splice(index, 1);
         }
 
         public initialize(): void {
@@ -104,9 +75,7 @@ namespace paper {
                 this.extras = {};
             }
         }
-        /**
-         * 销毁该场景和场景中的全部实体。
-         */
+
         public destroy(): boolean {
             const sceneManager = SceneManager.getInstance();
 
@@ -141,7 +110,54 @@ namespace paper {
             return true;
         }
 
-        public getEntityByName(name: string): IEntity | null {
+        public addEntity(entity: Entity): boolean {
+            if (this._isDestroyed) {
+                if (DEBUG) {
+                    console.warn("The scene has been destroyed.");
+                }
+
+                return false;
+            }
+
+            const entities = this._entities;
+
+            if (entities.indexOf(entity) < 0) {
+                entities.push(entity);
+                entity.scene = this;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public removeEntity(entity: Entity): boolean {
+            if (this._isDestroyed) {
+                if (DEBUG) {
+                    console.warn("The scene has been destroyed.");
+                }
+
+                return false;
+            }
+
+            const entities = this._entities;
+            const index = entities.indexOf(entity);
+
+            if (index >= 0) {
+                entities.splice(index, 1);
+                entity.scene = null;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        public containsEntity(entity: Entity): boolean {
+            return this._entities.indexOf(entity) >= 0;
+        }
+
+        public getEntityByName(name: string): Entity | null {
             for (const entity of this._entities) {
                 if (entity.name === name) {
                     return entity;
@@ -149,10 +165,6 @@ namespace paper {
             }
 
             return null;
-        }
-
-        public containsEntity(entity: IEntity): boolean {
-            return this._entities.indexOf(entity) >= 0;
         }
 
         public get isDestroyed(): boolean {
@@ -163,7 +175,7 @@ namespace paper {
             return this._entities.length;
         }
 
-        public get entities(): ReadonlyArray<IEntity> {
+        public get entities(): ReadonlyArray<Entity> {
             return this._entities;
         }
     }

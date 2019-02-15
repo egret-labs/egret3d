@@ -4,7 +4,7 @@ namespace paper {
     /**
      * 
      */
-    export class Matcher<TEntity extends IEntity> implements IAllOfMatcher<TEntity>  {
+    export class Matcher<TEntity extends Entity> implements IAllOfMatcher<TEntity>  {
 
         public static create(...components: (IComponentClass<IComponent>)[]) {
             const matcher = new Matcher();
@@ -18,12 +18,13 @@ namespace paper {
         private readonly _allOfComponents: IComponentClass<IComponent>[] = [];
         private readonly _anyOfComponents: IComponentClass<IComponent>[] = [];
         private readonly _noneOfComponents: IComponentClass<IComponent>[] = [];
+        private readonly _extraOfComponents: IComponentClass<IComponent>[] = [];
 
         private constructor() {
         }
 
         private _sortComponents(a: IComponentClass<IComponent>, b: IComponentClass<IComponent>) {
-            return a.__index - b.__index;
+            return a.componentIndex - b.componentIndex;
         }
 
         private _distinct(source: ReadonlyArray<IComponentClass<IComponent>>, target: IComponentClass<IComponent>[]) {
@@ -65,6 +66,12 @@ namespace paper {
                 }
             }
 
+            if (this._extraOfComponents.length > 0) {
+                for (const component of this._extraOfComponents) {
+                    _components.push(component);
+                }
+            }
+
             this._distinct(_components, this._components);
 
             if (_components.length > 0) {
@@ -92,10 +99,24 @@ namespace paper {
             return this;
         }
 
+        public extraOf(...components: (IComponentClass<IComponent>)[]): INoneOfMatcher<TEntity> {
+            if (this._id) {
+                return this;
+            }
+
+            this._distinct(components, this._extraOfComponents);
+
+            return this;
+        }
+
         public matches(entity: TEntity): boolean {
             return (this._allOfComponents.length > 0 || entity.hasComponents(this._allOfComponents))
                 && (this._anyOfComponents.length > 0 || entity.hasAnyComponents(this._anyOfComponents))
                 && (this._noneOfComponents.length > 0 || !entity.hasAnyComponents(this._noneOfComponents));
+        }
+
+        public matchesExtra(component: IComponentClass<IComponent>): boolean {
+            return this._extraOfComponents.length > 0 || this._extraOfComponents.indexOf(component) >=0;
         }
 
         public get id(): string {
@@ -104,7 +125,7 @@ namespace paper {
 
                 const indices = [] as uint[];
                 for (const component of this._components) {
-                    indices.push(component.__index);
+                    indices.push(component.componentIndex);
                 }
 
                 this._id = indices.join(",");
@@ -127,6 +148,10 @@ namespace paper {
 
         public get noneOfComponents(): ReadonlyArray<IComponentClass<IComponent>> {
             return this._noneOfComponents;
+        }
+
+        public get extraOfComponents(): ReadonlyArray<IComponentClass<IComponent>> {
+            return this._extraOfComponents;
         }
     }
 }

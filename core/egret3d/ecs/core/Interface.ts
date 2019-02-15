@@ -259,38 +259,33 @@ namespace paper {
      */
     export interface IComponentClass<T extends IComponent> extends IBaseClass {
         /**
-         * 该组件的实例是否在编辑模式拥有生命周期。
-         * @internal
+         * 该组件是否在编辑模式拥有生命周期。
          */
         readonly executeInEditMode: boolean;
         /**
-         * 是否允许在同一实体上添加多个该组件的实例。
-         * @internal
+         * 是否允许在同一实体上添加多个该组件。
          */
         readonly allowMultiple: boolean;
         /**
-         * 该组件实例依赖的其他前置组件。
-         * @internal
+         * 该组件依赖的其他前置组件。
          */
         readonly requireComponents: IComponentClass<IComponent>[] | null;
         /**
-         * 该组件实例是否为单例组件。
-         * @internal
+         * 该组件是否为抽象组件。
          */
-        readonly __isSingleton: boolean;
+        readonly isAbstract: IComponentClass<IComponent>;
         /**
-         * @internal
+         * 该组件是否为单例组件。
          */
-        readonly __isBehaviour: boolean;
+        readonly isSingleton: boolean;
         /**
-         * 该组件实例索引。
-         * @internal
+         * 该组件是否为 Behaviour 组件。
          */
-        readonly __index: int;
+        readonly isBehaviour: boolean;
         /**
-         * @internal
+         * 该组件索引。
          */
-        readonly __isAbstract: IComponentClass<IComponent>;
+        readonly componentIndex: int;
         /**
          * 禁止实例化组件。
          * @protected
@@ -396,9 +391,13 @@ namespace paper {
          */
         enabled: boolean;
         /**
-         * 
+         * 该组件的实体。
          */
         readonly entity: IEntity;
+        /**
+         * @internal
+         */
+        _destroy(): void;
         /**
          * 组件被移除后，内部初始化时执行。
          * - 重写此方法时，必须调用 `super.initialize()`。
@@ -428,6 +427,11 @@ namespace paper {
          * @param entity 
          */
         matches(entity: TEntity): boolean;
+        /**
+         * 
+         * @param component 
+         */
+        matchesExtra(component: IComponentClass<IComponent>): boolean;
     }
     /**
      * 
@@ -445,12 +449,20 @@ namespace paper {
          * 
          */
         readonly noneOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
+        /**
+         * 
+         */
+        readonly extraOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
     }
     /**
      * 
      */
     export interface INoneOfMatcher<TEntity extends IEntity> extends ICompoundMatcher<TEntity> {
-
+        /**
+         * 
+         * @param componentClasses 
+         */
+        extraOf(...componentClasses: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
     }
     /**
      * 
@@ -479,19 +491,23 @@ namespace paper {
         /**
          * 
          */
-        readonly addedEntities: TEntity[];
+        readonly addedEntities: (TEntity | null)[];
         /**
          * 
          */
-        readonly removedEntities: TEntity[];
+        readonly removedEntities: (TEntity | null)[];
         /**
          * 
          */
-        readonly addedComponentes: IComponent[];
+        readonly addedComponentes: (IComponent | null)[];
         /**
          * 
          */
-        readonly removedComponentes: IComponent[];
+        readonly removedComponentes: (IComponent | null)[];
+        /**
+         * 
+         */
+        clear(): void;
     }
     /**
      * 
@@ -516,7 +532,7 @@ namespace paper {
         /**
          * 
          */
-        addOrRemoveEntity(entity: TEntity, component: IComponent, isAdded: boolean): void;
+        handleEvent(entity: TEntity, component: IComponent, isAdded: boolean): void;
         /**
          * 
          */
@@ -544,7 +560,7 @@ namespace paper {
         getGroup(matcher: IMatcher<TEntity>): IGroup<TEntity>;
     }
     /**
-     * 
+     * 场景接口。
      */
     export interface IScene {
         /**
@@ -552,15 +568,15 @@ namespace paper {
          */
         readonly isDestroyed: boolean;
         /**
-         * 
+         * 该场景的实体总数。
          */
         readonly entityCount: uint;
         /**
-         * 
+         * 该场景的名称。
          */
         name: string;
         /**
-         * 
+         * 该场景的全部实体。
          */
         readonly entities: ReadonlyArray<IEntity>;
         /**
@@ -576,19 +592,19 @@ namespace paper {
          */
         destroy(): boolean;
         /**
-         * 
+         * 添加指定实体到该场景。
          */
         addEntity(entity: IEntity): boolean;
         /**
-         * 
+         * 从该场景移除指定实体。
          */
         removeEntity(entity: IEntity): boolean;
         /**
-         * 
+         * 该场景是否包含指定实体。
          */
         containsEntity(entity: IEntity): boolean;
         /**
-         * 
+         * 通过实体名称获取该场景的一个实体。
          */
         getEntityByName(name: string): IEntity | null;
     }

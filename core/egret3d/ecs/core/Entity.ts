@@ -6,26 +6,22 @@ namespace paper {
         /**
          * 当实体被创建时派发事件。
          */
-        public static readonly onEntityCreated: signals.Signal<IEntity> = new signals.Signal();
+        public static readonly onEntityCreated: signals.Signal<Entity> = new signals.Signal();
         /**
          * 当实体将要被销毁时派发事件。
          */
-        public static readonly onEntityDestroy: signals.Signal<IEntity> = new signals.Signal();
+        public static readonly onEntityDestroy: signals.Signal<Entity> = new signals.Signal();
         /**
          * 当实体被销毁时派发事件。
          */
-        public static readonly onEntityDestroyed: signals.Signal<IEntity> = new signals.Signal();
-        /**
-         * @internal
-         */
-        public static _globalEntity: IEntity = null!;
+        public static readonly onEntityDestroyed: signals.Signal<Entity> = new signals.Signal();
 
         public static create(name: string = DefaultNames.NoName): Entity {
             const entity = new Entity();
-            entity._isDestroyed = false;
             entity._enabled = true;
             entity.name = name;
             entity.scene = SceneManager.getInstance().activeScene;
+            Entity.onEntityCreated.dispatch(entity);
 
             return entity;
         }
@@ -40,13 +36,11 @@ namespace paper {
         public extras?: EntityExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         protected _componentsDirty: boolean = false;
-        protected _isDestroyed: boolean = true;
         @serializedField("_activeSelf") // TODO 反序列化 bug
         protected _enabled: boolean = false;
         protected readonly _components: (IComponent | undefined)[] = [];
         protected readonly _cachedComponents: IComponent[] = [];
-        // public _context: IContext<this> | null = null;
-        protected _scene: IScene | null = null;
+        protected _scene: Scene | null = null;
         /**
          * 禁止实例化实体。
          * @protected
@@ -62,7 +56,6 @@ namespace paper {
                 }
             }
 
-            this._isDestroyed = true;
             this._components.length = 0;
             this._scene = null;
             Entity.onEntityDestroyed.dispatch(this);
@@ -71,8 +64,8 @@ namespace paper {
         protected _addComponent(component: IComponent, config?: any) {
             component.initialize(config);
 
-            if (this._enabled) {
-                Component.dispatchEnabledEvent(component, component.enabled);
+            if (this._enabled && component.enabled) {
+                Component.dispatchEnabledEvent(component, true);
             }
         }
 
@@ -80,8 +73,7 @@ namespace paper {
             // disposeCollecter.components.push(component); TODO
 
             component.enabled = false;
-
-            (component as Component)._isDestroyed = true;
+            component._destroy();
 
             if (groupComponent) {
                 groupComponent.removeComponent(component);
@@ -100,14 +92,14 @@ namespace paper {
                 delete this._components[groupComponent.componentIndex];
             }
             else {
-                delete this._components[(component.constructor as IComponentClass<IComponent>).__index];
+                delete this._components[(component.constructor as IComponentClass<IComponent>).componentIndex];
             }
 
             this._componentsDirty = true;
         }
 
         private _getComponent(componentClass: IComponentClass<IComponent>) {
-            const componentIndex = componentClass.__index;
+            const componentIndex = componentClass.componentIndex;
 
             return componentIndex < 0 ? undefined : this._components[componentIndex];
         }
@@ -147,12 +139,11 @@ namespace paper {
 
             this._componentsDirty = false;
             this._cachedComponents.length = 0;
-            // this._context = null;
             this._scene = null;
         }
 
         public destroy(): boolean {
-            if (this._isDestroyed) {
+            if (this.isDestroyed) {
                 if (DEBUG) {
                     console.warn("The entity has been destroyed.");
                 }
@@ -160,7 +151,7 @@ namespace paper {
                 return false;
             }
 
-            if (this === Entity._globalEntity) {
+            if (this === SceneManager.getInstance().globalEntity) {
                 if (DEBUG) {
                     console.warn("Cannot destroy singleton entity.");
                 }
@@ -179,11 +170,11 @@ namespace paper {
                 throw new Error();
             }
 
-            if (this._isDestroyed) {
+            if (this.isDestroyed) {
                 throw new Error("The entity has been destroyed.");
             }
 
-            if (this.constructor === Entity && componentClass.__isBehaviour) {
+            if (this.constructor === Entity && componentClass.isBehaviour) {
                 throw new Error("Can not add behaviour to entity.");
             }
 
@@ -191,11 +182,11 @@ namespace paper {
             registerClass(componentClass);
 
             // Singleton component.
-            if (componentClass.__isSingleton && this !== Entity._globalEntity) {
-                return this.getComponent(componentClass) || this.addComponent(componentClass, config);
+            if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) {
+                return SceneManager.getInstance().globalEntity.getComponent(componentClass) || SceneManager.getInstance().globalEntity.addComponent(componentClass, config);
             }
 
-            const componentIndex = componentClass.__index;
+            const componentIndex = componentClass.componentIndex;
             const components = this._components;
             const existedComponent = components[componentIndex];
 
@@ -227,7 +218,8 @@ namespace paper {
                     //
                     const groupComponent = Component.create(this, GroupComponent);
                     groupComponent.initialize(componentIndex);
-                    groupComponent.addComponent(existedComponent).addComponent(component);
+                    groupComponent.addComponent(existedComponent);
+                    groupComponent.addComponent(component);
                     components[componentIndex] = groupComponent;
                 }
             }
@@ -251,8 +243,8 @@ namespace paper {
             if (componentInstanceOrClass instanceof BaseComponent) { // Remove component by instance.
                 const componentClass = componentInstanceOrClass.constructor as IComponentClass<T>;
 
-                if (componentClass.__isSingleton && this !== Entity._globalEntity) { // Singleton component.
-                    return Entity._globalEntity.removeComponent(componentInstanceOrClass);
+                if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // Singleton component.
+                    return SceneManager.getInstance().globalEntity.removeComponent(componentInstanceOrClass);
                 }
 
                 if (!this._isRequireComponent(componentClass)) {
@@ -263,8 +255,8 @@ namespace paper {
             else { // Remove component by class.
                 const componentClass = componentInstanceOrClass as IComponentClass<T>;
 
-                if (componentClass.__isSingleton && this !== Entity._globalEntity) { // Singleton component.
-                    return Entity._globalEntity.removeComponent(componentClass, isExtends);
+                if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // Singleton component.
+                    return SceneManager.getInstance().globalEntity.removeComponent(componentClass, isExtends);
                 }
 
                 if (isExtends) {
@@ -319,8 +311,8 @@ namespace paper {
             let result = false;
 
             if (componentClass) {
-                if (componentClass.__isSingleton && this !== Entity._globalEntity) { // Singleton component.
-                    return Entity._globalEntity.removeAllComponents(componentClass, isExtends);
+                if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // Singleton component.
+                    return SceneManager.getInstance().globalEntity.removeAllComponents(componentClass, isExtends);
                 }
 
                 if (isExtends) {
@@ -365,8 +357,8 @@ namespace paper {
         }
 
         public getComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
-            if (componentClass.__isSingleton && this !== Entity._globalEntity) { // SingletonComponent.
-                return Entity._globalEntity.getComponent(componentClass, isExtends);
+            if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // SingletonComponent.
+                return SceneManager.getInstance().globalEntity.getComponent(componentClass, isExtends);
             }
 
             if (isExtends) {
@@ -384,7 +376,7 @@ namespace paper {
                 }
             }
             else {
-                const componentIndex = componentClass.__index;
+                const componentIndex = componentClass.componentIndex;
 
                 if (componentIndex > 0) {
                     const component = this._components[componentIndex];
@@ -403,8 +395,8 @@ namespace paper {
         }
 
         public getComponents<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T[] {
-            if (componentClass.__isSingleton && this !== Entity._globalEntity) { // SingletonComponent.
-                return Entity._globalEntity.getComponents(componentClass, isExtends);
+            if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // SingletonComponent.
+                return SceneManager.getInstance().globalEntity.getComponents(componentClass, isExtends);
             }
 
             const components: T[] = [];
@@ -449,7 +441,7 @@ namespace paper {
             const components = this._components;
 
             for (let i = 0, l = componentClasses.length; i < l; ++i) {
-                const index = componentClasses[i].__index;
+                const index = componentClasses[i].componentIndex;
 
                 if (index < 0 || !components[index]) {
                     return false;
@@ -463,7 +455,7 @@ namespace paper {
             const components = this._components;
 
             for (let i = 0, l = componentClasses.length; i < l; ++i) {
-                const index = componentClasses[i].__index;
+                const index = componentClasses[i].componentIndex;
 
                 if (index >= 0 && components[index]) {
                     return true;
@@ -474,18 +466,19 @@ namespace paper {
         }
 
         public get isDestroyed(): boolean {
-            return this._isDestroyed;
+            return !this._scene;
         }
 
         public get dontDestroy(): boolean {
-            return this._scene === Scene.globalScene as any;
+            return this._scene === SceneManager.getInstance().globalScene;
         }
         public set dontDestroy(value: boolean) {
-            if (this._isDestroyed || this.dontDestroy === value || this === Entity._globalEntity) {
+            if (this.dontDestroy === value || this.isDestroyed) {
                 return;
             }
 
-            this.scene = value ? Scene.globalScene : Scene.activeScene;
+            const sceneManager = SceneManager.getInstance();
+            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
         }
 
         @editor.property(editor.EditType.CHECKBOX)
@@ -493,7 +486,7 @@ namespace paper {
             return this._enabled;
         }
         public set enabled(value: boolean) {
-            if (this._isDestroyed || this._enabled === value || this === Entity._globalEntity) {
+            if (this._enabled === value || this.isDestroyed) {
                 return;
             }
 
@@ -548,10 +541,10 @@ namespace paper {
             return cachedComponents;
         }
 
-        public get scene(): IScene | null {
+        public get scene(): Scene | null {
             return this._scene;
         }
-        public set scene(value: IScene | null) {
+        public set scene(value: Scene | null) {
             const sceneManager = SceneManager.getInstance();
 
             if (!value) {
@@ -563,10 +556,13 @@ namespace paper {
             }
 
             if (this._scene) {
-                value.addEntity(this);
+                this._scene.removeEntity(this);
             }
-            else {
-                this._scene = value;
+
+            this._scene = value;
+
+            if (value) {
+                value.addEntity(this);
             }
         }
     }

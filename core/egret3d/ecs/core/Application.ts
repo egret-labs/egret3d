@@ -10,17 +10,17 @@ namespace paper {
     /**
      * 应用程序。
      */
-    export class ECS {
-        private static _instance: ECS | null = null;
+    export class ECS<TScene extends Scene> {
+        private static _instance: ECS<Scene> | null = null;
         /**
          * 应用程序单例。
          */
-        public static getInstance() {
+        public static getInstance<TScene extends Scene>(): ECS<TScene> {
             if (!this._instance) {
-                this._instance = new ECS();
+                this._instance = new ECS<TScene>() as any;
             }
 
-            return this._instance;
+            return this._instance as any;
         }
         /**
          * 当应用程序的播放模式改变时派发事件。
@@ -31,17 +31,21 @@ namespace paper {
          */
         public readonly version: string = "1.4.0.001";
         /**
-         * 
-         */
-        public readonly gameObjectContext:Context<GameObject> = Context.create();
-        /**
          * 系统管理器。
          */
         public readonly systemManager: SystemManager = SystemManager.getInstance();
         /**
          * 场景管理器。
          */
-        public readonly sceneManager: SceneManager = SceneManager.getInstance();
+        public readonly sceneManager: SceneManager<TScene> = SceneManager.getInstance<TScene>();
+        /**
+         * 
+         */
+        public readonly entityContext: Context<Entity> = Context.create();
+        /**
+         * 
+         */
+        public readonly gameObjectContext: Context<GameObject> = Context.create();
 
         private _isFocused = false;
         private _isRunning = false;
@@ -56,15 +60,13 @@ namespace paper {
             if (this._isRunning) {
                 requestAnimationFrame(this._bindUpdate!);
             }
-
-            clock && clock.update(); // TODO
-            GameObjectGroup.update();
+            clock.update();
             this.systemManager.update();
         }
         /**
-         * @internal
+         * 
          */
-        public initialize(options: egret3d.RunEgretOptions) {
+        public initialize(options: egret3d.RunEgretOptions): void {
             this._playerMode = options.playerMode || PlayerMode.Player;
             this.systemManager.register(EnableSystem, SystemOrder.Enable);
             this.systemManager.register(StartSystem, SystemOrder.Start);
@@ -72,22 +74,19 @@ namespace paper {
             this.systemManager.register(UpdateSystem, SystemOrder.Update);
             this.systemManager.register(LateUpdateSystem, SystemOrder.LateUpdate);
             this.systemManager.register(DisableSystem, SystemOrder.Disable);
-
-            this.onComponentEnabled.add(this._onComponentEnabled, this);
-            this.onComponentEnabled.add(this._onComponentDisabled, this);
         }
         /**
          * TODO
          * @internal
          */
-        public pause() {
+        public pause(): void {
             this._isRunning = false;
         }
         /**
          * TODO
          * @internal
          */
-        public resume() {
+        public resume(): void {
             if (this._isRunning) {
                 return;
             }
@@ -103,7 +102,7 @@ namespace paper {
         /**
          * 
          */
-        public get isMobile() {
+        public get isMobile(): boolean {
             const userAgent = (navigator && navigator.userAgent) ? navigator.userAgent.toLowerCase() : "";
             return userAgent.indexOf("mobile") >= 0 || userAgent.indexOf("android") >= 0;
         }
@@ -111,20 +110,20 @@ namespace paper {
          * TODO
          * @internal
          */
-        public get isFocused() {
+        public get isFocused(): boolean {
             return this._isFocused;
         }
         /**
          * TODO
          * @internal
          */
-        public get isRunning() {
+        public get isRunning(): boolean {
             return this._isRunning;
         }
         /**
          * 运行模式。
          */
-        public get playerMode() {
+        public get playerMode(): PlayerMode {
             return this._playerMode;
         }
         public set playerMode(value: PlayerMode) {
@@ -140,5 +139,5 @@ namespace paper {
     /**
      * 应用程序单例。
      */
-    export const Application = ECS.getInstance();
+    export const Application = ECS.getInstance<Scene>();
 }

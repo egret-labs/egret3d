@@ -2,11 +2,11 @@ namespace paper {
     /**
      * 
      */
-    export class Context<TEntity extends IEntity> implements IContext<TEntity> {
+    export class Context<TEntity extends Entity> implements IContext<TEntity> {
         /**
          * 
          */
-        public static create<TEntity extends IEntity>(): Context<TEntity> {
+        public static create<TEntity extends Entity>(): Context<TEntity> {
             const context = new Context<TEntity>();
 
             return context;
@@ -16,31 +16,31 @@ namespace paper {
         private readonly _componentsGroups: IGroup<TEntity>[][] = [];
         private readonly _groups: { [key: string]: IGroup<TEntity> } = {};
 
-        private _onComponentEnabled([entity, component]: [IEntity, IComponent]) {
-            const componentIndex = (component.constructor as IComponentClass<IComponent>).__index;
-            const groups = this._componentsGroups[componentIndex];
-
-            if (groups) {
-                for (const group of groups) {
-                    group.addOrRemoveEntity(entity as TEntity, component, true);
-                }
-            }
-        }
-
-        private _onComponentDisabled([entity, component]: [IEntity, IComponent]) {
-            const componentIndex = (component.constructor as IComponentClass<IComponent>).__index;
-            const groups = this._componentsGroups[componentIndex];
-
-            if (groups) {
-                for (const group of groups) {
-                    group.addOrRemoveEntity(entity as TEntity, component, false);
-                }
-            }
-        }
-
         private constructor() {
             Component.onComponentEnabled.add(this._onComponentEnabled);
             Component.onComponentDisabled.add(this._onComponentDisabled);
+        }
+
+        private _onComponentEnabled([entity, component]: [Entity, IComponent]) {
+            const componentIndex = (component.constructor as IComponentClass<IComponent>).componentIndex;
+            const groups = this._componentsGroups[componentIndex];
+
+            if (groups) {
+                for (const group of groups) {
+                    group.handleEvent(entity as TEntity, component, true);
+                }
+            }
+        }
+
+        private _onComponentDisabled([entity, component]: [Entity, IComponent]) {
+            const componentIndex = (component.constructor as IComponentClass<IComponent>).componentIndex;
+            const groups = this._componentsGroups[componentIndex];
+
+            if (groups) {
+                for (const group of groups) {
+                    group.handleEvent(entity as TEntity, component, false);
+                }
+            }
         }
 
         public containsEntity(entity: TEntity): boolean {
@@ -57,7 +57,7 @@ namespace paper {
                 groups[id] = group;
 
                 for (const componentClass of matcher.components) {
-                    const componentIndex = componentClass.__index;
+                    const componentIndex = componentClass.componentIndex;
 
                     if (!componentsGroups[componentIndex]) {
                         componentsGroups[componentIndex] = [];
@@ -78,8 +78,4 @@ namespace paper {
             return this._entities;
         }
     }
-    /**
-     * @internal
-     */
-    export const entityContext = Context.create<Entity>();
 }

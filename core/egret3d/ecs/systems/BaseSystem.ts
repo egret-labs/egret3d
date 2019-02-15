@@ -1,16 +1,14 @@
 namespace paper {
-    let _createEnabled = false;
     /**
      * 基础系统。
      * - 全部系统的基类。
      */
-    export abstract class BaseSystem<TEntity extends IEntity> {
+    export abstract class BaseSystem<TEntity extends Entity> {
         /**
          * @internal
          */
-        public static create(systemClass: { new(order?: SystemOrder): BaseSystem<IEntity> }, order: SystemOrder) {
-            _createEnabled = true;
-            return new systemClass(order);
+        public static create<TEntity extends Entity>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): BaseSystem<TEntity> }, context: Context<TEntity>, order: SystemOrder) {
+            return new systemClass(context, order);
         }
         /**
          * 该系统是否被激活。
@@ -48,12 +46,10 @@ namespace paper {
          * 禁止实例化系统。
          * @protected
          */
-        public constructor(order: SystemOrder = -1) {
-            if (!_createEnabled) {
-                throw new Error("Create an instance of a system is not allowed.");
-            }
-            _createEnabled = false;
-
+        public constructor(context: Context<Entity>, order: SystemOrder = -1) {
+            // this.collectors = [
+            //     Collector.create(context)
+            // ];
             this.order = order;
         }
         /**

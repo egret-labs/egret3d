@@ -15,18 +15,18 @@ namespace paper {
             return this._instance;
         }
 
-        private readonly _preSystems: { systemClass: { new(): BaseSystem<IEntity> }, order: number }[] = [];
-        private readonly _systems: BaseSystem<IEntity>[] = [];
-        private readonly _enableOrDisableSystems: BaseSystem<IEntity>[] = [];
-        private readonly _startSystems: BaseSystem<IEntity>[] = [];
-        private readonly _reactiveSystems: BaseSystem<IEntity>[] = [];
-        private readonly _updateSystems: BaseSystem<IEntity>[] = [];
-        private readonly _lateUpdateSystems: BaseSystem<IEntity>[] = [];
+        private readonly _preSystems: [{ new(): BaseSystem<Entity> }, Context<Entity>, int][] = [];
+        private readonly _systems: BaseSystem<Entity>[] = [];
+        private readonly _enableOrDisableSystems: BaseSystem<Entity>[] = [];
+        private readonly _startSystems: BaseSystem<Entity>[] = [];
+        private readonly _reactiveSystems: BaseSystem<Entity>[] = [];
+        private readonly _updateSystems: BaseSystem<Entity>[] = [];
+        private readonly _lateUpdateSystems: BaseSystem<Entity>[] = [];
 
         private constructor() {
         }
 
-        private _getSystemInsertIndex(systems: BaseSystem<IEntity>[], order: SystemOrder) {
+        private _getSystemInsertIndex(systems: BaseSystem<Entity>[], order: SystemOrder) {
             let index = -1;
             const systemCount = systems.length;
 
@@ -53,10 +53,10 @@ namespace paper {
          */
         public preRegisterSystems() {
             const preSystems = this._preSystems;
-            preSystems.sort((a, b) => { return a.order - b.order; });
+            preSystems.sort((a, b) => { return a[2] - b[2]; });
 
             for (const pair of preSystems) {
-                this.register(pair.systemClass, pair.order);
+                this.register.apply(this, pair);
             }
 
             preSystems.length = 0;
@@ -65,6 +65,8 @@ namespace paper {
          * 
          */
         public update() {
+            clock && clock.update(); // TODO
+
             for (const system of this._enableOrDisableSystems) {
                 if (system._enabled === system.enabled || !system.enabled || !system.onEnable) {
                     continue;
@@ -96,7 +98,9 @@ namespace paper {
                 if (system.onEntityAdded) {
                     for (const collector of collectors) {
                         for (const entity of collector.addedEntities) {
-                            system.onEntityAdded(entity, collector);
+                            if (entity) {
+                                system.onEntityAdded(entity, collector);
+                            }
                         }
                     }
                 }
@@ -104,7 +108,9 @@ namespace paper {
                 if (system.onComponentAdded) {
                     for (const collector of collectors) {
                         for (const component of collector.addedComponentes) {
-                            system.onComponentAdded(component, collector);
+                            if (component) {
+                                system.onComponentAdded(component, collector);
+                            }
                         }
                     }
                 }
@@ -112,7 +118,9 @@ namespace paper {
                 if (system.onComponentRemoved) {
                     for (const collector of collectors) {
                         for (const component of collector.removedComponentes) {
-                            system.onComponentRemoved(component, collector);
+                            if (component) {
+                                system.onComponentRemoved(component, collector);
+                            }
                         }
                     }
                 }
@@ -120,7 +128,9 @@ namespace paper {
                 if (system.onEntityRemoved) {
                     for (const collector of collectors) {
                         for (const entity of collector.removedEntities) {
-                            system.onEntityRemoved(entity, collector);
+                            if (entity) {
+                                system.onEntityRemoved(entity, collector);
+                            }
                         }
                     }
                 }
@@ -184,21 +194,21 @@ namespace paper {
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
-        public preRegister<T extends BaseSystem<IEntity>>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update) {
+        public preRegister<TEntity extends Entity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update) {
             if (this._systems.length > 0) {
-                this.register(systemClass, order);
+                this.register(systemClass, context, order);
 
                 return this;
             }
 
-            this._preSystems.unshift({ systemClass, order });
+            this._preSystems.unshift([systemClass, context, order]);
 
             return this;
         }
         /**
          * 为程序注册一个指定的系统。
          */
-        public register<T extends BaseSystem<IEntity>>(systemClass: { new(): T }, order: SystemOrder = SystemOrder.Update, config?: any) {
+        public register<TEntity extends Entity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any) {
             let system = this.getSystem(systemClass);
 
             if (system) {
@@ -207,7 +217,7 @@ namespace paper {
                 return system;
             }
 
-            system = BaseSystem.create(systemClass, order);
+            system = BaseSystem.create(systemClass, context, order);
 
             if (system.onEnable || system.onDisable) {
                 this._enableOrDisableSystems.splice(this._getSystemInsertIndex(this._enableOrDisableSystems, order), 0, system);
@@ -238,7 +248,7 @@ namespace paper {
         /**
          * 从程序已注册的全部系统中获取一个指定的系统。
          */
-        public getSystem<T extends BaseSystem<IEntity>>(systemClass: { new(): T }) {
+        public getSystem<T extends BaseSystem<Entity>>(systemClass: { new(): T }) {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
                     return system;
@@ -250,7 +260,7 @@ namespace paper {
         /**
          * 程序已注册的全部系统。
          */
-        public get systems(): ReadonlyArray<BaseSystem<IEntity>> {
+        public get systems(): ReadonlyArray<BaseSystem<Entity>> {
             return this._systems;
         }
     }

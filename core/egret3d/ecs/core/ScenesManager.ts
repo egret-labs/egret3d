@@ -2,41 +2,42 @@ namespace paper {
     /**
      * 程序场景管理器。
      */
-    export class SceneManager {
-        private static _instance: SceneManager | null = null;
+    export class SceneManager<TScene extends Scene> {
+        private static _instance: SceneManager<Scene> | null = null;
         /**
          * 场景管理器单例。
          */
-        public static getInstance() {
+        public static getInstance<TScene extends Scene>(): SceneManager<TScene> {
             if (!this._instance) {
-                this._instance = new SceneManager();
+                this._instance = new SceneManager<TScene>() as any;
             }
 
-            return this._instance;
+            return this._instance as any;
         }
         /**
          * 
          */
-        public readonly onSceneCreated: signals.Signal<[IScene, boolean]> = new signals.Signal();
+        public readonly onSceneCreated: signals.Signal<[TScene, boolean]> = new signals.Signal();
         /**
          * 
          */
-        public readonly onSceneDestroy: signals.Signal<IScene> = new signals.Signal();
+        public readonly onSceneDestroy: signals.Signal<TScene> = new signals.Signal();
         /**
          * 
          */
-        public readonly onSceneDestroyed: signals.Signal<IScene> = new signals.Signal();
+        public readonly onSceneDestroyed: signals.Signal<TScene> = new signals.Signal();
 
-        private readonly _scenes: IScene[] = [];
-        private _globalScene: IScene | null = null;
-        private _editorScene: IScene | null = null;
+        private readonly _scenes: TScene[] = [];
+        private _globalEntity: Entity | null = null;
+        private _globalScene: TScene | null = null;
+        private _editorScene: TScene | null = null;
 
         private constructor() {
             this.onSceneCreated.add(this._addScene);
             this.onSceneDestroyed.add(this._removeScene);
         }
 
-        private _addScene([scene, isActive]: [IScene, boolean]) {
+        private _addScene([scene, isActive]: [TScene, boolean]) {
             const scenes = this._scenes;
 
             if (scenes.indexOf(scene) < 0) {
@@ -52,7 +53,7 @@ namespace paper {
             }
         }
 
-        private _removeScene(scene: IScene) {
+        private _removeScene(scene: TScene) {
             const scenes = this._scenes;
             const index = scenes.indexOf(scene);
 
@@ -64,14 +65,14 @@ namespace paper {
             }
         }
 
-        public createScene(name: string, isActive: boolean = true) {
-            return Scene.createEmpty(name);
+        public createScene(name: string, isActive: boolean = true): TScene {
+            return Scene.createEmpty(name, isActive);
         }
         /**
          * 卸载程序中的全部场景。
          * - 不包含全局场景。
          */
-        public destroyAllScene(excludes?: ReadonlyArray<IScene>): void {
+        public destroyAllScene(excludes?: ReadonlyArray<TScene>): void {
             const scenes = this._scenes;
 
             let i = scenes.length;
@@ -92,7 +93,7 @@ namespace paper {
         /**
          * 从程序已创建的全部场景中获取指定名称的场景。
          */
-        public getScene(name: string): IScene | null {
+        public getScene(name: string): TScene | null {
             for (const scene of this._scenes) {
                 if (scene.name === name) {
                     return scene;
@@ -104,16 +105,27 @@ namespace paper {
         /**
          * 程序已创建的全部动态场景。
          */
-        public get scenes(): ReadonlyArray<IScene> {
+        public get scenes(): ReadonlyArray<TScene> {
             return this._scenes;
+        }
+        /**
+         * 
+         */
+        public get globalEntity(): Entity {
+            if (!this._globalEntity) {
+                this._globalEntity = GameObject.create(DefaultNames.Global, DefaultTags.Global, this.globalScene);
+                this._globalEntity.dontDestroy = true;
+            }
+
+            return this._globalEntity as GameObject;
         }
         /**
          * 全局场景。
          * - 全局场景无法被销毁。
          */
-        public get globalScene(): IScene {
+        public get globalScene(): TScene {
             if (!this._globalScene) {
-                this._globalScene = Scene.createEmpty(DefaultNames.Global, false);
+                this._globalScene = this.createScene(DefaultNames.Global, false);
                 this._scenes.pop(); // Remove global scene from scenes.
             }
 
@@ -123,9 +135,9 @@ namespace paper {
          * 全局编辑器场景。
          * - 全局编辑器场景无法被销毁。
          */
-        public get editorScene(): IScene {
+        public get editorScene(): TScene {
             if (!this._editorScene) {
-                this._editorScene = Scene.createEmpty(DefaultNames.Editor, false);
+                this._editorScene = this.createScene(DefaultNames.Editor, false);
                 this._scenes.pop(); // Remove editor scene from scenes.
             }
 
@@ -134,16 +146,16 @@ namespace paper {
         /**
          * 当前激活的场景。
          */
-        public get activeScene(): IScene {
+        public get activeScene(): TScene {
             const scenes = this._scenes;
 
             if (scenes.length === 0) {
-                Scene.createEmpty();
+                this.createScene(DefaultNames.NoName);
             }
 
             return scenes[0];
         }
-        public set activeScene(value: IScene) {
+        public set activeScene(value: TScene) {
             const scenes = this._scenes;
             if (
                 scenes.length <= 1 ||
@@ -174,13 +186,13 @@ namespace paper {
         /**
          * @deprecated
          */
-        public unloadScene(scene: Scene) {
+        public unloadScene(scene: TScene) {
             scene.destroy();
         }
         /**
          * @deprecated
          */
-        public unloadAllScene(excludes?: ReadonlyArray<IScene>) {
+        public unloadAllScene(excludes?: ReadonlyArray<TScene>) {
             this.destroyAllScene(excludes);
         }
         /**

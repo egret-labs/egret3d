@@ -5,29 +5,17 @@ namespace paper {
      */
     export class GameObject extends Entity {
         /**
-         * @internal
-         */
-        // public static readonly _instances: GameObject[] = [];
-        /**
          * 创建实体，并添加到当前场景中。
          */
         public static create(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null): GameObject {
-            let gameObect: GameObject;
-            // if (this._instances.length > 0) {
-            //     gameObect = this._instances.pop()!;
-            // }
-            // else {
-            gameObect = new GameObject();
-            // }
+            const gameObect = new GameObject();
             gameObect._enabled = true;
-            gameObect._isDestroyed = false;
             gameObect._globalEnabled = false;
             gameObect.name = name;
             gameObect.tag = tag;
-            gameObect.scene = scene || Scene.activeScene;
-            gameObect.addComponent(egret3d.Transform);
-
-            Entity.onCreated.dispatch(gameObect);
+            gameObect.scene = scene || SceneManager.getInstance().activeScene;
+            gameObect.addComponent(egret3d.Transform); //
+            Entity.onEntityCreated.dispatch(gameObect);
 
             return gameObect;
         }
@@ -37,12 +25,7 @@ namespace paper {
          * - 静态组件都会添加到全局实体上。
          */
         public static get globalGameObject(): GameObject {
-            if (!this._globalEntity) {
-                this._globalEntity = GameObject.create(DefaultNames.Global, DefaultTags.Global, Scene.globalScene);
-                this._globalEntity.dontDestroy = true;
-            }
-
-            return this._globalEntity as GameObject;
+            return SceneManager.getInstance().globalEntity as GameObject;
         }
         /**
          * 是否是静态模式。
@@ -98,28 +81,39 @@ namespace paper {
             super._destroy();
         }
 
-        protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null) {
-            component.enabled = false;
-
-            if ((component.constructor as IComponentClass<IComponent>).__isBehaviour) {
-                if ((component as Behaviour)._isAwaked) {
-                    (component as Behaviour).onDestroy && (component as Behaviour).onDestroy!();
-                }
-
+        protected _addComponent(component: IComponent, config?: any) {
+            if (component.constructor === egret3d.Transform) {
+                (this.transform as egret3d.Transform) = component as egret3d.Transform;
+            }
+            else if (component instanceof BaseRenderer) {
+                (this.renderer as BaseRenderer) = component;
+            }
+            else if ((component.constructor as IComponentClass<IComponent>).isBehaviour) {
                 if ((component as Behaviour).onBeforeRender) {
-                    this._beforeRenderBehaviorCount--;
+                    this._beforeRenderBehaviorCount++;
                 }
             }
 
-            super._removeComponent(component, groupComponent);
+            component.initialize(config);
 
-            ((component as BaseComponent).gameObject as GameObject) = null!;
+            if (this.activeInHierarchy && component.enabled) {
+                Component.dispatchEnabledEvent(component, true);
+            }
+        }
+
+        protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null) {
+            super._removeComponent(component, groupComponent);
 
             if (component === this.transform) {
                 (this.transform as egret3d.Transform) = null!;
             }
             else if (component === this.renderer) {
                 (this.renderer as BaseRenderer | null) = null;
+            }
+            else if ((component.constructor as IComponentClass<IComponent>).isBehaviour) {
+                if ((component as Behaviour).onBeforeRender) {
+                    this._beforeRenderBehaviorCount--;
+                }
             }
         }
         /**
@@ -136,33 +130,13 @@ namespace paper {
 
                     if (component.constructor === GroupComponent) {
                         for (const componentInGroup of (component as GroupComponent).components) {
-                            if (
-                                (componentInGroup.constructor as IComponentClass<IComponent>).__isBehaviour &&
-                                !(<any>componentInGroup as Behaviour)._isAwaked &&
-                                (Application.playerMode !== PlayerMode.Editor || (componentInGroup.constructor as IComponentClass<Behaviour>).executeInEditMode)
-                            ) {
-                                (<any>componentInGroup as Behaviour).onAwake && (<any>componentInGroup as Behaviour).onAwake!();
-                                (<any>componentInGroup as Behaviour)._isAwaked = true;
-                            }
-
                             if (componentInGroup.enabled) {
                                 Component.dispatchEnabledEvent(componentInGroup, currentEnabled);
                             }
                         }
                     }
-                    else {
-                        if (
-                            (component.constructor as IComponentClass<IComponent>).__isBehaviour &&
-                            !(<any>component as Behaviour)._isAwaked &&
-                            (Application.playerMode !== PlayerMode.Editor || (component.constructor as IComponentClass<Behaviour>).executeInEditMode)
-                        ) {
-                            (<any>component as Behaviour).onAwake && (<any>component as Behaviour).onAwake!();
-                            (<any>component as Behaviour)._isAwaked = true;
-                        }
-
-                        if (component.enabled) {
-                            Component.dispatchEnabledEvent(component, currentEnabled);
-                        }
+                    else if (component.enabled) {
+                        Component.dispatchEnabledEvent(component, currentEnabled);
                     }
                 }
             }
@@ -184,6 +158,7 @@ namespace paper {
 
             this._globalEnabled = false;
             this._globalEnabledDirty = true;
+            this._beforeRenderBehaviorCount = 0;
         }
         /**
          * 销毁实体。
@@ -200,36 +175,6 @@ namespace paper {
             }
 
             return false;
-        }
-
-        protected _addComponent(component: IComponent, config?: any) {
-            if (component.constructor === egret3d.Transform) {
-                (this.transform as egret3d.Transform) = <any>component as egret3d.Transform;
-            }
-            else if (component instanceof BaseRenderer) {
-                (this.renderer as BaseRenderer) = component;
-            }
-            else if ((component.constructor as IComponentClass<IComponent>).__isBehaviour) {
-                if ((<any>component as Behaviour).onBeforeRender) {
-                    this._beforeRenderBehaviorCount++;
-                }
-            }
-
-            component.initialize(config);
-
-            if (this.activeInHierarchy) {
-                if (
-                    (component.constructor as IComponentClass<IComponent>).__isBehaviour &&
-                    (Application.playerMode !== PlayerMode.Editor || (component.constructor as IComponentClass<Behaviour>).executeInEditMode)
-                ) {
-                    (<any>component as Behaviour).onAwake && (<any>component as Behaviour).onAwake!(config);
-                    (<any>component as Behaviour)._isAwaked = true;
-                }
-
-                if (component.enabled) {
-                    Component.dispatchEnabledEvent(component, component.enabled);
-                }
-            }
         }
         /**
          * 获取一个自己或父级中指定的组件实例。
@@ -316,7 +261,7 @@ namespace paper {
          */
         public sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
             for (const component of this._components) {
-                if (component && (component.constructor as IComponentClass<T>).__isBehaviour && (component as T).isActiveAndEnabled) {
+                if (component && (component.constructor as IComponentClass<T>).isBehaviour && (component as T).isActiveAndEnabled) {
                     if (methodName in component) {
                         (component as any)[methodName](parameter);
                     }
@@ -355,7 +300,9 @@ namespace paper {
         }
 
         public set dontDestroy(value: boolean) {
-            if (this.dontDestroy === value || this === Entity._globalEntity) {
+            const sceneManager = SceneManager.getInstance();
+
+            if (this.dontDestroy === value || this === sceneManager.globalEntity) {
                 return;
             }
 
@@ -363,7 +310,7 @@ namespace paper {
                 this.transform.parent = null;
             }
 
-            this.scene = value ? Scene.globalScene : Scene.activeScene;
+            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
 
             for (const child of this.transform.children) {
                 child.gameObject.dontDestroy = value;
@@ -371,7 +318,7 @@ namespace paper {
         }
 
         public set enabled(value: boolean) {
-            if (this._isDestroyed || this._enabled === value || this === Entity._globalEntity) {
+            if (this._enabled === value || this.isDestroyed || this === SceneManager.getInstance().globalEntity) {
                 return;
             }
 
@@ -442,35 +389,13 @@ namespace paper {
         public set parent(gameObject: GameObject | null) {
             this.transform.parent = gameObject ? gameObject.transform : null;
         }
-        /**
-         * 全局实体。
-         * - 全局实体不可被销毁。
-         * - 静态组件都会添加到全局实体上。
-         */
-        public get globalGameObject(): GameObject {
-            return GameObject.globalGameObject;
-        }
 
         /**
          * @deprecated
          * @see paper.Scene#find()
          */
         public static find(name: string, scene: Scene | null = null) {
-            return (scene || Application.sceneManager.activeScene).find(name);
-        }
-        /**
-         * @deprecated
-         * @see paper.Scene#findWithTag()
-         */
-        public static findWithTag(tag: string, scene: Scene | null = null) {
-            return (scene || Application.sceneManager.activeScene).findWithTag(tag);
-        }
-        /**
-         * @deprecated
-         * @see paper.Scene#findGameObjectsWithTag()
-         */
-        public static findGameObjectsWithTag(tag: string, scene: Scene | null = null) {
-            return (scene || Application.sceneManager.activeScene).findGameObjectsWithTag(tag);
+            return (scene || SceneManager.getInstance().activeScene).getEntityByName(name);
         }
         /**
          * @deprecated
@@ -480,6 +405,12 @@ namespace paper {
             maxDistance: number = 0.0, cullingMask: Layer = Layer.Everything, raycastMesh: boolean = false
         ) {
             return egret3d.raycastAll(ray, gameObjects, maxDistance, cullingMask, raycastMesh);
+        }
+        /**
+         * @deprecated
+         */
+        public get globalGameObject(): GameObject {
+            return GameObject.globalGameObject;
         }
     }
 }
