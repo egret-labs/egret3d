@@ -99,6 +99,7 @@ namespace egret3d {
         Shininess = "shininess",
 
         BumpScale = "bumpScale",
+        NormalScale = "normalScale",
         Roughness = "roughness",
         Metalness = "metalness",
         Emissive = "emissive",
