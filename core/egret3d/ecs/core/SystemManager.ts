@@ -21,6 +21,7 @@ namespace paper {
         private readonly _startSystems: BaseSystem<IEntity>[] = [];
         private readonly _reactiveSystems: BaseSystem<IEntity>[] = [];
         private readonly _updateSystems: BaseSystem<IEntity>[] = [];
+        private readonly _fixedUpdateSystems: BaseSystem<IEntity>[] = [];
         private readonly _lateUpdateSystems: BaseSystem<IEntity>[] = [];
 
         private constructor() {
@@ -64,130 +65,142 @@ namespace paper {
         /**
          * 
          */
-        public update() {
-            clock && clock.update(); // TODO
+        public update(update: boolean, fixedUpdate: boolean) {
+            if (update) {
+                for (const system of this._enableOrDisableSystems) {
+                    if (system._enabled === system.enabled || !system.enabled || !system.onEnable) {
+                        continue;
+                    }
 
-            for (const system of this._enableOrDisableSystems) {
-                if (system._enabled === system.enabled || !system.enabled || !system.onEnable) {
-                    continue;
+                    system.onEnable();
+
+                    if (DEBUG) {
+                        console.debug(egret.getQualifiedClassName(this), "enabled.");
+                    }
                 }
 
-                system.onEnable();
+                for (const system of this._startSystems) {
+                    if (!system._started) {
+                        continue;
+                    }
 
-                if (DEBUG) {
-                    console.debug(egret.getQualifiedClassName(this), "enabled.");
-                }
-            }
-
-            for (const system of this._startSystems) {
-                if (!system._started) {
-                    continue;
+                    system.onStart!();
+                    system._started = true;
                 }
 
-                system.onStart!();
-                system._started = true;
-            }
+                for (const system of this._reactiveSystems) {
+                    if (!system.enabled) {
+                        continue;
+                    }
 
-            for (const system of this._reactiveSystems) {
-                if (!system.enabled) {
-                    continue;
-                }
+                    const collectors = system.collectors;
 
-                const collectors = system.collectors;
+                    if (system.onEntityAdded) {
+                        for (const collector of collectors) {
+                            for (const entity of collector.addedEntities) {
+                                if (entity) {
+                                    system.onEntityAdded(entity, collector);
+                                }
+                            }
+                        }
+                    }
 
-                if (system.onEntityAdded) {
-                    for (const collector of collectors) {
-                        for (const entity of collector.addedEntities) {
-                            if (entity) {
-                                system.onEntityAdded(entity, collector);
+                    if (system.onComponentAdded) {
+                        for (const collector of collectors) {
+                            for (const component of collector.addedComponentes) {
+                                if (component) {
+                                    system.onComponentAdded(component, collector);
+                                }
+                            }
+                        }
+                    }
+
+                    if (system.onComponentRemoved) {
+                        for (const collector of collectors) {
+                            for (const component of collector.removedComponentes) {
+                                if (component) {
+                                    system.onComponentRemoved(component, collector);
+                                }
+                            }
+                        }
+                    }
+
+                    if (system.onEntityRemoved) {
+                        for (const collector of collectors) {
+                            for (const entity of collector.removedEntities) {
+                                if (entity) {
+                                    system.onEntityRemoved(entity, collector);
+                                }
                             }
                         }
                     }
                 }
 
-                if (system.onComponentAdded) {
-                    for (const collector of collectors) {
-                        for (const component of collector.addedComponentes) {
-                            if (component) {
-                                system.onComponentAdded(component, collector);
-                            }
-                        }
-                    }
-                }
+                for (const system of this._updateSystems) {
+                    let startTime = 0;
 
-                if (system.onComponentRemoved) {
-                    for (const collector of collectors) {
-                        for (const component of collector.removedComponentes) {
-                            if (component) {
-                                system.onComponentRemoved(component, collector);
-                            }
-                        }
+                    if (DEBUG) {
+                        (system.deltaTime as uint) = 0;
+                        startTime = clock.now;
                     }
-                }
 
-                if (system.onEntityRemoved) {
-                    for (const collector of collectors) {
-                        for (const entity of collector.removedEntities) {
-                            if (entity) {
-                                system.onEntityRemoved(entity, collector);
-                            }
-                        }
+                    if (!system.enabled) {
+                        continue;
+                    }
+
+                    system.onUpdate!(clock.deltaTime);
+
+                    if (DEBUG) {
+                        (system.deltaTime as uint) += clock.now - startTime;
                     }
                 }
             }
 
-            for (const system of this._updateSystems) {
-                let startTime = 0;
+            if (fixedUpdate) {
+                for (const system of this._fixedUpdateSystems) {
+                    if (!system.enabled) {
+                        continue;
+                    }
 
-                if (DEBUG) {
-                    (system.deltaTime as uint) = 0;
-                    startTime = clock.now;
-                }
-
-                if (!system.enabled) {
-                    continue;
-                }
-
-                system.onUpdate!(clock.deltaTime);
-
-                if (DEBUG) {
-                    (system.deltaTime as uint) += clock.now - startTime;
+                    system.onFixedUpdate!();
                 }
             }
 
-            for (const system of this._lateUpdateSystems) {
-                if (!system.enabled) {
-                    continue;
+            if (update) {
+                for (const system of this._lateUpdateSystems) {
+                    if (!system.enabled) {
+                        continue;
+                    }
+
+                    let startTime = 0;
+
+                    if (DEBUG) {
+                        startTime = clock.now;
+                    }
+
+                    system.onLateUpdate!(clock.deltaTime);
+
+                    if (DEBUG) {
+                        (system.deltaTime as uint) += clock.now - startTime;
+                    }
                 }
 
-                let startTime = 0;
+                for (const system of this._enableOrDisableSystems) {
+                    if (system._enabled === system.enabled) {
+                        continue;
+                    }
 
-                if (DEBUG) {
-                    startTime = clock.now;
-                }
+                    system._enabled = system.enabled;
 
-                system.onLateUpdate!(clock.deltaTime);
+                    if (system.enabled || !system.onDisable) {
+                        continue;
+                    }
 
-                if (DEBUG) {
-                    (system.deltaTime as uint) += clock.now - startTime;
-                }
-            }
+                    system.onDisable();
 
-            for (const system of this._enableOrDisableSystems) {
-                if (system._enabled === system.enabled) {
-                    continue;
-                }
-
-                system._enabled = system.enabled;
-
-                if (system.enabled || !system.onDisable) {
-                    continue;
-                }
-
-                system.onDisable();
-
-                if (DEBUG) {
-                    console.debug(egret.getQualifiedClassName(this), "disabled.");
+                    if (DEBUG) {
+                        console.debug(egret.getQualifiedClassName(this), "disabled.");
+                    }
                 }
             }
         }
@@ -233,6 +246,10 @@ namespace paper {
 
             if (system.onUpdate) {
                 this._updateSystems.splice(this._getSystemInsertIndex(this._updateSystems, order), 0, system);
+            }
+
+            if (system.onFixedUpdate) {
+                this._updateSystems.splice(this._getSystemInsertIndex(this._fixedUpdateSystems, order), 0, system);
             }
 
             if (system.onLateUpdate) {

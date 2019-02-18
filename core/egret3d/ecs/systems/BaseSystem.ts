@@ -192,6 +192,10 @@ namespace paper {
          */
         public onUpdate?(deltaTime?: number): void;
         /**
+         * 
+         */
+        public onFixedUpdate?(currentTimes: number, totalTimes: number): void;
+        /**
          * 该系统更新时调用。
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
