@@ -2,7 +2,7 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
-    export class BeginSystem extends paper.BaseSystem {
+    export class BeginSystem extends paper.BaseSystem<paper.GameObject> {
         private _canvas: HTMLCanvasElement = null!;
 
         private _updateCanvas(stage: Stage) {

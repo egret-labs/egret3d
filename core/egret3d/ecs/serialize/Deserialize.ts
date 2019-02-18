@@ -3,9 +3,9 @@ namespace paper {
     const KEY_ASSET: keyof IAssetReference = "asset";
     const KEY_CLASS: keyof IClass = "class";
     const KEY_DESERIALIZE: keyof ISerializable = "deserialize";
-    const KEY_COMPONENTS: keyof GameObject = "components";
-    const KEY_EXTRAS: keyof GameObject = "extras";
-    const KEY_CHILDREN: keyof egret3d.Transform = "children";
+    const KEY_COMPONENTS: keyof IEntity = "components";
+    const KEY_EXTRAS: keyof IEntity = "extras";
+    const KEY_CHILDREN: keyof BaseTransform = "children";
     // const KEY_MISSINGOBJECT: keyof MissingComponent = 'missingObject';
 
     function _getDeserializedKeys(serializedClass: IBaseClass, keys: { [key: string]: string } | null = null) {
@@ -21,7 +21,7 @@ namespace paper {
             }
         }
 
-        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object as any) {
+        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
             _getDeserializedKeys(serializedClass.prototype.__proto__.constructor, keys);
         }
 
@@ -37,7 +37,7 @@ namespace paper {
             }
         }
 
-        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object as any) {
+        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
             _getDeserializedIgnoreKeys(serializedClass.prototype.__proto__.constructor, keys);
         }
 
@@ -78,23 +78,23 @@ namespace paper {
         /**
          * 
          */
-        public readonly objects: { [key: string]: Scene | GameObject } = {};
+        public readonly objects: { [key: string]: IScene | IEntity } = {};
         /**
          * 
          */
-        public readonly components: { [key: string]: BaseComponent } = {};
+        public readonly components: { [key: string]: IComponent } = {};
 
-        public root: Scene | GameObject | BaseComponent | null = null;
+        public root: IScene | IEntity | IComponent | null = null;
 
         private _keepUUID: boolean;
         private _makeLink: boolean;
         private readonly _deserializers: { [key: string]: Deserializer } = {};
-        private readonly _prefabRootMap: { [key: string]: { rootUUID: string, root: GameObject } } = {};
-        private _rootTarget: Scene | GameObject | null = null;
+        private readonly _prefabRootMap: { [key: string]: { rootUUID: string, root: IEntity } } = {};
+        private _rootTarget: IScene | IEntity | null = null;
 
-        private _deserializeObject(source: ISerializedObject, target: BaseObject) {
-            const deserializedKeys = _getDeserializedKeys(<any>target.constructor as IBaseClass);
-            const deserializedIgnoreKeys = _getDeserializedIgnoreKeys(<any>target.constructor as IBaseClass);
+        private _deserializeObject(source: ISerializedObject, target: IScene | IEntity | IComponent) {
+            const deserializedKeys = _getDeserializedKeys(target.constructor as IBaseClass);
+            const deserializedIgnoreKeys = _getDeserializedIgnoreKeys(target.constructor as IBaseClass);
 
             for (const k in source) {
                 if (k === KEY_CLASS) { // 类名不需要反序列化。
@@ -134,23 +134,23 @@ namespace paper {
             return target;
         }
 
-        private _deserializeComponent(componentSource: ISerializedObject, source?: ISerializedObject, target?: GameObject) {
-            const className = serializeClassMap[componentSource.class] || componentSource.class; // 废弃 serializeClassMap。
+        private _deserializeComponent(componentSource: ISerializedObject, source?: ISerializedObject, target?: IEntity) {
+            const className = serializeClassMap[componentSource.class] || componentSource.class; // TODO 废弃 serializeClassMap。
             const clazz = egret.getDefinitionByName(className);
-            let componentTarget: BaseComponent | undefined = undefined;
+            let componentTarget: IComponent | undefined = undefined;
 
             if (clazz) {
                 const hasLink = KEY_EXTRAS in componentSource && (componentSource[KEY_EXTRAS] as ComponentExtras).linkedID;
 
                 if (clazz === egret3d.Transform) {
-                    componentTarget = this.components[componentSource.uuid] as egret3d.Transform;
+                    componentTarget = this.components[componentSource.uuid] as BaseTransform;
 
                     if (KEY_CHILDREN in componentSource) { // Link transform children.
                         for (const childUUID of componentSource[KEY_CHILDREN] as IUUID[]) {
-                            const child = this.components[childUUID.uuid] as egret3d.Transform | null;
-                            if (child && child._parent !== componentTarget) {
-                                child._parent = componentTarget as egret3d.Transform;
-                                (componentTarget as egret3d.Transform)._children.push(child);
+                            const child = this.components[childUUID.uuid] as BaseTransform | null;
+
+                            if (child && child.parent !== componentTarget) {
+                                (componentTarget as BaseTransform)._addChild(child);
                             }
                         }
                     }
@@ -164,8 +164,8 @@ namespace paper {
                         componentTarget = prefabDeserializer.components[linkedID];
                     }
                     else {
-                        // const enabled = componentSource._enabled === undefined ? true : componentSource._enabled; // TODO
-                        componentTarget = (target || this._rootTarget as GameObject).addComponent(clazz);
+                        Component.createDefaultEnabled = componentSource._enabled === undefined ? true : componentSource._enabled;
+                        componentTarget = (target || this._rootTarget as IEntity).addComponent(clazz);
                     }
 
                     // if (clazz === Behaviour) { TODO
@@ -253,25 +253,25 @@ namespace paper {
                     else if (KEY_UUID in source) { // Reference.
                         const uuid = (source as IUUID).uuid;
 
-                        if (uuid in this.objects) { // GameObject.
+                        if (uuid in this.objects) { // Entity.
                             return this.objects[uuid];
                         }
                         else if (uuid in this.components) { // Component.
                             return this.components[uuid];
                         }
                         else if (classCodeOrName) { // Link expand objects and components.
-                            const scene = this._rootTarget instanceof GameObject ? this._rootTarget.scene : this._rootTarget!;
+                            const scene = (this._rootTarget instanceof Entity ? this._rootTarget.scene : this._rootTarget!) as IScene;
 
-                            if ((serializeClassMap[classCodeOrName] || classCodeOrName) === egret.getQualifiedClassName(GameObject)) { // GameObject.
-                                for (const gameObject of scene.gameObjects) {
-                                    if (gameObject.uuid === uuid) {
-                                        return gameObject;
+                            if ((serializeClassMap[classCodeOrName] || classCodeOrName) === egret.getQualifiedClassName(GameObject)) { // GameObject. TODO 字符串依赖。
+                                for (const entity of scene.entities) {
+                                    if (entity.uuid === uuid) {
+                                        return entity;
                                     }
                                 }
                             }
                             else { // Component.
-                                for (const gameObject of scene.gameObjects) {
-                                    for (const component of gameObject.components) {
+                                for (const entity of scene.entities) {
+                                    for (const component of entity.components) {
                                         if (component && component.uuid === uuid) {
                                             return component;
                                         }
@@ -308,7 +308,7 @@ namespace paper {
             }
         }
 
-        public getAssetOrComponent(source: IUUID | IAssetReference): Asset | GameObject | BaseComponent | null {
+        public getAssetOrComponent(source: IUUID | IAssetReference): Asset | IEntity | IComponent | null {
             if (KEY_ASSET in source) {
                 const assetIndex = (source as IAssetReference).asset;
                 if (assetIndex >= 0) {
@@ -320,15 +320,15 @@ namespace paper {
 
             const uuid = (source as IUUID).uuid;
 
-            return this.components[uuid] || this.objects[uuid] as GameObject;
+            return this.components[uuid] || this.objects[uuid] as IEntity;
         }
         /**
          * @private
          */
-        public deserialize<T extends (Scene | GameObject | BaseComponent)>(
+        public deserialize<T extends (IScene | IEntity | IComponent)>(
             data: ISerializedData,
             keepUUID: boolean = false, makeLink: boolean = false,
-            rootTarget: Scene | GameObject | null = null,
+            rootTarget: IScene | IEntity | null = null,
         ): T | null {
             if (data.assets) {
                 for (const assetName of data.assets) {
@@ -343,7 +343,7 @@ namespace paper {
             const sceneClassName = egret.getQualifiedClassName(Scene);
             const transformClassName = egret.getQualifiedClassName(egret3d.Transform);
             const components: { [key: string]: ISerializedObject } = {};
-            let root: Scene | GameObject | BaseComponent | null = null;
+            let root: IScene | IEntity | IComponent | null = null;
 
             if (data.components) {
                 for (const componentSource of data.components) { // Mapping components.
@@ -354,7 +354,7 @@ namespace paper {
             if (data.objects) {
                 for (const source of data.objects) { // 场景和实体实例化。
                     const className = serializeClassMap[source.class] || source.class;
-                    let target: Scene | GameObject | null | undefined = undefined;
+                    let target: IScene | IEntity | null | undefined = undefined;
 
                     if (className === sceneClassName) {
                         target = Scene.createEmpty((<any>source as { name: string }).name);
@@ -362,7 +362,7 @@ namespace paper {
                     }
                     else {
                         if (!this._rootTarget) {
-                            this._rootTarget = paper.Application.sceneManager.activeScene; // TODO
+                            this._rootTarget = SceneManager.getInstance().activeScene; // TODO
                         }
 
                         const hasLink = KEY_EXTRAS in source && (source[KEY_EXTRAS] as EntityExtras).linkedID;
@@ -373,9 +373,10 @@ namespace paper {
 
                             if (prefab) { // Prefab root.
                                 const assetIndex = ((<any>prefab) as IAssetReference).asset;
+
                                 if (assetIndex >= 0) {
                                     const assetName = this.assets[assetIndex];
-                                    target = Prefab.create(assetName, this._rootTarget as Scene);
+                                    target = Prefab.create(assetName, this._rootTarget as IScene);
 
                                     if (target) { // Cache.
                                         this._deserializers[source.uuid] = Deserializer._lastDeserializer;
@@ -393,10 +394,12 @@ namespace paper {
                         }
                         else {
                             target = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, this._rootTarget as Scene);
+
                             if (this._makeLink) { // 在 editor 模式下调用 Prefab.createInstance 方法始终会走到这里。
-                                (target as GameObject).extras!.linkedID = source.uuid;
+                                target.extras!.linkedID = source.uuid;
+
                                 if (root) {
-                                    (target as GameObject).extras!.rootID = (root as GameObject).uuid;
+                                    target.extras!.rootID = root.uuid;
                                 }
                             }
                         }
@@ -427,16 +430,16 @@ namespace paper {
                     if (target) {
                         this._deserializeObject(source, target); // 场景或实体属性反序列化。
 
-                        if (target.constructor === GameObject && KEY_COMPONENTS in source) { // 组件实例化。
+                        if (target instanceof Entity && KEY_COMPONENTS in source) { // 组件实例化。
                             for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
-                                this._deserializeComponent(components[componentUUID.uuid], source, target as GameObject);
+                                this._deserializeComponent(components[componentUUID.uuid], source, target);
                             }
                         }
                     }
                 }
 
                 // 重新设置 rootID（只有编辑模式需要处理该内容）
-                if (paper.Application.playerMode === PlayerMode.Editor) {
+                if (ECS.getInstance().playerMode === PlayerMode.Editor) {
                     // 重新设置rootid的值
                     for (const uuid in this._prefabRootMap) {
                         const rootDeser = this._deserializers[uuid];
@@ -444,7 +447,7 @@ namespace paper {
                         for (const key in rootDeser.objects) {
                             const obj = rootDeser.objects[key];
 
-                            if (obj instanceof GameObject) {
+                            if (obj instanceof Entity) {
                                 if (obj.extras!.linkedID && obj.extras!.rootID === this._prefabRootMap[uuid].rootUUID) {
                                     obj.extras!.rootID = this._prefabRootMap[uuid].root.uuid;
                                 }
@@ -462,20 +465,21 @@ namespace paper {
                     if (component) {
                         if (
                             component.constructor === MissingComponent &&
-                            componentSource[KEY_CLASS].indexOf((component.constructor as any).name) < 0
+                            componentSource[KEY_CLASS].indexOf((component.constructor as any).name) < 0 // TODO
                         ) {
                             continue;
                         }
 
                         this._deserializeObject(componentSource, component);
                     }
-                    else if (rootTarget && rootTarget.constructor === GameObject) { // 整个反序列化过程只反序列化组件。
+                    else if (rootTarget && rootTarget instanceof Entity) { // 整个反序列化过程只反序列化组件。
                         component = this._deserializeComponent(componentSource);
                         root = root || component;
                         this._deserializeObject(componentSource, component);
                     }
                 }
             }
+
             Deserializer._lastDeserializer = this;
 
             this.root = root;

@@ -2,26 +2,39 @@ namespace paper {
     /**
      * 
      */
-    export class Context<TEntity extends Entity> implements IContext<TEntity> {
+    export class Context<TEntity extends IEntity> {
+        private static _entityClasses: IEntityClass<IEntity>[] = [];
+        private static _instances: Context<IEntity>[] = [];
         /**
          * 
          */
-        public static create<TEntity extends Entity>(): Context<TEntity> {
-            const context = new Context<TEntity>();
+        public static getInstance<TEntity extends IEntity>(entityClass: IEntityClass<TEntity>): Context<TEntity> {
+            let index = this._entityClasses.indexOf(entityClass);
+            if (index < 0) {
+                index = this._entityClasses.length;
+                this._entityClasses.push(entityClass);
+                this._instances.push(new Context<TEntity>(entityClass));
+            }
 
-            return context;
+            return this._instances[index] as Context<TEntity>;
         }
 
+        private readonly _entityClass: IEntityClass<TEntity>;
         private readonly _entities: TEntity[] = [];
-        private readonly _componentsGroups: IGroup<TEntity>[][] = [];
-        private readonly _groups: { [key: string]: IGroup<TEntity> } = {};
+        private readonly _componentsGroups: Group<TEntity>[][] = [];
+        private readonly _groups: { [key: string]: Group<TEntity> } = {};
 
-        private constructor() {
+        private constructor(entityClass: IEntityClass<TEntity>) {
+            this._entityClass = entityClass;
             Component.onComponentEnabled.add(this._onComponentEnabled);
             Component.onComponentDisabled.add(this._onComponentDisabled);
         }
 
-        private _onComponentEnabled([entity, component]: [Entity, IComponent]) {
+        private _onComponentEnabled([entity, component]: [IEntity, IComponent]) {
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+
             const componentIndex = (component.constructor as IComponentClass<IComponent>).componentIndex;
             const groups = this._componentsGroups[componentIndex];
 
@@ -32,7 +45,11 @@ namespace paper {
             }
         }
 
-        private _onComponentDisabled([entity, component]: [Entity, IComponent]) {
+        private _onComponentDisabled([entity, component]: [IEntity, IComponent]) {
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+
             const componentIndex = (component.constructor as IComponentClass<IComponent>).componentIndex;
             const groups = this._componentsGroups[componentIndex];
 
@@ -47,7 +64,7 @@ namespace paper {
             return this._entities.indexOf(entity) >= 0;
         }
 
-        public getGroup(matcher: IMatcher<TEntity>): IGroup<TEntity> {
+        public getGroup(matcher: ICompoundMatcher<TEntity>): Group<TEntity> {
             const id = matcher.id;
             const groups = this._groups;
 

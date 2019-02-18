@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * Egret 传统 2D 渲染系统。
      */
-    export class Egret2DRendererSystem extends paper.BaseSystem {
+    export class Egret2DRendererSystem extends paper.BaseSystem<paper.GameObject> {
         /**
          * @deprecated
          */

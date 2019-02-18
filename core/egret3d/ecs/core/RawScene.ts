@@ -11,8 +11,8 @@ namespace paper {
                 return null;
             }
 
-            const isEditor = Application.playerMode === PlayerMode.Editor;
-            const deserializer = new paper.Deserializer();
+            const isEditor = ECS.getInstance().playerMode === PlayerMode.Editor;
+            const deserializer = new Deserializer();
             const scene = deserializer.deserialize(this.config, keepUUID) as Scene | null;
 
             if (scene && isEditor) {

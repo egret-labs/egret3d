@@ -1,7 +1,6 @@
 namespace egret3d {
     const _helpVector3 = Vector3.create();
     const _helpRotation = Quaternion.create();
-    const _helpMatrix3 = Matrix3.create();
     const _helpMatrix = Matrix4.create();
 
     const enum TransformDirty {
@@ -19,12 +18,58 @@ namespace egret3d {
     }
     /**
      * 变换组件。
-     * - 实现实体之间的父子关系。
      * - 实现 3D 空间坐标系变换。
      */
-    export class Transform extends paper.BaseComponent {
+    export class Transform extends paper.BaseTransform {
         private _localDirty: TransformDirty = TransformDirty.All;
         private _worldDirty: TransformDirty = TransformDirty.All;
+        private readonly _observers: ITransformObserver[] = [];
+        /**
+         * @internal
+         */
+        public _destroy() {
+            super._destroy();
+
+            this._observers.length > 0 && (this._observers.length = 0);
+        }
+
+        public initialize(): void {
+            super.initialize();
+
+            this._localPosition.onUpdateTarget = this._position.onUpdateTarget = this;
+            this._localPosition.onUpdate = this._position.onUpdate = this._onPositionUpdate;
+            this._localRotation.onUpdateTarget = this._rotation.onUpdateTarget = this;
+            this._localRotation.onUpdate = this._rotation.onUpdate = this._onRotationUpdate;
+            this._localEuler.onUpdateTarget = this._euler.onUpdateTarget = this;
+            this._localEuler.onUpdate = this._euler.onUpdate = this._onEulerUpdate;
+            this._localEulerAngles.onUpdateTarget = this._eulerAngles.onUpdateTarget = this;
+            this._localEulerAngles.onUpdate = this._eulerAngles.onUpdate = this._onEulerAnglesUpdate;
+            this._localScale.onUpdateTarget = this._scale.onUpdateTarget = this;
+            this._localScale.onUpdate = this._scale.onUpdate = this._onScaleUpdate;
+        }
+        /**
+         * 
+         * @param observer 
+         */
+        public registerObserver(observer: ITransformObserver): void {
+            const observers = this._observers;
+
+            if (observers.indexOf(observer) < 0) {
+                observers.push(observer);
+            }
+        }
+        /**
+         * 
+         * @param observer 
+         */
+        public unregisterObserver(observer: ITransformObserver): void {
+            const observers = this._observers;
+            const index = observers.indexOf(observer);
+
+            if (index >= 0) {
+                observers.splice(index, 1);
+            }
+        }
         /**
          * 世界矩阵的行列式，如果小于0，说明进行了反转
          * @internal
@@ -49,43 +94,68 @@ namespace egret3d {
         private readonly _localToParentMatrix: Matrix4 = Matrix4.create();
         private readonly _worldToLocalMatrix: Matrix4 = Matrix4.create();
         private readonly _localToWorldMatrix: Matrix4 = Matrix4.create();
-        /**
-         * @internal
-         */
-        public readonly _children: Transform[] = [];
-        private readonly _observers: ITransformObserver[] = [];
-        /**
-         * @internal
-         */
-        public _parent: Transform | null = null;
 
-        private _removeFromChildren(value: Transform) {
-            let index = 0;
-            for (const child of this._children) {
-                if (child === value) {
-                    this._children.splice(index, 1);
-                    break;
+        protected _onChangeParent(isBefore: boolean, worldTransformStays: boolean) {
+            if (isBefore) {
+                if (worldTransformStays) {
+                    _helpVector3.copy(this.position);
+                    _helpRotation.copy(this.rotation);
                 }
+            }
+            else {
+                this._dirtify(false, TransformDirty.PRS);
 
-                index++;
+                if (worldTransformStays) { // TODO copy matrix.
+                    this.position = _helpVector3;
+                    this.rotation = _helpRotation;
+                }
             }
         }
 
-        private _getRotationAndScale(): Matrix3 {
-            const scale = Matrix3.create().fromScale(this._localScale).release();
-            const rotation = Matrix3.create().fromMatrix4(_helpMatrix.fromRotation(this._localRotation)).release();
-
-            if (this._parent) {
-                return this._parent._getRotationAndScale().multiply(rotation).multiply(scale);
+        private _onPositionUpdate(position: Readonly<Vector3>): void {
+            if (position === this._localPosition) {
+                this._dirtify(true, TransformDirty.Position);
             }
-
-            return rotation.multiply(scale);
+            else {
+                this.position = position;
+            }
         }
 
-        // private _setRotationAndScale(value: Readonly<Matrix3>) {
-        //     const rotationAndScale = this._getRotationAndScale().inverse().multiply(value);
-        //     this._localScale.set(rotationAndScale.rawData[0], rotationAndScale.rawData[4], rotationAndScale.rawData[8]).update();
-        // }
+        private _onRotationUpdate(rotation: Readonly<Quaternion>): void {
+            if (rotation === this._localRotation) {
+                this._dirtify(true, TransformDirty.Rotation);
+            }
+            else {
+                this.rotation = rotation;
+            }
+        }
+
+        private _onEulerUpdate(euler: Readonly<Vector3>): void {
+            if (euler === this._localEuler) {
+                this.localEuler = euler;
+            }
+            else {
+                this.euler = euler;
+            }
+        }
+
+        private _onEulerAnglesUpdate(euler: Readonly<Vector3>): void {
+            if (euler === this._localEulerAngles) {
+                this.localEulerAngles = euler;
+            }
+            else {
+                this.eulerAngles = euler;
+            }
+        }
+
+        private _onScaleUpdate(scale: Readonly<Vector3>): void {
+            if (scale === this._localScale) {
+                this._dirtify(true, TransformDirty.Scale);
+            }
+            else {
+                this.scale = scale;
+            }
+        }
 
         private _dirtify(isLocalDirty: ConstrainBoolean, dirty: TransformDirty) {
             if (isLocalDirty) {
@@ -240,284 +310,6 @@ namespace egret3d {
                 this._localEulerAngles.multiplyScalar(Const.RAD_DEG, this._localEuler);
                 this._localDirty &= ~TransformDirty.Euler;
             }
-        }
-
-        private _addToCollecter() {
-            const parentChangedGameObjects = paper._parentChangedGameObjects;
-            if (parentChangedGameObjects.indexOf(this.gameObject) < 0) {
-                parentChangedGameObjects.push(this.gameObject);
-            }
-        }
-
-        private _onParentChange(newParent: Transform | null, oldParent: Transform | null) {
-            const prevActive = oldParent ? oldParent.gameObject.activeInHierarchy : this.gameObject.activeSelf;
-            if ((newParent ? newParent.gameObject.activeInHierarchy : this.gameObject.activeSelf) !== prevActive) {
-                this.gameObject._updateGlobalEnabledDitry(prevActive);
-            }
-
-            this._dirtify(false, TransformDirty.PRS);
-            this._addToCollecter();
-        }
-
-        private _onPositionUpdate(position: Readonly<Vector3>): void {
-            if (position === this._localPosition) {
-                this._dirtify(true, TransformDirty.Position);
-            }
-            else {
-                this.position = position;
-            }
-        }
-
-        private _onRotationUpdate(rotation: Readonly<Quaternion>): void {
-            if (rotation === this._localRotation) {
-                this._dirtify(true, TransformDirty.Rotation);
-            }
-            else {
-                this.rotation = rotation;
-            }
-        }
-
-        private _onEulerUpdate(euler: Readonly<Vector3>): void {
-            if (euler === this._localEuler) {
-                this.localEuler = euler;
-            }
-            else {
-                this.euler = euler;
-            }
-        }
-
-        private _onEulerAnglesUpdate(euler: Readonly<Vector3>): void {
-            if (euler === this._localEulerAngles) {
-                this.localEulerAngles = euler;
-            }
-            else {
-                this.eulerAngles = euler;
-            }
-        }
-
-        private _onScaleUpdate(scale: Readonly<Vector3>): void {
-            if (scale === this._localScale) {
-                this._dirtify(true, TransformDirty.Scale);
-            }
-            else {
-                this.scale = scale;
-            }
-        }
-        /**
-         * @internal
-         */
-        public initialize() {
-            super.initialize();
-
-            this._localPosition.onUpdateTarget = this._position.onUpdateTarget = this;
-            this._localPosition.onUpdate = this._position.onUpdate = this._onPositionUpdate;
-            this._localRotation.onUpdateTarget = this._rotation.onUpdateTarget = this;
-            this._localRotation.onUpdate = this._rotation.onUpdate = this._onRotationUpdate;
-            this._localEuler.onUpdateTarget = this._euler.onUpdateTarget = this;
-            this._localEuler.onUpdate = this._euler.onUpdate = this._onEulerUpdate;
-            this._localEulerAngles.onUpdateTarget = this._eulerAngles.onUpdateTarget = this;
-            this._localEulerAngles.onUpdate = this._eulerAngles.onUpdate = this._onEulerAnglesUpdate;
-            this._localScale.onUpdateTarget = this._scale.onUpdateTarget = this;
-            this._localScale.onUpdate = this._scale.onUpdate = this._onScaleUpdate;
-            this._addToCollecter();
-        }
-        /**
-         * @internal
-         */
-        public uninitialize() {
-            super.uninitialize();
-
-            this._children.length = 0;
-            this._observers.length = 0;
-        }
-        /**
-         * @internal
-         */
-        public getAllChildren(out: Transform[] | { [key: string]: Transform | (Transform[]) } = []) {
-            for (const child of this._children) {
-                if (Array.isArray(out)) {
-                    out.push(child);
-                }
-                else {
-                    const childName = child.gameObject.name;
-                    if (childName in out) {
-                        const transformOrTransforms = out[childName];
-                        if (Array.isArray(transformOrTransforms)) {
-                            transformOrTransforms.push(child);
-                        }
-                        else {
-                            out[childName] = [transformOrTransforms, child];
-                        }
-                    }
-                    else {
-                        out[childName] = child;
-                    }
-                }
-
-                child.getAllChildren(out);
-            }
-
-            return out;
-        }
-        /**
-         * 销毁该组件所有子（孙）级变换组件。
-         */
-        public destroyChildren() {
-            let i = this._children.length;
-            while (i--) {
-                this._children[i].gameObject.destroy();
-            }
-        }
-        /**
-         * 
-         * @param observer 
-         */
-        public registerObserver(observer: ITransformObserver): void {
-            const observers = this._observers;
-
-            if (observers.indexOf(observer) < 0) {
-                observers.push(observer);
-            }
-        }
-        /**
-         * 
-         * @param observer 
-         */
-        public unregisterObserver(observer: ITransformObserver): void {
-            const observers = this._observers;
-            const index = observers.indexOf(observer);
-
-            if (index >= 0) {
-                observers.splice(index, 1);
-            }
-        }
-        /**
-         * 该组件是否包含某个子（孙）级变换组件。
-         */
-        public contains(transform: Transform): boolean {
-            if (transform === this) {
-                return false;
-            }
-
-            let ancestor: Transform | null = transform;
-            while (ancestor !== this && ancestor !== null) {
-                ancestor = ancestor.parent;
-            }
-
-            return ancestor === this;
-        }
-        /**
-         * 更改该组件的父级变换组件。
-         * @param parent 父级变换组件。
-         * @param worldTransformStays 是否保留当前世界空间变换。
-         */
-        public setParent(parent: Transform | null, worldTransformStays: boolean = false) {
-            const prevParent = this._parent;
-            if (prevParent === parent) {
-                return this;
-            }
-
-            if (this.gameObject === paper.GameObject.globalGameObject) {
-                return this;
-            }
-
-            if (
-                parent &&
-                this.gameObject.scene !== parent.gameObject.scene
-            ) {
-                console.warn("Cannot change the parent to a different scene.");
-                return this;
-            }
-
-            if (this === parent || (parent && this.contains(parent))) {
-                console.error("Set the parent error.");
-                return this;
-            }
-
-            if (worldTransformStays) {
-                _helpVector3.copy(this.position);
-                _helpRotation.copy(this.rotation);
-                // _helpMatrix3.copy(this._getRotationAndScale()); //
-            }
-
-            if (prevParent) {
-                prevParent._removeFromChildren(this);
-            }
-
-            if (parent) {
-                parent._children.push(this);
-            }
-
-            this._parent = parent;
-            this._onParentChange(parent, prevParent);
-
-            if (worldTransformStays) { // TODO copy matrix.
-                this.position = _helpVector3;
-                this.rotation = _helpRotation;
-                // this._setRotationAndScale(_helpMatrix3); //
-            }
-
-            return this;
-        }
-        /**
-         * 
-         */
-        public getChildIndex(value: Transform) {
-            if (value.parent !== this) {
-                return -1;
-            }
-
-            return this._children.indexOf(value);
-        }
-        /**
-         * 
-         */
-        public setChildIndex(value: Transform, index: number) {
-            if (value.parent !== this) {
-                return;
-            }
-
-            const prevIndex = this._children.indexOf(value);
-            if (prevIndex === index) {
-                return;
-            }
-
-            this._children.splice(prevIndex, 1);
-            this._children.splice(index, 0, value);
-        }
-        /**
-         * 
-         */
-        public getChildAt(index: number) {
-            return 0 <= index && index < this._children.length ? this._children[index] : null;
-        }
-        /**
-         * 通过指定的名称或路径获取该组件的子（孙）级变换组件。
-         * @param nameOrPath 名称或路径。
-         */
-        public find(nameOrPath: string) {
-            const names = nameOrPath.split("/");
-            let ancestor: Transform = this;
-
-            for (const name of names) {
-                if (!name) {
-                    return ancestor;
-                }
-
-                const prevAncestor = ancestor;
-                for (const child of ancestor._children) {
-                    if (child.gameObject.name === name) {
-                        ancestor = child;
-                        break;
-                    }
-                }
-
-                if (prevAncestor === ancestor) {
-                    return null;
-                }
-            }
-
-            return ancestor;
         }
         /**
          * 设置该组件的本地位置。
@@ -1110,7 +902,7 @@ namespace egret3d {
          * @param target 目标点。
          * @param up 旋转后，该组件在世界空间坐标系下描述的 Y 轴正方向。
          */
-        public lookAt(target: Readonly<Transform> | Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP): this {
+        public lookAt(target: Readonly<this> | Readonly<IVector3>, up: Readonly<IVector3> = Vector3.UP): this {
             this.rotation = this._localRotation.fromMatrix(
                 _helpMatrix.lookAt(
                     this.position,
@@ -1164,32 +956,6 @@ namespace egret3d {
 
             return out.applyDirection(this.localToWorldMatrix, Vector3.FORWARD);
         }
-        /**
-         * 该组件的全部子级变换组件总数。（不包含孙级）
-         */
-        public get childCount(): number {
-            return this._children.length;
-        }
-        /**
-         * 该组件实体的全部子级变换组件。（不包含孙级）
-         */
-        @paper.serializedField
-        @paper.deserializedIgnore
-        public get children(): ReadonlyArray<Transform> {
-            return this._children;
-        }
-        /**
-         * 该组件实体的父级变换组件。
-         */
-        public get parent(): Transform | null {
-            return this._parent;
-        }
-        public set parent(value: Transform | null) {
-            this.setParent(value, false);
-        }
-
-        // public get root{
-        // }
 
         /**
          * @deprecated

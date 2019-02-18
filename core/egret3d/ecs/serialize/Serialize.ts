@@ -2,17 +2,17 @@ namespace paper {
     /**
      * @private
      */
-    export const DATA_VERSION: number = 3;
+    export const DATA_VERSION: number = 5;
     /**
      * @private
      */
     export const DATA_VERSIONS = [DATA_VERSION];
 
     const KEY_SERIALIZE: keyof ISerializable = "serialize";
-    const KEY_GAMEOBJECTS: keyof Scene = "gameObjects";
-    const KEY_COMPONENTS: keyof GameObject = "components";
-    const KEY_EXTRAS: keyof GameObject = "extras";
-    const KEY_CHILDREN: keyof egret3d.Transform = "children";
+    const KEY_ENTITIES: keyof IScene = "entities";
+    const KEY_COMPONENTS: keyof IEntity = "components";
+    // const KEY_EXTRAS: keyof GameObject = "extras";
+    const KEY_CHILDREN: keyof BaseTransform = "children";
 
     let _inline: boolean = false;
     const _serializeds: string[] = [];
@@ -24,14 +24,13 @@ namespace paper {
     /**
      * @private
      */
-    export function serialize(source: Scene | GameObject | BaseComponent, inline: boolean = false): ISerializedData {
+    export function serialize(source: IScene | IEntity | IComponent, inline: boolean = false): ISerializedData {
         if (_serializeData) {
-            console.warn("The deserialization is not complete.");
+            console.error("The deserialization is not complete.");
         }
 
         if (!_defaultGameObject) {
-            _defaultGameObject = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, Scene.globalScene);
-            _defaultGameObject.parent = GameObject.globalGameObject;
+            _defaultGameObject = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, SceneManager.getInstance().globalScene);
         }
 
         _inline = inline;
@@ -43,8 +42,8 @@ namespace paper {
             delete _deserializers[k];
         }
 
-        _defaultGameObject.transform.destroyChildren();
-        _defaultGameObject.removeAllComponents();
+        _defaultGameObject.transform.destroyChildren(); // Clear default prefabs.
+        _defaultGameObject.removeAllComponents(); // Clear default components.
 
         const serializeData = _serializeData;
         _serializeData = null;
@@ -54,7 +53,7 @@ namespace paper {
     /**
      * @private
      */
-    export function clone(object: GameObject) {
+    export function clone(object: IEntity) {
         const data = serialize(object, true);
         const deserializer = new Deserializer();
 
@@ -121,8 +120,8 @@ namespace paper {
 
         if (
             source instanceof Asset ||
-            source.constructor === GameObject ||
-            source instanceof BaseComponent
+            source instanceof Entity ||
+            source instanceof Component
         ) {
             return source === target;
         }
@@ -151,16 +150,17 @@ namespace paper {
      * @private
      */
     export function serializeAsset(source: Asset): IAssetReference {
-        if (!source.name) {
+        if (!source.name) { // Pass unnamed asset.
             return { asset: -1 };
         }
 
-        if (_serializeData && _serializeData!.assets) {
-            let index = _serializeData!.assets!.indexOf(source.name);
+        if (_serializeData) {
+            const assets = _serializeData.assets!;
+            let index = assets.indexOf(source.name);
 
             if (index < 0) {
-                index = _serializeData!.assets!.length;
-                _serializeData!.assets!.push(source.name);
+                index = assets.length;
+                assets.push(source.name);
             }
 
             return { asset: index };
@@ -196,12 +196,12 @@ namespace paper {
         return keys;
     }
 
-    function _serializeReference(source: BaseObject): ISerializedObject {
+    function _serializeReference(source: IUUID): ISerializedObject {
         const className = egret.getQualifiedClassName(source);
         return { uuid: source.uuid, class: className };
     }
 
-    function _findPrefabRoot(gameObject: GameObject) {
+    function _getPrefabRoot(gameObject: GameObject) {
         while (!gameObject.extras!.prefab) {
             gameObject = gameObject.parent!;
         }
@@ -209,67 +209,70 @@ namespace paper {
         return gameObject;
     }
 
-    function _serializeObject(source: BaseObject) {
+    function _serializeObject(source: IUUID) {
         if (_serializeds.indexOf(source.uuid) >= 0) {
             return true;
         }
 
         const target = _serializeReference(source);
-        let temp: GameObject | BaseComponent | null = null;
-        let ignoreKeys: string[] = _ignoreKeys;
+        let ignoreKeys = _ignoreKeys;
+        let equalTemplate: IEntity | IComponent | null = null;
 
-        if (source instanceof GameObject) {
+        if (source instanceof Entity) {
             if (source.isDestroyed) {
                 console.warn("Missing game object.");
                 return false;
             }
 
             if (source.extras && source.extras.linkedID) {
-                const rootPrefabObject = _findPrefabRoot(source);
+                const rootPrefabObject = source instanceof GameObject ? _getPrefabRoot(source) : source;
                 const prefabName = rootPrefabObject.extras!.prefab!.name;
+
                 if (!(prefabName in _deserializers)) {
-                    const prefabGameObject = Prefab.create(prefabName, _defaultGameObject!.scene)!;
+                    const prefabGameObject = Prefab.create(prefabName, _defaultGameObject!.scene!)!;
                     prefabGameObject.parent = _defaultGameObject;
                     _deserializers[prefabName] = Deserializer._lastDeserializer;
                 }
 
                 const deserializer = _deserializers[prefabName];
-                temp = deserializer.objects[source.extras.linkedID] as GameObject;
+                equalTemplate = deserializer.objects[source.extras!.linkedID] as IEntity;
 
-                if (source.extras.prefab) {
+                if (source.extras!.prefab) {
                     ignoreKeys = _rootIgnoreKeys;
                 }
             }
             else {
-                temp = _defaultGameObject;
+                equalTemplate = _defaultGameObject;
             }
 
             _serializeData!.objects!.push(target);
         }
-        else if (source instanceof BaseComponent) {
+        else if (source instanceof Component) {
             if (source.isDestroyed) {
                 console.warn("Missing component.");
+                
                 return false;
             }
 
             if (source.extras && source.extras.linkedID) { // Prefab component.
-                const rootPrefabObject = _findPrefabRoot(source.gameObject);
+                const rootPrefabObject = source.entity instanceof GameObject ? _getPrefabRoot(source.entity) : source.entity;
                 const prefabName = rootPrefabObject.extras!.prefab!.name;
+
                 if (!(prefabName in _deserializers)) {
-                    const prefabGameObject = Prefab.create(prefabName, _defaultGameObject!.scene)!;
+                    const prefabGameObject = Prefab.create(prefabName, _defaultGameObject!.scene!)!;
                     prefabGameObject.parent = _defaultGameObject;
                     _deserializers[prefabName] = Deserializer._lastDeserializer;
                 }
 
                 const deserializer = _deserializers[prefabName];
-                temp = deserializer.components[source.extras.linkedID];
+                equalTemplate = deserializer.components[source.extras.linkedID];
 
-                if (source.gameObject.extras!.prefab) {
+                if (source.entity.extras!.prefab) {
                     ignoreKeys = _rootIgnoreKeys;
                 }
             }
             else {
-                temp = _defaultGameObject!.getOrAddComponent(source.constructor as IComponentClass<BaseComponent>);
+                equalTemplate = _defaultGameObject!.getOrAddComponent(source.constructor as IComponentClass<IComponent>);
             }
 
             _serializeData!.components!.push(target as ISerializedObject);
@@ -279,23 +282,26 @@ namespace paper {
         }
 
         _serializeds.push(source.uuid);
-        _serializeChildren(source, target, temp, ignoreKeys);
+        _serializeChildren(source, target, equalTemplate, ignoreKeys);
 
         return true;
     }
 
-    function _serializeChildren(source: BaseObject, target: ISerializedObject | ISerializedStruct, temp: GameObject | BaseComponent | null, ignoreKeys: string[] | null) {
-        const serializedKeys = _getSerializedKeys(<any>source.constructor as IBaseClass);
-        if (!serializedKeys) {
-            return;
-        }
+    function _serializeChildren(source: IUUID, target: ISerializedObject | ISerializedStruct, equalTemplate: IEntity | IComponent | null, ignoreKeys: string[] | null) {
+        const serializedKeys = _getSerializedKeys(source.constructor as IBaseClass);
 
-        for (const k of serializedKeys) {
-            if (temp && (!ignoreKeys || ignoreKeys.indexOf(k) < 0) && equal((source as any)[k], (temp as any)[k])) {
-                continue;
+        if (serializedKeys) {
+            for (const k of serializedKeys) {
+                if (
+                    equalTemplate &&
+                    (!ignoreKeys || ignoreKeys.indexOf(k) < 0) &&
+                    equal((source as any)[k], (equalTemplate as any)[k])
+                ) {
+                    continue;
+                }
+
+                target[k] = _serializeChild((source as any)[k], source, k);
             }
-
-            target[k] = _serializeChild((source as any)[k], source, k);
         }
     }
 
@@ -311,8 +317,10 @@ namespace paper {
             case "object": {
                 if (Array.isArray(source) || ArrayBuffer.isView(source)) { // Array.
                     const target = [];
+
                     for (const element of source as any[]) {
                         const result = _serializeChild(element, parent, key);
+
                         if (result !== undefined) { // Pass undefined.
                             target.push(result);
                         }
@@ -323,8 +331,10 @@ namespace paper {
 
                 if (source.constructor === Object) { // Object map.
                     const target = {} as any;
+
                     for (const k in source) {
                         const result = _serializeChild(source[k], parent, key);
+
                         if (result !== undefined) { // Pass undefined.
                             target[k] = result;
                         }
@@ -338,7 +348,7 @@ namespace paper {
                 }
 
                 if (source instanceof BaseObject) {
-                    if (source.constructor === Scene) { // Cannot serialize scene reference.
+                    if (source instanceof Scene) { // Cannot serialize scene reference.
                         return undefined; // Pass.
                     }
 
@@ -346,28 +356,28 @@ namespace paper {
                         return serializeAsset(source);
                     }
 
-                    if (source.constructor === GameObject || source instanceof BaseComponent) {
-                        if (source.constructor === GameObject && (source as GameObject).hideFlags & paper.HideFlags.DontSave) {
+                    if (source instanceof Entity || source instanceof Component) {
+                        if (source instanceof Entity && ((source as IEntity).hideFlags & paper.HideFlags.DontSave)) {
                             return undefined; // Pass.
                         }
-                        else if (source.constructor === egret3d.Transform && (source as egret3d.Transform).gameObject.hideFlags & paper.HideFlags.DontSave) {
+                        else if (source instanceof Component && ((source as IComponent).hideFlags & paper.HideFlags.DontSave)) {
                             return undefined; // Pass.
                         }
 
                         if (parent) {
-                            if (parent.constructor === Scene) {
-                                if (key === KEY_GAMEOBJECTS) {
+                            if (parent instanceof Scene) {
+                                if (key === KEY_ENTITIES) {
                                     return _serializeObject(source) ? { uuid: source.uuid } : undefined; // Pass.
                                 }
                             }
-                            else if (parent.constructor === GameObject) {
+                            else if (parent instanceof Entity) {
                                 if (key === KEY_COMPONENTS) {
                                     return _serializeObject(source) ? { uuid: source.uuid } : undefined; // Pass.
                                 }
                             }
-                            else if (parent.constructor === egret3d.Transform) {
+                            else if (parent instanceof BaseTransform) {
                                 if (key === KEY_CHILDREN) {
-                                    return _serializeObject((source as egret3d.Transform).gameObject) ? { uuid: source.uuid } : undefined; // Pass.
+                                    return _serializeObject((source as IComponent).entity) ? { uuid: source.uuid } : undefined; // Pass.
                                 }
                             }
                         }
@@ -378,7 +388,8 @@ namespace paper {
                     return serializeStruct(source);
                 }
 
-                console.warn("Serialize error.", source);
+                console.error("Serialize error.", source);
+
                 return undefined; // Pass.
             }
 

@@ -2,11 +2,11 @@ namespace paper {
     /**
      * 
      */
-    export class Collector<TEntity extends Entity> implements ICollector<TEntity> {
+    export class Collector<TEntity extends IEntity> implements ICollector<TEntity> {
         /**
          * 
          */
-        public static create<TEntity extends Entity>(group: Group<TEntity>): Collector<TEntity> {
+        public static create<TEntity extends IEntity>(group: Group<TEntity>): ICollector<TEntity> {
             const collector = new Collector<TEntity>(group);
 
             return collector;
@@ -28,32 +28,56 @@ namespace paper {
             Group.onComponentDisabled.add(this._onComponentDisabled);
         }
 
-        private _onEntityAdded([group, entity]: [IGroup<Entity>, Entity]) {
+        private _onEntityAdded([group, entity]: [Group<IEntity>, IEntity]) {
             if (this._group !== group) {
                 return;
+            }
+
+            const index = this.removedEntities.indexOf(entity as TEntity);
+            if (index >= 0) {
+                this.removedEntities[index] = null;
             }
 
             this.addedEntities.push(entity as TEntity);
         }
 
-        private _onEntityRemoved([group, entity]: [IGroup<Entity>, Entity]) {
+        private _onEntityRemoved([group, entity]: [Group<IEntity>, IEntity]) {
             if (this._group !== group) {
                 return;
             }
 
-            this.addedEntities.push(entity as TEntity);
+            const index = this.addedEntities.indexOf(entity as TEntity);
+            if (index >= 0) {
+                this.addedEntities[index] = null;
+            }
+
+            this.removedEntities.push(entity as TEntity);
         }
 
-        private _onComponentEnabled([group, entity]: [IGroup<Entity>, IComponent]) {
+        private _onComponentEnabled([group, component]: [Group<IEntity>, IComponent]) {
             if (this._group !== group) {
                 return;
             }
+
+            const index = this.removedComponentes.indexOf(component);
+            if (index >= 0) {
+                this.removedComponentes[index] = null;
+            }
+
+            this.addedComponentes.push(component);
         }
 
-        private _onComponentDisabled([group, entity]: [IGroup<Entity>, IComponent]) {
+        private _onComponentDisabled([group, component]: [Group<IEntity>, IComponent]) {
             if (this._group !== group) {
                 return;
             }
+
+            const index = this.addedComponentes.indexOf(component);
+            if (index >= 0) {
+                this.addedComponentes[index] = null;
+            }
+
+            this.removedComponentes.push(component);
         }
 
         public clear(): void {

@@ -2,13 +2,16 @@ namespace paper {
     /**
      * @internal
      */
-    export class StartSystem extends BaseSystem {
-        public readonly interests = [
-            { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
-        ];
-        
-        public onAddComponent(component: Behaviour) {
-            if (!component || component._isStarted) {
+    export class StartSystem extends BaseSystem<GameObject> {
+
+        public getMatchers() {
+            return [
+                Matcher.create<GameObject>().extraOf(Behaviour as any)
+            ];
+        }
+
+        public onComponentAdded(component: Behaviour) {
+            if (component._lifeStates & ComponentLifeState.Started) {
                 return;
             }
 
@@ -19,7 +22,7 @@ namespace paper {
                 return;
             }
 
-            component._isStarted = true;
+            component._lifeStates |= ComponentLifeState.Started;
             component.onStart && component.onStart();
         }
     }

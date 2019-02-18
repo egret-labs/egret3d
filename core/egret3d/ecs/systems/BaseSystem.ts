@@ -3,12 +3,12 @@ namespace paper {
      * 基础系统。
      * - 全部系统的基类。
      */
-    export abstract class BaseSystem<TEntity extends Entity> {
+    export abstract class BaseSystem<TEntity extends IEntity> {
         /**
          * @internal
          */
-        public static create<TEntity extends Entity>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): BaseSystem<TEntity> }, context: Context<TEntity>, order: SystemOrder) {
-            return new systemClass(context, order);
+        public static create<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): BaseSystem<TEntity> }, context: Context<TEntity>, order: SystemOrder): TSystem {
+            return new systemClass(context, order) as TSystem;
         }
         /**
          * 该系统是否被激活。
@@ -23,17 +23,13 @@ namespace paper {
          */
         public readonly deltaTime: uint = 0;
         /**
-         * 全局时钟信息组件实例。
+         * 
          */
-        public readonly clock: Clock = GameObject.globalGameObject.getOrAddComponent(Clock);
+        public readonly groups: Group<TEntity>[] = [];
         /**
          * 
          */
-        public readonly collectors: ReadonlyArray<ICollector<TEntity>> = [];
-        /**
-         * 
-         */
-        public readonly groups: ReadonlyArray<IGroup<TEntity>> = [];
+        public readonly collectors: ICollector<TEntity>[] = [];
         /**
          * @internal
          */
@@ -46,46 +42,105 @@ namespace paper {
          * 禁止实例化系统。
          * @protected
          */
-        public constructor(context: Context<Entity>, order: SystemOrder = -1) {
-            // this.collectors = [
-            //     Collector.create(context)
-            // ];
+        public constructor(context: Context<TEntity>, order: SystemOrder = -1) {
+            const matchers = this.getMatchers();
+            const listeners = this.getListeners();
+
+            if (matchers) {
+                for (const matcher of matchers) {
+                    const group = context.getGroup(matcher);
+                    this.groups.push(group);
+                    this.collectors.push(Collector.create(group));
+                }
+            }
+
+            if (listeners) {
+                for (const config of listeners) {
+                    config.type.add(config.listener, this);
+                }
+            }
+
+            if (!matchers && this.interests && this.interests.length > 0) {
+                let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
+
+                if (Array.isArray(this.interests[0])) {
+                    interests = this.interests as ReadonlyArray<ReadonlyArray<InterestConfig>>;
+                }
+                else {
+                    interests = [this.interests as ReadonlyArray<InterestConfig>];
+                }
+
+                for (const interest of interests) {
+                    const allOf = [];
+                    const anyOf = [];
+                    const noneOf = [];
+                    const extraOf = [];
+
+                    for (const config of interest) {
+                        const isNoneOf = (config.type !== undefined) && (config.type & InterestType.Exculde) !== 0;
+                        const isExtraOf = (config.type !== undefined) && (config.type & InterestType.Unessential) !== 0;
+
+                        if (Array.isArray(config.componentClass)) {
+                            for (const componentClass of config.componentClass) {
+                                if (isNoneOf) {
+                                    noneOf.push(componentClass);
+                                }
+                                else if (isExtraOf) {
+                                    extraOf.push(componentClass);
+                                }
+                                else {
+                                    anyOf.push(componentClass);
+                                }
+                            }
+                        }
+                        else if (isNoneOf) {
+                            noneOf.push(config.componentClass);
+                        }
+                        else if (isExtraOf) {
+                            extraOf.push(config.componentClass);
+                        }
+                        else {
+                            allOf.push(config.componentClass);
+                        }
+
+                        if (config.listeners) {
+                            for (const listenerConfig of config.listeners) {
+                                listenerConfig.type.add(listenerConfig.listener, this);
+                            }
+                        }
+                    }
+
+                    const matcher = Matcher.create.apply(Matcher, allOf).anyOf.apply(Matcher, anyOf).noneOf.apply(Matcher, noneOf).extraOf.apply(Matcher, extraOf);
+                    const group = context.getGroup(matcher);
+                    this.groups.push(group);
+                    this.collectors.push(Collector.create(group));
+                }
+            }
+
             this.order = order;
         }
         /**
-         * 系统内部初始化。
+         * @internal
          */
         public initialize(config?: any): void {
-            // (this.interests as any) = this.interests || (this as any)["_interests"]; // TODO
-            // if (this.interests.length > 0) {
-            //     let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
-
-            //     if (Array.isArray(this.interests[0])) {
-            //         interests = this.interests as ReadonlyArray<ReadonlyArray<InterestConfig>>;
-            //     }
-            //     else {
-            //         interests = [this.interests as ReadonlyArray<InterestConfig>];
-            //     }
-
-            //     const groups = this.groups as GameObjectGroup[];
-
-            //     for (const interest of interests) {
-            //         for (const config of interest) {
-            //             if (config.listeners) {
-            //                 for (const listenerConfig of config.listeners) {
-            //                     listenerConfig.type.add(listenerConfig.listener, this);
-            //                 }
-            //             }
-            //         }
-
-            //         groups.push(GameObjectGroup.create(interest));
-            //     }
-            // }
-
             this.onAwake && this.onAwake(config);
         }
-
+        /**
+         * @internal
+         */
         public uninitialize(): void {
+        }
+        /**
+         * 
+         */
+        public getMatchers(): ICompoundMatcher<TEntity>[] | null {
+            return null;
+        }
+        /**
+         * 
+         */
+        public getListeners(): { type: signals.Signal, listener: (component: BaseComponent) => void }[] | null {
+            return null;
         }
         /**
          * 该系统初始化时调用。
@@ -152,5 +207,14 @@ namespace paper {
          * @see paper.Application#systemManager
          */
         public onDestroy?(): void;
+
+        /**
+         * @deprecated
+         */
+        public readonly clock: Clock = clock;
+        /**
+         * @deprecated
+         */
+        public readonly interests: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>> = [];
     }
 }

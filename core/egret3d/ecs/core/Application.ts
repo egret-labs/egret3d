@@ -1,13 +1,5 @@
 namespace paper {
     /**
-     * 应用程序运行模式。
-     */
-    export const enum PlayerMode {
-        Player,
-        DebugPlayer,
-        Editor,
-    }
-    /**
      * 应用程序。
      */
     export class ECS<TScene extends Scene> {
@@ -37,15 +29,7 @@ namespace paper {
         /**
          * 场景管理器。
          */
-        public readonly sceneManager: SceneManager<TScene> = SceneManager.getInstance<TScene>();
-        /**
-         * 
-         */
-        public readonly entityContext: Context<Entity> = Context.create();
-        /**
-         * 
-         */
-        public readonly gameObjectContext: Context<GameObject> = Context.create();
+        public readonly sceneManager: SceneManager = SceneManager.getInstance();
 
         private _isFocused = false;
         private _isRunning = false;
@@ -66,14 +50,13 @@ namespace paper {
         /**
          * 
          */
-        public initialize(options: egret3d.RunEgretOptions): void {
+        public initialize(options: ApplicationOptions): void {
+            const gameObjectContext = Context.getInstance(GameObject);
             this._playerMode = options.playerMode || PlayerMode.Player;
-            this.systemManager.register(EnableSystem, SystemOrder.Enable);
-            this.systemManager.register(StartSystem, SystemOrder.Start);
-            this.systemManager.register(FixedUpdateSystem, SystemOrder.FixedUpdate);
-            this.systemManager.register(UpdateSystem, SystemOrder.Update);
-            this.systemManager.register(LateUpdateSystem, SystemOrder.LateUpdate);
-            this.systemManager.register(DisableSystem, SystemOrder.Disable);
+            this.systemManager.register(StartSystem, gameObjectContext, SystemOrder.Start);
+            this.systemManager.register(FixedUpdateSystem, gameObjectContext, SystemOrder.FixedUpdate);
+            this.systemManager.register(UpdateSystem, gameObjectContext, SystemOrder.Update);
+            this.systemManager.register(LateUpdateSystem, gameObjectContext, SystemOrder.LateUpdate);
         }
         /**
          * TODO

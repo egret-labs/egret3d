@@ -132,11 +132,12 @@ namespace egret3d {
             this.boneMatrices = null;
 
             const mesh = this._mesh;
+            const parent = this.gameObject.transform.parent;
 
-            if (mesh) {
+            if (mesh && parent) {
                 const config = mesh.config;
                 const skin = config.skins![0];
-                const children = this.gameObject.transform.parent!.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
+                const children = parent.getChildren({}) as { [key: string]: Transform | (Transform[]) };
 
                 if (skin.skeleton !== undefined) {
                     const rootNode = config.nodes![skin.skeleton];

@@ -260,7 +260,7 @@ namespace egret3d {
                 const animationMask = animationLayer.mask as AnimationMask | null;
                 const jointNames = animationMask ? animationMask.jointNames : null;
                 const rootGameObject = animation.gameObject;
-                const children = rootGameObject.transform.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
+                const children = rootGameObject.transform.getChildren({}) as { [key: string]: Transform | (Transform[]) };
                 children["__root__"] = rootGameObject.transform; // 
 
                 for (const glTFChannel of this.animation.channels as GLTFAnimationChannel[]) {

@@ -53,7 +53,6 @@ namespace paper {
         }
         /**
          * 资源名称。
-         * @readonly
          */
         public name: string = "";
 

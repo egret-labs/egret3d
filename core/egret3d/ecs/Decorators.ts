@@ -48,7 +48,7 @@ namespace paper {
     //  * 通过装饰器标记组件是否为抽象组件。
     //  * @param componentClass 组件类。
     //  */
-    // export function abstract(componentClass: IComponentClass<BaseComponent>) {
+    // export function abstract(componentClass: IComponentClass<IComponent>) {
     //     (componentClass.__isAbstract as any) = componentClass;
     //     console.log(componentClass);
     // }
@@ -56,7 +56,7 @@ namespace paper {
      * 通过装饰器标记组件允许在同一实体上添加多个实例。
      * @param componentClass 组件类。
      */
-    export function allowMultiple(componentClass: IComponentClass<BaseComponent>) {
+    export function allowMultiple(componentClass: IComponentClass<IComponent>) {
         if (!componentClass.isSingleton) {
             (componentClass.allowMultiple as boolean) = true;
         }
@@ -65,7 +65,7 @@ namespace paper {
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
      */
-    export function singleton(componentClass: IComponentClass<BaseComponent>) {
+    export function singleton(componentClass: IComponentClass<IComponent>) {
         (componentClass.isSingleton as boolean) = true;
         (componentClass.allowMultiple as boolean) = false;
     }
@@ -90,8 +90,8 @@ namespace paper {
      * 通过装饰器标记组件依赖的其他组件。
      * @param requireComponentClass 依赖的组件类。
      */
-    export function requireComponent(requireComponentClass: IComponentClass<BaseComponent>) {
-        return function (componentClass: IComponentClass<BaseComponent>) {
+    export function requireComponent(requireComponentClass: IComponentClass<IComponent>) {
+        return function (componentClass: IComponentClass<IComponent>) {
             const requireComponents = componentClass.requireComponents!;
             if (requireComponents.indexOf(requireComponentClass) < 0) {
                 requireComponents.push(requireComponentClass);

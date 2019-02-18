@@ -25,8 +25,8 @@
 
         "libs/paper/customenum.ts",
 
-        "egret3d/ecs/core/Interface.ts",
-        "egret3d/ecs/core/Decorators.ts",
+        "egret3d/ecs/Interface.ts",
+        "egret3d/ecs/Decorators.ts",
         "egret3d/ecs/core/BaseObject.ts",
         "egret3d/editor/EditorDecorators.ts",
 
@@ -48,29 +48,31 @@
         "egret3d/math/Ray.ts",
         "egret3d/math/Frustum.ts",
 
-        "egret3d/ecs/core/Asset.ts",
-        "egret3d/ecs/core/Prefab.ts",
-        "egret3d/ecs/core/RawScene.ts",
-        "egret3d/ecs/core/Scene.ts",
         "egret3d/ecs/core/Entity.ts",
         "egret3d/ecs/core/GameObject.ts",
         "egret3d/ecs/core/Matcher.ts",
         "egret3d/ecs/core/Collector.ts",
+        "egret3d/ecs/core/Group.ts",
+        "egret3d/ecs/core/Scene.ts",
         "egret3d/ecs/core/Context.ts",
         "egret3d/ecs/core/SystemManager.ts",
         "egret3d/ecs/core/ScenesManager.ts",
         "egret3d/ecs/core/Application.ts",
 
+        "egret3d/ecs/core/Asset.ts",
+        "egret3d/ecs/core/Prefab.ts",
+        "egret3d/ecs/core/RawScene.ts",
+
         "egret3d/ecs/components/Component.ts",
         "egret3d/ecs/components/BaseComponent.ts",
         "egret3d/ecs/components/GroupComponent.ts",
-        "egret3d/ecs/components/BaseRenderer.ts",
         "egret3d/ecs/components/MissingComponent.ts",
+        "egret3d/ecs/components/BaseTransform.ts",
+        "egret3d/ecs/components/BaseRenderer.ts",
         "egret3d/ecs/components/Behaviour.ts",
         "egret3d/ecs/components/Time.ts",
         "egret3d/ecs/components/DisposeCollecter.ts",
 
-        "egret3d/ecs/systems/GameObjectGroup.ts",
         "egret3d/ecs/systems/BaseSystem.ts",
         "egret3d/ecs/systems/EnableSystem.ts",
         "egret3d/ecs/systems/StartSystem.ts",
@@ -78,9 +80,9 @@
         "egret3d/ecs/systems/UpdateSystem.ts",
         "egret3d/ecs/systems/LateUpdateSystem.ts",
         "egret3d/ecs/systems/DisableSystem.ts",
-        "egret3d/ecs/serialize/SerializeClassMap.ts",
         "egret3d/ecs/serialize/Deserialize.ts",
         "egret3d/ecs/serialize/Serialize.ts",
+        "egret3d/ecs/Deprecated.ts",
 
         "egret3d/Interface.ts",
 

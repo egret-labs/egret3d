@@ -6,7 +6,7 @@ namespace paper {
         /**
          * @internal
          */
-        public static readonly __isAbstract: any = BaseRenderer;
+        public static readonly isAbstract: IComponentClass<IComponent> = BaseRenderer as any;
         /**
          * 当渲染组件的材质列表改变时派发事件。
          */
@@ -38,18 +38,14 @@ namespace paper {
             this._boundingSphere.center.applyMatrix(localToWorldMatrix);
             this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         }
-        /**
-         * @internal
-         */
-        public initialize() {
+
+        public initialize(): void {
             super.initialize();
 
             this.getBoundingTransform().registerObserver(this);
         }
-        /**
-         * @internal
-         */
-        public uninitialize() {
+
+        public uninitialize(): void {
             super.uninitialize();
 
             for (const material of this._materials) {

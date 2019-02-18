@@ -1,14 +1,9 @@
 namespace paper {
     /**
-     * TODO
-     * @internal
-     */
-    export const _parentChangedGameObjects: GameObject[] = [];
-    /**
      * 全局销毁信息收集组件。
      */
     @singleton
-    export class DisposeCollecter extends BaseComponent {
+    export class DisposeCollecter extends Component {
         /**
          * 缓存此帧销毁的全部场景。
          */
@@ -16,15 +11,11 @@ namespace paper {
         /**
          * 缓存此帧销毁的全部实体。
          */
-        public readonly gameObjects: GameObject[] = [];
-        /**
-         * 缓存此帧更改过父级的实体。
-         */
-        public readonly parentChangedGameObjects: GameObject[] = _parentChangedGameObjects;
+        public readonly entities: IEntity[] = [];
         /**
          * 缓存此帧销毁的全部组件。
          */
-        public readonly components: BaseComponent[] = [];
+        public readonly components: IComponent[] = [];
         /**
          * 缓存此帧结束时释放的对象。
          */
@@ -44,8 +35,7 @@ namespace paper {
          */
         public clear() {
             this.scenes.length = 0;
-            this.gameObjects.length = 0;
-            this.parentChangedGameObjects.length = 0;
+            this.entities.length = 0;
             this.components.length = 0;
             this.releases.length = 0;
             this.assets.length = 0;

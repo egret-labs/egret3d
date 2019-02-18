@@ -1,39 +1,35 @@
 namespace paper {
     /**
-     * 实体。
+     * 基础实体。
      */
-    export class Entity extends BaseObject implements IEntity {
+    export abstract class Entity extends BaseObject implements IEntity {
         /**
          * 当实体被创建时派发事件。
          */
-        public static readonly onEntityCreated: signals.Signal<Entity> = new signals.Signal();
+        public static readonly onEntityCreated: signals.Signal<IEntity> = new signals.Signal();
         /**
          * 当实体将要被销毁时派发事件。
          */
-        public static readonly onEntityDestroy: signals.Signal<Entity> = new signals.Signal();
+        public static readonly onEntityDestroy: signals.Signal<IEntity> = new signals.Signal();
         /**
          * 当实体被销毁时派发事件。
          */
-        public static readonly onEntityDestroyed: signals.Signal<Entity> = new signals.Signal();
-
-        public static create(name: string = DefaultNames.NoName): Entity {
-            const entity = new Entity();
-            entity._enabled = true;
-            entity.name = name;
-            entity.scene = SceneManager.getInstance().activeScene;
-            Entity.onEntityCreated.dispatch(entity);
-
-            return entity;
-        }
+        public static readonly onEntityDestroyed: signals.Signal<IEntity> = new signals.Signal();
 
         @serializedField
         @editor.property(editor.EditType.TEXT)
-        public name: string = DefaultNames.NoName;
-        /**
-         * 额外数据，仅保存在编辑器环境，项目发布该数据将被移除。
-         */
+        public name: string = "";
         @serializedField
-        public extras?: EntityExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
+
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).DefaultTags) }) // TODO
+        public tag: DefaultTags | string = "";
+
+        @serializedField
+        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).HideFlags) }) // TODO
+        public hideFlags: HideFlags = HideFlags.None;
+
+        @serializedField
+        public extras?: EntityExtras = ECS.getInstance().playerMode === PlayerMode.Editor ? {} : undefined;
 
         protected _componentsDirty: boolean = false;
         @serializedField("_activeSelf") // TODO 反序列化 bug
@@ -45,7 +41,7 @@ namespace paper {
          * 禁止实例化实体。
          * @protected
          */
-        protected constructor() {
+        public constructor() {
             super();
         }
 
@@ -65,7 +61,7 @@ namespace paper {
             component.initialize(config);
 
             if (this._enabled && component.enabled) {
-                Component.dispatchEnabledEvent(component, true);
+                component.dispatchEnabledEvent(true);
             }
         }
 
@@ -132,6 +128,8 @@ namespace paper {
 
         public uninitialize(): void {
             this.name = "";
+            this.tag = "";
+            this.hideFlags = HideFlags.None;
 
             if (this.extras) { // Editor. TODO
                 this.extras = {};
@@ -172,10 +170,6 @@ namespace paper {
 
             if (this.isDestroyed) {
                 throw new Error("The entity has been destroyed.");
-            }
-
-            if (this.constructor === Entity && componentClass.isBehaviour) {
-                throw new Error("Can not add behaviour to entity.");
             }
 
             //
@@ -356,6 +350,10 @@ namespace paper {
             return result;
         }
 
+        public getOrAddComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T {
+            return this.getComponent(componentClass, isExtends) || this.addComponent(componentClass);
+        }
+
         public getComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
             if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // SingletonComponent.
                 return SceneManager.getInstance().globalEntity.getComponent(componentClass, isExtends);
@@ -370,7 +368,7 @@ namespace paper {
                             }
                         }
                         else if (component instanceof componentClass) {
-                            return component;
+                            return component as T;
                         }
                     }
                 }
@@ -413,7 +411,7 @@ namespace paper {
                         }
                     }
                     else if (component instanceof componentClass) {
-                        components.push(component);
+                        components.push(component as T);
                     }
                 }
             }
@@ -429,7 +427,7 @@ namespace paper {
                         }
                     }
                     else if (component instanceof componentClass) {
-                        components.push(component);
+                        components.push(component as T);
                     }
                 }
             }
@@ -486,7 +484,7 @@ namespace paper {
             return this._enabled;
         }
         public set enabled(value: boolean) {
-            if (this._enabled === value || this.isDestroyed) {
+            if (this._enabled === value || this.isDestroyed || this === SceneManager.getInstance().globalEntity) {
                 return;
             }
 
@@ -498,12 +496,12 @@ namespace paper {
                 if (component.constructor === GroupComponent) {
                     for (const componentInGroup of (component as GroupComponent).components) {
                         if (componentInGroup.enabled) {
-                            Component.dispatchEnabledEvent(componentInGroup, value);
+                            componentInGroup.dispatchEnabledEvent(value);
                         }
                     }
                 }
                 else if (component.enabled) {
-                    Component.dispatchEnabledEvent(component, value);
+                    component.dispatchEnabledEvent(value);
                 }
             }
 

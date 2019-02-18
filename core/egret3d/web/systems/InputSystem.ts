@@ -2,7 +2,7 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
-    export class InputSystem extends paper.BaseSystem {
+    export class InputSystem extends paper.BaseSystem<paper.GameObject> {
         private _hasTouch: boolean = false;
         private _canvas: HTMLCanvasElement = null!;
 

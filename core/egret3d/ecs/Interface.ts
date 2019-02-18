@@ -125,6 +125,14 @@ namespace paper {
         End = 10000,
     }
     /**
+     * 应用程序运行模式。
+     */
+    export const enum PlayerMode {
+        Player = 0,
+        DebugPlayer = 1,
+        Editor = 2,
+    }
+    /**
      * 
      */
     export type EntityExtras = { linkedID?: string, rootID?: string, prefab?: Prefab };
@@ -254,10 +262,20 @@ namespace paper {
         readonly __onRegister: () => boolean;
     }
     /**
+     * 
+     */
+    export interface IEntityClass<TEntity extends IEntity> {
+        /**
+         * 禁止实例化实体。
+         * @protected
+         */
+        new(): TEntity;
+    }
+    /**
      * 组件类接口。
      * - 仅用于约束组件类传递。
      */
-    export interface IComponentClass<T extends IComponent> extends IBaseClass {
+    export interface IComponentClass<TComponent extends IComponent> extends IBaseClass {
         /**
          * 该组件是否在编辑模式拥有生命周期。
          */
@@ -290,12 +308,12 @@ namespace paper {
          * 禁止实例化组件。
          * @protected
          */
-        new(): T;
+        new(): TComponent;
     }
     /**
      * 实体接口。
      */
-    export interface IEntity {
+    export interface IEntity extends IUUID {
         /**
          * 该实体是否已经被销毁。
          */
@@ -315,6 +333,14 @@ namespace paper {
          */
         name: string;
         /**
+         * 该实体的标签。
+         */
+        tag: DefaultTags | string;
+        /**
+         * 
+         */
+        hideFlags: HideFlags;
+        /**
          * 该实体已经添加的全部组件。
          */
         readonly components: ReadonlyArray<IComponent>;
@@ -322,6 +348,10 @@ namespace paper {
          * 该实体所属的场景。
          */
         scene: IScene | null;
+        /**
+         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
+         */
+        extras?: EntityExtras;
         /**
          * 实体内部初始化时执行。
          * - 重写此方法时，必须调用 `super.initialize()`。
@@ -356,6 +386,12 @@ namespace paper {
          */
         removeAllComponents<T extends IComponent>(componentClass?: IComponentClass<T>, isExtends?: boolean): boolean;
         /**
+         * 从该实体已注册的全部组件中获取一个指定组件实例，如果未添加该组件，则添加该组件。
+         * @param componentClass 组件类。
+         * @param isExtends 是否尝试获取全部派生自此组件的实例。
+         */
+        getOrAddComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T;
+        /**
          * 获取一个指定组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
@@ -381,7 +417,7 @@ namespace paper {
     /**
      * 组件接口。
      */
-    export interface IComponent {
+    export interface IComponent extends IUUID {
         /**
          * 该组件是否已经被销毁。
          */
@@ -391,9 +427,17 @@ namespace paper {
          */
         enabled: boolean;
         /**
+         * 
+         */
+        hideFlags: HideFlags;
+        /**
          * 该组件的实体。
          */
         readonly entity: IEntity;
+        /**
+         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
+         */
+        extras?: ComponentExtras;
         /**
          * @internal
          */
@@ -409,6 +453,10 @@ namespace paper {
          * - 重写此方法时，必须调用 `super.uninitialize()`。
          */
         uninitialize(): void;
+        /**
+         * 
+         */
+        dispatchEnabledEvent(enabled: boolean): void;
     }
     /**
      * 
@@ -510,59 +558,9 @@ namespace paper {
         clear(): void;
     }
     /**
-     * 
-     */
-    export interface IGroup<TEntity extends IEntity> {
-        /**
-         * 
-         */
-        readonly entityCount: uint;
-        /**
-         * 
-         */
-        readonly matcher: Readonly<IMatcher<TEntity>>;
-        /**
-         * 
-         */
-        readonly entity: TEntity;
-        /**
-         * 
-         */
-        readonly entities: ReadonlyArray<TEntity>;
-        /**
-         * 
-         */
-        handleEvent(entity: TEntity, component: IComponent, isAdded: boolean): void;
-        /**
-         * 
-         */
-        containsEntity(entity: TEntity): boolean;
-    }
-    /**
-     * 
-     */
-    export interface IContext<TEntity extends IEntity> {
-        /**
-         * 
-         */
-        readonly entityCount: uint;
-        /**
-         * 
-         */
-        readonly entities: ReadonlyArray<TEntity>;
-        /**
-         * 
-         */
-        containsEntity(entity: TEntity): boolean;
-        /**
-         * 
-         */
-        getGroup(matcher: IMatcher<TEntity>): IGroup<TEntity>;
-    }
-    /**
      * 场景接口。
      */
-    export interface IScene {
+    export interface IScene extends IUUID {
         /**
          * 该场景是否已经被销毁。
          */
@@ -606,6 +604,12 @@ namespace paper {
         /**
          * 通过实体名称获取该场景的一个实体。
          */
-        getEntityByName(name: string): IEntity | null;
+        find(name: string): IEntity | null;
+    }
+    /**
+     * 
+     */
+    export interface ApplicationOptions {
+        playerMode?: PlayerMode;
     }
 }

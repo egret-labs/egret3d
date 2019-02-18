@@ -2,26 +2,12 @@ namespace paper {
     /**
      * @deprecated
      */
-    export type CullingMask = Layer;
-    /**
-     * @deprecated
-     */
-    export const CullingMask = (paper as any).Layer as any;
-    /**
-     * @deprecated
-     */
     export type RenderQueue = egret3d.RenderQueue;
     /**
      * @deprecated
      */
     export const RenderQueue = (egret3d as any).RenderQueue as any;
-    /**
-     * @deprecated 
-     * @see paper.clock
-     */
-    export const Time: Clock = null!;
 }
-
 namespace gltf {
     /**
      * @deprecated
@@ -197,11 +183,4 @@ namespace egret3d {
             },
         },
     };
-    /**
-     * @deprecated
-     * @see paper.@singleton
-     */
-    @paper.singleton
-    export class SingletonComponent extends paper.BaseComponent {
-    }
 }

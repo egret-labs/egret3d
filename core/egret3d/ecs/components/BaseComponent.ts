@@ -34,7 +34,7 @@ namespace paper {
             this._enabled = value;
 
             if ((this._lifeStates & ComponentLifeState.Initialized) && this.gameObject.activeInHierarchy) {
-                Component.dispatchEnabledEvent(this, value);
+                this.dispatchEnabledEvent(value);
             }
         }
         /**

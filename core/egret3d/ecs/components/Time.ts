@@ -3,7 +3,7 @@ namespace paper {
      * 全局时钟信息组件。
      */
     @singleton
-    export class Clock extends BaseComponent {
+    export class Clock extends Component {
         public maxFixedSubSteps: uint = 3;
         public fixedDeltaTime: number = 1.0 / 50.0; // TODO same as fps.
         public timeScale: number = 1.0;

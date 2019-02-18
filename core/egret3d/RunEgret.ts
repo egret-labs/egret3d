@@ -87,20 +87,22 @@ namespace egret3d {
 
         paper.Application.initialize(options);
         const systemManager = paper.Application.systemManager;
-        systemManager.register(webgl.BeginSystem, paper.SystemOrder.Begin, options);
+        const gameObjectContext = paper.Context.getInstance(paper.GameObject);
 
-        systemManager.register(AnimationSystem, paper.SystemOrder.Animation);
-        systemManager.register(MeshRendererSystem, paper.SystemOrder.BeforeRenderer);
-        systemManager.register(SkinnedMeshRendererSystem, paper.SystemOrder.BeforeRenderer);
-        systemManager.register(particle.ParticleSystem, paper.SystemOrder.BeforeRenderer);
-        systemManager.register(Egret2DRendererSystem, paper.SystemOrder.BeforeRenderer, options);
-        systemManager.register(CameraAndLightSystem, paper.SystemOrder.BeforeRenderer);
+        systemManager.register(webgl.BeginSystem, gameObjectContext, paper.SystemOrder.Begin, options);
+        systemManager.register(AnimationSystem, gameObjectContext, paper.SystemOrder.Animation);
+        systemManager.register(MeshRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
+        systemManager.register(SkinnedMeshRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
+        systemManager.register(particle.ParticleSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
+        systemManager.register(Egret2DRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer, options);
+        systemManager.register(CameraAndLightSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
 
-        systemManager.register(webgl.WebGLRenderSystem, paper.SystemOrder.Renderer, options);
-        systemManager.register(webgl.InputSystem, paper.SystemOrder.End, options);
-        systemManager.register(webgl.EndSystem, paper.SystemOrder.End, options);
-        // TODO
-        systemManager._preRegisterSystems();
+        systemManager.register(webgl.WebGLRenderSystem, gameObjectContext, paper.SystemOrder.Renderer, options);
+        systemManager.register(webgl.InputSystem, gameObjectContext, paper.SystemOrder.End, options);
+        systemManager.register(webgl.EndSystem, gameObjectContext, paper.SystemOrder.End, options);
+        
+        systemManager.preRegisterSystems();
+
         paper.Application.resume();
 
         console.info("Egret start complete.");

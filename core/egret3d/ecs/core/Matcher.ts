@@ -4,10 +4,13 @@ namespace paper {
     /**
      * 
      */
-    export class Matcher<TEntity extends Entity> implements IAllOfMatcher<TEntity>  {
-
-        public static create(...components: (IComponentClass<IComponent>)[]) {
-            const matcher = new Matcher();
+    export class Matcher<TEntity extends IEntity> implements IAllOfMatcher<TEntity>  {
+        /**
+         * 
+         * @param components 
+         */
+        public static create<TEntity extends IEntity>(...components: (IComponentClass<IComponent>)[]): IAllOfMatcher<TEntity> {
+            const matcher = new Matcher<TEntity>();
             matcher._distinct(components, matcher._allOfComponents);
 
             return matcher;
@@ -35,6 +38,8 @@ namespace paper {
             let index = 0;
 
             for (const component of source) {
+                registerClass(component); // TODO
+
                 if (target.indexOf(component) < 0) {
                     target[index++] = component;
                 }
@@ -116,7 +121,7 @@ namespace paper {
         }
 
         public matchesExtra(component: IComponentClass<IComponent>): boolean {
-            return this._extraOfComponents.length > 0 || this._extraOfComponents.indexOf(component) >=0;
+            return this._extraOfComponents.length > 0 || this._extraOfComponents.indexOf(component) >= 0;
         }
 
         public get id(): string {

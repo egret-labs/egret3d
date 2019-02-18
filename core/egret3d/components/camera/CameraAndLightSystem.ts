@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * @internal
      */
-    export class CameraAndLightSystem extends paper.BaseSystem {
+    export class CameraAndLightSystem extends paper.BaseSystem<paper.GameObject> {
         public readonly interests = [
             [
                 { componentClass: Camera }
@@ -15,7 +15,7 @@ namespace egret3d {
         private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
 
-        public onAddGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup) {
+        public onAddGameObject(_gameObject: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const groups = this.groups;
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
             if (group === groups[0]) {
@@ -26,7 +26,7 @@ namespace egret3d {
             }
         }
 
-        public onRemoveGameObject(_gameObject: paper.GameObject, group: paper.GameObjectGroup) {
+        public onRemoveGameObject(_gameObject: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const groups = this.groups;
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
             if (group === groups[0]) {

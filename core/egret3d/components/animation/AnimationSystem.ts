@@ -2,12 +2,11 @@ namespace egret3d {
     /**
      * 动画系统。
      */
-    export class AnimationSystem extends paper.BaseSystem {
+    export class AnimationSystem extends paper.BaseSystem<paper.GameObject> {
         public readonly interests = [
             { componentClass: Animation }
         ];
 
-        private readonly _events: any[] = [];
         private _animation: Animation | null = null;
 
         private _updateAnimationFadeState(animationFadeState: AnimationFadeState, deltaTime: number) {

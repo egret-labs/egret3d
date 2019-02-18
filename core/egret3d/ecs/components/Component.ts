@@ -22,11 +22,11 @@ namespace paper {
         /**
          * 当组件被激活时派发事件。
          */
-        public static readonly onComponentEnabled: signals.Signal<[Entity, IComponent]> = new signals.Signal();
+        public static readonly onComponentEnabled: signals.Signal<[IEntity, IComponent]> = new signals.Signal();
         /**
          * 当组件被禁用时派发事件。
          */
-        public static readonly onComponentDisabled: signals.Signal<[Entity, IComponent]> = new signals.Signal();
+        public static readonly onComponentDisabled: signals.Signal<[IEntity, IComponent]> = new signals.Signal();
         /**
          * 该组件的实例是否在编辑模式拥有生命周期。
          */
@@ -64,34 +64,6 @@ namespace paper {
          */
         private static readonly _allSingletonComponents: IComponentClass<IComponent>[] = [];
         /**
-         * 
-         */
-        public static dispatchEnabledEvent(component: IComponent, enabled: boolean) {
-            if (
-                (component.constructor as IComponentClass<IComponent>).isBehaviour &&
-                (Application.playerMode !== PlayerMode.Editor || (component.constructor as IComponentClass<Behaviour>).executeInEditMode)
-            ) {
-                if (enabled) {
-                    if (((component as Behaviour)._lifeStates & ComponentLifeState.Awaked) === 0) {
-                        (component as Behaviour).onAwake && (component as Behaviour).onAwake!();
-                        (component as Behaviour)._lifeStates |= ComponentLifeState.Awaked;
-                    }
-
-                    (component as Behaviour).onEnable && (component as Behaviour).onEnable!();
-                }
-                else {
-                    (component as Behaviour).onDisable && (component as Behaviour).onDisable!();
-                }
-            }
-
-            if (enabled) {
-                Component.onComponentEnabled.dispatch([component.entity, component]);
-            }
-            else {
-                Component.onComponentDisabled.dispatch([component.entity, component]);
-            }
-        }
-        /**
          * @internal
          */
         public static __onRegister() {
@@ -125,28 +97,28 @@ namespace paper {
         /**
          * @internal
          */
-        public static create<T extends IComponent>(entity: Entity, componentClass: IComponentClass<T>): T {
-            const component = <any>new componentClass() as Component;
-            (component.entity as Entity) = entity;
-            component._enabled = this.createDefaultEnabled;
+        public static create<T extends IComponent>(entity: IEntity, componentClass: IComponentClass<T>): T {
+            const component = new componentClass();
+            (component.entity as IEntity) = entity;
+            (<any>component as Component)._enabled = this.createDefaultEnabled;
 
-            return <any>component as T;
+            return component;
         }
 
         @serializedField
         public hideFlags: HideFlags = HideFlags.None;
 
-        public readonly entity: Entity = null!;
-        /**
-         * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
-         */
+        public readonly entity: IEntity = null!;
+
         @paper.serializedField
-        public extras?: ComponentExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
+        public extras?: ComponentExtras = ECS.getInstance().playerMode === PlayerMode.Editor ? {} : undefined;
 
         @serializedField
         protected _enabled: boolean = false;
-
-        protected _lifeStates: ComponentLifeState = ComponentLifeState.None;
+        /**
+         * @internal
+         */
+        public _lifeStates: ComponentLifeState = ComponentLifeState.None;
         /**
          * 禁止实例化组件。
          * @protected
@@ -158,7 +130,7 @@ namespace paper {
          * @internal
          */
         public _destroy() {
-            (this.entity as Entity) = null!;
+            (this.entity as IEntity) = null!;
         }
 
         public initialize(config?: any): void {
@@ -167,6 +139,15 @@ namespace paper {
 
         public uninitialize(): void {
             this._lifeStates = ComponentLifeState.None;
+        }
+
+        public dispatchEnabledEvent(enabled: boolean): void {
+            if (enabled) {
+                Component.onComponentEnabled.dispatch([this.entity, this]);
+            }
+            else {
+                Component.onComponentDisabled.dispatch([this.entity, this]);
+            }
         }
 
         public get isDestroyed(): boolean {
@@ -185,7 +166,7 @@ namespace paper {
             this._enabled = value;
 
             if ((this._lifeStates & ComponentLifeState.Initialized)) {
-                Component.dispatchEnabledEvent(this, value);
+                this.dispatchEnabledEvent(value);
             }
         }
     }

@@ -58,7 +58,7 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
-    export class WebGLRenderSystem extends paper.BaseSystem implements IRenderSystem {
+    export class WebGLRenderSystem extends paper.BaseSystem<paper.GameObject> implements IRenderSystem {
         public readonly interests = [
             [
                 { componentClass: Egret2DRenderer }
@@ -688,11 +688,18 @@ namespace egret3d.webgl {
             const renderer = drawCall.renderer;
             material = material || drawCall.material;
 
-            if (renderer && renderer.gameObject._beforeRenderBehaviors.length > 0) {
+            if (renderer && renderer.gameObject._beforeRenderBehaviorCount > 0) {
                 let flag = false;
+                const isEditor = paper.ECS.getInstance().playerMode === paper.PlayerMode.Editor;
 
-                for (const behaviour of renderer.gameObject._beforeRenderBehaviors) {
-                    flag = !behaviour.onBeforeRender!() || flag;
+                for (const component of renderer.gameObject.components) {
+                    if (
+                        (component.constructor as paper.IComponentClass<paper.IComponent>).isBehaviour &&
+                        (!isEditor || (component.constructor as paper.IComponentClass<paper.Behaviour>).executeInEditMode) &&
+                        (component as paper.Behaviour).onBeforeRender
+                    ) {
+                        flag = !(component as paper.Behaviour).onBeforeRender!() || flag;
+                    }
                 }
 
                 if (flag) {

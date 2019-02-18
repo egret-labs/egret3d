@@ -2,19 +2,23 @@ namespace paper {
     /**
      * Late 更新系统。
      */
-    export class LateUpdateSystem extends BaseSystem {
-        public readonly interests = [
-            { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
-        ];
+    export class LateUpdateSystem extends BaseSystem<GameObject> {
+
         private readonly _laterCalls: (() => void)[] = [];
 
+        public getMatchers() {
+            return [
+                Matcher.create<GameObject>().extraOf(Behaviour as any)
+            ];
+        }
+
         public onUpdate(deltaTime: number) {
-            // Update behaviours.
-            const components = this.groups[0].components as ReadonlyArray<Behaviour | null>;
-            for (const component of components) {
-                if (component && component._isStarted) {
-                    component.onLateUpdate && component.onLateUpdate(deltaTime);
+            for (const behaviour of this.groups[0].behaviours) {
+                if (!behaviour || (behaviour._lifeStates & ComponentLifeState.Started) === 0) {
+                    continue;
                 }
+
+                behaviour.onUpdate && behaviour.onUpdate(deltaTime);
             }
 
             //

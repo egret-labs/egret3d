@@ -4,7 +4,7 @@ namespace egret3d {
      * - 为蒙皮网格渲染组件生成绘制信息。
      * - 更新蒙皮网格的骨骼矩阵信息。
      */
-    export class SkinnedMeshRendererSystem extends paper.BaseSystem {
+    export class SkinnedMeshRendererSystem extends paper.BaseSystem<paper.GameObject> {
         public readonly interests = [
             {
                 componentClass: SkinnedMeshRenderer,

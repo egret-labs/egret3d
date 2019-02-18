@@ -2,7 +2,7 @@ namespace egret3d.particle {
     /**
      * 
      */
-    export class ParticleSystem extends paper.BaseSystem {
+    export class ParticleSystem extends paper.BaseSystem<paper.GameObject> {
         public readonly interests = [
             {
                 componentClass: ParticleComponent,

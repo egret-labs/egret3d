@@ -15,18 +15,18 @@ namespace paper {
             return this._instance;
         }
 
-        private readonly _preSystems: [{ new(): BaseSystem<Entity> }, Context<Entity>, int][] = [];
-        private readonly _systems: BaseSystem<Entity>[] = [];
-        private readonly _enableOrDisableSystems: BaseSystem<Entity>[] = [];
-        private readonly _startSystems: BaseSystem<Entity>[] = [];
-        private readonly _reactiveSystems: BaseSystem<Entity>[] = [];
-        private readonly _updateSystems: BaseSystem<Entity>[] = [];
-        private readonly _lateUpdateSystems: BaseSystem<Entity>[] = [];
+        private readonly _preSystems: [{ new(context: Context<IEntity>, order?: SystemOrder): BaseSystem<IEntity> }, Context<IEntity>, int][] = [];
+        private readonly _systems: BaseSystem<IEntity>[] = [];
+        private readonly _enableOrDisableSystems: BaseSystem<IEntity>[] = [];
+        private readonly _startSystems: BaseSystem<IEntity>[] = [];
+        private readonly _reactiveSystems: BaseSystem<IEntity>[] = [];
+        private readonly _updateSystems: BaseSystem<IEntity>[] = [];
+        private readonly _lateUpdateSystems: BaseSystem<IEntity>[] = [];
 
         private constructor() {
         }
 
-        private _getSystemInsertIndex(systems: BaseSystem<Entity>[], order: SystemOrder) {
+        private _getSystemInsertIndex(systems: BaseSystem<IEntity>[], order: SystemOrder) {
             let index = -1;
             const systemCount = systems.length;
 
@@ -194,21 +194,21 @@ namespace paper {
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
-        public preRegister<TEntity extends Entity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update) {
+        public preRegister<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update): SystemManager {
             if (this._systems.length > 0) {
                 this.register(systemClass, context, order);
 
                 return this;
             }
 
-            this._preSystems.unshift([systemClass, context, order]);
+            this._preSystems.unshift([systemClass as any, context, order]);
 
             return this;
         }
         /**
          * 为程序注册一个指定的系统。
          */
-        public register<TEntity extends Entity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any) {
+        public register<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any): TSystem | null {
             let system = this.getSystem(systemClass);
 
             if (system) {
@@ -217,7 +217,7 @@ namespace paper {
                 return system;
             }
 
-            system = BaseSystem.create(systemClass, context, order);
+            system = BaseSystem.create<TEntity, TSystem>(systemClass, context, order);
 
             if (system.onEnable || system.onDisable) {
                 this._enableOrDisableSystems.splice(this._getSystemInsertIndex(this._enableOrDisableSystems, order), 0, system);
@@ -248,10 +248,10 @@ namespace paper {
         /**
          * 从程序已注册的全部系统中获取一个指定的系统。
          */
-        public getSystem<T extends BaseSystem<Entity>>(systemClass: { new(): T }) {
+        public getSystem<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem }): TSystem | null {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
-                    return system;
+                    return system as TSystem;
                 }
             }
 
@@ -260,7 +260,7 @@ namespace paper {
         /**
          * 程序已注册的全部系统。
          */
-        public get systems(): ReadonlyArray<BaseSystem<Entity>> {
+        public get systems(): ReadonlyArray<BaseSystem<IEntity>> {
             return this._systems;
         }
     }
