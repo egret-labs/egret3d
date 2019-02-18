@@ -22,10 +22,10 @@ namespace paper {
         private constructor(group: Group<TEntity>) {
             this._group = group;
 
-            Group.onEntityAdded.add(this._onEntityAdded);
-            Group.onEntityRemoved.add(this._onEntityRemoved);
-            Group.onComponentEnabled.add(this._onComponentEnabled);
-            Group.onComponentDisabled.add(this._onComponentDisabled);
+            Group.onEntityAdded.add(this._onEntityAdded, this);
+            Group.onEntityRemoved.add(this._onEntityRemoved, this);
+            Group.onComponentEnabled.add(this._onComponentEnabled, this);
+            Group.onComponentDisabled.add(this._onComponentDisabled, this);
         }
 
         private _onEntityAdded([group, entity]: [Group<IEntity>, IEntity]) {

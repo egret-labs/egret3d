@@ -235,7 +235,7 @@ namespace paper {
                 }
 
                 const deserializer = _deserializers[prefabName];
-                equalTemplate = deserializer.objects[source.extras!.linkedID] as IEntity;
+                equalTemplate = deserializer.objects[source.extras!.linkedID!] as IEntity;
 
                 if (source.extras!.prefab) {
                     ignoreKeys = _rootIgnoreKeys;
@@ -250,7 +250,7 @@ namespace paper {
         else if (source instanceof Component) {
             if (source.isDestroyed) {
                 console.warn("Missing component.");
-                
+
                 return false;
             }
 

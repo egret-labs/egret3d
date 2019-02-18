@@ -45,8 +45,10 @@ namespace paper {
                 requestAnimationFrame(this._bindUpdate!);
             }
 
-            clock && clock.update();
-            this.systemManager.update();
+            if (clock) {
+                clock.update();
+                this.systemManager.update(clock.updateEnabled, clock.fixedUpdateEnabled);
+            }
         }
         /**
          * 

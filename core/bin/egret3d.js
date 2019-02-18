@@ -9993,12 +9993,13 @@ var paper;
         __extends(Clock, _super);
         function Clock() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.updateEnabled = false;
+            _this.fixedUpdateEnabled = false;
             _this.maxFixedSubSteps = 3;
             _this.fixedDeltaTime = 1.0 / 50.0; // TODO same as fps.
             _this.timeScale = 1.0;
             _this._frameCount = 0;
             _this._beginTime = 0.0;
-            _this._lastTime = 0.0;
             _this._delayTime = 0.0;
             _this._unscaledTime = 0.0;
             _this._unscaledDeltaTime = 0.0;
@@ -10015,7 +10016,6 @@ var paper;
          */
         Clock.prototype.update = function (time) {
             if (this._unscaledTime !== 0.0) {
-                this._lastTime = this._unscaledTime;
                 if (this._fixedTime < this.fixedDeltaTime) {
                 }
                 else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
@@ -10026,10 +10026,14 @@ var paper;
                 }
             }
             var now = time || this.now * 0.001;
+            var lastTime = this._unscaledTime;
             this._frameCount += 1;
             this._unscaledTime = now - this._beginTime;
-            this._unscaledDeltaTime = this._unscaledTime - this._lastTime;
+            this._unscaledDeltaTime = this._unscaledTime - lastTime;
             this._fixedTime += this._unscaledDeltaTime;
+            // TODO
+            this.updateEnabled = true;
+            this.fixedUpdateEnabled = true;
         };
         Object.defineProperty(Clock.prototype, "frameCount", {
             get: function () {
@@ -14614,10 +14618,10 @@ var paper;
             this.addedComponentes = [];
             this.removedComponentes = [];
             this._group = group;
-            paper.Group.onEntityAdded.add(this._onEntityAdded);
-            paper.Group.onEntityRemoved.add(this._onEntityRemoved);
-            paper.Group.onComponentEnabled.add(this._onComponentEnabled);
-            paper.Group.onComponentDisabled.add(this._onComponentDisabled);
+            paper.Group.onEntityAdded.add(this._onEntityAdded, this);
+            paper.Group.onEntityRemoved.add(this._onEntityRemoved, this);
+            paper.Group.onComponentEnabled.add(this._onComponentEnabled, this);
+            paper.Group.onComponentDisabled.add(this._onComponentDisabled, this);
         }
         /**
          *
@@ -17537,8 +17541,8 @@ var paper;
             this._componentsGroups = [];
             this._groups = {};
             this._entityClass = entityClass;
-            paper.Component.onComponentEnabled.add(this._onComponentEnabled);
-            paper.Component.onComponentDisabled.add(this._onComponentDisabled);
+            paper.Component.onComponentEnabled.add(this._onComponentEnabled, this);
+            paper.Component.onComponentDisabled.add(this._onComponentDisabled, this);
         }
         /**
          *
@@ -17694,6 +17698,7 @@ var paper;
             this._startSystems = [];
             this._reactiveSystems = [];
             this._updateSystems = [];
+            this._fixedUpdateSystems = [];
             this._lateUpdateSystems = [];
         }
         /**
@@ -17739,118 +17744,133 @@ var paper;
         /**
          *
          */
-        SystemManager.prototype.update = function () {
-            paper.clock && paper.clock.update(); // TODO
-            for (var _i = 0, _a = this._enableOrDisableSystems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system._enabled === system.enabled || !system.enabled || !system.onEnable) {
-                    continue;
-                }
-                system.onEnable();
-                if (true) {
-                    console.debug(egret.getQualifiedClassName(this), "enabled.");
-                }
+        SystemManager.prototype.update = function (update, fixedUpdate) {
+            if (!paper.clock) {
+                return;
             }
-            for (var _b = 0, _c = this._startSystems; _b < _c.length; _b++) {
-                var system = _c[_b];
-                if (!system._started) {
-                    continue;
+            if (update) {
+                for (var _i = 0, _a = this._enableOrDisableSystems; _i < _a.length; _i++) {
+                    var system = _a[_i];
+                    if (system._enabled === system.enabled || !system.enabled || !system.onEnable) {
+                        continue;
+                    }
+                    system.onEnable();
+                    if (true) {
+                        console.debug(egret.getQualifiedClassName(this), "enabled.");
+                    }
                 }
-                system.onStart();
-                system._started = true;
-            }
-            for (var _d = 0, _e = this._reactiveSystems; _d < _e.length; _d++) {
-                var system = _e[_d];
-                if (!system.enabled) {
-                    continue;
+                for (var _b = 0, _c = this._startSystems; _b < _c.length; _b++) {
+                    var system = _c[_b];
+                    if (!system._started) {
+                        continue;
+                    }
+                    system.onStart();
+                    system._started = true;
                 }
-                var collectors = system.collectors;
-                if (system.onEntityAdded) {
-                    for (var _f = 0, collectors_1 = collectors; _f < collectors_1.length; _f++) {
-                        var collector = collectors_1[_f];
-                        for (var _g = 0, _h = collector.addedEntities; _g < _h.length; _g++) {
-                            var entity = _h[_g];
-                            if (entity) {
-                                system.onEntityAdded(entity, collector);
+                for (var _d = 0, _e = this._reactiveSystems; _d < _e.length; _d++) {
+                    var system = _e[_d];
+                    if (!system.enabled) {
+                        continue;
+                    }
+                    var collectors = system.collectors;
+                    if (system.onEntityAdded) {
+                        for (var _f = 0, collectors_1 = collectors; _f < collectors_1.length; _f++) {
+                            var collector = collectors_1[_f];
+                            for (var _g = 0, _h = collector.addedEntities; _g < _h.length; _g++) {
+                                var entity = _h[_g];
+                                if (entity) {
+                                    system.onEntityAdded(entity, collector);
+                                }
+                            }
+                        }
+                    }
+                    if (system.onComponentAdded) {
+                        for (var _j = 0, collectors_2 = collectors; _j < collectors_2.length; _j++) {
+                            var collector = collectors_2[_j];
+                            for (var _k = 0, _l = collector.addedComponentes; _k < _l.length; _k++) {
+                                var component = _l[_k];
+                                if (component) {
+                                    system.onComponentAdded(component, collector);
+                                }
+                            }
+                        }
+                    }
+                    if (system.onComponentRemoved) {
+                        for (var _m = 0, collectors_3 = collectors; _m < collectors_3.length; _m++) {
+                            var collector = collectors_3[_m];
+                            for (var _o = 0, _p = collector.removedComponentes; _o < _p.length; _o++) {
+                                var component = _p[_o];
+                                if (component) {
+                                    system.onComponentRemoved(component, collector);
+                                }
+                            }
+                        }
+                    }
+                    if (system.onEntityRemoved) {
+                        for (var _q = 0, collectors_4 = collectors; _q < collectors_4.length; _q++) {
+                            var collector = collectors_4[_q];
+                            for (var _r = 0, _s = collector.removedEntities; _r < _s.length; _r++) {
+                                var entity = _s[_r];
+                                if (entity) {
+                                    system.onEntityRemoved(entity, collector);
+                                }
                             }
                         }
                     }
                 }
-                if (system.onComponentAdded) {
-                    for (var _j = 0, collectors_2 = collectors; _j < collectors_2.length; _j++) {
-                        var collector = collectors_2[_j];
-                        for (var _k = 0, _l = collector.addedComponentes; _k < _l.length; _k++) {
-                            var component = _l[_k];
-                            if (component) {
-                                system.onComponentAdded(component, collector);
-                            }
-                        }
+                for (var _t = 0, _u = this._updateSystems; _t < _u.length; _t++) {
+                    var system = _u[_t];
+                    var startTime = 0;
+                    if (true) {
+                        system.deltaTime = 0;
+                        startTime = paper.clock.now;
                     }
-                }
-                if (system.onComponentRemoved) {
-                    for (var _m = 0, collectors_3 = collectors; _m < collectors_3.length; _m++) {
-                        var collector = collectors_3[_m];
-                        for (var _o = 0, _p = collector.removedComponentes; _o < _p.length; _o++) {
-                            var component = _p[_o];
-                            if (component) {
-                                system.onComponentRemoved(component, collector);
-                            }
-                        }
+                    if (!system.enabled) {
+                        continue;
                     }
-                }
-                if (system.onEntityRemoved) {
-                    for (var _q = 0, collectors_4 = collectors; _q < collectors_4.length; _q++) {
-                        var collector = collectors_4[_q];
-                        for (var _r = 0, _s = collector.removedEntities; _r < _s.length; _r++) {
-                            var entity = _s[_r];
-                            if (entity) {
-                                system.onEntityRemoved(entity, collector);
-                            }
-                        }
+                    system.onUpdate(paper.clock.deltaTime);
+                    if (true) {
+                        system.deltaTime += paper.clock.now - startTime;
                     }
                 }
             }
-            for (var _t = 0, _u = this._updateSystems; _t < _u.length; _t++) {
-                var system = _u[_t];
-                var startTime = 0;
-                if (true) {
-                    system.deltaTime = 0;
-                    startTime = paper.clock.now;
-                }
-                if (!system.enabled) {
-                    continue;
-                }
-                system.onUpdate(paper.clock.deltaTime);
-                if (true) {
-                    system.deltaTime += paper.clock.now - startTime;
+            if (fixedUpdate) {
+                for (var _v = 0, _w = this._fixedUpdateSystems; _v < _w.length; _v++) {
+                    var system = _w[_v];
+                    if (!system.enabled) {
+                        continue;
+                    }
+                    system.onFixedUpdate(paper.clock.fixedDeltaTime);
                 }
             }
-            for (var _v = 0, _w = this._lateUpdateSystems; _v < _w.length; _v++) {
-                var system = _w[_v];
-                if (!system.enabled) {
-                    continue;
+            if (update) {
+                for (var _x = 0, _y = this._lateUpdateSystems; _x < _y.length; _x++) {
+                    var system = _y[_x];
+                    if (!system.enabled) {
+                        continue;
+                    }
+                    var startTime = 0;
+                    if (true) {
+                        startTime = paper.clock.now;
+                    }
+                    system.onLateUpdate(paper.clock.deltaTime);
+                    if (true) {
+                        system.deltaTime += paper.clock.now - startTime;
+                    }
                 }
-                var startTime = 0;
-                if (true) {
-                    startTime = paper.clock.now;
-                }
-                system.onLateUpdate(paper.clock.deltaTime);
-                if (true) {
-                    system.deltaTime += paper.clock.now - startTime;
-                }
-            }
-            for (var _x = 0, _y = this._enableOrDisableSystems; _x < _y.length; _x++) {
-                var system = _y[_x];
-                if (system._enabled === system.enabled) {
-                    continue;
-                }
-                system._enabled = system.enabled;
-                if (system.enabled || !system.onDisable) {
-                    continue;
-                }
-                system.onDisable();
-                if (true) {
-                    console.debug(egret.getQualifiedClassName(this), "disabled.");
+                for (var _z = 0, _0 = this._enableOrDisableSystems; _z < _0.length; _z++) {
+                    var system = _0[_z];
+                    if (system._enabled === system.enabled) {
+                        continue;
+                    }
+                    system._enabled = system.enabled;
+                    if (system.enabled || !system.onDisable) {
+                        continue;
+                    }
+                    system.onDisable();
+                    if (true) {
+                        console.debug(egret.getQualifiedClassName(this), "disabled.");
+                    }
                 }
             }
         };
@@ -17888,6 +17908,9 @@ var paper;
             }
             if (system.onUpdate) {
                 this._updateSystems.splice(this._getSystemInsertIndex(this._updateSystems, order), 0, system);
+            }
+            if (system.onFixedUpdate) {
+                this._updateSystems.splice(this._getSystemInsertIndex(this._fixedUpdateSystems, order), 0, system);
             }
             if (system.onLateUpdate) {
                 this._lateUpdateSystems.splice(this._getSystemInsertIndex(this._lateUpdateSystems, order), 0, system);
@@ -24804,8 +24827,8 @@ var paper;
             this._globalEntity = null;
             this._globalScene = null;
             this._editorScene = null;
-            this.onSceneCreated.add(this._addScene);
-            this.onSceneDestroyed.add(this._removeScene);
+            this.onSceneCreated.add(this._addScene, this);
+            this.onSceneDestroyed.add(this._removeScene, this);
         }
         /**
          * 场景管理器单例。
@@ -25033,8 +25056,10 @@ var paper;
             if (this._isRunning) {
                 requestAnimationFrame(this._bindUpdate);
             }
-            paper.clock.update();
-            this.systemManager.update();
+            if (paper.clock) {
+                paper.clock.update();
+                this.systemManager.update(paper.clock.updateEnabled, paper.clock.fixedUpdateEnabled);
+            }
         };
         /**
          *

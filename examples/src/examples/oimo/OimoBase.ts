@@ -56,32 +56,32 @@ namespace examples.oimo {
                 }
             }
 
-            paper.GameObject.globalGameObject.addComponent(TeleportRigidBodies);
+            // paper.GameObject.globalGameObject.addComponent(TeleportRigidBodies);
         }
     }
 
-    class TeleportRigidBodies extends paper.Behaviour {
-        public top: number = 20.0;
-        public bottom: number = -20.0;
-        public area: number = 10.0;
+    // class TeleportRigidBodies extends paper.Behaviour {
+    //     public top: number = 20.0;
+    //     public bottom: number = -20.0;
+    //     public area: number = 10.0;
 
-        public onUpdate() {
-            const pos = egret3d.Vector3.create().release();
-            const physicsSystem = paper.Application.systemManager.getSystem(egret3d.oimo.PhysicsSystem)!;
-            let rigidBody = physicsSystem.oimoWorld.getRigidBodyList();
+    //     public onUpdate() {
+    //         const pos = egret3d.Vector3.create().release();
+    //         const physicsSystem = paper.Application.systemManager.getSystem(egret3d.oimo.PhysicsSystem)!;
+    //         let rigidBody = physicsSystem.oimoWorld.getRigidBodyList();
 
-            while (rigidBody !== null) {
-                rigidBody.getPositionTo(pos as any);
-                if (pos.y < this.bottom) {
-                    pos.y = this.top;
-                    pos.x = Math.random() * this.area - this.area * 0.5;
-                    pos.z = Math.random() * this.area - this.area * 0.5;
-                    rigidBody.setPosition(pos as any);
-                    rigidBody.setLinearVelocity(egret3d.Vector3.ZERO as any);
-                }
+    //         while (rigidBody !== null) {
+    //             rigidBody.getPositionTo(pos as any);
+    //             if (pos.y < this.bottom) {
+    //                 pos.y = this.top;
+    //                 pos.x = Math.random() * this.area - this.area * 0.5;
+    //                 pos.z = Math.random() * this.area - this.area * 0.5;
+    //                 rigidBody.setPosition(pos as any);
+    //                 rigidBody.setLinearVelocity(egret3d.Vector3.ZERO as any);
+    //             }
 
-                rigidBody = rigidBody.getNext();
-            }
-        }
-    }
+    //             rigidBody = rigidBody.getNext();
+    //         }
+    //     }
+    // }
 }

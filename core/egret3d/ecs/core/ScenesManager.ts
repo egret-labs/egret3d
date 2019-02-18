@@ -33,8 +33,8 @@ namespace paper {
         private _editorScene: Scene | null = null;
 
         private constructor() {
-            this.onSceneCreated.add(this._addScene);
-            this.onSceneDestroyed.add(this._removeScene);
+            this.onSceneCreated.add(this._addScene, this);
+            this.onSceneDestroyed.add(this._removeScene, this);
         }
 
         private _addScene([scene, isActive]: [Scene, boolean]) {

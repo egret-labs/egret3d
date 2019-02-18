@@ -52,7 +52,7 @@ namespace paper {
         /**
          * 
          */
-        public preRegisterSystems() {
+        public preRegisterSystems(): void {
             const preSystems = this._preSystems;
             preSystems.sort((a, b) => { return a[2] - b[2]; });
 
@@ -65,7 +65,11 @@ namespace paper {
         /**
          * 
          */
-        public update(update: boolean, fixedUpdate: boolean) {
+        public update(update: boolean, fixedUpdate: boolean): void {
+            if (!clock) {
+                return;
+            }
+
             if (update) {
                 for (const system of this._enableOrDisableSystems) {
                     if (system._enabled === system.enabled || !system.enabled || !system.onEnable) {
@@ -162,7 +166,7 @@ namespace paper {
                         continue;
                     }
 
-                    system.onFixedUpdate!();
+                    system.onFixedUpdate!(clock.fixedDeltaTime);
                 }
             }
 

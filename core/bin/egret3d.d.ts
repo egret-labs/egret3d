@@ -4613,6 +4613,10 @@ declare namespace paper {
          */
         onUpdate?(deltaTime?: number): void;
         /**
+         *
+         */
+        onFixedUpdate?(deltaTime?: number): void;
+        /**
          * 该系统更新时调用。
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
@@ -5697,12 +5701,13 @@ declare namespace paper {
      * 全局时钟信息组件。
      */
     class Clock extends Component {
+        updateEnabled: boolean;
+        fixedUpdateEnabled: boolean;
         maxFixedSubSteps: uint;
         fixedDeltaTime: number;
         timeScale: number;
         private _frameCount;
         private _beginTime;
-        private _lastTime;
         private _delayTime;
         private _unscaledTime;
         private _unscaledDeltaTime;
@@ -8145,6 +8150,7 @@ declare namespace paper {
         private readonly _startSystems;
         private readonly _reactiveSystems;
         private readonly _updateSystems;
+        private readonly _fixedUpdateSystems;
         private readonly _lateUpdateSystems;
         private constructor();
         private _getSystemInsertIndex(systems, order);
@@ -8155,7 +8161,7 @@ declare namespace paper {
         /**
          *
          */
-        update(): void;
+        update(update: boolean, fixedUpdate: boolean): void;
         /**
          * 在程序启动之前预注册一个指定的系统。
          */

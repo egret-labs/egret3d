@@ -26,8 +26,8 @@ namespace paper {
 
         private constructor(entityClass: IEntityClass<TEntity>) {
             this._entityClass = entityClass;
-            Component.onComponentEnabled.add(this._onComponentEnabled);
-            Component.onComponentDisabled.add(this._onComponentDisabled);
+            Component.onComponentEnabled.add(this._onComponentEnabled, this);
+            Component.onComponentDisabled.add(this._onComponentDisabled, this);
         }
 
         private _onComponentEnabled([entity, component]: [IEntity, IComponent]) {
