@@ -101,15 +101,15 @@ namespace egret3d {
         }
 
         public onEnable() {
-            for (const gameObject of this.groups[0].gameObjects) {
-                this._updateDrawCalls(gameObject, false);
-            }
+            // for (const gameObject of this.groups[0].gameObjects) {
+            //     this._updateDrawCalls(gameObject, false);
+            // }
         }
 
         public onDisable() {
-            for (const gameObject of this.groups[0].gameObjects) {
-                this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
-            }
+            // for (const gameObject of this.groups[0].gameObjects) {
+            //     this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
+            // }
         }
 
         public onAddGameObject(gameObject: paper.GameObject) {

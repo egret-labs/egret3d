@@ -25,11 +25,11 @@ namespace paper {
         /**
          * 
          */
-        public readonly groups: Group<TEntity>[] = [];
+        public readonly groups: ReadonlyArray<Group<TEntity>> = [];
         /**
          * 
          */
-        public readonly collectors: ICollector<TEntity>[] = [];
+        public readonly collectors: ReadonlyArray<Collector<TEntity>> = [];
         /**
          * @internal
          */
@@ -38,19 +38,22 @@ namespace paper {
          * @internal
          */
         public _enabled: boolean = false;
+
+        private _context: Context<TEntity> | null = null; // 兼容 interests 2.0 移除。
         /**
          * 禁止实例化系统。
          * @protected
          */
         public constructor(context: Context<TEntity>, order: SystemOrder = -1) {
+            this.order = order;
+            this._context = context;
+
             const matchers = this.getMatchers();
             const listeners = this.getListeners();
 
             if (matchers) {
                 for (const matcher of matchers) {
-                    const group = context.getGroup(matcher);
-                    this.groups.push(group);
-                    this.collectors.push(Collector.create(group));
+                    this._addGroupAndCollector(matcher);
                 }
             }
 
@@ -60,14 +63,140 @@ namespace paper {
                 }
             }
 
-            if (!matchers && this.interests && this.interests.length > 0) {
+            if (!this.onEntityAdded && this.onAddGameObject) {
+                this.onEntityAdded = this.onAddGameObject;
+            }
+
+            if (!this.onEntityRemoved && this.onRemoveGameObject) {
+                this.onEntityRemoved = this.onRemoveGameObject;
+            }
+        }
+
+        private _addGroupAndCollector(matcher: ICompoundMatcher<TEntity>) {
+            const group = this._context!.getGroup(matcher);
+            (this.groups as Group<TEntity>[]).push(group);
+            (this.collectors as Collector<TEntity>[]).push(Collector.create(group));
+        }
+        /**
+         * @internal
+         */
+        public initialize(config?: any): void {
+            this.onAwake && this.onAwake(config);
+        }
+        /**
+         * @internal
+         */
+        public uninitialize(): void {
+        }
+        /**
+         * 
+         */
+        public getMatchers(): ICompoundMatcher<TEntity>[] | null {
+            return null;
+        }
+        /**
+         * 
+         */
+        public getListeners(): { type: signals.Signal, listener: (component: BaseComponent) => void }[] | null {
+            return null;
+        }
+        /**
+         * 该系统初始化时调用。
+         * @param config 该系统被注册时可以传递的初始化数据。
+         */
+        public onAwake?(config?: any): void;
+        /**
+         * 该系统被激活时调用。
+         * @see paper.BaseSystem#enabled
+         */
+        public onEnable?(): void;
+        /**
+         * 该系统开始运行时调用。
+         */
+        public onStart?(): void;
+        /**
+         * 实体被添加到系统时调用。
+         * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
+         * @param entity 收集的实体。
+         * @param collector 收集实体的实体组。
+         * @see paper.GameObject#addComponent()
+         */
+        public onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * 充分非必要组件添加到实体时调用。
+         * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
+         * @param component 收集的实体组件。
+         * @param collector 收集实体组件的实体组。
+         * @see paper.GameObject#addComponent()
+         */
+        public onComponentAdded?(component: IComponent, group: Collector<TEntity>): void;
+        /**
+         * 充分非必要组件从实体移除时调用。
+         * @param component 移除的实体组件。
+         * @param collector 移除实体组件的实体组。
+         * @see paper.GameObject#removeComponent()
+         */
+        public onComponentRemoved?(component: IComponent, collector: Collector<TEntity>): void;
+        /**
+         * 实体从系统移除时调用。
+         * @param entity 移除的实体。
+         * @param collector 移除实体的实体组。
+         * @see paper.GameObject#removeComponent()
+         */
+        public onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * 该系统更新时调用。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        public onUpdate?(deltaTime?: number): void;
+        /**
+         * 
+         */
+        public onFixedUpdate?(deltaTime?: number): void;
+        /**
+         * 该系统更新时调用。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        public onLateUpdate?(deltaTime?: number): void;
+        /**
+         * 该系统被禁用时调用。
+         * @see paper.BaseSystem#enabled
+         */
+        public onDisable?(): void;
+        /**
+         * 该系统被注销时调用。
+         * @see paper.SystemManager#unregister()
+         * @see paper.Application#systemManager
+         */
+        public onDestroy?(): void;
+
+        /**
+         * @deprecated
+         */
+        public readonly clock: Clock = clock;
+        /**
+         * @deprecated
+         */
+        public onAddGameObject?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * @deprecated
+         */
+        public onRemoveGameObject?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * @deprecated
+         */
+        public get interests(): ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>> {
+            return [];
+        }
+        public set interests(value: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>>) {
+            if (value.length > 0) {
                 let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
 
-                if (Array.isArray(this.interests[0])) {
-                    interests = this.interests as ReadonlyArray<ReadonlyArray<InterestConfig>>;
+                if (Array.isArray(value[0])) {
+                    interests = value as ReadonlyArray<ReadonlyArray<InterestConfig>>;
                 }
                 else {
-                    interests = [this.interests as ReadonlyArray<InterestConfig>];
+                    interests = [value as ReadonlyArray<InterestConfig>];
                 }
 
                 for (const interest of interests) {
@@ -110,115 +239,11 @@ namespace paper {
                         }
                     }
 
-                    const matcher = Matcher.create.apply(Matcher, allOf).anyOf.apply(Matcher, anyOf).noneOf.apply(Matcher, noneOf).extraOf.apply(Matcher, extraOf);
-                    const group = context.getGroup(matcher);
-                    this.groups.push(group);
-                    this.collectors.push(Collector.create(group));
+                    const matcher = Matcher.create.apply(Matcher, allOf);
+                    matcher.anyOf.apply(matcher, anyOf).noneOf.apply(matcher, noneOf).extraOf.apply(matcher, extraOf);
+                    this._addGroupAndCollector(matcher);
                 }
             }
-
-            this.order = order;
         }
-        /**
-         * @internal
-         */
-        public initialize(config?: any): void {
-            this.onAwake && this.onAwake(config);
-        }
-        /**
-         * @internal
-         */
-        public uninitialize(): void {
-        }
-        /**
-         * 
-         */
-        public getMatchers(): ICompoundMatcher<TEntity>[] | null {
-            return null;
-        }
-        /**
-         * 
-         */
-        public getListeners(): { type: signals.Signal, listener: (component: BaseComponent) => void }[] | null {
-            return null;
-        }
-        /**
-         * 该系统初始化时调用。
-         * @param config 该系统被注册时可以传递的初始化数据。
-         */
-        public onAwake?(config?: any): void;
-        /**
-         * 该系统被激活时调用。
-         * @see paper.BaseSystem#enabled
-         */
-        public onEnable?(): void;
-        /**
-         * 该系统开始运行时调用。
-         */
-        public onStart?(): void;
-        /**
-         * 实体被添加到系统时调用。
-         * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
-         * @param gameObject 收集的实体。
-         * @param collector 收集实体的实体组。
-         * @see paper.GameObject#addComponent()
-         */
-        public onEntityAdded?(entity: TEntity, collector: ICollector<TEntity>): void;
-        /**
-         * 充分非必要组件添加到实体时调用。
-         * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
-         * @param component 收集的实体组件。
-         * @param collector 收集实体组件的实体组。
-         * @see paper.GameObject#addComponent()
-         */
-        public onComponentAdded?(component: IComponent, collector: ICollector<TEntity>): void;
-        /**
-         * 充分非必要组件从实体移除时调用。
-         * @param component 移除的实体组件。
-         * @param collector 移除实体组件的实体组。
-         * @see paper.GameObject#removeComponent()
-         */
-        public onComponentRemoved?(component: IComponent, collector: ICollector<TEntity>): void;
-        /**
-         * 实体从系统移除时调用。
-         * @param gameObject 移除的实体。
-         * @param collector 移除实体的实体组。
-         * @see paper.GameObject#removeComponent()
-         */
-        public onEntityRemoved?(gameObject: TEntity, collector: ICollector<TEntity>): void;
-        /**
-         * 该系统更新时调用。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        public onUpdate?(deltaTime?: number): void;
-        /**
-         * 
-         */
-        public onFixedUpdate?(deltaTime?: number): void;
-        /**
-         * 该系统更新时调用。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        public onLateUpdate?(deltaTime?: number): void;
-        /**
-         * 该系统被禁用时调用。
-         * @see paper.BaseSystem#enabled
-         */
-        public onDisable?(): void;
-        /**
-         * 该系统被注销时调用。
-         * @see paper.SystemManager#unregister()
-         * @see paper.Application#systemManager
-         */
-        public onDestroy?(): void;
-
-        /**
-         * @deprecated
-         */
-        public readonly clock: Clock = clock;
-        /**
-         * @deprecated
-         */
-        public readonly interests: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>> = [];
     }
 }

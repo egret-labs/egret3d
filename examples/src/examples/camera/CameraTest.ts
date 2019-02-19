@@ -80,7 +80,7 @@ namespace examples.camera {
                     continue;
                 }
 
-                this.stagePosition.z = camera.near + camera.far * i / l + backupZ;
+                this.stagePosition.z = camera.near + (camera.far - camera.near) * i / l + backupZ;
 
                 // camera.stageToWorld(this.stagePosition, line.transform.position).update();
                 const position = line.transform.position;

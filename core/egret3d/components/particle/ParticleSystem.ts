@@ -469,9 +469,9 @@ namespace egret3d.particle {
         }
 
         public onEnable() {
-            for (const gameObject of this.groups[0].gameObjects) {
-                this._updateDrawCalls(gameObject);
-            }
+            // for (const gameObject of this.groups[0].gameObjects) {
+            //     this._updateDrawCalls(gameObject);
+            // }
         }
 
         public onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup) {
@@ -499,9 +499,9 @@ namespace egret3d.particle {
         }
 
         public onDisable() {
-            for (const gameObject of this.groups[0].gameObjects) {
-                this._drawCallCollecter.removeDrawCalls(gameObject.renderer as ParticleRenderer);
-            }
+            // for (const gameObject of this.groups[0].gameObjects) {
+            //     this._drawCallCollecter.removeDrawCalls(gameObject.renderer as ParticleRenderer);
+            // }
         }
     }
 }

@@ -103,13 +103,13 @@ namespace egret3d {
 
         public onEnable() {
             for (const gameObject of this.groups[0].gameObjects) {
-                this._updateDrawCalls(gameObject, false);
+                this.onAddGameObject(gameObject);
             }
         }
 
         public onDisable() {
             for (const gameObject of this.groups[0].gameObjects) {
-                this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
+                this.onRemoveGameObject(gameObject);
             }
         }
 

@@ -1128,18 +1128,17 @@ var paper;
          * @internal
          */
         Component.__onRegister = function () {
-            if (!paper.BaseObject.__onRegister.call(this) || this.isAbstract === this) {
+            if (!paper.BaseObject.__onRegister.call(this)) {
+                return false;
+            }
+            if (this.isAbstract === this) {
+                this.componentIndex = this._allAbstractComponents.length + 512;
+                this._allAbstractComponents.push(this);
                 return false;
             }
             if ((this.isSingleton ? this._allSingletonComponents : this._allComponents).indexOf(this) >= 0) {
                 console.warn("Register component class again.", egret.getQualifiedClassName(this));
                 return false;
-            }
-            if (this.requireComponents) {
-                this.requireComponents = this.requireComponents.concat();
-            }
-            else {
-                this.requireComponents = [];
             }
             if (this.isSingleton) {
                 this.componentIndex = this._allSingletonComponents.length + 256; // This means that a maximum of 256 non-singleton components can be added.
@@ -1148,6 +1147,12 @@ var paper;
             else {
                 this.componentIndex = this._allComponents.length;
                 this._allComponents.push(this);
+            }
+            if (this.requireComponents) {
+                this.requireComponents = this.requireComponents.concat();
+            }
+            else {
+                this.requireComponents = [];
             }
             return true;
         };
@@ -1165,6 +1170,11 @@ var paper;
          */
         Component.prototype._destroy = function () {
             this.entity = null;
+        };
+        Component.prototype._setEnabled = function (value) {
+            if ((this._lifeStates & 4 /* Initialized */)) {
+                this.dispatchEnabledEvent(value);
+            }
         };
         Component.prototype.initialize = function (config) {
             this._lifeStates |= 4 /* Initialized */;
@@ -1196,9 +1206,7 @@ var paper;
                     return;
                 }
                 this._enabled = value;
-                if ((this._lifeStates & 4 /* Initialized */)) {
-                    this.dispatchEnabledEvent(value);
-                }
+                this._setEnabled(value);
             },
             enumerable: true,
             configurable: true
@@ -1244,13 +1252,17 @@ var paper;
          */
         Component.componentIndex = -1;
         /**
-         * 所有已注册的组件类。
+         * 所有已注册的单例组件类。
          */
-        Component._allComponents = [];
+        Component._allAbstractComponents = [];
         /**
          * 所有已注册的单例组件类。
          */
         Component._allSingletonComponents = [];
+        /**
+         * 所有已注册的组件类。
+         */
+        Component._allComponents = [];
         __decorate([
             paper.serializedField
         ], Component.prototype, "hideFlags", void 0);
@@ -2423,23 +2435,15 @@ var paper;
             _super.prototype._destroy.call(this);
             this.gameObject = null;
         };
+        BaseComponent.prototype._setEnabled = function (value) {
+            if ((this._lifeStates & 4 /* Initialized */) && this.gameObject.activeInHierarchy) {
+                this.dispatchEnabledEvent(value);
+            }
+        };
         BaseComponent.prototype.initialize = function (config) {
             _super.prototype.initialize.call(this, config);
             this.gameObject = this.entity;
         };
-        Object.defineProperty(BaseComponent.prototype, "enabled", {
-            set: function (value) {
-                if (this._enabled === value || this.isDestroyed) {
-                    return;
-                }
-                this._enabled = value;
-                if ((this._lifeStates & 4 /* Initialized */) && this.gameObject.activeInHierarchy) {
-                    this.dispatchEnabledEvent(value);
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(BaseComponent.prototype, "isActiveAndEnabled", {
             /**
              * 该组件在场景的激活状态。
@@ -6012,11 +6016,14 @@ var paper;
          * @internal
          */
         BaseTransform.prototype._destroy = function () {
-            _super.prototype._destroy.call(this);
             for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
                 var child = _a[_i];
                 child.entity.destroy();
             }
+            if (this._parent) {
+                this._parent._removeChild(this);
+            }
+            _super.prototype._destroy.call(this);
             this._children.length > 0 && (this._children.length = 0);
             this._parent = null;
         };
@@ -6315,22 +6322,19 @@ var paper;
              * @internal
              */
             this._enabled = false;
+            this._context = null; // 兼容 interests 2.0 移除。
             /**
              * @deprecated
              */
             this.clock = paper.clock;
-            /**
-             * @deprecated
-             */
-            this.interests = [];
+            this.order = order;
+            this._context = context;
             var matchers = this.getMatchers();
             var listeners = this.getListeners();
             if (matchers) {
                 for (var _i = 0, matchers_1 = matchers; _i < matchers_1.length; _i++) {
                     var matcher = matchers_1[_i];
-                    var group = context.getGroup(matcher);
-                    this.groups.push(group);
-                    this.collectors.push(paper.Collector.create(group));
+                    this._addGroupAndCollector(matcher);
                 }
             }
             if (listeners) {
@@ -6339,67 +6343,23 @@ var paper;
                     config.type.add(config.listener, this);
                 }
             }
-            if (!matchers && this.interests && this.interests.length > 0) {
-                var interests = void 0;
-                if (Array.isArray(this.interests[0])) {
-                    interests = this.interests;
-                }
-                else {
-                    interests = [this.interests];
-                }
-                for (var _b = 0, interests_1 = interests; _b < interests_1.length; _b++) {
-                    var interest = interests_1[_b];
-                    var allOf = [];
-                    var anyOf = [];
-                    var noneOf = [];
-                    var extraOf = [];
-                    for (var _c = 0, interest_1 = interest; _c < interest_1.length; _c++) {
-                        var config = interest_1[_c];
-                        var isNoneOf = (config.type !== undefined) && (config.type & 2 /* Exculde */) !== 0;
-                        var isExtraOf = (config.type !== undefined) && (config.type & 4 /* Unessential */) !== 0;
-                        if (Array.isArray(config.componentClass)) {
-                            for (var _d = 0, _e = config.componentClass; _d < _e.length; _d++) {
-                                var componentClass = _e[_d];
-                                if (isNoneOf) {
-                                    noneOf.push(componentClass);
-                                }
-                                else if (isExtraOf) {
-                                    extraOf.push(componentClass);
-                                }
-                                else {
-                                    anyOf.push(componentClass);
-                                }
-                            }
-                        }
-                        else if (isNoneOf) {
-                            noneOf.push(config.componentClass);
-                        }
-                        else if (isExtraOf) {
-                            extraOf.push(config.componentClass);
-                        }
-                        else {
-                            allOf.push(config.componentClass);
-                        }
-                        if (config.listeners) {
-                            for (var _f = 0, _g = config.listeners; _f < _g.length; _f++) {
-                                var listenerConfig = _g[_f];
-                                listenerConfig.type.add(listenerConfig.listener, this);
-                            }
-                        }
-                    }
-                    var matcher = paper.Matcher.create.apply(paper.Matcher, allOf).anyOf.apply(paper.Matcher, anyOf).noneOf.apply(paper.Matcher, noneOf).extraOf.apply(paper.Matcher, extraOf);
-                    var group = context.getGroup(matcher);
-                    this.groups.push(group);
-                    this.collectors.push(paper.Collector.create(group));
-                }
+            if (!this.onEntityAdded && this.onAddGameObject) {
+                this.onEntityAdded = this.onAddGameObject;
             }
-            this.order = order;
+            if (!this.onEntityRemoved && this.onRemoveGameObject) {
+                this.onEntityRemoved = this.onRemoveGameObject;
+            }
         }
         /**
          * @internal
          */
         BaseSystem.create = function (systemClass, context, order) {
             return new systemClass(context, order);
+        };
+        BaseSystem.prototype._addGroupAndCollector = function (matcher) {
+            var group = this._context.getGroup(matcher);
+            this.groups.push(group);
+            this.collectors.push(paper.Collector.create(group));
         };
         /**
          * @internal
@@ -6424,6 +6384,71 @@ var paper;
         BaseSystem.prototype.getListeners = function () {
             return null;
         };
+        Object.defineProperty(BaseSystem.prototype, "interests", {
+            /**
+             * @deprecated
+             */
+            get: function () {
+                return [];
+            },
+            set: function (value) {
+                if (value.length > 0) {
+                    var interests = void 0;
+                    if (Array.isArray(value[0])) {
+                        interests = value;
+                    }
+                    else {
+                        interests = [value];
+                    }
+                    for (var _i = 0, interests_1 = interests; _i < interests_1.length; _i++) {
+                        var interest = interests_1[_i];
+                        var allOf = [];
+                        var anyOf = [];
+                        var noneOf = [];
+                        var extraOf = [];
+                        for (var _a = 0, interest_1 = interest; _a < interest_1.length; _a++) {
+                            var config = interest_1[_a];
+                            var isNoneOf = (config.type !== undefined) && (config.type & 2 /* Exculde */) !== 0;
+                            var isExtraOf = (config.type !== undefined) && (config.type & 4 /* Unessential */) !== 0;
+                            if (Array.isArray(config.componentClass)) {
+                                for (var _b = 0, _c = config.componentClass; _b < _c.length; _b++) {
+                                    var componentClass = _c[_b];
+                                    if (isNoneOf) {
+                                        noneOf.push(componentClass);
+                                    }
+                                    else if (isExtraOf) {
+                                        extraOf.push(componentClass);
+                                    }
+                                    else {
+                                        anyOf.push(componentClass);
+                                    }
+                                }
+                            }
+                            else if (isNoneOf) {
+                                noneOf.push(config.componentClass);
+                            }
+                            else if (isExtraOf) {
+                                extraOf.push(config.componentClass);
+                            }
+                            else {
+                                allOf.push(config.componentClass);
+                            }
+                            if (config.listeners) {
+                                for (var _d = 0, _e = config.listeners; _d < _e.length; _d++) {
+                                    var listenerConfig = _e[_d];
+                                    listenerConfig.type.add(listenerConfig.listener, this);
+                                }
+                            }
+                        }
+                        var matcher = paper.Matcher.create.apply(paper.Matcher, allOf);
+                        matcher.anyOf.apply(matcher, anyOf).noneOf.apply(matcher, noneOf).extraOf.apply(matcher, extraOf);
+                        this._addGroupAndCollector(matcher);
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         return BaseSystem;
     }());
     paper.BaseSystem = BaseSystem;
@@ -7088,6 +7113,10 @@ var paper;
             }
             this._componentsDirty = true;
         };
+        Entity.prototype._setDontDestroy = function (value) {
+            var sceneManager = paper.SceneManager.getInstance();
+            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
+        };
         Entity.prototype._getComponent = function (componentClass) {
             var componentIndex = componentClass.componentIndex;
             return componentIndex < 0 ? undefined : this._components[componentIndex];
@@ -7131,7 +7160,7 @@ var paper;
             }
             if (this === paper.SceneManager.getInstance().globalEntity) {
                 if (true) {
-                    console.warn("Cannot destroy singleton entity.");
+                    console.warn("Cannot destroy global entity.");
                 }
                 return false;
             }
@@ -7403,11 +7432,10 @@ var paper;
                 return this._scene === paper.SceneManager.getInstance().globalScene;
             },
             set: function (value) {
-                if (this.dontDestroy === value || this.isDestroyed) {
+                if (this.dontDestroy === value || this.isDestroyed || this === paper.SceneManager.getInstance().globalEntity) {
                     return;
                 }
-                var sceneManager = paper.SceneManager.getInstance();
-                this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
+                this._setDontDestroy(value);
             },
             enumerable: true,
             configurable: true
@@ -7476,10 +7504,6 @@ var paper;
                 return this._scene;
             },
             set: function (value) {
-                var sceneManager = paper.SceneManager.getInstance();
-                if (!value) {
-                    value = sceneManager.globalScene;
-                }
                 if (this._scene === value) {
                     return;
                 }
@@ -9625,6 +9649,29 @@ var paper;
             paper.Entity.onEntityCreated.dispatch(gameObect);
             return gameObect;
         };
+        GameObject.prototype._destroy = function () {
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (component && component !== this.transform) {
+                    this._removeComponent(component, null);
+                }
+            }
+            this._removeComponent(this.transform, null); // Remove transform at last.
+            this._components.length = 0;
+            this._scene = null;
+            paper.Entity.onEntityDestroyed.dispatch(this);
+        };
+        GameObject.prototype._setDontDestroy = function (value) {
+            var sceneManager = paper.SceneManager.getInstance();
+            if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
+                this.transform.parent = null;
+            }
+            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
+            for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
+                var child = _a[_i];
+                child.gameObject.dontDestroy = value;
+            }
+        };
         GameObject.prototype._addComponent = function (component, config) {
             if (component.constructor === egret3d.Transform) {
                 this.transform = component;
@@ -9665,25 +9712,15 @@ var paper;
             this._beforeRenderBehaviorCount = 0;
         };
         /**
-         * 销毁实体。
-         */
-        GameObject.prototype.destroy = function () {
-            if (_super.prototype.destroy.call(this)) {
-                var parent_2 = this.transform.parent;
-                if (parent_2) {
-                    parent_2._removeChild(this.transform);
-                }
-                return true;
-            }
-            return false;
-        };
-        /**
          * 获取一个自己或父级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         GameObject.prototype.getComponentInParent = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
+            if (this.isDestroyed) {
+                return null;
+            }
             var result = null;
             var parent = this.transform.parent;
             while (!result && parent) {
@@ -9699,6 +9736,9 @@ var paper;
          */
         GameObject.prototype.getComponentInChildren = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
+            if (this.isDestroyed) {
+                return null;
+            }
             var component = this.getComponent(componentClass, isExtends);
             if (!component) {
                 for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
@@ -9720,6 +9760,9 @@ var paper;
             if (isExtends === void 0) { isExtends = false; }
             if (components === void 0) { components = null; }
             components = components || [];
+            if (this.isDestroyed) {
+                return components;
+            }
             for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
                 var component = _a[_i];
                 if (!component) {
@@ -9753,6 +9796,9 @@ var paper;
          */
         GameObject.prototype.sendMessage = function (methodName, parameter, requireReceiver) {
             if (requireReceiver === void 0) { requireReceiver = true; }
+            if (this.isDestroyed) {
+                return this;
+            }
             for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
                 var component = _a[_i];
                 if (component && component.constructor.isBehaviour && component.enabled) {
@@ -9764,6 +9810,7 @@ var paper;
                     }
                 }
             }
+            return this;
         };
         /**
          * 向该实体和其父级的 Behaviour 组件发送消息。
@@ -9772,12 +9819,16 @@ var paper;
          */
         GameObject.prototype.sendMessageUpwards = function (methodName, parameter, requireReceiver) {
             if (requireReceiver === void 0) { requireReceiver = true; }
+            if (this.isDestroyed) {
+                return this;
+            }
             this.sendMessage(methodName, parameter, requireReceiver);
             //
             var parent = this.transform.parent;
             if (parent && parent.enabled) {
                 parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
             }
+            return this;
         };
         /**
          * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
@@ -9786,6 +9837,9 @@ var paper;
          */
         GameObject.prototype.broadcastMessage = function (methodName, parameter, requireReceiver) {
             if (requireReceiver === void 0) { requireReceiver = true; }
+            if (this.isDestroyed) {
+                return this;
+            }
             this.sendMessage(methodName, parameter, requireReceiver);
             for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
                 var child = _a[_i];
@@ -9793,25 +9847,8 @@ var paper;
                     child.gameObject.broadcastMessage(methodName, parameter, requireReceiver);
                 }
             }
+            return this;
         };
-        Object.defineProperty(GameObject.prototype, "dontDestroy", {
-            set: function (value) {
-                var sceneManager = paper.SceneManager.getInstance();
-                if (this.dontDestroy === value || this === sceneManager.globalEntity) {
-                    return;
-                }
-                if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
-                    this.transform.parent = null;
-                }
-                this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
-                for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
-                    var child = _a[_i];
-                    child.gameObject.dontDestroy = value;
-                }
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(GameObject.prototype, "activeSelf", {
             /**
              * 该实体自身的激活状态。
@@ -9830,7 +9867,7 @@ var paper;
              * 该实体在场景中的激活状态。
              */
             get: function () {
-                var parent = this.transform.parent;
+                var parent = this.transform ? this.transform.parent : null;
                 return this._enabled && (!parent || parent.isActiveAndEnabled);
             },
             enumerable: true,
@@ -9843,10 +9880,10 @@ var paper;
             get: function () {
                 var path = this.name;
                 if (this.transform) {
-                    var parent_3 = this.transform.parent;
-                    while (parent_3) {
-                        path = parent_3.gameObject.name + "/" + path;
-                        parent_3 = parent_3.parent;
+                    var parent_2 = this.transform.parent;
+                    while (parent_2) {
+                        path = parent_2.gameObject.name + "/" + path;
+                        parent_2 = parent_2.parent;
                     }
                     return this._scene.name + "/" + path;
                 }
@@ -9860,10 +9897,12 @@ var paper;
              * 该实体的父级实体。
              */
             get: function () {
-                return this.transform.parent ? this.transform.parent.gameObject : null;
+                return (this.transform && this.transform.parent) ? this.transform.parent.gameObject : null;
             },
             set: function (gameObject) {
-                this.transform.parent = gameObject ? gameObject.transform : null;
+                if (this.transform) {
+                    this.transform.parent = gameObject ? gameObject.transform : null;
+                }
             },
             enumerable: true,
             configurable: true
@@ -10286,9 +10325,9 @@ var paper;
             return this;
         };
         Matcher.prototype.matches = function (entity) {
-            return (this._allOfComponents.length > 0 || entity.hasComponents(this._allOfComponents))
-                && (this._anyOfComponents.length > 0 || entity.hasAnyComponents(this._anyOfComponents))
-                && (this._noneOfComponents.length > 0 || !entity.hasAnyComponents(this._noneOfComponents));
+            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents))
+                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents))
+                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents));
         };
         Matcher.prototype.matchesExtra = function (component) {
             return this._extraOfComponents.length > 0 || this._extraOfComponents.indexOf(component) >= 0;
@@ -10318,7 +10357,7 @@ var paper;
         });
         Object.defineProperty(Matcher.prototype, "allOfComponents", {
             get: function () {
-                return this._anyOfComponents;
+                return this._allOfComponents;
             },
             enumerable: true,
             configurable: true
@@ -10383,7 +10422,7 @@ var paper;
             if (component._lifeStates & 8 /* Started */) {
                 return;
             }
-            if (paper.Application.playerMode === 2 /* Editor */ &&
+            if (paper.ECS.getInstance().playerMode === 2 /* Editor */ &&
                 !component.constructor.executeInEditMode) {
                 return;
             }
@@ -14688,10 +14727,17 @@ var paper;
                 this.removedComponentes.length = 0;
             }
         };
+        Object.defineProperty(Collector.prototype, "group", {
+            get: function () {
+                return this._group;
+            },
+            enumerable: true,
+            configurable: true
+        });
         return Collector;
     }());
     paper.Collector = Collector;
-    __reflect(Collector.prototype, "paper.Collector", ["paper.ICollector"]);
+    __reflect(Collector.prototype, "paper.Collector");
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -16804,7 +16850,7 @@ var paper;
             var scene = new paper.Scene();
             scene._isDestroyed = false;
             scene.name = name;
-            paper.SceneManager.getInstance().onSceneCreated.dispatch([scene, isActive]);
+            this.onSceneCreated.dispatch([scene, isActive]);
             return scene;
         };
         /**
@@ -16841,7 +16887,7 @@ var paper;
              * - 全局场景无法被销毁。
              */
             get: function () {
-                return paper.Application.sceneManager.globalScene;
+                return paper.SceneManager.getInstance().globalScene;
             },
             enumerable: true,
             configurable: true
@@ -16851,7 +16897,7 @@ var paper;
              * 全局静态编辑器的场景。
              */
             get: function () {
-                return paper.Application.sceneManager.editorScene;
+                return paper.SceneManager.getInstance().editorScene;
             },
             enumerable: true,
             configurable: true
@@ -16861,10 +16907,10 @@ var paper;
              * 当前激活的场景。
              */
             get: function () {
-                return paper.Application.sceneManager.activeScene;
+                return paper.SceneManager.getInstance().activeScene;
             },
             set: function (value) {
-                paper.Application.sceneManager.activeScene = value;
+                paper.SceneManager.getInstance().activeScene = value;
             },
             enumerable: true,
             configurable: true
@@ -16902,7 +16948,7 @@ var paper;
                 return false;
             }
             var entities = this._entities;
-            sceneManager.onSceneDestroy.dispatch(this);
+            Scene.onSceneDestroy.dispatch(this);
             var i = entities.length;
             while (i--) {
                 var entity = entities[i];
@@ -16914,7 +16960,7 @@ var paper;
             this._isDestroyed = true;
             this._entitiesDirty = true;
             entities.length = 0;
-            sceneManager.onSceneDestroyed.dispatch(this);
+            Scene.onSceneDestroyed.dispatch(this);
             return true;
         };
         Scene.prototype.addEntity = function (entity) {
@@ -16944,7 +16990,7 @@ var paper;
             var index = entities.indexOf(entity);
             if (index >= 0) {
                 entities.splice(index, 1);
-                entity.scene = null;
+                entity.scene = paper.SceneManager.getInstance().globalScene; //
                 this._entitiesDirty = true;
                 return true;
             }
@@ -17092,6 +17138,18 @@ var paper;
             enumerable: true,
             configurable: true
         });
+        /**
+         *
+         */
+        Scene.onSceneCreated = new signals.Signal();
+        /**
+         *
+         */
+        Scene.onSceneDestroy = new signals.Signal();
+        /**
+         *
+         */
+        Scene.onSceneDestroyed = new signals.Signal();
         __decorate([
             paper.serializedField
         ], Scene.prototype, "name", void 0);
@@ -17561,11 +17619,19 @@ var paper;
             if (entity.constructor !== this._entityClass) {
                 return;
             }
-            var componentIndex = component.constructor.componentIndex;
+            var componentClass = component.constructor;
+            var componentIndex = componentClass.componentIndex;
             var groups = this._componentsGroups[componentIndex];
             if (groups) {
                 for (var _i = 0, groups_1 = groups; _i < groups_1.length; _i++) {
                     var group = groups_1[_i];
+                    group.handleEvent(entity, component, true);
+                }
+            }
+            if (componentClass.isBehaviour) {
+                var groups_2 = this._componentsGroups[paper.Behaviour.componentIndex];
+                for (var _b = 0, groups_3 = groups_2; _b < groups_3.length; _b++) {
+                    var group = groups_3[_b];
                     group.handleEvent(entity, component, true);
                 }
             }
@@ -17575,11 +17641,19 @@ var paper;
             if (entity.constructor !== this._entityClass) {
                 return;
             }
-            var componentIndex = component.constructor.componentIndex;
+            var componentClass = component.constructor;
+            var componentIndex = componentClass.componentIndex;
             var groups = this._componentsGroups[componentIndex];
             if (groups) {
-                for (var _i = 0, groups_2 = groups; _i < groups_2.length; _i++) {
-                    var group = groups_2[_i];
+                for (var _i = 0, groups_4 = groups; _i < groups_4.length; _i++) {
+                    var group = groups_4[_i];
+                    group.handleEvent(entity, component, false);
+                }
+            }
+            if (componentClass.isBehaviour) {
+                var groups_5 = this._componentsGroups[paper.Behaviour.componentIndex];
+                for (var _b = 0, groups_6 = groups_5; _b < groups_6.length; _b++) {
+                    var group = groups_6[_b];
                     group.handleEvent(entity, component, false);
                 }
             }
@@ -17694,7 +17768,6 @@ var paper;
         function SystemManager() {
             this._preSystems = [];
             this._systems = [];
-            this._enableOrDisableSystems = [];
             this._startSystems = [];
             this._reactiveSystems = [];
             this._updateSystems = [];
@@ -17749,46 +17822,55 @@ var paper;
                 return;
             }
             if (update) {
-                for (var _i = 0, _a = this._enableOrDisableSystems; _i < _a.length; _i++) {
+                for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                     var system = _a[_i];
-                    if (system._enabled === system.enabled || !system.enabled || !system.onEnable) {
+                    if (system._enabled === system.enabled || !system.enabled) {
                         continue;
                     }
-                    system.onEnable();
+                    if (system.onEntityAdded) {
+                        for (var _b = 0, _c = system.groups; _b < _c.length; _b++) {
+                            var group = _c[_b];
+                            for (var _d = 0, _e = group.entities; _d < _e.length; _d++) {
+                                var entity = _e[_d];
+                                system.onEntityAdded(entity, group);
+                            }
+                        }
+                    }
+                    system.onEnable && system.onEnable();
                     if (true) {
                         console.debug(egret.getQualifiedClassName(this), "enabled.");
                     }
                 }
-                for (var _b = 0, _c = this._startSystems; _b < _c.length; _b++) {
-                    var system = _c[_b];
-                    if (!system._started) {
+                for (var _f = 0, _g = this._startSystems; _f < _g.length; _f++) {
+                    var system = _g[_f];
+                    if (!system.enabled || !system._started) {
                         continue;
                     }
                     system.onStart();
                     system._started = true;
                 }
-                for (var _d = 0, _e = this._reactiveSystems; _d < _e.length; _d++) {
-                    var system = _e[_d];
+                for (var _h = 0, _j = this._reactiveSystems; _h < _j.length; _h++) {
+                    var system = _j[_h];
                     if (!system.enabled) {
                         continue;
                     }
                     var collectors = system.collectors;
                     if (system.onEntityAdded) {
-                        for (var _f = 0, collectors_1 = collectors; _f < collectors_1.length; _f++) {
-                            var collector = collectors_1[_f];
-                            for (var _g = 0, _h = collector.addedEntities; _g < _h.length; _g++) {
-                                var entity = _h[_g];
+                        for (var _k = 0, collectors_1 = collectors; _k < collectors_1.length; _k++) {
+                            var collector = collectors_1[_k];
+                            for (var _l = 0, _m = collector.addedEntities; _l < _m.length; _l++) {
+                                var entity = _m[_l];
                                 if (entity) {
-                                    system.onEntityAdded(entity, collector);
+                                    system.onEntityAdded(entity, collector.group);
                                 }
                             }
                         }
                     }
                     if (system.onComponentAdded) {
-                        for (var _j = 0, collectors_2 = collectors; _j < collectors_2.length; _j++) {
-                            var collector = collectors_2[_j];
-                            for (var _k = 0, _l = collector.addedComponentes; _k < _l.length; _k++) {
-                                var component = _l[_k];
+                        for (var _o = 0, collectors_2 = collectors; _o < collectors_2.length; _o++) {
+                            var collector = collectors_2[_o];
+                            for (var _p = 0, _q = collector.addedComponentes; _p < _q.length; _p++) {
+                                var component = _q[_p];
                                 if (component) {
                                     system.onComponentAdded(component, collector);
                                 }
@@ -17796,10 +17878,10 @@ var paper;
                         }
                     }
                     if (system.onComponentRemoved) {
-                        for (var _m = 0, collectors_3 = collectors; _m < collectors_3.length; _m++) {
-                            var collector = collectors_3[_m];
-                            for (var _o = 0, _p = collector.removedComponentes; _o < _p.length; _o++) {
-                                var component = _p[_o];
+                        for (var _r = 0, collectors_3 = collectors; _r < collectors_3.length; _r++) {
+                            var collector = collectors_3[_r];
+                            for (var _s = 0, _t = collector.removedComponentes; _s < _t.length; _s++) {
+                                var component = _t[_s];
                                 if (component) {
                                     system.onComponentRemoved(component, collector);
                                 }
@@ -17807,19 +17889,34 @@ var paper;
                         }
                     }
                     if (system.onEntityRemoved) {
-                        for (var _q = 0, collectors_4 = collectors; _q < collectors_4.length; _q++) {
-                            var collector = collectors_4[_q];
-                            for (var _r = 0, _s = collector.removedEntities; _r < _s.length; _r++) {
-                                var entity = _s[_r];
+                        for (var _u = 0, collectors_4 = collectors; _u < collectors_4.length; _u++) {
+                            var collector = collectors_4[_u];
+                            for (var _v = 0, _w = collector.removedEntities; _v < _w.length; _v++) {
+                                var entity = _w[_v];
                                 if (entity) {
-                                    system.onEntityRemoved(entity, collector);
+                                    system.onEntityRemoved(entity, collector.group);
                                 }
                             }
                         }
                     }
+                    for (var _x = 0, collectors_5 = collectors; _x < collectors_5.length; _x++) {
+                        var collector = collectors_5[_x];
+                        collector.clear();
+                    }
                 }
-                for (var _t = 0, _u = this._updateSystems; _t < _u.length; _t++) {
-                    var system = _u[_t];
+            }
+            if (fixedUpdate) {
+                for (var _y = 0, _z = this._fixedUpdateSystems; _y < _z.length; _y++) {
+                    var system = _z[_y];
+                    if (!system.enabled) {
+                        continue;
+                    }
+                    system.onFixedUpdate(paper.clock.fixedDeltaTime);
+                }
+            }
+            if (update) {
+                for (var _0 = 0, _1 = this._updateSystems; _0 < _1.length; _0++) {
+                    var system = _1[_0];
                     var startTime = 0;
                     if (true) {
                         system.deltaTime = 0;
@@ -17833,19 +17930,8 @@ var paper;
                         system.deltaTime += paper.clock.now - startTime;
                     }
                 }
-            }
-            if (fixedUpdate) {
-                for (var _v = 0, _w = this._fixedUpdateSystems; _v < _w.length; _v++) {
-                    var system = _w[_v];
-                    if (!system.enabled) {
-                        continue;
-                    }
-                    system.onFixedUpdate(paper.clock.fixedDeltaTime);
-                }
-            }
-            if (update) {
-                for (var _x = 0, _y = this._lateUpdateSystems; _x < _y.length; _x++) {
-                    var system = _y[_x];
+                for (var _2 = 0, _3 = this._lateUpdateSystems; _2 < _3.length; _2++) {
+                    var system = _3[_2];
                     if (!system.enabled) {
                         continue;
                     }
@@ -17858,16 +17944,25 @@ var paper;
                         system.deltaTime += paper.clock.now - startTime;
                     }
                 }
-                for (var _z = 0, _0 = this._enableOrDisableSystems; _z < _0.length; _z++) {
-                    var system = _0[_z];
+                for (var _4 = 0, _5 = this._systems; _4 < _5.length; _4++) {
+                    var system = _5[_4];
                     if (system._enabled === system.enabled) {
                         continue;
                     }
                     system._enabled = system.enabled;
-                    if (system.enabled || !system.onDisable) {
+                    if (system.enabled) {
                         continue;
                     }
-                    system.onDisable();
+                    system.onDisable && system.onDisable();
+                    if (system.onEntityRemoved) {
+                        for (var _6 = 0, _7 = system.groups; _6 < _7.length; _6++) {
+                            var group = _7[_6];
+                            for (var _8 = 0, _9 = group.entities; _8 < _9.length; _8++) {
+                                var entity = _9[_8];
+                                system.onEntityRemoved(entity, group);
+                            }
+                        }
+                    }
                     if (true) {
                         console.debug(egret.getQualifiedClassName(this), "disabled.");
                     }
@@ -17897,9 +17992,7 @@ var paper;
                 return system;
             }
             system = paper.BaseSystem.create(systemClass, context, order);
-            if (system.onEnable || system.onDisable) {
-                this._enableOrDisableSystems.splice(this._getSystemInsertIndex(this._enableOrDisableSystems, order), 0, system);
-            }
+            this._systems.splice(this._getSystemInsertIndex(this._systems, order), 0, system);
             if (system.onStart) {
                 this._startSystems.splice(this._getSystemInsertIndex(this._startSystems, order), 0, system);
             }
@@ -17915,7 +18008,6 @@ var paper;
             if (system.onLateUpdate) {
                 this._lateUpdateSystems.splice(this._getSystemInsertIndex(this._lateUpdateSystems, order), 0, system);
             }
-            this._systems.splice(this._getSystemInsertIndex(this._systems, order), 0, system);
             system.initialize(config);
             return system;
         };
@@ -18044,13 +18136,13 @@ var egret3d;
         MeshRendererSystem.prototype.onEnable = function () {
             for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
                 var gameObject = _a[_i];
-                this._updateDrawCalls(gameObject, false);
+                this.onAddGameObject(gameObject);
             }
         };
         MeshRendererSystem.prototype.onDisable = function () {
             for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
                 var gameObject = _a[_i];
-                this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
+                this.onRemoveGameObject(gameObject);
             }
         };
         MeshRendererSystem.prototype.onAddGameObject = function (gameObject) {
@@ -18475,16 +18567,14 @@ var egret3d;
             materialFilter.length = 0;
         };
         SkinnedMeshRendererSystem.prototype.onEnable = function () {
-            for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                this._updateDrawCalls(gameObject, false);
-            }
+            // for (const gameObject of this.groups[0].gameObjects) {
+            //     this._updateDrawCalls(gameObject, false);
+            // }
         };
         SkinnedMeshRendererSystem.prototype.onDisable = function () {
-            for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
-                var gameObject = _a[_i];
-                this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
-            }
+            // for (const gameObject of this.groups[0].gameObjects) {
+            //     this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
+            // }
         };
         SkinnedMeshRendererSystem.prototype.onAddGameObject = function (gameObject) {
             var renderer = gameObject.renderer;
@@ -24365,10 +24455,9 @@ var egret3d;
                 }
             };
             ParticleSystem.prototype.onEnable = function () {
-                for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
-                    var gameObject = _a[_i];
-                    this._updateDrawCalls(gameObject);
-                }
+                // for (const gameObject of this.groups[0].gameObjects) {
+                //     this._updateDrawCalls(gameObject);
+                // }
             };
             ParticleSystem.prototype.onAddGameObject = function (gameObject, _group) {
                 this._updateDrawCalls(gameObject, false);
@@ -24392,10 +24481,9 @@ var egret3d;
                 }
             };
             ParticleSystem.prototype.onDisable = function () {
-                for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
-                    var gameObject = _a[_i];
-                    this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
-                }
+                // for (const gameObject of this.groups[0].gameObjects) {
+                //     this._drawCallCollecter.removeDrawCalls(gameObject.renderer as ParticleRenderer);
+                // }
             };
             return ParticleSystem;
         }(paper.BaseSystem));
@@ -24811,24 +24899,12 @@ var paper;
      */
     var SceneManager = (function () {
         function SceneManager() {
-            /**
-             *
-             */
-            this.onSceneCreated = new signals.Signal();
-            /**
-             *
-             */
-            this.onSceneDestroy = new signals.Signal();
-            /**
-             *
-             */
-            this.onSceneDestroyed = new signals.Signal();
             this._scenes = [];
             this._globalEntity = null;
             this._globalScene = null;
             this._editorScene = null;
-            this.onSceneCreated.add(this._addScene, this);
-            this.onSceneDestroyed.add(this._removeScene, this);
+            paper.Scene.onSceneCreated.add(this._addScene, this);
+            paper.Scene.onSceneDestroyed.add(this._removeScene, this);
         }
         /**
          * 场景管理器单例。
@@ -25067,10 +25143,14 @@ var paper;
         ECS.prototype.initialize = function (options) {
             var gameObjectContext = paper.Context.getInstance(paper.GameObject);
             this._playerMode = options.playerMode || 0 /* Player */;
+            this.sceneManager.globalEntity.addComponent(paper.Clock);
+            this.sceneManager.globalEntity.addComponent(paper.DisposeCollecter);
+            this.systemManager.register(paper.EnableSystem, gameObjectContext, 1000 /* Enable */);
             this.systemManager.register(paper.StartSystem, gameObjectContext, 2000 /* Start */);
             this.systemManager.register(paper.FixedUpdateSystem, gameObjectContext, 3000 /* FixedUpdate */);
             this.systemManager.register(paper.UpdateSystem, gameObjectContext, 4000 /* Update */);
             this.systemManager.register(paper.LateUpdateSystem, gameObjectContext, 6000 /* LateUpdate */);
+            this.systemManager.register(paper.DisableSystem, gameObjectContext, 9000 /* Disable */);
         };
         /**
          * TODO

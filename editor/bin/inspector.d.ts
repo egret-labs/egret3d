@@ -399,7 +399,7 @@ declare namespace paper.editor {
     /**
      * TODO
      */
-    class SceneSystem extends BaseSystem {
+    class SceneSystem extends BaseSystem<GameObject> {
         readonly interests: {
             componentClass: typeof egret3d.Transform;
         }[][];
@@ -501,8 +501,8 @@ declare namespace paper.editor {
         createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
         removeComponent(gameObjectUUid: string, componentUUid: string): void;
-        getComponentById(gameObject: GameObject, componentId: string): BaseComponent | null;
-        getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null;
+        getComponentById(gameObject: GameObject, componentId: string): IComponent | null;
+        getComponentByAssetId(gameObject: GameObject, assetId: string): IComponent | null;
         /**
          * 复制游戏对象
          * @param objs

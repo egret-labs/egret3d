@@ -2,11 +2,11 @@ namespace paper {
     /**
      * 
      */
-    export class Collector<TEntity extends IEntity> implements ICollector<TEntity> {
+    export class Collector<TEntity extends IEntity> {
         /**
          * 
          */
-        public static create<TEntity extends IEntity>(group: Group<TEntity>): ICollector<TEntity> {
+        public static create<TEntity extends IEntity>(group: Group<TEntity>): Collector<TEntity> {
             const collector = new Collector<TEntity>(group);
 
             return collector;
@@ -96,6 +96,10 @@ namespace paper {
             if (this.removedComponentes.length > 0) {
                 this.removedComponentes.length = 0;
             }
+        }
+
+        public get group(): Group<TEntity> {
+            return this._group;
         }
     }
 }

@@ -238,7 +238,7 @@ namespace paper.editor {
             if (!obj) {
                 return;
             }
-            let removeComponent: BaseComponent | null = this.getComponentById(obj, componentUUid);
+            let removeComponent = this.getComponentById(obj, componentUUid);
             if (!removeComponent) {
                 return;
             }
@@ -249,7 +249,7 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public getComponentById(gameObject: GameObject, componentId: string): BaseComponent | null {
+        public getComponentById(gameObject: GameObject, componentId: string): IComponent | null {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp = gameObject.components[i];
                 if (comp.uuid === componentId) {
@@ -259,7 +259,7 @@ namespace paper.editor {
             return null;
         }
 
-        public getComponentByAssetId(gameObject: GameObject, assetId: string): BaseComponent | null {
+        public getComponentByAssetId(gameObject: GameObject, assetId: string): IComponent | null {
             for (let i: number = 0; i < gameObject.components.length; i++) {
                 let comp = gameObject.components[i];
                 if (comp.extras!.linkedID === assetId) {

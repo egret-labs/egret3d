@@ -2,14 +2,14 @@ namespace paper {
     /**
      * 应用程序。
      */
-    export class ECS<TScene extends Scene> {
-        private static _instance: ECS<Scene> | null = null;
+    export class ECS {
+        private static _instance: ECS | null = null;
         /**
          * 应用程序单例。
          */
-        public static getInstance<TScene extends Scene>(): ECS<TScene> {
+        public static getInstance(): ECS {
             if (!this._instance) {
-                this._instance = new ECS<TScene>() as any;
+                this._instance = new ECS() as any;
             }
 
             return this._instance as any;
@@ -56,10 +56,16 @@ namespace paper {
         public initialize(options: ApplicationOptions): void {
             const gameObjectContext = Context.getInstance(GameObject);
             this._playerMode = options.playerMode || PlayerMode.Player;
+
+            this.sceneManager.globalEntity.addComponent(Clock);
+            this.sceneManager.globalEntity.addComponent(DisposeCollecter);
+
+            this.systemManager.register(EnableSystem, gameObjectContext, SystemOrder.Enable);
             this.systemManager.register(StartSystem, gameObjectContext, SystemOrder.Start);
             this.systemManager.register(FixedUpdateSystem, gameObjectContext, SystemOrder.FixedUpdate);
             this.systemManager.register(UpdateSystem, gameObjectContext, SystemOrder.Update);
             this.systemManager.register(LateUpdateSystem, gameObjectContext, SystemOrder.LateUpdate);
+            this.systemManager.register(DisableSystem, gameObjectContext, SystemOrder.Disable);
         }
         /**
          * TODO
@@ -125,5 +131,5 @@ namespace paper {
     /**
      * 应用程序单例。
      */
-    export const Application = ECS.getInstance<Scene>();
+    export const Application = ECS.getInstance();
 }

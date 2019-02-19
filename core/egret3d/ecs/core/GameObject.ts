@@ -44,6 +44,34 @@ namespace paper {
          */
         public _beforeRenderBehaviorCount: uint = 0;
 
+        protected _destroy() {
+            for (const component of this._components) {
+                if (component && component !== this.transform) {
+                    this._removeComponent(component, null);
+                }
+            }
+
+            this._removeComponent(this.transform, null); // Remove transform at last.
+
+            this._components.length = 0;
+            this._scene = null;
+            Entity.onEntityDestroyed.dispatch(this);
+        }
+
+        protected _setDontDestroy(value: boolean) {
+            const sceneManager = SceneManager.getInstance();
+
+            if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
+                this.transform.parent = null;
+            }
+
+            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
+
+            for (const child of this.transform.children) {
+                child.gameObject.dontDestroy = value;
+            }
+        }
+
         protected _addComponent(component: IComponent, config?: any) {
             if (component.constructor === egret3d.Transform) {
                 (this.transform as egret3d.Transform) = component as egret3d.Transform;
@@ -91,27 +119,15 @@ namespace paper {
             this._beforeRenderBehaviorCount = 0;
         }
         /**
-         * 销毁实体。
-         */
-        public destroy(): boolean {
-            if (super.destroy()) {
-                const parent = this.transform.parent;
-
-                if (parent) {
-                    parent._removeChild(this.transform);
-                }
-
-                return true;
-            }
-
-            return false;
-        }
-        /**
          * 获取一个自己或父级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponentInParent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false) {
+            if (this.isDestroyed) {
+                return null;
+            }
+
             let result: T | null = null;
             let parent = this.transform.parent;
 
@@ -128,7 +144,12 @@ namespace paper {
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponentInChildren<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
+            if (this.isDestroyed) {
+                return null;
+            }
+
             let component = this.getComponent(componentClass, isExtends);
+
             if (!component) {
                 for (const child of this.transform.children) {
                     component = child.gameObject.getComponentInChildren(componentClass, isExtends);
@@ -147,6 +168,10 @@ namespace paper {
          */
         public getComponentsInChildren<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
             components = components || [];
+
+            if (this.isDestroyed) {
+                return components;
+            }
 
             for (const component of this._components) {
                 if (!component) {
@@ -180,7 +205,11 @@ namespace paper {
          * @param methodName 
          * @param parameter
          */
-        public sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
+        public sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true): this {
+            if (this.isDestroyed) {
+                return this;
+            }
+
             for (const component of this._components) {
                 if (component && (component.constructor as IComponentClass<T>).isBehaviour && (component as T).enabled) {
                     if (methodName in component) {
@@ -191,26 +220,38 @@ namespace paper {
                     }
                 }
             }
+
+            return this;
         }
         /**
          * 向该实体和其父级的 Behaviour 组件发送消息。
          * @param methodName 
          * @param parameter 
          */
-        public sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
+        public sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true): this {
+            if (this.isDestroyed) {
+                return this;
+            }
+
             this.sendMessage(methodName as any, parameter, requireReceiver);
             //
             const parent = this.transform.parent;
             if (parent && parent.enabled) {
                 parent.gameObject.sendMessage(methodName as any, parameter, requireReceiver);
             }
+
+            return this;
         }
         /**
          * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
          * @param methodName 
          * @param parameter 
          */
-        public broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true) {
+        public broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true): this {
+            if (this.isDestroyed) {
+                return this;
+            }
+
             this.sendMessage(methodName as any, parameter, requireReceiver);
 
             for (const child of this.transform.children) {
@@ -218,24 +259,8 @@ namespace paper {
                     child.gameObject.broadcastMessage(methodName as any, parameter, requireReceiver);
                 }
             }
-        }
 
-        public set dontDestroy(value: boolean) {
-            const sceneManager = SceneManager.getInstance();
-
-            if (this.dontDestroy === value || this === sceneManager.globalEntity) {
-                return;
-            }
-
-            if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
-                this.transform.parent = null;
-            }
-
-            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
-
-            for (const child of this.transform.children) {
-                child.gameObject.dontDestroy = value;
-            }
+            return this;
         }
         /**
          * 该实体自身的激活状态。
@@ -251,7 +276,7 @@ namespace paper {
          * 该实体在场景中的激活状态。
          */
         public get activeInHierarchy(): boolean {
-            const parent = this.transform.parent;
+            const parent = this.transform ? this.transform.parent : null;
 
             return this._enabled && (!parent || parent.isActiveAndEnabled);
         }
@@ -277,10 +302,12 @@ namespace paper {
          * 该实体的父级实体。
          */
         public get parent(): GameObject | null {
-            return this.transform.parent ? this.transform.parent.gameObject : null;
+            return (this.transform && this.transform.parent) ? this.transform.parent.gameObject : null;
         }
         public set parent(gameObject: GameObject | null) {
-            this.transform.parent = gameObject ? gameObject.transform : null;
+            if (this.transform) {
+                this.transform.parent = gameObject ? gameObject.transform : null;
+            }
         }
 
         /**

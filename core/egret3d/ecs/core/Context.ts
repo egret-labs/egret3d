@@ -35,10 +35,19 @@ namespace paper {
                 return;
             }
 
-            const componentIndex = (component.constructor as IComponentClass<IComponent>).componentIndex;
+            const componentClass = component.constructor as IComponentClass<IComponent>;
+            const componentIndex = componentClass.componentIndex;
             const groups = this._componentsGroups[componentIndex];
 
             if (groups) {
+                for (const group of groups) {
+                    group.handleEvent(entity as TEntity, component, true);
+                }
+            }
+
+            if (componentClass.isBehaviour) {
+                const groups = this._componentsGroups[Behaviour.componentIndex];
+
                 for (const group of groups) {
                     group.handleEvent(entity as TEntity, component, true);
                 }
@@ -50,10 +59,19 @@ namespace paper {
                 return;
             }
 
-            const componentIndex = (component.constructor as IComponentClass<IComponent>).componentIndex;
+            const componentClass = component.constructor as IComponentClass<IComponent>;
+            const componentIndex = componentClass.componentIndex;
             const groups = this._componentsGroups[componentIndex];
 
             if (groups) {
+                for (const group of groups) {
+                    group.handleEvent(entity as TEntity, component, false);
+                }
+            }
+
+            if (componentClass.isBehaviour) {
+                const groups = this._componentsGroups[Behaviour.componentIndex];
+
                 for (const group of groups) {
                     group.handleEvent(entity as TEntity, component, false);
                 }

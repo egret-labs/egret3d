@@ -37,10 +37,6 @@
     {
       "name": "inspector",
       "path": "../editor"
-    },
-    {
-      "name": "oimo",
-      "path": "../plugins/oimo"
     }
   ]
 }

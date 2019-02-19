@@ -94,6 +94,11 @@ namespace paper {
             this._componentsDirty = true;
         }
 
+        protected _setDontDestroy(value: boolean) {
+            const sceneManager = SceneManager.getInstance();
+            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
+        }
+
         private _getComponent(componentClass: IComponentClass<IComponent>) {
             const componentIndex = componentClass.componentIndex;
 
@@ -151,7 +156,7 @@ namespace paper {
 
             if (this === SceneManager.getInstance().globalEntity) {
                 if (DEBUG) {
-                    console.warn("Cannot destroy singleton entity.");
+                    console.warn("Cannot destroy global entity.");
                 }
 
                 return false;
@@ -471,12 +476,11 @@ namespace paper {
             return this._scene === SceneManager.getInstance().globalScene;
         }
         public set dontDestroy(value: boolean) {
-            if (this.dontDestroy === value || this.isDestroyed) {
+            if (this.dontDestroy === value || this.isDestroyed || this === SceneManager.getInstance().globalEntity) {
                 return;
             }
 
-            const sceneManager = SceneManager.getInstance();
-            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
+            this._setDontDestroy(value);
         }
 
         @editor.property(editor.EditType.CHECKBOX)
@@ -539,16 +543,10 @@ namespace paper {
             return cachedComponents;
         }
 
-        public get scene(): Scene | null {
-            return this._scene;
+        public get scene(): Scene {
+            return this._scene!;
         }
-        public set scene(value: Scene | null) {
-            const sceneManager = SceneManager.getInstance();
-
-            if (!value) {
-                value = sceneManager.globalScene;
-            }
-
+        public set scene(value: Scene) {
             if (this._scene === value) {
                 return;
             }

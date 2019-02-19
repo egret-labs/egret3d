@@ -4,7 +4,7 @@ namespace paper.editor {
      * TODO GUI NEW SAVE LOAD
      * @internal
      */
-    export class GUISystem extends BaseSystem {
+    export class GUISystem extends BaseSystem<GameObject> {
         private readonly _disposeCollecter: DisposeCollecter = GameObject.globalGameObject.getOrAddComponent(DisposeCollecter);
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = GameObject.globalGameObject.getOrAddComponent(GUIComponent);
@@ -169,7 +169,7 @@ namespace paper.editor {
                 let gameObject: GameObject | null = null;
                 if (this._modelComponent.selectedGameObject) {
                     const parent = this._modelComponent.selectedGameObject!;
-                    gameObject = Prefab.create(v, parent.scene);
+                    gameObject = Prefab.create(v, parent.scene!);
                     gameObject!.parent = parent;
                 }
                 else {
@@ -207,7 +207,7 @@ namespace paper.editor {
                 return true;
             }
 
-            let parentFolder = this._guiComponent._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene.uuid];
+            let parentFolder = this._guiComponent._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene!.uuid];
             if (!parentFolder) {
                 if (gameObject.transform.parent) {
                     // throw new Error(); // Never.
@@ -601,7 +601,11 @@ namespace paper.editor {
             };
 
             this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-                const sceneSystem = Application.systemManager.getOrRegisterSystem(editor.SceneSystem, SystemOrder.LateUpdate);
+                let sceneSystem = Application.systemManager.getSystem(editor.SceneSystem);
+
+                if (!sceneSystem) {
+                    sceneSystem = Application.systemManager.register(editor.SceneSystem, Context.getInstance(GameObject), SystemOrder.LateUpdate);
+                }
 
                 if (v) {
                     Application.playerMode = PlayerMode.DebugPlayer;
@@ -667,7 +671,7 @@ namespace paper.editor {
                     }
                 }
 
-                for (const gameObject of this._disposeCollecter.gameObjects) {
+                for (const gameObject of this._disposeCollecter.entities) {
                     const folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
                     delete this._guiComponent._hierarchyFolders[gameObject.uuid];
 
@@ -693,25 +697,25 @@ namespace paper.editor {
                     }
                 }
 
-                for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
-                    const folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
+                // for (const gameObject of this._disposeCollecter.parentChangedGameObjects) { // TODO
+                //     const folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
 
-                    if (folder) {
-                        delete this._guiComponent._hierarchyFolders[gameObject.uuid];
+                //     if (folder) {
+                //         delete this._guiComponent._hierarchyFolders[gameObject.uuid];
 
-                        if (folder && folder.parent) {
-                            try {
-                                folder.parent.removeFolder(folder);
-                            }
-                            catch (e) {
-                            }
-                        }
-                    }
+                //         if (folder && folder.parent) {
+                //             try {
+                //                 folder.parent.removeFolder(folder);
+                //             }
+                //             catch (e) {
+                //             }
+                //         }
+                //     }
 
-                    if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
-                        this._bufferedGameObjects.push(gameObject);
-                    }
-                }
+                //     if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
+                //         this._bufferedGameObjects.push(gameObject);
+                //     }
+                // }
             }
 
             this._modelComponent.update();

@@ -14,18 +14,6 @@ namespace paper {
 
             return this._instance as any;
         }
-        /**
-         * 
-         */
-        public readonly onSceneCreated: signals.Signal<[Scene, boolean]> = new signals.Signal();
-        /**
-         * 
-         */
-        public readonly onSceneDestroy: signals.Signal<Scene> = new signals.Signal();
-        /**
-         * 
-         */
-        public readonly onSceneDestroyed: signals.Signal<Scene> = new signals.Signal();
 
         private readonly _scenes: Scene[] = [];
         private _globalEntity: IEntity | null = null;
@@ -33,8 +21,8 @@ namespace paper {
         private _editorScene: Scene | null = null;
 
         private constructor() {
-            this.onSceneCreated.add(this._addScene, this);
-            this.onSceneDestroyed.add(this._removeScene, this);
+            Scene.onSceneCreated.add(this._addScene, this);
+            Scene.onSceneDestroyed.add(this._removeScene, this);
         }
 
         private _addScene([scene, isActive]: [Scene, boolean]) {

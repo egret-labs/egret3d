@@ -4880,7 +4880,7 @@ var paper;
                 //
                 if (paper.Application.playerMode === 2 /* Editor */) {
                     this._showStates = 0 /* None */;
-                    paper.Application.systemManager.register(editor.SceneSystem, 6000 /* LateUpdate */);
+                    paper.Application.systemManager.register(editor.SceneSystem, paper.Context.getInstance(paper.GameObject), 6000 /* LateUpdate */);
                 }
                 else {
                     var guiComponent_1 = this._guiComponent;
@@ -4939,7 +4939,7 @@ var paper;
                         guiComponent_1.hierarchy.close();
                         guiComponent_1.inspector.close();
                     }
-                    paper.Application.systemManager.register(editor.GUISystem, 6000 /* LateUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
+                    paper.Application.systemManager.register(editor.GUISystem, paper.Context.getInstance(paper.GameObject), 6000 /* LateUpdate */ + 1); // Make sure the GUISystem update after the SceneSystem.
                 }
             };
             EditorSystem.prototype.onStart = function () {
@@ -5010,7 +5010,7 @@ var paper;
         editor.EditorSystem = EditorSystem;
         __reflect(EditorSystem.prototype, "paper.editor.EditorSystem");
         //
-        paper.Application.systemManager.preRegister(EditorSystem, 0 /* Begin */ - 10000);
+        paper.Application.systemManager.preRegister(EditorSystem, paper.Context.getInstance(paper.GameObject), 0 /* Begin */ - 10000);
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 /// <reference path="./EventDispatcher.ts" />
@@ -5552,7 +5552,7 @@ var paper;
                                 transformController_1.hovered = null;
                             }
                             if (!transformController_1 || !transformController_1.isActiveAndEnabled || !transformController_1.hovered) {
-                                var gameObjects = paper.Scene.activeScene.getRootGameObjects();
+                                var gameObjects = paper.Scene.activeScene.getRootGameObjects().concat();
                                 gameObjects.unshift(this._touchDrawer);
                                 var raycastInfos = editor.Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
                                 if (raycastInfos.length > 0) {
@@ -8985,7 +8985,10 @@ var paper;
                     },
                 };
                 this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
-                    var sceneSystem = paper.Application.systemManager.getOrRegisterSystem(editor.SceneSystem, 6000 /* LateUpdate */);
+                    var sceneSystem = paper.Application.systemManager.getSystem(editor.SceneSystem);
+                    if (!sceneSystem) {
+                        sceneSystem = paper.Application.systemManager.register(editor.SceneSystem, paper.Context.getInstance(paper.GameObject), 6000 /* LateUpdate */);
+                    }
                     if (v) {
                         paper.Application.playerMode = 1 /* DebugPlayer */;
                         sceneSystem.enabled = true;
@@ -9040,7 +9043,7 @@ var paper;
                             }
                         }
                     }
-                    for (var _b = 0, _d = this._disposeCollecter.gameObjects; _b < _d.length; _b++) {
+                    for (var _b = 0, _d = this._disposeCollecter.entities; _b < _d.length; _b++) {
                         var gameObject = _d[_b];
                         var folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
                         delete this._guiComponent._hierarchyFolders[gameObject.uuid];
@@ -9064,23 +9067,22 @@ var paper;
                             }
                         }
                     }
-                    for (var _g = 0, _h = this._disposeCollecter.parentChangedGameObjects; _g < _h.length; _g++) {
-                        var gameObject = _h[_g];
-                        var folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
-                        if (folder) {
-                            delete this._guiComponent._hierarchyFolders[gameObject.uuid];
-                            if (folder && folder.parent) {
-                                try {
-                                    folder.parent.removeFolder(folder);
-                                }
-                                catch (e) {
-                                }
-                            }
-                        }
-                        if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
-                            this._bufferedGameObjects.push(gameObject);
-                        }
-                    }
+                    // for (const gameObject of this._disposeCollecter.parentChangedGameObjects) { // TODO
+                    //     const folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
+                    //     if (folder) {
+                    //         delete this._guiComponent._hierarchyFolders[gameObject.uuid];
+                    //         if (folder && folder.parent) {
+                    //             try {
+                    //                 folder.parent.removeFolder(folder);
+                    //             }
+                    //             catch (e) {
+                    //             }
+                    //         }
+                    //     }
+                    //     if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
+                    //         this._bufferedGameObjects.push(gameObject);
+                    //     }
+                    // }
                 }
                 this._modelComponent.update();
                 if (isHierarchyShowed) {

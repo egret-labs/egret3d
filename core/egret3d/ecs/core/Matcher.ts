@@ -115,13 +115,13 @@ namespace paper {
         }
 
         public matches(entity: TEntity): boolean {
-            return (this._allOfComponents.length > 0 || entity.hasComponents(this._allOfComponents))
-                && (this._anyOfComponents.length > 0 || entity.hasAnyComponents(this._anyOfComponents))
-                && (this._noneOfComponents.length > 0 || !entity.hasAnyComponents(this._noneOfComponents));
+            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents))
+                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents))
+                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents));
         }
 
         public matchesExtra(component: IComponentClass<IComponent>): boolean {
-            return this._extraOfComponents.length > 0 || this._extraOfComponents.indexOf(component) >= 0;
+            return this._extraOfComponents.length > 0 && this._extraOfComponents.indexOf(component) >= 0;
         }
 
         public get id(): string {
@@ -144,7 +144,7 @@ namespace paper {
         }
 
         public get allOfComponents(): ReadonlyArray<IComponentClass<IComponent>> {
-            return this._anyOfComponents;
+            return this._allOfComponents;
         }
 
         public get anyOfComponents(): ReadonlyArray<IComponentClass<IComponent>> {

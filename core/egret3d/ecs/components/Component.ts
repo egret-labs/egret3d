@@ -56,31 +56,34 @@ namespace paper {
          */
         public static readonly componentIndex: int = -1;
         /**
-         * 所有已注册的组件类。
+         * 所有已注册的单例组件类。
          */
-        private static readonly _allComponents: IComponentClass<IComponent>[] = [];
+        private static readonly _allAbstractComponents: IComponentClass<IComponent>[] = [];
         /**
          * 所有已注册的单例组件类。
          */
         private static readonly _allSingletonComponents: IComponentClass<IComponent>[] = [];
         /**
+         * 所有已注册的组件类。
+         */
+        private static readonly _allComponents: IComponentClass<IComponent>[] = [];
+        /**
          * @internal
          */
         public static __onRegister() {
-            if (!BaseObject.__onRegister.call(this) || this.isAbstract === this as any) { // Super.
+            if (!BaseObject.__onRegister.call(this)) { // Super.
+                return false;
+            }
+
+            if (this.isAbstract === this as any) {
+                (this.componentIndex as uint) = this._allAbstractComponents.length + 512;
+                this._allAbstractComponents.push(this as any);
                 return false;
             }
 
             if ((this.isSingleton ? this._allSingletonComponents : this._allComponents).indexOf(this as any) >= 0) {
                 console.warn("Register component class again.", egret.getQualifiedClassName(this));
                 return false;
-            }
-
-            if (this.requireComponents) { // Inherited parent class require components.
-                (this.requireComponents as any) = this.requireComponents.concat();
-            }
-            else {
-                (this.requireComponents as any) = [];
             }
 
             if (this.isSingleton) {
@@ -90,6 +93,13 @@ namespace paper {
             else {
                 (this.componentIndex as uint) = this._allComponents.length;
                 this._allComponents.push(this as any);
+            }
+
+            if (this.requireComponents) { // Inherited parent class require components.
+                (this.requireComponents as any) = this.requireComponents.concat();
+            }
+            else {
+                (this.requireComponents as any) = [];
             }
 
             return true;
@@ -133,6 +143,12 @@ namespace paper {
             (this.entity as IEntity) = null!;
         }
 
+        protected _setEnabled(value: boolean): void {
+            if ((this._lifeStates & ComponentLifeState.Initialized)) {
+                this.dispatchEnabledEvent(value);
+            }
+        }
+
         public initialize(config?: any): void {
             this._lifeStates |= ComponentLifeState.Initialized;
         }
@@ -164,10 +180,7 @@ namespace paper {
             }
 
             this._enabled = value;
-
-            if ((this._lifeStates & ComponentLifeState.Initialized)) {
-                this.dispatchEnabledEvent(value);
-            }
+            this._setEnabled(value);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace paper.editor {
     /**
      * @internal
      */
-    export class EditorSystem extends BaseSystem {
+    export class EditorSystem extends BaseSystem<GameObject> {
         private _isMobile: boolean = false;
         private _showStates: ShowState = ShowState.None;
         private _fpsIndex: uint = 0;
@@ -48,7 +48,7 @@ namespace paper.editor {
             //
             if (Application.playerMode === PlayerMode.Editor) {
                 this._showStates = ShowState.None;
-                Application.systemManager.register(SceneSystem, SystemOrder.LateUpdate);
+                Application.systemManager.register(SceneSystem, Context.getInstance(GameObject), SystemOrder.LateUpdate);
             }
             else {
                 const guiComponent = this._guiComponent!;
@@ -116,7 +116,7 @@ namespace paper.editor {
                     guiComponent.inspector.close();
                 }
 
-                Application.systemManager.register(GUISystem, SystemOrder.LateUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
+                Application.systemManager.register(GUISystem, Context.getInstance(GameObject), SystemOrder.LateUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
             }
         }
 
@@ -201,5 +201,5 @@ namespace paper.editor {
         }
     }
     //
-    Application.systemManager.preRegister(EditorSystem, SystemOrder.Begin - 10000);
+    Application.systemManager.preRegister(EditorSystem, Context.getInstance(GameObject), SystemOrder.Begin - 10000);
 }

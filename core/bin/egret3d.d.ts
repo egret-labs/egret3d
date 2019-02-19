@@ -443,7 +443,7 @@ declare namespace paper {
         /**
          * 该实体所属的场景。
          */
-        scene: IScene | null;
+        scene: IScene;
         /**
          * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
          */
@@ -623,31 +623,6 @@ declare namespace paper {
          * @param componentClasses
          */
         anyOf(...componentClasses: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity>;
-    }
-    /**
-     *
-     */
-    interface ICollector<TEntity extends IEntity> {
-        /**
-         *
-         */
-        readonly addedEntities: (TEntity | null)[];
-        /**
-         *
-         */
-        readonly removedEntities: (TEntity | null)[];
-        /**
-         *
-         */
-        readonly addedComponentes: (IComponent | null)[];
-        /**
-         *
-         */
-        readonly removedComponentes: (IComponent | null)[];
-        /**
-         *
-         */
-        clear(): void;
     }
     /**
      * 场景接口。
@@ -1082,13 +1057,17 @@ declare namespace paper {
          */
         static readonly componentIndex: int;
         /**
-         * 所有已注册的组件类。
+         * 所有已注册的单例组件类。
          */
-        private static readonly _allComponents;
+        private static readonly _allAbstractComponents;
         /**
          * 所有已注册的单例组件类。
          */
         private static readonly _allSingletonComponents;
+        /**
+         * 所有已注册的组件类。
+         */
+        private static readonly _allComponents;
         hideFlags: HideFlags;
         readonly entity: IEntity;
         extras?: ComponentExtras;
@@ -1098,6 +1077,7 @@ declare namespace paper {
          * @protected
          */
         constructor();
+        protected _setEnabled(value: boolean): void;
         initialize(config?: any): void;
         uninitialize(): void;
         dispatchEnabledEvent(enabled: boolean): void;
@@ -3286,8 +3266,8 @@ declare namespace paper {
          * 该组件的游戏实体。
          */
         readonly gameObject: GameObject;
+        protected _setEnabled(value: boolean): void;
         initialize(config?: any): void;
-        enabled: boolean;
         /**
          * 该组件在场景的激活状态。
          */
@@ -4495,14 +4475,6 @@ declare namespace paper {
      */
     const enum Layer {
     }
-    /**
-     *
-     */
-    const enum Flag {
-        DEBUG = 0,
-        RELEASE = 0,
-        CHECKER = 0,
-    }
 }
 declare namespace egret3d {
     /**
@@ -4542,16 +4514,18 @@ declare namespace paper {
         /**
          *
          */
-        readonly groups: Group<TEntity>[];
+        readonly groups: ReadonlyArray<Group<TEntity>>;
         /**
          *
          */
-        readonly collectors: ICollector<TEntity>[];
+        readonly collectors: ReadonlyArray<Collector<TEntity>>;
+        private _context;
         /**
          * 禁止实例化系统。
          * @protected
          */
         constructor(context: Context<TEntity>, order?: SystemOrder);
+        private _addGroupAndCollector(matcher);
         /**
          *
          */
@@ -4580,11 +4554,11 @@ declare namespace paper {
         /**
          * 实体被添加到系统时调用。
          * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
-         * @param gameObject 收集的实体。
+         * @param entity 收集的实体。
          * @param collector 收集实体的实体组。
          * @see paper.GameObject#addComponent()
          */
-        onEntityAdded?(entity: TEntity, collector: ICollector<TEntity>): void;
+        onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
         /**
          * 充分非必要组件添加到实体时调用。
          * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
@@ -4592,21 +4566,21 @@ declare namespace paper {
          * @param collector 收集实体组件的实体组。
          * @see paper.GameObject#addComponent()
          */
-        onComponentAdded?(component: IComponent, collector: ICollector<TEntity>): void;
+        onComponentAdded?(component: IComponent, group: Collector<TEntity>): void;
         /**
          * 充分非必要组件从实体移除时调用。
          * @param component 移除的实体组件。
          * @param collector 移除实体组件的实体组。
          * @see paper.GameObject#removeComponent()
          */
-        onComponentRemoved?(component: IComponent, collector: ICollector<TEntity>): void;
+        onComponentRemoved?(component: IComponent, collector: Collector<TEntity>): void;
         /**
          * 实体从系统移除时调用。
-         * @param gameObject 移除的实体。
+         * @param entity 移除的实体。
          * @param collector 移除实体的实体组。
          * @see paper.GameObject#removeComponent()
          */
-        onEntityRemoved?(gameObject: TEntity, collector: ICollector<TEntity>): void;
+        onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
         /**
          * 该系统更新时调用。
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
@@ -4639,7 +4613,15 @@ declare namespace paper {
         /**
          * @deprecated
          */
-        readonly interests: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>>;
+        onAddGameObject?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * @deprecated
+         */
+        onRemoveGameObject?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * @deprecated
+         */
+        interests: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>>;
     }
 }
 declare namespace egret3d {
@@ -4876,6 +4858,7 @@ declare namespace paper {
         protected _destroy(): void;
         protected _addComponent(component: IComponent, config?: any): void;
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
+        protected _setDontDestroy(value: boolean): void;
         private _getComponent(componentClass);
         private _isRequireComponent(componentClass);
         initialize(): void;
@@ -4893,7 +4876,7 @@ declare namespace paper {
         dontDestroy: boolean;
         enabled: boolean;
         readonly components: ReadonlyArray<IComponent>;
-        scene: Scene | null;
+        scene: Scene;
     }
 }
 declare namespace egret3d {
@@ -5514,13 +5497,11 @@ declare namespace paper {
          * 渲染组件。
          */
         readonly renderer: BaseRenderer | null;
+        protected _destroy(): void;
+        protected _setDontDestroy(value: boolean): void;
         protected _addComponent(component: IComponent, config?: any): void;
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
         uninitialize(): void;
-        /**
-         * 销毁实体。
-         */
-        destroy(): boolean;
         /**
          * 获取一个自己或父级中指定的组件实例。
          * @param componentClass 组件类。
@@ -5544,20 +5525,19 @@ declare namespace paper {
          * @param methodName
          * @param parameter
          */
-        sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver?: boolean): void;
+        sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver?: boolean): this;
         /**
          * 向该实体和其父级的 Behaviour 组件发送消息。
          * @param methodName
          * @param parameter
          */
-        sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver?: boolean): void;
+        sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver?: boolean): this;
         /**
          * 向该实体和的其子（孙）级的 Behaviour 组件发送消息。
          * @param methodName
          * @param parameter
          */
-        broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver?: boolean): void;
-        dontDestroy: boolean;
+        broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver?: boolean): this;
         /**
          * 该实体自身的激活状态。
          */
@@ -7356,11 +7336,11 @@ declare namespace paper {
     /**
      *
      */
-    class Collector<TEntity extends IEntity> implements ICollector<TEntity> {
+    class Collector<TEntity extends IEntity> {
         /**
          *
          */
-        static create<TEntity extends IEntity>(group: Group<TEntity>): ICollector<TEntity>;
+        static create<TEntity extends IEntity>(group: Group<TEntity>): Collector<TEntity>;
         readonly addedEntities: (TEntity | null)[];
         readonly removedEntities: (TEntity | null)[];
         readonly addedComponentes: (IComponent | null)[];
@@ -7372,6 +7352,7 @@ declare namespace paper {
         private _onComponentEnabled([group, component]);
         private _onComponentDisabled([group, component]);
         clear(): void;
+        readonly group: Group<TEntity>;
     }
 }
 declare namespace egret3d {
@@ -7829,6 +7810,18 @@ declare namespace paper {
      */
     class Scene extends BaseObject implements IScene {
         /**
+         *
+         */
+        static readonly onSceneCreated: signals.Signal<[Scene, boolean]>;
+        /**
+         *
+         */
+        static readonly onSceneDestroy: signals.Signal<Scene>;
+        /**
+         *
+         */
+        static readonly onSceneDestroyed: signals.Signal<Scene>;
+        /**
          * 创建一个空场景。
          * @param name 场景的名称。
          */
@@ -8146,7 +8139,6 @@ declare namespace paper {
         static getInstance(): SystemManager;
         private readonly _preSystems;
         private readonly _systems;
-        private readonly _enableOrDisableSystems;
         private readonly _startSystems;
         private readonly _reactiveSystems;
         private readonly _updateSystems;
@@ -8173,7 +8165,7 @@ declare namespace paper {
          */
         register<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: {
             new (context: Context<TEntity>, order?: SystemOrder): TSystem;
-        }, context: Context<TEntity>, order?: SystemOrder, config?: any): TSystem | null;
+        }, context: Context<TEntity>, order?: SystemOrder, config?: any): TSystem;
         /**
          * 从程序已注册的全部系统中获取一个指定的系统。
          */
@@ -9608,18 +9600,6 @@ declare namespace paper {
          * 场景管理器单例。
          */
         static getInstance(): SceneManager;
-        /**
-         *
-         */
-        readonly onSceneCreated: signals.Signal<[Scene, boolean]>;
-        /**
-         *
-         */
-        readonly onSceneDestroy: signals.Signal<Scene>;
-        /**
-         *
-         */
-        readonly onSceneDestroyed: signals.Signal<Scene>;
         private readonly _scenes;
         private _globalEntity;
         private _globalScene;
@@ -9681,12 +9661,12 @@ declare namespace paper {
     /**
      * 应用程序。
      */
-    class ECS<TScene extends Scene> {
+    class ECS {
         private static _instance;
         /**
          * 应用程序单例。
          */
-        static getInstance<TScene extends Scene>(): ECS<TScene>;
+        static getInstance(): ECS;
         /**
          * 当应用程序的播放模式改变时派发事件。
          */
@@ -9725,7 +9705,7 @@ declare namespace paper {
     /**
      * 应用程序单例。
      */
-    const Application: ECS<Scene>;
+    const Application: ECS;
 }
 declare namespace egret3d {
     /**

@@ -16,11 +16,11 @@ declare namespace paper {
     /**
      * 
      */
-    export const enum Flag {
-        DEBUG = 0,
-        RELEASE = 0,
-        CHECKER = 0,
-    }
+    // export const enum Flag {
+    //     DEBUG = 0,
+    //     RELEASE = 0,
+    //     CHECKER = 0,
+    // }
 }
 
 declare namespace egret3d {

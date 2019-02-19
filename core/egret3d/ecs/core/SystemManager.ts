@@ -17,7 +17,6 @@ namespace paper {
 
         private readonly _preSystems: [{ new(context: Context<IEntity>, order?: SystemOrder): BaseSystem<IEntity> }, Context<IEntity>, int][] = [];
         private readonly _systems: BaseSystem<IEntity>[] = [];
-        private readonly _enableOrDisableSystems: BaseSystem<IEntity>[] = [];
         private readonly _startSystems: BaseSystem<IEntity>[] = [];
         private readonly _reactiveSystems: BaseSystem<IEntity>[] = [];
         private readonly _updateSystems: BaseSystem<IEntity>[] = [];
@@ -71,12 +70,20 @@ namespace paper {
             }
 
             if (update) {
-                for (const system of this._enableOrDisableSystems) {
-                    if (system._enabled === system.enabled || !system.enabled || !system.onEnable) {
+                for (const system of this._systems) {
+                    if (system._enabled === system.enabled || !system.enabled) {
                         continue;
                     }
 
-                    system.onEnable();
+                    if (system.onEntityAdded) {
+                        for (const group of system.groups) {
+                            for (const entity of group.entities) {
+                                system.onEntityAdded(entity, group);
+                            }
+                        }
+                    }
+
+                    system.onEnable && system.onEnable();
 
                     if (DEBUG) {
                         console.debug(egret.getQualifiedClassName(this), "enabled.");
@@ -84,79 +91,12 @@ namespace paper {
                 }
 
                 for (const system of this._startSystems) {
-                    if (!system._started) {
+                    if (!system.enabled || !system._started) {
                         continue;
                     }
 
                     system.onStart!();
                     system._started = true;
-                }
-
-                for (const system of this._reactiveSystems) {
-                    if (!system.enabled) {
-                        continue;
-                    }
-
-                    const collectors = system.collectors;
-
-                    if (system.onEntityAdded) {
-                        for (const collector of collectors) {
-                            for (const entity of collector.addedEntities) {
-                                if (entity) {
-                                    system.onEntityAdded(entity, collector);
-                                }
-                            }
-                        }
-                    }
-
-                    if (system.onComponentAdded) {
-                        for (const collector of collectors) {
-                            for (const component of collector.addedComponentes) {
-                                if (component) {
-                                    system.onComponentAdded(component, collector);
-                                }
-                            }
-                        }
-                    }
-
-                    if (system.onComponentRemoved) {
-                        for (const collector of collectors) {
-                            for (const component of collector.removedComponentes) {
-                                if (component) {
-                                    system.onComponentRemoved(component, collector);
-                                }
-                            }
-                        }
-                    }
-
-                    if (system.onEntityRemoved) {
-                        for (const collector of collectors) {
-                            for (const entity of collector.removedEntities) {
-                                if (entity) {
-                                    system.onEntityRemoved(entity, collector);
-                                }
-                            }
-                        }
-                    }
-                }
-
-                for (const system of this._updateSystems) {
-                    let startTime = 0;
-
-                    if (DEBUG) {
-                        (system.deltaTime as uint) = 0;
-                        startTime = clock.now;
-                    }
-
-                    if (!system.enabled) {
-                        continue;
-                    }
-
-                    system.onUpdate!(clock.deltaTime);
-
-                    if (DEBUG) {
-                        (system.deltaTime as uint) += clock.now - startTime;
-                    }
                 }
             }
 
@@ -171,6 +111,75 @@ namespace paper {
             }
 
             if (update) {
+                const reactiveSystems = this._reactiveSystems;
+
+                for (const system of this._systems) {
+                    let startTime = 0;
+
+                    if (DEBUG) {
+                        (system.deltaTime as uint) = 0;
+                        startTime = clock.now;
+                    }
+
+                    if (!system.enabled) {
+                        continue;
+                    }
+
+                    if (reactiveSystems.indexOf(system) >= 0) {
+                        const collectors = system.collectors;
+
+                        if (system.onEntityAdded) {
+                            for (const collector of collectors) {
+                                for (const entity of collector.addedEntities) {
+                                    if (entity) {
+                                        system.onEntityAdded(entity, collector.group);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (system.onComponentAdded) {
+                            for (const collector of collectors) {
+                                for (const component of collector.addedComponentes) {
+                                    if (component) {
+                                        system.onComponentAdded(component, collector);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (system.onComponentRemoved) {
+                            for (const collector of collectors) {
+                                for (const component of collector.removedComponentes) {
+                                    if (component) {
+                                        system.onComponentRemoved(component, collector);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (system.onEntityRemoved) {
+                            for (const collector of collectors) {
+                                for (const entity of collector.removedEntities) {
+                                    if (entity) {
+                                        system.onEntityRemoved(entity, collector.group);
+                                    }
+                                }
+                            }
+                        }
+
+                        for (const collector of collectors) {
+                            collector.clear();
+                        }
+                    }
+
+                    system.onUpdate && system.onUpdate(clock.deltaTime);
+
+                    if (DEBUG) {
+                        (system.deltaTime as uint) += clock.now - startTime;
+                    }
+                }
+
                 for (const system of this._lateUpdateSystems) {
                     if (!system.enabled) {
                         continue;
@@ -189,18 +198,26 @@ namespace paper {
                     }
                 }
 
-                for (const system of this._enableOrDisableSystems) {
+                for (const system of this._systems) {
                     if (system._enabled === system.enabled) {
                         continue;
                     }
 
                     system._enabled = system.enabled;
 
-                    if (system.enabled || !system.onDisable) {
+                    if (system.enabled) {
                         continue;
                     }
 
-                    system.onDisable();
+                    system.onDisable && system.onDisable();
+
+                    if (system.onEntityRemoved) {
+                        for (const group of system.groups) {
+                            for (const entity of group.entities) {
+                                system.onEntityRemoved(entity, group);
+                            }
+                        }
+                    }
 
                     if (DEBUG) {
                         console.debug(egret.getQualifiedClassName(this), "disabled.");
@@ -225,7 +242,7 @@ namespace paper {
         /**
          * 为程序注册一个指定的系统。
          */
-        public register<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any): TSystem | null {
+        public register<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any): TSystem {
             let system = this.getSystem(systemClass);
 
             if (system) {
@@ -235,10 +252,7 @@ namespace paper {
             }
 
             system = BaseSystem.create<TEntity, TSystem>(systemClass, context, order);
-
-            if (system.onEnable || system.onDisable) {
-                this._enableOrDisableSystems.splice(this._getSystemInsertIndex(this._enableOrDisableSystems, order), 0, system);
-            }
+            this._systems.splice(this._getSystemInsertIndex(this._systems, order), 0, system);
 
             if (system.onStart) {
                 this._startSystems.splice(this._getSystemInsertIndex(this._startSystems, order), 0, system);
@@ -253,14 +267,12 @@ namespace paper {
             }
 
             if (system.onFixedUpdate) {
-                this._updateSystems.splice(this._getSystemInsertIndex(this._fixedUpdateSystems, order), 0, system);
+                this._fixedUpdateSystems.splice(this._getSystemInsertIndex(this._fixedUpdateSystems, order), 0, system);
             }
 
             if (system.onLateUpdate) {
                 this._lateUpdateSystems.splice(this._getSystemInsertIndex(this._lateUpdateSystems, order), 0, system);
             }
-
-            this._systems.splice(this._getSystemInsertIndex(this._systems, order), 0, system);
 
             system.initialize(config);
 

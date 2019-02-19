@@ -20,22 +20,16 @@ namespace paper {
             (this.gameObject as GameObject) = null!;
         }
 
+        protected _setEnabled(value: boolean): void {
+            if ((this._lifeStates & ComponentLifeState.Initialized) && this.gameObject.activeInHierarchy) {
+                this.dispatchEnabledEvent(value);
+            }
+        }
+
         public initialize(config?: any): void {
             super.initialize(config);
 
             (this.gameObject as GameObject) = this.entity as GameObject;
-        }
-
-        public set enabled(value: boolean) {
-            if (this._enabled === value || this.isDestroyed) {
-                return;
-            }
-
-            this._enabled = value;
-
-            if ((this._lifeStates & ComponentLifeState.Initialized) && this.gameObject.activeInHierarchy) {
-                this.dispatchEnabledEvent(value);
-            }
         }
         /**
          * 该组件在场景的激活状态。

@@ -347,7 +347,7 @@ namespace paper {
         /**
          * 该实体所属的场景。
          */
-        scene: IScene | null;
+        scene: IScene;
         /**
          * 仅保存在编辑器环境的额外数据，项目发布该数据将被移除。
          */
@@ -531,31 +531,6 @@ namespace paper {
          * @param componentClasses 
          */
         anyOf(...componentClasses: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity>;
-    }
-    /**
-     * 
-     */
-    export interface ICollector<TEntity extends IEntity> {
-        /**
-         * 
-         */
-        readonly addedEntities: (TEntity | null)[];
-        /**
-         * 
-         */
-        readonly removedEntities: (TEntity | null)[];
-        /**
-         * 
-         */
-        readonly addedComponentes: (IComponent | null)[];
-        /**
-         * 
-         */
-        readonly removedComponentes: (IComponent | null)[];
-        /**
-         * 
-         */
-        clear(): void;
     }
     /**
      * 场景接口。

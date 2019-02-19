@@ -36,7 +36,7 @@ namespace paper.editor{
             const gameObjectUUid = this.stateData.gameObjUUid;
             const componentUUid = this.stateData.componentUUid;
             let gameObj: GameObject | null = this.editorModel.getGameObjectByUUid(gameObjectUUid);
-            let modifyObj: BaseComponent | null;
+            let modifyObj: IComponent | null;
             if (gameObj) {
                 modifyObj = this.editorModel.getComponentById(gameObj, componentUUid);
                 if (modifyObj) {

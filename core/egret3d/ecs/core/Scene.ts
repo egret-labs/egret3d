@@ -4,6 +4,18 @@ namespace paper {
      */
     export class Scene extends BaseObject implements IScene {
         /**
+         * 
+         */
+        public static readonly onSceneCreated: signals.Signal<[Scene, boolean]> = new signals.Signal();
+        /**
+         * 
+         */
+        public static readonly onSceneDestroy: signals.Signal<Scene> = new signals.Signal();
+        /**
+         * 
+         */
+        public static readonly onSceneDestroyed: signals.Signal<Scene> = new signals.Signal();
+        /**
          * 创建一个空场景。
          * @param name 场景的名称。
          */
@@ -11,7 +23,7 @@ namespace paper {
             const scene = new paper.Scene();
             scene._isDestroyed = false;
             scene.name = name;
-            SceneManager.getInstance().onSceneCreated.dispatch([scene, isActive]);
+            this.onSceneCreated.dispatch([scene, isActive]);
 
             return scene;
         }
@@ -52,22 +64,22 @@ namespace paper {
          * - 全局场景无法被销毁。
          */
         public static get globalScene() {
-            return Application.sceneManager.globalScene;
+            return SceneManager.getInstance().globalScene;
         }
         /**
          * 全局静态编辑器的场景。
          */
         public static get editorScene() {
-            return Application.sceneManager.editorScene;
+            return SceneManager.getInstance().editorScene;
         }
         /**
          * 当前激活的场景。
          */
         public static get activeScene() {
-            return Application.sceneManager.activeScene;
+            return SceneManager.getInstance().activeScene;
         }
         public static set activeScene(value: Scene) {
-            Application.sceneManager.activeScene = value;
+            SceneManager.getInstance().activeScene = value;
         }
         /**
          * 该场景的名称。
@@ -131,7 +143,7 @@ namespace paper {
             }
 
             const entities = this._entities;
-            sceneManager.onSceneDestroy.dispatch(this);
+            Scene.onSceneDestroy.dispatch(this);
 
             let i = entities.length;
             while (i--) {
@@ -147,7 +159,7 @@ namespace paper {
             this._isDestroyed = true;
             this._entitiesDirty = true;
             entities.length = 0;
-            sceneManager.onSceneDestroyed.dispatch(this);
+            Scene.onSceneDestroyed.dispatch(this);
 
             return true;
         }
@@ -188,7 +200,7 @@ namespace paper {
 
             if (index >= 0) {
                 entities.splice(index, 1);
-                entity.scene = null;
+                entity.scene = SceneManager.getInstance().globalScene; //
                 this._entitiesDirty = true;
 
                 return true;

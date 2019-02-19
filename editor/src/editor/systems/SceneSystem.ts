@@ -2,7 +2,7 @@ namespace paper.editor {
     /**
      * TODO
      */
-    export class SceneSystem extends BaseSystem {
+    export class SceneSystem extends BaseSystem<GameObject> {
         public readonly interests = [
             [
                 { componentClass: egret3d.Transform }
@@ -294,8 +294,9 @@ namespace paper.editor {
                         }
 
                         if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                            const gameObjects = Scene.activeScene.getRootGameObjects();
+                            const gameObjects = Scene.activeScene.getRootGameObjects().concat();
                             gameObjects.unshift(this._touchDrawer!);
+
                             const raycastInfos = Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
                             if (raycastInfos.length > 0) {
                                 this._modelComponent.hover(raycastInfos[0].transform!.gameObject);
