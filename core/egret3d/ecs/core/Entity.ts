@@ -8,6 +8,10 @@ namespace paper {
          */
         public static readonly onEntityCreated: signals.Signal<IEntity> = new signals.Signal();
         /**
+         * 当实体的场景改变时派发事件。
+         */
+        public static readonly onEntitySceneChanged: signals.Signal<IEntity> = new signals.Signal();
+        /**
          * 当实体将要被销毁时派发事件。
          */
         public static readonly onEntityDestroy: signals.Signal<IEntity> = new signals.Signal();
@@ -32,6 +36,7 @@ namespace paper {
         public extras?: EntityExtras = ECS.getInstance().playerMode === PlayerMode.Editor ? {} : undefined;
 
         protected _componentsDirty: boolean = false;
+        protected _isDestroyed: boolean = true;
         @serializedField("_activeSelf") // TODO 反序列化 bug
         protected _enabled: boolean = false;
         protected readonly _components: (IComponent | undefined)[] = [];
@@ -52,6 +57,7 @@ namespace paper {
                 }
             }
 
+            this._isDestroyed = true;
             this._components.length = 0;
             this._scene = null;
             Entity.onEntityDestroyed.dispatch(this);
@@ -94,9 +100,23 @@ namespace paper {
             this._componentsDirty = true;
         }
 
-        protected _setDontDestroy(value: boolean) {
-            const sceneManager = SceneManager.getInstance();
-            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
+        protected _setScene(value: Scene) {
+            let hasScene = false;
+
+            if (this._scene) {
+                hasScene = true;
+                this._scene.removeEntity(this);
+            }
+
+            this._scene = value;
+
+            if (value) {
+                value.addEntity(this);
+            }
+
+            if (hasScene) {
+                Entity.onEntitySceneChanged.dispatch(this);
+            }
         }
 
         private _getComponent(componentClass: IComponentClass<IComponent>) {
@@ -146,7 +166,7 @@ namespace paper {
         }
 
         public destroy(): boolean {
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 if (DEBUG) {
                     console.warn("The entity has been destroyed.");
                 }
@@ -154,7 +174,7 @@ namespace paper {
                 return false;
             }
 
-            if (this === SceneManager.getInstance().globalEntity) {
+            if (this === SceneManager.getInstance()._globalEntity) {
                 if (DEBUG) {
                     console.warn("Cannot destroy global entity.");
                 }
@@ -173,7 +193,7 @@ namespace paper {
                 throw new Error();
             }
 
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 throw new Error("The entity has been destroyed.");
             }
 
@@ -181,8 +201,10 @@ namespace paper {
             registerClass(componentClass);
 
             // Singleton component.
-            if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) {
-                return SceneManager.getInstance().globalEntity.getComponent(componentClass) || SceneManager.getInstance().globalEntity.addComponent(componentClass, config);
+            const globalEntity = SceneManager.getInstance()._globalEntity;
+
+            if (componentClass.isSingleton && globalEntity && this !== globalEntity) {
+                return globalEntity.getComponent(componentClass) || globalEntity.addComponent(componentClass, config);
             }
 
             const componentIndex = componentClass.componentIndex;
@@ -238,12 +260,13 @@ namespace paper {
             }
 
             let result = false;
+            const globalEntity = SceneManager.getInstance()._globalEntity;
 
             if (componentInstanceOrClass instanceof BaseComponent) { // Remove component by instance.
                 const componentClass = componentInstanceOrClass.constructor as IComponentClass<T>;
 
-                if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // Singleton component.
-                    return SceneManager.getInstance().globalEntity.removeComponent(componentInstanceOrClass);
+                if (componentClass.isSingleton && globalEntity && this !== globalEntity) { // Singleton component.
+                    return globalEntity.removeComponent(componentInstanceOrClass);
                 }
 
                 if (!this._isRequireComponent(componentClass)) {
@@ -254,8 +277,8 @@ namespace paper {
             else { // Remove component by class.
                 const componentClass = componentInstanceOrClass as IComponentClass<T>;
 
-                if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // Singleton component.
-                    return SceneManager.getInstance().globalEntity.removeComponent(componentClass, isExtends);
+                if (componentClass.isSingleton && globalEntity && this !== globalEntity) { // Singleton component.
+                    return globalEntity.removeComponent(componentClass, isExtends);
                 }
 
                 if (isExtends) {
@@ -310,8 +333,10 @@ namespace paper {
             let result = false;
 
             if (componentClass) {
-                if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // Singleton component.
-                    return SceneManager.getInstance().globalEntity.removeAllComponents(componentClass, isExtends);
+                const globalEntity = SceneManager.getInstance()._globalEntity;
+
+                if (componentClass.isSingleton && globalEntity && this !== globalEntity) { // Singleton component.
+                    return globalEntity.removeAllComponents(componentClass, isExtends);
                 }
 
                 if (isExtends) {
@@ -360,8 +385,8 @@ namespace paper {
         }
 
         public getComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
-            if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // SingletonComponent.
-                return SceneManager.getInstance().globalEntity.getComponent(componentClass, isExtends);
+            if (componentClass.isSingleton && this !== SceneManager.getInstance()._globalEntity) { // SingletonComponent.
+                return SceneManager.getInstance()._globalEntity!.getComponent(componentClass, isExtends);
             }
 
             if (isExtends) {
@@ -398,8 +423,8 @@ namespace paper {
         }
 
         public getComponents<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T[] {
-            if (componentClass.isSingleton && this !== SceneManager.getInstance().globalEntity) { // SingletonComponent.
-                return SceneManager.getInstance().globalEntity.getComponents(componentClass, isExtends);
+            if (componentClass.isSingleton && this !== SceneManager.getInstance()._globalEntity) { // SingletonComponent.
+                return SceneManager.getInstance()._globalEntity!.getComponents(componentClass, isExtends);
             }
 
             const components: T[] = [];
@@ -469,18 +494,20 @@ namespace paper {
         }
 
         public get isDestroyed(): boolean {
-            return !this._scene;
+            return this._isDestroyed;
         }
 
         public get dontDestroy(): boolean {
             return this._scene === SceneManager.getInstance().globalScene;
         }
         public set dontDestroy(value: boolean) {
-            if (this.dontDestroy === value || this.isDestroyed || this === SceneManager.getInstance().globalEntity) {
+            const sceneManager = SceneManager.getInstance();
+
+            if (this.dontDestroy === value || this._isDestroyed || this === sceneManager.globalEntity) {
                 return;
             }
 
-            this._setDontDestroy(value);
+            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
         }
 
         @editor.property(editor.EditType.CHECKBOX)
@@ -488,7 +515,7 @@ namespace paper {
             return this._enabled;
         }
         public set enabled(value: boolean) {
-            if (this._enabled === value || this.isDestroyed || this === SceneManager.getInstance().globalEntity) {
+            if (this._enabled === value || this._isDestroyed || this === SceneManager.getInstance().globalEntity) {
                 return;
             }
 
@@ -547,19 +574,11 @@ namespace paper {
             return this._scene!;
         }
         public set scene(value: Scene) {
-            if (this._scene === value) {
+            if (this._scene === value || this._isDestroyed || this === SceneManager.getInstance().globalEntity) {
                 return;
             }
 
-            if (this._scene) {
-                this._scene.removeEntity(this);
-            }
-
-            this._scene = value;
-
-            if (value) {
-                value.addEntity(this);
-            }
+            this._setScene(value);
         }
     }
 }

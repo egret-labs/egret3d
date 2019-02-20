@@ -4404,6 +4404,10 @@ declare namespace paper {
      * - 实现实体之间的父子关系。
      */
     abstract class BaseTransform extends BaseComponent {
+        /**
+         * 当变换组件的父级改变时派发事件。
+         */
+        static readonly onTransformParentChanged: signals.Signal<BaseTransform>;
         private _globalEnabled;
         private _globalEnabledDirty;
         protected readonly _children: this[];
@@ -4417,7 +4421,7 @@ declare namespace paper {
          */
         setParent(parent: this | null, worldTransformStays?: boolean): this;
         /**
-         * 销毁该组件所有子（孙）级变换组件。
+         * 销毁该组件所有子（孙）级变换组件和其实体。
          */
         destroyChildren(): void;
         /**
@@ -4449,6 +4453,9 @@ declare namespace paper {
          * 该组件是否包含某个子（孙）级变换组件。
          */
         contains(child: this): boolean;
+        /**
+         *
+         */
         readonly isActiveAndEnabled: boolean;
         /**
          * 该组件的全部子级变换组件总数。（不包含孙级）
@@ -4834,6 +4841,10 @@ declare namespace paper {
          */
         static readonly onEntityCreated: signals.Signal<IEntity>;
         /**
+         * 当实体的场景改变时派发事件。
+         */
+        static readonly onEntitySceneChanged: signals.Signal<IEntity>;
+        /**
          * 当实体将要被销毁时派发事件。
          */
         static readonly onEntityDestroy: signals.Signal<IEntity>;
@@ -4846,6 +4857,7 @@ declare namespace paper {
         hideFlags: HideFlags;
         extras?: EntityExtras;
         protected _componentsDirty: boolean;
+        protected _isDestroyed: boolean;
         protected _enabled: boolean;
         protected readonly _components: (IComponent | undefined)[];
         protected readonly _cachedComponents: IComponent[];
@@ -4858,7 +4870,7 @@ declare namespace paper {
         protected _destroy(): void;
         protected _addComponent(component: IComponent, config?: any): void;
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
-        protected _setDontDestroy(value: boolean): void;
+        protected _setScene(value: Scene): void;
         private _getComponent(componentClass);
         private _isRequireComponent(componentClass);
         initialize(): void;
@@ -5490,7 +5502,7 @@ declare namespace paper {
          */
         layer: Layer;
         /**
-         * 变换组件。
+         * 该实体的变换组件。
          */
         readonly transform: egret3d.Transform;
         /**
@@ -5498,7 +5510,7 @@ declare namespace paper {
          */
         readonly renderer: BaseRenderer | null;
         protected _destroy(): void;
-        protected _setDontDestroy(value: boolean): void;
+        protected _setScene(value: Scene): void;
         protected _addComponent(component: IComponent, config?: any): void;
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
         uninitialize(): void;
@@ -5804,13 +5816,6 @@ declare namespace paper {
     }
 }
 declare namespace paper {
-    /**
-     * 更新系统。
-     */
-    class UpdateSystem extends BaseSystem<GameObject> {
-        getMatchers(): INoneOfMatcher<GameObject>[];
-        onUpdate(deltaTime: number): void;
-    }
 }
 declare namespace paper {
     /**
@@ -5821,8 +5826,7 @@ declare namespace paper {
         getMatchers(): INoneOfMatcher<GameObject>[];
         onUpdate(deltaTime: number): void;
         /**
-         * 在 `paper.Behaviour.onLateUpdate()` 生命周期之后回调指定方法。
-         * @param callback 需要回调的方法。
+         * @deprecated
          */
         callLater(callback: () => void): void;
     }
@@ -7332,10 +7336,6 @@ declare namespace paper {
      *
      */
     class Collector<TEntity extends IEntity> {
-        /**
-         *
-         */
-        static create<TEntity extends IEntity>(group: Group<TEntity>): Collector<TEntity>;
         readonly addedEntities: (TEntity | null)[];
         readonly removedEntities: (TEntity | null)[];
         readonly addedComponentes: (IComponent | null)[];
@@ -7724,9 +7724,9 @@ declare namespace egret3d {
          *
          */
         logDepthBufFC: number;
-        private readonly _camera;
         private readonly _drawCallCollecter;
         private readonly _cameraAndLightCollecter;
+        private readonly _camera;
         /**
          * 禁止实例化。
          */
@@ -9600,7 +9600,6 @@ declare namespace paper {
          */
         static getInstance(): SceneManager;
         private readonly _scenes;
-        private _globalEntity;
         private _globalScene;
         private _editorScene;
         private constructor();

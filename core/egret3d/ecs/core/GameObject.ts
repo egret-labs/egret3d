@@ -9,12 +9,14 @@ namespace paper {
          */
         public static create(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null): GameObject {
             const gameObect = new GameObject();
+            gameObect._isDestroyed = false;
             gameObect._enabled = true;
             gameObect.name = name;
             gameObect.tag = tag;
-            gameObect.scene = scene || SceneManager.getInstance().activeScene;
-            gameObect.addComponent(egret3d.Transform); //
+            gameObect._setScene(scene || SceneManager.getInstance().activeScene);
             Entity.onEntityCreated.dispatch(gameObect);
+            
+            gameObect.addComponent(egret3d.Transform); //
 
             return gameObect;
         }
@@ -32,7 +34,7 @@ namespace paper {
         @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).Layer) }) // TODO
         public layer: Layer = Layer.Default;
         /**
-         * 变换组件。
+         * 该实体的变换组件。
          */
         public readonly transform: egret3d.Transform = null!;
         /**
@@ -53,22 +55,20 @@ namespace paper {
 
             this._removeComponent(this.transform, null); // Remove transform at last.
 
-            this._components.length = 0;
-            this._scene = null;
-            Entity.onEntityDestroyed.dispatch(this);
+            super._destroy();
         }
 
-        protected _setDontDestroy(value: boolean) {
-            const sceneManager = SceneManager.getInstance();
-
-            if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
+        protected _setScene(value: Scene) {
+            if (this.transform && this.transform.parent && this.transform.parent.gameObject.scene !== value) {
                 this.transform.parent = null;
             }
 
-            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
+            super._setScene(value);
 
-            for (const child of this.transform.children) {
-                child.gameObject.dontDestroy = value;
+            if (this.transform) {
+                for (const child of this.transform.children) {
+                    child.entity.scene = value;
+                }
             }
         }
 
@@ -124,7 +124,7 @@ namespace paper {
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponentInParent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false) {
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return null;
             }
 
@@ -144,7 +144,7 @@ namespace paper {
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         public getComponentInChildren<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return null;
             }
 
@@ -169,7 +169,7 @@ namespace paper {
         public getComponentsInChildren<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
             components = components || [];
 
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return components;
             }
 
@@ -206,7 +206,7 @@ namespace paper {
          * @param parameter
          */
         public sendMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true): this {
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return this;
             }
 
@@ -229,7 +229,7 @@ namespace paper {
          * @param parameter 
          */
         public sendMessageUpwards<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true): this {
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return this;
             }
 
@@ -248,7 +248,7 @@ namespace paper {
          * @param parameter 
          */
         public broadcastMessage<T extends Behaviour>(methodName: keyof T, parameter?: any, requireReceiver: boolean = true): this {
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return this;
             }
 

@@ -3,7 +3,6 @@ namespace paper {
      * Late 更新系统。
      */
     export class LateUpdateSystem extends BaseSystem<GameObject> {
-
         private readonly _laterCalls: (() => void)[] = [];
 
         public getMatchers() {
@@ -18,7 +17,7 @@ namespace paper {
                     continue;
                 }
 
-                behaviour.onUpdate && behaviour.onUpdate(deltaTime);
+                behaviour.onLateUpdate && behaviour.onLateUpdate(deltaTime);
             }
 
             //
@@ -34,8 +33,7 @@ namespace paper {
             }
         }
         /**
-         * 在 `paper.Behaviour.onLateUpdate()` 生命周期之后回调指定方法。
-         * @param callback 需要回调的方法。
+         * @deprecated
          */
         public callLater(callback: () => void): void {
             this._laterCalls.push(callback);

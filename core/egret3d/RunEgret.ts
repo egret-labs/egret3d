@@ -86,6 +86,7 @@ namespace egret3d {
         options.webgl = <WebGLRenderingContext>canvas.getContext("webgl", options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
 
         paper.Application.initialize(options);
+
         const systemManager = paper.Application.systemManager;
         const gameObjectContext = paper.Context.getInstance(paper.GameObject);
 
@@ -100,7 +101,7 @@ namespace egret3d {
         systemManager.register(webgl.WebGLRenderSystem, gameObjectContext, paper.SystemOrder.Renderer, options);
         systemManager.register(webgl.InputSystem, gameObjectContext, paper.SystemOrder.End, options);
         systemManager.register(webgl.EndSystem, gameObjectContext, paper.SystemOrder.End, options);
-        
+
         systemManager.preRegisterSystems();
 
         paper.Application.resume();

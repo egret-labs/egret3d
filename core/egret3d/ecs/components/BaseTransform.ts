@@ -8,11 +8,17 @@ namespace paper {
          * @internal
          */
         public static readonly isAbstract: IComponentClass<IComponent> = BaseTransform as any;
+        /**
+         * 当变换组件的父级改变时派发事件。
+         */
+        public static readonly onTransformParentChanged: signals.Signal<BaseTransform> = new signals.Signal();
 
         private _globalEnabled: boolean = false;
         private _globalEnabledDirty: boolean = true;
         protected readonly _children: this[] = [];
         protected _parent: this | null = null;
+
+        protected abstract _onChangeParent(isBefore: boolean, worldTransformStays: boolean): void;
         /**
          * @internal
          */
@@ -62,8 +68,6 @@ namespace paper {
             return false;
         }
 
-        protected abstract _onChangeParent(isBefore: boolean, worldTransformStays: boolean): void;
-
         public dispatchEnabledEvent(enabled: boolean): void {
             this._globalEnabledDirty = true;
 
@@ -85,6 +89,16 @@ namespace paper {
          * @param worldTransformStays 是否保留当前世界空间变换。
          */
         public setParent(parent: this | null, worldTransformStays: boolean = false) {
+            if (this === parent || (parent && this.contains(parent))) {
+                console.error("Set the parent error.");
+                return this;
+            }
+
+            if (parent && this.entity.scene !== parent.entity.scene) {
+                console.error("Cannot change the parent to a different scene.");
+                return this;
+            }
+
             if (this.entity === paper.SceneManager.getInstance().globalEntity) {
                 return this;
             }
@@ -92,19 +106,6 @@ namespace paper {
             const prevParent = this._parent;
 
             if (prevParent === parent) {
-                return this;
-            }
-
-            if (
-                parent &&
-                this.entity.scene !== parent.entity.scene
-            ) {
-                console.warn("Cannot change the parent to a different scene.");
-                return this;
-            }
-
-            if (this === parent || (parent && this.contains(parent))) {
-                console.error("Set the parent error.");
                 return this;
             }
 
@@ -129,10 +130,12 @@ namespace paper {
 
             this._onChangeParent(false, worldTransformStays);
 
+            BaseTransform.onTransformParentChanged.dispatch(this);
+
             return this;
         }
         /**
-         * 销毁该组件所有子（孙）级变换组件。
+         * 销毁该组件所有子（孙）级变换组件和其实体。
          */
         public destroyChildren(): void {
             const children = this._children;
@@ -256,7 +259,9 @@ namespace paper {
 
             return ancestor === this;
         }
-
+        /**
+         * 
+         */
         public get isActiveAndEnabled(): boolean {
             if (this._globalEnabledDirty) {
                 const parent = this._parent;

@@ -6074,20 +6074,19 @@ var paper;
          */
         BaseTransform.prototype.setParent = function (parent, worldTransformStays) {
             if (worldTransformStays === void 0) { worldTransformStays = false; }
+            if (this === parent || (parent && this.contains(parent))) {
+                console.error("Set the parent error.");
+                return this;
+            }
+            if (parent && this.entity.scene !== parent.entity.scene) {
+                console.error("Cannot change the parent to a different scene.");
+                return this;
+            }
             if (this.entity === paper.SceneManager.getInstance().globalEntity) {
                 return this;
             }
             var prevParent = this._parent;
             if (prevParent === parent) {
-                return this;
-            }
-            if (parent &&
-                this.entity.scene !== parent.entity.scene) {
-                console.warn("Cannot change the parent to a different scene.");
-                return this;
-            }
-            if (this === parent || (parent && this.contains(parent))) {
-                console.error("Set the parent error.");
                 return this;
             }
             this._onChangeParent(true, worldTransformStays);
@@ -6104,10 +6103,11 @@ var paper;
                 this.dispatchEnabledEvent(currentEnabled);
             }
             this._onChangeParent(false, worldTransformStays);
+            BaseTransform.onTransformParentChanged.dispatch(this);
             return this;
         };
         /**
-         * 销毁该组件所有子（孙）级变换组件。
+         * 销毁该组件所有子（孙）级变换组件和其实体。
          */
         BaseTransform.prototype.destroyChildren = function () {
             var children = this._children;
@@ -6219,6 +6219,9 @@ var paper;
             return ancestor === this;
         };
         Object.defineProperty(BaseTransform.prototype, "isActiveAndEnabled", {
+            /**
+             *
+             */
             get: function () {
                 if (this._globalEnabledDirty) {
                     var parent_1 = this._parent;
@@ -6272,6 +6275,10 @@ var paper;
          * @internal
          */
         BaseTransform.isAbstract = BaseTransform;
+        /**
+         * 当变换组件的父级改变时派发事件。
+         */
+        BaseTransform.onTransformParentChanged = new signals.Signal();
         __decorate([
             paper.serializedField,
             paper.deserializedIgnore
@@ -7067,6 +7074,7 @@ var paper;
             _this.hideFlags = 0 /* None */;
             _this.extras = paper.ECS.getInstance().playerMode === 2 /* Editor */ ? {} : undefined;
             _this._componentsDirty = false;
+            _this._isDestroyed = true;
             _this._enabled = false;
             _this._components = [];
             _this._cachedComponents = [];
@@ -7080,6 +7088,7 @@ var paper;
                     this._removeComponent(component, null);
                 }
             }
+            this._isDestroyed = true;
             this._components.length = 0;
             this._scene = null;
             Entity.onEntityDestroyed.dispatch(this);
@@ -7113,9 +7122,19 @@ var paper;
             }
             this._componentsDirty = true;
         };
-        Entity.prototype._setDontDestroy = function (value) {
-            var sceneManager = paper.SceneManager.getInstance();
-            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
+        Entity.prototype._setScene = function (value) {
+            var hasScene = false;
+            if (this._scene) {
+                hasScene = true;
+                this._scene.removeEntity(this);
+            }
+            this._scene = value;
+            if (value) {
+                value.addEntity(this);
+            }
+            if (hasScene) {
+                Entity.onEntitySceneChanged.dispatch(this);
+            }
         };
         Entity.prototype._getComponent = function (componentClass) {
             var componentIndex = componentClass.componentIndex;
@@ -7152,13 +7171,13 @@ var paper;
             this._scene = null;
         };
         Entity.prototype.destroy = function () {
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 if (true) {
                     console.warn("The entity has been destroyed.");
                 }
                 return false;
             }
-            if (this === paper.SceneManager.getInstance().globalEntity) {
+            if (this === paper.SceneManager.getInstance()._globalEntity) {
                 if (true) {
                     console.warn("Cannot destroy global entity.");
                 }
@@ -7172,14 +7191,15 @@ var paper;
             if (!componentClass) {
                 throw new Error();
             }
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 throw new Error("The entity has been destroyed.");
             }
             //
             paper.registerClass(componentClass);
             // Singleton component.
-            if (componentClass.isSingleton && this !== paper.SceneManager.getInstance().globalEntity) {
-                return paper.SceneManager.getInstance().globalEntity.getComponent(componentClass) || paper.SceneManager.getInstance().globalEntity.addComponent(componentClass, config);
+            var globalEntity = paper.SceneManager.getInstance()._globalEntity;
+            if (componentClass.isSingleton && globalEntity && this !== globalEntity) {
+                return globalEntity.getComponent(componentClass) || globalEntity.addComponent(componentClass, config);
             }
             var componentIndex = componentClass.componentIndex;
             var components = this._components;
@@ -7227,10 +7247,11 @@ var paper;
                 throw new Error();
             }
             var result = false;
+            var globalEntity = paper.SceneManager.getInstance()._globalEntity;
             if (componentInstanceOrClass instanceof paper.BaseComponent) {
                 var componentClass = componentInstanceOrClass.constructor;
-                if (componentClass.isSingleton && this !== paper.SceneManager.getInstance().globalEntity) {
-                    return paper.SceneManager.getInstance().globalEntity.removeComponent(componentInstanceOrClass);
+                if (componentClass.isSingleton && globalEntity && this !== globalEntity) {
+                    return globalEntity.removeComponent(componentInstanceOrClass);
                 }
                 if (!this._isRequireComponent(componentClass)) {
                     this._removeComponent(componentInstanceOrClass, null);
@@ -7239,8 +7260,8 @@ var paper;
             }
             else {
                 var componentClass = componentInstanceOrClass;
-                if (componentClass.isSingleton && this !== paper.SceneManager.getInstance().globalEntity) {
-                    return paper.SceneManager.getInstance().globalEntity.removeComponent(componentClass, isExtends);
+                if (componentClass.isSingleton && globalEntity && this !== globalEntity) {
+                    return globalEntity.removeComponent(componentClass, isExtends);
                 }
                 if (isExtends) {
                     for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
@@ -7282,8 +7303,9 @@ var paper;
             if (isExtends === void 0) { isExtends = false; }
             var result = false;
             if (componentClass) {
-                if (componentClass.isSingleton && this !== paper.SceneManager.getInstance().globalEntity) {
-                    return paper.SceneManager.getInstance().globalEntity.removeAllComponents(componentClass, isExtends);
+                var globalEntity = paper.SceneManager.getInstance()._globalEntity;
+                if (componentClass.isSingleton && globalEntity && this !== globalEntity) {
+                    return globalEntity.removeAllComponents(componentClass, isExtends);
                 }
                 if (isExtends) {
                     for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
@@ -7327,8 +7349,8 @@ var paper;
         };
         Entity.prototype.getComponent = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
-            if (componentClass.isSingleton && this !== paper.SceneManager.getInstance().globalEntity) {
-                return paper.SceneManager.getInstance().globalEntity.getComponent(componentClass, isExtends);
+            if (componentClass.isSingleton && this !== paper.SceneManager.getInstance()._globalEntity) {
+                return paper.SceneManager.getInstance()._globalEntity.getComponent(componentClass, isExtends);
             }
             if (isExtends) {
                 for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
@@ -7361,8 +7383,8 @@ var paper;
         };
         Entity.prototype.getComponents = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
-            if (componentClass.isSingleton && this !== paper.SceneManager.getInstance().globalEntity) {
-                return paper.SceneManager.getInstance().globalEntity.getComponents(componentClass, isExtends);
+            if (componentClass.isSingleton && this !== paper.SceneManager.getInstance()._globalEntity) {
+                return paper.SceneManager.getInstance()._globalEntity.getComponents(componentClass, isExtends);
             }
             var components = [];
             if (isExtends) {
@@ -7422,7 +7444,7 @@ var paper;
         };
         Object.defineProperty(Entity.prototype, "isDestroyed", {
             get: function () {
-                return !this._scene;
+                return this._isDestroyed;
             },
             enumerable: true,
             configurable: true
@@ -7432,10 +7454,11 @@ var paper;
                 return this._scene === paper.SceneManager.getInstance().globalScene;
             },
             set: function (value) {
-                if (this.dontDestroy === value || this.isDestroyed || this === paper.SceneManager.getInstance().globalEntity) {
+                var sceneManager = paper.SceneManager.getInstance();
+                if (this.dontDestroy === value || this._isDestroyed || this === sceneManager.globalEntity) {
                     return;
                 }
-                this._setDontDestroy(value);
+                this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
             },
             enumerable: true,
             configurable: true
@@ -7445,7 +7468,7 @@ var paper;
                 return this._enabled;
             },
             set: function (value) {
-                if (this._enabled === value || this.isDestroyed || this === paper.SceneManager.getInstance().globalEntity) {
+                if (this._enabled === value || this._isDestroyed || this === paper.SceneManager.getInstance().globalEntity) {
                     return;
                 }
                 for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
@@ -7504,16 +7527,10 @@ var paper;
                 return this._scene;
             },
             set: function (value) {
-                if (this._scene === value) {
+                if (this._scene === value || this._isDestroyed || this === paper.SceneManager.getInstance().globalEntity) {
                     return;
                 }
-                if (this._scene) {
-                    this._scene.removeEntity(this);
-                }
-                this._scene = value;
-                if (value) {
-                    value.addEntity(this);
-                }
+                this._setScene(value);
             },
             enumerable: true,
             configurable: true
@@ -7522,6 +7539,10 @@ var paper;
          * 当实体被创建时派发事件。
          */
         Entity.onEntityCreated = new signals.Signal();
+        /**
+         * 当实体的场景改变时派发事件。
+         */
+        Entity.onEntitySceneChanged = new signals.Signal();
         /**
          * 当实体将要被销毁时派发事件。
          */
@@ -9620,7 +9641,7 @@ var paper;
              */
             _this.layer = 1 /* Default */;
             /**
-             * 变换组件。
+             * 该实体的变换组件。
              */
             _this.transform = null;
             /**
@@ -9641,12 +9662,13 @@ var paper;
             if (tag === void 0) { tag = "Untagged" /* Untagged */; }
             if (scene === void 0) { scene = null; }
             var gameObect = new GameObject();
+            gameObect._isDestroyed = false;
             gameObect._enabled = true;
             gameObect.name = name;
             gameObect.tag = tag;
-            gameObect.scene = scene || paper.SceneManager.getInstance().activeScene;
-            gameObect.addComponent(egret3d.Transform); //
+            gameObect._setScene(scene || paper.SceneManager.getInstance().activeScene);
             paper.Entity.onEntityCreated.dispatch(gameObect);
+            gameObect.addComponent(egret3d.Transform); //
             return gameObect;
         };
         GameObject.prototype._destroy = function () {
@@ -9657,19 +9679,18 @@ var paper;
                 }
             }
             this._removeComponent(this.transform, null); // Remove transform at last.
-            this._components.length = 0;
-            this._scene = null;
-            paper.Entity.onEntityDestroyed.dispatch(this);
+            _super.prototype._destroy.call(this);
         };
-        GameObject.prototype._setDontDestroy = function (value) {
-            var sceneManager = paper.SceneManager.getInstance();
-            if (this.transform.parent && this.transform.parent.gameObject.dontDestroy !== value) {
+        GameObject.prototype._setScene = function (value) {
+            if (this.transform && this.transform.parent && this.transform.parent.gameObject.scene !== value) {
                 this.transform.parent = null;
             }
-            this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
-            for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                child.gameObject.dontDestroy = value;
+            _super.prototype._setScene.call(this, value);
+            if (this.transform) {
+                for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
+                    var child = _a[_i];
+                    child.entity.scene = value;
+                }
             }
         };
         GameObject.prototype._addComponent = function (component, config) {
@@ -9718,7 +9739,7 @@ var paper;
          */
         GameObject.prototype.getComponentInParent = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return null;
             }
             var result = null;
@@ -9736,7 +9757,7 @@ var paper;
          */
         GameObject.prototype.getComponentInChildren = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return null;
             }
             var component = this.getComponent(componentClass, isExtends);
@@ -9760,7 +9781,7 @@ var paper;
             if (isExtends === void 0) { isExtends = false; }
             if (components === void 0) { components = null; }
             components = components || [];
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return components;
             }
             for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
@@ -9796,7 +9817,7 @@ var paper;
          */
         GameObject.prototype.sendMessage = function (methodName, parameter, requireReceiver) {
             if (requireReceiver === void 0) { requireReceiver = true; }
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return this;
             }
             for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
@@ -9819,7 +9840,7 @@ var paper;
          */
         GameObject.prototype.sendMessageUpwards = function (methodName, parameter, requireReceiver) {
             if (requireReceiver === void 0) { requireReceiver = true; }
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return this;
             }
             this.sendMessage(methodName, parameter, requireReceiver);
@@ -9837,7 +9858,7 @@ var paper;
          */
         GameObject.prototype.broadcastMessage = function (methodName, parameter, requireReceiver) {
             if (requireReceiver === void 0) { requireReceiver = true; }
-            if (this.isDestroyed) {
+            if (this._isDestroyed) {
                 return this;
             }
             this.sendMessage(methodName, parameter, requireReceiver);
@@ -10195,11 +10216,21 @@ var paper;
          * @internal
          */
         DisposeCollecter.prototype.clear = function () {
-            this.scenes.length = 0;
-            this.entities.length = 0;
-            this.components.length = 0;
-            this.releases.length = 0;
-            this.assets.length = 0;
+            if (this.scenes.length > 0) {
+                this.scenes.length = 0;
+            }
+            if (this.entities.length > 0) {
+                this.entities.length = 0;
+            }
+            if (this.components.length > 0) {
+                this.components.length = 0;
+            }
+            if (this.releases.length > 0) {
+                this.releases.length = 0;
+            }
+            if (this.assets.length > 0) {
+                this.assets.length = 0;
+            }
         };
         DisposeCollecter = __decorate([
             paper.singleton
@@ -10475,7 +10506,7 @@ var paper;
 var paper;
 (function (paper) {
     /**
-     * 更新系统。
+     * @internal
      */
     var UpdateSystem = (function (_super) {
         __extends(UpdateSystem, _super);
@@ -10524,7 +10555,7 @@ var paper;
                 if (!behaviour || (behaviour._lifeStates & 8 /* Started */) === 0) {
                     continue;
                 }
-                behaviour.onUpdate && behaviour.onUpdate(deltaTime);
+                behaviour.onLateUpdate && behaviour.onLateUpdate(deltaTime);
             }
             //
             egret.ticker.update(); // TODO 帧频
@@ -10539,8 +10570,7 @@ var paper;
             }
         };
         /**
-         * 在 `paper.Behaviour.onLateUpdate()` 生命周期之后回调指定方法。
-         * @param callback 需要回调的方法。
+         * @deprecated
          */
         LateUpdateSystem.prototype.callLater = function (callback) {
             this._laterCalls.push(callback);
@@ -14663,7 +14693,7 @@ var paper;
             paper.Group.onComponentDisabled.add(this._onComponentDisabled, this);
         }
         /**
-         *
+         * @internal
          */
         Collector.create = function (group) {
             var collector = new Collector(group);
@@ -16222,9 +16252,9 @@ var egret3d;
              * @internal
              */
             this.shadowCalls = [];
-            this._camera = null;
             this._drawCallCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.DrawCallCollecter);
             this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.CameraAndLightCollecter);
+            this._camera = null;
             this._camera = camera;
         }
         /**
@@ -16556,8 +16586,8 @@ var egret3d;
                     { componentClass: [egret3d.DirectionalLight, egret3d.SpotLight, egret3d.PointLight, egret3d.HemisphereLight] }
                 ]
             ];
-            _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
-            _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
+            _this._drawCallCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.DrawCallCollecter);
+            _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.CameraAndLightCollecter);
             return _this;
         }
         CameraAndLightSystem.prototype.onAddGameObject = function (_gameObject, group) {
@@ -16821,6 +16851,7 @@ var paper;
             _this._entitiesDirty = false;
             _this._entities = [];
             _this._rootEntities = [];
+            //#ifdef EGRET_3D
             /**
              * 该场景使用光照贴图时的光照强度。
              */
@@ -16925,7 +16956,7 @@ var paper;
             this._entitiesDirty = false;
             this._entities.length = 0;
             this._rootEntities.length = 0;
-            // Egret3D
+            //#ifdef EGRET_3D
             for (var _i = 0, _a = this._lightmaps; _i < _a.length; _i++) {
                 var lightmap = _a[_i];
                 if (lightmap) {
@@ -16936,6 +16967,7 @@ var paper;
             this.ambientColor.set(0.20, 0.20, 0.25, 1.0);
             // this.fog.clear();
             this._lightmaps.length = 0;
+            //#endif
         };
         Scene.prototype.destroy = function () {
             var sceneManager = paper.SceneManager.getInstance();
@@ -17068,6 +17100,7 @@ var paper;
                             rootEntities.push(entity);
                         }
                     }
+                    this._entitiesDirty = false;
                 }
                 return rootEntities;
             },
@@ -24907,6 +24940,9 @@ var paper;
     var SceneManager = (function () {
         function SceneManager() {
             this._scenes = [];
+            /**
+             * @internal
+             */
             this._globalEntity = null;
             this._globalScene = null;
             this._editorScene = null;
@@ -29588,7 +29624,10 @@ var egret3d;
                 globalGameObject.addComponent(egret3d.DefaultShaders);
                 globalGameObject.addComponent(egret3d.DefaultTextures);
                 globalGameObject.addComponent(egret3d.DefaultMaterials);
+                globalGameObject.addComponent(egret3d.DrawCallCollecter);
+                globalGameObject.addComponent(egret3d.CameraAndLightCollecter);
                 globalGameObject.addComponent(egret3d.InputCollecter);
+                globalGameObject.addComponent(egret3d.ContactCollecter);
                 // Update canvas when screen resized.
                 this._updateCanvas(egret3d.stage); // First update.
                 egret3d.stage.onScreenResize.add(function () {
@@ -29676,9 +29715,9 @@ var egret3d;
                         { componentClass: egret3d.Egret2DRenderer }
                     ]
                 ];
-                _this._drawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.DrawCallCollecter);
-                _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
-                _this._renderState = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.RenderState);
+                _this._drawCallCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.DrawCallCollecter);
+                _this._cameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(egret3d.CameraAndLightCollecter);
+                _this._renderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState);
                 //
                 _this._modelViewMatrix = egret3d.Matrix4.create();
                 _this._modelViewPojectionMatrix = egret3d.Matrix4.create();
@@ -30877,7 +30916,7 @@ var egret3d;
             __extends(EndSystem, _super);
             function EndSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._contactCollecter = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
+                _this._contactCollecter = paper.SceneManager.getInstance().globalEntity.getComponent(egret3d.ContactCollecter);
                 return _this;
             }
             EndSystem.prototype.onUpdate = function () {

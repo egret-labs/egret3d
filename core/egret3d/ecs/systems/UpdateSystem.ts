@@ -1,6 +1,6 @@
 namespace paper {
     /**
-     * 更新系统。
+     * @internal
      */
     export class UpdateSystem extends BaseSystem<GameObject> {
 

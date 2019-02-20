@@ -16,7 +16,10 @@ namespace paper {
         }
 
         private readonly _scenes: Scene[] = [];
-        private _globalEntity: IEntity | null = null;
+        /**
+         * @internal
+         */
+        public _globalEntity: IEntity | null = null;
         private _globalScene: Scene | null = null;
         private _editorScene: Scene | null = null;
 

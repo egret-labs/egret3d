@@ -12,8 +12,8 @@ namespace egret3d {
             ]
         ];
 
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
-        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
 
         public onAddGameObject(_gameObject: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const groups = this.groups;

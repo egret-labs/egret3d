@@ -46,9 +46,11 @@ namespace paper {
                 const scene = rawScene.createInstance();
 
                 if (scene) {
+                    //#ifdef EGRET_3D
                     if (combineStaticObjects && ECS.getInstance().playerMode !== PlayerMode.Editor) {
-                        // egret3d.combine(scene.gameObjects); // TODO
+                        egret3d.combine(scene.gameObjects); // TODO
                     }
+                    //#endif
 
                     return scene;
                 }
@@ -63,19 +65,19 @@ namespace paper {
          * 全局静态的场景。
          * - 全局场景无法被销毁。
          */
-        public static get globalScene() {
+        public static get globalScene(): Scene {
             return SceneManager.getInstance().globalScene;
         }
         /**
          * 全局静态编辑器的场景。
          */
-        public static get editorScene() {
+        public static get editorScene(): Scene {
             return SceneManager.getInstance().editorScene;
         }
         /**
          * 当前激活的场景。
          */
-        public static get activeScene() {
+        public static get activeScene(): Scene {
             return SceneManager.getInstance().activeScene;
         }
         public static set activeScene(value: Scene) {
@@ -115,7 +117,7 @@ namespace paper {
             this._entities.length = 0;
             this._rootEntities.length = 0;
 
-            // Egret3D
+            //#ifdef EGRET_3D
             for (const lightmap of this._lightmaps) {
                 if (lightmap) {
                     lightmap.release();
@@ -127,6 +129,7 @@ namespace paper {
             // this.fog.clear();
 
             this._lightmaps.length = 0;
+            //#endif
         }
 
         public destroy(): boolean {
@@ -276,36 +279,13 @@ namespace paper {
                         rootEntities.push(entity);
                     }
                 }
+
+                this._entitiesDirty = false;
             }
 
             return rootEntities;
         }
-
-        /**
-         * @deprecated
-         */
-        public findGameObjectsWithTag(tag: string): GameObject[] {
-            return this.findEntitiesWithTag<GameObject>(tag);
-        }
-        /**
-         * @deprecated
-         */
-        public getRootGameObjects(): ReadonlyArray<GameObject> {
-            return this.rootEntities as any;
-        }
-        /**
-         * @deprecated
-         */
-        public get gameObjectCount(): uint {
-            return this._entities.length;
-        }
-        /**
-         * @deprecated
-         */
-        public get gameObjects(): ReadonlyArray<GameObject> {
-            return this._entities as any;
-        }
-
+        //#ifdef EGRET_3D
         /**
          * 该场景使用光照贴图时的光照强度。
          */
@@ -360,5 +340,30 @@ namespace paper {
                 }
             }
         }
+        /**
+         * @deprecated
+         */
+        public findGameObjectsWithTag(tag: string): GameObject[] {
+            return this.findEntitiesWithTag<GameObject>(tag);
+        }
+        /**
+         * @deprecated
+         */
+        public getRootGameObjects(): ReadonlyArray<GameObject> {
+            return this.rootEntities as any;
+        }
+        /**
+         * @deprecated
+         */
+        public get gameObjectCount(): uint {
+            return this._entities.length;
+        }
+        /**
+         * @deprecated
+         */
+        public get gameObjects(): ReadonlyArray<GameObject> {
+            return this._entities as any;
+        }
+        //#endif
     }
 }

@@ -65,9 +65,9 @@ namespace egret3d.webgl {
             ]
         ];
 
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
-        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
-        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState) as WebGLRenderState;
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
+        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getComponent(RenderState) as WebGLRenderState;
         //
         private readonly _modelViewMatrix: Matrix4 = Matrix4.create();
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();

@@ -4,7 +4,7 @@ namespace paper {
      */
     export class Collector<TEntity extends IEntity> {
         /**
-         * 
+         * @internal
          */
         public static create<TEntity extends IEntity>(group: Group<TEntity>): Collector<TEntity> {
             const collector = new Collector<TEntity>(group);
