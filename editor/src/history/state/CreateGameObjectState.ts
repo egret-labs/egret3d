@@ -64,12 +64,20 @@ namespace paper.editor {
 
         private createGameObjectByType(createType: string): GameObject {
             let obj: GameObject = new GameObject();
-            let meshFilter: egret3d.MeshFilter;
             obj.name = createType.toLowerCase();
-            if (this.mesh) {
-                meshFilter = obj.addComponent(egret3d.MeshFilter);
-                meshFilter.mesh = this.mesh;
-                obj.addComponent(egret3d.MeshRenderer);
+            if(createType==='NODE_2D'){
+                let component2D:egret3d.Egret2DRenderer=obj.addComponent(egret3d.Egret2DRenderer);
+                obj.layer=Layer.UI;
+                let camera:egret3d.Camera=obj.addComponent(egret3d.Camera);
+                camera.cullingMask=Layer.UI;
+            }
+            else{
+                let meshFilter: egret3d.MeshFilter;
+                if (this.mesh) {
+                    meshFilter = obj.addComponent(egret3d.MeshFilter);
+                    meshFilter.mesh = this.mesh;
+                    obj.addComponent(egret3d.MeshRenderer);
+                }
             }
             return obj;
         }
