@@ -6897,19 +6897,14 @@ declare namespace egret3d {
          */
         readonly postprocessing: DrawCall;
         /**
-         * 此帧可能参与渲染的渲染组件列表。
-         * - 未进行视锥剔除的。
+         *
          */
-        readonly renderers: (paper.BaseRenderer | null)[];
+        readonly entities: (paper.IEntity | null)[];
         /**
          * 此帧可能参与渲染的绘制信息列表。
          * - 未进行视锥剔除的。
          */
         readonly drawCalls: (DrawCall | null)[];
-        /**
-         * 此帧新添加的绘制信息列表。
-         */
-        readonly addDrawCalls: (DrawCall | null)[];
         private _drawCallsDirty;
         /**
          * @interal
@@ -6923,11 +6918,11 @@ declare namespace egret3d {
         /**
          * 移除指定渲染组件的绘制信息列表。
          */
-        removeDrawCalls(renderer: paper.BaseRenderer): void;
+        removeDrawCalls(entity: paper.IEntity): boolean;
         /**
          * 是否包含指定渲染组件的绘制信息列表。
          */
-        hasDrawCalls(renderer: paper.BaseRenderer): boolean;
+        hasDrawCalls(entity: paper.IEntity): boolean;
     }
     /**
      * 全局绘制信息收集组件实例。
@@ -8016,6 +8011,10 @@ declare namespace egret3d {
          * - 用于调试模式下检测重复绘制的情况。
          */
         drawCount: int;
+        /**
+         *
+         */
+        entity: paper.IEntity | null;
         /**
          * 此次绘制的渲染组件。
          */

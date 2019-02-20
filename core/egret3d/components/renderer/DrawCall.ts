@@ -23,6 +23,10 @@ namespace egret3d {
          */
         public drawCount: int = -1;
         /**
+         * 
+         */
+        public entity: paper.IEntity | null = null;
+        /**
          * 此次绘制的渲染组件。
          */
         public renderer: paper.BaseRenderer | null = null;
@@ -53,6 +57,7 @@ namespace egret3d {
 
         public onClear() {
             this.drawCount = -1;
+            this.entity = null;
             this.renderer = null;
             this.matrix = null!;
             this.subMeshIndex = -1;

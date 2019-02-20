@@ -89,7 +89,7 @@ namespace paper {
                 return this;
             }
 
-            this._distinct(components, this._allOfComponents);
+            this._distinct(components, this._anyOfComponents);
 
             return this;
         }

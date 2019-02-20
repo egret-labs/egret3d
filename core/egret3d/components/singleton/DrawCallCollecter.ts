@@ -13,37 +13,36 @@ namespace egret3d {
          */
         public readonly postprocessing: DrawCall = DrawCall.create();
         /**
-         * 此帧可能参与渲染的渲染组件列表。
-         * - 未进行视锥剔除的。
+         * 
          */
-        public readonly renderers: (paper.BaseRenderer | null)[] = [];
+        public readonly entities: (paper.IEntity | null)[] = [];
         /**
          * 此帧可能参与渲染的绘制信息列表。
          * - 未进行视锥剔除的。
          */
         public readonly drawCalls: (DrawCall | null)[] = [];
-        /**
-         * 此帧新添加的绘制信息列表。
-         */
-        public readonly addDrawCalls: (DrawCall | null)[] = [];
+        // /**
+        //  * 此帧新添加的绘制信息列表。
+        //  */
+        // public readonly addDrawCalls: (DrawCall | null)[] = [];
 
         private _drawCallsDirty: boolean = false;
         /**
          * @internal
          */
         public _update() {
-            const { renderers, drawCalls } = this;
+            const { entities, drawCalls } = this;
 
             if (this._drawCallsDirty) {
-                // Clear renderers.
+                // Clear entities.
                 let index = 0;
                 let removeCount = 0;
 
-                for (const renderer of renderers) {
-                    if (renderer) {
+                for (const entity of entities) {
+                    if (entity) {
                         if (removeCount > 0) {
-                            renderers[index - removeCount] = renderer;
-                            renderers[index] = null;
+                            entities[index - removeCount] = entity;
+                            entities[index] = null;
                         }
                     }
                     else {
@@ -54,7 +53,7 @@ namespace egret3d {
                 }
 
                 if (removeCount > 0) {
-                    renderers.length -= removeCount;
+                    entities.length -= removeCount;
                 }
                 // Clear drawCalls.
                 index = 0;
@@ -91,10 +90,10 @@ namespace egret3d {
          * @internal
          */
         public _lateUpdate() {
-            const { addDrawCalls } = this;
-            if (addDrawCalls.length > 0) {
-                addDrawCalls.length = 0;
-            }
+            // const { addDrawCalls } = this;
+            // if (addDrawCalls.length > 0) {
+            //     addDrawCalls.length = 0;
+            // }
         }
         /**
          * @interal
@@ -114,52 +113,55 @@ namespace egret3d {
          * @param drawCall 
          */
         public addDrawCall(drawCall: DrawCall): void {
-            const { renderers, drawCalls, addDrawCalls } = this;
-            const renderer = drawCall.renderer;
+            const { entities, drawCalls, /*addDrawCalls*/ } = this;
+            const entity = drawCall.entity!;
 
-            if (renderers.indexOf(renderer) < 0) {
-                renderers.push(renderer);
+            if (entities.indexOf(entity) < 0) {
+                entities.push(entity);
             }
 
             drawCalls.push(drawCall);
-            addDrawCalls.push(drawCall);
+            // addDrawCalls.push(drawCall);
         }
         /**
          * 移除指定渲染组件的绘制信息列表。
          */
-        public removeDrawCalls(renderer: paper.BaseRenderer): void {
-            const { renderers, drawCalls, addDrawCalls } = this;
-            const index = renderers.indexOf(renderer);
+        public removeDrawCalls(entity: paper.IEntity): boolean {
+            const { entities, drawCalls, /*addDrawCalls*/ } = this;
+            const index = entities.indexOf(entity);
 
             if (index < 0) {
-                return;
+                return false;
             }
 
             let i = drawCalls.length;
             while (i--) {
                 const drawCall = drawCalls[i];
-                if (drawCall && drawCall.renderer === renderer) {
+                if (drawCall && drawCall.entity === entity) {
                     drawCalls[i] = null;
                     drawCall.release();
                 }
             }
 
-            i = addDrawCalls.length;
-            while (i--) {
-                const drawCall = addDrawCalls[i];
-                if (drawCall && drawCall.renderer === renderer) {
-                    addDrawCalls[i] = null;
-                }
-            }
+            // i = addDrawCalls.length;
+            // while (i--) {
+            //     const drawCall = addDrawCalls[i];
+            //     if (drawCall && drawCall.entity === entity) {
+            //         addDrawCalls[i] = null;
+            //     }
+            // }
 
-            renderers[index] = null;
+            entities[index] = null;
+
             this._drawCallsDirty = true;
+
+            return true;
         }
         /**
          * 是否包含指定渲染组件的绘制信息列表。
          */
-        public hasDrawCalls(renderer: paper.BaseRenderer): boolean {
-            return this.renderers.indexOf(renderer) >= 0;
+        public hasDrawCalls(entity: paper.IEntity): boolean {
+            return this.entities.indexOf(entity) >= 0;
         }
     }
     /**

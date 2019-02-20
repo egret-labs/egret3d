@@ -39,7 +39,7 @@ namespace egret3d {
             const mesh = renderer.mesh;
             const materials = renderer.materials;
             const materialCount = materials.length;
-            drawCallCollecter.removeDrawCalls(renderer); // Clear drawCalls.
+            drawCallCollecter.removeDrawCalls(gameObject); // Clear drawCalls.
 
             if (!mesh || materialCount === 0) {
                 return;
@@ -70,6 +70,7 @@ namespace egret3d {
 
                 if (material) {
                     const drawCall = DrawCall.create();
+                    drawCall.entity = gameObject;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = i;
@@ -88,6 +89,7 @@ namespace egret3d {
 
                 for (let j = 0; j < subMeshCount; ++j) {
                     const drawCall = DrawCall.create();
+                    drawCall.entity = gameObject;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = j;
@@ -122,7 +124,7 @@ namespace egret3d {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
+            this._drawCallCollecter.removeDrawCalls(gameObject);
         }
 
         public onUpdate() {

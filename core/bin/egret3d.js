@@ -10299,7 +10299,7 @@ var paper;
             if (this._id) {
                 return this;
             }
-            this._distinct(components, this._allOfComponents);
+            this._distinct(components, this._anyOfComponents);
             return this;
         };
         Matcher.prototype.noneOf = function () {
@@ -10330,7 +10330,7 @@ var paper;
                 && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents));
         };
         Matcher.prototype.matchesExtra = function (component) {
-            return this._extraOfComponents.length > 0 || this._extraOfComponents.indexOf(component) >= 0;
+            return this._extraOfComponents.length > 0 && this._extraOfComponents.indexOf(component) >= 0;
         };
         Object.defineProperty(Matcher.prototype, "id", {
             get: function () {
@@ -13691,19 +13691,18 @@ var egret3d;
              */
             _this.postprocessing = egret3d.DrawCall.create();
             /**
-             * 此帧可能参与渲染的渲染组件列表。
-             * - 未进行视锥剔除的。
+             *
              */
-            _this.renderers = [];
+            _this.entities = [];
             /**
              * 此帧可能参与渲染的绘制信息列表。
              * - 未进行视锥剔除的。
              */
             _this.drawCalls = [];
-            /**
-             * 此帧新添加的绘制信息列表。
-             */
-            _this.addDrawCalls = [];
+            // /**
+            //  * 此帧新添加的绘制信息列表。
+            //  */
+            // public readonly addDrawCalls: (DrawCall | null)[] = [];
             _this._drawCallsDirty = false;
             return _this;
         }
@@ -13711,17 +13710,17 @@ var egret3d;
          * @internal
          */
         DrawCallCollecter.prototype._update = function () {
-            var _a = this, renderers = _a.renderers, drawCalls = _a.drawCalls;
+            var _a = this, entities = _a.entities, drawCalls = _a.drawCalls;
             if (this._drawCallsDirty) {
-                // Clear renderers.
+                // Clear entities.
                 var index = 0;
                 var removeCount = 0;
-                for (var _i = 0, renderers_1 = renderers; _i < renderers_1.length; _i++) {
-                    var renderer = renderers_1[_i];
-                    if (renderer) {
+                for (var _i = 0, entities_1 = entities; _i < entities_1.length; _i++) {
+                    var entity = entities_1[_i];
+                    if (entity) {
                         if (removeCount > 0) {
-                            renderers[index - removeCount] = renderer;
-                            renderers[index] = null;
+                            entities[index - removeCount] = entity;
+                            entities[index] = null;
                         }
                     }
                     else {
@@ -13730,7 +13729,7 @@ var egret3d;
                     index++;
                 }
                 if (removeCount > 0) {
-                    renderers.length -= removeCount;
+                    entities.length -= removeCount;
                 }
                 // Clear drawCalls.
                 index = 0;
@@ -13764,10 +13763,10 @@ var egret3d;
          * @internal
          */
         DrawCallCollecter.prototype._lateUpdate = function () {
-            var addDrawCalls = this.addDrawCalls;
-            if (addDrawCalls.length > 0) {
-                addDrawCalls.length = 0;
-            }
+            // const { addDrawCalls } = this;
+            // if (addDrawCalls.length > 0) {
+            //     addDrawCalls.length = 0;
+            // }
         };
         /**
          * @interal
@@ -13785,46 +13784,47 @@ var egret3d;
          * @param drawCall
          */
         DrawCallCollecter.prototype.addDrawCall = function (drawCall) {
-            var _a = this, renderers = _a.renderers, drawCalls = _a.drawCalls, addDrawCalls = _a.addDrawCalls;
-            var renderer = drawCall.renderer;
-            if (renderers.indexOf(renderer) < 0) {
-                renderers.push(renderer);
+            var _a = this, entities = _a.entities, drawCalls = _a.drawCalls;
+            var entity = drawCall.entity;
+            if (entities.indexOf(entity) < 0) {
+                entities.push(entity);
             }
             drawCalls.push(drawCall);
-            addDrawCalls.push(drawCall);
+            // addDrawCalls.push(drawCall);
         };
         /**
          * 移除指定渲染组件的绘制信息列表。
          */
-        DrawCallCollecter.prototype.removeDrawCalls = function (renderer) {
-            var _a = this, renderers = _a.renderers, drawCalls = _a.drawCalls, addDrawCalls = _a.addDrawCalls;
-            var index = renderers.indexOf(renderer);
+        DrawCallCollecter.prototype.removeDrawCalls = function (entity) {
+            var _a = this, entities = _a.entities, drawCalls = _a.drawCalls;
+            var index = entities.indexOf(entity);
             if (index < 0) {
-                return;
+                return false;
             }
             var i = drawCalls.length;
             while (i--) {
                 var drawCall = drawCalls[i];
-                if (drawCall && drawCall.renderer === renderer) {
+                if (drawCall && drawCall.entity === entity) {
                     drawCalls[i] = null;
                     drawCall.release();
                 }
             }
-            i = addDrawCalls.length;
-            while (i--) {
-                var drawCall = addDrawCalls[i];
-                if (drawCall && drawCall.renderer === renderer) {
-                    addDrawCalls[i] = null;
-                }
-            }
-            renderers[index] = null;
+            // i = addDrawCalls.length;
+            // while (i--) {
+            //     const drawCall = addDrawCalls[i];
+            //     if (drawCall && drawCall.entity === entity) {
+            //         addDrawCalls[i] = null;
+            //     }
+            // }
+            entities[index] = null;
             this._drawCallsDirty = true;
+            return true;
         };
         /**
          * 是否包含指定渲染组件的绘制信息列表。
          */
-        DrawCallCollecter.prototype.hasDrawCalls = function (renderer) {
-            return this.renderers.indexOf(renderer) >= 0;
+        DrawCallCollecter.prototype.hasDrawCalls = function (entity) {
+            return this.entities.indexOf(entity) >= 0;
         };
         DrawCallCollecter = __decorate([
             paper.singleton
@@ -17430,6 +17430,10 @@ var egret3d;
              */
             _this.drawCount = -1;
             /**
+             *
+             */
+            _this.entity = null;
+            /**
              * 此次绘制的渲染组件。
              */
             _this.renderer = null;
@@ -17469,6 +17473,7 @@ var egret3d;
         };
         DrawCall.prototype.onClear = function () {
             this.drawCount = -1;
+            this.entity = null;
             this.renderer = null;
             this.matrix = null;
             this.subMeshIndex = -1;
@@ -17849,65 +17854,10 @@ var paper;
                     system.onStart();
                     system._started = true;
                 }
-                for (var _h = 0, _j = this._reactiveSystems; _h < _j.length; _h++) {
-                    var system = _j[_h];
-                    if (!system.enabled) {
-                        continue;
-                    }
-                    var collectors = system.collectors;
-                    if (system.onEntityAdded) {
-                        for (var _k = 0, collectors_1 = collectors; _k < collectors_1.length; _k++) {
-                            var collector = collectors_1[_k];
-                            for (var _l = 0, _m = collector.addedEntities; _l < _m.length; _l++) {
-                                var entity = _m[_l];
-                                if (entity) {
-                                    system.onEntityAdded(entity, collector.group);
-                                }
-                            }
-                        }
-                    }
-                    if (system.onComponentAdded) {
-                        for (var _o = 0, collectors_2 = collectors; _o < collectors_2.length; _o++) {
-                            var collector = collectors_2[_o];
-                            for (var _p = 0, _q = collector.addedComponentes; _p < _q.length; _p++) {
-                                var component = _q[_p];
-                                if (component) {
-                                    system.onComponentAdded(component, collector);
-                                }
-                            }
-                        }
-                    }
-                    if (system.onComponentRemoved) {
-                        for (var _r = 0, collectors_3 = collectors; _r < collectors_3.length; _r++) {
-                            var collector = collectors_3[_r];
-                            for (var _s = 0, _t = collector.removedComponentes; _s < _t.length; _s++) {
-                                var component = _t[_s];
-                                if (component) {
-                                    system.onComponentRemoved(component, collector);
-                                }
-                            }
-                        }
-                    }
-                    if (system.onEntityRemoved) {
-                        for (var _u = 0, collectors_4 = collectors; _u < collectors_4.length; _u++) {
-                            var collector = collectors_4[_u];
-                            for (var _v = 0, _w = collector.removedEntities; _v < _w.length; _v++) {
-                                var entity = _w[_v];
-                                if (entity) {
-                                    system.onEntityRemoved(entity, collector.group);
-                                }
-                            }
-                        }
-                    }
-                    for (var _x = 0, collectors_5 = collectors; _x < collectors_5.length; _x++) {
-                        var collector = collectors_5[_x];
-                        collector.clear();
-                    }
-                }
             }
             if (fixedUpdate) {
-                for (var _y = 0, _z = this._fixedUpdateSystems; _y < _z.length; _y++) {
-                    var system = _z[_y];
+                for (var _h = 0, _j = this._fixedUpdateSystems; _h < _j.length; _h++) {
+                    var system = _j[_h];
                     if (!system.enabled) {
                         continue;
                     }
@@ -17915,8 +17865,9 @@ var paper;
                 }
             }
             if (update) {
-                for (var _0 = 0, _1 = this._updateSystems; _0 < _1.length; _0++) {
-                    var system = _1[_0];
+                var reactiveSystems = this._reactiveSystems;
+                for (var _k = 0, _l = this._systems; _k < _l.length; _k++) {
+                    var system = _l[_k];
                     var startTime = 0;
                     if (true) {
                         system.deltaTime = 0;
@@ -17925,13 +17876,64 @@ var paper;
                     if (!system.enabled) {
                         continue;
                     }
-                    system.onUpdate(paper.clock.deltaTime);
+                    if (reactiveSystems.indexOf(system) >= 0) {
+                        var collectors = system.collectors;
+                        if (system.onEntityAdded) {
+                            for (var _m = 0, collectors_1 = collectors; _m < collectors_1.length; _m++) {
+                                var collector = collectors_1[_m];
+                                for (var _o = 0, _p = collector.addedEntities; _o < _p.length; _o++) {
+                                    var entity = _p[_o];
+                                    if (entity) {
+                                        system.onEntityAdded(entity, collector.group);
+                                    }
+                                }
+                            }
+                        }
+                        if (system.onComponentAdded) {
+                            for (var _q = 0, collectors_2 = collectors; _q < collectors_2.length; _q++) {
+                                var collector = collectors_2[_q];
+                                for (var _r = 0, _s = collector.addedComponentes; _r < _s.length; _r++) {
+                                    var component = _s[_r];
+                                    if (component) {
+                                        system.onComponentAdded(component, collector);
+                                    }
+                                }
+                            }
+                        }
+                        if (system.onComponentRemoved) {
+                            for (var _t = 0, collectors_3 = collectors; _t < collectors_3.length; _t++) {
+                                var collector = collectors_3[_t];
+                                for (var _u = 0, _v = collector.removedComponentes; _u < _v.length; _u++) {
+                                    var component = _v[_u];
+                                    if (component) {
+                                        system.onComponentRemoved(component, collector);
+                                    }
+                                }
+                            }
+                        }
+                        if (system.onEntityRemoved) {
+                            for (var _w = 0, collectors_4 = collectors; _w < collectors_4.length; _w++) {
+                                var collector = collectors_4[_w];
+                                for (var _x = 0, _y = collector.removedEntities; _x < _y.length; _x++) {
+                                    var entity = _y[_x];
+                                    if (entity) {
+                                        system.onEntityRemoved(entity, collector.group);
+                                    }
+                                }
+                            }
+                        }
+                        for (var _z = 0, collectors_5 = collectors; _z < collectors_5.length; _z++) {
+                            var collector = collectors_5[_z];
+                            collector.clear();
+                        }
+                    }
+                    system.onUpdate && system.onUpdate(paper.clock.deltaTime);
                     if (true) {
                         system.deltaTime += paper.clock.now - startTime;
                     }
                 }
-                for (var _2 = 0, _3 = this._lateUpdateSystems; _2 < _3.length; _2++) {
-                    var system = _3[_2];
+                for (var _0 = 0, _1 = this._lateUpdateSystems; _0 < _1.length; _0++) {
+                    var system = _1[_0];
                     if (!system.enabled) {
                         continue;
                     }
@@ -17944,8 +17946,8 @@ var paper;
                         system.deltaTime += paper.clock.now - startTime;
                     }
                 }
-                for (var _4 = 0, _5 = this._systems; _4 < _5.length; _4++) {
-                    var system = _5[_4];
+                for (var _2 = 0, _3 = this._systems; _2 < _3.length; _2++) {
+                    var system = _3[_2];
                     if (system._enabled === system.enabled) {
                         continue;
                     }
@@ -17955,10 +17957,10 @@ var paper;
                     }
                     system.onDisable && system.onDisable();
                     if (system.onEntityRemoved) {
-                        for (var _6 = 0, _7 = system.groups; _6 < _7.length; _6++) {
-                            var group = _7[_6];
-                            for (var _8 = 0, _9 = group.entities; _8 < _9.length; _8++) {
-                                var entity = _9[_8];
+                        for (var _4 = 0, _5 = system.groups; _4 < _5.length; _4++) {
+                            var group = _5[_4];
+                            for (var _6 = 0, _7 = group.entities; _6 < _7.length; _6++) {
+                                var entity = _7[_6];
                                 system.onEntityRemoved(entity, group);
                             }
                         }
@@ -18003,7 +18005,7 @@ var paper;
                 this._updateSystems.splice(this._getSystemInsertIndex(this._updateSystems, order), 0, system);
             }
             if (system.onFixedUpdate) {
-                this._updateSystems.splice(this._getSystemInsertIndex(this._fixedUpdateSystems, order), 0, system);
+                this._fixedUpdateSystems.splice(this._getSystemInsertIndex(this._fixedUpdateSystems, order), 0, system);
             }
             if (system.onLateUpdate) {
                 this._lateUpdateSystems.splice(this._getSystemInsertIndex(this._lateUpdateSystems, order), 0, system);
@@ -18084,7 +18086,7 @@ var egret3d;
             var mesh = filter.mesh;
             var materials = renderer.materials;
             var materialCount = materials.length;
-            drawCallCollecter.removeDrawCalls(renderer); // Clear drawCalls.
+            drawCallCollecter.removeDrawCalls(gameObject); // Clear drawCalls.
             if (!mesh || materialCount === 0) {
                 return;
             }
@@ -18108,6 +18110,7 @@ var egret3d;
                 }
                 if (material) {
                     var drawCall = egret3d.DrawCall.create();
+                    drawCall.entity = gameObject;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = i;
@@ -18123,6 +18126,7 @@ var egret3d;
                 var material = materials[i];
                 for (var j = 0; j < subMeshCount; ++j) {
                     var drawCall = egret3d.DrawCall.create();
+                    drawCall.entity = gameObject;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = j;
@@ -18149,7 +18153,7 @@ var egret3d;
             this._updateDrawCalls(gameObject, false);
         };
         MeshRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
-            this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
+            this._drawCallCollecter.removeDrawCalls(gameObject);
         };
         return MeshRendererSystem;
     }(paper.BaseSystem));
@@ -18517,7 +18521,7 @@ var egret3d;
             var mesh = renderer.mesh;
             var materials = renderer.materials;
             var materialCount = materials.length;
-            drawCallCollecter.removeDrawCalls(renderer); // Clear drawCalls.
+            drawCallCollecter.removeDrawCalls(gameObject); // Clear drawCalls.
             if (!mesh || materialCount === 0) {
                 return;
             }
@@ -18541,6 +18545,7 @@ var egret3d;
                 }
                 if (material) {
                     var drawCall = egret3d.DrawCall.create();
+                    drawCall.entity = gameObject;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = i;
@@ -18556,6 +18561,7 @@ var egret3d;
                 var material = materials[i];
                 for (var j = 0; j < subMeshCount; ++j) {
                     var drawCall = egret3d.DrawCall.create();
+                    drawCall.entity = gameObject;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = j;
@@ -18584,7 +18590,7 @@ var egret3d;
             this._updateDrawCalls(gameObject, false);
         };
         SkinnedMeshRendererSystem.prototype.onRemoveGameObject = function (gameObject) {
-            this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
+            this._drawCallCollecter.removeDrawCalls(gameObject);
         };
         SkinnedMeshRendererSystem.prototype.onUpdate = function () {
             for (var _i = 0, _a = this.groups[0].gameObjects; _i < _a.length; _i++) {
@@ -24427,7 +24433,7 @@ var egret3d;
                 var component = gameObject.getComponent(particle.ParticleComponent);
                 var renderer = gameObject.getComponent(particle.ParticleRenderer);
                 //
-                drawCallCollecter.removeDrawCalls(renderer);
+                drawCallCollecter.removeDrawCalls(gameObject);
                 if (!renderer.material) {
                     console.error("ParticleSystem : material is null");
                     return;
@@ -24446,6 +24452,7 @@ var egret3d;
                 for (var _i = 0, _a = renderer.batchMesh.glTFMesh.primitives; _i < _a.length; _i++) {
                     var _primitive = _a[_i];
                     var drawCall = egret3d.DrawCall.create();
+                    drawCall.entity = gameObject;
                     drawCall.renderer = renderer;
                     drawCall.matrix = gameObject.transform.localToWorldMatrix;
                     drawCall.subMeshIndex = subMeshIndex++;
@@ -24467,7 +24474,7 @@ var egret3d;
                 }
             };
             ParticleSystem.prototype.onRemoveGameObject = function (gameObject) {
-                this._drawCallCollecter.removeDrawCalls(gameObject.renderer);
+                this._drawCallCollecter.removeDrawCalls(gameObject);
                 // component.stop();
             };
             ParticleSystem.prototype.onUpdate = function (deltaTime) {

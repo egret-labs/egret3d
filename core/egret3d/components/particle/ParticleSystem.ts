@@ -440,7 +440,7 @@ namespace egret3d.particle {
             const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;
             const renderer = gameObject.getComponent(ParticleRenderer) as ParticleRenderer;
             //
-            drawCallCollecter.removeDrawCalls(renderer);
+            drawCallCollecter.removeDrawCalls(gameObject);
             if (!renderer.material) {
                 console.error("ParticleSystem : material is null");
                 return;
@@ -459,6 +459,7 @@ namespace egret3d.particle {
             let subMeshIndex = 0;
             for (const _primitive of renderer.batchMesh.glTFMesh.primitives) {
                 const drawCall = DrawCall.create();
+                drawCall.entity = gameObject;
                 drawCall.renderer = renderer;
                 drawCall.matrix = gameObject.transform.localToWorldMatrix;
                 drawCall.subMeshIndex = subMeshIndex++;
@@ -484,7 +485,7 @@ namespace egret3d.particle {
         }
 
         public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCallCollecter.removeDrawCalls(gameObject.renderer as ParticleRenderer);
+            this._drawCallCollecter.removeDrawCalls(gameObject);
             // component.stop();
         }
 
