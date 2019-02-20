@@ -89,15 +89,15 @@ namespace paper {
         public uninitialize(): void {
         }
         /**
-         * 
+         * 获取该系统需要响应的组件匹配器。
          */
-        public getMatchers(): ICompoundMatcher<TEntity>[] | null {
+        protected getMatchers(): ICompoundMatcher<TEntity>[] | null {
             return null;
         }
         /**
          * 
          */
-        public getListeners(): { type: signals.Signal, listener: (component: BaseComponent) => void }[] | null {
+        protected getListeners(): { type: signals.Signal, listener: (component: any) => void }[] | null {
             return null;
         }
         /**
@@ -116,7 +116,6 @@ namespace paper {
         public onStart?(): void;
         /**
          * 实体被添加到系统时调用。
-         * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
          * @param entity 收集的实体。
          * @param collector 收集实体的实体组。
          * @see paper.GameObject#addComponent()
@@ -124,7 +123,6 @@ namespace paper {
         public onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
         /**
          * 充分非必要组件添加到实体时调用。
-         * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
          * @param component 收集的实体组件。
          * @param collector 收集实体组件的实体组。
          * @see paper.GameObject#addComponent()

@@ -195,7 +195,7 @@ namespace egret3d {
                         opaqueCalls[opaqueIndex++] = drawCall!;
                     }
 
-                    drawCall!.zdist = renderer.gameObject.transform.position.getSquaredDistance(cameraPosition);
+                    drawCall!.zdist = Vector3.create().fromMatrixPosition(drawCall!.matrix).getSquaredDistance(cameraPosition);
                 }
             }
 

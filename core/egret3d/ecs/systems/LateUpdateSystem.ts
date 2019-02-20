@@ -5,7 +5,7 @@ namespace paper {
     export class LateUpdateSystem extends BaseSystem<GameObject> {
         private readonly _laterCalls: (() => void)[] = [];
 
-        public getMatchers() {
+        protected getMatchers() {
             return [
                 Matcher.create<GameObject>().extraOf(Behaviour as any)
             ];

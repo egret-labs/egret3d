@@ -4,7 +4,7 @@ namespace paper {
      */
     export class UpdateSystem extends BaseSystem<GameObject> {
 
-        public getMatchers() {
+        protected getMatchers() {
             return [
                 Matcher.create<GameObject>().extraOf(Behaviour as any)
             ];

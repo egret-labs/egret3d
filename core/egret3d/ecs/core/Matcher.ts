@@ -2,7 +2,7 @@ namespace paper {
 
     const _components: IComponentClass<IComponent>[] = [];
     /**
-     * 
+     * 组件匹配器。
      */
     export class Matcher<TEntity extends IEntity> implements IAllOfMatcher<TEntity>  {
         /**

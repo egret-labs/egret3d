@@ -14,7 +14,7 @@ namespace egret3d {
          * @private
          */
         public recalculateLocalBox() {
-            const meshFilter = this.gameObject.getComponent(MeshFilter);
+            const meshFilter = this.entity.getComponent(MeshFilter);
             this._localBoundingBox.clear();
 
             if (meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
@@ -29,16 +29,19 @@ namespace egret3d {
         }
         /**
          * 实时获取网格资源的指定三角形顶点位置。
+         * @param triangleIndex 三角形索引。
+         * @param out 
          */
         public getTriangle(triangleIndex: uint, out?: Triangle): Triangle {
             if (!out) {
                 out = Triangle.create();
             }
 
-            const meshFilter = this.gameObject.getComponent(MeshFilter);
+            const transform = this.entity.getComponent(Transform);
+            const meshFilter = this.entity.getComponent(MeshFilter);
 
-            if (meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
-                const localToWorldMatrix = this.gameObject.transform.localToWorldMatrix;
+            if (transform && meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+                const localToWorldMatrix = transform.localToWorldMatrix;
                 meshFilter.mesh.getTriangle(triangleIndex, out);
                 out.a.applyMatrix(localToWorldMatrix);
                 out.b.applyMatrix(localToWorldMatrix);
@@ -49,42 +52,41 @@ namespace egret3d {
         }
 
         public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
-            const meshFilter = this.gameObject.getComponent(MeshFilter);
-            if (!meshFilter || !meshFilter.enabled || !meshFilter.mesh || meshFilter.mesh.isDisposed) {
-                return false;
-            }
+            const transform = this.entity.getComponent(Transform);
+            const meshFilter = this.entity.getComponent(MeshFilter);
 
-            let raycastMesh = false;
-            let raycastInfo: RaycastInfo | undefined = undefined;
-            const transform = this.gameObject.transform;
-            const worldToLocalMatrix = transform.worldToLocalMatrix;
-            const localRay = helpRay.applyMatrix(worldToLocalMatrix, p1);
-            const localBoundingBox = this.localBoundingBox;
+            if (transform && meshFilter && meshFilter.enabled && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+                let raycastMesh = false;
+                let raycastInfo: RaycastInfo | undefined = undefined;
+                const worldToLocalMatrix = transform.worldToLocalMatrix;
+                const localRay = helpRay.applyMatrix(worldToLocalMatrix, p1);
+                const localBoundingBox = this.localBoundingBox;
 
-            if (p2) {
-                if (p2 === true) {
-                    raycastMesh = true;
-                }
-                else {
-                    raycastMesh = p3 || false;
-                    raycastInfo = p2;
-                }
-            }
-
-            if (raycastMesh ? localBoundingBox.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : localBoundingBox.raycast(localRay, raycastInfo)) {
-                if (raycastInfo) { // Update local raycast info to world.
-                    const localToWorldMatrix = transform.localToWorldMatrix;
-                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
-                    raycastInfo.transform = transform;
-
-                    const normal = raycastInfo.normal;
-                    if (normal) {
-                        // normal.applyDirection(localToWorldMatrix);
-                        normal.applyMatrix3(helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                if (p2) {
+                    if (p2 === true) {
+                        raycastMesh = true;
+                    }
+                    else {
+                        raycastMesh = p3 || false;
+                        raycastInfo = p2;
                     }
                 }
 
-                return true;
+                if (raycastMesh ? localBoundingBox.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : localBoundingBox.raycast(localRay, raycastInfo)) {
+                    if (raycastInfo) { // Update local raycast info to world.
+                        const localToWorldMatrix = transform.localToWorldMatrix;
+                        raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
+                        raycastInfo.transform = transform;
+
+                        const normal = raycastInfo.normal;
+                        if (normal) {
+                            // normal.applyDirection(localToWorldMatrix);
+                            normal.applyMatrix3(helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                        }
+                    }
+
+                    return true;
+                }
             }
 
             return false;

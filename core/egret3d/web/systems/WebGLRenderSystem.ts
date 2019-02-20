@@ -316,28 +316,6 @@ namespace egret3d.webgl {
                         webgl.uniform4fv(location, renderState.caches.clockBuffer);
                         break;
 
-                    case gltf.UniformSemantics._LIGHTMAPTEX:
-                        const lightmapIndex = (renderer as MeshRenderer).lightmapIndex;
-                        if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {
-                            if (uniform.textureUnits && uniform.textureUnits.length === 1) {
-                                const texture = currentScene!.lightmaps[lightmapIndex] || DefaultTextures.WHITE;//TODO可能有空
-                                const unit = uniform.textureUnits[0];
-                                webgl.uniform1i(location, unit);
-                                texture.bindTexture(unit);
-                            }
-                            else {
-                                console.error("Error texture unit.");
-                            }
-
-                            this._cacheLightmapIndex = lightmapIndex;
-                        }
-                        break;
-
-                    case gltf.UniformSemantics._LIGHTMAP_SCALE_OFFSET:
-                        const lightmapScaleOffset = (renderer as MeshRenderer).lightmapScaleOffset;
-                        webgl.uniform4f(location, lightmapScaleOffset.x, lightmapScaleOffset.y, lightmapScaleOffset.z, lightmapScaleOffset.w);
-                        break;
-
                     case gltf.UniformSemantics._DIRECTIONSHADOWMAT:
                         webgl.uniformMatrix4fv(location, false, context.directShadowMatrix);
                         break;
@@ -390,6 +368,28 @@ namespace egret3d.webgl {
                                 const texture = spotShadowMaps as WebGLTexture;
                                 texture.bindTexture(unit);
                             }
+                        }
+                        break;
+
+                    case gltf.UniformSemantics._LIGHTMAP_SCALE_OFFSET:
+                        const lightmapScaleOffset = (renderer as MeshRenderer).lightmapScaleOffset;
+                        webgl.uniform4f(location, lightmapScaleOffset.x, lightmapScaleOffset.y, lightmapScaleOffset.z, lightmapScaleOffset.w);
+                        break;
+
+                    case gltf.UniformSemantics._LIGHTMAPTEX:
+                        const lightmapIndex = (renderer as MeshRenderer).lightmapIndex;
+                        if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {
+                            if (uniform.textureUnits && uniform.textureUnits.length === 1) {
+                                const texture = currentScene!.lightmaps[lightmapIndex] || DefaultTextures.WHITE;//TODO可能有空
+                                const unit = uniform.textureUnits[0];
+                                webgl.uniform1i(location, unit);
+                                texture.bindTexture(unit);
+                            }
+                            else {
+                                console.error("Error texture unit.");
+                            }
+
+                            this._cacheLightmapIndex = lightmapIndex;
                         }
                         break;
                 }

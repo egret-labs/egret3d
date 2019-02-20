@@ -4,43 +4,22 @@ namespace egret3d {
      * - 为网格渲染组件生成绘制信息。
      */
     export class MeshRendererSystem extends paper.BaseSystem<paper.GameObject> {
-        public readonly interests = [
-            {
-                componentClass: MeshFilter,
-                listeners: [{
-                    type: MeshFilter.onMeshChanged, listener: (component: paper.BaseComponent) => {
-                        this._updateDrawCalls(component.gameObject, true);
-
-                        if (component.gameObject.renderer) {
-                            component.gameObject.renderer._localBoundingBoxDirty = true;
-                        }
-                    }
-                }]
-            },
-            {
-                componentClass: MeshRenderer,
-                listeners: [{
-                    type: MeshRenderer.onMaterialsChanged, listener: (component: paper.BaseComponent) => {
-                        this._updateDrawCalls(component.gameObject, true);
-                    }
-                }]
-            },
-        ];
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.SceneManager.getInstance().globalEntity.getComponent(DrawCallCollecter)!;
         private readonly _materialFilter: boolean[] = [];
 
-        private _updateDrawCalls(gameObject: paper.GameObject, checkState: boolean) {
-            if (checkState && (!this.enabled || !this.groups[0].hasGameObject(gameObject))) {
+        private _updateDrawCalls(entity: paper.GameObject, checkState: boolean) {
+            if (checkState && (!this.groups[0].containsEntity(entity))) {
                 return;
             }
 
             const drawCallCollecter = this._drawCallCollecter;
-            const filter = gameObject.getComponent(MeshFilter)!;
-            const renderer = gameObject.renderer!;
+            const filter = entity.getComponent(MeshFilter)!;
+            const renderer = entity.getComponent(MeshRenderer)!;
             const mesh = filter.mesh;
             const materials = renderer.materials;
             const materialCount = materials.length;
-            drawCallCollecter.removeDrawCalls(gameObject); // Clear drawCalls.
+            // Clear drawCalls.
+            drawCallCollecter.removeDrawCalls(entity);
 
             if (!mesh || materialCount === 0) {
                 return;
@@ -54,7 +33,7 @@ namespace egret3d {
             }
 
             const materialFilter = this._materialFilter;
-            const matrix = gameObject.transform.localToWorldMatrix;
+            const matrix = entity.getComponent(egret3d.Transform)!.localToWorldMatrix;
             materialFilter.length = materialCount;
 
             for (let i = 0; i < subMeshCount; ++i) { // Specified materials.
@@ -71,7 +50,7 @@ namespace egret3d {
 
                 if (material) {
                     const drawCall = DrawCall.create();
-                    drawCall.entity = gameObject;
+                    drawCall.entity = entity;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = i;
@@ -90,7 +69,7 @@ namespace egret3d {
 
                 for (let j = 0; j < subMeshCount; ++j) {
                     const drawCall = DrawCall.create();
-                    drawCall.entity = gameObject;
+                    drawCall.entity = entity;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = j;
@@ -103,24 +82,39 @@ namespace egret3d {
             materialFilter.length = 0;
         }
 
-        public onEnable() {
-            for (const gameObject of this.groups[0].gameObjects) {
-                this.onAddGameObject(gameObject);
-            }
+        protected getMatchers() {
+            return [
+                paper.Matcher.create(Transform, MeshFilter, MeshRenderer),
+            ];
         }
 
-        public onDisable() {
-            for (const gameObject of this.groups[0].gameObjects) {
-                this.onRemoveGameObject(gameObject);
-            }
+        protected getListeners() {
+            return [
+                {
+                    type: MeshFilter.onMeshChanged, listener: (component: paper.IComponent) => {
+                        this._updateDrawCalls(component.entity as paper.GameObject, true);
+
+                        const renderer = component.entity.getComponent(MeshRenderer);
+
+                        if (renderer) {
+                            renderer._localBoundingBoxDirty = true;
+                        }
+                    }
+                },
+                {
+                    type: MeshRenderer.onMaterialsChanged, listener: (component: paper.IComponent) => {
+                        this._updateDrawCalls(component.entity as paper.GameObject, true);
+                    }
+                }
+            ];
         }
 
-        public onAddGameObject(gameObject: paper.GameObject) {
-            this._updateDrawCalls(gameObject, false);
+        public onEntityAdded(entity: paper.GameObject) {
+            this._updateDrawCalls(entity, false);
         }
 
-        public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCallCollecter.removeDrawCalls(gameObject);
+        public onEntityRemoved(entity: paper.GameObject) {
+            this._drawCallCollecter.removeDrawCalls(entity);
         }
     }
 }

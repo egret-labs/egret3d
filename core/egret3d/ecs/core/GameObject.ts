@@ -15,7 +15,7 @@ namespace paper {
             gameObect.tag = tag;
             gameObect._setScene(scene || SceneManager.getInstance().activeScene);
             Entity.onEntityCreated.dispatch(gameObect);
-            
+
             gameObect.addComponent(egret3d.Transform); //
 
             return gameObect;
@@ -73,7 +73,7 @@ namespace paper {
         }
 
         protected _addComponent(component: IComponent, config?: any) {
-            if (component.constructor === egret3d.Transform) {
+            if (component instanceof BaseTransform) {
                 (this.transform as egret3d.Transform) = component as egret3d.Transform;
             }
             else if (component instanceof BaseRenderer) {
