@@ -88,14 +88,22 @@ namespace examples.camera {
 
             { // Create game objects.
                 const colors = [0xff0000, 0x00ff00, 0x0000ff];
+                const materials =
+                    [
+                        egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT).setColor(0xff0000),
+                        egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT).setColor(0x00ff00),
+                        egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT).setColor(0x0000ff)
+                    ];
                 const layers = [paper.Layer.UserLayer10, paper.Layer.UserLayer11, paper.Layer.UserLayer12];
 
+                const combines = [];
                 for (let i = 0; i < 300; ++i) {
                     const layer = (i % 3);
                     const gameObject = egret3d.creater.createGameObject(`Cube ${i}`, {
                         mesh: egret3d.DefaultMeshes.CUBE,
-                        material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT).setColor(colors[layer]),
+                        material: materials[layer],
                     });
+                    gameObject.isStatic = true;
                     gameObject.layer = layers[layer];
                     gameObject.transform
                         .setLocalPosition(
@@ -113,7 +121,11 @@ namespace examples.camera {
                             (Math.random() + 0.5) * 20.0,
                             (Math.random() + 0.5) * 20.0,
                         );
+
+                    combines.push(gameObject);
                 }
+
+                egret3d.combine(combines);
             }
         }
 

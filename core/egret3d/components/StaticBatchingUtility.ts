@@ -38,7 +38,7 @@ namespace egret3d {
             }
         }
 
-        console.log("combine", beforeCombineCount, "to", beforeCombineCount - afterCombineCount);
+        console.log("combine", beforeCombineCount, "to", afterCombineCount, "save", beforeCombineCount - afterCombineCount);
 
         cacheInstances.length = 0;
     }
@@ -76,9 +76,9 @@ namespace egret3d {
         const materials = meshRenderer.materials;
         const meshData = meshFilter.mesh;
 
-        //合并筛选的条件:光照贴图_材质0_材质1... ：0_234_532...
-        let key: string = meshRenderer.lightmapIndex + "_";
-        materials.forEach(element => { key = key + "_" + element!.uuid; });
+        //合并筛选的条件:层级_光照贴图索引_材质0_材质1... ：256_0_234_532...
+        let key: string = target.layer + "_" +  meshRenderer.lightmapIndex + "_";
+        materials.forEach(e => { key = key + "_" + e!.uuid; });
 
         if (!out[key]) {
             out[key] = [];
@@ -183,7 +183,7 @@ namespace egret3d {
                             const normalBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.NORMAL)) as Float32Array;
                             const target = tempVertexBuffers[gltf.AttributeSemantics.NORMAL];
                             const count = normalBuffer.length;
-                            let startIndex = target.length;
+                            const startIndex = target.length;
 
                             target.length += count;
                             for (let j = 0; j < count; j += 3) {

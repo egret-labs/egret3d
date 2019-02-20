@@ -68,7 +68,7 @@ namespace egret3d {
         /**
          * 
          */
-        public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;
+        public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;//开发者一般不会手动调用,通常是后期渲染调用
 
         private _logarithmicDepthBuffer: boolean = false;
         private _gammaInput: boolean = true; //

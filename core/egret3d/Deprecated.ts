@@ -7,6 +7,13 @@ namespace paper {
      * @deprecated
      */
     export const RenderQueue = (egret3d as any).RenderQueue as any;
+    /**
+     * @deprecated
+     * @see paper.@singleton
+     */
+    @paper.singleton
+    export class SingletonComponent extends paper.BaseComponent {
+    }
 }
 namespace gltf {
     /**

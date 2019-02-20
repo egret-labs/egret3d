@@ -1,5 +1,13 @@
 namespace egret3d {
     /**
+     * 
+     */
+    // export const enum ShadowFilteringType {
+    //     None,
+    //     PCF,
+    //     PCF_SOFT
+    // }
+    /**
      * 灯光的阴影。
      */
     export class LightShadow implements paper.ISerializable {
@@ -34,6 +42,14 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
         public size: number = 10.0;
+        /**
+         * 
+         */
+        // public filteringType: ShadowFilteringType = ShadowFilteringType.PCF;//TODO
+        /**
+         * 
+         */
+        // public rgbaDepthPacking: boolean = true;
 
         private _mapSize: uint = 512;
         /**
