@@ -11,7 +11,7 @@ namespace paper {
             ];
         }
 
-        public onUpdate(deltaTime: number) {
+        public onTick(deltaTime: number) {
             for (const behaviour of this.groups[0].behaviours) {
                 if (!behaviour || (behaviour._lifeStates & ComponentLifeState.Started) === 0) {
                     continue;

@@ -764,7 +764,7 @@ namespace paper.editor {
             this._selectItem = null;
         }
 
-        public onUpdate() {
+        public onTick() {
             const isHierarchyShowed = !this._guiComponent.hierarchy.closed && this._guiComponent.hierarchy.domElement.style.display !== "none";
             const isInspectorShowed = !this._guiComponent.inspector.closed && this._guiComponent.inspector.domElement.style.display !== "none";
 

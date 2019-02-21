@@ -124,7 +124,7 @@ namespace paper.editor {
             console.info(`小提示：通过 H 键切换 Inspector 的显示与隐藏。`);
         }
 
-        public onUpdate() {
+        public onTick() {
             if (Application.playerMode === PlayerMode.Editor) {
                 return;
             }

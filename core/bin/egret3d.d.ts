@@ -678,6 +678,14 @@ declare namespace paper {
      */
     interface RunOptions {
         playerMode?: PlayerMode;
+        /**
+         * 逻辑帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         */
+        tickInterval?: number;
+        /**
+         * 渲染帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         */
+        frameInterval?: number;
     }
 }
 declare namespace paper {
@@ -4313,11 +4321,13 @@ declare namespace paper {
         private readonly _systems;
         private readonly _startSystems;
         private readonly _reactiveSystems;
-        private readonly _updateSystems;
-        private readonly _fixedUpdateSystems;
-        private readonly _lateUpdateSystems;
+        private readonly _frameSystems;
+        private readonly _frameCleanupSystems;
+        private readonly _tickSystems;
+        private readonly _tickCleanupSystems;
         private constructor();
         private _getSystemInsertIndex(systems, order);
+        private _getSystemInsertIndexReversely(systems, order);
         /**
          *
          */
@@ -4325,7 +4335,7 @@ declare namespace paper {
         /**
          *
          */
-        update(update: boolean, fixedUpdate: boolean): void;
+        update(updateFlags: ClockUpdateFlags): void;
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
@@ -4782,19 +4792,25 @@ declare namespace paper {
          */
         onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
         /**
-         * 该系统更新时调用。
+         * 生成一个新的渲染帧时调用
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
-        onUpdate?(deltaTime?: number): void;
+        onFrame?(deltaTime?: number): void;
         /**
-         *
+         * 在新的渲染帧的清理阶段调用
+         * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
          */
-        onFixedUpdate?(deltaTime?: number): void;
+        onFrameCleanup?(deltaTime?: number): void;
         /**
-         * 该系统更新时调用。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         * 生成一个新的逻辑帧时调用
+         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
-        onLateUpdate?(deltaTime?: number): void;
+        onTick?(deltaTime?: number): void;
+        /**
+         * 在新的逻辑帧的清理阶段调用
+         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
+         */
+        onTickCleanup?(deltaTime?: number): void;
         /**
          * 该系统被禁用时调用。
          * @see paper.BaseSystem#enabled
@@ -5641,11 +5657,10 @@ declare namespace paper {
         onStart?(): void;
         /**
          * 程序运行时以固定间隔被执行。
-         * @param currentTimes 本帧被执行的计数。
-         * @param totalTimes 本帧被执行的总数。
+         * @param delta 本帧距离上一帧的时长。
          * @see paper.Clock
          */
-        onFixedUpdate?(currentTimes: number, totalTimes: number): void;
+        onFixedUpdate?(delta?: number): void;
         /**
          *
          */
@@ -5705,29 +5720,63 @@ declare namespace paper {
     }
 }
 declare namespace paper {
+    interface ClockUpdateFlags {
+        frameCount: number;
+        tickCount: number;
+    }
     /**
      * 全局时钟信息组件。
      */
     class Clock extends Component {
-        updateEnabled: boolean;
-        fixedUpdateEnabled: boolean;
-        maxFixedSubSteps: uint;
-        fixedDeltaTime: number;
+        /**
+         * 逻辑帧补偿速度
+         */
+        tickCompensateSpeed: uint;
+        /**
+         * 逻辑帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
+         */
+        tickInterval: number;
+        /**
+         * 渲染帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
+         */
+        frameInterval: number;
+        /**
+         * 运行倍速
+         *
+         * 为了保证平滑的效果, 不会影响逻辑/渲染帧频
+         */
         timeScale: number;
+        /**
+         * 程序启动后运行的总渲染帧数
+         */
         private _frameCount;
+        /**
+         * 程序启动后运行的总逻辑帧数
+         */
+        private _tickCount;
         private _beginTime;
-        private _delayTime;
         private _unscaledTime;
         private _unscaledDeltaTime;
         private _fixedTime;
+        private _needReset;
+        private _unusedFrameDelta;
+        private _unusedTickDelta;
+        private _firstTicked;
         initialize(): void;
+        /**
+         * 程序启动后运行的总渲染帧数
+         */
         readonly frameCount: uint;
         /**
-         * 系统时间。（以毫秒为单位）
+         * 程序启动后运行的总逻辑帧数
+         */
+        readonly tickCount: uint;
+        /**
+         * 系统时间(毫秒)
          */
         readonly now: uint;
         /**
-         * 从程序开始运行时的累计时间。（以秒为单位）
+         * 从程序开始运行时的累计时间(秒)
          */
         readonly time: number;
         /**
@@ -5735,9 +5784,13 @@ declare namespace paper {
          */
         readonly fixedTime: number;
         /**
-         * 上一帧到此帧流逝的时间。（以秒为单位）
+         * 此次逻辑帧的时长
          */
-        readonly deltaTime: number;
+        readonly lastTickDelta: number;
+        /**
+         * 此次渲染帧的时长
+         */
+        readonly lastFrameDelta: number;
         /**
          *
          */
@@ -5746,6 +5799,10 @@ declare namespace paper {
          *
          */
         readonly unscaledDeltaTime: number;
+        /**
+         * reset
+         */
+        reset(): void;
     }
     /**
      * 全局时钟信息组件实例。
@@ -5814,7 +5871,7 @@ declare namespace paper {
      */
     class FixedUpdateSystem extends BaseSystem<GameObject> {
         protected getMatchers(): INoneOfMatcher<GameObject>[];
-        onUpdate(): void;
+        onTick(delta?: number): void;
     }
 }
 declare namespace paper {
@@ -5826,7 +5883,7 @@ declare namespace paper {
     class LateUpdateSystem extends BaseSystem<GameObject> {
         private readonly _laterCalls;
         protected getMatchers(): INoneOfMatcher<GameObject>[];
-        onUpdate(deltaTime: number): void;
+        onTick(deltaTime: number): void;
         /**
          * @deprecated
          */
@@ -8451,7 +8508,7 @@ declare namespace egret3d {
         }[];
         onEntityAdded(entity: paper.GameObject): void;
         onEntityRemoved(entity: paper.GameObject): void;
-        onUpdate(): void;
+        onTick(): void;
     }
 }
 declare namespace egret3d {
@@ -8527,7 +8584,7 @@ declare namespace egret3d {
         onDisable(): void;
         onEntityAdded(entity: paper.GameObject): void;
         onEntityRemoved(entity: paper.GameObject): void;
-        onUpdate(deltaTime: number): void;
+        onTick(deltaTime: number): void;
     }
 }
 declare module egret.web {
@@ -8977,7 +9034,7 @@ declare namespace egret3d {
         private _updateAnimationState(animationFadeState, animationState, deltaTime, forceUpdate);
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
         onEntityAdded(entity: paper.GameObject): void;
-        onUpdate(deltaTime: number): void;
+        onTick(deltaTime: number): void;
     }
 }
 declare namespace egret3d.particle {
@@ -9725,7 +9782,7 @@ declare namespace egret3d.particle {
         onEnable(): void;
         onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup): void;
         onRemoveGameObject(gameObject: paper.GameObject): void;
-        onUpdate(deltaTime: number): void;
+        onTick(deltaTime: number): void;
         onDisable(): void;
     }
 }
@@ -9759,6 +9816,21 @@ declare namespace egret3d.creater {
 declare namespace paper {
     /**
      * 应用程序。
+     *
+     * ### 自动刷新和被动刷新
+     *
+     * 默认情况下
+     *
+     * - 自动刷新: 会以无限循环方式刷新, `PlayerMode.Player` 模式默认为自动刷新
+     * - 被动刷新: 不会启动循环, 需要刷新时需调用 `update()` 方法, `PlayerMode.Editor` 模式为被动刷新
+     *
+     * 在运行过程中可随时调用 `resume()` 切换到自动刷新, 或者调用 `pause()` 切换为被动刷新
+     *
+     * ### 限制帧频
+     *
+     * - 通过设置 `clock.frameInterval` 来设置渲染帧间隔(秒)
+     * - 通过设置 `clock.tickInterval` 来设置逻辑帧间隔(秒)
+     * - 在帧补偿的时候, 为了尽快达到同步, `clock.update()` 会在同步之前忽略此间隔, 也就是说在这种情况下, 帧率会增加, 只有逻辑帧会补偿
      */
     class ECS {
         private static _instance;
@@ -9766,6 +9838,7 @@ declare namespace paper {
          * 应用程序单例。
          */
         static getInstance(): ECS;
+        private constructor();
         /**
          * 当应用程序的播放模式改变时派发事件。
          */
@@ -9789,13 +9862,31 @@ declare namespace paper {
         private _isFocused;
         private _isRunning;
         private _playerMode;
-        private _bindUpdate;
-        private constructor();
-        private _update();
+        /**
+         * core updating loop
+         */
+        private _loop(timestamp?);
+        /**
+         * including calculating, status updating, rerendering and logical updating
+         */
+        private _update(updateFlags?);
         /**
          *
          */
         initialize(options: RunOptions): void;
+        /**
+         * engine start
+         *
+         * TODO:
+         */
+        start(): void;
+        /**
+         * 显式更新
+         *
+         * - 在暂停的情况下才有意义 (`this._isRunning === false`), 因为在运行的情况下下一帧自动会刷新
+         * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
+         */
+        update(): void;
         /**
          *
          */

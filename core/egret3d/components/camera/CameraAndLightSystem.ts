@@ -38,7 +38,7 @@ namespace egret3d {
             }
         }
 
-        public onUpdate() {
+        public onFrame() {
             this._drawCallCollecter._update();
 
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
@@ -46,8 +46,8 @@ namespace egret3d {
                 cameraAndLightCollecter.sortCameras();
             }
         }
-
-        public onLateUpdate() {
+        
+        public onFrameCleanup() {
             this._drawCallCollecter._lateUpdate();
             this._cameraAndLightCollecter.lightCountDirty = LightCountDirty.None;
         }

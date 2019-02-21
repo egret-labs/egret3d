@@ -4945,7 +4945,7 @@ var paper;
             EditorSystem.prototype.onStart = function () {
                 console.info("\u5C0F\u63D0\u793A\uFF1A\u901A\u8FC7 H \u952E\u5207\u6362 Inspector \u7684\u663E\u793A\u4E0E\u9690\u85CF\u3002");
             };
-            EditorSystem.prototype.onUpdate = function () {
+            EditorSystem.prototype.onTick = function () {
                 if (paper.Application.playerMode === 2 /* Editor */) {
                     return;
                 }
@@ -9119,7 +9119,7 @@ var paper;
                 this._sceneOrEntityBuffer.length = 0;
                 this._selectItem = null;
             };
-            GUISystem.prototype.onUpdate = function () {
+            GUISystem.prototype.onTick = function () {
                 var isHierarchyShowed = !this._guiComponent.hierarchy.closed && this._guiComponent.hierarchy.domElement.style.display !== "none";
                 var isInspectorShowed = !this._guiComponent.inspector.closed && this._guiComponent.inspector.domElement.style.display !== "none";
                 {

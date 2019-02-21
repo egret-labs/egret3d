@@ -489,7 +489,7 @@ namespace egret3d.particle {
             // component.stop();
         }
 
-        public onUpdate(deltaTime: number) {
+        public onTick(deltaTime: number) {
             // if (deltaTime > 0.3) {
             //     deltaTime = 0.3;//防止dt过大，引起周期错乱
             // }

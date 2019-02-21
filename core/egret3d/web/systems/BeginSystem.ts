@@ -132,7 +132,7 @@ namespace egret3d.webgl {
             }, this);
         }
 
-        public onUpdate() {
+        public onTick() {
             // TODO 查询是否有性能问题。
             const screenSize = stage.screenSize;
             // 

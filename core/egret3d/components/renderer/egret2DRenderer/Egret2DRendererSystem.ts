@@ -132,7 +132,7 @@ namespace egret3d {
             }
         }
 
-        public onUpdate(deltaTime: number) {
+        public onTick(deltaTime: number) {
             const { w, h } = stage.viewport;
 
             for (const entity of this.groups[0].entities) {

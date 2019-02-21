@@ -586,5 +586,13 @@ namespace paper {
      */
     export interface RunOptions {
         playerMode?: PlayerMode;
+        /**
+         * 逻辑帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         */
+        tickInterval?: number;
+        /**
+         * 渲染帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         */
+        frameInterval?: number;
     }
 }
