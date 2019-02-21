@@ -38,27 +38,89 @@ namespace egret3d.webgl {
             }
         }
 
-        public onAwake(config: RunEgretOptions) {
-            const globalGameObject = paper.GameObject.globalGameObject;
+        private _getMainCanvas(options: RunOptions) {
+            if (window.canvas) {
+                return window.canvas;
+            }
+            else if (options.canvas) {
+                return options.canvas;
+            }
+            else {
+                const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
+                const canvas = document.createElement("canvas");
+                div.appendChild(canvas);
+
+                return canvas;
+            }
+        }
+
+        public onAwake(config: RunOptions) {
+            {
+                // TODO
+                egret.Sound = egret.web ? egret.web.HtmlSound : (egret as any)['wxgame']['HtmlSound']; //TODO:Sound
+                (egret.Capabilities as any)["renderMode" + ""] = "webgl";
+
+                const canvas = this._getMainCanvas(config);
+
+                if (config.alpha === undefined) {
+                    config.alpha = false;
+                }
+
+                if (config.antialias === undefined) {
+                    config.antialias = true;
+                }
+
+                if (config.antialiasSamples === undefined) {
+                    config.antialiasSamples = 4;
+                }
+
+                if (config.contentWidth === undefined) {
+                    const defaultWidth = 1136;
+                    if (window.canvas) {
+                        config.contentWidth = defaultWidth;
+                    }
+                    else {
+                        const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0]!;
+                        config.contentWidth = parseInt(div.getAttribute("data-content-width")!) || defaultWidth;
+                    }
+                }
+
+                if (config.contentHeight === undefined) {
+                    const defaultHeight = 640;
+                    if (window.canvas) {
+                        config.contentHeight = defaultHeight;
+                    }
+                    else {
+                        const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0]!;
+                        config.contentHeight = parseInt(div.getAttribute("data-content-height")!) || defaultHeight;
+                    }
+                }
+
+                config.canvas = canvas;
+                config.webgl = <WebGLRenderingContext>canvas.getContext("webgl", config) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", config);
+            }
+
+            const globalEntity = paper.Application.sceneManager.globalEntity;
             // Add stage, set stage, update canvas.
             this._canvas = config.canvas!;
             const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
             const screenWidth = isWX ? window.innerWidth : this._canvas.parentElement!.clientWidth;
             const screenHeight = isWX ? window.innerHeight : this._canvas.parentElement!.clientHeight;
 
-            globalGameObject.addComponent(Stage, {
+            globalEntity.addComponent(RenderState, config);
+            globalEntity.addComponent(Stage, {
                 size: { w: config.contentWidth!, h: config.contentHeight! },
                 screenSize: { w: screenWidth, h: screenHeight },
             });
-            globalGameObject.addComponent(RenderState, config);
-            globalGameObject.addComponent(DefaultMeshes);
-            globalGameObject.addComponent(DefaultShaders);
-            globalGameObject.addComponent(DefaultTextures);
-            globalGameObject.addComponent(DefaultMaterials);
-            globalGameObject.addComponent(DrawCallCollecter);
-            globalGameObject.addComponent(CameraAndLightCollecter);
-            globalGameObject.addComponent(InputCollecter);
-            globalGameObject.addComponent(ContactCollecter);
+
+            globalEntity.addComponent(DefaultMeshes);
+            globalEntity.addComponent(DefaultShaders);
+            globalEntity.addComponent(DefaultTextures);
+            globalEntity.addComponent(DefaultMaterials);
+            globalEntity.addComponent(DrawCallCollecter);
+            globalEntity.addComponent(CameraAndLightCollecter);
+            globalEntity.addComponent(ContactCollecter);
+            globalEntity.addComponent(InputCollecter);
 
             // Update canvas when screen resized.
             this._updateCanvas(stage); // First update.
@@ -85,3 +147,14 @@ namespace egret3d.webgl {
         }
     }
 }
+
+declare interface Window {
+    canvas: HTMLCanvasElement;
+    gltf: any;
+    paper: any;
+    egret3d: any;
+}
+
+window.gltf = gltf;
+window.paper = paper;
+window.egret3d = egret3d;

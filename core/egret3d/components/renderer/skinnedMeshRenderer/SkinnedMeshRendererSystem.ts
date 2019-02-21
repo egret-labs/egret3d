@@ -5,11 +5,12 @@ namespace egret3d {
      * - 更新蒙皮网格的骨骼矩阵信息。
      */
     export class SkinnedMeshRendererSystem extends paper.BaseSystem<paper.GameObject> {
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.SceneManager.getInstance().globalEntity.getComponent(DrawCallCollecter)!;
+
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
         private readonly _materialFilter: boolean[] = [];
 
         private _updateDrawCalls(entity: paper.GameObject, checkState: boolean) {
-            if (checkState && !this.enabled || !this.groups[0].hasGameObject(entity)) {
+            if (checkState && !this.enabled || !this.groups[0].containsEntity(entity)) {
                 return;
             }
 
@@ -83,7 +84,7 @@ namespace egret3d {
 
         protected getMatchers() {
             return [
-                paper.Matcher.create(Transform, SkinnedMeshRenderer),
+                paper.Matcher.create<paper.GameObject>(Transform, SkinnedMeshRenderer),
             ];
         }
 

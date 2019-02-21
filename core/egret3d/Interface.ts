@@ -112,8 +112,8 @@ namespace egret3d {
      */
     export const enum ShaderDefineOrder {
         GammaFactor = 1,
-        DecodingFun  = 2,
-        EncodingFun  = 3,
+        DecodingFun = 2,
+        EncodingFun = 3,
     }
     /**
      * 
@@ -366,4 +366,37 @@ namespace egret3d {
          */
         draw(drawCall: DrawCall, material: Material | null): void;
     }
+    /**
+     * 
+     */
+    export type RunOptions = {
+        defaultScene?: string;
+        /**
+         * 舞台宽。
+         */
+        contentWidth?: number;
+        /**
+         * 舞台高。
+         */
+        contentHeight?: number;
+        /**
+         * 是否开启抗锯齿，默认开启。
+         */
+        antialias?: boolean;
+        /**
+         * 是否与画布背景色混合，默认不混合。
+         */
+        alpha?: boolean;
+        /**
+         * 
+         */
+        gammaInput?: boolean;
+
+        antialiasSamples?: number;
+
+        canvas?: HTMLCanvasElement;
+        webgl?: WebGLRenderingContext;
+
+        playerMode?: paper.PlayerMode;
+    };
 }

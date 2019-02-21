@@ -9,15 +9,15 @@ namespace paper {
          */
         public static getInstance(): ECS {
             if (!this._instance) {
-                this._instance = new ECS() as any;
+                this._instance = new ECS();
             }
 
-            return this._instance as any;
+            return this._instance;
         }
         /**
          * 当应用程序的播放模式改变时派发事件。
          */
-        public readonly onPlayerModeChange: signals.Signal = new signals.Signal();
+        public readonly onPlayerModeChange: signals.Signal<PlayerMode> = new signals.Signal();
         /**
          * 引擎版本。
          */
@@ -30,9 +30,13 @@ namespace paper {
          * 场景管理器。
          */
         public readonly sceneManager: SceneManager = SceneManager.getInstance();
+        /**
+         * 
+         */
+        public readonly gameObjectContext: Context<GameObject> = Context.create(GameObject);
 
-        private _isFocused = false;
-        private _isRunning = false;
+        private _isFocused: boolean = false;
+        private _isRunning: boolean = false;
         private _playerMode: PlayerMode = PlayerMode.Player;
 
         private _bindUpdate: FrameRequestCallback | null = null;
@@ -53,19 +57,19 @@ namespace paper {
         /**
          * 
          */
-        public initialize(options: ApplicationOptions): void {
-            const gameObjectContext = Context.getInstance(GameObject);
+        public initialize(options: RunOptions): void {
             this._playerMode = options.playerMode || PlayerMode.Player;
 
-            this.sceneManager.globalEntity.addComponent(Clock);
-            this.sceneManager.globalEntity.addComponent(DisposeCollecter);
+            const { systemManager, gameObjectContext } = this;
+            systemManager.register(EnableSystem, gameObjectContext, SystemOrder.Enable);
+            systemManager.register(StartSystem, gameObjectContext, SystemOrder.Start);
+            systemManager.register(FixedUpdateSystem, gameObjectContext, SystemOrder.FixedUpdate);
+            systemManager.register(UpdateSystem, gameObjectContext, SystemOrder.Update);
+            systemManager.register(LateUpdateSystem, gameObjectContext, SystemOrder.LateUpdate);
+            systemManager.register(DisableSystem, gameObjectContext, SystemOrder.Disable);
+            systemManager.preRegisterSystems();
 
-            this.systemManager.register(EnableSystem, gameObjectContext, SystemOrder.Enable);
-            this.systemManager.register(StartSystem, gameObjectContext, SystemOrder.Start);
-            this.systemManager.register(FixedUpdateSystem, gameObjectContext, SystemOrder.FixedUpdate);
-            this.systemManager.register(UpdateSystem, gameObjectContext, SystemOrder.Update);
-            this.systemManager.register(LateUpdateSystem, gameObjectContext, SystemOrder.LateUpdate);
-            this.systemManager.register(DisableSystem, gameObjectContext, SystemOrder.Disable);
+            this.resume();
         }
         /**
          * TODO
@@ -124,7 +128,6 @@ namespace paper {
             }
 
             this._playerMode = value;
-
             this.onPlayerModeChange.dispatch(this.playerMode);
         }
     }

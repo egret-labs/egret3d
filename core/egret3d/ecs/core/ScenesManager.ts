@@ -55,7 +55,11 @@ namespace paper {
                 console.error("Remove scene error.");
             }
         }
-
+        /**
+         * 
+         * @param name 
+         * @param isActive 
+         */
         public createScene(name: string, isActive: boolean = true): Scene {
             return Scene.createEmpty(name, isActive);
         }

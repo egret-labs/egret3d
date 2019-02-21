@@ -362,7 +362,7 @@ namespace paper {
                     }
                     else {
                         if (!this._rootTarget) {
-                            this._rootTarget = SceneManager.getInstance().activeScene; // TODO
+                            this._rootTarget = Application.sceneManager.activeScene; // TODO
                         }
 
                         const hasLink = KEY_EXTRAS in source && (source[KEY_EXTRAS] as EntityExtras).linkedID;
@@ -439,7 +439,7 @@ namespace paper {
                 }
 
                 // 重新设置 rootID（只有编辑模式需要处理该内容）
-                if (ECS.getInstance().playerMode === PlayerMode.Editor) {
+                if (Application.playerMode === PlayerMode.Editor) {
                     // 重新设置rootid的值
                     for (const uuid in this._prefabRootMap) {
                         const rootDeser = this._deserializers[uuid];

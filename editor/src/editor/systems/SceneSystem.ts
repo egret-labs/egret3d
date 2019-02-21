@@ -3,12 +3,6 @@ namespace paper.editor {
      * TODO
      */
     export class SceneSystem extends BaseSystem<GameObject> {
-        public readonly interests = [
-            [
-                { componentClass: egret3d.Transform }
-            ]
-        ];
-
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
 
         private readonly _keyEscape: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.Escape);

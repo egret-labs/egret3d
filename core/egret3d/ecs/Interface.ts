@@ -443,7 +443,7 @@ namespace paper {
          */
         _destroy(): void;
         /**
-         * 组件被移除后，内部初始化时执行。
+         * 组件被添加后，内部初始化时执行。
          * - 重写此方法时，必须调用 `super.initialize()`。
          * @param config 实体添加该组件时可以传递的初始化数据。（注意：如果添加该组件时，实体未处于激活状态，则该属性无效）
          */
@@ -584,7 +584,7 @@ namespace paper {
     /**
      * 
      */
-    export interface ApplicationOptions {
+    export interface RunOptions {
         playerMode?: PlayerMode;
     }
 }

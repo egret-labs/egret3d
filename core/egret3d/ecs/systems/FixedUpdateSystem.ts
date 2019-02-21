@@ -12,7 +12,7 @@ namespace paper {
         }
 
         public onUpdate() {
-            const clock = this.clock;
+            const clock = paper.clock;
             let currentTimes = 0;
             let fixedTime = clock.fixedTime;
             const totalTimes = Math.min(Math.floor(fixedTime / clock.fixedDeltaTime), clock.maxFixedSubSteps);

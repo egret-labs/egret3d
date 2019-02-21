@@ -400,9 +400,6 @@ declare namespace paper.editor {
      * TODO
      */
     class SceneSystem extends BaseSystem<GameObject> {
-        readonly interests: {
-            componentClass: typeof egret3d.Transform;
-        }[][];
         private readonly _modelComponent;
         private readonly _keyEscape;
         private readonly _keyDelete;

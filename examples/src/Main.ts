@@ -13,6 +13,8 @@ namespace examples {
 
 function exampleStart() {
     const exampleString = getCurrentExampleString();
+    createGUI(exampleString);
+
     let exampleClass: { new(): examples.Example };
 
     if (exampleString.indexOf(".") > 0) { // Package
@@ -23,12 +25,15 @@ function exampleStart() {
         exampleClass = (window as any).examples[exampleString];
     }
 
-    createGUI(exampleString);
-
     const exampleObj: examples.Example = new exampleClass();
     exampleObj.start();
 
     function createGUI(exampleString: string) {
+        const guiComponent = paper.Application.sceneManager.globalEntity.getComponent(paper.editor.GUIComponent);
+        if (!guiComponent) {
+            return;
+        }
+
         const namespaceExamples = (window as any).examples;
         const examples: string[] = [];
 
@@ -47,7 +52,6 @@ function exampleStart() {
             }
         }
 
-        const guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(paper.editor.GUIComponent);
         const gui = guiComponent.hierarchy.addFolder("Examples");
         const options = {
             example: exampleString

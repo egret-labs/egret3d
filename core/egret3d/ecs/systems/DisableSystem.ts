@@ -4,9 +4,23 @@ namespace paper {
      */
     export class DisableSystem extends BaseSystem<GameObject> {
 
-        private readonly _disposeCollecter: DisposeCollecter = SceneManager.getInstance().globalEntity.getComponent(DisposeCollecter)!;
+        private readonly _disposeCollecter: DisposeCollecter = Application.sceneManager.globalEntity.getComponent(DisposeCollecter)!;
 
-        public onUpdate() {
+        public onAwake() {
+            const { scenes, entities, components } = this._disposeCollecter;
+
+            Scene.onSceneDestroyed.add((scene: Scene) => {
+                scenes.push(scene);
+            });
+            Entity.onEntityDestroyed.add((entity: IEntity) => {
+                entities.push(entity);
+            });
+            Component.onComponentDestroyed.add(([entity, component]: [IEntity, IComponent]) => {
+                components.push(component);
+            });
+        }
+
+        public onLateUpdate() {
             const disposeCollecter = this._disposeCollecter;
 
             for (const scene of disposeCollecter.scenes) {

@@ -30,7 +30,7 @@ namespace paper {
         }
 
         if (!_defaultGameObject) {
-            _defaultGameObject = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, SceneManager.getInstance().globalScene);
+            _defaultGameObject = GameObject.create(DefaultNames.NoName, DefaultTags.Untagged, Application.sceneManager.globalScene);
         }
 
         _inline = inline;

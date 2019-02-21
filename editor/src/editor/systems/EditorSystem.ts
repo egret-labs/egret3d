@@ -48,7 +48,7 @@ namespace paper.editor {
             //
             if (Application.playerMode === PlayerMode.Editor) {
                 this._showStates = ShowState.None;
-                Application.systemManager.register(SceneSystem, Context.getInstance(GameObject), SystemOrder.LateUpdate);
+                Application.systemManager.register(SceneSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
             }
             else {
                 const guiComponent = this._guiComponent!;
@@ -116,7 +116,7 @@ namespace paper.editor {
                     guiComponent.inspector.close();
                 }
 
-                Application.systemManager.register(GUISystem, Context.getInstance(GameObject), SystemOrder.LateUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
+                Application.systemManager.register(GUISystem, Application.gameObjectContext, SystemOrder.LateUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
             }
         }
 
@@ -201,5 +201,5 @@ namespace paper.editor {
         }
     }
     //
-    Application.systemManager.preRegister(EditorSystem, Context.getInstance(GameObject), SystemOrder.Begin - 10000);
+    Application.systemManager.preRegister(EditorSystem, Application.gameObjectContext, SystemOrder.Begin - 10000);
 }

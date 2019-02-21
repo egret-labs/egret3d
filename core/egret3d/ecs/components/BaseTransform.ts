@@ -11,7 +11,7 @@ namespace paper {
         /**
          * 当变换组件的父级改变时派发事件。
          */
-        public static readonly onTransformParentChanged: signals.Signal<BaseTransform> = new signals.Signal();
+        public static readonly onTransformParentChanged: signals.Signal<[BaseTransform, BaseTransform | null, BaseTransform | null]> = new signals.Signal();
 
         private _globalEnabled: boolean = false;
         private _globalEnabledDirty: boolean = true;
@@ -99,7 +99,7 @@ namespace paper {
                 return this;
             }
 
-            if (this.entity === paper.SceneManager.getInstance().globalEntity) {
+            if (this.entity === Application.sceneManager.globalEntity) {
                 return this;
             }
 
@@ -130,7 +130,7 @@ namespace paper {
 
             this._onChangeParent(false, worldTransformStays);
 
-            BaseTransform.onTransformParentChanged.dispatch(this);
+            BaseTransform.onTransformParentChanged.dispatch([this, prevParent, parent]);
 
             return this;
         }
@@ -287,8 +287,8 @@ namespace paper {
         /**
          * 该组件实体的全部子级变换组件。（不包含孙级）
          */
-        @paper.serializedField
-        @paper.deserializedIgnore
+        @serializedField
+        @deserializedIgnore
         public get children(): ReadonlyArray<this> {
             return this._children;
         }

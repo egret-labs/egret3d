@@ -15,7 +15,12 @@ namespace paper {
             return this._instance;
         }
 
-        private readonly _preSystems: [{ new(context: Context<IEntity>, order?: SystemOrder): BaseSystem<IEntity> }, Context<IEntity>, int][] = [];
+        private readonly _preSystems: [
+            { new(context: Context<IEntity>, order?: SystemOrder): BaseSystem<IEntity> },
+            Context<IEntity>,
+            int,
+            any
+        ][] = [];
         private readonly _systems: BaseSystem<IEntity>[] = [];
         private readonly _startSystems: BaseSystem<IEntity>[] = [];
         private readonly _reactiveSystems: BaseSystem<IEntity>[] = [];
@@ -86,7 +91,7 @@ namespace paper {
                     system.onEnable && system.onEnable();
 
                     if (DEBUG) {
-                        console.debug(egret.getQualifiedClassName(this), "enabled.");
+                        console.debug(egret.getQualifiedClassName(system), "enabled.");
                     }
                 }
 
@@ -220,7 +225,7 @@ namespace paper {
                     }
 
                     if (DEBUG) {
-                        console.debug(egret.getQualifiedClassName(this), "disabled.");
+                        console.debug(egret.getQualifiedClassName(system), "disabled.");
                     }
                 }
             }
@@ -228,21 +233,27 @@ namespace paper {
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
-        public preRegister<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update): SystemManager {
+        public preRegister<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(
+            systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem },
+            context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any
+        ): SystemManager {
             if (this._systems.length > 0) {
-                this.register(systemClass, context, order);
+                this.register(systemClass, context, order, config);
 
                 return this;
             }
 
-            this._preSystems.unshift([systemClass as any, context, order]);
+            this._preSystems.push([systemClass as any, context, order, config]);
 
             return this;
         }
         /**
          * 为程序注册一个指定的系统。
          */
-        public register<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem }, context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any): TSystem {
+        public register<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(
+            systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem },
+            context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any
+        ): TSystem {
             let system = this.getSystem(systemClass);
 
             if (system) {

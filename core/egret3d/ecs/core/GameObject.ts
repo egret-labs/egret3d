@@ -10,10 +10,10 @@ namespace paper {
         public static create(name: string = DefaultNames.NoName, tag: string = DefaultTags.Untagged, scene: Scene | null = null): GameObject {
             const gameObect = new GameObject();
             gameObect._isDestroyed = false;
-            gameObect._enabled = true;
+            gameObect._enabled = Entity.createDefaultEnabled;
             gameObect.name = name;
             gameObect.tag = tag;
-            gameObect._setScene(scene || SceneManager.getInstance().activeScene);
+            gameObect._setScene(scene || Application.sceneManager.activeScene);
             Entity.onEntityCreated.dispatch(gameObect);
 
             gameObect.addComponent(egret3d.Transform); //
@@ -265,7 +265,6 @@ namespace paper {
         /**
          * 该实体自身的激活状态。
          */
-        @editor.property(editor.EditType.CHECKBOX)
         public get activeSelf(): boolean {
             return this._enabled;
         }
@@ -315,13 +314,13 @@ namespace paper {
          * @see paper.Scene#find()
          */
         public static find(name: string, scene: Scene | null = null) {
-            return (scene || SceneManager.getInstance().activeScene).find(name);
+            return (scene || Application.sceneManager.activeScene).find(name);
         }
         /**
          * @deprecated
          */
         public static get globalGameObject(): GameObject {
-            return SceneManager.getInstance().globalEntity as GameObject;
+            return Application.sceneManager.globalEntity as GameObject;
         }
         /**
          * @deprecated

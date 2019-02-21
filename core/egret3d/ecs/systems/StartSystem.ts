@@ -16,7 +16,7 @@ namespace paper {
             }
 
             if (
-                ECS.getInstance().playerMode === PlayerMode.Editor &&
+                Application.playerMode === PlayerMode.Editor &&
                 !(component.constructor as IComponentClass<Behaviour>).executeInEditMode
             ) {
                 return;

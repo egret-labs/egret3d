@@ -16,9 +16,9 @@ namespace paper {
      */
     export abstract class Component extends BaseObject implements IComponent {
         /**
-         * 
+         * 当组件被创建时派发事件。
          */
-        public static createDefaultEnabled: boolean = true;
+        public static readonly onComponentCreated: signals.Signal<[IEntity, IComponent]> = new signals.Signal();
         /**
          * 当组件被激活时派发事件。
          */
@@ -27,6 +27,18 @@ namespace paper {
          * 当组件被禁用时派发事件。
          */
         public static readonly onComponentDisabled: signals.Signal<[IEntity, IComponent]> = new signals.Signal();
+        /**
+         * 当组件将要被销毁时派发事件。
+         */
+        public static readonly onComponentDestroy: signals.Signal<[IEntity, IComponent]> = new signals.Signal();
+        /**
+         * 当组件被销毁时派发事件。
+         */
+        public static readonly onComponentDestroyed: signals.Signal<[IEntity, IComponent]> = new signals.Signal();
+        /**
+         * 
+         */
+        public static createDefaultEnabled: boolean = true;
         /**
          * 该组件的实例是否在编辑模式拥有生命周期。
          */
@@ -121,7 +133,7 @@ namespace paper {
         public readonly entity: IEntity = null!;
 
         @paper.serializedField
-        public extras?: ComponentExtras = ECS.getInstance().playerMode === PlayerMode.Editor ? {} : undefined;
+        public extras?: ComponentExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         @serializedField
         protected _enabled: boolean = false;

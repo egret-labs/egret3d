@@ -7,7 +7,7 @@ namespace paper {
         /**
          * 缓存此帧销毁的全部场景。
          */
-        public readonly scenes: Scene[] = [];
+        public readonly scenes: IScene[] = [];
         /**
          * 缓存此帧销毁的全部实体。
          */

@@ -445,7 +445,7 @@ namespace egret3d.webgl {
             }
         }
 
-        public onAwake(config: RunEgretOptions) {
+        public onAwake(config: RunOptions) {
             this._canvas = config.canvas!;
         }
 
@@ -521,6 +521,11 @@ namespace egret3d.webgl {
         public onUpdate(deltaTime: number) {
             if (inputCollecter.isActiveAndEnabled) {
                 inputCollecter._update(deltaTime);
+            }
+        }
+
+        public onLateUpdate() {
+            if (inputCollecter.isActiveAndEnabled) {
                 inputCollecter._clear();
             }
         }

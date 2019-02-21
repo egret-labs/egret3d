@@ -28,7 +28,7 @@ namespace egret3d {
          * - 如果没有则创建一个。
          */
         public static get main(): Camera {
-            const activeScene = paper.SceneManager.getInstance().activeScene;
+            const activeScene = paper.Application.sceneManager.activeScene;
             let gameObject = activeScene.findWithTag<paper.GameObject>(paper.DefaultTags.MainCamera);
 
             if (!gameObject) { // TODO 兼容数据错误，在 2.0 移除
@@ -51,7 +51,7 @@ namespace egret3d {
          * - 如果没有则创建一个。
          */
         public static get editor(): Camera {
-            let gameObject = paper.SceneManager.getInstance().editorScene.find<paper.GameObject>(paper.DefaultNames.EditorCamera);
+            let gameObject = paper.Application.sceneManager.editorScene.find<paper.GameObject>(paper.DefaultNames.EditorCamera);
 
             if (!gameObject) {
                 gameObject = paper.GameObject.create(paper.DefaultNames.EditorCamera, paper.DefaultTags.EditorOnly, paper.Application.sceneManager.editorScene);

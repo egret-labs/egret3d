@@ -29,7 +29,7 @@ namespace paper {
          * @internal
          */
         public _destroy() {
-            if (ECS.getInstance().playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
                 if (this._lifeStates & ComponentLifeState.Awaked) {
                     this.onDestroy && this.onDestroy();
                 }
@@ -39,7 +39,7 @@ namespace paper {
         }
 
         public initialize(config?: any): void {
-            if (ECS.getInstance().playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
                 (this.gameObject as GameObject) = this.entity as GameObject; //
 
                 if (this._enabled && this.gameObject.activeInHierarchy) {
@@ -52,7 +52,7 @@ namespace paper {
         }
 
         public dispatchEnabledEvent(enabled: boolean): void {
-            if (ECS.getInstance().playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
                 if (enabled) {
                     if ((this._lifeStates & ComponentLifeState.Awaked) === 0) {
                         this.onAwake && this.onAwake();

@@ -93,8 +93,8 @@ namespace egret3d {
          */
         public readonly shadowCalls: DrawCall[] = [];
 
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
-        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(CameraAndLightCollecter)!;
         private readonly _camera: Camera = null!;
         /**
          * 禁止实例化。

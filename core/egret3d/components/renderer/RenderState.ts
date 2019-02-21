@@ -330,7 +330,7 @@ namespace egret3d {
             return prefixContext;
         }
 
-        public initialize(config: RunEgretOptions) {
+        public initialize(config: RunOptions) {
             super.initialize();
 
             (renderState as RenderState) = this;

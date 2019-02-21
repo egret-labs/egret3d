@@ -59,15 +59,9 @@ namespace egret3d.webgl {
      * @internal
      */
     export class WebGLRenderSystem extends paper.BaseSystem<paper.GameObject> implements IRenderSystem {
-        public readonly interests = [
-            [
-                { componentClass: Egret2DRenderer }
-            ]
-        ];
-
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
-        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
-        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getComponent(RenderState) as WebGLRenderState;
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(CameraAndLightCollecter)!;
+        private readonly _renderState: WebGLRenderState = paper.Application.sceneManager.globalEntity.getComponent(RenderState) as WebGLRenderState;
         //
         private readonly _modelViewMatrix: Matrix4 = Matrix4.create();
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
@@ -128,7 +122,7 @@ namespace egret3d.webgl {
             this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
             // Global.
             if (forceUpdate) {
-                const activeScene = paper.Scene.activeScene;
+                const activeScene = paper.Application.sceneManager.activeScene;
                 const fog = activeScene.fog;
                 i = globalUniforms.length;
 
@@ -592,8 +586,9 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); // TODO 解决字体模糊。
 
-            for (const gameObject of this.groups[0].gameObjects) {
-                const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
+            for (const entity of this.groups[0].entities) {
+                const egret2DRenderer = entity.getComponent(Egret2DRenderer)!;
+                
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     if (egret2DRenderer._order < 0) {
                         egret2DRenderer._order = renderState.caches.egret2DOrderCount++;
@@ -693,7 +688,7 @@ namespace egret3d.webgl {
 
             if (renderer && renderer.gameObject._beforeRenderBehaviorCount > 0) {
                 let flag = false;
-                const isEditor = paper.ECS.getInstance().playerMode === paper.PlayerMode.Editor;
+                const isEditor = paper.Application.playerMode === paper.PlayerMode.Editor;
 
                 for (const component of renderer.gameObject.components) {
                     if (
@@ -713,7 +708,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
             const camera = cameraAndLightCollecter.currentCamera!;
-            const activeScene = paper.Scene.activeScene;
+            const activeScene = paper.Application.sceneManager.activeScene;
             const currentScene = renderer ? renderer.gameObject.scene : null; // 后期渲染 renderer 为空。
             const mesh = drawCall.mesh;
             const shader = material.shader as WebGLShader;
@@ -852,6 +847,12 @@ namespace egret3d.webgl {
             }
         }
 
+        protected getMatchers() {
+            return [
+                paper.Matcher.create<paper.GameObject>(Egret2DRenderer),
+            ];
+        }
+
         public onAwake() {
             const renderState = this._renderState;
             renderState.render = this.render.bind(this);
@@ -867,9 +868,9 @@ namespace egret3d.webgl {
 
             if (cameras.length > 0) { // Render cameras.
                 const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
-                const clock = this.clock;
+                const clock = paper.clock;
                 const renderState = this._renderState;
-                const editorScene = paper.Scene.editorScene;
+                const editorScene = paper.Application.sceneManager.editorScene;
 
                 renderState.caches.egret2DOrderCount = 0;
                 renderState.caches.cullingMask = paper.Layer.Nothing;

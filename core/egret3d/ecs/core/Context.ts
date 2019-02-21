@@ -3,20 +3,11 @@ namespace paper {
      * 
      */
     export class Context<TEntity extends IEntity> {
-        private static _entityClasses: IEntityClass<IEntity>[] = [];
-        private static _instances: Context<IEntity>[] = [];
         /**
          * 
          */
-        public static getInstance<TEntity extends IEntity>(entityClass: IEntityClass<TEntity>): Context<TEntity> {
-            let index = this._entityClasses.indexOf(entityClass);
-            if (index < 0) {
-                index = this._entityClasses.length;
-                this._entityClasses.push(entityClass);
-                this._instances.push(new Context<TEntity>(entityClass));
-            }
-
-            return this._instances[index] as Context<TEntity>;
+        public static create<TEntity extends IEntity>(entityClass: IEntityClass<TEntity>): Context<TEntity> {
+            return new Context<TEntity>(entityClass);
         }
 
         private readonly _entityClass: IEntityClass<TEntity>;

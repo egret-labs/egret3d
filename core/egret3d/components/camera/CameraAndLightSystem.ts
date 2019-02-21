@@ -3,37 +3,38 @@ namespace egret3d {
      * @internal
      */
     export class CameraAndLightSystem extends paper.BaseSystem<paper.GameObject> {
-        public readonly interests = [
-            [
-                { componentClass: Camera }
-            ],
-            [
-                { componentClass: [DirectionalLight, SpotLight, PointLight, HemisphereLight] }
-            ]
-        ];
 
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
-        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(CameraAndLightCollecter)!;
 
-        public onAddGameObject(_gameObject: paper.GameObject, group: paper.Group<paper.GameObject>) {
+        protected getMatchers() {
+            return [
+                paper.Matcher.create<paper.GameObject>(Transform, Camera),
+                paper.Matcher.create<paper.GameObject>(Transform).anyOf(DirectionalLight, SpotLight, PointLight, HemisphereLight),
+            ];
+        }
+
+        public onEntityAdded(_entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const groups = this.groups;
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
+
             if (group === groups[0]) {
-                cameraAndLightCollecter.updateCameras(groups[0].gameObjects);
+                cameraAndLightCollecter.updateCameras(groups[0].entities);
             }
             else if (group === groups[1]) {
-                cameraAndLightCollecter.updateLights(groups[1].gameObjects);
+                cameraAndLightCollecter.updateLights(groups[1].entities);
             }
         }
 
-        public onRemoveGameObject(_gameObject: paper.GameObject, group: paper.Group<paper.GameObject>) {
+        public onEntityRemoved(_entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const groups = this.groups;
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
+
             if (group === groups[0]) {
-                cameraAndLightCollecter.updateCameras(groups[0].gameObjects);
+                cameraAndLightCollecter.updateCameras(groups[0].entities);
             }
             else if (group === groups[1]) {
-                cameraAndLightCollecter.updateLights(groups[1].gameObjects);
+                cameraAndLightCollecter.updateLights(groups[1].entities);
             }
         }
 

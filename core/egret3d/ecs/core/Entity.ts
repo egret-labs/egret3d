@@ -19,6 +19,10 @@ namespace paper {
          * 当实体被销毁时派发事件。
          */
         public static readonly onEntityDestroyed: signals.Signal<IEntity> = new signals.Signal();
+        /**
+         * 
+         */
+        public static createDefaultEnabled: boolean = true;
 
         @serializedField
         @editor.property(editor.EditType.TEXT)
@@ -33,7 +37,7 @@ namespace paper {
         public hideFlags: HideFlags = HideFlags.None;
 
         @serializedField
-        public extras?: EntityExtras = ECS.getInstance().playerMode === PlayerMode.Editor ? {} : undefined;
+        public extras?: EntityExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         protected _componentsDirty: boolean = false;
         protected _isDestroyed: boolean = true;
@@ -66,15 +70,17 @@ namespace paper {
         protected _addComponent(component: IComponent, config?: any) {
             component.initialize(config);
 
+            Component.onComponentCreated.dispatch([this, component]);
+
             if (this._enabled && component.enabled) {
                 component.dispatchEnabledEvent(true);
             }
         }
 
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void {
-            // disposeCollecter.components.push(component); TODO
-
             component.enabled = false;
+            //
+            Component.onComponentDestroy.dispatch([this, component]);
             component._destroy();
 
             if (groupComponent) {
@@ -97,6 +103,7 @@ namespace paper {
                 delete this._components[(component.constructor as IComponentClass<IComponent>).componentIndex];
             }
 
+            Component.onComponentDestroyed.dispatch([this, component]);
             this._componentsDirty = true;
         }
 
@@ -174,7 +181,7 @@ namespace paper {
                 return false;
             }
 
-            if (this === SceneManager.getInstance()._globalEntity) {
+            if (this === Application.sceneManager._globalEntity) {
                 if (DEBUG) {
                     console.warn("Cannot destroy global entity.");
                 }
@@ -201,7 +208,7 @@ namespace paper {
             registerClass(componentClass);
 
             // Singleton component.
-            const globalEntity = SceneManager.getInstance()._globalEntity;
+            const globalEntity = Application.sceneManager._globalEntity;
 
             if (componentClass.isSingleton && globalEntity && this !== globalEntity) {
                 return globalEntity.getComponent(componentClass) || globalEntity.addComponent(componentClass, config);
@@ -260,7 +267,7 @@ namespace paper {
             }
 
             let result = false;
-            const globalEntity = SceneManager.getInstance()._globalEntity;
+            const globalEntity = Application.sceneManager._globalEntity;
 
             if (componentInstanceOrClass instanceof BaseComponent) { // Remove component by instance.
                 const componentClass = componentInstanceOrClass.constructor as IComponentClass<T>;
@@ -333,7 +340,7 @@ namespace paper {
             let result = false;
 
             if (componentClass) {
-                const globalEntity = SceneManager.getInstance()._globalEntity;
+                const globalEntity = Application.sceneManager._globalEntity;
 
                 if (componentClass.isSingleton && globalEntity && this !== globalEntity) { // Singleton component.
                     return globalEntity.removeAllComponents(componentClass, isExtends);
@@ -385,8 +392,8 @@ namespace paper {
         }
 
         public getComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
-            if (componentClass.isSingleton && this !== SceneManager.getInstance()._globalEntity) { // SingletonComponent.
-                return SceneManager.getInstance()._globalEntity!.getComponent(componentClass, isExtends);
+            if (componentClass.isSingleton && this !== Application.sceneManager._globalEntity) { // SingletonComponent.
+                return Application.sceneManager._globalEntity!.getComponent(componentClass, isExtends);
             }
 
             if (isExtends) {
@@ -423,8 +430,8 @@ namespace paper {
         }
 
         public getComponents<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T[] {
-            if (componentClass.isSingleton && this !== SceneManager.getInstance()._globalEntity) { // SingletonComponent.
-                return SceneManager.getInstance()._globalEntity!.getComponents(componentClass, isExtends);
+            if (componentClass.isSingleton && this !== Application.sceneManager._globalEntity) { // SingletonComponent.
+                return Application.sceneManager._globalEntity!.getComponents(componentClass, isExtends);
             }
 
             const components: T[] = [];
@@ -498,10 +505,10 @@ namespace paper {
         }
 
         public get dontDestroy(): boolean {
-            return this._scene === SceneManager.getInstance().globalScene;
+            return this._scene === Application.sceneManager.globalScene;
         }
         public set dontDestroy(value: boolean) {
-            const sceneManager = SceneManager.getInstance();
+            const sceneManager = Application.sceneManager;
 
             if (this.dontDestroy === value || this._isDestroyed || this === sceneManager.globalEntity) {
                 return;
@@ -515,7 +522,7 @@ namespace paper {
             return this._enabled;
         }
         public set enabled(value: boolean) {
-            if (this._enabled === value || this._isDestroyed || this === SceneManager.getInstance().globalEntity) {
+            if (this._enabled === value || this._isDestroyed || this === Application.sceneManager.globalEntity) {
                 return;
             }
 
@@ -574,7 +581,7 @@ namespace paper {
             return this._scene!;
         }
         public set scene(value: Scene) {
-            if (this._scene === value || this._isDestroyed || this === SceneManager.getInstance().globalEntity) {
+            if (this._scene === value || this._isDestroyed || this === Application.sceneManager.globalEntity) {
                 return;
             }
 

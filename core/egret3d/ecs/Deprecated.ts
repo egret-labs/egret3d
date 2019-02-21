@@ -105,7 +105,7 @@ namespace paper {
      * @deprecated 
      */
     export type InterestConfig = {
-        componentClass: IComponentClass<Component>[] | IComponentClass<BaseComponent>;
+        componentClass: IComponentClass<BaseComponent>[] | IComponentClass<BaseComponent>;
         type?: InterestType;
         listeners?: {
             type: signals.Signal;

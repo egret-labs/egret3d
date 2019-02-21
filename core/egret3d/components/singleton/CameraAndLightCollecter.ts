@@ -81,7 +81,7 @@ namespace egret3d {
             (cameraAndLightCollecter as CameraAndLightCollecter) = this;
 
             { //
-                const gameObject = paper.GameObject.create("Postprocessing Camera", paper.DefaultTags.Global, paper.Scene.globalScene);
+                const gameObject = paper.GameObject.create("Postprocessing Camera", paper.DefaultTags.Global, paper.Application.sceneManager.globalScene);
                 //
                 const camera = gameObject.getOrAddComponent(Camera);
                 camera.enabled = false;
@@ -95,7 +95,7 @@ namespace egret3d {
             }
 
             { //
-                const gameObject = paper.GameObject.create("Shadow Camera", paper.DefaultTags.Global, paper.Scene.globalScene);
+                const gameObject = paper.GameObject.create("Shadow Camera", paper.DefaultTags.Global, paper.Application.sceneManager.globalScene);
                 //
                 const camera = gameObject.getOrAddComponent(Camera);
                 camera.enabled = false;
@@ -106,24 +106,24 @@ namespace egret3d {
         /**
          * 更新相机。
          */
-        public updateCameras(gameObjects: ReadonlyArray<paper.GameObject>) {
+        public updateCameras(entities: ReadonlyArray<paper.IEntity>) {
             this.cameras.length = 0;
 
-            for (const gameObject of gameObjects) {
-                this.cameras.push(gameObject.getComponent(Camera)!);
+            for (const entity of entities) {
+                this.cameras.push(entity.getComponent(Camera)!);
             }
         }
         /**
          * 更新灯光。
          */
-        public updateLights(gameObjects: ReadonlyArray<paper.GameObject>) {
+        public updateLights(entities: ReadonlyArray<paper.IEntity>) {
             let directLightCount = 0, spotLightCount = 0, rectangleAreaLightCount = 0, pointLightCount = 0, hemisphereLightCount = 0;
             // const lights = [];
             const { lights, directionalLights, spotLights, rectangleAreaLights, pointLights, hemisphereLights } = this;
             lights.length = 0;
 
-            for (const gameObject of gameObjects) {
-                const light = gameObject.getComponent(BaseLight as any, true) as BaseLight;
+            for (const entity of entities) {
+                const light = entity.getComponent(BaseLight as any, true) as BaseLight;
                 lights.push(light);
 
                 switch (light.constructor) {

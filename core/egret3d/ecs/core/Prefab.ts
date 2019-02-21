@@ -118,7 +118,7 @@ namespace paper {
                 return null;
             }
 
-            const isEditor = ECS.getInstance().playerMode === PlayerMode.Editor;
+            const isEditor = Application.playerMode === PlayerMode.Editor;
             const deserializer = new Deserializer();
             const gameObject = deserializer.deserialize(this.config, keepUUID, isEditor, scene) as GameObject | null;
 

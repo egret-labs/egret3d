@@ -83,15 +83,15 @@ namespace egret3d {
 
         protected getMatchers() {
             return [
-                paper.Matcher.create(Egret2DRenderer),
+                paper.Matcher.create<paper.GameObject>(Egret2DRenderer),
             ];
         }
 
-        public onAwake(config: RunEgretOptions) {
+        public onAwake(config: RunOptions) {
             Egret2DRendererSystem.canvas = config.canvas!;
             Egret2DRendererSystem.webgl = config.webgl!;
             const webgl = Egret2DRendererSystem.webgl;
-            
+
             if (!webgl) {
                 return;
             }

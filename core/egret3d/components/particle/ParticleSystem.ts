@@ -29,7 +29,7 @@ namespace egret3d.particle {
                 ]
             }
         ];
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
         /**
         * Buffer改变的时候，有可能是初始化，也有可能是mesh改变，此时全部刷一下
         */
@@ -493,9 +493,9 @@ namespace egret3d.particle {
             // if (deltaTime > 0.3) {
             //     deltaTime = 0.3;//防止dt过大，引起周期错乱
             // }
-            const dt = 0.016 * this.clock.timeScale;
-            for (const gameObject of this.groups[0].gameObjects) {
-                (gameObject.getComponent(ParticleComponent) as ParticleComponent).update(dt);
+            const dt = 0.016 * paper.clock.timeScale;
+            for (const entity of this.groups[0].entities) {
+                (entity.getComponent(ParticleComponent) as ParticleComponent).update(dt);
             }
         }
 

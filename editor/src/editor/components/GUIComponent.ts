@@ -11,11 +11,11 @@ namespace paper.editor {
         /**
          * @internal
          */
-        public readonly _hierarchyFolders: { [key: string]: dat.GUI } = {};
+        public readonly hierarchyItems: { [key: string]: dat.GUI } = {};
         /**
          * @internal
          */
-        public readonly _inspectorFolders: { [key: string]: dat.GUI } = {};
+        public readonly inspectorItems: { [key: string]: dat.GUI } = {};
 
         public initialize() {
             super.initialize();
@@ -30,14 +30,14 @@ namespace paper.editor {
                 return;
             }
 
-            for (const k in this._inspectorFolders) {
-                this._inspectorFolders[k].close();
+            for (const k in this.inspectorItems) {
+                this.inspectorItems[k].close();
             }
 
             for (const componentClass of args) {
                 const component = selectedGameObject.getComponent(componentClass);
-                if (component && component.uuid in this._inspectorFolders) {
-                    this._inspectorFolders[component.uuid].open();
+                if (component && component.uuid in this.inspectorItems) {
+                    this.inspectorItems[component.uuid].open();
                 }
             }
         }

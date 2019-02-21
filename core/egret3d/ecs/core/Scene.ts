@@ -4,15 +4,15 @@ namespace paper {
      */
     export class Scene extends BaseObject implements IScene {
         /**
-         * 
+         * 当场景被创建时派发事件。
          */
         public static readonly onSceneCreated: signals.Signal<[Scene, boolean]> = new signals.Signal();
         /**
-         * 
+         * 当场景将要被销毁时派发事件。
          */
         public static readonly onSceneDestroy: signals.Signal<Scene> = new signals.Signal();
         /**
-         * 
+         * 当场景被销毁时派发事件。
          */
         public static readonly onSceneDestroyed: signals.Signal<Scene> = new signals.Signal();
         /**
@@ -36,7 +36,7 @@ namespace paper {
 
             if (rawScene && rawScene instanceof RawScene) {
                 if (rawScene) {
-                    const existedScene = SceneManager.getInstance().getScene(rawScene.sceneName);
+                    const existedScene = Application.sceneManager.getScene(rawScene.sceneName);
                     if (existedScene) {
                         console.warn("The scene with the same name already exists.");
                         return existedScene;
@@ -47,7 +47,7 @@ namespace paper {
 
                 if (scene) {
                     //#ifdef EGRET_3D
-                    if (combineStaticObjects && ECS.getInstance().playerMode !== PlayerMode.Editor) {
+                    if (combineStaticObjects && Application.playerMode !== PlayerMode.Editor) {
                         egret3d.combine(scene.gameObjects); // TODO
                     }
                     //#endif
@@ -66,22 +66,22 @@ namespace paper {
          * - 全局场景无法被销毁。
          */
         public static get globalScene(): Scene {
-            return SceneManager.getInstance().globalScene;
+            return Application.sceneManager.globalScene;
         }
         /**
          * 全局静态编辑器的场景。
          */
         public static get editorScene(): Scene {
-            return SceneManager.getInstance().editorScene;
+            return Application.sceneManager.editorScene;
         }
         /**
          * 当前激活的场景。
          */
         public static get activeScene(): Scene {
-            return SceneManager.getInstance().activeScene;
+            return Application.sceneManager.activeScene;
         }
         public static set activeScene(value: Scene) {
-            SceneManager.getInstance().activeScene = value;
+            Application.sceneManager.activeScene = value;
         }
         /**
          * 该场景的名称。
@@ -92,7 +92,7 @@ namespace paper {
          * 额外数据，仅保存在编辑器环境，项目发布时该数据将被移除。
          */
         @serializedField
-        public extras?: any = ECS.getInstance().playerMode === PlayerMode.Editor ? {} : undefined;
+        public extras?: any = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         private _isDestroyed: boolean = true;
         private _entitiesDirty: boolean = false;
@@ -133,7 +133,7 @@ namespace paper {
         }
 
         public destroy(): boolean {
-            const sceneManager = SceneManager.getInstance();
+            const sceneManager = Application.sceneManager;
 
             if (this._isDestroyed) {
                 console.warn("The scene has been destroyed.");
@@ -203,7 +203,7 @@ namespace paper {
 
             if (index >= 0) {
                 entities.splice(index, 1);
-                entity.scene = SceneManager.getInstance().globalScene; //
+                entity.scene = Application.sceneManager.globalScene; //
                 this._entitiesDirty = true;
 
                 return true;

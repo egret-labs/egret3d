@@ -4,7 +4,8 @@ namespace egret3d {
      * - 为网格渲染组件生成绘制信息。
      */
     export class MeshRendererSystem extends paper.BaseSystem<paper.GameObject> {
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.SceneManager.getInstance().globalEntity.getComponent(DrawCallCollecter)!;
+
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
         private readonly _materialFilter: boolean[] = [];
 
         private _updateDrawCalls(entity: paper.GameObject, checkState: boolean) {
@@ -84,7 +85,7 @@ namespace egret3d {
 
         protected getMatchers() {
             return [
-                paper.Matcher.create(Transform, MeshFilter, MeshRenderer),
+                paper.Matcher.create<paper.GameObject>(Transform, MeshFilter, MeshRenderer),
             ];
         }
 
