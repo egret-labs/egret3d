@@ -2780,6 +2780,7 @@ var paper;
                     this._removeComponent(component, null);
                 }
             }
+            this._scene._removeEntity(this);
             this._isDestroyed = true;
             this._components.length = 0;
             this._scene = null;
@@ -2817,18 +2818,16 @@ var paper;
             paper.Component.onComponentDestroyed.dispatch([this, component]);
             this._componentsDirty = true;
         };
-        Entity.prototype._setScene = function (value) {
-            var hasScene = false;
-            if (this._scene) {
-                hasScene = true;
-                this._scene.removeEntity(this);
-            }
-            this._scene = value;
+        Entity.prototype._setScene = function (value, dispatchEvent) {
             if (value) {
-                value.addEntity(this);
+                if (this._scene) {
+                    this._scene._removeEntity(this);
+                }
+                value._addEntity(this);
+                this._scene = value;
             }
-            if (hasScene) {
-                Entity.onEntitySceneChanged.dispatch(this);
+            if (dispatchEvent) {
+                Entity.onEntityAddedToScene.dispatch(this);
             }
         };
         Entity.prototype._getComponent = function (componentClass) {
@@ -3150,7 +3149,7 @@ var paper;
             },
             set: function (value) {
                 var sceneManager = paper.Application.sceneManager;
-                if (this.dontDestroy === value || this._isDestroyed || this === sceneManager.globalEntity) {
+                if (this.dontDestroy === value || this._isDestroyed || this === sceneManager._globalEntity) {
                     return;
                 }
                 this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
@@ -3163,7 +3162,7 @@ var paper;
                 return this._enabled;
             },
             set: function (value) {
-                if (this._enabled === value || this._isDestroyed || this === paper.Application.sceneManager.globalEntity) {
+                if (this._enabled === value || this._isDestroyed || this === paper.Application.sceneManager._globalEntity) {
                     return;
                 }
                 for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
@@ -3222,22 +3221,18 @@ var paper;
                 return this._scene;
             },
             set: function (value) {
-                if (this._scene === value || this._isDestroyed || this === paper.Application.sceneManager.globalEntity) {
+                if (this._scene === value || this._isDestroyed || this === paper.Application.sceneManager._globalEntity) {
                     return;
                 }
-                this._setScene(value);
+                this._setScene(value, true);
             },
             enumerable: true,
             configurable: true
         });
         /**
-         * 当实体被创建时派发事件。
+         * 当实体添加到场景时派发事件。
          */
-        Entity.onEntityCreated = new signals.Signal();
-        /**
-         * 当实体的场景改变时派发事件。
-         */
-        Entity.onEntitySceneChanged = new signals.Signal();
+        Entity.onEntityAddedToScene = new signals.Signal();
         /**
          * 当实体将要被销毁时派发事件。
          */
@@ -5989,6 +5984,7 @@ var paper;
     var Group = (function () {
         function Group(matcher) {
             this.isBehaviour = false;
+            this.createdEnabled = false;
             this._entities = [];
             this._behaviours = [];
             if (matcher.extraOfComponents.length === 1 && matcher.extraOfComponents[0] === paper.Behaviour) {
@@ -6131,8 +6127,10 @@ var paper;
             this._componentsGroups = [];
             this._groups = {};
             this._entityClass = entityClass;
+            paper.Component.onComponentCreated.add(this._onComponentCreated, this);
             paper.Component.onComponentEnabled.add(this._onComponentEnabled, this);
             paper.Component.onComponentDisabled.add(this._onComponentDisabled, this);
+            paper.Component.onComponentDestroyed.add(this._onComponentDestroyed, this);
         }
         /**
          *
@@ -6140,7 +6138,7 @@ var paper;
         Context.create = function (entityClass) {
             return new Context(entityClass);
         };
-        Context.prototype._onComponentEnabled = function (_a) {
+        Context.prototype._onComponentCreated = function (_a) {
             var entity = _a[0], component = _a[1];
             if (entity.constructor !== this._entityClass) {
                 return;
@@ -6151,14 +6149,44 @@ var paper;
             if (groups) {
                 for (var _i = 0, groups_1 = groups; _i < groups_1.length; _i++) {
                     var group = groups_1[_i];
-                    group.handleEvent(entity, component, true);
+                    if (group.createdEnabled) {
+                        group.handleEvent(entity, component, true);
+                    }
                 }
             }
             if (componentClass.isBehaviour) {
                 var groups_2 = this._componentsGroups[paper.Behaviour.componentIndex];
                 for (var _b = 0, groups_3 = groups_2; _b < groups_3.length; _b++) {
                     var group = groups_3[_b];
-                    group.handleEvent(entity, component, true);
+                    if (group.createdEnabled) {
+                        group.handleEvent(entity, component, true);
+                    }
+                }
+            }
+        };
+        Context.prototype._onComponentEnabled = function (_a) {
+            var entity = _a[0], component = _a[1];
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+            var componentClass = component.constructor;
+            var componentIndex = componentClass.componentIndex;
+            var groups = this._componentsGroups[componentIndex];
+            if (groups) {
+                for (var _i = 0, groups_4 = groups; _i < groups_4.length; _i++) {
+                    var group = groups_4[_i];
+                    if (!group.createdEnabled) {
+                        group.handleEvent(entity, component, true);
+                    }
+                }
+            }
+            if (componentClass.isBehaviour) {
+                var groups_5 = this._componentsGroups[paper.Behaviour.componentIndex];
+                for (var _b = 0, groups_6 = groups_5; _b < groups_6.length; _b++) {
+                    var group = groups_6[_b];
+                    if (!group.createdEnabled) {
+                        group.handleEvent(entity, component, true);
+                    }
                 }
             }
         };
@@ -6171,16 +6199,46 @@ var paper;
             var componentIndex = componentClass.componentIndex;
             var groups = this._componentsGroups[componentIndex];
             if (groups) {
-                for (var _i = 0, groups_4 = groups; _i < groups_4.length; _i++) {
-                    var group = groups_4[_i];
-                    group.handleEvent(entity, component, false);
+                for (var _i = 0, groups_7 = groups; _i < groups_7.length; _i++) {
+                    var group = groups_7[_i];
+                    if (!group.createdEnabled) {
+                        group.handleEvent(entity, component, false);
+                    }
                 }
             }
             if (componentClass.isBehaviour) {
-                var groups_5 = this._componentsGroups[paper.Behaviour.componentIndex];
-                for (var _b = 0, groups_6 = groups_5; _b < groups_6.length; _b++) {
-                    var group = groups_6[_b];
-                    group.handleEvent(entity, component, false);
+                var groups_8 = this._componentsGroups[paper.Behaviour.componentIndex];
+                for (var _b = 0, groups_9 = groups_8; _b < groups_9.length; _b++) {
+                    var group = groups_9[_b];
+                    if (!group.createdEnabled) {
+                        group.handleEvent(entity, component, false);
+                    }
+                }
+            }
+        };
+        Context.prototype._onComponentDestroyed = function (_a) {
+            var entity = _a[0], component = _a[1];
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+            var componentClass = component.constructor;
+            var componentIndex = componentClass.componentIndex;
+            var groups = this._componentsGroups[componentIndex];
+            if (groups) {
+                for (var _i = 0, groups_10 = groups; _i < groups_10.length; _i++) {
+                    var group = groups_10[_i];
+                    if (group.createdEnabled) {
+                        group.handleEvent(entity, component, false);
+                    }
+                }
+            }
+            if (componentClass.isBehaviour) {
+                var groups_11 = this._componentsGroups[paper.Behaviour.componentIndex];
+                for (var _b = 0, groups_12 = groups_11; _b < groups_12.length; _b++) {
+                    var group = groups_12[_b];
+                    if (group.createdEnabled) {
+                        group.handleEvent(entity, component, false);
+                    }
                 }
             }
         };
@@ -6837,7 +6895,6 @@ var paper;
          */
         BaseTransform.prototype._addChild = function (child) {
             var children = this._children;
-            child._parent = this;
             if (children.indexOf(child) < 0) {
                 children.push(child);
                 return true;
@@ -6850,7 +6907,6 @@ var paper;
         BaseTransform.prototype._removeChild = function (child) {
             var children = this._children;
             var index = children.indexOf(child);
-            child._parent = null;
             if (index >= 0) {
                 children.splice(index, 1);
                 return true;
@@ -6887,7 +6943,7 @@ var paper;
                 console.error("Cannot change the parent to a different scene.");
                 return this;
             }
-            if (this.entity === paper.Application.sceneManager.globalEntity) {
+            if (this.entity === paper.Application.sceneManager._globalEntity) {
                 return this;
             }
             var prevParent = this._parent;
@@ -6903,6 +6959,7 @@ var paper;
                 parent._addChild(this);
             }
             this._globalEnabledDirty = true;
+            this._parent = parent;
             var currentEnabled = this.isActiveAndEnabled;
             if (prevEnabled !== currentEnabled) {
                 this.dispatchEnabledEvent(currentEnabled);
@@ -8826,8 +8883,7 @@ var paper;
             gameObect._enabled = paper.Entity.createDefaultEnabled;
             gameObect.name = name;
             gameObect.tag = tag;
-            gameObect._setScene(scene || paper.Application.sceneManager.activeScene);
-            paper.Entity.onEntityCreated.dispatch(gameObect);
+            gameObect._setScene(scene || paper.Application.sceneManager.activeScene, true);
             gameObect.addComponent(egret3d.Transform); //
             return gameObect;
         };
@@ -8841,15 +8897,24 @@ var paper;
             this._removeComponent(this.transform, null); // Remove transform at last.
             _super.prototype._destroy.call(this);
         };
-        GameObject.prototype._setScene = function (value) {
+        GameObject.prototype._setScene = function (value, dispatchEvent) {
             if (this.transform && this.transform.parent && this.transform.parent.gameObject.scene !== value) {
                 this.transform.parent = null;
             }
-            _super.prototype._setScene.call(this, value);
+            _super.prototype._setScene.call(this, value, false);
             if (this.transform) {
                 for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
                     var child = _a[_i];
-                    child.entity.scene = value;
+                    child.entity._setScene(value, false);
+                }
+            }
+            if (dispatchEvent) {
+                _super.prototype._setScene.call(this, null, true);
+                if (this.transform) {
+                    for (var _b = 0, _c = this.transform.children; _b < _c.length; _b++) {
+                        var child = _c[_b];
+                        child.entity._setScene(null, true);
+                    }
                 }
             }
         };
@@ -15617,6 +15682,31 @@ var paper;
             enumerable: true,
             configurable: true
         });
+        /**
+         * @internal
+         */
+        Scene.prototype._addEntity = function (entity) {
+            var entities = this._entities;
+            if (entities.indexOf(entity) < 0) {
+                entities.push(entity);
+                this._entitiesDirty = true;
+                return true;
+            }
+            return false;
+        };
+        /**
+         * @internal
+         */
+        Scene.prototype._removeEntity = function (entity) {
+            var entities = this._entities;
+            var index = entities.indexOf(entity);
+            if (index >= 0) {
+                entities.splice(index, 1);
+                this._entitiesDirty = true;
+                return true;
+            }
+            return false;
+        };
         Scene.prototype.initialize = function () {
         };
         Scene.prototype.uninitialize = function () {
@@ -15665,39 +15755,6 @@ var paper;
             entities.length = 0;
             Scene.onSceneDestroyed.dispatch(this);
             return true;
-        };
-        Scene.prototype.addEntity = function (entity) {
-            if (this._isDestroyed) {
-                if (true) {
-                    console.warn("The scene has been destroyed.");
-                }
-                return false;
-            }
-            var entities = this._entities;
-            if (entities.indexOf(entity) < 0) {
-                entities.push(entity);
-                entity.scene = this;
-                this._entitiesDirty = true;
-                return true;
-            }
-            return false;
-        };
-        Scene.prototype.removeEntity = function (entity) {
-            if (this._isDestroyed) {
-                if (true) {
-                    console.warn("The scene has been destroyed.");
-                }
-                return false;
-            }
-            var entities = this._entities;
-            var index = entities.indexOf(entity);
-            if (index >= 0) {
-                entities.splice(index, 1);
-                entity.scene = paper.Application.sceneManager.globalScene; //
-                this._entitiesDirty = true;
-                return true;
-            }
-            return false;
         };
         Scene.prototype.containsEntity = function (entity) {
             return this._entities.indexOf(entity) >= 0;
@@ -15765,6 +15822,7 @@ var paper;
             get: function () {
                 var rootEntities = this._rootEntities;
                 if (this._entitiesDirty) {
+                    rootEntities.length = 0;
                     for (var _i = 0, _a = this._entities; _i < _a.length; _i++) {
                         var entity = _a[_i];
                         if (entity instanceof paper.GameObject && !entity.transform.parent) {

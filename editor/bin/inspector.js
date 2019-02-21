@@ -3621,7 +3621,7 @@ var paper;
                     }
                     else {
                         var gameObject = cameras[i].gameObject;
-                        if (gameObject.scene !== editorScene) {
+                        if (gameObject && !gameObject.isDestroyed && gameObject.scene !== editorScene) {
                             drawer.activeSelf = true;
                             var eyeDistance = cameraPosition.getDistance(gameObject.transform.position);
                             drawer.transform.localPosition = gameObject.transform.position;
@@ -3646,7 +3646,7 @@ var paper;
                     }
                     else {
                         var gameObject = lights[i].gameObject;
-                        if (gameObject.scene !== editorScene) {
+                        if (gameObject && !gameObject.isDestroyed && gameObject.scene !== editorScene) {
                             drawer.activeSelf = true;
                             var eyeDistance = cameraPosition.getDistance(gameObject.transform.position);
                             drawer.transform.localPosition = gameObject.transform.position;
@@ -5331,7 +5331,7 @@ var paper;
                     _this._transformController.gameObject.activeSelf =
                         selectedGameObject ? true : false;
                     _this._cameraViewFrustum.activeSelf =
-                        selectedGameObject && selectedGameObject !== paper.GameObject.globalGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
+                        selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
                 };
                 _this._onGameObjectSelected = function (_c, value) {
                 };
@@ -8463,7 +8463,6 @@ var paper;
     var editor;
     (function (editor) {
         /**
-         * TODO GUI NEW SAVE LOAD
          * @internal
          */
         var GUISystem = (function (_super) {
@@ -8516,7 +8515,7 @@ var paper;
             GUISystem.prototype._onSceneDestroy = function (scene) {
                 this._removeSceneOrEntity(scene);
             };
-            GUISystem.prototype._onEntityCreated = function (entity) {
+            GUISystem.prototype._onEntityAddedToScene = function (entity) {
                 this._sceneOrEntityBuffer.push(entity);
             };
             GUISystem.prototype._onEntityDestroy = function (entity) {
@@ -9067,7 +9066,7 @@ var paper;
             GUISystem.prototype.onEnable = function () {
                 paper.Scene.onSceneCreated.add(this._onSceneCreated, this);
                 paper.Scene.onSceneDestroy.add(this._onSceneDestroy, this);
-                paper.Entity.onEntityCreated.add(this._onEntityCreated, this);
+                paper.Entity.onEntityAddedToScene.add(this._onEntityAddedToScene, this);
                 paper.Entity.onEntityDestroy.add(this._onEntityDestroy, this);
                 paper.Component.onComponentCreated.add(this._onComponentCreated, this);
                 paper.Component.onComponentDestroy.add(this._onComponentDestroy, this);
@@ -9085,7 +9084,7 @@ var paper;
             GUISystem.prototype.onDisable = function () {
                 paper.Scene.onSceneCreated.remove(this._onSceneCreated);
                 paper.Scene.onSceneDestroy.remove(this._onSceneDestroy);
-                paper.Entity.onEntityCreated.remove(this._onEntityCreated);
+                paper.Entity.onEntityAddedToScene.remove(this._onEntityAddedToScene);
                 paper.Entity.onEntityDestroy.remove(this._onEntityDestroy);
                 paper.Component.onComponentCreated.remove(this._onComponentCreated);
                 paper.Component.onComponentDestroy.remove(this._onComponentDestroy);

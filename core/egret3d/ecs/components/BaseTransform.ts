@@ -41,7 +41,6 @@ namespace paper {
          */
         public _addChild(child: this) {
             const children = this._children;
-            child._parent = this;
 
             if (children.indexOf(child) < 0) {
                 children.push(child);
@@ -57,7 +56,6 @@ namespace paper {
         public _removeChild(child: this) {
             const children = this._children;
             const index = children.indexOf(child);
-            child._parent = null;
 
             if (index >= 0) {
                 children.splice(index, 1);
@@ -99,7 +97,7 @@ namespace paper {
                 return this;
             }
 
-            if (this.entity === Application.sceneManager.globalEntity) {
+            if (this.entity === Application.sceneManager._globalEntity) {
                 return this;
             }
 
@@ -122,6 +120,8 @@ namespace paper {
             }
 
             this._globalEnabledDirty = true;
+            this._parent = parent;
+
             const currentEnabled = this.isActiveAndEnabled;
 
             if (prevEnabled !== currentEnabled) {

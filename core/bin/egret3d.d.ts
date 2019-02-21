@@ -657,14 +657,6 @@ declare namespace paper {
          */
         destroy(): boolean;
         /**
-         * 添加指定实体到该场景。
-         */
-        addEntity(entity: IEntity): boolean;
-        /**
-         * 从该场景移除指定实体。
-         */
-        removeEntity(entity: IEntity): boolean;
-        /**
          * 该场景是否包含指定实体。
          */
         containsEntity(entity: IEntity): boolean;
@@ -3368,13 +3360,9 @@ declare namespace paper {
      */
     abstract class Entity extends BaseObject implements IEntity {
         /**
-         * 当实体被创建时派发事件。
+         * 当实体添加到场景时派发事件。
          */
-        static readonly onEntityCreated: signals.Signal<IEntity>;
-        /**
-         * 当实体的场景改变时派发事件。
-         */
-        static readonly onEntitySceneChanged: signals.Signal<IEntity>;
+        static readonly onEntityAddedToScene: signals.Signal<IEntity>;
         /**
          * 当实体将要被销毁时派发事件。
          */
@@ -3405,7 +3393,7 @@ declare namespace paper {
         protected _destroy(): void;
         protected _addComponent(component: IComponent, config?: any): void;
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
-        protected _setScene(value: Scene): void;
+        protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
         private _getComponent(componentClass);
         private _isRequireComponent(componentClass);
         initialize(): void;
@@ -4256,6 +4244,7 @@ declare namespace paper {
          */
         static readonly onComponentDisabled: signals.Signal<[Group<IEntity>, IComponent]>;
         readonly isBehaviour: boolean;
+        createdEnabled: boolean;
         private readonly _matcher;
         private readonly _entities;
         private readonly _behaviours;
@@ -4291,8 +4280,10 @@ declare namespace paper {
         private readonly _componentsGroups;
         private readonly _groups;
         private constructor();
+        private _onComponentCreated([entity, component]);
         private _onComponentEnabled([entity, component]);
         private _onComponentDisabled([entity, component]);
+        private _onComponentDestroyed([entity, component]);
         containsEntity(entity: TEntity): boolean;
         getGroup(matcher: ICompoundMatcher<TEntity>): Group<TEntity>;
         readonly entityCount: uint;
@@ -4756,29 +4747,25 @@ declare namespace paper {
         /**
          * 实体被添加到系统时调用。
          * @param entity 收集的实体。
-         * @param collector 收集实体的实体组。
-         * @see paper.GameObject#addComponent()
+         * @param group 收集实体的实体组。
          */
         onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
         /**
          * 充分非必要组件添加到实体时调用。
          * @param component 收集的实体组件。
          * @param collector 收集实体组件的实体组。
-         * @see paper.GameObject#addComponent()
          */
-        onComponentAdded?(component: IComponent, group: Collector<TEntity>): void;
+        onComponentAdded?(component: IComponent, collector: Collector<TEntity>): void;
         /**
          * 充分非必要组件从实体移除时调用。
          * @param component 移除的实体组件。
          * @param collector 移除实体组件的实体组。
-         * @see paper.GameObject#removeComponent()
          */
         onComponentRemoved?(component: IComponent, collector: Collector<TEntity>): void;
         /**
          * 实体从系统移除时调用。
          * @param entity 移除的实体。
-         * @param collector 移除实体的实体组。
-         * @see paper.GameObject#removeComponent()
+         * @param group 移除实体的实体组。
          */
         onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
         /**
@@ -5178,7 +5165,7 @@ declare namespace paper {
          */
         readonly renderer: BaseRenderer | null;
         protected _destroy(): void;
-        protected _setScene(value: Scene): void;
+        protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
         protected _addComponent(component: IComponent, config?: any): void;
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
         uninitialize(): void;
@@ -7590,8 +7577,6 @@ declare namespace paper {
         initialize(): void;
         uninitialize(): void;
         destroy(): boolean;
-        addEntity(entity: IEntity): boolean;
-        removeEntity(entity: IEntity): boolean;
         containsEntity(entity: IEntity): boolean;
         find<TEntity extends IEntity>(name: string): TEntity | null;
         /**

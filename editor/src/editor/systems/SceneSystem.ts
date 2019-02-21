@@ -38,7 +38,7 @@ namespace paper.editor {
                 selectedGameObject ? true : false;
 
             this._cameraViewFrustum!.activeSelf =
-                selectedGameObject && selectedGameObject !== GameObject.globalGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
+                selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
         }
 
         private _onGameObjectSelected = (_c: any, value: GameObject) => {

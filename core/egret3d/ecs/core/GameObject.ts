@@ -13,9 +13,7 @@ namespace paper {
             gameObect._enabled = Entity.createDefaultEnabled;
             gameObect.name = name;
             gameObect.tag = tag;
-            gameObect._setScene(scene || Application.sceneManager.activeScene);
-            Entity.onEntityCreated.dispatch(gameObect);
-
+            gameObect._setScene(scene || Application.sceneManager.activeScene, true);
             gameObect.addComponent(egret3d.Transform); //
 
             return gameObect;
@@ -58,16 +56,26 @@ namespace paper {
             super._destroy();
         }
 
-        protected _setScene(value: Scene) {
-            if (this.transform && this.transform.parent && this.transform.parent.gameObject.scene !== value) {
+        protected _setScene(value: Scene | null, dispatchEvent: boolean) {
+            if (this.transform && this.transform.parent && this.transform.parent.gameObject.scene !== value) { // TODO
                 this.transform.parent = null;
             }
 
-            super._setScene(value);
+            super._setScene(value, false);
 
             if (this.transform) {
                 for (const child of this.transform.children) {
-                    child.entity.scene = value;
+                    (child.entity as GameObject)._setScene(value, false);
+                }
+            }
+
+            if (dispatchEvent) {
+                super._setScene(null, true);
+
+                if (this.transform) {
+                    for (const child of this.transform.children) {
+                        (child.entity as GameObject)._setScene(null, true);
+                    }
                 }
             }
         }

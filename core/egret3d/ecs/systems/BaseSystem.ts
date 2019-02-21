@@ -117,29 +117,25 @@ namespace paper {
         /**
          * 实体被添加到系统时调用。
          * @param entity 收集的实体。
-         * @param collector 收集实体的实体组。
-         * @see paper.GameObject#addComponent()
+         * @param group 收集实体的实体组。
          */
         public onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
         /**
          * 充分非必要组件添加到实体时调用。
          * @param component 收集的实体组件。
          * @param collector 收集实体组件的实体组。
-         * @see paper.GameObject#addComponent()
          */
-        public onComponentAdded?(component: IComponent, group: Collector<TEntity>): void;
+        public onComponentAdded?(component: IComponent, collector: Collector<TEntity>): void;
         /**
          * 充分非必要组件从实体移除时调用。
          * @param component 移除的实体组件。
          * @param collector 移除实体组件的实体组。
-         * @see paper.GameObject#removeComponent()
          */
         public onComponentRemoved?(component: IComponent, collector: Collector<TEntity>): void;
         /**
          * 实体从系统移除时调用。
          * @param entity 移除的实体。
-         * @param collector 移除实体的实体组。
-         * @see paper.GameObject#removeComponent()
+         * @param group 移除实体的实体组。
          */
         public onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
         /**

@@ -28,6 +28,7 @@ namespace paper {
         }
 
         public readonly isBehaviour: boolean = false;
+        public createdEnabled: boolean = false;
 
         private readonly _matcher: IMatcher<TEntity>;
         private readonly _entities: TEntity[] = [];

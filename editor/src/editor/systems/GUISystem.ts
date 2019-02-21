@@ -1,7 +1,6 @@
 namespace paper.editor {
     type ResData = { name: string, type: string, url: string, root: string };
     /**
-     * TODO GUI NEW SAVE LOAD
      * @internal
      */
     export class GUISystem extends BaseSystem<GameObject> {
@@ -20,7 +19,7 @@ namespace paper.editor {
             this._removeSceneOrEntity(scene);
         }
 
-        private _onEntityCreated(entity: IEntity) {
+        private _onEntityAddedToScene(entity: IEntity) {
             this._sceneOrEntityBuffer.push(entity);
         }
 
@@ -701,7 +700,7 @@ namespace paper.editor {
         public onEnable() {
             Scene.onSceneCreated.add(this._onSceneCreated, this);
             Scene.onSceneDestroy.add(this._onSceneDestroy, this);
-            Entity.onEntityCreated.add(this._onEntityCreated, this);
+            Entity.onEntityAddedToScene.add(this._onEntityAddedToScene, this);
             Entity.onEntityDestroy.add(this._onEntityDestroy, this);
             Component.onComponentCreated.add(this._onComponentCreated, this);
             Component.onComponentDestroy.add(this._onComponentDestroy, this);
@@ -722,7 +721,7 @@ namespace paper.editor {
         public onDisable() {
             Scene.onSceneCreated.remove(this._onSceneCreated);
             Scene.onSceneDestroy.remove(this._onSceneDestroy);
-            Entity.onEntityCreated.remove(this._onEntityCreated);
+            Entity.onEntityAddedToScene.remove(this._onEntityAddedToScene);
             Entity.onEntityDestroy.remove(this._onEntityDestroy);
             Component.onComponentCreated.remove(this._onComponentCreated);
             Component.onComponentDestroy.remove(this._onComponentDestroy);

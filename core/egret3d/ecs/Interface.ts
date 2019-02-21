@@ -565,14 +565,6 @@ namespace paper {
          */
         destroy(): boolean;
         /**
-         * 添加指定实体到该场景。
-         */
-        addEntity(entity: IEntity): boolean;
-        /**
-         * 从该场景移除指定实体。
-         */
-        removeEntity(entity: IEntity): boolean;
-        /**
          * 该场景是否包含指定实体。
          */
         containsEntity(entity: IEntity): boolean;

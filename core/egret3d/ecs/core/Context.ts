@@ -17,8 +17,38 @@ namespace paper {
 
         private constructor(entityClass: IEntityClass<TEntity>) {
             this._entityClass = entityClass;
+            Component.onComponentCreated.add(this._onComponentCreated, this);
             Component.onComponentEnabled.add(this._onComponentEnabled, this);
             Component.onComponentDisabled.add(this._onComponentDisabled, this);
+            Component.onComponentDestroyed.add(this._onComponentDestroyed, this);
+        }
+
+        private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+
+            const componentClass = component.constructor as IComponentClass<IComponent>;
+            const componentIndex = componentClass.componentIndex;
+            const groups = this._componentsGroups[componentIndex];
+
+            if (groups) {
+                for (const group of groups) {
+                    if (group.createdEnabled) {
+                        group.handleEvent(entity as TEntity, component, true);
+                    }
+                }
+            }
+
+            if (componentClass.isBehaviour) {
+                const groups = this._componentsGroups[Behaviour.componentIndex];
+
+                for (const group of groups) {
+                    if (group.createdEnabled) {
+                        group.handleEvent(entity as TEntity, component, true);
+                    }
+                }
+            }
         }
 
         private _onComponentEnabled([entity, component]: [IEntity, IComponent]) {
@@ -32,7 +62,9 @@ namespace paper {
 
             if (groups) {
                 for (const group of groups) {
-                    group.handleEvent(entity as TEntity, component, true);
+                    if (!group.createdEnabled) {
+                        group.handleEvent(entity as TEntity, component, true);
+                    }
                 }
             }
 
@@ -40,7 +72,9 @@ namespace paper {
                 const groups = this._componentsGroups[Behaviour.componentIndex];
 
                 for (const group of groups) {
-                    group.handleEvent(entity as TEntity, component, true);
+                    if (!group.createdEnabled) {
+                        group.handleEvent(entity as TEntity, component, true);
+                    }
                 }
             }
         }
@@ -56,7 +90,9 @@ namespace paper {
 
             if (groups) {
                 for (const group of groups) {
-                    group.handleEvent(entity as TEntity, component, false);
+                    if (!group.createdEnabled) {
+                        group.handleEvent(entity as TEntity, component, false);
+                    }
                 }
             }
 
@@ -64,7 +100,37 @@ namespace paper {
                 const groups = this._componentsGroups[Behaviour.componentIndex];
 
                 for (const group of groups) {
-                    group.handleEvent(entity as TEntity, component, false);
+                    if (!group.createdEnabled) {
+                        group.handleEvent(entity as TEntity, component, false);
+                    }
+                }
+            }
+        }
+
+        private _onComponentDestroyed([entity, component]: [IEntity, IComponent]) {
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+
+            const componentClass = component.constructor as IComponentClass<IComponent>;
+            const componentIndex = componentClass.componentIndex;
+            const groups = this._componentsGroups[componentIndex];
+
+            if (groups) {
+                for (const group of groups) {
+                    if (group.createdEnabled) {
+                        group.handleEvent(entity as TEntity, component, false);
+                    }
+                }
+            }
+
+            if (componentClass.isBehaviour) {
+                const groups = this._componentsGroups[Behaviour.componentIndex];
+
+                for (const group of groups) {
+                    if (group.createdEnabled) {
+                        group.handleEvent(entity as TEntity, component, false);
+                    }
                 }
             }
         }

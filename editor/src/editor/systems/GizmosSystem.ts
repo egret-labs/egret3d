@@ -2,16 +2,24 @@ namespace paper.editor {
     /**
      * @internal
      */
-    export class IconDrawer extends BaseComponent {
-        private readonly _cameraAndLightCollecter: egret3d.CameraAndLightCollecter = GameObject.globalGameObject.getOrAddComponent(egret3d.CameraAndLightCollecter);
+    export class GizmosSystem extends BaseSystem<GameObject> {
         private readonly _cameraDrawer: GameObject[] = [];
         private readonly _lightDrawer: GameObject[] = [];
 
-        public initialize() {
-            super.initialize();
+        protected getMatchers() {
+            return [
+                Matcher.create<GameObject>(egret3d.Transform, egret3d.Camera),
+                Matcher.create<GameObject>(egret3d.Transform).anyOf(egret3d.DirectionalLight, egret3d.SpotLight, egret3d.PointLight, egret3d.HemisphereLight),
+            ];
         }
 
-        public update() {
+        public onAwake() {
+
+        }
+
+        public onEntityAdded() {
+
+
             const editorScene = paper.Scene.editorScene;
             const editorCamera = egret3d.Camera.editor;
             const cameraPosition = editorCamera.gameObject.transform.position;
@@ -75,6 +83,10 @@ namespace paper.editor {
                     }
                 }
             }
+        }
+
+        public onEntityRemoved() {
+
         }
     }
 }

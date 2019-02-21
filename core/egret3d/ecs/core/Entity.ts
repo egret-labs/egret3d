@@ -4,13 +4,9 @@ namespace paper {
      */
     export abstract class Entity extends BaseObject implements IEntity {
         /**
-         * 当实体被创建时派发事件。
+         * 当实体添加到场景时派发事件。
          */
-        public static readonly onEntityCreated: signals.Signal<IEntity> = new signals.Signal();
-        /**
-         * 当实体的场景改变时派发事件。
-         */
-        public static readonly onEntitySceneChanged: signals.Signal<IEntity> = new signals.Signal();
+        public static readonly onEntityAddedToScene: signals.Signal<IEntity> = new signals.Signal();
         /**
          * 当实体将要被销毁时派发事件。
          */
@@ -61,6 +57,8 @@ namespace paper {
                 }
             }
 
+            this._scene!._removeEntity(this);
+
             this._isDestroyed = true;
             this._components.length = 0;
             this._scene = null;
@@ -107,22 +105,18 @@ namespace paper {
             this._componentsDirty = true;
         }
 
-        protected _setScene(value: Scene) {
-            let hasScene = false;
-
-            if (this._scene) {
-                hasScene = true;
-                this._scene.removeEntity(this);
-            }
-
-            this._scene = value;
-
+        protected _setScene(value: Scene | null, dispatchEvent: boolean) {
             if (value) {
-                value.addEntity(this);
+                if (this._scene) {
+                    this._scene._removeEntity(this);
+                }
+
+                value._addEntity(this);
+                this._scene = value;
             }
 
-            if (hasScene) {
-                Entity.onEntitySceneChanged.dispatch(this);
+            if (dispatchEvent) {
+                Entity.onEntityAddedToScene.dispatch(this);
             }
         }
 
@@ -510,7 +504,7 @@ namespace paper {
         public set dontDestroy(value: boolean) {
             const sceneManager = Application.sceneManager;
 
-            if (this.dontDestroy === value || this._isDestroyed || this === sceneManager.globalEntity) {
+            if (this.dontDestroy === value || this._isDestroyed || this === sceneManager._globalEntity) {
                 return;
             }
 
@@ -522,7 +516,7 @@ namespace paper {
             return this._enabled;
         }
         public set enabled(value: boolean) {
-            if (this._enabled === value || this._isDestroyed || this === Application.sceneManager.globalEntity) {
+            if (this._enabled === value || this._isDestroyed || this === Application.sceneManager._globalEntity) {
                 return;
             }
 
@@ -581,11 +575,11 @@ namespace paper {
             return this._scene!;
         }
         public set scene(value: Scene) {
-            if (this._scene === value || this._isDestroyed || this === Application.sceneManager.globalEntity) {
+            if (this._scene === value || this._isDestroyed || this === Application.sceneManager._globalEntity) {
                 return;
             }
 
-            this._setScene(value);
+            this._setScene(value, true);
         }
     }
 }
