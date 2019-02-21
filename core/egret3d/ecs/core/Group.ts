@@ -28,7 +28,6 @@ namespace paper {
         }
 
         public readonly isBehaviour: boolean = false;
-        public createdEnabled: boolean = false;
 
         private readonly _matcher: IMatcher<TEntity>;
         private readonly _entities: TEntity[] = [];
@@ -40,6 +39,12 @@ namespace paper {
             }
 
             this._matcher = matcher;
+
+            for (const scene of Application.sceneManager.scenes) {
+                for (const entity of scene.entities) {
+                    this.handleEvent(entity as TEntity, null as any, true); // TODO context._entityClass
+                }
+            }
         }
 
         public containsEntity(entity: TEntity): boolean {

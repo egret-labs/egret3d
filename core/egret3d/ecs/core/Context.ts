@@ -13,6 +13,7 @@ namespace paper {
         private readonly _entityClass: IEntityClass<TEntity>;
         private readonly _entities: TEntity[] = [];
         private readonly _componentsGroups: Group<TEntity>[][] = [];
+        private readonly _componentsGroupsB: Group<TEntity>[][] = [];
         private readonly _groups: { [key: string]: Group<TEntity> } = {};
 
         private constructor(entityClass: IEntityClass<TEntity>) {
@@ -29,24 +30,11 @@ namespace paper {
             }
 
             const componentClass = component.constructor as IComponentClass<IComponent>;
-            const componentIndex = componentClass.componentIndex;
-            const groups = this._componentsGroups[componentIndex];
+            const groups = this._componentsGroupsB[componentClass.componentIndex];
 
             if (groups) {
                 for (const group of groups) {
-                    if (group.createdEnabled) {
-                        group.handleEvent(entity as TEntity, component, true);
-                    }
-                }
-            }
-
-            if (componentClass.isBehaviour) {
-                const groups = this._componentsGroups[Behaviour.componentIndex];
-
-                for (const group of groups) {
-                    if (group.createdEnabled) {
-                        group.handleEvent(entity as TEntity, component, true);
-                    }
+                    group.handleEvent(entity as TEntity, component, true);
                 }
             }
         }
@@ -57,14 +45,11 @@ namespace paper {
             }
 
             const componentClass = component.constructor as IComponentClass<IComponent>;
-            const componentIndex = componentClass.componentIndex;
-            const groups = this._componentsGroups[componentIndex];
+            const groups = this._componentsGroups[componentClass.componentIndex];
 
             if (groups) {
                 for (const group of groups) {
-                    if (!group.createdEnabled) {
-                        group.handleEvent(entity as TEntity, component, true);
-                    }
+                    group.handleEvent(entity as TEntity, component, true);
                 }
             }
 
@@ -72,9 +57,7 @@ namespace paper {
                 const groups = this._componentsGroups[Behaviour.componentIndex];
 
                 for (const group of groups) {
-                    if (!group.createdEnabled) {
-                        group.handleEvent(entity as TEntity, component, true);
-                    }
+                    group.handleEvent(entity as TEntity, component, true);
                 }
             }
         }
@@ -85,14 +68,11 @@ namespace paper {
             }
 
             const componentClass = component.constructor as IComponentClass<IComponent>;
-            const componentIndex = componentClass.componentIndex;
-            const groups = this._componentsGroups[componentIndex];
+            const groups = this._componentsGroups[componentClass.componentIndex];
 
             if (groups) {
                 for (const group of groups) {
-                    if (!group.createdEnabled) {
-                        group.handleEvent(entity as TEntity, component, false);
-                    }
+                    group.handleEvent(entity as TEntity, component, false);
                 }
             }
 
@@ -100,9 +80,7 @@ namespace paper {
                 const groups = this._componentsGroups[Behaviour.componentIndex];
 
                 for (const group of groups) {
-                    if (!group.createdEnabled) {
-                        group.handleEvent(entity as TEntity, component, false);
-                    }
+                    group.handleEvent(entity as TEntity, component, false);
                 }
             }
         }
@@ -113,24 +91,11 @@ namespace paper {
             }
 
             const componentClass = component.constructor as IComponentClass<IComponent>;
-            const componentIndex = componentClass.componentIndex;
-            const groups = this._componentsGroups[componentIndex];
+            const groups = this._componentsGroupsB[componentClass.componentIndex];
 
             if (groups) {
                 for (const group of groups) {
-                    if (group.createdEnabled) {
-                        group.handleEvent(entity as TEntity, component, false);
-                    }
-                }
-            }
-
-            if (componentClass.isBehaviour) {
-                const groups = this._componentsGroups[Behaviour.componentIndex];
-
-                for (const group of groups) {
-                    if (group.createdEnabled) {
-                        group.handleEvent(entity as TEntity, component, false);
-                    }
+                    group.handleEvent(entity as TEntity, component, false);
                 }
             }
         }
@@ -144,7 +109,7 @@ namespace paper {
             const groups = this._groups;
 
             if (!(id in groups)) {
-                const componentsGroups = this._componentsGroups;
+                const componentsGroups = matcher.componentEnabledFilter ? this._componentsGroups : this._componentsGroupsB;
                 const group = Group.create(matcher);
                 groups[id] = group;
 

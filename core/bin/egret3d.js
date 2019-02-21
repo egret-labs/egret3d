@@ -1370,6 +1370,7 @@ var paper;
             _this.hideFlags = 0 /* None */;
             _this.entity = null;
             _this.extras = paper.Application.playerMode === 2 /* Editor */ ? {} : undefined;
+            _this._isDestroyed = true;
             _this._enabled = false;
             /**
              * @internal
@@ -1415,6 +1416,7 @@ var paper;
         Component.create = function (entity, componentClass) {
             var component = new componentClass();
             component.entity = entity;
+            component._isDestroyed = false;
             component._enabled = this.createDefaultEnabled;
             return component;
         };
@@ -1422,7 +1424,7 @@ var paper;
          * @internal
          */
         Component.prototype._destroy = function () {
-            this.entity = null;
+            this._isDestroyed = true;
         };
         Component.prototype._setEnabled = function (value) {
             if ((this._lifeStates & 4 /* Initialized */)) {
@@ -1434,6 +1436,7 @@ var paper;
         };
         Component.prototype.uninitialize = function () {
             this._lifeStates = 0 /* None */;
+            this.entity = null;
         };
         Component.prototype.dispatchEnabledEvent = function (enabled) {
             if (enabled) {
@@ -1445,7 +1448,7 @@ var paper;
         };
         Object.defineProperty(Component.prototype, "isDestroyed", {
             get: function () {
-                return !this.entity;
+                return this._isDestroyed;
             },
             enumerable: true,
             configurable: true
@@ -1455,7 +1458,7 @@ var paper;
                 return this._enabled;
             },
             set: function (value) {
-                if (this._enabled === value || this.isDestroyed) {
+                if (this._enabled === value || this._isDestroyed) {
                     return;
                 }
                 this._enabled = value;
@@ -1812,13 +1815,6 @@ var paper;
             _this.gameObject = null;
             return _this;
         }
-        /**
-         * @internal
-         */
-        BaseComponent.prototype._destroy = function () {
-            _super.prototype._destroy.call(this);
-            this.gameObject = null;
-        };
         BaseComponent.prototype._setEnabled = function (value) {
             if ((this._lifeStates & 4 /* Initialized */) && this.gameObject.activeInHierarchy) {
                 this.dispatchEnabledEvent(value);
@@ -1827,6 +1823,10 @@ var paper;
         BaseComponent.prototype.initialize = function (config) {
             _super.prototype.initialize.call(this, config);
             this.gameObject = this.entity;
+        };
+        BaseComponent.prototype.uninitialize = function () {
+            _super.prototype.uninitialize.call(this);
+            this.gameObject = null;
         };
         Object.defineProperty(BaseComponent.prototype, "isActiveAndEnabled", {
             /**
@@ -5984,13 +5984,19 @@ var paper;
     var Group = (function () {
         function Group(matcher) {
             this.isBehaviour = false;
-            this.createdEnabled = false;
             this._entities = [];
             this._behaviours = [];
             if (matcher.extraOfComponents.length === 1 && matcher.extraOfComponents[0] === paper.Behaviour) {
                 this.isBehaviour = true;
             }
             this._matcher = matcher;
+            for (var _i = 0, _a = paper.Application.sceneManager.scenes; _i < _a.length; _i++) {
+                var scene = _a[_i];
+                for (var _b = 0, _c = scene.entities; _b < _c.length; _b++) {
+                    var entity = _c[_b];
+                    this.handleEvent(entity, null, true); // TODO context._entityClass
+                }
+            }
         }
         /**
          * @internal
@@ -6125,6 +6131,7 @@ var paper;
         function Context(entityClass) {
             this._entities = [];
             this._componentsGroups = [];
+            this._componentsGroupsB = [];
             this._groups = {};
             this._entityClass = entityClass;
             paper.Component.onComponentCreated.add(this._onComponentCreated, this);
@@ -6144,23 +6151,11 @@ var paper;
                 return;
             }
             var componentClass = component.constructor;
-            var componentIndex = componentClass.componentIndex;
-            var groups = this._componentsGroups[componentIndex];
+            var groups = this._componentsGroupsB[componentClass.componentIndex];
             if (groups) {
                 for (var _i = 0, groups_1 = groups; _i < groups_1.length; _i++) {
                     var group = groups_1[_i];
-                    if (group.createdEnabled) {
-                        group.handleEvent(entity, component, true);
-                    }
-                }
-            }
-            if (componentClass.isBehaviour) {
-                var groups_2 = this._componentsGroups[paper.Behaviour.componentIndex];
-                for (var _b = 0, groups_3 = groups_2; _b < groups_3.length; _b++) {
-                    var group = groups_3[_b];
-                    if (group.createdEnabled) {
-                        group.handleEvent(entity, component, true);
-                    }
+                    group.handleEvent(entity, component, true);
                 }
             }
         };
@@ -6170,23 +6165,18 @@ var paper;
                 return;
             }
             var componentClass = component.constructor;
-            var componentIndex = componentClass.componentIndex;
-            var groups = this._componentsGroups[componentIndex];
+            var groups = this._componentsGroups[componentClass.componentIndex];
             if (groups) {
-                for (var _i = 0, groups_4 = groups; _i < groups_4.length; _i++) {
-                    var group = groups_4[_i];
-                    if (!group.createdEnabled) {
-                        group.handleEvent(entity, component, true);
-                    }
+                for (var _i = 0, groups_2 = groups; _i < groups_2.length; _i++) {
+                    var group = groups_2[_i];
+                    group.handleEvent(entity, component, true);
                 }
             }
             if (componentClass.isBehaviour) {
-                var groups_5 = this._componentsGroups[paper.Behaviour.componentIndex];
-                for (var _b = 0, groups_6 = groups_5; _b < groups_6.length; _b++) {
-                    var group = groups_6[_b];
-                    if (!group.createdEnabled) {
-                        group.handleEvent(entity, component, true);
-                    }
+                var groups_3 = this._componentsGroups[paper.Behaviour.componentIndex];
+                for (var _b = 0, groups_4 = groups_3; _b < groups_4.length; _b++) {
+                    var group = groups_4[_b];
+                    group.handleEvent(entity, component, true);
                 }
             }
         };
@@ -6196,23 +6186,18 @@ var paper;
                 return;
             }
             var componentClass = component.constructor;
-            var componentIndex = componentClass.componentIndex;
-            var groups = this._componentsGroups[componentIndex];
+            var groups = this._componentsGroups[componentClass.componentIndex];
             if (groups) {
-                for (var _i = 0, groups_7 = groups; _i < groups_7.length; _i++) {
-                    var group = groups_7[_i];
-                    if (!group.createdEnabled) {
-                        group.handleEvent(entity, component, false);
-                    }
+                for (var _i = 0, groups_5 = groups; _i < groups_5.length; _i++) {
+                    var group = groups_5[_i];
+                    group.handleEvent(entity, component, false);
                 }
             }
             if (componentClass.isBehaviour) {
-                var groups_8 = this._componentsGroups[paper.Behaviour.componentIndex];
-                for (var _b = 0, groups_9 = groups_8; _b < groups_9.length; _b++) {
-                    var group = groups_9[_b];
-                    if (!group.createdEnabled) {
-                        group.handleEvent(entity, component, false);
-                    }
+                var groups_6 = this._componentsGroups[paper.Behaviour.componentIndex];
+                for (var _b = 0, groups_7 = groups_6; _b < groups_7.length; _b++) {
+                    var group = groups_7[_b];
+                    group.handleEvent(entity, component, false);
                 }
             }
         };
@@ -6222,23 +6207,11 @@ var paper;
                 return;
             }
             var componentClass = component.constructor;
-            var componentIndex = componentClass.componentIndex;
-            var groups = this._componentsGroups[componentIndex];
+            var groups = this._componentsGroupsB[componentClass.componentIndex];
             if (groups) {
-                for (var _i = 0, groups_10 = groups; _i < groups_10.length; _i++) {
-                    var group = groups_10[_i];
-                    if (group.createdEnabled) {
-                        group.handleEvent(entity, component, false);
-                    }
-                }
-            }
-            if (componentClass.isBehaviour) {
-                var groups_11 = this._componentsGroups[paper.Behaviour.componentIndex];
-                for (var _b = 0, groups_12 = groups_11; _b < groups_12.length; _b++) {
-                    var group = groups_12[_b];
-                    if (group.createdEnabled) {
-                        group.handleEvent(entity, component, false);
-                    }
+                for (var _i = 0, groups_8 = groups; _i < groups_8.length; _i++) {
+                    var group = groups_8[_i];
+                    group.handleEvent(entity, component, false);
                 }
             }
         };
@@ -6249,7 +6222,7 @@ var paper;
             var id = matcher.id;
             var groups = this._groups;
             if (!(id in groups)) {
-                var componentsGroups = this._componentsGroups;
+                var componentsGroups = matcher.componentEnabledFilter ? this._componentsGroups : this._componentsGroupsB;
                 var group = paper.Group.create(matcher);
                 groups[id] = group;
                 for (var _i = 0, _a = matcher.components; _i < _a.length; _i++) {
@@ -28885,25 +28858,26 @@ var paper;
      * 组件匹配器。
      */
     var Matcher = (function () {
-        function Matcher() {
+        function Matcher(componentEnabledFilter) {
+            this.componentEnabledFilter = true;
             this._id = "";
             this._components = [];
             this._allOfComponents = [];
             this._anyOfComponents = [];
             this._noneOfComponents = [];
             this._extraOfComponents = [];
+            this.componentEnabledFilter = componentEnabledFilter;
         }
-        /**
-         *
-         * @param components
-         */
         Matcher.create = function () {
-            var components = [];
+            var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
-                components[_i] = arguments[_i];
+                args[_i] = arguments[_i];
             }
-            var matcher = new Matcher();
-            matcher._distinct(components, matcher._allOfComponents);
+            var matcher = new Matcher(args[0] !== false);
+            if (!matcher.componentEnabledFilter) {
+                args.shift();
+            }
+            matcher._distinct(args, matcher._allOfComponents);
             return matcher;
         };
         Matcher.prototype._sortComponents = function (a, b) {
@@ -29006,7 +28980,7 @@ var paper;
                         var component = _a[_i];
                         indices.push(component.componentIndex);
                     }
-                    this._id = indices.join(",");
+                    this._id = (this.componentEnabledFilter ? "E" : "") + indices.join(",");
                 }
                 return this._id;
             },

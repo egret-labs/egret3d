@@ -465,6 +465,10 @@ namespace paper {
         /**
          * 
          */
+        readonly componentEnabledFilter: boolean;
+        /**
+         * 
+         */
         readonly id: string;
         /**
          * 

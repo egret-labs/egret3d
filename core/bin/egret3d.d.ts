@@ -557,6 +557,10 @@ declare namespace paper {
         /**
          *
          */
+        readonly componentEnabledFilter: boolean;
+        /**
+         *
+         */
         readonly id: string;
         /**
          *
@@ -1237,6 +1241,7 @@ declare namespace paper {
         hideFlags: HideFlags;
         readonly entity: IEntity;
         extras?: ComponentExtras;
+        protected _isDestroyed: boolean;
         protected _enabled: boolean;
         /**
          * 禁止实例化组件。
@@ -2821,6 +2826,7 @@ declare namespace paper {
         readonly gameObject: GameObject;
         protected _setEnabled(value: boolean): void;
         initialize(config?: any): void;
+        uninitialize(): void;
         /**
          * 该组件在场景的激活状态。
          */
@@ -4244,7 +4250,6 @@ declare namespace paper {
          */
         static readonly onComponentDisabled: signals.Signal<[Group<IEntity>, IComponent]>;
         readonly isBehaviour: boolean;
-        createdEnabled: boolean;
         private readonly _matcher;
         private readonly _entities;
         private readonly _behaviours;
@@ -4278,6 +4283,7 @@ declare namespace paper {
         private readonly _entityClass;
         private readonly _entities;
         private readonly _componentsGroups;
+        private readonly _componentsGroupsB;
         private readonly _groups;
         private constructor();
         private _onComponentCreated([entity, component]);
@@ -11669,7 +11675,14 @@ declare namespace paper {
          *
          * @param components
          */
-        static create<TEntity extends IEntity>(...components: (IComponentClass<IComponent>)[]): IAllOfMatcher<TEntity>;
+        static create<TEntity extends IEntity>(...components: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        /**
+         *
+         * @param componentEnabledFilter
+         * @param components
+         */
+        static create<TEntity extends IEntity>(componentEnabledFilter: false, ...components: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        readonly componentEnabledFilter: boolean;
         private _id;
         private readonly _components;
         private readonly _allOfComponents;
@@ -11680,9 +11693,9 @@ declare namespace paper {
         private _sortComponents(a, b);
         private _distinct(source, target);
         private _merge();
-        anyOf(...components: (IComponentClass<IComponent>)[]): IAnyOfMatcher<TEntity>;
-        noneOf(...components: (IComponentClass<IComponent>)[]): INoneOfMatcher<TEntity>;
-        extraOf(...components: (IComponentClass<IComponent>)[]): INoneOfMatcher<TEntity>;
+        anyOf(...components: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity>;
+        noneOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
+        extraOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
         matches(entity: TEntity): boolean;
         matchesExtra(component: IComponentClass<IComponent>): boolean;
         readonly id: string;

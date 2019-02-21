@@ -250,8 +250,6 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-}
-declare namespace paper.editor {
     /**
      *
      */
@@ -396,6 +394,8 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
      * TODO
      */
@@ -412,7 +412,6 @@ declare namespace paper.editor {
         private _drawer;
         private _touchDrawer;
         private _boxesDrawer;
-        private _iconDrawer;
         private _boxColliderDrawer;
         private _sphereColliderDrawer;
         private _cylinderColliderDrawer;

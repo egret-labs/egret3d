@@ -9,12 +9,26 @@ namespace paper {
          * 
          * @param components 
          */
-        public static create<TEntity extends IEntity>(...components: (IComponentClass<IComponent>)[]): IAllOfMatcher<TEntity> {
-            const matcher = new Matcher<TEntity>();
-            matcher._distinct(components, matcher._allOfComponents);
+        public static create<TEntity extends IEntity>(...components: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        /**
+         * 
+         * @param componentEnabledFilter 
+         * @param components 
+         */
+        public static create<TEntity extends IEntity>(componentEnabledFilter: false, ...components: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        public static create<TEntity extends IEntity>(...args: any[]): IAllOfMatcher<TEntity> {
+            const matcher = new Matcher<TEntity>(args[0] !== false);
+
+            if (!matcher.componentEnabledFilter) {
+                args.shift();
+            }
+
+            matcher._distinct(args, matcher._allOfComponents);
 
             return matcher;
         }
+
+        public readonly componentEnabledFilter: boolean = true;
 
         private _id: string = "";
         private readonly _components: IComponentClass<IComponent>[] = [];
@@ -23,7 +37,8 @@ namespace paper {
         private readonly _noneOfComponents: IComponentClass<IComponent>[] = [];
         private readonly _extraOfComponents: IComponentClass<IComponent>[] = [];
 
-        private constructor() {
+        private constructor(componentEnabledFilter: boolean) {
+            this.componentEnabledFilter = componentEnabledFilter;
         }
 
         private _sortComponents(a: IComponentClass<IComponent>, b: IComponentClass<IComponent>) {
@@ -84,7 +99,7 @@ namespace paper {
             }
         }
 
-        public anyOf(...components: (IComponentClass<IComponent>)[]): IAnyOfMatcher<TEntity> {
+        public anyOf(...components: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity> {
             if (this._id) {
                 return this;
             }
@@ -94,7 +109,7 @@ namespace paper {
             return this;
         }
 
-        public noneOf(...components: (IComponentClass<IComponent>)[]): INoneOfMatcher<TEntity> {
+        public noneOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity> {
             if (this._id) {
                 return this;
             }
@@ -104,7 +119,7 @@ namespace paper {
             return this;
         }
 
-        public extraOf(...components: (IComponentClass<IComponent>)[]): INoneOfMatcher<TEntity> {
+        public extraOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity> {
             if (this._id) {
                 return this;
             }
@@ -133,7 +148,7 @@ namespace paper {
                     indices.push(component.componentIndex);
                 }
 
-                this._id = indices.join(",");
+                this._id = (this.componentEnabledFilter ? "E" : "") + indices.join(",");
             }
 
             return this._id;

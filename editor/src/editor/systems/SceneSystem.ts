@@ -18,7 +18,7 @@ namespace paper.editor {
         private _touchDrawer: GameObject | null = null;
 
         private _boxesDrawer: BoxesDrawer | null = null;
-        private _iconDrawer: IconDrawer | null = null;
+        // private _iconDrawer: IconDrawer | null = null;
         private _boxColliderDrawer: BoxColliderDrawer | null = null;
         private _sphereColliderDrawer: SphereColliderDrawer | null = null;
         private _cylinderColliderDrawer: CylinderColliderDrawer | null = null;
@@ -123,9 +123,12 @@ namespace paper.editor {
 
         public onAwake() {
             // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
+            Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
         }
 
         public onEnable() {
+            Application.systemManager.getSystem(GizmosSystem)!.enabled = true;
+
             ModelComponent.onGameObjectHovered.add(this._onGameObjectHovered, this);
             ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectChanged, this);
             ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
@@ -142,7 +145,7 @@ namespace paper.editor {
             this._touchDrawer = EditorMeshHelper.createGameObject("Touch Drawer");
 
             this._boxesDrawer = this._drawer.addComponent(BoxesDrawer);
-            this._iconDrawer = this._touchDrawer.addComponent(IconDrawer);
+            // this._iconDrawer = this._touchDrawer.addComponent(IconDrawer);
             this._boxColliderDrawer = this._drawer.addComponent(BoxColliderDrawer);
             this._sphereColliderDrawer = this._drawer.addComponent(SphereColliderDrawer);
             this._cylinderColliderDrawer = this._drawer.addComponent(CylinderColliderDrawer);
@@ -161,6 +164,8 @@ namespace paper.editor {
         }
 
         public onDisable() {
+            Application.systemManager.getSystem(GizmosSystem)!.enabled = false;
+
             ModelComponent.onGameObjectHovered.remove(this._onGameObjectHovered, this);
             ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectChanged, this);
             ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
@@ -178,7 +183,7 @@ namespace paper.editor {
             this._drawer = null;
             this._touchDrawer = null;
             this._boxesDrawer = null;
-            this._iconDrawer = null;
+            // this._iconDrawer = null;
             this._boxColliderDrawer = null;
             this._sphereColliderDrawer = null;
             this._cylinderColliderDrawer = null;
@@ -288,7 +293,7 @@ namespace paper.editor {
                         }
 
                         if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                            const gameObjects = Scene.activeScene.getRootGameObjects().concat();
+                            const gameObjects = Scene.activeScene.getRootGameObjects().concat(); // TODO
                             gameObjects.unshift(this._touchDrawer!);
 
                             const raycastInfos = Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
@@ -345,7 +350,7 @@ namespace paper.editor {
             }
 
             this._boxesDrawer!.update();
-            this._iconDrawer!.update();
+            // this._iconDrawer!.update();
             this._boxColliderDrawer!.update();
             this._sphereColliderDrawer!.update();
             this._cylinderColliderDrawer!.update();
