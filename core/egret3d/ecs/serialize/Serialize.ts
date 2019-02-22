@@ -137,7 +137,7 @@ namespace paper {
             return true;
         }
 
-        if (source.hasOwnProperty(KEY_SERIALIZE)) {
+        if (egret.is(source, "paper.ISerializable")) {
             return equal((source as ISerializable).serialize(), (target as ISerializable).serialize());
         }
 
@@ -333,7 +333,7 @@ namespace paper {
                     return target;
                 }
 
-                if (source.hasOwnProperty(KEY_SERIALIZE)) {
+                if (egret.is(source, "paper.ISerializable")) {
                     return (source as paper.ISerializable).serialize();
                 }
 

@@ -58,10 +58,10 @@ namespace paper.editor {
             return this._dirty;
         }
         public set dirty(v: boolean) {
-            if (this._dirty !== v) {
+            // if (this._dirty !== v) {
                 this._dirty = v;
                 this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_DIRTY));
-            }
+            // }
         }
         /**
          * 初始化
