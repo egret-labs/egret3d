@@ -116,7 +116,9 @@ namespace paper.editor {
                     guiComponent.inspector.close();
                 }
 
-                Application.systemManager.register(GUISystem, Application.gameObjectContext, SystemOrder.LateUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
+                // Make sure the GUISystem update after the SceneSystem.
+                Application.systemManager.register(HierarchySystem, Application.gameObjectContext, SystemOrder.LateUpdate + 1);
+                Application.systemManager.register(InspectorSystem, Application.gameObjectContext, SystemOrder.LateUpdate + 1);
             }
         }
 

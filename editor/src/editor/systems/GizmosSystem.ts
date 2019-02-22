@@ -8,6 +8,7 @@ namespace paper.editor {
 
         protected getMatchers() {
             return [
+                Matcher.create<GameObject>(false, egret3d.Transform, TouchEntityFlag),
                 Matcher.create<GameObject>(false, egret3d.Transform, egret3d.Camera),
                 Matcher.create<GameObject>(false, egret3d.Transform).anyOf(egret3d.DirectionalLight, egret3d.SpotLight, egret3d.PointLight, egret3d.HemisphereLight),
             ];
@@ -18,13 +19,14 @@ namespace paper.editor {
             const editorCamera = egret3d.Camera.editor;
             const cameraPosition = editorCamera.gameObject.transform.position;
             const groups = this.groups;
-            const cameraEntities = groups[0].entities;
-            const lightEntities = groups[1].entities;
+            const touchEntity = groups[0].singleEntity;
+            const cameraEntities = groups[1].entities;
+            const lightEntities = groups[2].entities;
 
             for (let i = 0, l = Math.max(this._cameraDrawer.length, cameraEntities.length); i < l; ++i) {
                 if (i + 1 > this._cameraDrawer.length) {
-                    const entity = EditorMeshHelper.createIcon(`Icon ${i}`, EditorDefaultTexture.CAMERA_ICON);
-                    // gameObject.parent = this.gameObject;
+                    const entity = EditorMeshHelper.createIcon(`Camera Icon ${i}`, EditorDefaultTexture.CAMERA_ICON);
+                    entity.parent = touchEntity;
                     this._cameraDrawer.push(entity);
                 }
 
@@ -53,8 +55,8 @@ namespace paper.editor {
 
             for (let i = 0, l = Math.max(this._lightDrawer.length, lightEntities.length); i < l; ++i) {
                 if (i + 1 > this._lightDrawer.length) {
-                    const entity = EditorMeshHelper.createIcon(`Icon ${i}`, EditorDefaultTexture.LIGHT_ICON);
-                    // gameObject.parent = this.gameObject;
+                    const entity = EditorMeshHelper.createIcon(`Light Icon ${i}`, EditorDefaultTexture.LIGHT_ICON);
+                    entity.parent = touchEntity;
                     this._lightDrawer.push(entity);
                 }
 

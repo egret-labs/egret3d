@@ -95,7 +95,9 @@ namespace paper {
 
             component.initialize(config);
 
-            if (component.enabled && this.activeInHierarchy) {
+            Component.onComponentCreated.dispatch([this, component]);
+
+            if (this.activeInHierarchy && component.enabled) {
                 component.dispatchEnabledEvent(true);
             }
         }

@@ -237,6 +237,8 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
      *
      */
@@ -315,6 +317,8 @@ declare namespace paper.editor {
         initialize(): void;
         update(): void;
     }
+}
+declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
@@ -410,7 +414,7 @@ declare namespace paper.editor {
         private readonly _keyF;
         private _transformController;
         private _drawer;
-        private _touchDrawer;
+        private _touchEntity;
         private _boxesDrawer;
         private _boxColliderDrawer;
         private _sphereColliderDrawer;

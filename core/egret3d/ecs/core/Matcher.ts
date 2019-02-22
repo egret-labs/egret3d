@@ -2,20 +2,20 @@ namespace paper {
 
     const _components: IComponentClass<IComponent>[] = [];
     /**
-     * 组件匹配器。
+     * 实体组件匹配器。
      */
     export class Matcher<TEntity extends IEntity> implements IAllOfMatcher<TEntity>  {
         /**
-         * 
-         * @param components 
+         * 创建匹配器。
+         * @param componentClasses 必须包含的全部组件。
          */
-        public static create<TEntity extends IEntity>(...components: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        public static create<TEntity extends IEntity>(...componentClasses: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
         /**
-         * 
-         * @param componentEnabledFilter 
-         * @param components 
+         * 创建匹配器。
+         * @param componentEnabledFilter 是否以组件的激活状态做为匹配条件。
+         * @param componentClasses 必须包含的全部组件。
          */
-        public static create<TEntity extends IEntity>(componentEnabledFilter: false, ...components: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        public static create<TEntity extends IEntity>(componentEnabledFilter: false, ...componentClasses: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
         public static create<TEntity extends IEntity>(...args: any[]): IAllOfMatcher<TEntity> {
             const matcher = new Matcher<TEntity>(args[0] !== false);
 
@@ -130,9 +130,11 @@ namespace paper {
         }
 
         public matches(entity: TEntity): boolean {
-            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents))
-                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents))
-                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents));
+            const componentEnabledFilter = this.componentEnabledFilter;
+
+            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents, componentEnabledFilter))
+                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents, componentEnabledFilter))
+                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents, componentEnabledFilter));
         }
 
         public matchesExtra(component: IComponentClass<IComponent>): boolean {

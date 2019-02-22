@@ -503,12 +503,12 @@ declare namespace paper {
          *
          * @param componentClasses
          */
-        hasComponents(componentClasses: IComponentClass<IComponent>[]): boolean;
+        hasComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
         /**
          *
          * @param componentClasses
          */
-        hasAnyComponents(componentClasses: IComponentClass<IComponent>[]): boolean;
+        hasAnyComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
     }
     /**
      * 组件接口。
@@ -551,29 +551,26 @@ declare namespace paper {
         dispatchEnabledEvent(enabled: boolean): void;
     }
     /**
-     *
+     * 实体组件匹配器接口。
      */
     interface IMatcher<TEntity extends IEntity> {
         /**
-         *
+         * 该匹配器是否以组件的激活状态做为匹配条件。
+         * - 默认为 `true`。
          */
         readonly componentEnabledFilter: boolean;
         /**
-         *
+         * 该匹配器的唯一标识。
          */
         readonly id: string;
         /**
-         *
-         */
-        readonly components: ReadonlyArray<IComponentClass<IComponent>>;
-        /**
-         *
-         * @param entity
+         * 指定的实体是否与该匹配器的规则相匹配。
+         * @param entity 指定的实体。
          */
         matches(entity: TEntity): boolean;
         /**
-         *
-         * @param component
+         * 指定的组件是否与该匹配器的额外规则相匹配。
+         * @param component 指定的组件。
          */
         matchesExtra(component: IComponentClass<IComponent>): boolean;
     }
@@ -582,49 +579,53 @@ declare namespace paper {
      */
     interface ICompoundMatcher<TEntity extends IEntity> extends IMatcher<TEntity> {
         /**
-         *
+         * 该匹配器的全部组件。
+         */
+        readonly components: ReadonlyArray<IComponentClass<IComponent>>;
+        /**
+         * 必须包含的全部组件。
          */
         readonly allOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         /**
-         *
+         * 必须包含的任一组件。
          */
         readonly anyOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         /**
-         *
+         * 不能包含的任一组件。
          */
         readonly noneOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         /**
-         *
+         * 可以包含的任一组件。
          */
         readonly extraOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
     }
     /**
-     *
+     * 不能包含任一组件的匹配器接口。
      */
     interface INoneOfMatcher<TEntity extends IEntity> extends ICompoundMatcher<TEntity> {
         /**
-         *
-         * @param componentClasses
+         * 设置可以包含的任一组件。
+         * @param componentClasses 可以包含的任一组件。
          */
         extraOf(...componentClasses: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
     }
     /**
-     *
+     * 必须包含任一组件的匹配器接口。
      */
     interface IAnyOfMatcher<TEntity extends IEntity> extends INoneOfMatcher<TEntity> {
         /**
-         *
-         * @param componentClasses
+         * 设置不能包含的任一组件。
+         * @param componentClasses 不能包含的任一组件。
          */
         noneOf(...componentClasses: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
     }
     /**
-     *
+     * 必须包含全部组件的匹配器接口。
      */
     interface IAllOfMatcher<TEntity extends IEntity> extends IAnyOfMatcher<TEntity> {
         /**
-         *
-         * @param componentClasses
+         * 设置必须包含的任一组件。
+         * @param componentClasses 必须包含的任一组件。
          */
         anyOf(...componentClasses: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity>;
     }
@@ -3411,8 +3412,8 @@ declare namespace paper {
         getOrAddComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T;
         getComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T | null;
         getComponents<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T[];
-        hasComponents(componentClasses: IComponentClass<IComponent>[]): boolean;
-        hasAnyComponents(componentClasses: IComponentClass<IComponent>[]): boolean;
+        hasComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
+        hasAnyComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
         readonly isDestroyed: boolean;
         dontDestroy: boolean;
         enabled: boolean;
@@ -4249,7 +4250,6 @@ declare namespace paper {
          * 当组中实体移除非必要组件时派发事件。
          */
         static readonly onComponentDisabled: signals.Signal<[Group<IEntity>, IComponent]>;
-        readonly isBehaviour: boolean;
         private readonly _matcher;
         private readonly _entities;
         private readonly _behaviours;
@@ -4257,8 +4257,8 @@ declare namespace paper {
         containsEntity(entity: TEntity): boolean;
         handleEvent(entity: TEntity, component: IComponent, isAdd: boolean): void;
         readonly entityCount: uint;
-        readonly matcher: Readonly<IMatcher<TEntity>>;
-        readonly entity: TEntity;
+        readonly matcher: Readonly<ICompoundMatcher<TEntity>>;
+        readonly singleEntity: TEntity | null;
         readonly entities: ReadonlyArray<TEntity>;
         readonly behaviours: ReadonlyArray<Behaviour | null>;
         /**
@@ -11668,20 +11668,20 @@ declare namespace egret3d.webgl {
 }
 declare namespace paper {
     /**
-     * 组件匹配器。
+     * 实体组件匹配器。
      */
     class Matcher<TEntity extends IEntity> implements IAllOfMatcher<TEntity> {
         /**
-         *
-         * @param components
+         * 创建匹配器。
+         * @param componentClasses 必须包含的全部组件。
          */
-        static create<TEntity extends IEntity>(...components: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        static create<TEntity extends IEntity>(...componentClasses: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
         /**
-         *
-         * @param componentEnabledFilter
-         * @param components
+         * 创建匹配器。
+         * @param componentEnabledFilter 是否以组件的激活状态做为匹配条件。
+         * @param componentClasses 必须包含的全部组件。
          */
-        static create<TEntity extends IEntity>(componentEnabledFilter: false, ...components: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        static create<TEntity extends IEntity>(componentEnabledFilter: false, ...componentClasses: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
         readonly componentEnabledFilter: boolean;
         private _id;
         private readonly _components;

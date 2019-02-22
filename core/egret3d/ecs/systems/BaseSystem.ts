@@ -233,7 +233,7 @@ namespace paper {
                         }
                     }
 
-                    const matcher = Matcher.create.apply(Matcher, allOf);
+                    const matcher = Matcher.create.apply(Matcher, allOf as any);
                     matcher.anyOf.apply(matcher, anyOf).noneOf.apply(matcher, noneOf).extraOf.apply(matcher, extraOf);
                     this._addGroupAndCollector(matcher);
                 }

@@ -3116,22 +3116,29 @@ var paper;
             }
             return components;
         };
-        Entity.prototype.hasComponents = function (componentClasses) {
+        Entity.prototype.hasComponents = function (componentClasses, componentEnabled) {
             var components = this._components;
             for (var i = 0, l = componentClasses.length; i < l; ++i) {
                 var index = componentClasses[i].componentIndex;
-                if (index < 0 || !components[index]) {
+                if (index < 0) {
+                    return false;
+                }
+                var component = components[index];
+                if (!component || (componentEnabled && !component.enabled)) {
                     return false;
                 }
             }
             return true;
         };
-        Entity.prototype.hasAnyComponents = function (componentClasses) {
+        Entity.prototype.hasAnyComponents = function (componentClasses, componentEnabled) {
             var components = this._components;
             for (var i = 0, l = componentClasses.length; i < l; ++i) {
                 var index = componentClasses[i].componentIndex;
-                if (index >= 0 && components[index]) {
-                    return true;
+                if (index >= 0) {
+                    var component = components[index];
+                    if (component && (!componentEnabled || component.enabled)) {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -5983,6 +5990,9 @@ var paper;
      */
     var Group = (function () {
         function Group(matcher) {
+            /**
+             * @internal
+             */
             this.isBehaviour = false;
             this._entities = [];
             this._behaviours = [];
@@ -6064,9 +6074,16 @@ var paper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Group.prototype, "entity", {
+        Object.defineProperty(Group.prototype, "singleEntity", {
             get: function () {
-                return this._entities[0];
+                var entities = this._entities;
+                if (entities.length === 0) {
+                    return null;
+                }
+                else if (entities.length > 1) {
+                    throw new Error();
+                }
+                return entities[0];
             },
             enumerable: true,
             configurable: true
@@ -6169,6 +6186,9 @@ var paper;
             if (groups) {
                 for (var _i = 0, groups_2 = groups; _i < groups_2.length; _i++) {
                     var group = groups_2[_i];
+                    if (!group.matcher.componentEnabledFilter) {
+                        debugger;
+                    }
                     group.handleEvent(entity, component, true);
                 }
             }
@@ -8904,7 +8924,8 @@ var paper;
                 }
             }
             component.initialize(config);
-            if (component.enabled && this.activeInHierarchy) {
+            paper.Component.onComponentCreated.dispatch([this, component]);
+            if (this.activeInHierarchy && component.enabled) {
                 component.dispatchEnabledEvent(true);
             }
         };
@@ -28855,7 +28876,7 @@ var paper;
 (function (paper) {
     var _components = [];
     /**
-     * 组件匹配器。
+     * 实体组件匹配器。
      */
     var Matcher = (function () {
         function Matcher(componentEnabledFilter) {
@@ -28964,9 +28985,10 @@ var paper;
             return this;
         };
         Matcher.prototype.matches = function (entity) {
-            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents))
-                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents))
-                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents));
+            var componentEnabledFilter = this.componentEnabledFilter;
+            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents, componentEnabledFilter))
+                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents, componentEnabledFilter))
+                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents, componentEnabledFilter));
         };
         Matcher.prototype.matchesExtra = function (component) {
             return this._extraOfComponents.length > 0 && this._extraOfComponents.indexOf(component) >= 0;

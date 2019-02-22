@@ -466,13 +466,19 @@ namespace paper {
             return components;
         }
 
-        public hasComponents(componentClasses: IComponentClass<IComponent>[]): boolean {
+        public hasComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean {
             const components = this._components;
 
             for (let i = 0, l = componentClasses.length; i < l; ++i) {
                 const index = componentClasses[i].componentIndex;
 
-                if (index < 0 || !components[index]) {
+                if (index < 0) {
+                    return false;
+                }
+
+                const component = components[index];
+
+                if (!component || (componentEnabled && !component.enabled)) {
                     return false;
                 }
             }
@@ -480,14 +486,18 @@ namespace paper {
             return true;
         }
 
-        public hasAnyComponents(componentClasses: IComponentClass<IComponent>[]): boolean {
+        public hasAnyComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean {
             const components = this._components;
 
             for (let i = 0, l = componentClasses.length; i < l; ++i) {
                 const index = componentClasses[i].componentIndex;
 
-                if (index >= 0 && components[index]) {
-                    return true;
+                if (index >= 0) {
+                    const component = components[index];
+
+                    if (component && (!componentEnabled || component.enabled)) {
+                        return true;
+                    }
                 }
             }
 
