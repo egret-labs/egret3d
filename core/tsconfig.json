@@ -27,6 +27,7 @@
 
         "egret3d/ecs/Interface.ts",
         "egret3d/ecs/Decorators.ts",
+        "egret3d/ecs/Utility.ts",
         "egret3d/ecs/core/BaseObject.ts",
         "egret3d/editor/EditorDecorators.ts",
 

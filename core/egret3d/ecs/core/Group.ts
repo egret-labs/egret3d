@@ -31,9 +31,13 @@ namespace paper {
          */
         public readonly isBehaviour: boolean = false;
 
-        private readonly _matcher: ICompoundMatcher<TEntity>;
-        private readonly _entities: TEntity[] = [];
+        private _entitiesDirty: boolean = false;
+        private _behavioursDirty: boolean = false;
+        private _entityCount: uint = 0;
+        private readonly _matcher: ICompoundMatcher<TEntity> = null as any;
+        private readonly _entities: (TEntity | null)[] = [];
         private readonly _behaviours: (Behaviour | null)[] = [];
+        private _singleEntity: TEntity | null = null;
 
         private constructor(matcher: ICompoundMatcher<TEntity>) {
             if (matcher.extraOfComponents.length === 1 && matcher.extraOfComponents[0] === Behaviour as any) { // TODO
@@ -61,13 +65,14 @@ namespace paper {
 
                     if (isAdd) {
                         if (index < 0) {
-                            behaviours.push(component as Behaviour);
+                            behaviours[behaviours.length] = component as Behaviour;
                             Group.onComponentEnabled.dispatch([this, component]);
                         }
                     }
                     else if (index >= 0) {
-                        Group.onComponentDisabled.dispatch([this, component]);
                         behaviours[index] = null;
+                        this._behavioursDirty = true;
+                        Group.onComponentDisabled.dispatch([this, component]);
                     }
                 }
             }
@@ -83,7 +88,9 @@ namespace paper {
                         }
                     }
                     else if (matcher.matches(entity)) {
-                        entities.push(entity);
+                        entities[entities.length] = entity;
+                        this._entityCount++;
+                        this._singleEntity = entity;
                         Group.onEntityAdded.dispatch([this, entity]);
                     }
                 }
@@ -92,8 +99,11 @@ namespace paper {
                         Group.onComponentDisabled.dispatch([this, component]);
                     }
                     else {
+                        entities[index] = null;
+                        this._entitiesDirty = true;
+                        this._entityCount--;
+                        this._singleEntity = null;
                         Group.onEntityRemoved.dispatch([this, entity]);
-                        entities.splice(index, 1);
                     }
                 }
             }
@@ -103,29 +113,43 @@ namespace paper {
             return this._entities.length;
         }
 
+        public get entities(): ReadonlyArray<TEntity> {
+            const entities = this._entities;
+
+            if (this._entitiesDirty) {
+                utility.filterArray(entities, null);
+                this._entitiesDirty = false;
+            }
+
+            return entities as ReadonlyArray<TEntity>;
+        }
+
+        public get behaviours(): ReadonlyArray<Behaviour | null> {
+            const behaviours = this._behaviours;
+
+            if (this._behavioursDirty) {
+                utility.filterArray(behaviours, null);
+                this._behavioursDirty = false;
+            }
+
+            return this._behaviours;
+        }
+
         public get matcher(): Readonly<ICompoundMatcher<TEntity>> {
             return this._matcher;
         }
 
         public get singleEntity(): TEntity | null {
-            const entities = this._entities;
+            const entityCount = this._entityCount;
 
-            if (entities.length === 0) {
+            if (entityCount === 0) {
                 return null;
             }
-            else if (entities.length > 1) {
+            else if (entityCount > 1) {
                 throw new Error();
             }
 
-            return entities[0];
-        }
-
-        public get entities(): ReadonlyArray<TEntity> {
-            return this._entities;
-        }
-
-        public get behaviours(): ReadonlyArray<Behaviour | null> {
-            return this._behaviours;
+            return this._singleEntity;
         }
 
         /**
@@ -138,7 +162,7 @@ namespace paper {
          * @deprecated
          */
         public get gameObjects(): ReadonlyArray<TEntity> {
-            return this._entities;
+            return this.entities;
         }
     }
 }

@@ -234,6 +234,42 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+    /**
+     *
+     */
+    class EditorComponent extends Component {
+        hideFlags: HideFlags;
+    }
+    /**
+     *
+     */
+    class ContainerEntityFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class TouchContainerEntityFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class HoveredFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class SelectedFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class LastSelectedFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class DeletedFlag extends EditorComponent {
+    }
 }
 declare namespace paper.editor {
 }
@@ -280,7 +316,6 @@ declare namespace paper.editor {
     class ModelComponent extends BaseComponent {
         static readonly onSceneSelected: signals.Signal;
         static readonly onSceneUnselected: signals.Signal;
-        static readonly onGameObjectHovered: signals.Signal;
         static readonly onGameObjectSelectChanged: signals.Signal;
         static readonly onGameObjectSelected: signals.Signal;
         static readonly onGameObjectUnselected: signals.Signal;
@@ -293,10 +328,6 @@ declare namespace paper.editor {
          */
         selectedScene: Scene | null;
         /**
-         * 指向的实体。
-         */
-        hoveredGameObject: GameObject | null;
-        /**
          * 最后一个选中的实体。
          */
         selectedGameObject: GameObject | null;
@@ -308,10 +339,9 @@ declare namespace paper.editor {
         private _select(value, isReplace?);
         private _unselect(value);
         initialize(): void;
-        hover(value: GameObject | null): void;
         select(value: Scene | GameObject | null, isReplace?: boolean): void;
-        remove(value: GameObject): void;
         unselect(value: GameObject): void;
+        remove(value: GameObject): void;
         update(): void;
         changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
     }
@@ -435,7 +465,7 @@ declare namespace paper.editor {
         private readonly _keyX;
         private readonly _keyF;
         private _transformController;
-        private _drawer;
+        private _containerEntity;
         private _touchEntity;
         private _boxesDrawer;
         private _boxColliderDrawer;
@@ -452,10 +482,11 @@ declare namespace paper.editor {
         private _onGameObjectUnselected;
         private _updateCameras();
         lookAtSelected(): void;
+        protected getMatchers(): IAnyOfMatcher<IEntity>[];
         onAwake(): void;
         onEnable(): void;
         onDisable(): void;
-        onUpdate(): void;
+        onTick(): void;
         private static readonly _defalutPosition;
         private _clearDefaultPointerDownPosition();
     }

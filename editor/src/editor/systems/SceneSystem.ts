@@ -120,15 +120,21 @@ namespace paper.editor {
             }
         }
 
+        protected getMatchers() {
+            return [
+                Matcher.create(egret3d.Transform, HoveredFlag)
+                    .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
+            ];
+        }
+
         public onAwake() {
             // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
-            Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate + 1);
         }
 
         public onEnable() {
             Application.systemManager.getSystem(GizmosSystem)!.enabled = true;
 
-            ModelComponent.onGameObjectHovered.add(this._onGameObjectHovered, this);
             ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectChanged, this);
             ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
             ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
@@ -143,7 +149,7 @@ namespace paper.editor {
             this._containerEntity = EditorMeshHelper.createGameObject("Drawer");
             this._touchEntity = EditorMeshHelper.createGameObject("Touch Drawer");
             this._containerEntity.addComponent(ContainerEntityFlag);
-            this._touchEntity.addComponent(TouchEntityFlag);
+            this._touchEntity.addComponent(TouchContainerEntityFlag);
 
             this._boxesDrawer = this._containerEntity.addComponent(BoxesDrawer);
             this._boxColliderDrawer = this._containerEntity.addComponent(BoxColliderDrawer);
@@ -166,7 +172,6 @@ namespace paper.editor {
         public onDisable() {
             Application.systemManager.getSystem(GizmosSystem)!.enabled = false;
 
-            ModelComponent.onGameObjectHovered.remove(this._onGameObjectHovered, this);
             ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectChanged, this);
             ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
             ModelComponent.onGameObjectUnselected.remove(this._onGameObjectUnselected, this);
@@ -197,8 +202,10 @@ namespace paper.editor {
             // this._worldAxisesDrawer = null;
         }
 
-        public onUpdate() {
+        public onTick() {
+            const groups = this.groups;
             const transformController = this._transformController!;
+            let hoveredEntity = groups[0].singleEntity;
 
             const defaultPointer = egret3d.inputCollecter.defaultPointer;
             if (defaultPointer.isDown(egret3d.PointerButtonsType.LeftMouse, false)) {
@@ -217,30 +224,29 @@ namespace paper.editor {
                 }
                 else { // Update selected.
                     const event = defaultPointer.event!;
-                    let hoveredGameObject = this._modelComponent.hoveredGameObject;
 
-                    if (hoveredGameObject) {
-                        if (this._modelComponent.selectedGameObjects.indexOf(hoveredGameObject) >= 0) {
+                    if (hoveredEntity) {
+                        if (this._modelComponent.selectedGameObjects.indexOf(hoveredEntity) >= 0) {
                             if (event.ctrlKey) {
-                                this._modelComponent.unselect(hoveredGameObject);
+                                this._modelComponent.unselect(hoveredEntity);
                             }
                         }
                         else {
                             if (defaultPointer.position.getDistance(defaultPointer.downPosition) < 5.0) {
-                                if (hoveredGameObject.renderer instanceof egret3d.SkinnedMeshRenderer) { //
-                                    const animation = hoveredGameObject.getComponentInParent(egret3d.Animation);
+                                if (hoveredEntity.renderer instanceof egret3d.SkinnedMeshRenderer) { //
+                                    const animation = hoveredEntity.getComponentInParent(egret3d.Animation);
                                     if (animation) {
-                                        hoveredGameObject = animation.gameObject;
+                                        hoveredEntity = animation.gameObject;
                                     }
                                 }
                                 else {
-                                    const gizmoPickComponent = hoveredGameObject.getComponent(GizmoPickComponent);
+                                    const gizmoPickComponent = hoveredEntity.getComponent(GizmoPickComponent);
                                     if (gizmoPickComponent) {
-                                        hoveredGameObject = gizmoPickComponent.pickTarget;
+                                        hoveredEntity = gizmoPickComponent.pickTarget;
                                     }
                                 }
 
-                                this._modelComponent.select(hoveredGameObject, !event.ctrlKey);
+                                this._modelComponent.select(hoveredEntity, !event.ctrlKey);
                             }
                             else if (defaultPointer.event!.ctrlKey) {
                                 // TODO
@@ -291,20 +297,18 @@ namespace paper.editor {
                             transformController.hovered = null;
                         }
 
+                        if (hoveredEntity) {
+                            hoveredEntity.removeComponent(HoveredFlag);
+                        }
+
                         if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
                             const gameObjects = Scene.activeScene.getRootGameObjects().concat(); // TODO
                             gameObjects.unshift(this._touchEntity!);
 
                             const raycastInfos = Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
                             if (raycastInfos.length > 0) {
-                                this._modelComponent.hover(raycastInfos[0].transform!.gameObject);
+                                raycastInfos[0].transform!.gameObject.addComponent(HoveredFlag);
                             }
-                            else {
-                                this._modelComponent.hover(null);
-                            }
-                        }
-                        else {
-                            this._modelComponent.hover(null);
                         }
                     }
                 }

@@ -572,8 +572,6 @@ namespace paper.editor {
         }
 
         public onDisable() {
-            Application.systemManager.getSystem(HierarchySystem)!.enabled = false;
-
             Component.onComponentCreated.remove(this._onComponentCreated, this);
             Component.onComponentDestroy.remove(this._onComponentDestroy, this);
 

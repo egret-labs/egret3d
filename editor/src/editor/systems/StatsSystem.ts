@@ -20,6 +20,37 @@ namespace paper.editor {
             }
         }
 
+        private _update() {
+            const guiComponent = this._guiComponent!;
+
+            if (egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyH).isDown(false)) {
+                this._fpsIndex++;
+
+                if (this._fpsIndex >= this._fpsShowQueue.length) {
+                    this._fpsIndex = 0;
+                }
+
+                if (this._fpsShowQueue[this._fpsIndex]) {
+                    guiComponent.showStates |= ShowState.FPS;
+                }
+                else {
+                    guiComponent.showStates &= ~ShowState.FPS;
+                }
+
+                this._updateFPSShowState();
+            }
+
+            // TODO dc tc vc
+
+            if (guiComponent.showStates & ShowState.FPS) {
+                guiComponent.stats.update();
+                guiComponent.renderPanel.update(
+                    paper.Application.systemManager.getSystem((egret3d as any)["webgl"]["WebGLRenderSystem"])!.deltaTime,
+                    200
+                );
+            }
+        }
+
         public onAwake() {
             const quaryValues = this._guiComponent.quaryValues;
 
@@ -33,32 +64,12 @@ namespace paper.editor {
             }
         }
 
-        public onUpdate() {
-            if (egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyH).isDown(false)) {
-                this._fpsIndex++;
+        public onTick() {
+            this._update();
+        }
 
-                if (this._fpsIndex >= this._fpsShowQueue.length) {
-                    this._fpsIndex = 0;
-                }
-
-                if (this._fpsShowQueue[this._fpsIndex]) {
-                    this._guiComponent.showStates |= ShowState.FPS;
-                }
-                else {
-                    this._guiComponent.showStates &= ~ShowState.FPS;
-                }
-
-                this._updateFPSShowState();
-            }
-
-            // TODO dc tc vc
-
-            const guiComponent = this._guiComponent!;
-            guiComponent.stats.update();
-            guiComponent.renderPanel.update(
-                paper.Application.systemManager.getSystem((egret3d as any)["webgl"]["WebGLRenderSystem"])!.deltaTime,
-                200
-            );
+        public onFrame() {
+            this._update();
         }
     }
 }

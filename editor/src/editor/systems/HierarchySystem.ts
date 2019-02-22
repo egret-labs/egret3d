@@ -5,10 +5,12 @@ namespace paper.editor {
     export class HierarchySystem extends BaseSystem<GameObject> {
         private _delayShow: uint = 0;
         private _addEntityCount: uint = 0;
-        private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
+
+        private readonly _controlLeft: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlLeft);
+        private readonly _controlRight: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlRight);
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
         private readonly _sceneOrEntityBuffer: (IScene | IEntity | null)[] = [];
-        private _selectItem: dat.GUI | null = null;
+        private _selectSceneOrEntity: IEntity | null = null;
 
         private _onSceneCreated([scene, isActive]: [IScene, boolean]) {
             this._addSceneOrEntity(scene);
@@ -16,18 +18,6 @@ namespace paper.editor {
 
         private _onSceneDestroy(scene: IScene) {
             this._removeSceneOrEntity(scene);
-        }
-
-        private _onSceneSelected = (_c: any, value: Scene) => {
-            this._selectSceneOrGameObject(value);
-        }
-
-        private _onSceneUnselected = (_c: any, value: Scene) => {
-            this._selectSceneOrGameObject(null);
-        }
-
-        private _onGameObjectSelectedChange = (_c: any, value: GameObject) => {
-            this._selectSceneOrGameObject(this._modelComponent.selectedGameObject);
         }
 
         private _onTransformParentChanged([transform, prevParent, currentParent]: [BaseTransform, BaseTransform | null, BaseTransform | null]) {
@@ -38,7 +28,9 @@ namespace paper.editor {
         }
 
         private _sceneOrGameObjectGUIClickHandler = (gui: dat.GUI) => {
-            this._modelComponent.select(gui.instance, true);
+            this._selectSceneOrEntity = gui.instance;
+
+            // this._modelComponent.select(gui.instance, true);
         }
 
         private _addSceneOrEntity(value: IScene | IEntity) {
@@ -125,14 +117,6 @@ namespace paper.editor {
             return true;
         }
 
-        private _selectSceneOrGameObject(sceneOrGameObject: Scene | GameObject | null) {
-            // Unselect prev folder.
-            if (this._selectItem) {
-                this._selectItem.selected = false;
-                this._selectItem = null;
-            }
-        }
-
         private _openFolder(folder: dat.GUI) {
             if (!folder.parent || folder.parent === this._guiComponent.hierarchy) {
                 return;
@@ -145,15 +129,41 @@ namespace paper.editor {
         protected getMatchers() {
             return [
                 Matcher.create<GameObject>(false, egret3d.Transform),
+                Matcher.create<GameObject>(false, egret3d.Transform, SelectedFlag),
+                Matcher.create<GameObject>(false, egret3d.Transform, LastSelectedFlag),
             ];
         }
 
         public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
-            this._addSceneOrEntity(entity);
+            const groups = this.groups;
+
+            if (group === groups[0]) {
+                this._addSceneOrEntity(entity);
+            }
+            else if (group === groups[1]) {
+                const item = this._guiComponent.hierarchyItems[entity.uuid];
+                if (item) {
+                    item.selected = true;
+                }
+            }
+            else if (group === groups[2]) {
+            }
         }
 
         public onEntityRemoved(entity: GameObject, group: Group<GameObject>) {
-            this._removeSceneOrEntity(entity);
+            const groups = this.groups;
+
+            if (group === groups[0]) {
+                this._removeSceneOrEntity(entity);
+            }
+            else if (group === groups[1]) {
+                const item = this._guiComponent.hierarchyItems[entity.uuid];
+                if (item) {
+                    item.selected = false;
+                }
+            }
+            else if (group === groups[2]) {
+            }
         }
 
         public onAwake() {
@@ -215,15 +225,57 @@ namespace paper.editor {
             this._delayShow = 0;
             this._addEntityCount = 0;
             this._sceneOrEntityBuffer.length = 0;
-            this._selectItem = null;
+            this._selectSceneOrEntity = null;
         }
 
-        public onUpdate() {
+        public onTick() {
             if (this._guiComponent.hierarchy.closed || this._guiComponent.hierarchy.domElement.style.display === "none") {
                 return;
             }
 
-            if (this._delayShow > 5) { // Add folder.
+            const groups = this.groups;
+            const selectSceneOrEntity = this._selectSceneOrEntity;
+
+            if (selectSceneOrEntity) {
+                if (selectSceneOrEntity instanceof Entity) {
+                    const isCtrl = this._controlLeft.isHold(false) || this._controlRight.isHold(false);
+                    const lastSelectedEntity = groups[2].singleEntity;
+
+                    if (selectSceneOrEntity.getComponent(SelectedFlag)) {
+                        if (isCtrl) {
+                            if (lastSelectedEntity === selectSceneOrEntity) {
+                                lastSelectedEntity.removeComponent(LastSelectedFlag);
+                            }
+
+                            selectSceneOrEntity.removeComponent(SelectedFlag);
+                        }
+                    }
+                    else {
+                        if (!isCtrl) {
+                            for (const entity of groups[1].entities) {
+                                entity.removeComponent(SelectedFlag);
+                            }
+                        }
+
+                        if (lastSelectedEntity) {
+                            lastSelectedEntity.removeComponent(LastSelectedFlag);
+                        }
+
+                        selectSceneOrEntity.addComponent(SelectedFlag);
+                        selectSceneOrEntity.addComponent(LastSelectedFlag);
+                    }
+                }
+
+                this._selectSceneOrEntity = null;
+            }
+        }
+
+        public onFrame() {
+            if (this._guiComponent.hierarchy.closed || this._guiComponent.hierarchy.domElement.style.display === "none") {
+                return;
+            }
+
+            if (this._delayShow > 5) {
                 const sceneOrEntityBuffer = this._sceneOrEntityBuffer;
 
                 while (sceneOrEntityBuffer.length > 0) {
@@ -243,16 +295,16 @@ namespace paper.editor {
 
                 this._addEntityCount = 0;
 
-                if (!this._selectItem) {  // Open and select folder.
-                    const sceneOrEntity = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
-                    const { hierarchyItems } = this._guiComponent;
+                // if (!this._selectItem) {  // Open and select folder.
+                //     const sceneOrEntity = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
+                //     const { hierarchyItems } = this._guiComponent;
 
-                    if (sceneOrEntity && sceneOrEntity.uuid in hierarchyItems) {
-                        this._selectItem = hierarchyItems[sceneOrEntity.uuid];
-                        this._selectItem.selected = true;
-                        this._openFolder(this._selectItem);
-                    }
-                }
+                //     if (sceneOrEntity && sceneOrEntity.uuid in hierarchyItems) {
+                //         this._selectItem = hierarchyItems[sceneOrEntity.uuid];
+                //         this._selectItem.selected = true;
+                //         this._openFolder(this._selectItem);
+                //     }
+                // }
             }
             else {
                 this._delayShow++;

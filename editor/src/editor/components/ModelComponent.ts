@@ -7,7 +7,6 @@ namespace paper.editor {
         public static readonly onSceneSelected: signals.Signal = new signals.Signal();
         public static readonly onSceneUnselected: signals.Signal = new signals.Signal();
 
-        public static readonly onGameObjectHovered: signals.Signal = new signals.Signal();
         public static readonly onGameObjectSelectChanged: signals.Signal = new signals.Signal();
         public static readonly onGameObjectSelected: signals.Signal = new signals.Signal();
         public static readonly onGameObjectUnselected: signals.Signal = new signals.Signal();
@@ -19,10 +18,6 @@ namespace paper.editor {
          * 选中的场景。
          */
         public selectedScene: Scene | null = null;
-        /**
-         * 指向的实体。
-         */
-        public hoveredGameObject: GameObject | null = null;
         /**
          * 最后一个选中的实体。
          */
@@ -178,25 +173,11 @@ namespace paper.editor {
             }
         }
 
-        public hover(value: GameObject | null) {
-            if (this.hoveredGameObject === value) {
-                return;
-            }
-
-            this.hoveredGameObject = value;
-            ModelComponent.onGameObjectHovered.dispatch(this, this.hoveredGameObject);
-        }
-
         public select(value: Scene | GameObject | null, isReplace?: boolean) {
             this._select(value, isReplace);
 
             if (this._editorModel !== null) {
                 this._editorModel.selectGameObject(this.selectedGameObjects);
-            }
-        }
-        public remove(value: GameObject) {
-            if (this._editorModel !== null) {
-                this._editorModel.deleteGameObject(this.selectedGameObjects);
             }
         }
 
@@ -207,12 +188,14 @@ namespace paper.editor {
                 this._editorModel.selectGameObject(this.selectedGameObjects);
             }
         }
+        
+        public remove(value: GameObject) {
+            if (this._editorModel !== null) {
+                this._editorModel.deleteGameObject(this.selectedGameObjects);
+            }
+        }
 
         public update() {
-            if (this.hoveredGameObject && this.hoveredGameObject.isDestroyed) {
-                this.hover(null);
-            }
-
             let i = this.selectedGameObjects.length;
             while (i--) {
                 const gameObject = this.selectedGameObjects[0];

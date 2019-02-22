@@ -12,89 +12,14 @@ namespace egret3d {
          * 专用于后期渲染的绘制信息。
          */
         public readonly postprocessing: DrawCall = DrawCall.create();
-        /**
-         * 
-         */
-        public readonly entities: (paper.IEntity | null)[] = [];
-        /**
-         * 此帧可能参与渲染的绘制信息列表。
-         * - 未进行视锥剔除的。
-         */
-        public readonly drawCalls: (DrawCall | null)[] = [];
         // /**
         //  * 此帧新添加的绘制信息列表。
         //  */
         // public readonly addDrawCalls: (DrawCall | null)[] = [];
 
         private _drawCallsDirty: boolean = false;
-        /**
-         * @internal
-         */
-        public _update() {
-            const { entities, drawCalls } = this;
-
-            if (this._drawCallsDirty) {
-                // Clear entities.
-                let index = 0;
-                let removeCount = 0;
-
-                for (const entity of entities) {
-                    if (entity) {
-                        if (removeCount > 0) {
-                            entities[index - removeCount] = entity;
-                            entities[index] = null;
-                        }
-                    }
-                    else {
-                        removeCount++;
-                    }
-
-                    index++;
-                }
-
-                if (removeCount > 0) {
-                    entities.length -= removeCount;
-                }
-                // Clear drawCalls.
-                index = 0;
-                removeCount = 0;
-
-                for (const drawCall of drawCalls) {
-                    if (drawCall) {
-                        if (removeCount > 0) {
-                            drawCalls[index - removeCount] = drawCall;
-                            drawCalls[index] = null;
-                        }
-                    }
-                    else {
-                        removeCount++;
-                    }
-
-                    index++;
-                }
-
-                if (removeCount > 0) {
-                    drawCalls.length -= removeCount;
-                }
-
-                this._drawCallsDirty = false;
-            }
-
-            if (DEBUG) {
-                for (const drawCall of drawCalls) {
-                    drawCall!.drawCount = 0;
-                }
-            }
-        }
-        /**
-         * @internal
-         */
-        public _lateUpdate() {
-            // const { addDrawCalls } = this;
-            // if (addDrawCalls.length > 0) {
-            //     addDrawCalls.length = 0;
-            // }
-        }
+        private _entities: (paper.IEntity | null)[] = [];
+        private _drawCalls: (DrawCall | null)[] = [];
         /**
          * @interal
          */
@@ -113,45 +38,36 @@ namespace egret3d {
          * @param drawCall 
          */
         public addDrawCall(drawCall: DrawCall): void {
-            const { entities, drawCalls, /*addDrawCalls*/ } = this;
+            const { _entities, _drawCalls } = this;
             const entity = drawCall.entity!;
 
-            if (entities.indexOf(entity) < 0) {
-                entities.push(entity);
+            if (_entities.indexOf(entity) < 0) {
+                _entities[_entities.length] = entity;
             }
 
-            drawCalls.push(drawCall);
-            // addDrawCalls.push(drawCall);
+            _drawCalls[_drawCalls.length] = drawCall;
         }
         /**
          * 移除指定渲染组件的绘制信息列表。
          */
         public removeDrawCalls(entity: paper.IEntity): boolean {
-            const { entities, drawCalls, /*addDrawCalls*/ } = this;
-            const index = entities.indexOf(entity);
+            const { _entities, _drawCalls } = this;
+            const index = _entities.indexOf(entity);
 
             if (index < 0) {
                 return false;
             }
 
-            let i = drawCalls.length;
+            let i = _drawCalls.length;
             while (i--) {
-                const drawCall = drawCalls[i];
+                const drawCall = _drawCalls[i];
                 if (drawCall && drawCall.entity === entity) {
-                    drawCalls[i] = null;
+                    _drawCalls[i] = null;
                     drawCall.release();
                 }
             }
 
-            // i = addDrawCalls.length;
-            // while (i--) {
-            //     const drawCall = addDrawCalls[i];
-            //     if (drawCall && drawCall.entity === entity) {
-            //         addDrawCalls[i] = null;
-            //     }
-            // }
-
-            entities[index] = null;
+            _entities[index] = null;
 
             this._drawCallsDirty = true;
 
@@ -161,7 +77,22 @@ namespace egret3d {
          * 是否包含指定渲染组件的绘制信息列表。
          */
         public hasDrawCalls(entity: paper.IEntity): boolean {
-            return this.entities.indexOf(entity) >= 0;
+            return this._entities.indexOf(entity) >= 0;
+        }
+        /**
+         * 此帧可能参与渲染的绘制信息列表。
+         * - 未进行视锥剔除的。
+         */
+        public get drawCalls(): ReadonlyArray<DrawCall> {
+            const { _entities, _drawCalls } = this;
+
+            if (this._drawCallsDirty) {
+                paper.utility.filterArray(_entities, null);
+                paper.utility.filterArray(_drawCalls, null);
+                this._drawCallsDirty = false;
+            }
+
+            return _drawCalls as ReadonlyArray<DrawCall>;
         }
     }
     /**

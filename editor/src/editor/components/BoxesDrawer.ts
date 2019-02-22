@@ -3,30 +3,11 @@ namespace paper.editor {
      * @internal
      */
     export class BoxesDrawer extends BaseComponent {
-        private readonly _hoverBox: GameObject = EditorMeshHelper.createBox("Hover Box", egret3d.Color.WHITE, 0.6);
         private readonly _drawer: GameObject[] = [];
-
-        public initialize() {
-            super.initialize();
-
-            this._hoverBox.parent = this.gameObject;
-        }
 
         public update() {
             const modelComponent = this.gameObject.getComponent(ModelComponent)!;
             const selectedGameObjects = modelComponent.selectedGameObjects;
-            const hoveredGameObject = modelComponent.hoveredGameObject;
-
-            if (hoveredGameObject && hoveredGameObject.renderer) {
-                const boundingTransform = hoveredGameObject.renderer.getBoundingTransform();
-                this._hoverBox.activeSelf = true;
-                this._hoverBox.transform.localPosition.applyMatrix(boundingTransform.localToWorldMatrix, hoveredGameObject.renderer.localBoundingBox.center).update();
-                this._hoverBox.transform.localRotation = boundingTransform.rotation;
-                this._hoverBox.transform.localScale.multiply(hoveredGameObject.renderer.localBoundingBox.size, boundingTransform.scale).update();
-            }
-            else {
-                this._hoverBox.activeSelf = false;
-            }
 
             for (let i = 0, l = Math.max(this._drawer.length, selectedGameObjects ? selectedGameObjects.length : 0); i < l; ++i) {
                 if (i + 1 > this._drawer.length) {

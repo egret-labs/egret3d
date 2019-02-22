@@ -4,7 +4,6 @@ namespace egret3d {
      */
     export class CameraAndLightSystem extends paper.BaseSystem<paper.GameObject> {
 
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(CameraAndLightCollecter)!;
 
         protected getMatchers() {
@@ -39,16 +38,13 @@ namespace egret3d {
         }
 
         public onFrame() {
-            this._drawCallCollecter._update();
-
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
             if (cameraAndLightCollecter.cameras.length > 0) {
                 cameraAndLightCollecter.sortCameras();
             }
         }
-        
+
         public onFrameCleanup() {
-            this._drawCallCollecter._lateUpdate();
             this._cameraAndLightCollecter.lightCountDirty = LightCountDirty.None;
         }
     }

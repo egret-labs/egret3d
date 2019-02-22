@@ -73,10 +73,9 @@ namespace paper.editor {
                     guiComponent.inspector.close();
                 }
 
-                // Make sure the GUISystem update after the SceneSystem.
-                Application.systemManager.register(HierarchySystem, Application.gameObjectContext, SystemOrder.LateUpdate + 1);
-                Application.systemManager.register(InspectorSystem, Application.gameObjectContext, SystemOrder.LateUpdate + 1);
-                Application.systemManager.register(StatsSystem, Application.gameObjectContext, SystemOrder.LateUpdate + 1);
+                Application.systemManager.register(HierarchySystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+                Application.systemManager.register(InspectorSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+                Application.systemManager.register(StatsSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
             }
         }
 
@@ -85,14 +84,6 @@ namespace paper.editor {
         }
 
         public onFrame() {
-            if (Application.playerMode === PlayerMode.Editor) {
-                return;
-            }
-
-            const guiComponent = this._guiComponent!;
-            guiComponent.stats.onFrame();
-        }
-        public onTick() {
             if (Application.playerMode === PlayerMode.Editor) {
                 return;
             }
@@ -149,5 +140,5 @@ namespace paper.editor {
         }
     }
     //
-    Application.systemManager.preRegister(EditorSystem, Application.gameObjectContext, SystemOrder.Begin - 10000);
+    Application.systemManager.preRegister(EditorSystem, Application.gameObjectContext, SystemOrder.End + 10000);
 }
