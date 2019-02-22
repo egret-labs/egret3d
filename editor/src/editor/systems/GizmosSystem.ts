@@ -8,8 +8,9 @@ namespace paper.editor {
 
         protected getMatchers() {
             return [
+                Matcher.create<GameObject>(false, egret3d.Transform, ContainerEntityFlag),
                 Matcher.create<GameObject>(false, egret3d.Transform, TouchEntityFlag),
-                Matcher.create<GameObject>(false, egret3d.Transform, egret3d.Camera),
+                Matcher.create<GameObject>(false, egret3d.Transform, egret3d.Camera), // Camera
                 Matcher.create<GameObject>(false, egret3d.Transform).anyOf(egret3d.DirectionalLight, egret3d.SpotLight, egret3d.PointLight, egret3d.HemisphereLight),
             ];
         }
@@ -19,9 +20,10 @@ namespace paper.editor {
             const editorCamera = egret3d.Camera.editor;
             const cameraPosition = editorCamera.gameObject.transform.position;
             const groups = this.groups;
-            const touchEntity = groups[0].singleEntity;
-            const cameraEntities = groups[1].entities;
-            const lightEntities = groups[2].entities;
+            const containerEntity = groups[0].singleEntity;
+            const touchEntity = groups[1].singleEntity;
+            const cameraEntities = groups[2].entities;
+            const lightEntities = groups[3].entities;
 
             for (let i = 0, l = Math.max(this._cameraDrawer.length, cameraEntities.length); i < l; ++i) {
                 if (i + 1 > this._cameraDrawer.length) {

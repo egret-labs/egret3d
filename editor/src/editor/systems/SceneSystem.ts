@@ -14,7 +14,7 @@ namespace paper.editor {
         private readonly _keyF: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyF);
 
         private _transformController: TransformController | null = null;
-        private _drawer: GameObject | null = null;
+        private _containerEntity: GameObject | null = null;
         private _touchEntity: GameObject | null = null;
 
         private _boxesDrawer: BoxesDrawer | null = null;
@@ -140,17 +140,18 @@ namespace paper.editor {
             this._transformController = EditorMeshHelper.createGameObject("Transform Controller").addComponent(TransformController);
             this._transformController.gameObject.activeSelf = false;
 
-            this._drawer = EditorMeshHelper.createGameObject("Drawer");
+            this._containerEntity = EditorMeshHelper.createGameObject("Drawer");
             this._touchEntity = EditorMeshHelper.createGameObject("Touch Drawer");
+            this._containerEntity.addComponent(ContainerEntityFlag);
             this._touchEntity.addComponent(TouchEntityFlag);
 
-            this._boxesDrawer = this._drawer.addComponent(BoxesDrawer);
-            this._boxColliderDrawer = this._drawer.addComponent(BoxColliderDrawer);
-            this._sphereColliderDrawer = this._drawer.addComponent(SphereColliderDrawer);
-            this._cylinderColliderDrawer = this._drawer.addComponent(CylinderColliderDrawer);
-            this._skeletonDrawer = this._drawer.addComponent(SkeletonDrawer);
-            this._cameraViewportDrawer = this._drawer.addComponent(CameraViewportDrawer);
-            this._gridDrawer = this._drawer.addComponent(GridDrawer);
+            this._boxesDrawer = this._containerEntity.addComponent(BoxesDrawer);
+            this._boxColliderDrawer = this._containerEntity.addComponent(BoxColliderDrawer);
+            this._sphereColliderDrawer = this._containerEntity.addComponent(SphereColliderDrawer);
+            this._cylinderColliderDrawer = this._containerEntity.addComponent(CylinderColliderDrawer);
+            this._skeletonDrawer = this._containerEntity.addComponent(SkeletonDrawer);
+            this._cameraViewportDrawer = this._containerEntity.addComponent(CameraViewportDrawer);
+            this._gridDrawer = this._containerEntity.addComponent(GridDrawer);
 
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
             this._cameraViewFrustum.activeSelf = false;
@@ -175,11 +176,11 @@ namespace paper.editor {
             editorCamera.enabled = false;
 
             this._transformController!.gameObject.destroy();
-            this._drawer!.destroy();
+            this._containerEntity!.destroy();
             this._touchEntity!.destroy();
 
             this._transformController = null;
-            this._drawer = null;
+            this._containerEntity = null;
             this._touchEntity = null;
             this._boxesDrawer = null;
             this._boxColliderDrawer = null;
