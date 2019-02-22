@@ -859,7 +859,7 @@ namespace egret3d.webgl {
             renderState.draw = this.draw.bind(this);
         }
 
-        public onUpdate() {
+        public onFrame() {
             if (!WebGLRenderState.webgl) {
                 return;
             }

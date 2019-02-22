@@ -11,23 +11,15 @@ namespace paper {
             ];
         }
 
-        public onUpdate() {
-            const clock = paper.clock;
-            let currentTimes = 0;
-            let fixedTime = clock.fixedTime;
-            const totalTimes = Math.min(Math.floor(fixedTime / clock.fixedDeltaTime), clock.maxFixedSubSteps);
+        public onTick(delta?:number) {
             const behaviours = this.groups[0].behaviours;
 
-            while (fixedTime >= clock.fixedDeltaTime && currentTimes++ < clock.maxFixedSubSteps) {
-                for (const behaviour of behaviours) {
-                    if (!behaviour || (behaviour._lifeStates & ComponentLifeState.Started) === 0) {
-                        continue;
-                    }
-
-                    behaviour.onFixedUpdate && behaviour.onFixedUpdate(currentTimes, totalTimes);
+            for (const behaviour of behaviours) {
+                if (!behaviour || (behaviour._lifeStates & ComponentLifeState.Started) === 0) {
+                    continue;
                 }
 
-                fixedTime -= clock.fixedDeltaTime;
+                behaviour.onFixedUpdate && behaviour.onFixedUpdate(delta);
             }
         }
     }

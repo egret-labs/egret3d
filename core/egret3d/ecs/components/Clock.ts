@@ -1,60 +1,120 @@
 namespace paper {
+
+    export interface ClockUpdateFlags { frameCount: number, tickCount: number }
+
     /**
      * 全局时钟信息组件。
      */
-    @singleton
     export class Clock extends Component {
-        public updateEnabled: boolean = false;
-        public fixedUpdateEnabled: boolean = false;
-        public maxFixedSubSteps: uint = 3;
-        public fixedDeltaTime: number = 1.0 / 50.0; // TODO same as fps.
+        /**
+         * 逻辑帧补偿速度
+         */
+        public tickCompensateSpeed: uint = 3;
+        /**
+         * 逻辑帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
+         */
+        public tickInterval: number = 1.0 / 50.0;
+        /**
+         * 渲染帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
+         */
+        public frameInterval: number = 1.0 / 60.0
+        /**
+         * 运行倍速
+         * 
+         * 为了保证平滑的效果, 不会影响逻辑/渲染帧频
+         */
         public timeScale: number = 1.0;
 
+        /**
+         * 程序启动后运行的总渲染帧数 
+         */
         private _frameCount: uint = 0;
+        /**
+         * 程序启动后运行的总逻辑帧数 
+         */
+        private _tickCount: uint = 0;
         private _beginTime: number = 0.0;
-        private _delayTime: number = 0.0;
         private _unscaledTime: number = 0.0;
         private _unscaledDeltaTime: number = 0.0;
         private _fixedTime: number = 0.0;
+
+        private _needReset: boolean = false;
+        private _unusedFrameDelta: number = 0.0;
+        private _unusedTickDelta: number = 0.0;
+        private _firstTicked: boolean;
 
         public initialize() {
             super.initialize();
 
             (Time as Clock) = (clock as Clock) = this;
-            this._beginTime = this.now * 0.001;
+            this._beginTime = performance.now() * 0.001;
         }
         /**
          * @internal
+         * @returns 此次生成的渲染帧和逻辑帧数量, @see `ClockResult`
          */
-        public update(time?: number) {
-            if (this._unscaledTime !== 0.0) {
-                if (this._fixedTime < this.fixedDeltaTime) {
-                }
-                else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
-                    this._fixedTime %= this.fixedDeltaTime;
-                }
-                else {
-                    this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
-                }
+        public update(time?: number): ClockUpdateFlags {
+            const now = (time || performance.now()) * 0.001;
+
+            if (this._needReset) { // 刚刚恢复, 需要重置间隔
+                this._unscaledTime = now - this._beginTime;
+                this._unscaledDeltaTime = 0;
+                this._needReset = false;
+            } else { // 计算和上此的间隔
+                const lastTime = this._unscaledTime;
+                this._unscaledTime = now - this._beginTime;
+                this._unscaledDeltaTime = this._unscaledTime - lastTime;
             }
 
-            const now = time || this.now * 0.001;
-            const lastTime = this._unscaledTime;
-            this._frameCount += 1;
-            this._unscaledTime = now - this._beginTime;
-            this._unscaledDeltaTime = this._unscaledTime - lastTime;
-            this._fixedTime += this._unscaledDeltaTime;
+            const returnValue: ClockUpdateFlags = { frameCount: 0, tickCount: 0 };
 
-            // TODO
-            this.updateEnabled = true;
-            this.fixedUpdateEnabled = true;
+            // 判断渲染帧
+            if (this.frameInterval && this._firstTicked) { // 确保执行过一次逻辑帧之后再执行第一次渲染
+                this._unusedFrameDelta += this._unscaledDeltaTime;
+                if (this._unusedFrameDelta >= this.frameInterval) {
+                    // 渲染帧不需要补帧
+                    this._unusedFrameDelta = this._unusedFrameDelta % this.frameInterval;
+                    returnValue.frameCount = 1;
+                    this._frameCount++;
+                }
+            } else { // frameInterval 未设置或者其值为零, 则表示跟随浏览器的帧率
+                returnValue.frameCount = 1;
+                this._frameCount++;
+            }
+
+            // 判断是否够一个逻辑帧
+            if (this.tickInterval) {
+                this._unusedTickDelta += this._unscaledDeltaTime;
+                if (this._unusedTickDelta >= this.tickInterval) {
+                    // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
+                    while (this._unusedTickDelta >= this.tickInterval && returnValue.tickCount < this.tickCompensateSpeed) {
+                        this._unusedTickDelta -= this.tickInterval;
+                        returnValue.tickCount++;
+                        this._tickCount++;
+                        this._firstTicked = true;
+                    }
+                }
+            } else { // tickInterval 未设置或者其值为零, 则表示跟随浏览器的帧率
+                returnValue.tickCount = 1;
+                this._tickCount++;
+            }
+            return returnValue;
         }
 
+        /**
+         * 程序启动后运行的总渲染帧数
+         */
         public get frameCount(): uint {
             return this._frameCount;
         }
         /**
-         * 系统时间。（以毫秒为单位）
+         * 程序启动后运行的总逻辑帧数
+         */
+        public get tickCount(): uint {
+            return this._tickCount;
+        }
+        /**
+         * 系统时间(毫秒)
          */
         public get now(): uint {
             if (Date.now) {
@@ -64,7 +124,7 @@ namespace paper {
             return new Date().getTime();
         }
         /**
-         * 从程序开始运行时的累计时间。（以秒为单位）
+         * 从程序开始运行时的累计时间(秒)
          */
         public get time(): number {
             return this._unscaledTime * this.timeScale;
@@ -76,10 +136,16 @@ namespace paper {
             return this._fixedTime;
         }
         /**
-         * 上一帧到此帧流逝的时间。（以秒为单位）
+         * 此次逻辑帧的时长
          */
-        public get deltaTime(): number {
-            return this._unscaledDeltaTime * this.timeScale;
+        public get lastTickDelta(): number {
+            return (this.tickInterval || this._unscaledDeltaTime) * this.timeScale;
+        }
+        /**
+         * 此次渲染帧的时长
+         */
+        public get lastFrameDelta(): number {
+            return (this.frameInterval || this._unscaledDeltaTime) * this.timeScale;
         }
         /**
          * 
@@ -92,6 +158,13 @@ namespace paper {
          */
         public get unscaledDeltaTime(): number {
             return this._unscaledDeltaTime;
+        }
+        /**
+         * reset
+         */
+        public reset(): void {
+            this._needReset = true;
+            this._firstTicked = true;
         }
     }
     /**

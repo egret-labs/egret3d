@@ -518,13 +518,13 @@ namespace egret3d.webgl {
             inputCollecter._clear();
         }
 
-        public onUpdate(deltaTime: number) {
+        public onFrame(deltaTime: number) {
             if (inputCollecter.isActiveAndEnabled) {
                 inputCollecter._update(deltaTime);
             }
         }
 
-        public onLateUpdate() {
+        public onFrameCleanup() {
             if (inputCollecter.isActiveAndEnabled) {
                 inputCollecter._clear();
             }

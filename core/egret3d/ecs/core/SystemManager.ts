@@ -24,9 +24,10 @@ namespace paper {
         private readonly _systems: BaseSystem<IEntity>[] = [];
         private readonly _startSystems: BaseSystem<IEntity>[] = [];
         private readonly _reactiveSystems: BaseSystem<IEntity>[] = [];
-        private readonly _updateSystems: BaseSystem<IEntity>[] = [];
-        private readonly _fixedUpdateSystems: BaseSystem<IEntity>[] = [];
-        private readonly _lateUpdateSystems: BaseSystem<IEntity>[] = [];
+        private readonly _frameSystems: BaseSystem<IEntity>[] = [];
+        private readonly _frameCleanupSystems: BaseSystem<IEntity>[] = [];
+        private readonly _tickSystems: BaseSystem<IEntity>[] = [];
+        private readonly _tickCleanupSystems: BaseSystem<IEntity>[] = [];
 
         private constructor() {
         }
@@ -53,6 +54,28 @@ namespace paper {
 
             return index < 0 ? systems.length : index;
         }
+        private _getSystemInsertIndexReversely(systems: BaseSystem<IEntity>[], order: SystemOrder) {
+            let index = -1;
+            const systemCount = systems.length;
+
+            if (systemCount > 0) {
+                if (order < systems[systemCount - 1].order) {
+                    return systemCount;
+                }
+                if (order >= systems[0].order) {
+                    return 0;
+                }
+            }
+
+            for (let i = 0; i < systemCount - 1; ++i) {
+                if (systems[i].order >= order && order > systems[i + 1].order) {
+                    index = i + 1;
+                    break;
+                }
+            }
+
+            return index < 0 ? systems.length : index;
+        }
         /**
          * 
          */
@@ -69,12 +92,8 @@ namespace paper {
         /**
          * 
          */
-        public update(update: boolean, fixedUpdate: boolean): void {
-            if (!clock) {
-                return;
-            }
-
-            if (update) {
+        public update(updateFlags: ClockUpdateFlags): void { // TODO: 太长需要重构
+            if (updateFlags.tickCount) {
                 for (const system of this._systems) {
                     if (system._enabled === system.enabled || !system.enabled) {
                         continue;
@@ -105,17 +124,26 @@ namespace paper {
                 }
             }
 
-            if (fixedUpdate) {
-                for (const system of this._fixedUpdateSystems) {
+            for (let i = 0; i < updateFlags.tickCount; i++) {
+                for (const system of this._tickSystems) {
                     if (!system.enabled) {
                         continue;
                     }
 
-                    system.onFixedUpdate!(clock.fixedDeltaTime);
+                    system.onTick && system.onTick(clock.lastTickDelta);
                 }
             }
 
-            if (update) {
+            if (updateFlags.frameCount) {
+                for (const system of this._frameSystems) {
+                    system.onFrame && system.onFrame(clock.lastFrameDelta);
+                }
+                for (const system of this._frameCleanupSystems) {
+                    system.onFrameCleanup && system.onFrameCleanup(clock.lastFrameDelta);
+                }
+            }
+
+            if (updateFlags.tickCount) {
                 const reactiveSystems = this._reactiveSystems;
 
                 for (const system of this._systems) {
@@ -178,14 +206,13 @@ namespace paper {
                         }
                     }
 
-                    system.onUpdate && system.onUpdate(clock.deltaTime);
 
                     if (DEBUG) {
                         (system.deltaTime as uint) += clock.now - startTime;
                     }
                 }
 
-                for (const system of this._lateUpdateSystems) {
+                for (const system of this._tickCleanupSystems) {
                     if (!system.enabled) {
                         continue;
                     }
@@ -196,7 +223,7 @@ namespace paper {
                         startTime = clock.now;
                     }
 
-                    system.onLateUpdate!(clock.deltaTime);
+                    system.onTickCleanup && system.onTickCleanup(clock.lastTickDelta);
 
                     if (DEBUG) {
                         (system.deltaTime as uint) += clock.now - startTime;
@@ -239,7 +266,6 @@ namespace paper {
         ): SystemManager {
             if (this._systems.length > 0) {
                 this.register(systemClass, context, order, config);
-
                 return this;
             }
 
@@ -273,16 +299,20 @@ namespace paper {
                 this._reactiveSystems.splice(this._getSystemInsertIndex(this._reactiveSystems, order), 0, system);
             }
 
-            if (system.onUpdate) {
-                this._updateSystems.splice(this._getSystemInsertIndex(this._updateSystems, order), 0, system);
+            if (system.onFrame) {
+                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
             }
 
-            if (system.onFixedUpdate) {
-                this._fixedUpdateSystems.splice(this._getSystemInsertIndex(this._fixedUpdateSystems, order), 0, system);
+            if (system.onFrameCleanup) {
+                this._frameCleanupSystems.splice(this._getSystemInsertIndexReversely(this._frameCleanupSystems, order), 0, system);
             }
 
-            if (system.onLateUpdate) {
-                this._lateUpdateSystems.splice(this._getSystemInsertIndex(this._lateUpdateSystems, order), 0, system);
+            if (system.onTick) {
+                this._tickSystems.splice(this._getSystemInsertIndex(this._tickSystems, order), 0, system);
+            }
+
+            if (system.onTickCleanup) {
+                this._tickCleanupSystems.splice(this._getSystemInsertIndexReversely(this._tickCleanupSystems, order), 0, system);
             }
 
             system.initialize(config);

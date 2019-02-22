@@ -5,7 +5,7 @@ namespace egret3d.webgl {
     export class EndSystem extends paper.BaseSystem<paper.GameObject> {
         private readonly _contactCollecter: ContactCollecter = paper.Application.sceneManager.globalEntity.getComponent(ContactCollecter)!;
 
-        public onLateUpdate() {
+        public onTickCleanup() {
             this._contactCollecter._update();
         }
     }

@@ -92,11 +92,10 @@ namespace paper {
         public onStart?(): void;
         /**
          * 程序运行时以固定间隔被执行。
-         * @param currentTimes 本帧被执行的计数。
-         * @param totalTimes 本帧被执行的总数。
+         * @param delta 本帧距离上一帧的时长。
          * @see paper.Clock
          */
-        public onFixedUpdate?(currentTimes: number, totalTimes: number): void;
+        public onFixedUpdate?(delta?: number): void;
         /**
          * 
          */

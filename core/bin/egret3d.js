@@ -6286,9 +6286,10 @@ var paper;
             this._systems = [];
             this._startSystems = [];
             this._reactiveSystems = [];
-            this._updateSystems = [];
-            this._fixedUpdateSystems = [];
-            this._lateUpdateSystems = [];
+            this._frameSystems = [];
+            this._frameCleanupSystems = [];
+            this._tickSystems = [];
+            this._tickCleanupSystems = [];
         }
         /**
          * 程序系统管理器单例。
@@ -6318,6 +6319,25 @@ var paper;
             }
             return index < 0 ? systems.length : index;
         };
+        SystemManager.prototype._getSystemInsertIndexReversely = function (systems, order) {
+            var index = -1;
+            var systemCount = systems.length;
+            if (systemCount > 0) {
+                if (order < systems[systemCount - 1].order) {
+                    return systemCount;
+                }
+                if (order >= systems[0].order) {
+                    return 0;
+                }
+            }
+            for (var i = 0; i < systemCount - 1; ++i) {
+                if (systems[i].order >= order && order > systems[i + 1].order) {
+                    index = i + 1;
+                    break;
+                }
+            }
+            return index < 0 ? systems.length : index;
+        };
         /**
          *
          */
@@ -6333,11 +6353,8 @@ var paper;
         /**
          *
          */
-        SystemManager.prototype.update = function (update, fixedUpdate) {
-            if (!paper.clock) {
-                return;
-            }
-            if (update) {
+        SystemManager.prototype.update = function (updateFlags) {
+            if (updateFlags.tickCount) {
                 for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                     var system = _a[_i];
                     if (system._enabled === system.enabled || !system.enabled) {
@@ -6366,19 +6383,29 @@ var paper;
                     system._started = true;
                 }
             }
-            if (fixedUpdate) {
-                for (var _h = 0, _j = this._fixedUpdateSystems; _h < _j.length; _h++) {
+            for (var i = 0; i < updateFlags.tickCount; i++) {
+                for (var _h = 0, _j = this._tickSystems; _h < _j.length; _h++) {
                     var system = _j[_h];
                     if (!system.enabled) {
                         continue;
                     }
-                    system.onFixedUpdate(paper.clock.fixedDeltaTime);
+                    system.onTick && system.onTick(paper.clock.lastTickDelta);
                 }
             }
-            if (update) {
-                var reactiveSystems = this._reactiveSystems;
-                for (var _k = 0, _l = this._systems; _k < _l.length; _k++) {
+            if (updateFlags.frameCount) {
+                for (var _k = 0, _l = this._frameSystems; _k < _l.length; _k++) {
                     var system = _l[_k];
+                    system.onFrame && system.onFrame(paper.clock.lastFrameDelta);
+                }
+                for (var _m = 0, _o = this._frameCleanupSystems; _m < _o.length; _m++) {
+                    var system = _o[_m];
+                    system.onFrameCleanup && system.onFrameCleanup(paper.clock.lastFrameDelta);
+                }
+            }
+            if (updateFlags.tickCount) {
+                var reactiveSystems = this._reactiveSystems;
+                for (var _p = 0, _q = this._systems; _p < _q.length; _p++) {
+                    var system = _q[_p];
                     var startTime = 0;
                     if (true) {
                         system.deltaTime = 0;
@@ -6390,10 +6417,10 @@ var paper;
                     if (reactiveSystems.indexOf(system) >= 0) {
                         var collectors = system.collectors;
                         if (system.onEntityAdded) {
-                            for (var _m = 0, collectors_1 = collectors; _m < collectors_1.length; _m++) {
-                                var collector = collectors_1[_m];
-                                for (var _o = 0, _p = collector.addedEntities; _o < _p.length; _o++) {
-                                    var entity = _p[_o];
+                            for (var _r = 0, collectors_1 = collectors; _r < collectors_1.length; _r++) {
+                                var collector = collectors_1[_r];
+                                for (var _s = 0, _t = collector.addedEntities; _s < _t.length; _s++) {
+                                    var entity = _t[_s];
                                     if (entity) {
                                         system.onEntityAdded(entity, collector.group);
                                     }
@@ -6401,10 +6428,10 @@ var paper;
                             }
                         }
                         if (system.onComponentAdded) {
-                            for (var _q = 0, collectors_2 = collectors; _q < collectors_2.length; _q++) {
-                                var collector = collectors_2[_q];
-                                for (var _r = 0, _s = collector.addedComponentes; _r < _s.length; _r++) {
-                                    var component = _s[_r];
+                            for (var _u = 0, collectors_2 = collectors; _u < collectors_2.length; _u++) {
+                                var collector = collectors_2[_u];
+                                for (var _v = 0, _w = collector.addedComponentes; _v < _w.length; _v++) {
+                                    var component = _w[_v];
                                     if (component) {
                                         system.onComponentAdded(component, collector);
                                     }
@@ -6412,10 +6439,10 @@ var paper;
                             }
                         }
                         if (system.onComponentRemoved) {
-                            for (var _t = 0, collectors_3 = collectors; _t < collectors_3.length; _t++) {
-                                var collector = collectors_3[_t];
-                                for (var _u = 0, _v = collector.removedComponentes; _u < _v.length; _u++) {
-                                    var component = _v[_u];
+                            for (var _x = 0, collectors_3 = collectors; _x < collectors_3.length; _x++) {
+                                var collector = collectors_3[_x];
+                                for (var _y = 0, _z = collector.removedComponentes; _y < _z.length; _y++) {
+                                    var component = _z[_y];
                                     if (component) {
                                         system.onComponentRemoved(component, collector);
                                     }
@@ -6423,28 +6450,27 @@ var paper;
                             }
                         }
                         if (system.onEntityRemoved) {
-                            for (var _w = 0, collectors_4 = collectors; _w < collectors_4.length; _w++) {
-                                var collector = collectors_4[_w];
-                                for (var _x = 0, _y = collector.removedEntities; _x < _y.length; _x++) {
-                                    var entity = _y[_x];
+                            for (var _0 = 0, collectors_4 = collectors; _0 < collectors_4.length; _0++) {
+                                var collector = collectors_4[_0];
+                                for (var _1 = 0, _2 = collector.removedEntities; _1 < _2.length; _1++) {
+                                    var entity = _2[_1];
                                     if (entity) {
                                         system.onEntityRemoved(entity, collector.group);
                                     }
                                 }
                             }
                         }
-                        for (var _z = 0, collectors_5 = collectors; _z < collectors_5.length; _z++) {
-                            var collector = collectors_5[_z];
+                        for (var _3 = 0, collectors_5 = collectors; _3 < collectors_5.length; _3++) {
+                            var collector = collectors_5[_3];
                             collector.clear();
                         }
                     }
-                    system.onUpdate && system.onUpdate(paper.clock.deltaTime);
                     if (true) {
                         system.deltaTime += paper.clock.now - startTime;
                     }
                 }
-                for (var _0 = 0, _1 = this._lateUpdateSystems; _0 < _1.length; _0++) {
-                    var system = _1[_0];
+                for (var _4 = 0, _5 = this._tickCleanupSystems; _4 < _5.length; _4++) {
+                    var system = _5[_4];
                     if (!system.enabled) {
                         continue;
                     }
@@ -6452,13 +6478,13 @@ var paper;
                     if (true) {
                         startTime = paper.clock.now;
                     }
-                    system.onLateUpdate(paper.clock.deltaTime);
+                    system.onTickCleanup && system.onTickCleanup(paper.clock.lastTickDelta);
                     if (true) {
                         system.deltaTime += paper.clock.now - startTime;
                     }
                 }
-                for (var _2 = 0, _3 = this._systems; _2 < _3.length; _2++) {
-                    var system = _3[_2];
+                for (var _6 = 0, _7 = this._systems; _6 < _7.length; _6++) {
+                    var system = _7[_6];
                     if (system._enabled === system.enabled) {
                         continue;
                     }
@@ -6468,10 +6494,10 @@ var paper;
                     }
                     system.onDisable && system.onDisable();
                     if (system.onEntityRemoved) {
-                        for (var _4 = 0, _5 = system.groups; _4 < _5.length; _4++) {
-                            var group = _5[_4];
-                            for (var _6 = 0, _7 = group.entities; _6 < _7.length; _6++) {
-                                var entity = _7[_6];
+                        for (var _8 = 0, _9 = system.groups; _8 < _9.length; _8++) {
+                            var group = _9[_8];
+                            for (var _10 = 0, _11 = group.entities; _10 < _11.length; _10++) {
+                                var entity = _11[_10];
                                 system.onEntityRemoved(entity, group);
                             }
                         }
@@ -6512,14 +6538,17 @@ var paper;
             if (system.onEntityAdded || system.onComponentAdded || system.onComponentRemoved || system.onEntityRemoved) {
                 this._reactiveSystems.splice(this._getSystemInsertIndex(this._reactiveSystems, order), 0, system);
             }
-            if (system.onUpdate) {
-                this._updateSystems.splice(this._getSystemInsertIndex(this._updateSystems, order), 0, system);
+            if (system.onFrame) {
+                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
             }
-            if (system.onFixedUpdate) {
-                this._fixedUpdateSystems.splice(this._getSystemInsertIndex(this._fixedUpdateSystems, order), 0, system);
+            if (system.onFrameCleanup) {
+                this._frameCleanupSystems.splice(this._getSystemInsertIndexReversely(this._frameCleanupSystems, order), 0, system);
             }
-            if (system.onLateUpdate) {
-                this._lateUpdateSystems.splice(this._getSystemInsertIndex(this._lateUpdateSystems, order), 0, system);
+            if (system.onTick) {
+                this._tickSystems.splice(this._getSystemInsertIndex(this._tickSystems, order), 0, system);
+            }
+            if (system.onTickCleanup) {
+                this._tickCleanupSystems.splice(this._getSystemInsertIndexReversely(this._tickCleanupSystems, order), 0, system);
             }
             system.initialize(config);
             return system;
@@ -10487,58 +10516,119 @@ var paper;
         __extends(Clock, _super);
         function Clock() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.updateEnabled = false;
-            _this.fixedUpdateEnabled = false;
-            _this.maxFixedSubSteps = 3;
-            _this.fixedDeltaTime = 1.0 / 50.0; // TODO same as fps.
+            /**
+             * 逻辑帧补偿速度
+             */
+            _this.tickCompensateSpeed = 3;
+            /**
+             * 逻辑帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
+             */
+            _this.tickInterval = 1.0 / 50.0;
+            /**
+             * 渲染帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
+             */
+            _this.frameInterval = 1.0 / 60.0;
+            /**
+             * 运行倍速
+             *
+             * 为了保证平滑的效果, 不会影响逻辑/渲染帧频
+             */
             _this.timeScale = 1.0;
+            /**
+             * 程序启动后运行的总渲染帧数
+             */
             _this._frameCount = 0;
+            /**
+             * 程序启动后运行的总逻辑帧数
+             */
+            _this._tickCount = 0;
             _this._beginTime = 0.0;
-            _this._delayTime = 0.0;
             _this._unscaledTime = 0.0;
             _this._unscaledDeltaTime = 0.0;
             _this._fixedTime = 0.0;
+            _this._needReset = false;
+            _this._unusedFrameDelta = 0.0;
+            _this._unusedTickDelta = 0.0;
             return _this;
         }
         Clock.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             paper.Time = paper.clock = this;
-            this._beginTime = this.now * 0.001;
+            this._beginTime = performance.now() * 0.001;
         };
         /**
          * @internal
+         * @returns 此次生成的渲染帧和逻辑帧数量, @see `ClockResult`
          */
         Clock.prototype.update = function (time) {
-            if (this._unscaledTime !== 0.0) {
-                if (this._fixedTime < this.fixedDeltaTime) {
-                }
-                else if (this._fixedTime < this.fixedDeltaTime * this.maxFixedSubSteps) {
-                    this._fixedTime %= this.fixedDeltaTime;
-                }
-                else {
-                    this._fixedTime -= this.fixedDeltaTime * this.maxFixedSubSteps;
+            var now = (time || performance.now()) * 0.001;
+            if (this._needReset) {
+                this._unscaledTime = now - this._beginTime;
+                this._unscaledDeltaTime = 0;
+                this._needReset = false;
+            }
+            else {
+                var lastTime = this._unscaledTime;
+                this._unscaledTime = now - this._beginTime;
+                this._unscaledDeltaTime = this._unscaledTime - lastTime;
+            }
+            var returnValue = { frameCount: 0, tickCount: 0 };
+            // 判断渲染帧
+            if (this.frameInterval && this._firstTicked) {
+                this._unusedFrameDelta += this._unscaledDeltaTime;
+                if (this._unusedFrameDelta >= this.frameInterval) {
+                    // 渲染帧不需要补帧
+                    this._unusedFrameDelta = this._unusedFrameDelta % this.frameInterval;
+                    returnValue.frameCount = 1;
+                    this._frameCount++;
                 }
             }
-            var now = time || this.now * 0.001;
-            var lastTime = this._unscaledTime;
-            this._frameCount += 1;
-            this._unscaledTime = now - this._beginTime;
-            this._unscaledDeltaTime = this._unscaledTime - lastTime;
-            this._fixedTime += this._unscaledDeltaTime;
-            // TODO
-            this.updateEnabled = true;
-            this.fixedUpdateEnabled = true;
+            else {
+                returnValue.frameCount = 1;
+                this._frameCount++;
+            }
+            // 判断是否够一个逻辑帧
+            if (this.tickInterval) {
+                this._unusedTickDelta += this._unscaledDeltaTime;
+                if (this._unusedTickDelta >= this.tickInterval) {
+                    // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
+                    while (this._unusedTickDelta >= this.tickInterval && returnValue.tickCount < this.tickCompensateSpeed) {
+                        this._unusedTickDelta -= this.tickInterval;
+                        returnValue.tickCount++;
+                        this._tickCount++;
+                        this._firstTicked = true;
+                    }
+                }
+            }
+            else {
+                returnValue.tickCount = 1;
+                this._tickCount++;
+            }
+            return returnValue;
         };
         Object.defineProperty(Clock.prototype, "frameCount", {
+            /**
+             * 程序启动后运行的总渲染帧数
+             */
             get: function () {
                 return this._frameCount;
             },
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Clock.prototype, "tickCount", {
+            /**
+             * 程序启动后运行的总逻辑帧数
+             */
+            get: function () {
+                return this._tickCount;
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Clock.prototype, "now", {
             /**
-             * 系统时间。（以毫秒为单位）
+             * 系统时间(毫秒)
              */
             get: function () {
                 if (Date.now) {
@@ -10551,7 +10641,7 @@ var paper;
         });
         Object.defineProperty(Clock.prototype, "time", {
             /**
-             * 从程序开始运行时的累计时间。（以秒为单位）
+             * 从程序开始运行时的累计时间(秒)
              */
             get: function () {
                 return this._unscaledTime * this.timeScale;
@@ -10569,12 +10659,22 @@ var paper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Clock.prototype, "deltaTime", {
+        Object.defineProperty(Clock.prototype, "lastTickDelta", {
             /**
-             * 上一帧到此帧流逝的时间。（以秒为单位）
+             * 此次逻辑帧的时长
              */
             get: function () {
-                return this._unscaledDeltaTime * this.timeScale;
+                return (this.tickInterval || this._unscaledDeltaTime) * this.timeScale;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Clock.prototype, "lastFrameDelta", {
+            /**
+             * 此次渲染帧的时长
+             */
+            get: function () {
+                return (this.frameInterval || this._unscaledDeltaTime) * this.timeScale;
             },
             enumerable: true,
             configurable: true
@@ -10599,9 +10699,13 @@ var paper;
             enumerable: true,
             configurable: true
         });
-        Clock = __decorate([
-            paper.singleton
-        ], Clock);
+        /**
+         * reset
+         */
+        Clock.prototype.reset = function () {
+            this._needReset = true;
+            this._firstTicked = true;
+        };
         return Clock;
     }(paper.Component));
     paper.Clock = Clock;
@@ -10839,21 +10943,14 @@ var paper;
                 paper.Matcher.create().extraOf(paper.Behaviour)
             ];
         };
-        FixedUpdateSystem.prototype.onUpdate = function () {
-            var clock = paper.clock;
-            var currentTimes = 0;
-            var fixedTime = clock.fixedTime;
-            var totalTimes = Math.min(Math.floor(fixedTime / clock.fixedDeltaTime), clock.maxFixedSubSteps);
+        FixedUpdateSystem.prototype.onTick = function (delta) {
             var behaviours = this.groups[0].behaviours;
-            while (fixedTime >= clock.fixedDeltaTime && currentTimes++ < clock.maxFixedSubSteps) {
-                for (var _i = 0, behaviours_1 = behaviours; _i < behaviours_1.length; _i++) {
-                    var behaviour = behaviours_1[_i];
-                    if (!behaviour || (behaviour._lifeStates & 8 /* Started */) === 0) {
-                        continue;
-                    }
-                    behaviour.onFixedUpdate && behaviour.onFixedUpdate(currentTimes, totalTimes);
+            for (var _i = 0, behaviours_1 = behaviours; _i < behaviours_1.length; _i++) {
+                var behaviour = behaviours_1[_i];
+                if (!behaviour || (behaviour._lifeStates & 8 /* Started */) === 0) {
+                    continue;
                 }
-                fixedTime -= clock.fixedDeltaTime;
+                behaviour.onFixedUpdate && behaviour.onFixedUpdate(delta);
             }
         };
         return FixedUpdateSystem;
@@ -10876,7 +10973,7 @@ var paper;
                 paper.Matcher.create().extraOf(paper.Behaviour)
             ];
         };
-        UpdateSystem.prototype.onUpdate = function (deltaTime) {
+        UpdateSystem.prototype.onTick = function (deltaTime) {
             for (var _i = 0, _a = this.groups[0].behaviours; _i < _a.length; _i++) {
                 var behaviour = _a[_i];
                 if (!behaviour || (behaviour._lifeStates & 8 /* Started */) === 0) {
@@ -10907,7 +11004,7 @@ var paper;
                 paper.Matcher.create().extraOf(paper.Behaviour)
             ];
         };
-        LateUpdateSystem.prototype.onUpdate = function (deltaTime) {
+        LateUpdateSystem.prototype.onTick = function (deltaTime) {
             for (var _i = 0, _a = this.groups[0].behaviours; _i < _a.length; _i++) {
                 var behaviour = _a[_i];
                 if (!behaviour || (behaviour._lifeStates & 8 /* Started */) === 0) {
@@ -10963,7 +11060,7 @@ var paper;
                 components.push(component);
             });
         };
-        DisableSystem.prototype.onLateUpdate = function () {
+        DisableSystem.prototype.onTickCleanup = function () {
             var disposeCollecter = this._disposeCollecter;
             for (var _i = 0, _a = disposeCollecter.scenes; _i < _a.length; _i++) {
                 var scene = _a[_i];
@@ -17263,14 +17360,14 @@ var egret3d;
                 cameraAndLightCollecter.updateLights(groups[1].entities);
             }
         };
-        CameraAndLightSystem.prototype.onUpdate = function () {
+        CameraAndLightSystem.prototype.onFrame = function () {
             this._drawCallCollecter._update();
             var cameraAndLightCollecter = this._cameraAndLightCollecter;
             if (cameraAndLightCollecter.cameras.length > 0) {
                 cameraAndLightCollecter.sortCameras();
             }
         };
-        CameraAndLightSystem.prototype.onLateUpdate = function () {
+        CameraAndLightSystem.prototype.onFrameCleanup = function () {
             this._drawCallCollecter._lateUpdate();
             this._cameraAndLightCollecter.lightCountDirty = egret3d.LightCountDirty.None;
         };
@@ -18934,7 +19031,7 @@ var egret3d;
         SkinnedMeshRendererSystem.prototype.onEntityRemoved = function (entity) {
             this._drawCallCollecter.removeDrawCalls(entity);
         };
-        SkinnedMeshRendererSystem.prototype.onUpdate = function () {
+        SkinnedMeshRendererSystem.prototype.onTick = function () {
             for (var _i = 0, _a = this.groups[0].entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
                 entity.getComponent(egret3d.SkinnedMeshRenderer)._update();
@@ -19191,7 +19288,7 @@ var egret3d;
                 this._sortedEntities.splice(index, 1);
             }
         };
-        Egret2DRendererSystem.prototype.onUpdate = function (deltaTime) {
+        Egret2DRendererSystem.prototype.onTick = function (deltaTime) {
             var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
             for (var _i = 0, _b = this.groups[0].entities; _i < _b.length; _i++) {
                 var entity = _b[_i];
@@ -21490,7 +21587,7 @@ var egret3d;
                 animation.play();
             }
         };
-        AnimationSystem.prototype.onUpdate = function (deltaTime) {
+        AnimationSystem.prototype.onTick = function (deltaTime) {
             for (var _i = 0, _a = this.groups[0].entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
                 var animation = this._animation = entity.getComponent(egret3d.Animation);
@@ -24827,7 +24924,7 @@ var egret3d;
                 this._drawCallCollecter.removeDrawCalls(gameObject);
                 // component.stop();
             };
-            ParticleSystem.prototype.onUpdate = function (deltaTime) {
+            ParticleSystem.prototype.onTick = function (deltaTime) {
                 // if (deltaTime > 0.3) {
                 //     deltaTime = 0.3;//防止dt过大，引起周期错乱
                 // }
@@ -25253,6 +25350,21 @@ var paper;
 (function (paper) {
     /**
      * 应用程序。
+     *
+     * ### 自动刷新和被动刷新
+     *
+     * 默认情况下
+     *
+     * - 自动刷新: 会以无限循环方式刷新, `PlayerMode.Player` 模式默认为自动刷新
+     * - 被动刷新: 不会启动循环, 需要刷新时需调用 `update()` 方法, `PlayerMode.Editor` 模式为被动刷新
+     *
+     * 在运行过程中可随时调用 `resume()` 切换到自动刷新, 或者调用 `pause()` 切换为被动刷新
+     *
+     * ### 限制帧频
+     *
+     * - 通过设置 `clock.frameInterval` 来设置渲染帧间隔(秒)
+     * - 通过设置 `clock.tickInterval` 来设置逻辑帧间隔(秒)
+     * - 在帧补偿的时候, 为了尽快达到同步, `clock.update()` 会在同步之前忽略此间隔, 也就是说在这种情况下, 帧率会增加, 只有逻辑帧会补偿
      */
     var ECS = (function () {
         function ECS() {
@@ -25279,7 +25391,7 @@ var paper;
             this._isFocused = false;
             this._isRunning = false;
             this._playerMode = 0 /* Player */;
-            this._bindUpdate = null;
+            this._loop = this._loop.bind(this);
         }
         /**
          * 应用程序单例。
@@ -25290,14 +25402,24 @@ var paper;
             }
             return this._instance;
         };
-        ECS.prototype._update = function () {
-            if (this._isRunning) {
-                requestAnimationFrame(this._bindUpdate);
+        /**
+         * core updating loop
+         */
+        ECS.prototype._loop = function (timestamp) {
+            if (!this._isRunning) {
+                return;
             }
-            if (paper.clock) {
-                paper.clock.update();
-                this.systemManager.update(paper.clock.updateEnabled, paper.clock.fixedUpdateEnabled);
-            }
+            timestamp = timestamp || performance.now();
+            var result = paper.clock && paper.clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
+            this._update(result);
+            requestAnimationFrame(this._loop);
+        };
+        /**
+         * including calculating, status updating, rerendering and logical updating
+         */
+        ECS.prototype._update = function (updateFlags) {
+            if (updateFlags === void 0) { updateFlags = { tickCount: 1, frameCount: 1 }; }
+            this.systemManager.update(updateFlags);
         };
         /**
          *
@@ -25312,6 +25434,14 @@ var paper;
             systemManager.register(paper.LateUpdateSystem, gameObjectContext, 6000 /* LateUpdate */);
             systemManager.register(paper.DisableSystem, gameObjectContext, 9000 /* Disable */);
             systemManager.preRegisterSystems();
+            if (options.tickInterval !== (void 0)) {
+                paper.clock.tickInterval = options.tickInterval;
+            }
+            console.info("tick rate:", paper.clock.tickInterval ? (1.0 / paper.clock.tickInterval) : "auto");
+            if (options.frameInterval !== (void 0)) {
+                paper.clock.frameInterval = options.frameInterval;
+            }
+            console.info("frame rate:", paper.clock.frameInterval ? (1.0 / paper.clock.frameInterval) : "auto");
             this.resume();
         };
         /**
@@ -25320,6 +25450,7 @@ var paper;
          */
         ECS.prototype.pause = function () {
             this._isRunning = false;
+            paper.clock.reset();
         };
         /**
          * TODO
@@ -25330,8 +25461,38 @@ var paper;
                 return;
             }
             this._isRunning = true;
-            if (!this._bindUpdate) {
-                this._bindUpdate = this._update.bind(this);
+            paper.clock.reset();
+            this._loop();
+        };
+        /**
+         * engine start
+         *
+         * TODO:
+         */
+        ECS.prototype.start = function () {
+            switch (this._playerMode) {
+                case 2 /* Editor */:
+                    this.pause();
+                    this._update();
+                    break;
+                case 0 /* Player */:
+                // breakthrough
+                case 1 /* DebugPlayer */:
+                    this.resume();
+                    break;
+                default: break;
+            }
+        };
+        /**
+         * 显式更新
+         *
+         * - 在暂停的情况下才有意义 (`this._isRunning === false`), 因为在运行的情况下下一帧自动会刷新
+         * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
+         */
+        ECS.prototype.update = function () {
+            // if it is running, updating will occur in next frame
+            if (this._isRunning) {
+                return;
             }
             this._update();
         };
@@ -29813,7 +29974,7 @@ var egret3d;
                     _this._updateCanvas(egret3d.stage);
                 }, this);
             };
-            BeginSystem.prototype.onUpdate = function () {
+            BeginSystem.prototype.onTick = function () {
                 // TODO 查询是否有性能问题。
                 var screenSize = egret3d.stage.screenSize;
                 // 
@@ -30581,7 +30742,7 @@ var egret3d;
                 renderState.render = this.render.bind(this);
                 renderState.draw = this.draw.bind(this);
             };
-            WebGLRenderSystem.prototype.onUpdate = function () {
+            WebGLRenderSystem.prototype.onFrame = function () {
                 if (!webgl_15.WebGLRenderState.webgl) {
                     return;
                 }
@@ -31076,12 +31237,12 @@ var egret3d;
                 window.removeEventListener("keyup", this._onKeyEvent);
                 egret3d.inputCollecter._clear();
             };
-            InputSystem.prototype.onUpdate = function (deltaTime) {
+            InputSystem.prototype.onFrame = function (deltaTime) {
                 if (egret3d.inputCollecter.isActiveAndEnabled) {
                     egret3d.inputCollecter._update(deltaTime);
                 }
             };
-            InputSystem.prototype.onLateUpdate = function () {
+            InputSystem.prototype.onFrameCleanup = function () {
                 if (egret3d.inputCollecter.isActiveAndEnabled) {
                     egret3d.inputCollecter._clear();
                 }
@@ -31106,7 +31267,7 @@ var egret3d;
                 _this._contactCollecter = paper.Application.sceneManager.globalEntity.getComponent(egret3d.ContactCollecter);
                 return _this;
             }
-            EndSystem.prototype.onLateUpdate = function () {
+            EndSystem.prototype.onTickCleanup = function () {
                 this._contactCollecter._update();
             };
             return EndSystem;

@@ -597,7 +597,7 @@ namespace paper.editor {
             }
         }
 
-        public onUpdate() {
+        public onTick() {
             const isInspectorShowed = !this._guiComponent.inspector.closed && this._guiComponent.inspector.domElement.style.display !== "none";
 
             this._modelComponent.update(); // TODO

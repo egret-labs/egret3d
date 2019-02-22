@@ -20,7 +20,7 @@ namespace paper {
             });
         }
 
-        public onLateUpdate() {
+        public onTickCleanup() {
             const disposeCollecter = this._disposeCollecter;
 
             for (const scene of disposeCollecter.scenes) {

@@ -123,7 +123,7 @@ namespace egret3d {
             this._drawCallCollecter.removeDrawCalls(entity);
         }
 
-        public onUpdate() {
+        public onTick() {
             for (const entity of this.groups[0].entities) {
                 entity.getComponent(SkinnedMeshRenderer)!._update();
             }
