@@ -15,6 +15,7 @@ declare class Stats {
     begin(): void;
     end(): number;
     update(): void;
+    onFrame(): void;
 }
 
 declare namespace Stats {

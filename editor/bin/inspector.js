@@ -45,9 +45,14 @@
 
 		//
 
-		var beginTime = (performance || Date).now(), prevTime = beginTime, frames = 0;
+		var beginTime = (performance || Date).now();
+		var prevTickTime = beginTime;
+		var prevFrameTime = beginTime;
+		var frames = 0;
+		var ticks = 0;
 
 		var fpsPanel = addPanel(new Stats.Panel('FPS', '#0ff', '#002'));
+		var tpsPanel = addPanel(new Stats.Panel('TPS', '#ff0', '#220'));
 		var msPanel = addPanel(new Stats.Panel('MS', '#0f0', '#020'));
 
 		if (self.performance && self.performance.memory) {
@@ -75,18 +80,18 @@
 
 			end: function () {
 
-				frames++;
+				ticks++;
 
 				var time = (performance || Date).now();
 
 				msPanel.update(time - beginTime, 200);
 
-				if (time > prevTime + 1000) {
+				if (time > prevTickTime + 1000) {
 
-					fpsPanel.update((frames * 1000) / (time - prevTime), 100);
+					tpsPanel.update((ticks * 1000) / (time - prevTickTime), 100);
 
-					prevTime = time;
-					frames = 0;
+					prevTickTime = time;
+					ticks = 0;
 
 					if (memPanel) {
 
@@ -105,6 +110,17 @@
 
 				beginTime = this.end();
 
+			},
+
+			onFrame: function() {
+				frames++;
+				var time = (performance || Date).now();
+				if (time > prevFrameTime + 1000) {
+					fpsPanel.update((frames * 1000) / (time - prevFrameTime), 100);
+					prevFrameTime = time;
+					frames = 0;
+				}
+				return time;
 			},
 
 			// Backwards Compatibility
@@ -4944,6 +4960,13 @@ var paper;
             };
             EditorSystem.prototype.onStart = function () {
                 console.info("\u5C0F\u63D0\u793A\uFF1A\u901A\u8FC7 H \u952E\u5207\u6362 Inspector \u7684\u663E\u793A\u4E0E\u9690\u85CF\u3002");
+            };
+            EditorSystem.prototype.onFrame = function () {
+                if (paper.Application.playerMode === 2 /* Editor */) {
+                    return;
+                }
+                var guiComponent = this._guiComponent;
+                guiComponent.stats.onFrame();
             };
             EditorSystem.prototype.onTick = function () {
                 if (paper.Application.playerMode === 2 /* Editor */) {
