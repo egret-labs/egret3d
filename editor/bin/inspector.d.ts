@@ -238,10 +238,33 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
+    /**
+     *
+     */
+    type QuaryValues = {
+        FPS?: 0 | 1;
+        GUI?: 0 | 1;
+        DEBUG?: 0 | 1;
+    };
+    /**
+     *
+     */
+    const enum ShowState {
+        None = 0,
+        FPS = 1,
+        Hierarchy = 2,
+        Inspector = 4,
+        HierarchyAndInspector = 6,
+        All = 7,
+    }
     /**
      *
      */
     class GUIComponent extends BaseComponent {
+        showStates: ShowState;
+        quaryValues: QuaryValues;
         readonly hierarchy: dat.GUI;
         readonly inspector: dat.GUI;
         readonly stats: Stats;
@@ -249,8 +272,6 @@ declare namespace paper.editor {
         initialize(): void;
         openComponents(...args: IComponentClass<BaseComponent>[]): void;
     }
-}
-declare namespace paper.editor {
 }
 declare namespace paper.editor {
     /**
@@ -318,6 +339,8 @@ declare namespace paper.editor {
         initialize(): void;
         update(): void;
     }
+}
+declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
@@ -397,6 +420,8 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
      * TODO
      */
@@ -411,9 +436,8 @@ declare namespace paper.editor {
         private readonly _keyF;
         private _transformController;
         private _drawer;
-        private _touchDrawer;
+        private _touchEntity;
         private _boxesDrawer;
-        private _iconDrawer;
         private _boxColliderDrawer;
         private _sphereColliderDrawer;
         private _cylinderColliderDrawer;

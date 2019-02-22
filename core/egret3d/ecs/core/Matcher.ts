@@ -2,19 +2,33 @@ namespace paper {
 
     const _components: IComponentClass<IComponent>[] = [];
     /**
-     * 组件匹配器。
+     * 实体组件匹配器。
      */
     export class Matcher<TEntity extends IEntity> implements IAllOfMatcher<TEntity>  {
         /**
-         * 
-         * @param components 
+         * 创建匹配器。
+         * @param componentClasses 必须包含的全部组件。
          */
-        public static create<TEntity extends IEntity>(...components: (IComponentClass<IComponent>)[]): IAllOfMatcher<TEntity> {
-            const matcher = new Matcher<TEntity>();
-            matcher._distinct(components, matcher._allOfComponents);
+        public static create<TEntity extends IEntity>(...componentClasses: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        /**
+         * 创建匹配器。
+         * @param componentEnabledFilter 是否以组件的激活状态做为匹配条件。
+         * @param componentClasses 必须包含的全部组件。
+         */
+        public static create<TEntity extends IEntity>(componentEnabledFilter: false, ...componentClasses: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
+        public static create<TEntity extends IEntity>(...args: any[]): IAllOfMatcher<TEntity> {
+            const matcher = new Matcher<TEntity>(args[0] !== false);
+
+            if (!matcher.componentEnabledFilter) {
+                args.shift();
+            }
+
+            matcher._distinct(args, matcher._allOfComponents);
 
             return matcher;
         }
+
+        public readonly componentEnabledFilter: boolean = true;
 
         private _id: string = "";
         private readonly _components: IComponentClass<IComponent>[] = [];
@@ -23,7 +37,8 @@ namespace paper {
         private readonly _noneOfComponents: IComponentClass<IComponent>[] = [];
         private readonly _extraOfComponents: IComponentClass<IComponent>[] = [];
 
-        private constructor() {
+        private constructor(componentEnabledFilter: boolean) {
+            this.componentEnabledFilter = componentEnabledFilter;
         }
 
         private _sortComponents(a: IComponentClass<IComponent>, b: IComponentClass<IComponent>) {
@@ -84,7 +99,7 @@ namespace paper {
             }
         }
 
-        public anyOf(...components: (IComponentClass<IComponent>)[]): IAnyOfMatcher<TEntity> {
+        public anyOf(...components: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity> {
             if (this._id) {
                 return this;
             }
@@ -94,7 +109,7 @@ namespace paper {
             return this;
         }
 
-        public noneOf(...components: (IComponentClass<IComponent>)[]): INoneOfMatcher<TEntity> {
+        public noneOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity> {
             if (this._id) {
                 return this;
             }
@@ -104,7 +119,7 @@ namespace paper {
             return this;
         }
 
-        public extraOf(...components: (IComponentClass<IComponent>)[]): INoneOfMatcher<TEntity> {
+        public extraOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity> {
             if (this._id) {
                 return this;
             }
@@ -115,9 +130,11 @@ namespace paper {
         }
 
         public matches(entity: TEntity): boolean {
-            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents))
-                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents))
-                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents));
+            const componentEnabledFilter = this.componentEnabledFilter;
+
+            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents, componentEnabledFilter))
+                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents, componentEnabledFilter))
+                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents, componentEnabledFilter));
         }
 
         public matchesExtra(component: IComponentClass<IComponent>): boolean {
@@ -133,7 +150,7 @@ namespace paper {
                     indices.push(component.componentIndex);
                 }
 
-                this._id = indices.join(",");
+                this._id = (this.componentEnabledFilter ? "E" : "") + indices.join(",");
             }
 
             return this._id;

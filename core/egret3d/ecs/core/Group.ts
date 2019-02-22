@@ -26,10 +26,12 @@ namespace paper {
         public static create<TEntity extends IEntity>(matcher: ICompoundMatcher<TEntity>): Group<TEntity> {
             return new Group<TEntity>(matcher);
         }
-
+        /**
+         * @internal
+         */
         public readonly isBehaviour: boolean = false;
 
-        private readonly _matcher: IMatcher<TEntity>;
+        private readonly _matcher: ICompoundMatcher<TEntity>;
         private readonly _entities: TEntity[] = [];
         private readonly _behaviours: (Behaviour | null)[] = [];
 
@@ -39,6 +41,12 @@ namespace paper {
             }
 
             this._matcher = matcher;
+
+            for (const scene of Application.sceneManager.scenes) {
+                for (const entity of scene.entities) {
+                    this.handleEvent(entity as TEntity, null as any, true); // TODO context._entityClass
+                }
+            }
         }
 
         public containsEntity(entity: TEntity): boolean {
@@ -95,12 +103,21 @@ namespace paper {
             return this._entities.length;
         }
 
-        public get matcher(): Readonly<IMatcher<TEntity>> {
+        public get matcher(): Readonly<ICompoundMatcher<TEntity>> {
             return this._matcher;
         }
 
-        public get entity(): TEntity {
-            return this._entities[0];
+        public get singleEntity(): TEntity | null {
+            const entities = this._entities;
+
+            if (entities.length === 0) {
+                return null;
+            }
+            else if (entities.length > 1) {
+                throw new Error();
+            }
+
+            return entities[0];
         }
 
         public get entities(): ReadonlyArray<TEntity> {

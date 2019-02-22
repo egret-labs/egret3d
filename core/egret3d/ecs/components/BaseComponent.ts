@@ -11,14 +11,6 @@ namespace paper {
          * 该组件的游戏实体。
          */
         public readonly gameObject: GameObject = null!;
-        /**
-         * @internal
-         */
-        public _destroy() {
-            super._destroy();
-
-            (this.gameObject as GameObject) = null!;
-        }
 
         protected _setEnabled(value: boolean): void {
             if ((this._lifeStates & ComponentLifeState.Initialized) && this.gameObject.activeInHierarchy) {
@@ -30,6 +22,12 @@ namespace paper {
             super.initialize(config);
 
             (this.gameObject as GameObject) = this.entity as GameObject;
+        }
+
+        public uninitialize(): void {
+            super.uninitialize();
+
+            (this.gameObject as GameObject) = null!;
         }
         /**
          * 该组件在场景的激活状态。

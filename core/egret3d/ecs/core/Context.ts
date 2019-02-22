@@ -13,12 +13,30 @@ namespace paper {
         private readonly _entityClass: IEntityClass<TEntity>;
         private readonly _entities: TEntity[] = [];
         private readonly _componentsGroups: Group<TEntity>[][] = [];
+        private readonly _componentsGroupsB: Group<TEntity>[][] = [];
         private readonly _groups: { [key: string]: Group<TEntity> } = {};
 
         private constructor(entityClass: IEntityClass<TEntity>) {
             this._entityClass = entityClass;
+            Component.onComponentCreated.add(this._onComponentCreated, this);
             Component.onComponentEnabled.add(this._onComponentEnabled, this);
             Component.onComponentDisabled.add(this._onComponentDisabled, this);
+            Component.onComponentDestroyed.add(this._onComponentDestroyed, this);
+        }
+
+        private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+
+            const componentClass = component.constructor as IComponentClass<IComponent>;
+            const groups = this._componentsGroupsB[componentClass.componentIndex];
+
+            if (groups) {
+                for (const group of groups) {
+                    group.handleEvent(entity as TEntity, component, true);
+                }
+            }
         }
 
         private _onComponentEnabled([entity, component]: [IEntity, IComponent]) {
@@ -27,11 +45,13 @@ namespace paper {
             }
 
             const componentClass = component.constructor as IComponentClass<IComponent>;
-            const componentIndex = componentClass.componentIndex;
-            const groups = this._componentsGroups[componentIndex];
+            const groups = this._componentsGroups[componentClass.componentIndex];
 
             if (groups) {
                 for (const group of groups) {
+                    if (!group.matcher.componentEnabledFilter){
+                        debugger;
+                    }
                     group.handleEvent(entity as TEntity, component, true);
                 }
             }
@@ -51,8 +71,7 @@ namespace paper {
             }
 
             const componentClass = component.constructor as IComponentClass<IComponent>;
-            const componentIndex = componentClass.componentIndex;
-            const groups = this._componentsGroups[componentIndex];
+            const groups = this._componentsGroups[componentClass.componentIndex];
 
             if (groups) {
                 for (const group of groups) {
@@ -69,6 +88,21 @@ namespace paper {
             }
         }
 
+        private _onComponentDestroyed([entity, component]: [IEntity, IComponent]) {
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+
+            const componentClass = component.constructor as IComponentClass<IComponent>;
+            const groups = this._componentsGroupsB[componentClass.componentIndex];
+
+            if (groups) {
+                for (const group of groups) {
+                    group.handleEvent(entity as TEntity, component, false);
+                }
+            }
+        }
+
         public containsEntity(entity: TEntity): boolean {
             return this._entities.indexOf(entity) >= 0;
         }
@@ -78,7 +112,7 @@ namespace paper {
             const groups = this._groups;
 
             if (!(id in groups)) {
-                const componentsGroups = this._componentsGroups;
+                const componentsGroups = matcher.componentEnabledFilter ? this._componentsGroups : this._componentsGroupsB;
                 const group = Group.create(matcher);
                 groups[id] = group;
 

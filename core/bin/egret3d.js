@@ -1370,6 +1370,7 @@ var paper;
             _this.hideFlags = 0 /* None */;
             _this.entity = null;
             _this.extras = paper.Application.playerMode === 2 /* Editor */ ? {} : undefined;
+            _this._isDestroyed = true;
             _this._enabled = false;
             /**
              * @internal
@@ -1415,6 +1416,7 @@ var paper;
         Component.create = function (entity, componentClass) {
             var component = new componentClass();
             component.entity = entity;
+            component._isDestroyed = false;
             component._enabled = this.createDefaultEnabled;
             return component;
         };
@@ -1422,7 +1424,7 @@ var paper;
          * @internal
          */
         Component.prototype._destroy = function () {
-            this.entity = null;
+            this._isDestroyed = true;
         };
         Component.prototype._setEnabled = function (value) {
             if ((this._lifeStates & 4 /* Initialized */)) {
@@ -1434,6 +1436,7 @@ var paper;
         };
         Component.prototype.uninitialize = function () {
             this._lifeStates = 0 /* None */;
+            this.entity = null;
         };
         Component.prototype.dispatchEnabledEvent = function (enabled) {
             if (enabled) {
@@ -1445,7 +1448,7 @@ var paper;
         };
         Object.defineProperty(Component.prototype, "isDestroyed", {
             get: function () {
-                return !this.entity;
+                return this._isDestroyed;
             },
             enumerable: true,
             configurable: true
@@ -1455,7 +1458,7 @@ var paper;
                 return this._enabled;
             },
             set: function (value) {
-                if (this._enabled === value || this.isDestroyed) {
+                if (this._enabled === value || this._isDestroyed) {
                     return;
                 }
                 this._enabled = value;
@@ -1812,13 +1815,6 @@ var paper;
             _this.gameObject = null;
             return _this;
         }
-        /**
-         * @internal
-         */
-        BaseComponent.prototype._destroy = function () {
-            _super.prototype._destroy.call(this);
-            this.gameObject = null;
-        };
         BaseComponent.prototype._setEnabled = function (value) {
             if ((this._lifeStates & 4 /* Initialized */) && this.gameObject.activeInHierarchy) {
                 this.dispatchEnabledEvent(value);
@@ -1827,6 +1823,10 @@ var paper;
         BaseComponent.prototype.initialize = function (config) {
             _super.prototype.initialize.call(this, config);
             this.gameObject = this.entity;
+        };
+        BaseComponent.prototype.uninitialize = function () {
+            _super.prototype.uninitialize.call(this);
+            this.gameObject = null;
         };
         Object.defineProperty(BaseComponent.prototype, "isActiveAndEnabled", {
             /**
@@ -2780,6 +2780,7 @@ var paper;
                     this._removeComponent(component, null);
                 }
             }
+            this._scene._removeEntity(this);
             this._isDestroyed = true;
             this._components.length = 0;
             this._scene = null;
@@ -2817,18 +2818,16 @@ var paper;
             paper.Component.onComponentDestroyed.dispatch([this, component]);
             this._componentsDirty = true;
         };
-        Entity.prototype._setScene = function (value) {
-            var hasScene = false;
-            if (this._scene) {
-                hasScene = true;
-                this._scene.removeEntity(this);
-            }
-            this._scene = value;
+        Entity.prototype._setScene = function (value, dispatchEvent) {
             if (value) {
-                value.addEntity(this);
+                if (this._scene) {
+                    this._scene._removeEntity(this);
+                }
+                value._addEntity(this);
+                this._scene = value;
             }
-            if (hasScene) {
-                Entity.onEntitySceneChanged.dispatch(this);
+            if (dispatchEvent) {
+                Entity.onEntityAddedToScene.dispatch(this);
             }
         };
         Entity.prototype._getComponent = function (componentClass) {
@@ -3117,22 +3116,29 @@ var paper;
             }
             return components;
         };
-        Entity.prototype.hasComponents = function (componentClasses) {
+        Entity.prototype.hasComponents = function (componentClasses, componentEnabled) {
             var components = this._components;
             for (var i = 0, l = componentClasses.length; i < l; ++i) {
                 var index = componentClasses[i].componentIndex;
-                if (index < 0 || !components[index]) {
+                if (index < 0) {
+                    return false;
+                }
+                var component = components[index];
+                if (!component || (componentEnabled && !component.enabled)) {
                     return false;
                 }
             }
             return true;
         };
-        Entity.prototype.hasAnyComponents = function (componentClasses) {
+        Entity.prototype.hasAnyComponents = function (componentClasses, componentEnabled) {
             var components = this._components;
             for (var i = 0, l = componentClasses.length; i < l; ++i) {
                 var index = componentClasses[i].componentIndex;
-                if (index >= 0 && components[index]) {
-                    return true;
+                if (index >= 0) {
+                    var component = components[index];
+                    if (component && (!componentEnabled || component.enabled)) {
+                        return true;
+                    }
                 }
             }
             return false;
@@ -3150,7 +3156,7 @@ var paper;
             },
             set: function (value) {
                 var sceneManager = paper.Application.sceneManager;
-                if (this.dontDestroy === value || this._isDestroyed || this === sceneManager.globalEntity) {
+                if (this.dontDestroy === value || this._isDestroyed || this === sceneManager._globalEntity) {
                     return;
                 }
                 this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
@@ -3163,7 +3169,7 @@ var paper;
                 return this._enabled;
             },
             set: function (value) {
-                if (this._enabled === value || this._isDestroyed || this === paper.Application.sceneManager.globalEntity) {
+                if (this._enabled === value || this._isDestroyed || this === paper.Application.sceneManager._globalEntity) {
                     return;
                 }
                 for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
@@ -3222,22 +3228,18 @@ var paper;
                 return this._scene;
             },
             set: function (value) {
-                if (this._scene === value || this._isDestroyed || this === paper.Application.sceneManager.globalEntity) {
+                if (this._scene === value || this._isDestroyed || this === paper.Application.sceneManager._globalEntity) {
                     return;
                 }
-                this._setScene(value);
+                this._setScene(value, true);
             },
             enumerable: true,
             configurable: true
         });
         /**
-         * 当实体被创建时派发事件。
+         * 当实体添加到场景时派发事件。
          */
-        Entity.onEntityCreated = new signals.Signal();
-        /**
-         * 当实体的场景改变时派发事件。
-         */
-        Entity.onEntitySceneChanged = new signals.Signal();
+        Entity.onEntityAddedToScene = new signals.Signal();
         /**
          * 当实体将要被销毁时派发事件。
          */
@@ -5988,6 +5990,9 @@ var paper;
      */
     var Group = (function () {
         function Group(matcher) {
+            /**
+             * @internal
+             */
             this.isBehaviour = false;
             this._entities = [];
             this._behaviours = [];
@@ -5995,6 +6000,13 @@ var paper;
                 this.isBehaviour = true;
             }
             this._matcher = matcher;
+            for (var _i = 0, _a = paper.Application.sceneManager.scenes; _i < _a.length; _i++) {
+                var scene = _a[_i];
+                for (var _b = 0, _c = scene.entities; _b < _c.length; _b++) {
+                    var entity = _c[_b];
+                    this.handleEvent(entity, null, true); // TODO context._entityClass
+                }
+            }
         }
         /**
          * @internal
@@ -6062,9 +6074,16 @@ var paper;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Group.prototype, "entity", {
+        Object.defineProperty(Group.prototype, "singleEntity", {
             get: function () {
-                return this._entities[0];
+                var entities = this._entities;
+                if (entities.length === 0) {
+                    return null;
+                }
+                else if (entities.length > 1) {
+                    throw new Error();
+                }
+                return entities[0];
             },
             enumerable: true,
             configurable: true
@@ -6129,10 +6148,13 @@ var paper;
         function Context(entityClass) {
             this._entities = [];
             this._componentsGroups = [];
+            this._componentsGroupsB = [];
             this._groups = {};
             this._entityClass = entityClass;
+            paper.Component.onComponentCreated.add(this._onComponentCreated, this);
             paper.Component.onComponentEnabled.add(this._onComponentEnabled, this);
             paper.Component.onComponentDisabled.add(this._onComponentDisabled, this);
+            paper.Component.onComponentDestroyed.add(this._onComponentDestroyed, this);
         }
         /**
          *
@@ -6140,24 +6162,40 @@ var paper;
         Context.create = function (entityClass) {
             return new Context(entityClass);
         };
-        Context.prototype._onComponentEnabled = function (_a) {
+        Context.prototype._onComponentCreated = function (_a) {
             var entity = _a[0], component = _a[1];
             if (entity.constructor !== this._entityClass) {
                 return;
             }
             var componentClass = component.constructor;
-            var componentIndex = componentClass.componentIndex;
-            var groups = this._componentsGroups[componentIndex];
+            var groups = this._componentsGroupsB[componentClass.componentIndex];
             if (groups) {
                 for (var _i = 0, groups_1 = groups; _i < groups_1.length; _i++) {
                     var group = groups_1[_i];
                     group.handleEvent(entity, component, true);
                 }
             }
+        };
+        Context.prototype._onComponentEnabled = function (_a) {
+            var entity = _a[0], component = _a[1];
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+            var componentClass = component.constructor;
+            var groups = this._componentsGroups[componentClass.componentIndex];
+            if (groups) {
+                for (var _i = 0, groups_2 = groups; _i < groups_2.length; _i++) {
+                    var group = groups_2[_i];
+                    if (!group.matcher.componentEnabledFilter) {
+                        debugger;
+                    }
+                    group.handleEvent(entity, component, true);
+                }
+            }
             if (componentClass.isBehaviour) {
-                var groups_2 = this._componentsGroups[paper.Behaviour.componentIndex];
-                for (var _b = 0, groups_3 = groups_2; _b < groups_3.length; _b++) {
-                    var group = groups_3[_b];
+                var groups_3 = this._componentsGroups[paper.Behaviour.componentIndex];
+                for (var _b = 0, groups_4 = groups_3; _b < groups_4.length; _b++) {
+                    var group = groups_4[_b];
                     group.handleEvent(entity, component, true);
                 }
             }
@@ -6168,18 +6206,31 @@ var paper;
                 return;
             }
             var componentClass = component.constructor;
-            var componentIndex = componentClass.componentIndex;
-            var groups = this._componentsGroups[componentIndex];
+            var groups = this._componentsGroups[componentClass.componentIndex];
             if (groups) {
-                for (var _i = 0, groups_4 = groups; _i < groups_4.length; _i++) {
-                    var group = groups_4[_i];
+                for (var _i = 0, groups_5 = groups; _i < groups_5.length; _i++) {
+                    var group = groups_5[_i];
                     group.handleEvent(entity, component, false);
                 }
             }
             if (componentClass.isBehaviour) {
-                var groups_5 = this._componentsGroups[paper.Behaviour.componentIndex];
-                for (var _b = 0, groups_6 = groups_5; _b < groups_6.length; _b++) {
-                    var group = groups_6[_b];
+                var groups_6 = this._componentsGroups[paper.Behaviour.componentIndex];
+                for (var _b = 0, groups_7 = groups_6; _b < groups_7.length; _b++) {
+                    var group = groups_7[_b];
+                    group.handleEvent(entity, component, false);
+                }
+            }
+        };
+        Context.prototype._onComponentDestroyed = function (_a) {
+            var entity = _a[0], component = _a[1];
+            if (entity.constructor !== this._entityClass) {
+                return;
+            }
+            var componentClass = component.constructor;
+            var groups = this._componentsGroupsB[componentClass.componentIndex];
+            if (groups) {
+                for (var _i = 0, groups_8 = groups; _i < groups_8.length; _i++) {
+                    var group = groups_8[_i];
                     group.handleEvent(entity, component, false);
                 }
             }
@@ -6191,7 +6242,7 @@ var paper;
             var id = matcher.id;
             var groups = this._groups;
             if (!(id in groups)) {
-                var componentsGroups = this._componentsGroups;
+                var componentsGroups = matcher.componentEnabledFilter ? this._componentsGroups : this._componentsGroupsB;
                 var group = paper.Group.create(matcher);
                 groups[id] = group;
                 for (var _i = 0, _a = matcher.components; _i < _a.length; _i++) {
@@ -6866,7 +6917,6 @@ var paper;
          */
         BaseTransform.prototype._addChild = function (child) {
             var children = this._children;
-            child._parent = this;
             if (children.indexOf(child) < 0) {
                 children.push(child);
                 return true;
@@ -6879,7 +6929,6 @@ var paper;
         BaseTransform.prototype._removeChild = function (child) {
             var children = this._children;
             var index = children.indexOf(child);
-            child._parent = null;
             if (index >= 0) {
                 children.splice(index, 1);
                 return true;
@@ -6916,7 +6965,7 @@ var paper;
                 console.error("Cannot change the parent to a different scene.");
                 return this;
             }
-            if (this.entity === paper.Application.sceneManager.globalEntity) {
+            if (this.entity === paper.Application.sceneManager._globalEntity) {
                 return this;
             }
             var prevParent = this._parent;
@@ -6932,6 +6981,7 @@ var paper;
                 parent._addChild(this);
             }
             this._globalEnabledDirty = true;
+            this._parent = parent;
             var currentEnabled = this.isActiveAndEnabled;
             if (prevEnabled !== currentEnabled) {
                 this.dispatchEnabledEvent(currentEnabled);
@@ -8855,8 +8905,7 @@ var paper;
             gameObect._enabled = paper.Entity.createDefaultEnabled;
             gameObect.name = name;
             gameObect.tag = tag;
-            gameObect._setScene(scene || paper.Application.sceneManager.activeScene);
-            paper.Entity.onEntityCreated.dispatch(gameObect);
+            gameObect._setScene(scene || paper.Application.sceneManager.activeScene, true);
             gameObect.addComponent(egret3d.Transform); //
             return gameObect;
         };
@@ -8870,15 +8919,24 @@ var paper;
             this._removeComponent(this.transform, null); // Remove transform at last.
             _super.prototype._destroy.call(this);
         };
-        GameObject.prototype._setScene = function (value) {
+        GameObject.prototype._setScene = function (value, dispatchEvent) {
             if (this.transform && this.transform.parent && this.transform.parent.gameObject.scene !== value) {
                 this.transform.parent = null;
             }
-            _super.prototype._setScene.call(this, value);
+            _super.prototype._setScene.call(this, value, false);
             if (this.transform) {
                 for (var _i = 0, _a = this.transform.children; _i < _a.length; _i++) {
                     var child = _a[_i];
-                    child.entity.scene = value;
+                    child.entity._setScene(value, false);
+                }
+            }
+            if (dispatchEvent) {
+                _super.prototype._setScene.call(this, null, true);
+                if (this.transform) {
+                    for (var _b = 0, _c = this.transform.children; _b < _c.length; _b++) {
+                        var child = _c[_b];
+                        child.entity._setScene(null, true);
+                    }
                 }
             }
         };
@@ -8895,7 +8953,8 @@ var paper;
                 }
             }
             component.initialize(config);
-            if (component.enabled && this.activeInHierarchy) {
+            paper.Component.onComponentCreated.dispatch([this, component]);
+            if (this.activeInHierarchy && component.enabled) {
                 component.dispatchEnabledEvent(true);
             }
         };
@@ -15714,6 +15773,31 @@ var paper;
             enumerable: true,
             configurable: true
         });
+        /**
+         * @internal
+         */
+        Scene.prototype._addEntity = function (entity) {
+            var entities = this._entities;
+            if (entities.indexOf(entity) < 0) {
+                entities.push(entity);
+                this._entitiesDirty = true;
+                return true;
+            }
+            return false;
+        };
+        /**
+         * @internal
+         */
+        Scene.prototype._removeEntity = function (entity) {
+            var entities = this._entities;
+            var index = entities.indexOf(entity);
+            if (index >= 0) {
+                entities.splice(index, 1);
+                this._entitiesDirty = true;
+                return true;
+            }
+            return false;
+        };
         Scene.prototype.initialize = function () {
         };
         Scene.prototype.uninitialize = function () {
@@ -15762,39 +15846,6 @@ var paper;
             entities.length = 0;
             Scene.onSceneDestroyed.dispatch(this);
             return true;
-        };
-        Scene.prototype.addEntity = function (entity) {
-            if (this._isDestroyed) {
-                if (true) {
-                    console.warn("The scene has been destroyed.");
-                }
-                return false;
-            }
-            var entities = this._entities;
-            if (entities.indexOf(entity) < 0) {
-                entities.push(entity);
-                entity.scene = this;
-                this._entitiesDirty = true;
-                return true;
-            }
-            return false;
-        };
-        Scene.prototype.removeEntity = function (entity) {
-            if (this._isDestroyed) {
-                if (true) {
-                    console.warn("The scene has been destroyed.");
-                }
-                return false;
-            }
-            var entities = this._entities;
-            var index = entities.indexOf(entity);
-            if (index >= 0) {
-                entities.splice(index, 1);
-                entity.scene = paper.Application.sceneManager.globalScene; //
-                this._entitiesDirty = true;
-                return true;
-            }
-            return false;
         };
         Scene.prototype.containsEntity = function (entity) {
             return this._entities.indexOf(entity) >= 0;
@@ -15862,6 +15913,7 @@ var paper;
             get: function () {
                 var rootEntities = this._rootEntities;
                 if (this._entitiesDirty) {
+                    rootEntities.length = 0;
                     for (var _i = 0, _a = this._entities; _i < _a.length; _i++) {
                         var entity = _a[_i];
                         if (entity instanceof paper.GameObject && !entity.transform.parent) {
@@ -28985,28 +29037,29 @@ var paper;
 (function (paper) {
     var _components = [];
     /**
-     * 组件匹配器。
+     * 实体组件匹配器。
      */
     var Matcher = (function () {
-        function Matcher() {
+        function Matcher(componentEnabledFilter) {
+            this.componentEnabledFilter = true;
             this._id = "";
             this._components = [];
             this._allOfComponents = [];
             this._anyOfComponents = [];
             this._noneOfComponents = [];
             this._extraOfComponents = [];
+            this.componentEnabledFilter = componentEnabledFilter;
         }
-        /**
-         *
-         * @param components
-         */
         Matcher.create = function () {
-            var components = [];
+            var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
-                components[_i] = arguments[_i];
+                args[_i] = arguments[_i];
             }
-            var matcher = new Matcher();
-            matcher._distinct(components, matcher._allOfComponents);
+            var matcher = new Matcher(args[0] !== false);
+            if (!matcher.componentEnabledFilter) {
+                args.shift();
+            }
+            matcher._distinct(args, matcher._allOfComponents);
             return matcher;
         };
         Matcher.prototype._sortComponents = function (a, b) {
@@ -29093,9 +29146,10 @@ var paper;
             return this;
         };
         Matcher.prototype.matches = function (entity) {
-            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents))
-                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents))
-                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents));
+            var componentEnabledFilter = this.componentEnabledFilter;
+            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents, componentEnabledFilter))
+                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents, componentEnabledFilter))
+                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents, componentEnabledFilter));
         };
         Matcher.prototype.matchesExtra = function (component) {
             return this._extraOfComponents.length > 0 && this._extraOfComponents.indexOf(component) >= 0;
@@ -29109,7 +29163,7 @@ var paper;
                         var component = _a[_i];
                         indices.push(component.componentIndex);
                     }
-                    this._id = indices.join(",");
+                    this._id = (this.componentEnabledFilter ? "E" : "") + indices.join(",");
                 }
                 return this._id;
             },

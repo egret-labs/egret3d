@@ -15,10 +15,9 @@ namespace paper.editor {
 
         private _transformController: TransformController | null = null;
         private _drawer: GameObject | null = null;
-        private _touchDrawer: GameObject | null = null;
+        private _touchEntity: GameObject | null = null;
 
         private _boxesDrawer: BoxesDrawer | null = null;
-        private _iconDrawer: IconDrawer | null = null;
         private _boxColliderDrawer: BoxColliderDrawer | null = null;
         private _sphereColliderDrawer: SphereColliderDrawer | null = null;
         private _cylinderColliderDrawer: CylinderColliderDrawer | null = null;
@@ -38,7 +37,7 @@ namespace paper.editor {
                 selectedGameObject ? true : false;
 
             this._cameraViewFrustum!.activeSelf =
-                selectedGameObject && selectedGameObject !== GameObject.globalGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
+                selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
         }
 
         private _onGameObjectSelected = (_c: any, value: GameObject) => {
@@ -123,9 +122,12 @@ namespace paper.editor {
 
         public onAwake() {
             // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
+            Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
         }
 
         public onEnable() {
+            Application.systemManager.getSystem(GizmosSystem)!.enabled = true;
+
             ModelComponent.onGameObjectHovered.add(this._onGameObjectHovered, this);
             ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectChanged, this);
             ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
@@ -139,10 +141,10 @@ namespace paper.editor {
             this._transformController.gameObject.activeSelf = false;
 
             this._drawer = EditorMeshHelper.createGameObject("Drawer");
-            this._touchDrawer = EditorMeshHelper.createGameObject("Touch Drawer");
+            this._touchEntity = EditorMeshHelper.createGameObject("Touch Drawer");
+            this._touchEntity.addComponent(TouchEntityFlag);
 
             this._boxesDrawer = this._drawer.addComponent(BoxesDrawer);
-            this._iconDrawer = this._touchDrawer.addComponent(IconDrawer);
             this._boxColliderDrawer = this._drawer.addComponent(BoxColliderDrawer);
             this._sphereColliderDrawer = this._drawer.addComponent(SphereColliderDrawer);
             this._cylinderColliderDrawer = this._drawer.addComponent(CylinderColliderDrawer);
@@ -161,6 +163,8 @@ namespace paper.editor {
         }
 
         public onDisable() {
+            Application.systemManager.getSystem(GizmosSystem)!.enabled = false;
+
             ModelComponent.onGameObjectHovered.remove(this._onGameObjectHovered, this);
             ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectChanged, this);
             ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
@@ -172,13 +176,12 @@ namespace paper.editor {
 
             this._transformController!.gameObject.destroy();
             this._drawer!.destroy();
-            this._touchDrawer!.destroy();
+            this._touchEntity!.destroy();
 
             this._transformController = null;
             this._drawer = null;
-            this._touchDrawer = null;
+            this._touchEntity = null;
             this._boxesDrawer = null;
-            this._iconDrawer = null;
             this._boxColliderDrawer = null;
             this._sphereColliderDrawer = null;
             this._cylinderColliderDrawer = null;
@@ -288,8 +291,8 @@ namespace paper.editor {
                         }
 
                         if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                            const gameObjects = Scene.activeScene.getRootGameObjects().concat();
-                            gameObjects.unshift(this._touchDrawer!);
+                            const gameObjects = Scene.activeScene.getRootGameObjects().concat(); // TODO
+                            gameObjects.unshift(this._touchEntity!);
 
                             const raycastInfos = Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
                             if (raycastInfos.length > 0) {
@@ -345,7 +348,6 @@ namespace paper.editor {
             }
 
             this._boxesDrawer!.update();
-            this._iconDrawer!.update();
             this._boxColliderDrawer!.update();
             this._sphereColliderDrawer!.update();
             this._cylinderColliderDrawer!.update();

@@ -122,6 +122,7 @@ namespace paper {
         public static create<T extends IComponent>(entity: IEntity, componentClass: IComponentClass<T>): T {
             const component = new componentClass();
             (component.entity as IEntity) = entity;
+            (<any>component as Component)._isDestroyed = false;
             (<any>component as Component)._enabled = this.createDefaultEnabled;
 
             return component;
@@ -132,9 +133,10 @@ namespace paper {
 
         public readonly entity: IEntity = null!;
 
-        @paper.serializedField
+        @serializedField
         public extras?: ComponentExtras = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
+        protected _isDestroyed: boolean = true;
         @serializedField
         protected _enabled: boolean = false;
         /**
@@ -152,7 +154,7 @@ namespace paper {
          * @internal
          */
         public _destroy() {
-            (this.entity as IEntity) = null!;
+            this._isDestroyed = true;
         }
 
         protected _setEnabled(value: boolean): void {
@@ -167,6 +169,7 @@ namespace paper {
 
         public uninitialize(): void {
             this._lifeStates = ComponentLifeState.None;
+            (this.entity as IEntity) = null!;
         }
 
         public dispatchEnabledEvent(enabled: boolean): void {
@@ -179,7 +182,7 @@ namespace paper {
         }
 
         public get isDestroyed(): boolean {
-            return !this.entity;
+            return this._isDestroyed;
         }
 
         @editor.property(editor.EditType.CHECKBOX)
@@ -187,7 +190,7 @@ namespace paper {
             return this._enabled;
         }
         public set enabled(value: boolean) {
-            if (this._enabled === value || this.isDestroyed) {
+            if (this._enabled === value || this._isDestroyed) {
                 return;
             }
 

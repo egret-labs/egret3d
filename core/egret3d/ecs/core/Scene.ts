@@ -102,6 +102,37 @@ namespace paper {
         private constructor() {
             super();
         }
+        /**
+         * @internal
+         */
+        public _addEntity(entity: IEntity): boolean {
+            const entities = this._entities;
+
+            if (entities.indexOf(entity) < 0) {
+                entities.push(entity);
+                this._entitiesDirty = true;
+
+                return true;
+            }
+
+            return false;
+        }
+        /**
+         * @internal
+         */
+        public _removeEntity(entity: IEntity): boolean {
+            const entities = this._entities;
+            const index = entities.indexOf(entity);
+
+            if (index >= 0) {
+                entities.splice(index, 1);
+                this._entitiesDirty = true;
+
+                return true;
+            }
+
+            return false;
+        }
 
         public initialize(): void {
         }
@@ -167,51 +198,6 @@ namespace paper {
             return true;
         }
 
-        public addEntity(entity: IEntity): boolean {
-            if (this._isDestroyed) {
-                if (DEBUG) {
-                    console.warn("The scene has been destroyed.");
-                }
-
-                return false;
-            }
-
-            const entities = this._entities;
-
-            if (entities.indexOf(entity) < 0) {
-                entities.push(entity);
-                entity.scene = this;
-                this._entitiesDirty = true;
-
-                return true;
-            }
-
-            return false;
-        }
-
-        public removeEntity(entity: IEntity): boolean {
-            if (this._isDestroyed) {
-                if (DEBUG) {
-                    console.warn("The scene has been destroyed.");
-                }
-
-                return false;
-            }
-
-            const entities = this._entities;
-            const index = entities.indexOf(entity);
-
-            if (index >= 0) {
-                entities.splice(index, 1);
-                entity.scene = Application.sceneManager.globalScene; //
-                this._entitiesDirty = true;
-
-                return true;
-            }
-
-            return false;
-        }
-
         public containsEntity(entity: IEntity): boolean {
             return this._entities.indexOf(entity) >= 0;
         }
@@ -274,6 +260,8 @@ namespace paper {
             const rootEntities = this._rootEntities;
 
             if (this._entitiesDirty) {
+                rootEntities.length = 0;
+                
                 for (const entity of this._entities) {
                     if (entity instanceof GameObject && !entity.transform.parent) {
                         rootEntities.push(entity);

@@ -262,7 +262,8 @@ namespace paper {
         readonly __onRegister: () => boolean;
     }
     /**
-     * 
+     * 实体类接口。
+     * - 仅用于约束实体类传递。
      */
     export interface IEntityClass<TEntity extends IEntity> {
         /**
@@ -407,12 +408,12 @@ namespace paper {
          * 
          * @param componentClasses 
          */
-        hasComponents(componentClasses: IComponentClass<IComponent>[]): boolean;
+        hasComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
         /**
          * 
          * @param componentClasses 
          */
-        hasAnyComponents(componentClasses: IComponentClass<IComponent>[]): boolean;
+        hasAnyComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
     }
     /**
      * 组件接口。
@@ -459,25 +460,30 @@ namespace paper {
         dispatchEnabledEvent(enabled: boolean): void;
     }
     /**
-     * 
+     * 实体组件匹配器接口。
      */
     export interface IMatcher<TEntity extends IEntity> {
         /**
-         * 
+         * 该匹配器是否以组件的激活状态做为匹配条件。
+         * - 默认为 `true`。
+         */
+        readonly componentEnabledFilter: boolean;
+        /**
+         * 该匹配器的唯一标识。
          */
         readonly id: string;
         /**
-         * 
+         * 该匹配器的全部组件。
          */
         readonly components: ReadonlyArray<IComponentClass<IComponent>>;
         /**
-         * 
-         * @param entity 
+         * 指定的实体是否与该匹配器的规则相匹配。
+         * @param entity 指定的实体。
          */
         matches(entity: TEntity): boolean;
         /**
-         * 
-         * @param component 
+         * 指定的组件是否与该匹配器的额外规则相匹配。
+         * @param component 指定的组件。
          */
         matchesExtra(component: IComponentClass<IComponent>): boolean;
     }
@@ -486,49 +492,49 @@ namespace paper {
      */
     export interface ICompoundMatcher<TEntity extends IEntity> extends IMatcher<TEntity> {
         /**
-         * 
+         * 必须包含的全部组件。
          */
         readonly allOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         /**
-         * 
+         * 必须包含的任一组件。
          */
         readonly anyOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         /**
-         * 
+         * 不能包含的任一组件。
          */
         readonly noneOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         /**
-         * 
+         * 可以包含的任一组件。
          */
         readonly extraOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
     }
     /**
-     * 
+     * 不能包含任一组件的匹配器接口。
      */
     export interface INoneOfMatcher<TEntity extends IEntity> extends ICompoundMatcher<TEntity> {
         /**
-         * 
-         * @param componentClasses 
+         * 设置可以包含的任一组件。
+         * @param componentClasses 可以包含的任一组件。
          */
         extraOf(...componentClasses: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
     }
     /**
-     * 
+     * 必须包含任一组件的匹配器接口。
      */
     export interface IAnyOfMatcher<TEntity extends IEntity> extends INoneOfMatcher<TEntity> {
         /**
-         * 
-         * @param componentClasses 
+         * 设置不能包含的任一组件。
+         * @param componentClasses 不能包含的任一组件。
          */
         noneOf(...componentClasses: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
     }
     /**
-     * 
+     * 必须包含全部组件的匹配器接口。
      */
     export interface IAllOfMatcher<TEntity extends IEntity> extends IAnyOfMatcher<TEntity> {
         /**
-         * 
-         * @param componentClasses 
+         * 设置必须包含的任一组件。
+         * @param componentClasses 必须包含的任一组件。
          */
         anyOf(...componentClasses: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity>;
     }
@@ -564,14 +570,6 @@ namespace paper {
          * 销毁该场景。
          */
         destroy(): boolean;
-        /**
-         * 添加指定实体到该场景。
-         */
-        addEntity(entity: IEntity): boolean;
-        /**
-         * 从该场景移除指定实体。
-         */
-        removeEntity(entity: IEntity): boolean;
         /**
          * 该场景是否包含指定实体。
          */
