@@ -219,43 +219,43 @@ namespace paper.editor {
         }
 
         public onUpdate() {
-            const isHierarchyShowed = !this._guiComponent.hierarchy.closed && this._guiComponent.hierarchy.domElement.style.display !== "none";
+            if (this._guiComponent.hierarchy.closed || this._guiComponent.hierarchy.domElement.style.display === "none") {
+                return;
+            }
 
-            if (isHierarchyShowed) { // Add folder.
-                if (this._delayShow > 5) {
-                    const sceneOrEntityBuffer = this._sceneOrEntityBuffer;
+            if (this._delayShow > 5) { // Add folder.
+                const sceneOrEntityBuffer = this._sceneOrEntityBuffer;
 
-                    while (sceneOrEntityBuffer.length > 0) {
-                        const element = sceneOrEntityBuffer.shift();
+                while (sceneOrEntityBuffer.length > 0) {
+                    const element = sceneOrEntityBuffer.shift();
 
-                        if (element) {
-                            if (element instanceof Entity) {
-                                if (!this._addEntity(element)) {
-                                    break;
-                                }
-                            }
-                            else {
-                                this._getOrAddScene(element as IScene);
+                    if (element) {
+                        if (element instanceof Entity) {
+                            if (!this._addEntity(element)) {
+                                break;
                             }
                         }
-                    }
-
-                    this._addEntityCount = 0;
-
-                    if (!this._selectItem) {  // Open and select folder.
-                        const sceneOrEntity = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
-                        const { hierarchyItems } = this._guiComponent;
-
-                        if (sceneOrEntity && sceneOrEntity.uuid in hierarchyItems) {
-                            this._selectItem = hierarchyItems[sceneOrEntity.uuid];
-                            this._selectItem.selected = true;
-                            this._openFolder(this._selectItem);
+                        else {
+                            this._getOrAddScene(element as IScene);
                         }
                     }
                 }
-                else {
-                    this._delayShow++;
+
+                this._addEntityCount = 0;
+
+                if (!this._selectItem) {  // Open and select folder.
+                    const sceneOrEntity = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
+                    const { hierarchyItems } = this._guiComponent;
+
+                    if (sceneOrEntity && sceneOrEntity.uuid in hierarchyItems) {
+                        this._selectItem = hierarchyItems[sceneOrEntity.uuid];
+                        this._selectItem.selected = true;
+                        this._openFolder(this._selectItem);
+                    }
                 }
+            }
+            else {
+                this._delayShow++;
             }
         }
     }
