@@ -33,7 +33,7 @@ namespace paper.editor {
             }
         }
 
-        public onUpdate() {
+        public onTick() {
             if (egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyH).isDown(false)) {
                 this._fpsIndex++;
 
@@ -59,6 +59,10 @@ namespace paper.editor {
                 paper.Application.systemManager.getSystem((egret3d as any)["webgl"]["WebGLRenderSystem"])!.deltaTime,
                 200
             );
+        }
+        public onFrame() {
+            const guiComponent = this._guiComponent!;
+            guiComponent.stats.onFrame();
         }
     }
 }

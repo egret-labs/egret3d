@@ -4882,13 +4882,6 @@ var paper;
             EditorSystem.prototype.onStart = function () {
                 console.info("\u5C0F\u63D0\u793A\uFF1A\u901A\u8FC7 H \u952E\u5207\u6362 Inspector \u7684\u663E\u793A\u4E0E\u9690\u85CF\u3002");
             };
-            EditorSystem.prototype.onFrame = function () {
-                if (paper.Application.playerMode === 2 /* Editor */) {
-                    return;
-                }
-                var guiComponent = this._guiComponent;
-                guiComponent.stats.onFrame();
-            };
             EditorSystem.prototype.onTick = function () {
                 if (paper.Application.playerMode === 2 /* Editor */) {
                     return;
@@ -6263,7 +6256,7 @@ var paper;
                     this._updateFPSShowState();
                 }
             };
-            StatsSystem.prototype.onUpdate = function () {
+            StatsSystem.prototype.onTick = function () {
                 if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
                     this._fpsIndex++;
                     if (this._fpsIndex >= this._fpsShowQueue.length) {
@@ -6281,6 +6274,10 @@ var paper;
                 var guiComponent = this._guiComponent;
                 guiComponent.stats.update();
                 guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["webgl"]["WebGLRenderSystem"]).deltaTime, 200);
+            };
+            StatsSystem.prototype.onFrame = function () {
+                var guiComponent = this._guiComponent;
+                guiComponent.stats.onFrame();
             };
             return StatsSystem;
         }(paper.BaseSystem));
