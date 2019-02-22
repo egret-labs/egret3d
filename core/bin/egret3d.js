@@ -3496,23 +3496,6 @@ var egret3d;
             extension.depthBuffer = depthBuffer;
             extension.stencilBuffer = stencilBuffer;
             //
-            if (source) {
-                if (ArrayBuffer.isView(source)) {
-                    config.buffers = [];
-                    config.buffers[0] = { byteLength: source.byteLength };
-                    image.bufferView = 0;
-                }
-                else {
-                    image.uri = source; // 兼容
-                    extension.width = source.width;
-                    extension.height = source.height;
-                }
-            }
-            else if (image.uri) {
-                var source_1 = image.uri;
-                extension.width = source_1.width;
-                extension.height = source_1.height;
-            }
             return config;
         };
         BaseTexture.prototype._formatLevelsAndSampler = function () {
@@ -3732,6 +3715,7 @@ var egret3d;
         Texture.create = function (parametersOrName, config, buffers) {
             var name;
             var texture;
+            var source;
             if (typeof parametersOrName === "string") {
                 name = parametersOrName;
             }
@@ -3741,6 +3725,28 @@ var egret3d;
                 if (ArrayBuffer.isView(parametersOrName.source)) {
                     buffers = [parametersOrName.source];
                 }
+                source = parametersOrName.source;
+            }
+            var gltfTexture = config.textures[0];
+            var image = config.images[gltfTexture.source];
+            var extension = gltfTexture.extensions.paper;
+            // const source = image.uri as gltf.ImageSource;
+            if (source) {
+                if (ArrayBuffer.isView(source)) {
+                    config.buffers = [];
+                    config.buffers[0] = { byteLength: source.byteLength };
+                    image.bufferView = 0;
+                }
+                else {
+                    image.uri = source; // 兼容
+                    extension.width = source.width;
+                    extension.height = source.height;
+                }
+            }
+            else if (image.uri) {
+                var source_1 = image.uri;
+                extension.width = source_1.width;
+                extension.height = source_1.height;
             }
             // Retargeting.
             texture = new egret3d.Texture();
@@ -10643,6 +10649,7 @@ var egret3d;
         ShaderUniformName["Specular"] = "specular";
         ShaderUniformName["Shininess"] = "shininess";
         ShaderUniformName["BumpScale"] = "bumpScale";
+        ShaderUniformName["NormalScale"] = "normalScale";
         ShaderUniformName["Roughness"] = "roughness";
         ShaderUniformName["Metalness"] = "metalness";
         ShaderUniformName["Emissive"] = "emissive";
@@ -24340,7 +24347,7 @@ var egret3d;
         beforeCombineCount++;
         var materials = meshRenderer.materials;
         var meshData = meshFilter.mesh;
-        //合并筛选的条件:层级_光照贴图_材质0_材质1... ：0_234_532...
+        //合并筛选的条件:层级_光照贴图索引_材质0_材质1... ：256_0_234_532...
         var key = target.layer + "_" + meshRenderer.lightmapIndex + "_";
         materials.forEach(function (e) { key = key + "_" + e.uuid; });
         if (!out[key]) {
@@ -29812,10 +29819,10 @@ var egret3d;
                     // Draw.
                     if (primitive.indices !== undefined) {
                         var indexAccessor = mesh.getAccessor(primitive.indices);
-                        webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, bufferOffset);
+                        webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
                     }
                     else {
-                        webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
+                        webgl.drawArrays(drawMode, 0, vertexAccessor.count);
                     }
                     if (drawCall.drawCount >= 0) {
                         drawCall.drawCount++;

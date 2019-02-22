@@ -5429,6 +5429,7 @@ declare namespace egret3d {
         Specular = "specular",
         Shininess = "shininess",
         BumpScale = "bumpScale",
+        NormalScale = "normalScale",
         Roughness = "roughness",
         Metalness = "metalness",
         Emissive = "emissive",

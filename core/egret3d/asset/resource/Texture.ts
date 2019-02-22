@@ -65,23 +65,7 @@ namespace egret3d {
             extension.depthBuffer = depthBuffer;
             extension.stencilBuffer = stencilBuffer;
             //
-            if (source) {
-                if (ArrayBuffer.isView(source)) {
-                    config.buffers = [];
-                    config.buffers[0] = { byteLength: source.byteLength };
-                    image.bufferView = 0;
-                }
-                else {
-                    image.uri = source; // 兼容
-                    extension.width = source.width;
-                    extension.height = source.height;
-                }
-            }
-            else if (image.uri) {
-                const source = image.uri as gltf.ImageSource;
-                extension.width = source.width;
-                extension.height = source.height;
-            }
+            
 
             return config;
         }
@@ -308,6 +292,7 @@ namespace egret3d {
             let name: string;
             let texture: Texture;
 
+            let source;
             if (typeof parametersOrName === "string") {
                 name = parametersOrName;
             }
@@ -318,6 +303,29 @@ namespace egret3d {
                 if (ArrayBuffer.isView(parametersOrName.source)) {
                     buffers = [parametersOrName.source];
                 }
+                source = parametersOrName.source;
+            }
+
+            const gltfTexture = config!.textures![0] as GLTFTexture;
+            const image = config!.images![gltfTexture.source!];
+            const extension = gltfTexture.extensions.paper;
+            // const source = image.uri as gltf.ImageSource;
+            if (source) {
+                if (ArrayBuffer.isView(source)) {
+                    config!.buffers = [];
+                    config!.buffers[0] = { byteLength: source.byteLength };
+                    image.bufferView = 0;
+                }
+                else {
+                    image.uri = source; // 兼容
+                    extension.width = source.width;
+                    extension.height = source.height;
+                }
+            }
+            else if (image.uri) {
+                const imageSource = image.uri as gltf.ImageSource;
+                extension.width = imageSource.width;
+                extension.height = imageSource.height;
             }
 
             // Retargeting.
