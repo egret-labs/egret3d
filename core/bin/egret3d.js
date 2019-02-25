@@ -3744,9 +3744,9 @@ var egret3d;
                 }
             }
             else if (image.uri) {
-                var source_1 = image.uri;
-                extension.width = source_1.width;
-                extension.height = source_1.height;
+                var imageSource = image.uri;
+                extension.width = imageSource.width;
+                extension.height = imageSource.height;
             }
             // Retargeting.
             texture = new egret3d.Texture();
@@ -10340,7 +10340,7 @@ var paper;
             }
             return true;
         }
-        if (source.hasOwnProperty(KEY_SERIALIZE)) {
+        if (egret.is(source, "paper.ISerializable")) {
             return equal(source.serialize(), target.serialize());
         }
         if (source instanceof paper.BaseObject) {
@@ -10505,7 +10505,7 @@ var paper;
                     }
                     return target;
                 }
-                if (source.hasOwnProperty(KEY_SERIALIZE)) {
+                if (egret.is(source, "paper.ISerializable")) {
                     return source.serialize();
                 }
                 if (source instanceof paper.BaseObject) {
@@ -10965,10 +10965,12 @@ var egret3d;
         //     this._localScale.set(rotationAndScale.rawData[0], rotationAndScale.rawData[4], rotationAndScale.rawData[8]).update();
         // }
         Transform.prototype._dirtify = function (isLocalDirty, dirty) {
+            var childDirty = dirty;
             if (isLocalDirty) {
                 this._localDirty |= dirty | 48 /* MIM */;
                 if (dirty & 2 /* Rotation */) {
                     this._localDirty |= 4 /* Scale */ | 8 /* Euler */;
+                    childDirty |= 1 /* Position */;
                 }
                 else if (dirty & 4 /* Scale */) {
                     this._localDirty |= 2 /* Rotation */;
@@ -11039,7 +11041,7 @@ var egret3d;
             }
             for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
                 var child = _a[_i];
-                child._dirtify(false, dirty);
+                child._dirtify(false, childDirty);
             }
             if (!(this._worldDirty & dirty) || !(this._worldDirty & 16 /* Matrix */)) {
                 this._worldDirty |= dirty | 48 /* MIM */;

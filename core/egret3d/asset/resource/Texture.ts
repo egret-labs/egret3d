@@ -312,8 +312,8 @@ namespace egret3d {
             // const source = image.uri as gltf.ImageSource;
             if (source) {
                 if (ArrayBuffer.isView(source)) {
-                    config!.buffers = [];
-                    config!.buffers[0] = { byteLength: source.byteLength };
+                    (config as any).buffers = [];
+                    (config as any).buffers[0] = { byteLength: source.byteLength };
                     image.bufferView = 0;
                 }
                 else {
