@@ -54,6 +54,54 @@ namespace paper {
 
             return index < 0 ? systems.length : index;
         }
+
+        private _reactive(system: BaseSystem<IEntity>) {
+            const collectors = system.collectors;
+
+            if (system.onComponentRemoved) {
+                for (const collector of collectors) {
+                    for (const component of collector.removedComponentes) {
+                        if (component) {
+                            system.onComponentRemoved(component, collector);
+                        }
+                    }
+                }
+            }
+
+            if (system.onEntityRemoved) {
+                for (const collector of collectors) {
+                    for (const entity of collector.removedEntities) {
+                        if (entity) {
+                            system.onEntityRemoved(entity, collector.group);
+                        }
+                    }
+                }
+            }
+
+            if (system.onEntityAdded) {
+                for (const collector of collectors) {
+                    for (const entity of collector.addedEntities) {
+                        if (entity) {
+                            system.onEntityAdded(entity, collector.group);
+                        }
+                    }
+                }
+            }
+
+            if (system.onComponentAdded) {
+                for (const collector of collectors) {
+                    for (const component of collector.addedComponentes) {
+                        if (component) {
+                            system.onComponentAdded(component, collector);
+                        }
+                    }
+                }
+            }
+
+            for (const collector of collectors) {
+                collector.clear();
+            }
+        }
         /**
          * @internal
          */
@@ -91,61 +139,17 @@ namespace paper {
          * @internal
          */
         public _tick(tickCount: uint) {
-            const reactiveSystems = this._reactiveSystems;
+            // const reactiveSystems = this._reactiveSystems;
 
             for (let i = 0; i < tickCount; ++i) {
-                for (const system of this._systems) {
+                for (const system of this._tickSystems) { // this._systems
                     if (!system.enabled) {
                         continue;
                     }
 
-                    if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
-                        const collectors = system.collectors;
-
-                        if (system.onComponentRemoved) {
-                            for (const collector of collectors) {
-                                for (const component of collector.removedComponentes) {
-                                    if (component) {
-                                        system.onComponentRemoved(component, collector);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (system.onEntityRemoved) {
-                            for (const collector of collectors) {
-                                for (const entity of collector.removedEntities) {
-                                    if (entity) {
-                                        system.onEntityRemoved(entity, collector.group);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (system.onEntityAdded) {
-                            for (const collector of collectors) {
-                                for (const entity of collector.addedEntities) {
-                                    if (entity) {
-                                        system.onEntityAdded(entity, collector.group);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (system.onComponentAdded) {
-                            for (const collector of collectors) {
-                                for (const component of collector.addedComponentes) {
-                                    if (component) {
-                                        system.onComponentAdded(component, collector);
-                                    }
-                                }
-                            }
-                        }
-
-                        for (const collector of collectors) {
-                            collector.clear();
-                        }
-                    }
+                    // if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
+                    //     this._reactive(system);
+                    // }
 
                     system.onTick && system.onTick(clock.lastTickDelta);
                 }
@@ -155,12 +159,18 @@ namespace paper {
          * @internal
          */
         public _frame() {
-            for (const system of this._frameSystems) {
+            const reactiveSystems = this._reactiveSystems;
+
+            for (const system of this._systems) { // this._frameSystems
                 if (!system.enabled) {
                     continue;
                 }
 
-                system.onFrame!(clock.lastFrameDelta);
+                if (reactiveSystems.indexOf(system) >= 0) {
+                    this._reactive(system);
+                }
+
+                system.onFrame && system.onFrame(clock.lastFrameDelta);
             }
         }
         /**

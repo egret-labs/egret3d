@@ -84,7 +84,7 @@ namespace paper.editor {
             let isWorldSpace = this.isWorldSpace;
             const hoveredName = this._hovered!.name;
 
-            const lastSelectedEntity = this._selectedGroup.singleEntity!;
+            const lastSelectedEntity = this._lastSelectedGroup.singleEntity!;
             const selectedEntities = this._selectedGroup.entities;
 
             const currentSelectedPRS = this._prsStarts[lastSelectedEntity.uuid];
@@ -229,7 +229,7 @@ namespace paper.editor {
         private _updateSelf() {
             const isWorldSpace = this._mode === this.scale ? false : this.isWorldSpace; // scale always oriented to local rotation
             const camera = egret3d.Camera.editor;
-            const lastSelectedEntity = this._selectedGroup.singleEntity!;
+            const lastSelectedEntity = this._lastSelectedGroup.singleEntity!;
             const eye = this._eye.copy(camera.gameObject.transform.position);
             const eyeDistance = eye.getDistance(lastSelectedEntity.transform.position);
 

@@ -6343,6 +6343,57 @@ var paper;
             }
             return index < 0 ? systems.length : index;
         };
+        SystemManager.prototype._reactive = function (system) {
+            var collectors = system.collectors;
+            if (system.onComponentRemoved) {
+                for (var _i = 0, collectors_1 = collectors; _i < collectors_1.length; _i++) {
+                    var collector = collectors_1[_i];
+                    for (var _a = 0, _b = collector.removedComponentes; _a < _b.length; _a++) {
+                        var component = _b[_a];
+                        if (component) {
+                            system.onComponentRemoved(component, collector);
+                        }
+                    }
+                }
+            }
+            if (system.onEntityRemoved) {
+                for (var _c = 0, collectors_2 = collectors; _c < collectors_2.length; _c++) {
+                    var collector = collectors_2[_c];
+                    for (var _d = 0, _e = collector.removedEntities; _d < _e.length; _d++) {
+                        var entity = _e[_d];
+                        if (entity) {
+                            system.onEntityRemoved(entity, collector.group);
+                        }
+                    }
+                }
+            }
+            if (system.onEntityAdded) {
+                for (var _f = 0, collectors_3 = collectors; _f < collectors_3.length; _f++) {
+                    var collector = collectors_3[_f];
+                    for (var _g = 0, _h = collector.addedEntities; _g < _h.length; _g++) {
+                        var entity = _h[_g];
+                        if (entity) {
+                            system.onEntityAdded(entity, collector.group);
+                        }
+                    }
+                }
+            }
+            if (system.onComponentAdded) {
+                for (var _j = 0, collectors_4 = collectors; _j < collectors_4.length; _j++) {
+                    var collector = collectors_4[_j];
+                    for (var _k = 0, _l = collector.addedComponentes; _k < _l.length; _k++) {
+                        var component = _l[_k];
+                        if (component) {
+                            system.onComponentAdded(component, collector);
+                        }
+                    }
+                }
+            }
+            for (var _m = 0, collectors_5 = collectors; _m < collectors_5.length; _m++) {
+                var collector = collectors_5[_m];
+                collector.clear();
+            }
+        };
         /**
          * @internal
          */
@@ -6379,64 +6430,16 @@ var paper;
          * @internal
          */
         SystemManager.prototype._tick = function (tickCount) {
-            var reactiveSystems = this._reactiveSystems;
+            // const reactiveSystems = this._reactiveSystems;
             for (var i = 0; i < tickCount; ++i) {
-                for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
+                for (var _i = 0, _a = this._tickSystems; _i < _a.length; _i++) {
                     var system = _a[_i];
                     if (!system.enabled) {
                         continue;
                     }
-                    if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
-                        var collectors = system.collectors;
-                        if (system.onComponentRemoved) {
-                            for (var _b = 0, collectors_1 = collectors; _b < collectors_1.length; _b++) {
-                                var collector = collectors_1[_b];
-                                for (var _c = 0, _d = collector.removedComponentes; _c < _d.length; _c++) {
-                                    var component = _d[_c];
-                                    if (component) {
-                                        system.onComponentRemoved(component, collector);
-                                    }
-                                }
-                            }
-                        }
-                        if (system.onEntityRemoved) {
-                            for (var _e = 0, collectors_2 = collectors; _e < collectors_2.length; _e++) {
-                                var collector = collectors_2[_e];
-                                for (var _f = 0, _g = collector.removedEntities; _f < _g.length; _f++) {
-                                    var entity = _g[_f];
-                                    if (entity) {
-                                        system.onEntityRemoved(entity, collector.group);
-                                    }
-                                }
-                            }
-                        }
-                        if (system.onEntityAdded) {
-                            for (var _h = 0, collectors_3 = collectors; _h < collectors_3.length; _h++) {
-                                var collector = collectors_3[_h];
-                                for (var _j = 0, _k = collector.addedEntities; _j < _k.length; _j++) {
-                                    var entity = _k[_j];
-                                    if (entity) {
-                                        system.onEntityAdded(entity, collector.group);
-                                    }
-                                }
-                            }
-                        }
-                        if (system.onComponentAdded) {
-                            for (var _l = 0, collectors_4 = collectors; _l < collectors_4.length; _l++) {
-                                var collector = collectors_4[_l];
-                                for (var _m = 0, _o = collector.addedComponentes; _m < _o.length; _m++) {
-                                    var component = _o[_m];
-                                    if (component) {
-                                        system.onComponentAdded(component, collector);
-                                    }
-                                }
-                            }
-                        }
-                        for (var _p = 0, collectors_5 = collectors; _p < collectors_5.length; _p++) {
-                            var collector = collectors_5[_p];
-                            collector.clear();
-                        }
-                    }
+                    // if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
+                    //     this._reactive(system);
+                    // }
                     system.onTick && system.onTick(paper.clock.lastTickDelta);
                 }
             }
@@ -6445,12 +6448,16 @@ var paper;
          * @internal
          */
         SystemManager.prototype._frame = function () {
-            for (var _i = 0, _a = this._frameSystems; _i < _a.length; _i++) {
+            var reactiveSystems = this._reactiveSystems;
+            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (!system.enabled) {
                     continue;
                 }
-                system.onFrame(paper.clock.lastFrameDelta);
+                if (reactiveSystems.indexOf(system) >= 0) {
+                    this._reactive(system);
+                }
+                system.onFrame && system.onFrame(paper.clock.lastFrameDelta);
             }
         };
         /**

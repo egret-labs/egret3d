@@ -241,7 +241,14 @@ namespace paper.editor {
             if (selectSceneOrEntity) {
                 if (selectSceneOrEntity instanceof Entity) {
                     const isReplace = !this._controlLeft.isHold(false) && !this._controlRight.isHold(false);
-                    this._modelComponent.select(selectSceneOrEntity, isReplace);
+                    if (selectSceneOrEntity.getComponent(SelectedFlag)) {
+                        if (!isReplace) {
+                            this._modelComponent.unselect(selectSceneOrEntity);
+                        }
+                    }
+                    else {
+                        this._modelComponent.select(selectSceneOrEntity, isReplace);
+                    }
                 }
                 else {
 

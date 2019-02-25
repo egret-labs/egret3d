@@ -4364,6 +4364,9 @@ var paper;
                         }
                         isReplace = true;
                     }
+                    else if (value.getComponent(editor.SelectedFlag)) {
+                        return;
+                    }
                     if (this.selectedScene) {
                         isReplace = true;
                     }
@@ -4400,10 +4403,18 @@ var paper;
             };
             ModelComponent.prototype._unselect = function (value) {
                 if (value.getComponent(editor.SelectedFlag)) {
-                    if (value.getComponent(editor.LastSelectedFlag)) {
+                    var lastSelectedEntity = this._lastSelectedGroup.singleEntity;
+                    if (value === lastSelectedEntity) {
                         value.removeComponent(editor.LastSelectedFlag);
+                        value.removeComponent(editor.SelectedFlag);
+                        var selectedEntities = this._selectedGroup.entities;
+                        if (selectedEntities.length > 0) {
+                            selectedEntities[selectedEntities.length - 1].addComponent(editor.LastSelectedFlag);
+                        }
                     }
-                    value.removeComponent(editor.SelectedFlag);
+                    else {
+                        value.removeComponent(editor.SelectedFlag);
+                    }
                 }
             };
             ModelComponent.prototype.initialize = function () {
@@ -4737,7 +4748,7 @@ var paper;
                 }
                 var isWorldSpace = this.isWorldSpace;
                 var hoveredName = this._hovered.name;
-                var lastSelectedEntity = this._selectedGroup.singleEntity;
+                var lastSelectedEntity = this._lastSelectedGroup.singleEntity;
                 var selectedEntities = this._selectedGroup.entities;
                 var currentSelectedPRS = this._prsStarts[lastSelectedEntity.uuid];
                 this._offsetEnd.subtract(currentSelectedPRS[3 /* Position */], raycastInfo.position);
@@ -4864,7 +4875,7 @@ var paper;
             TransformController.prototype._updateSelf = function () {
                 var isWorldSpace = this._mode === this.scale ? false : this.isWorldSpace; // scale always oriented to local rotation
                 var camera = egret3d.Camera.editor;
-                var lastSelectedEntity = this._selectedGroup.singleEntity;
+                var lastSelectedEntity = this._lastSelectedGroup.singleEntity;
                 var eye = this._eye.copy(camera.gameObject.transform.position);
                 var eyeDistance = eye.getDistance(lastSelectedEntity.transform.position);
                 if (camera.opvalue > 0.0) {
@@ -5853,7 +5864,7 @@ var paper;
                     groups[3 /* TransformController */].singleEntity.enabled = false;
                 }
             };
-            GizmosSystem.prototype.onTick = function () {
+            GizmosSystem.prototype.onFrame = function () {
                 this._updateTransformController();
                 this._updateBoxes();
                 this._updateCameraAndLights();
@@ -6072,7 +6083,14 @@ var paper;
                 if (selectSceneOrEntity) {
                     if (selectSceneOrEntity instanceof paper.Entity) {
                         var isReplace = !this._controlLeft.isHold(false) && !this._controlRight.isHold(false);
-                        this._modelComponent.select(selectSceneOrEntity, isReplace);
+                        if (selectSceneOrEntity.getComponent(editor.SelectedFlag)) {
+                            if (!isReplace) {
+                                this._modelComponent.unselect(selectSceneOrEntity);
+                            }
+                        }
+                        else {
+                            this._modelComponent.select(selectSceneOrEntity, isReplace);
+                        }
                     }
                     else {
                     }
@@ -6804,12 +6822,14 @@ var paper;
                             }
                             else {
                                 if (defaultPointer.position.getDistance(defaultPointer.downPosition) < 5.0) {
+                                    var replaceEntity = null;
                                     if (hoveredEntity.renderer instanceof egret3d.SkinnedMeshRenderer) {
                                         var animation = hoveredEntity.getComponentInParent(egret3d.Animation);
                                         if (animation) {
                                             // Replace hovered entity.
                                             hoveredEntity.removeComponent(editor.HoveredFlag);
-                                            animation.entity.addComponent(editor.HoveredFlag);
+                                            replaceEntity = animation.entity;
+                                            replaceEntity.addComponent(editor.HoveredFlag);
                                         }
                                     }
                                     else {
@@ -6817,10 +6837,11 @@ var paper;
                                         if (gizmoPickComponent) {
                                             // Replace hovered entity.
                                             hoveredEntity.removeComponent(editor.HoveredFlag);
-                                            gizmoPickComponent.pickTarget.addComponent(editor.HoveredFlag);
+                                            replaceEntity = gizmoPickComponent.pickTarget;
+                                            replaceEntity.addComponent(editor.HoveredFlag);
                                         }
                                     }
-                                    this._modelComponent.select(hoveredEntity, !event_1.ctrlKey);
+                                    this._modelComponent.select(replaceEntity || hoveredEntity, !event_1.ctrlKey);
                                 }
                                 else if (defaultPointer.event.ctrlKey) {
                                     // TODO
@@ -6866,16 +6887,28 @@ var paper;
                             else {
                                 transformController.hovered = null;
                             }
-                            if (hoveredEntity) {
-                                hoveredEntity.removeComponent(editor.HoveredFlag);
-                            }
-                            if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                                var gameObjects = paper.Scene.activeScene.getRootGameObjects().concat(); // TODO
-                                gameObjects.unshift(this._touchContainerEntity);
-                                var raycastInfos = editor.Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
-                                if (raycastInfos.length > 0) {
-                                    raycastInfos[0].transform.gameObject.addComponent(editor.HoveredFlag);
+                            if (!transformController.isActiveAndEnabled || !transformController.hovered) {
+                                var isSame = false;
+                                if (hoveredEntity) {
+                                    var raycastInfos = editor.Helper.raycastAll([hoveredEntity], defaultPointer.position.x, defaultPointer.position.y, true);
+                                    if (raycastInfos.length > 0 && hoveredEntity === raycastInfos[0].transform.entity) {
+                                        isSame = true;
+                                    }
                                 }
+                                if (!isSame) {
+                                    if (hoveredEntity) {
+                                        hoveredEntity.removeComponent(editor.HoveredFlag);
+                                    }
+                                    var gameObjects = paper.Scene.activeScene.getRootGameObjects().concat(); // TODO
+                                    gameObjects.unshift(this._touchContainerEntity);
+                                    var raycastInfos = editor.Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
+                                    if (raycastInfos.length > 0) {
+                                        raycastInfos[0].transform.gameObject.addComponent(editor.HoveredFlag);
+                                    }
+                                }
+                            }
+                            else if (hoveredEntity) {
+                                hoveredEntity.removeComponent(editor.HoveredFlag);
                             }
                         }
                     }

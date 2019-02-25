@@ -119,13 +119,16 @@ namespace paper.editor {
                         }
                         else {
                             if (defaultPointer.position.getDistance(defaultPointer.downPosition) < 5.0) {
+                                let replaceEntity: IEntity | null = null;
+
                                 if (hoveredEntity.renderer instanceof egret3d.SkinnedMeshRenderer) { //
                                     const animation = hoveredEntity.getComponentInParent(egret3d.Animation);
 
                                     if (animation) {
                                         // Replace hovered entity.
                                         hoveredEntity.removeComponent(HoveredFlag);
-                                        animation.entity.addComponent(HoveredFlag);
+                                        replaceEntity = animation.entity;
+                                        replaceEntity.addComponent(HoveredFlag);
                                     }
                                 }
                                 else {
@@ -134,11 +137,12 @@ namespace paper.editor {
                                     if (gizmoPickComponent) {
                                         // Replace hovered entity.
                                         hoveredEntity.removeComponent(HoveredFlag);
-                                        gizmoPickComponent.pickTarget!.addComponent(HoveredFlag);
+                                        replaceEntity = gizmoPickComponent.pickTarget!;
+                                        replaceEntity.addComponent(HoveredFlag);
                                     }
                                 }
 
-                                this._modelComponent.select(hoveredEntity, !event.ctrlKey);
+                                this._modelComponent.select(replaceEntity || hoveredEntity, !event.ctrlKey);
                             }
                             else if (defaultPointer.event!.ctrlKey) {
                                 // TODO
@@ -191,18 +195,32 @@ namespace paper.editor {
                             transformController.hovered = null;
                         }
 
-                        if (hoveredEntity) {
-                            hoveredEntity.removeComponent(HoveredFlag);
-                        }
+                        if (!transformController.isActiveAndEnabled || !transformController.hovered) {
+                            let isSame = false;
 
-                        if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
-                            const gameObjects = Scene.activeScene.getRootGameObjects().concat(); // TODO
-                            gameObjects.unshift(this._touchContainerEntity!);
-
-                            const raycastInfos = Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
-                            if (raycastInfos.length > 0) {
-                                raycastInfos[0].transform!.gameObject.addComponent(HoveredFlag);
+                            if (hoveredEntity) {
+                                const raycastInfos = Helper.raycastAll([hoveredEntity], defaultPointer.position.x, defaultPointer.position.y, true);
+                                if (raycastInfos.length > 0 && hoveredEntity === raycastInfos[0].transform!.entity) {
+                                    isSame = true;
+                                }
                             }
+
+                            if (!isSame) {
+                                if (hoveredEntity) {
+                                    hoveredEntity.removeComponent(HoveredFlag);
+                                }
+
+                                const gameObjects = Scene.activeScene.getRootGameObjects().concat(); // TODO
+                                gameObjects.unshift(this._touchContainerEntity!);
+
+                                const raycastInfos = Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
+                                if (raycastInfos.length > 0) {
+                                    raycastInfos[0].transform!.gameObject.addComponent(HoveredFlag);
+                                }
+                            }
+                        }
+                        else if (hoveredEntity) {
+                            hoveredEntity.removeComponent(HoveredFlag);
                         }
                     }
                 }

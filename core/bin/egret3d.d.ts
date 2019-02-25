@@ -4329,6 +4329,7 @@ declare namespace paper {
         private readonly _tickCleanupSystems;
         private constructor();
         private _getSystemInsertIndex(systems, order);
+        private _reactive(system);
         /**
          *
          */

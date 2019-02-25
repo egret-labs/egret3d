@@ -503,7 +503,7 @@ namespace paper.editor {
 
         }
 
-        public onTick() {
+        public onFrame() {
             this._updateTransformController();
             this._updateBoxes();
             this._updateCameraAndLights();
