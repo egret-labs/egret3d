@@ -91,7 +91,7 @@ namespace paper.editor {
 
             if (this._addEntityCount > 5) {
                 this._sceneOrEntityBuffer.push(entity);
-                
+
                 return false;
             }
 
@@ -231,7 +231,7 @@ namespace paper.editor {
             }
         }
 
-        public onTick() {
+        public onFrame() {
             if (this._guiComponent.hierarchy.closed || this._guiComponent.hierarchy.domElement.style.display === "none") {
                 return;
             }
@@ -251,12 +251,6 @@ namespace paper.editor {
             }
             else if (egret3d.inputCollecter.getKey(egret3d.KeyCode.Escape).isUp()) {
                 this._modelComponent.select(null);
-            }
-        }
-
-        public onFrame() {
-            if (this._guiComponent.hierarchy.closed || this._guiComponent.hierarchy.domElement.style.display === "none") {
-                return;
             }
 
             if (this._delayShow > 5) {

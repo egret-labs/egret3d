@@ -337,37 +337,35 @@ declare namespace paper.editor {
         hideFlags: HideFlags;
     }
     /**
-     *
+     * Gizmos 容器标记。
      */
-    class ContainerEntityFlag extends EditorComponent {
+    class GizmosContainerEntityFlag extends EditorComponent {
     }
     /**
-     *
+     * 可点选容器标记。
      */
     class TouchContainerEntityFlag extends EditorComponent {
     }
     /**
-     *
+     * 标尺网格标记。
+     */
+    class GridFlag extends EditorComponent {
+    }
+    /**
+     * 高亮标记。
      */
     class HoveredFlag extends EditorComponent {
     }
     /**
-     *
+     * 选中标记。
      */
     class SelectedFlag extends EditorComponent {
     }
     /**
-     *
+     * 最后选中标记。
      */
     class LastSelectedFlag extends EditorComponent {
     }
-    /**
-     *
-     */
-    class DeletedFlag extends EditorComponent {
-    }
-}
-declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
@@ -472,12 +470,9 @@ declare namespace paper.editor {
         private readonly _keyR;
         private readonly _keyX;
         private readonly _keyF;
-        private _transformController;
         private _gizmosContainerEntity;
         private _touchContainerEntity;
-        private _gridDrawer;
-        private _cameraViewFrustum;
-        private _updateCameras();
+        private _transformController;
         lookAtSelected(): void;
         protected getMatchers(): IAnyOfMatcher<GameObject>[];
         onAwake(): void;
