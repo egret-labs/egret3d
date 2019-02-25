@@ -42,7 +42,7 @@ namespace paper.editor {
         public readonly inspectorItems: { [key: string]: dat.GUI } = {};
 
         private readonly _lastSelectedGroup: Group<GameObject> = Application.gameObjectContext.getGroup(
-            Matcher.create<GameObject>(false, egret3d.Transform, LastSelectedFlag)
+            Matcher.create<GameObject>(false, LastSelectedFlag)
         );
 
         public initialize() {

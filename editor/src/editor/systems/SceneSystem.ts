@@ -15,14 +15,14 @@ namespace paper.editor {
 
         private _gizmosContainerEntity: GameObject | null = null;
         private _touchContainerEntity: GameObject | null = null;
-        private _transformController: TransformController | null = null;
+        private _transformControllerEntity: GameObject | null = null;
 
         public lookAtSelected() {
             const orbitControls = egret3d.Camera.editor.gameObject.getComponent(OrbitControls)!;
             orbitControls!.distance = 10.0;
             orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
 
-            const lastSelectedEntity = this.groups[2].singleEntity;
+            const lastSelectedEntity = this.groups[1].singleEntity;
 
             if (lastSelectedEntity) {
                 orbitControls!.lookAtPoint.copy(lastSelectedEntity.transform.position);
@@ -36,7 +36,6 @@ namespace paper.editor {
             return [
                 Matcher.create<GameObject>(egret3d.Transform, HoveredFlag)
                     .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
-                Matcher.create<GameObject>(egret3d.Transform, SelectedFlag),
                 Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag),
             ];
         }
@@ -53,14 +52,14 @@ namespace paper.editor {
             editorCamera.gameObject.addComponent(OrbitControls);
             editorCamera.enabled = true;
 
-            this._transformController = EditorMeshHelper.createGameObject("Transform Controller").addComponent(TransformController);
-            this._transformController.gameObject.activeSelf = false;
-
             this._gizmosContainerEntity = EditorMeshHelper.createGameObject("Drawer");
             this._touchContainerEntity = EditorMeshHelper.createGameObject("Touch Drawer");
-            this._gizmosContainerEntity.addComponent(GizmosContainerEntityFlag);
+            this._transformControllerEntity = EditorMeshHelper.createGameObject("Transform Controller");
+            this._transformControllerEntity.enabled = false;
+            this._gizmosContainerEntity.addComponent(GizmosContainerFlag);
             this._gizmosContainerEntity.addComponent(GridFlag);
-            this._touchContainerEntity.addComponent(TouchContainerEntityFlag);
+            this._touchContainerEntity.addComponent(TouchContainerFlag);
+            this._transformControllerEntity.addComponent(TransformController);
         }
 
         public onDisable() {
@@ -72,43 +71,28 @@ namespace paper.editor {
 
             this._gizmosContainerEntity!.destroy();
             this._touchContainerEntity!.destroy();
-            this._transformController!.gameObject.destroy();
+            this._transformControllerEntity!.destroy();
 
             this._gizmosContainerEntity = null;
             this._touchContainerEntity = null;
-            this._transformController = null;
+            this._transformControllerEntity = null;
         }
 
         public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
             const groups = this.groups;
-
-            if (group === groups[2]) {
-                this._transformController!.gameObject.enabled = true;
-                // this._cameraViewFrustum!.activeSelf =
-                //     selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
-            }
         }
 
         public onEntityRemoved(entity: GameObject, group: Group<GameObject>) {
             const groups = this.groups;
-
-            if (group === groups[2]) {
-                this._transformController!.gameObject.enabled = false;
-                // this._cameraViewFrustum!.activeSelf =
-                //     selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
-            }
         }
 
         public onTick() {
             const groups = this.groups;
-            const transformController = this._transformController!;
-            let hoveredEntity = groups[0].singleEntity;
+            const hoveredEntity = groups[0].singleEntity;
+            const lastSelectedEntity = this.groups[1].singleEntity;
 
+            const transformController = this._transformControllerEntity!.getComponent(TransformController)!;
             const defaultPointer = egret3d.inputCollecter.defaultPointer;
-
-            if (transformController.isActiveAndEnabled) {
-                transformController.update(defaultPointer.position);
-            }
 
             if (defaultPointer.isDown(egret3d.PointerButtonsType.LeftMouse, false)) {
                 if (defaultPointer.event!.buttons & egret3d.PointerButtonsType.RightMouse) { // 正在控制摄像机。
@@ -137,14 +121,20 @@ namespace paper.editor {
                             if (defaultPointer.position.getDistance(defaultPointer.downPosition) < 5.0) {
                                 if (hoveredEntity.renderer instanceof egret3d.SkinnedMeshRenderer) { //
                                     const animation = hoveredEntity.getComponentInParent(egret3d.Animation);
+
                                     if (animation) {
-                                        hoveredEntity = animation.gameObject;
+                                        // Replace hovered entity.
+                                        hoveredEntity.removeComponent(HoveredFlag);
+                                        animation.entity.addComponent(HoveredFlag);
                                     }
                                 }
                                 else {
                                     const gizmoPickComponent = hoveredEntity.getComponent(GizmoPickComponent);
+
                                     if (gizmoPickComponent) {
-                                        hoveredEntity = gizmoPickComponent.pickTarget;
+                                        // Replace hovered entity.
+                                        hoveredEntity.removeComponent(HoveredFlag);
+                                        gizmoPickComponent.pickTarget!.addComponent(HoveredFlag);
                                     }
                                 }
 
@@ -180,14 +170,15 @@ namespace paper.editor {
                     else if (event.buttons & 0b01) {
 
                     }
-                    else { // Update hovered.
-                        const transformController = this._transformController!;
+                    else {
+                        // 更新变换控制器的控制柄。
                         if (transformController.isActiveAndEnabled) {
                             if (event.shiftKey || event.ctrlKey) {
                                 transformController.hovered = null;
                             }
                             else {
                                 const raycastInfos = Helper.raycastAll(transformController.mode.transform.children, defaultPointer.position.x, defaultPointer.position.y, false);
+
                                 if (raycastInfos.length > 0) {
                                     transformController.hovered = raycastInfos[0].transform!.gameObject;
                                 }

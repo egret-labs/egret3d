@@ -546,7 +546,7 @@ namespace paper.editor {
 
         protected getMatchers() {
             return [
-                Matcher.create<GameObject>(false, egret3d.Transform, LastSelectedFlag),
+                Matcher.create<GameObject>(false, LastSelectedFlag),
             ];
         }
 

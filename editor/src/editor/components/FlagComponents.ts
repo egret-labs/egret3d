@@ -8,12 +8,12 @@ namespace paper.editor {
     /**
      * Gizmos 容器标记。
      */
-    export class GizmosContainerEntityFlag extends EditorComponent {
+    export class GizmosContainerFlag extends EditorComponent {
     }
     /**
      * 可点选容器标记。
      */
-    export class TouchContainerEntityFlag extends EditorComponent {
+    export class TouchContainerFlag extends EditorComponent {
     }
     /**
      * 标尺网格标记。

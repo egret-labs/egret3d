@@ -3,17 +3,19 @@ namespace paper.editor {
     const enum GroupIndex {
         GizmosContainer,
         TouchContainer,
-        Hovered,
-        Selected,
-        Gird,
-        Cameras,
-        Lights,
-        SelectedCamera,
-        Skeleton,
-        BoxCollider,
-        SphereCollider,
-        CylinderCollider,
+        LastSelectedTransform,
+
         TransformController,
+        HoveredBox,
+        SelectedBoxes,
+        Gird,
+        AllCameras,
+        AllLights,
+        LastSelectedCamera,
+        LastSelectedSkeleton,
+        SelectedBoxColliders,
+        SelectedSphereColliders,
+        SelectedCylinderColliders,
     }
 
     const _girdStep = 5;
@@ -32,7 +34,6 @@ namespace paper.editor {
         private _gridB: GameObject | null = null;
         private _hoverBox: GameObject | null = null;
         private _skeletonDrawer: GameObject | null = null;
-        private _transformController: TransformController | null = null;
         private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
 
         private _createGrid(name: string, size: number = 100.0, divisions: number = 100) {
@@ -57,6 +58,14 @@ namespace paper.editor {
             return gameObject;
         }
 
+        private _updateTransformController(): any {
+            const transformController = this.groups[GroupIndex.TransformController].singleEntity!.getComponent(TransformController)!;
+
+            if (transformController.isActiveAndEnabled) {
+                transformController.update(egret3d.inputCollecter.defaultPointer.position);
+            }
+        }
+
         private _updateGrid() {
             const camera = egret3d.Camera.editor;
             const aaa = camera.gameObject.getComponent(OrbitControls)!;
@@ -76,17 +85,13 @@ namespace paper.editor {
             mB.opacity = 0.2 * 0.2;
         }
 
-        private _updateTransformController(): any {
-
-        }
-
         private _updateBoxes() {
             const groups = this.groups;
             const containerEntity = groups[GroupIndex.GizmosContainer].singleEntity;
-            const selectedEntities = groups[GroupIndex.Selected].entities;
+            const selectedEntities = groups[GroupIndex.SelectedBoxes].entities;
 
             const hoverBox = this._hoverBox!;
-            const hoveredEntity = groups[GroupIndex.Hovered].singleEntity;
+            const hoveredEntity = groups[GroupIndex.HoveredBox].singleEntity;
 
             if (hoveredEntity) {
                 const renderer = hoveredEntity.renderer!;
@@ -127,7 +132,7 @@ namespace paper.editor {
         private _updateCameraAndLights() {
             const groups = this.groups;
             const touchContainerEntity = groups[GroupIndex.TouchContainer].singleEntity!;
-            const cameraEntities = groups[GroupIndex.Cameras].entities;
+            const cameraEntities = groups[GroupIndex.AllCameras].entities;
 
             const editorScene = paper.Scene.editorScene;
             const editorCamera = egret3d.Camera.editor;
@@ -163,7 +168,7 @@ namespace paper.editor {
                 }
             }
 
-            const lightEntities = groups[GroupIndex.Lights].entities;
+            const lightEntities = groups[GroupIndex.AllLights].entities;
 
             for (let i = 0, l = Math.max(this._lightDrawer.length, lightEntities.length); i < l; ++i) {
                 if (i + 1 > this._lightDrawer.length) {
@@ -216,7 +221,7 @@ namespace paper.editor {
             };
 
             const cameraViewFrustum = this._cameraViewFrustum!;
-            const selectedCameraEntity = this.groups[GroupIndex.SelectedCamera].singleEntity;
+            const selectedCameraEntity = this.groups[GroupIndex.LastSelectedCamera].singleEntity;
 
             if (selectedCameraEntity) {
                 cameraViewFrustum.enabled = true;
@@ -264,7 +269,7 @@ namespace paper.editor {
         }
 
         private _updateSkeleton() {
-            const skeletonEntity = this.groups[GroupIndex.Skeleton].singleEntity;
+            const skeletonEntity = this.groups[GroupIndex.LastSelectedSkeleton].singleEntity;
             const skeletonDrawer = this._skeletonDrawer!;
 
             if (skeletonEntity) {
@@ -311,7 +316,7 @@ namespace paper.editor {
             const groups = this.groups;
             const containerEntity = groups[GroupIndex.GizmosContainer].singleEntity;
 
-            const boxColliderEntities = groups[GroupIndex.BoxCollider].entities;
+            const boxColliderEntities = groups[GroupIndex.SelectedBoxColliders].entities;
             const boxColliderDrawer = this._boxColliderDrawer;
 
             for (let i = 0, l = Math.max(boxColliderDrawer.length, boxColliderEntities.length); i < l; ++i) {
@@ -337,7 +342,7 @@ namespace paper.editor {
                 }
             }
 
-            const sphereColliderEntities = groups[GroupIndex.SphereCollider].entities;
+            const sphereColliderEntities = groups[GroupIndex.SelectedSphereColliders].entities;
             const sphereColliderDrawer = this._sphereColliderDrawer;
 
             for (let i = 0, l = Math.max(sphereColliderDrawer.length, sphereColliderEntities.length); i < l; ++i) {
@@ -370,7 +375,7 @@ namespace paper.editor {
                 }
             }
 
-            const cylinderColliderEntities = groups[GroupIndex.CylinderCollider].entities;
+            const cylinderColliderEntities = groups[GroupIndex.SelectedCylinderColliders].entities;
             const cylinderColliderDrawer = this._cylinderColliderDrawer;
 
             for (let i = 0, l = Math.max(cylinderColliderDrawer.length, cylinderColliderEntities.length); i < l; ++i) {
@@ -408,22 +413,24 @@ namespace paper.editor {
 
         protected getMatchers() {
             return [
-                Matcher.create<GameObject>(false, egret3d.Transform, GizmosContainerEntityFlag),
-                Matcher.create<GameObject>(false, egret3d.Transform, TouchContainerEntityFlag),
-                Matcher.create<GameObject>(egret3d.Transform, HoveredFlag)
+                Matcher.create<GameObject>(false, egret3d.Transform, GizmosContainerFlag),
+                Matcher.create<GameObject>(false, egret3d.Transform, TouchContainerFlag),
+                Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag), // Last selected transform
+
+                Matcher.create<GameObject>(false, egret3d.Transform, TransformController),
+                Matcher.create<GameObject>(egret3d.Transform, HoveredFlag) // Hovered box
                     .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
-                Matcher.create<GameObject>(egret3d.Transform, SelectedFlag)
+                Matcher.create<GameObject>(egret3d.Transform, SelectedFlag) // Selected boxes
                     .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
-                Matcher.create<GameObject>(egret3d.Transform, GridFlag),
-                Matcher.create<GameObject>(false, egret3d.Transform, egret3d.Camera),
-                Matcher.create<GameObject>(false, egret3d.Transform)
+                Matcher.create<GameObject>(egret3d.Transform, GridFlag), // Grid
+                Matcher.create<GameObject>(false, egret3d.Transform, egret3d.Camera), // All cameras
+                Matcher.create<GameObject>(false, egret3d.Transform) // All lights
                     .anyOf(egret3d.DirectionalLight, egret3d.SpotLight, egret3d.PointLight, egret3d.HemisphereLight),
-                Matcher.create<GameObject>(false, egret3d.Transform, egret3d.Camera, LastSelectedFlag),
-                Matcher.create<GameObject>(egret3d.Transform, egret3d.SkinnedMeshRenderer, LastSelectedFlag),
-                Matcher.create<GameObject>(egret3d.Transform, egret3d.BoxCollider, SelectedFlag),
-                Matcher.create<GameObject>(egret3d.Transform, egret3d.SphereCollider, SelectedFlag),
-                Matcher.create<GameObject>(egret3d.Transform, egret3d.CylinderCollider, SelectedFlag),
-                Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag),
+                Matcher.create<GameObject>(false, egret3d.Transform, egret3d.Camera, LastSelectedFlag), // Last selected camera
+                Matcher.create<GameObject>(egret3d.Transform, egret3d.SkinnedMeshRenderer, LastSelectedFlag), // Last selected skeleton
+                Matcher.create<GameObject>(egret3d.Transform, egret3d.BoxCollider, SelectedFlag), // Selected box colliders
+                Matcher.create<GameObject>(egret3d.Transform, egret3d.SphereCollider, SelectedFlag), // Selected sphere colliders
+                Matcher.create<GameObject>(egret3d.Transform, egret3d.CylinderCollider, SelectedFlag), // Selected cylinder colliders
             ];
         }
 
@@ -432,8 +439,6 @@ namespace paper.editor {
             this._gridB = this._createGrid("Grid B", 100.0 * _girdStep, 100 * _girdStep);
             this._hoverBox = EditorMeshHelper.createBox("Hover Box", egret3d.Color.WHITE, 0.6);
             this._skeletonDrawer = EditorMeshHelper.createGameObject("Skeleton Drawer");
-            // this._transformController = EditorMeshHelper.createGameObject("Transform Controller").addComponent(TransformController);
-            // this._transformController.gameObject.activeSelf = false;
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
             this._cameraViewFrustum.enabled = false;
 
@@ -454,7 +459,6 @@ namespace paper.editor {
         }
 
         public onDisable() {
-            // this._transformController!.gameObject.destroy();
             this._cameraViewFrustum!.destroy();
 
             this._selectedBoxDrawer.length = 0;
@@ -465,7 +469,6 @@ namespace paper.editor {
             this._cylinderColliderDrawer.length = 0;
             this._hoverBox = null;
             this._skeletonDrawer = null;
-            // this._transformController = null;
             this._cameraViewFrustum = null;
         }
 
@@ -486,18 +489,21 @@ namespace paper.editor {
                 this._hoverBox!.transform.parent = entity.transform;
                 this._skeletonDrawer!.transform.parent = entity.transform;
             }
-            else if (group === groups[GroupIndex.TransformController]) {
-                // this._transformController!.gameObject.enabled = true;
+            else if (group === groups[GroupIndex.LastSelectedTransform]) {
+                groups[GroupIndex.TransformController].singleEntity!.enabled = true;
             }
         }
 
         public onEntityRemoved(entity: GameObject, group: Group<GameObject>) {
-            if (group === this.groups[GroupIndex.TransformController]) {
-                // this._transformController!.gameObject.enabled = false;
+            const groups = this.groups;
+
+            if (group === groups[GroupIndex.LastSelectedTransform]) {
+                groups[GroupIndex.TransformController].singleEntity!.enabled = false;
             }
+
         }
 
-        public onFrame() {
+        public onTick() {
             this._updateTransformController();
             this._updateBoxes();
             this._updateCameraAndLights();

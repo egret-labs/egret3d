@@ -75,7 +75,7 @@ namespace paper.editor {
 
                 Application.systemManager.register(HierarchySystem, Application.gameObjectContext, SystemOrder.LateUpdate);
                 Application.systemManager.register(InspectorSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
-                Application.systemManager.register(StatsSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+                Application.systemManager.register(StatsSystem, Application.gameObjectContext, SystemOrder.End);
             }
         }
 

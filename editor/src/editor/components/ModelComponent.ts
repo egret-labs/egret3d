@@ -74,9 +74,6 @@ namespace paper.editor {
 
                     isReplace = true;
                 }
-                else if (value.getComponent(SelectedFlag)) {
-                    return;
-                }
 
                 if (this.selectedScene) {
                     isReplace = true;
@@ -86,17 +83,17 @@ namespace paper.editor {
                 isReplace = true;
             }
 
+            const lastSelectedEntity = this._lastSelectedGroup.singleEntity;
+
+            if (lastSelectedEntity) {
+                lastSelectedEntity.removeComponent(LastSelectedFlag);
+            }
+
             if (isReplace) {
                 if (this.selectedScene) {
                     this.selectedScene = null;
                 }
                 else {
-                    const lastSelectedEntity = this._lastSelectedGroup.singleEntity;
-
-                    if (lastSelectedEntity) {
-                        lastSelectedEntity.removeComponent(LastSelectedFlag);
-                    }
-
                     for (const entity of this._selectedGroup.entities) {
                         entity.removeComponent(SelectedFlag);
                     }

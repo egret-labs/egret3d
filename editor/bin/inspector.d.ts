@@ -339,12 +339,12 @@ declare namespace paper.editor {
     /**
      * Gizmos 容器标记。
      */
-    class GizmosContainerEntityFlag extends EditorComponent {
+    class GizmosContainerFlag extends EditorComponent {
     }
     /**
      * 可点选容器标记。
      */
-    class TouchContainerEntityFlag extends EditorComponent {
+    class TouchContainerFlag extends EditorComponent {
     }
     /**
      * 标尺网格标记。
@@ -472,7 +472,7 @@ declare namespace paper.editor {
         private readonly _keyF;
         private _gizmosContainerEntity;
         private _touchContainerEntity;
-        private _transformController;
+        private _transformControllerEntity;
         lookAtSelected(): void;
         protected getMatchers(): IAnyOfMatcher<GameObject>[];
         onAwake(): void;
