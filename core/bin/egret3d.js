@@ -6262,7 +6262,10 @@ var paper;
         Context.prototype.getGroup = function (matcher) {
             var id = matcher.id;
             var groups = this._groups;
-            if (!(id in groups)) {
+            if (id in groups) {
+                matcher.release();
+            }
+            else {
                 var componentsGroups = matcher.componentEnabledFilter ? this._componentsGroups : this._componentsGroupsB;
                 var group = paper.Group.create(matcher);
                 groups[id] = group;
@@ -6340,24 +6343,162 @@ var paper;
             }
             return index < 0 ? systems.length : index;
         };
-        SystemManager.prototype._getSystemInsertIndexReversely = function (systems, order) {
-            var index = -1;
-            var systemCount = systems.length;
-            if (systemCount > 0) {
-                if (order < systems[systemCount - 1].order) {
-                    return systemCount;
+        /**
+         * @internal
+         */
+        SystemManager.prototype._startUp = function () {
+            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
+                var system = _a[_i];
+                if (system._enabled === system.enabled || !system.enabled) {
+                    continue;
                 }
-                if (order >= systems[0].order) {
-                    return 0;
+                system.onEnable && system.onEnable();
+                if (true) {
+                    console.debug(egret.getQualifiedClassName(system), "enabled.");
+                }
+                if (system.onEntityAdded) {
+                    for (var _b = 0, _c = system.groups; _b < _c.length; _b++) {
+                        var group = _c[_b];
+                        for (var _d = 0, _e = group.entities; _d < _e.length; _d++) {
+                            var entity = _e[_d];
+                            system.onEntityAdded(entity, group);
+                        }
+                    }
                 }
             }
-            for (var i = 0; i < systemCount - 1; ++i) {
-                if (systems[i].order >= order && order > systems[i + 1].order) {
-                    index = i + 1;
-                    break;
+            for (var _f = 0, _g = this._startSystems; _f < _g.length; _f++) {
+                var system = _g[_f];
+                if (!system.enabled || !system._started) {
+                    continue;
+                }
+                system.onStart();
+                system._started = true;
+            }
+        };
+        /**
+         * @internal
+         */
+        SystemManager.prototype._tick = function (tickCount) {
+            var reactiveSystems = this._reactiveSystems;
+            for (var i = 0; i < tickCount; ++i) {
+                for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
+                    var system = _a[_i];
+                    if (!system.enabled) {
+                        continue;
+                    }
+                    if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
+                        var collectors = system.collectors;
+                        if (system.onComponentRemoved) {
+                            for (var _b = 0, collectors_1 = collectors; _b < collectors_1.length; _b++) {
+                                var collector = collectors_1[_b];
+                                for (var _c = 0, _d = collector.removedComponentes; _c < _d.length; _c++) {
+                                    var component = _d[_c];
+                                    if (component) {
+                                        system.onComponentRemoved(component, collector);
+                                    }
+                                }
+                            }
+                        }
+                        if (system.onEntityRemoved) {
+                            for (var _e = 0, collectors_2 = collectors; _e < collectors_2.length; _e++) {
+                                var collector = collectors_2[_e];
+                                for (var _f = 0, _g = collector.removedEntities; _f < _g.length; _f++) {
+                                    var entity = _g[_f];
+                                    if (entity) {
+                                        system.onEntityRemoved(entity, collector.group);
+                                    }
+                                }
+                            }
+                        }
+                        if (system.onEntityAdded) {
+                            for (var _h = 0, collectors_3 = collectors; _h < collectors_3.length; _h++) {
+                                var collector = collectors_3[_h];
+                                for (var _j = 0, _k = collector.addedEntities; _j < _k.length; _j++) {
+                                    var entity = _k[_j];
+                                    if (entity) {
+                                        system.onEntityAdded(entity, collector.group);
+                                    }
+                                }
+                            }
+                        }
+                        if (system.onComponentAdded) {
+                            for (var _l = 0, collectors_4 = collectors; _l < collectors_4.length; _l++) {
+                                var collector = collectors_4[_l];
+                                for (var _m = 0, _o = collector.addedComponentes; _m < _o.length; _m++) {
+                                    var component = _o[_m];
+                                    if (component) {
+                                        system.onComponentAdded(component, collector);
+                                    }
+                                }
+                            }
+                        }
+                        for (var _p = 0, collectors_5 = collectors; _p < collectors_5.length; _p++) {
+                            var collector = collectors_5[_p];
+                            collector.clear();
+                        }
+                    }
+                    system.onTick && system.onTick(paper.clock.lastTickDelta);
                 }
             }
-            return index < 0 ? systems.length : index;
+        };
+        /**
+         * @internal
+         */
+        SystemManager.prototype._frame = function () {
+            for (var _i = 0, _a = this._frameSystems; _i < _a.length; _i++) {
+                var system = _a[_i];
+                if (!system.enabled) {
+                    continue;
+                }
+                system.onFrame(paper.clock.lastFrameDelta);
+            }
+        };
+        /**
+         * @internal
+         */
+        SystemManager.prototype._teardown = function (frameCount) {
+            var i = 0;
+            if (frameCount) {
+                i = this._frameCleanupSystems.length;
+                while (i--) {
+                    var system = this._frameCleanupSystems[i];
+                    if (!system.enabled) {
+                        continue;
+                    }
+                    system.onFrameCleanup(paper.clock.lastFrameDelta);
+                }
+            }
+            i = this._tickCleanupSystems.length;
+            while (i--) {
+                var system = this._tickCleanupSystems[i];
+                if (!system.enabled) {
+                    continue;
+                }
+                system.onTickCleanup(paper.clock.lastFrameDelta);
+            }
+            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
+                var system = _a[_i];
+                if (system._enabled === system.enabled) {
+                    continue;
+                }
+                system._enabled = system.enabled;
+                if (system.enabled) {
+                    continue;
+                }
+                if (system.onEntityRemoved) {
+                    for (var _b = 0, _c = system.groups; _b < _c.length; _b++) {
+                        var group = _c[_b];
+                        for (var _d = 0, _e = group.entities; _d < _e.length; _d++) {
+                            var entity = _e[_d];
+                            system.onEntityRemoved(entity, group);
+                        }
+                    }
+                }
+                system.onDisable && system.onDisable();
+                if (true) {
+                    console.debug(egret.getQualifiedClassName(system), "disabled.");
+                }
+            }
         };
         /**
          *
@@ -6370,164 +6511,6 @@ var paper;
                 this.register.apply(this, pair);
             }
             preSystems.length = 0;
-        };
-        /**
-         *
-         */
-        SystemManager.prototype.update = function (updateFlags) {
-            if (updateFlags.tickCount) {
-                for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                    var system = _a[_i];
-                    if (system._enabled === system.enabled || !system.enabled) {
-                        continue;
-                    }
-                    if (system.onEntityAdded) {
-                        for (var _b = 0, _c = system.groups; _b < _c.length; _b++) {
-                            var group = _c[_b];
-                            for (var _d = 0, _e = group.entities; _d < _e.length; _d++) {
-                                var entity = _e[_d];
-                                system.onEntityAdded(entity, group);
-                            }
-                        }
-                    }
-                    system.onEnable && system.onEnable();
-                    if (true) {
-                        console.debug(egret.getQualifiedClassName(system), "enabled.");
-                    }
-                }
-                for (var _f = 0, _g = this._startSystems; _f < _g.length; _f++) {
-                    var system = _g[_f];
-                    if (!system.enabled || !system._started) {
-                        continue;
-                    }
-                    system.onStart();
-                    system._started = true;
-                }
-            }
-            for (var i = 0; i < updateFlags.tickCount; i++) {
-                for (var _h = 0, _j = this._tickSystems; _h < _j.length; _h++) {
-                    var system = _j[_h];
-                    if (!system.enabled) {
-                        continue;
-                    }
-                    system.onTick && system.onTick(paper.clock.lastTickDelta);
-                }
-            }
-            if (updateFlags.frameCount) {
-                for (var _k = 0, _l = this._frameSystems; _k < _l.length; _k++) {
-                    var system = _l[_k];
-                    system.onFrame && system.onFrame(paper.clock.lastFrameDelta);
-                }
-                for (var _m = 0, _o = this._frameCleanupSystems; _m < _o.length; _m++) {
-                    var system = _o[_m];
-                    system.onFrameCleanup && system.onFrameCleanup(paper.clock.lastFrameDelta);
-                }
-            }
-            if (updateFlags.tickCount) {
-                var reactiveSystems = this._reactiveSystems;
-                for (var _p = 0, _q = this._systems; _p < _q.length; _p++) {
-                    var system = _q[_p];
-                    var startTime = 0;
-                    if (true) {
-                        system.deltaTime = 0;
-                        startTime = paper.clock.now;
-                    }
-                    if (!system.enabled) {
-                        continue;
-                    }
-                    if (reactiveSystems.indexOf(system) >= 0) {
-                        var collectors = system.collectors;
-                        if (system.onEntityAdded) {
-                            for (var _r = 0, collectors_1 = collectors; _r < collectors_1.length; _r++) {
-                                var collector = collectors_1[_r];
-                                for (var _s = 0, _t = collector.addedEntities; _s < _t.length; _s++) {
-                                    var entity = _t[_s];
-                                    if (entity) {
-                                        system.onEntityAdded(entity, collector.group);
-                                    }
-                                }
-                            }
-                        }
-                        if (system.onComponentAdded) {
-                            for (var _u = 0, collectors_2 = collectors; _u < collectors_2.length; _u++) {
-                                var collector = collectors_2[_u];
-                                for (var _v = 0, _w = collector.addedComponentes; _v < _w.length; _v++) {
-                                    var component = _w[_v];
-                                    if (component) {
-                                        system.onComponentAdded(component, collector);
-                                    }
-                                }
-                            }
-                        }
-                        if (system.onComponentRemoved) {
-                            for (var _x = 0, collectors_3 = collectors; _x < collectors_3.length; _x++) {
-                                var collector = collectors_3[_x];
-                                for (var _y = 0, _z = collector.removedComponentes; _y < _z.length; _y++) {
-                                    var component = _z[_y];
-                                    if (component) {
-                                        system.onComponentRemoved(component, collector);
-                                    }
-                                }
-                            }
-                        }
-                        if (system.onEntityRemoved) {
-                            for (var _0 = 0, collectors_4 = collectors; _0 < collectors_4.length; _0++) {
-                                var collector = collectors_4[_0];
-                                for (var _1 = 0, _2 = collector.removedEntities; _1 < _2.length; _1++) {
-                                    var entity = _2[_1];
-                                    if (entity) {
-                                        system.onEntityRemoved(entity, collector.group);
-                                    }
-                                }
-                            }
-                        }
-                        for (var _3 = 0, collectors_5 = collectors; _3 < collectors_5.length; _3++) {
-                            var collector = collectors_5[_3];
-                            collector.clear();
-                        }
-                    }
-                    if (true) {
-                        system.deltaTime += paper.clock.now - startTime;
-                    }
-                }
-                for (var _4 = 0, _5 = this._tickCleanupSystems; _4 < _5.length; _4++) {
-                    var system = _5[_4];
-                    if (!system.enabled) {
-                        continue;
-                    }
-                    var startTime = 0;
-                    if (true) {
-                        startTime = paper.clock.now;
-                    }
-                    system.onTickCleanup && system.onTickCleanup(paper.clock.lastTickDelta);
-                    if (true) {
-                        system.deltaTime += paper.clock.now - startTime;
-                    }
-                }
-                for (var _6 = 0, _7 = this._systems; _6 < _7.length; _6++) {
-                    var system = _7[_6];
-                    if (system._enabled === system.enabled) {
-                        continue;
-                    }
-                    system._enabled = system.enabled;
-                    if (system.enabled) {
-                        continue;
-                    }
-                    system.onDisable && system.onDisable();
-                    if (system.onEntityRemoved) {
-                        for (var _8 = 0, _9 = system.groups; _8 < _9.length; _8++) {
-                            var group = _9[_8];
-                            for (var _10 = 0, _11 = group.entities; _10 < _11.length; _10++) {
-                                var entity = _11[_10];
-                                system.onEntityRemoved(entity, group);
-                            }
-                        }
-                    }
-                    if (true) {
-                        console.debug(egret.getQualifiedClassName(system), "disabled.");
-                    }
-                }
-            }
         };
         /**
          * 在程序启动之前预注册一个指定的系统。
@@ -6563,13 +6546,13 @@ var paper;
                 this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
             }
             if (system.onFrameCleanup) {
-                this._frameCleanupSystems.splice(this._getSystemInsertIndexReversely(this._frameCleanupSystems, order), 0, system);
+                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
             }
             if (system.onTick) {
                 this._tickSystems.splice(this._getSystemInsertIndex(this._tickSystems, order), 0, system);
             }
             if (system.onTickCleanup) {
-                this._tickCleanupSystems.splice(this._getSystemInsertIndexReversely(this._tickCleanupSystems, order), 0, system);
+                this._tickCleanupSystems.splice(this._getSystemInsertIndex(this._tickCleanupSystems, order), 0, system);
             }
             system.initialize(config);
             return system;
@@ -10704,7 +10687,7 @@ var paper;
             /**
              * 逻辑帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
              */
-            _this.tickInterval = 1.0 / 50.0;
+            _this.tickInterval = 1.0 / 60.0;
             /**
              * 渲染帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
              */
@@ -10754,8 +10737,27 @@ var paper;
                 this._unscaledDeltaTime = this._unscaledTime - lastTime;
             }
             var returnValue = { frameCount: 0, tickCount: 0 };
+            if (this.tickInterval < this.frameInterval) {
+                this.tickInterval = this.frameInterval;
+            }
+            // 判断是否够一个逻辑帧
+            if (this.tickInterval) {
+                this._unusedTickDelta += this._unscaledDeltaTime;
+                if (this._unusedTickDelta >= this.tickInterval) {
+                    // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
+                    while (this._unusedTickDelta >= this.tickInterval && returnValue.tickCount < this.tickCompensateSpeed) {
+                        this._unusedTickDelta -= this.tickInterval;
+                        returnValue.tickCount++;
+                        this._tickCount++;
+                    }
+                }
+            }
+            else {
+                returnValue.tickCount = 1;
+                this._tickCount++;
+            }
             // 判断渲染帧
-            if (this.frameInterval && this._firstTicked) {
+            if (this.frameInterval) {
                 this._unusedFrameDelta += this._unscaledDeltaTime;
                 if (this._unusedFrameDelta >= this.frameInterval) {
                     // 渲染帧不需要补帧
@@ -10767,23 +10769,6 @@ var paper;
             else {
                 returnValue.frameCount = 1;
                 this._frameCount++;
-            }
-            // 判断是否够一个逻辑帧
-            if (this.tickInterval) {
-                this._unusedTickDelta += this._unscaledDeltaTime;
-                if (this._unusedTickDelta >= this.tickInterval) {
-                    // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
-                    while (this._unusedTickDelta >= this.tickInterval && returnValue.tickCount < this.tickCompensateSpeed) {
-                        this._unusedTickDelta -= this.tickInterval;
-                        returnValue.tickCount++;
-                        this._tickCount++;
-                        this._firstTicked = true;
-                    }
-                }
-            }
-            else {
-                returnValue.tickCount = 1;
-                this._tickCount++;
             }
             return returnValue;
         };
@@ -10885,7 +10870,6 @@ var paper;
          */
         Clock.prototype.reset = function () {
             this._needReset = true;
-            this._firstTicked = true;
         };
         return Clock;
     }(paper.Component));
@@ -10969,28 +10953,38 @@ var paper;
     /**
      * 实体组件匹配器。
      */
-    var Matcher = (function () {
-        function Matcher(componentEnabledFilter) {
-            this.componentEnabledFilter = true;
-            this._id = "";
-            this._components = [];
-            this._allOfComponents = [];
-            this._anyOfComponents = [];
-            this._noneOfComponents = [];
-            this._extraOfComponents = [];
-            this.componentEnabledFilter = componentEnabledFilter;
+    var Matcher = (function (_super) {
+        __extends(Matcher, _super);
+        function Matcher() {
+            var _this = _super.call(this) || this;
+            _this.componentEnabledFilter = true;
+            _this._id = "";
+            _this._components = [];
+            _this._allOfComponents = [];
+            _this._anyOfComponents = [];
+            _this._noneOfComponents = [];
+            _this._extraOfComponents = [];
+            return _this;
         }
         Matcher.create = function () {
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
                 args[_i] = arguments[_i];
             }
-            var matcher = new Matcher(args[0] !== false);
-            if (!matcher.componentEnabledFilter) {
+            var instance;
+            if (this._instances.length > 0) {
+                instance = this._instances.pop();
+                instance._released = false;
+            }
+            else {
+                instance = new Matcher();
+            }
+            instance.componentEnabledFilter = args[0] !== false;
+            if (!instance.componentEnabledFilter) {
                 args.shift();
             }
-            matcher._distinct(args, matcher._allOfComponents);
-            return matcher;
+            instance._distinct(args, instance._allOfComponents);
+            return instance;
         };
         Matcher.prototype._sortComponents = function (a, b) {
             return a.componentIndex - b.componentIndex;
@@ -11041,6 +11035,14 @@ var paper;
             if (_components.length > 0) {
                 _components.length = 0;
             }
+        };
+        Matcher.prototype.onClear = function () {
+            this._id = "";
+            this._components.length = 0;
+            this._allOfComponents.length = 0;
+            this._anyOfComponents.length = 0;
+            this._noneOfComponents.length = 0;
+            this._extraOfComponents.length = 0;
         };
         Matcher.prototype.anyOf = function () {
             var components = [];
@@ -11135,8 +11137,9 @@ var paper;
             enumerable: true,
             configurable: true
         });
+        Matcher._instances = [];
         return Matcher;
-    }());
+    }(paper.BaseRelease));
     paper.Matcher = Matcher;
     __reflect(Matcher.prototype, "paper.Matcher", ["paper.IAllOfMatcher", "paper.IAnyOfMatcher", "paper.INoneOfMatcher", "paper.ICompoundMatcher", "paper.IMatcher"]);
 })(paper || (paper = {}));
@@ -11237,7 +11240,7 @@ var paper;
                 paper.Matcher.create().extraOf(paper.Behaviour)
             ];
         };
-        UpdateSystem.prototype.onTick = function (deltaTime) {
+        UpdateSystem.prototype.onFrame = function (deltaTime) {
             for (var _i = 0, _a = this.groups[0].behaviours; _i < _a.length; _i++) {
                 var behaviour = _a[_i];
                 if (!behaviour || (behaviour._lifeStates & 8 /* Started */) === 0) {
@@ -11268,7 +11271,7 @@ var paper;
                 paper.Matcher.create().extraOf(paper.Behaviour)
             ];
         };
-        LateUpdateSystem.prototype.onTick = function (deltaTime) {
+        LateUpdateSystem.prototype.onFrame = function (deltaTime) {
             for (var _i = 0, _a = this.groups[0].behaviours; _i < _a.length; _i++) {
                 var behaviour = _a[_i];
                 if (!behaviour || (behaviour._lifeStates & 8 /* Started */) === 0) {
@@ -14161,7 +14164,7 @@ var egret3d;
         function CameraAndLightCollecter() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
-             *
+             * TODO
              */
             _this.lightCountDirty = LightCountDirty.None;
             /**
@@ -19177,7 +19180,7 @@ var egret3d;
         SkinnedMeshRendererSystem.prototype.onEntityRemoved = function (entity) {
             this._drawCallCollecter.removeDrawCalls(entity);
         };
-        SkinnedMeshRendererSystem.prototype.onTick = function () {
+        SkinnedMeshRendererSystem.prototype.onFrame = function () {
             for (var _i = 0, _a = this.groups[0].entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
                 entity.getComponent(egret3d.SkinnedMeshRenderer)._update();
@@ -19434,7 +19437,7 @@ var egret3d;
                 this._sortedEntities.splice(index, 1);
             }
         };
-        Egret2DRendererSystem.prototype.onTick = function (deltaTime) {
+        Egret2DRendererSystem.prototype.onFrame = function (deltaTime) {
             var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
             for (var _i = 0, _b = this.groups[0].entities; _i < _b.length; _i++) {
                 var entity = _b[_i];
@@ -21733,7 +21736,7 @@ var egret3d;
                 animation.play();
             }
         };
-        AnimationSystem.prototype.onTick = function (deltaTime) {
+        AnimationSystem.prototype.onFrame = function (deltaTime) {
             for (var _i = 0, _a = this.groups[0].entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
                 var animation = this._animation = entity.getComponent(egret3d.Animation);
@@ -25054,23 +25057,18 @@ var egret3d;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             };
-            ParticleSystem.prototype.onEnable = function () {
-                // for (const gameObject of this.groups[0].gameObjects) {
-                //     this._updateDrawCalls(gameObject);
-                // }
-            };
-            ParticleSystem.prototype.onAddGameObject = function (gameObject, _group) {
-                this._updateDrawCalls(gameObject, false);
-                var component = gameObject.getComponent(particle.ParticleComponent);
+            ParticleSystem.prototype.onEntityAdded = function (entity) {
+                this._updateDrawCalls(entity, false);
+                var component = entity.getComponent(particle.ParticleComponent);
                 if (component.main.playOnAwake) {
                     component.play();
                 }
             };
-            ParticleSystem.prototype.onRemoveGameObject = function (gameObject) {
-                this._drawCallCollecter.removeDrawCalls(gameObject);
+            ParticleSystem.prototype.onEntityRemoved = function (entity) {
+                this._drawCallCollecter.removeDrawCalls(entity);
                 // component.stop();
             };
-            ParticleSystem.prototype.onTick = function (deltaTime) {
+            ParticleSystem.prototype.onFrame = function (deltaTime) {
                 // if (deltaTime > 0.3) {
                 //     deltaTime = 0.3;//防止dt过大，引起周期错乱
                 // }
@@ -25079,11 +25077,6 @@ var egret3d;
                     var entity = _a[_i];
                     entity.getComponent(particle.ParticleComponent).update(dt);
                 }
-            };
-            ParticleSystem.prototype.onDisable = function () {
-                // for (const gameObject of this.groups[0].gameObjects) {
-                //     this._drawCallCollecter.removeDrawCalls(gameObject.renderer as ParticleRenderer);
-                // }
             };
             return ParticleSystem;
         }(paper.BaseSystem));
@@ -25713,9 +25706,19 @@ var paper;
         /**
          * including calculating, status updating, rerendering and logical updating
          */
-        ECS.prototype._update = function (updateFlags) {
-            if (updateFlags === void 0) { updateFlags = { tickCount: 1, frameCount: 1 }; }
-            this.systemManager.update(updateFlags);
+        ECS.prototype._update = function (_a) {
+            var _b = _a === void 0 ? { tickCount: 1, frameCount: 1 } : _a, tickCount = _b.tickCount, frameCount = _b.frameCount;
+            var systemManager = this.systemManager;
+            if (tickCount) {
+                systemManager._startUp();
+                systemManager._tick(tickCount);
+            }
+            if (frameCount) {
+                systemManager._frame();
+            }
+            if (tickCount) {
+                systemManager._teardown(frameCount);
+            }
         };
         /**
          *
@@ -25782,7 +25785,7 @@ var paper;
         /**
          * 显式更新
          *
-         * - 在暂停的情况下才有意义 (`this._isRunning === false`), 因为在运行的情况下下一帧自动会刷新
+         * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
          * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
          */
         ECS.prototype.update = function () {
@@ -30059,7 +30062,7 @@ var egret3d;
                     _this._updateCanvas(egret3d.stage);
                 }, this);
             };
-            BeginSystem.prototype.onTick = function () {
+            BeginSystem.prototype.onFrame = function () {
                 // TODO 查询是否有性能问题。
                 var screenSize = egret3d.stage.screenSize;
                 // 
@@ -30630,6 +30633,57 @@ var egret3d;
                 collecter.currentCamera = null;
                 collecter.currentShadowLight = null;
             };
+            WebGLRenderSystem.prototype.getMatchers = function () {
+                return [
+                    paper.Matcher.create(egret3d.Egret2DRenderer),
+                ];
+            };
+            WebGLRenderSystem.prototype.onAwake = function () {
+                var renderState = this._renderState;
+                renderState.render = this.render.bind(this);
+                renderState.draw = this.draw.bind(this);
+            };
+            WebGLRenderSystem.prototype.onFrame = function () {
+                if (!webgl_15.WebGLRenderState.webgl) {
+                    return;
+                }
+                var cameras = this._cameraAndLightCollecter.cameras;
+                if (cameras.length > 0) {
+                    var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
+                    var clock = paper.clock;
+                    var renderState_2 = this._renderState;
+                    var editorScene = paper.Application.sceneManager.editorScene;
+                    renderState_2.caches.egret2DOrderCount = 0;
+                    renderState_2.caches.cullingMask = 0 /* Nothing */;
+                    renderState_2.caches.clockBuffer[0] = clock.time; // TODO more clock info.
+                    this._cacheProgram = null;
+                    // Render lights shadows. TODO 
+                    // if (camera.cullingMask !== renderState.caches.cullingMask) {
+                    var lights = this._cameraAndLightCollecter.lights;
+                    if (lights.length > 0) {
+                        for (var _i = 0, lights_6 = lights; _i < lights_6.length; _i++) {
+                            var light = lights_6[_i];
+                            if (light.castShadows && light.shadow._onUpdate) {
+                                this._renderShadow(light);
+                            }
+                        }
+                    }
+                    //     renderState.caches.cullingMask = camera.cullingMask;
+                    // }
+                    for (var _a = 0, cameras_1 = cameras; _a < cameras_1.length; _a++) {
+                        var camera = cameras_1[_a];
+                        var scene = camera.gameObject.scene;
+                        if (camera.renderTarget
+                            || camera._previewRenderTarget
+                            || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
+                            this.render(camera);
+                        }
+                    }
+                }
+                else {
+                    this._renderState.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.BLACK);
+                }
+            };
             WebGLRenderSystem.prototype.render = function (camera, material) {
                 if (material === void 0) { material = null; }
                 var cameraAndLightCollecter = this._cameraAndLightCollecter;
@@ -30815,57 +30869,6 @@ var egret3d;
                     if (drawCall.drawCount >= 0) {
                         drawCall.drawCount++;
                     }
-                }
-            };
-            WebGLRenderSystem.prototype.getMatchers = function () {
-                return [
-                    paper.Matcher.create(egret3d.Egret2DRenderer),
-                ];
-            };
-            WebGLRenderSystem.prototype.onAwake = function () {
-                var renderState = this._renderState;
-                renderState.render = this.render.bind(this);
-                renderState.draw = this.draw.bind(this);
-            };
-            WebGLRenderSystem.prototype.onFrame = function () {
-                if (!webgl_15.WebGLRenderState.webgl) {
-                    return;
-                }
-                var cameras = this._cameraAndLightCollecter.cameras;
-                if (cameras.length > 0) {
-                    var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
-                    var clock = paper.clock;
-                    var renderState_2 = this._renderState;
-                    var editorScene = paper.Application.sceneManager.editorScene;
-                    renderState_2.caches.egret2DOrderCount = 0;
-                    renderState_2.caches.cullingMask = 0 /* Nothing */;
-                    renderState_2.caches.clockBuffer[0] = clock.time; // TODO more clock info.
-                    this._cacheProgram = null;
-                    // Render lights shadows. TODO 
-                    // if (camera.cullingMask !== renderState.caches.cullingMask) {
-                    var lights = this._cameraAndLightCollecter.lights;
-                    if (lights.length > 0) {
-                        for (var _i = 0, lights_6 = lights; _i < lights_6.length; _i++) {
-                            var light = lights_6[_i];
-                            if (light.castShadows && light.shadow._onUpdate) {
-                                this._renderShadow(light);
-                            }
-                        }
-                    }
-                    //     renderState.caches.cullingMask = camera.cullingMask;
-                    // }
-                    for (var _a = 0, cameras_1 = cameras; _a < cameras_1.length; _a++) {
-                        var camera = cameras_1[_a];
-                        var scene = camera.gameObject.scene;
-                        if (camera.renderTarget
-                            || camera._previewRenderTarget
-                            || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
-                            this.render(camera);
-                        }
-                    }
-                }
-                else {
-                    this._renderState.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.BLACK);
                 }
             };
             return WebGLRenderSystem;

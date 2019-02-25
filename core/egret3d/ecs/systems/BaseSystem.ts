@@ -139,16 +139,6 @@ namespace paper {
          */
         public onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
         /**
-         * 生成一个新的渲染帧时调用
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        public onFrame?(deltaTime?: number): void;
-        /**
-         * 在新的渲染帧的清理阶段调用
-         * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
-         */
-        public onFrameCleanup?(deltaTime?: number): void;
-        /**
          * 生成一个新的逻辑帧时调用
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
@@ -158,6 +148,16 @@ namespace paper {
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
         public onTickCleanup?(deltaTime?: number): void;
+        /**
+         * 生成一个新的渲染帧时调用
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        public onFrame?(deltaTime?: number): void;
+        /**
+         * 在新的渲染帧的清理阶段调用
+         * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
+         */
+        public onFrameCleanup?(deltaTime?: number): void;
         /**
          * 该系统被禁用时调用。
          * @see paper.BaseSystem#enabled

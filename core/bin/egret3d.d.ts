@@ -4329,15 +4329,10 @@ declare namespace paper {
         private readonly _tickCleanupSystems;
         private constructor();
         private _getSystemInsertIndex(systems, order);
-        private _getSystemInsertIndexReversely(systems, order);
         /**
          *
          */
         preRegisterSystems(): void;
-        /**
-         *
-         */
-        update(updateFlags: ClockUpdateFlags): void;
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
@@ -4790,16 +4785,6 @@ declare namespace paper {
          */
         onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
         /**
-         * 生成一个新的渲染帧时调用
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        onFrame?(deltaTime?: number): void;
-        /**
-         * 在新的渲染帧的清理阶段调用
-         * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
-         */
-        onFrameCleanup?(deltaTime?: number): void;
-        /**
          * 生成一个新的逻辑帧时调用
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
@@ -4809,6 +4794,16 @@ declare namespace paper {
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
         onTickCleanup?(deltaTime?: number): void;
+        /**
+         * 生成一个新的渲染帧时调用
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onFrame?(deltaTime?: number): void;
+        /**
+         * 在新的渲染帧的清理阶段调用
+         * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
+         */
+        onFrameCleanup?(deltaTime?: number): void;
         /**
          * 该系统被禁用时调用。
          * @see paper.BaseSystem#enabled
@@ -5886,7 +5881,6 @@ declare namespace paper {
         private _needReset;
         private _unusedFrameDelta;
         private _unusedTickDelta;
-        private _firstTicked;
         initialize(): void;
         /**
          * 程序启动后运行的总渲染帧数
@@ -5970,7 +5964,8 @@ declare namespace paper {
     /**
      * 实体组件匹配器。
      */
-    class Matcher<TEntity extends IEntity> implements IAllOfMatcher<TEntity> {
+    class Matcher<TEntity extends IEntity> extends BaseRelease<Matcher<TEntity>> implements IAllOfMatcher<TEntity> {
+        private static readonly _instances;
         /**
          * 创建匹配器。
          * @param componentClasses 必须包含的全部组件。
@@ -5993,6 +5988,7 @@ declare namespace paper {
         private _sortComponents(a, b);
         private _distinct(source, target);
         private _merge();
+        onClear(): void;
         anyOf(...components: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity>;
         noneOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
         extraOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
@@ -6029,7 +6025,7 @@ declare namespace paper {
     class LateUpdateSystem extends BaseSystem<GameObject> {
         private readonly _laterCalls;
         protected getMatchers(): INoneOfMatcher<GameObject>[];
-        onTick(deltaTime: number): void;
+        onFrame(deltaTime: number): void;
         /**
          * @deprecated
          */
@@ -7048,7 +7044,7 @@ declare namespace egret3d {
      */
     class CameraAndLightCollecter extends paper.BaseComponent {
         /**
-         *
+         * TODO
          */
         lightCountDirty: LightCountDirty;
         /**
@@ -8524,7 +8520,7 @@ declare namespace egret3d {
         }[];
         onEntityAdded(entity: paper.GameObject): void;
         onEntityRemoved(entity: paper.GameObject): void;
-        onTick(): void;
+        onFrame(): void;
     }
 }
 declare namespace egret3d {
@@ -8600,7 +8596,7 @@ declare namespace egret3d {
         onDisable(): void;
         onEntityAdded(entity: paper.GameObject): void;
         onEntityRemoved(entity: paper.GameObject): void;
-        onTick(deltaTime: number): void;
+        onFrame(deltaTime: number): void;
     }
 }
 declare module egret.web {
@@ -9050,7 +9046,7 @@ declare namespace egret3d {
         private _updateAnimationState(animationFadeState, animationState, deltaTime, forceUpdate);
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
         onEntityAdded(entity: paper.GameObject): void;
-        onTick(deltaTime: number): void;
+        onFrame(deltaTime: number): void;
     }
 }
 declare namespace egret3d.particle {
@@ -9795,11 +9791,9 @@ declare namespace egret3d.particle {
         private _onRotationOverLifetime(comp);
         private _onTextureSheetAnimation(comp);
         private _updateDrawCalls(gameObject, cleanPlayState?);
-        onEnable(): void;
-        onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup): void;
-        onRemoveGameObject(gameObject: paper.GameObject): void;
-        onTick(deltaTime: number): void;
-        onDisable(): void;
+        onEntityAdded(entity: paper.GameObject): void;
+        onEntityRemoved(entity: paper.GameObject): void;
+        onFrame(deltaTime: number): void;
     }
 }
 declare namespace egret3d {
@@ -9928,7 +9922,7 @@ declare namespace paper {
         /**
          * including calculating, status updating, rerendering and logical updating
          */
-        private _update(updateFlags?);
+        private _update({tickCount, frameCount}?);
         /**
          *
          */
@@ -9942,7 +9936,7 @@ declare namespace paper {
         /**
          * 显式更新
          *
-         * - 在暂停的情况下才有意义 (`this._isRunning === false`), 因为在运行的情况下下一帧自动会刷新
+         * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
          * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
          */
         update(): void;

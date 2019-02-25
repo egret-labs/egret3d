@@ -69,14 +69,24 @@ namespace paper {
             this._update(result);
             requestAnimationFrame(this._loop);
         }
-
         /**
          * including calculating, status updating, rerendering and logical updating
          */
-        private _update(updateFlags: ClockUpdateFlags = { tickCount: 1, frameCount: 1 }): void {
-            this.systemManager.update(updateFlags);
-        }
+        private _update({ tickCount, frameCount }: ClockUpdateFlags = { tickCount: 1, frameCount: 1 }) {
+            const systemManager = this.systemManager;
+            if (tickCount) {
+                systemManager._startUp();
+                systemManager._tick(tickCount);
+            }
 
+            if (frameCount) {
+                systemManager._frame();
+            }
+
+            if (tickCount) {
+                systemManager._teardown(frameCount);
+            }
+        }
         /**
          * 
          */
@@ -93,9 +103,9 @@ namespace paper {
             systemManager.preRegisterSystems();
 
             if (options.tickInterval !== (void 0)) { clock.tickInterval = options.tickInterval; }
-            console.info("tick rate:", clock.tickInterval ? (1.0 / clock.tickInterval) : "auto")
+            console.info("tick rate:", clock.tickInterval ? (1.0 / clock.tickInterval) : "auto");
             if (options.frameInterval !== (void 0)) { clock.frameInterval = options.frameInterval; }
-            console.info("frame rate:", clock.frameInterval ? (1.0 / clock.frameInterval) : "auto")
+            console.info("frame rate:", clock.frameInterval ? (1.0 / clock.frameInterval) : "auto");
 
             this.resume();
         }
@@ -143,7 +153,7 @@ namespace paper {
         /**
          * 显式更新
          *
-         * - 在暂停的情况下才有意义 (`this._isRunning === false`), 因为在运行的情况下下一帧自动会刷新
+         * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
          * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
          */
         public update() {

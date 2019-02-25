@@ -49,7 +49,7 @@ namespace paper {
 
             if (groups) {
                 for (const group of groups) {
-                    if (!group.matcher.componentEnabledFilter){
+                    if (!group.matcher.componentEnabledFilter) {
                         debugger;
                     }
                     group.handleEvent(entity as TEntity, component, true);
@@ -111,7 +111,10 @@ namespace paper {
             const id = matcher.id;
             const groups = this._groups;
 
-            if (!(id in groups)) {
+            if (id in groups) {
+                (matcher as Matcher<TEntity>).release();
+            }
+            else {
                 const componentsGroups = matcher.componentEnabledFilter ? this._componentsGroups : this._componentsGroupsB;
                 const group = Group.create(matcher);
                 groups[id] = group;

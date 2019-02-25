@@ -14,37 +14,10 @@ namespace paper.editor {
         private readonly _keyF: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyF);
 
         private _transformController: TransformController | null = null;
-        private _containerEntity: GameObject | null = null;
-        private _touchEntity: GameObject | null = null;
-
-        private _boxesDrawer: BoxesDrawer | null = null;
-        private _boxColliderDrawer: BoxColliderDrawer | null = null;
-        private _sphereColliderDrawer: SphereColliderDrawer | null = null;
-        private _cylinderColliderDrawer: CylinderColliderDrawer | null = null;
-        private _skeletonDrawer: SkeletonDrawer | null = null;
-        private _cameraViewportDrawer: CameraViewportDrawer | null = null;
-        private _worldAxisesDrawer: WorldAxisesDrawer | null = null;
+        private _gizmosContainerEntity: GameObject | null = null;
+        private _touchContainerEntity: GameObject | null = null;
         private _gridDrawer: GridDrawer | null = null;
         private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
-
-        private _onGameObjectHovered = (_c: any, value: GameObject | null) => {
-        }
-
-        private _onGameObjectSelectChanged = (_c: any, value: GameObject) => {
-            const selectedGameObject = this._modelComponent.selectedGameObject;
-
-            this._transformController!.gameObject.activeSelf =
-                selectedGameObject ? true : false;
-
-            this._cameraViewFrustum!.activeSelf =
-                selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
-        }
-
-        private _onGameObjectSelected = (_c: any, value: GameObject) => {
-        }
-
-        private _onGameObjectUnselected = (_c: any, value: GameObject) => {
-        }
 
         private _updateCameras() {
             const setPoint = (cameraProject: egret3d.Matrix, positions: Float32Array, x: number, y: number, z: number, points: number[]) => {
@@ -66,45 +39,45 @@ namespace paper.editor {
             };
 
             const cameraViewFrustum = this._cameraViewFrustum!;
-            if (cameraViewFrustum.activeSelf) {
-                const selectedCamera = this._modelComponent.selectedGameObject!.getComponent(egret3d.Camera)!;
-                cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
-                cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
+            // if (cameraViewFrustum.activeSelf) {
+            //     const selectedCamera = this._modelComponent.selectedGameObject!.getComponent(egret3d.Camera)!;
+            //     cameraViewFrustum.transform.position = selectedCamera.gameObject.transform.position;
+            //     cameraViewFrustum.transform.rotation = selectedCamera.gameObject.transform.rotation;
 
-                const mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter)!.mesh!;
-                const cameraProject = selectedCamera.projectionMatrix;
+            //     const mesh = cameraViewFrustum.getComponent(egret3d.MeshFilter)!.mesh!;
+            //     const cameraProject = selectedCamera.projectionMatrix;
 
-                const positions = mesh.getVertices()!;
-                // center / target
-                setPoint(cameraProject, positions, 0, 0, -1, [38, 41]);
-                setPoint(cameraProject, positions, 0, 0, 1, [39]);
-                // near,
-                setPoint(cameraProject, positions, -1, -1, -1, [0, 7, 16, 25]);
-                setPoint(cameraProject, positions, 1, -1, -1, [1, 2, 18, 27]);
-                setPoint(cameraProject, positions, -1, 1, -1, [5, 6, 20, 29]);
-                setPoint(cameraProject, positions, 1, 1, - 1, [3, 4, 22, 31]);
-                // far,
-                setPoint(cameraProject, positions, -1, -1, 1, [8, 15, 17]);
-                setPoint(cameraProject, positions, 1, -1, 1, [9, 10, 19]);
-                setPoint(cameraProject, positions, -1, 1, 1, [13, 14, 21]);
-                setPoint(cameraProject, positions, 1, 1, 1, [11, 12, 23]);
-                // up,
-                setPoint(cameraProject, positions, 0.7, 1.1, -1, [32, 37]);
-                setPoint(cameraProject, positions, -0.7, 1.1, -1, [33, 34]);
-                setPoint(cameraProject, positions, 0, 2, -1, [35, 36]);
-                // cross,
-                setPoint(cameraProject, positions, -1, 0, 1, [42]);
-                setPoint(cameraProject, positions, 1, 0, 1, [43]);
-                setPoint(cameraProject, positions, 0, -1, 1, [44]);
-                setPoint(cameraProject, positions, 0, 1, 1, [45]);
+            //     const positions = mesh.getVertices()!;
+            //     // center / target
+            //     setPoint(cameraProject, positions, 0, 0, -1, [38, 41]);
+            //     setPoint(cameraProject, positions, 0, 0, 1, [39]);
+            //     // near,
+            //     setPoint(cameraProject, positions, -1, -1, -1, [0, 7, 16, 25]);
+            //     setPoint(cameraProject, positions, 1, -1, -1, [1, 2, 18, 27]);
+            //     setPoint(cameraProject, positions, -1, 1, -1, [5, 6, 20, 29]);
+            //     setPoint(cameraProject, positions, 1, 1, - 1, [3, 4, 22, 31]);
+            //     // far,
+            //     setPoint(cameraProject, positions, -1, -1, 1, [8, 15, 17]);
+            //     setPoint(cameraProject, positions, 1, -1, 1, [9, 10, 19]);
+            //     setPoint(cameraProject, positions, -1, 1, 1, [13, 14, 21]);
+            //     setPoint(cameraProject, positions, 1, 1, 1, [11, 12, 23]);
+            //     // up,
+            //     setPoint(cameraProject, positions, 0.7, 1.1, -1, [32, 37]);
+            //     setPoint(cameraProject, positions, -0.7, 1.1, -1, [33, 34]);
+            //     setPoint(cameraProject, positions, 0, 2, -1, [35, 36]);
+            //     // cross,
+            //     setPoint(cameraProject, positions, -1, 0, 1, [42]);
+            //     setPoint(cameraProject, positions, 1, 0, 1, [43]);
+            //     setPoint(cameraProject, positions, 0, -1, 1, [44]);
+            //     setPoint(cameraProject, positions, 0, 1, 1, [45]);
 
-                setPoint(cameraProject, positions, -1, 0, -1, [46]);
-                setPoint(cameraProject, positions, 1, 0, -1, [47]);
-                setPoint(cameraProject, positions, 0, -1, -1, [48]);
-                setPoint(cameraProject, positions, 0, 1, -1, [49]);
+            //     setPoint(cameraProject, positions, -1, 0, -1, [46]);
+            //     setPoint(cameraProject, positions, 1, 0, -1, [47]);
+            //     setPoint(cameraProject, positions, 0, -1, -1, [48]);
+            //     setPoint(cameraProject, positions, 0, 1, -1, [49]);
 
-                mesh.uploadVertexBuffer(gltf.AttributeSemantics.POSITION);
-            }
+            //     mesh.uploadVertexBuffer(gltf.AttributeSemantics.POSITION);
+            // }
         }
 
         public lookAtSelected() {
@@ -112,8 +85,10 @@ namespace paper.editor {
             orbitControls!.distance = 10.0;
             orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
 
-            if (this._modelComponent.selectedGameObject) {
-                orbitControls!.lookAtPoint.copy(this._modelComponent.selectedGameObject.transform.position);
+            const lastSelectedEntity = this.groups[2].singleEntity;
+
+            if (lastSelectedEntity) {
+                orbitControls!.lookAtPoint.copy(lastSelectedEntity.transform.position);
             }
             else {
                 orbitControls!.lookAtPoint.copy(egret3d.Vector3.ZERO);
@@ -122,8 +97,10 @@ namespace paper.editor {
 
         protected getMatchers() {
             return [
-                Matcher.create(egret3d.Transform, HoveredFlag)
+                Matcher.create<GameObject>(egret3d.Transform, HoveredFlag)
                     .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
+                Matcher.create<GameObject>(egret3d.Transform, SelectedFlag),
+                Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag),
             ];
         }
 
@@ -135,10 +112,6 @@ namespace paper.editor {
         public onEnable() {
             Application.systemManager.getSystem(GizmosSystem)!.enabled = true;
 
-            ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectChanged, this);
-            ModelComponent.onGameObjectSelected.add(this._onGameObjectSelected, this);
-            ModelComponent.onGameObjectUnselected.add(this._onGameObjectUnselected, this);
-
             const editorCamera = egret3d.Camera.editor;
             editorCamera.gameObject.addComponent(OrbitControls);
             editorCamera.enabled = true;
@@ -146,23 +119,14 @@ namespace paper.editor {
             this._transformController = EditorMeshHelper.createGameObject("Transform Controller").addComponent(TransformController);
             this._transformController.gameObject.activeSelf = false;
 
-            this._containerEntity = EditorMeshHelper.createGameObject("Drawer");
-            this._touchEntity = EditorMeshHelper.createGameObject("Touch Drawer");
-            this._containerEntity.addComponent(ContainerEntityFlag);
-            this._touchEntity.addComponent(TouchContainerEntityFlag);
-
-            this._boxesDrawer = this._containerEntity.addComponent(BoxesDrawer);
-            this._boxColliderDrawer = this._containerEntity.addComponent(BoxColliderDrawer);
-            this._sphereColliderDrawer = this._containerEntity.addComponent(SphereColliderDrawer);
-            this._cylinderColliderDrawer = this._containerEntity.addComponent(CylinderColliderDrawer);
-            this._skeletonDrawer = this._containerEntity.addComponent(SkeletonDrawer);
-            this._cameraViewportDrawer = this._containerEntity.addComponent(CameraViewportDrawer);
-            this._gridDrawer = this._containerEntity.addComponent(GridDrawer);
+            this._gizmosContainerEntity = EditorMeshHelper.createGameObject("Drawer");
+            this._touchContainerEntity = EditorMeshHelper.createGameObject("Touch Drawer");
+            this._gizmosContainerEntity.addComponent(ContainerEntityFlag);
+            this._touchContainerEntity.addComponent(TouchContainerEntityFlag);
+            this._gridDrawer = this._gizmosContainerEntity.addComponent(GridDrawer);
 
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
             this._cameraViewFrustum.activeSelf = false;
-            // this._worldAxisesDrawer = EditorMeshHelper.createGameObject("WorldAxisesDrawer").addComponent(WorldAxisesDrawer);
-
             // TODO
             // const mainCamera = egret3d.Camera.main;
             // editorCamera.transform.position = mainCamera.transform.position;
@@ -172,34 +136,41 @@ namespace paper.editor {
         public onDisable() {
             Application.systemManager.getSystem(GizmosSystem)!.enabled = false;
 
-            ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectChanged, this);
-            ModelComponent.onGameObjectSelected.remove(this._onGameObjectSelected, this);
-            ModelComponent.onGameObjectUnselected.remove(this._onGameObjectUnselected, this);
-
             const editorCamera = egret3d.Camera.editor;
             editorCamera.gameObject.removeComponent(OrbitControls);
             editorCamera.enabled = false;
 
             this._transformController!.gameObject.destroy();
-            this._containerEntity!.destroy();
-            this._touchEntity!.destroy();
+            this._gizmosContainerEntity!.destroy();
+            this._touchContainerEntity!.destroy();
 
             this._transformController = null;
-            this._containerEntity = null;
-            this._touchEntity = null;
-            this._boxesDrawer = null;
-            this._boxColliderDrawer = null;
-            this._sphereColliderDrawer = null;
-            this._cylinderColliderDrawer = null;
-            this._skeletonDrawer = null;
-            this._cameraViewportDrawer = null;
+            this._gizmosContainerEntity = null;
+            this._touchContainerEntity = null;
             this._gridDrawer = null;
 
             this._cameraViewFrustum!.destroy();
             this._cameraViewFrustum = null;
+        }
 
-            // this._worldAxisesDrawer!.gameObject.destroy();
-            // this._worldAxisesDrawer = null;
+        public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
+            const groups = this.groups;
+
+            if (group === groups[2]) {
+                this._transformController!.gameObject.activeSelf = true;
+                // this._cameraViewFrustum!.activeSelf =
+                //     selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
+            }
+        }
+
+        public onEntityRemoved(entity: GameObject, group: Group<GameObject>) {
+            const groups = this.groups;
+
+            if (group === groups[2]) {
+                this._transformController!.gameObject.activeSelf = false;
+                // this._cameraViewFrustum!.activeSelf =
+                //     selectedGameObject && selectedGameObject.getComponent(egret3d.Camera) ? true : false;
+            }
         }
 
         public onTick() {
@@ -208,6 +179,7 @@ namespace paper.editor {
             let hoveredEntity = groups[0].singleEntity;
 
             const defaultPointer = egret3d.inputCollecter.defaultPointer;
+
             if (defaultPointer.isDown(egret3d.PointerButtonsType.LeftMouse, false)) {
                 if (defaultPointer.event!.buttons & egret3d.PointerButtonsType.RightMouse) { // 正在控制摄像机。
                 }
@@ -226,7 +198,7 @@ namespace paper.editor {
                     const event = defaultPointer.event!;
 
                     if (hoveredEntity) {
-                        if (this._modelComponent.selectedGameObjects.indexOf(hoveredEntity) >= 0) {
+                        if (hoveredEntity.getComponent(SelectedFlag)) {
                             if (event.ctrlKey) {
                                 this._modelComponent.unselect(hoveredEntity);
                             }
@@ -257,7 +229,7 @@ namespace paper.editor {
                         }
                     }
                     else if (!event.ctrlKey && !event.shiftKey) {
-                        if (this._modelComponent.selectedGameObject && !defaultPointer.downPosition.equal(SceneSystem._defalutPosition)) {
+                        if (!this._modelComponent.selectedScene && !defaultPointer.downPosition.equal(SceneSystem._defalutPosition)) {
                             this._modelComponent.select(Scene.activeScene);
                         }
                     }
@@ -303,7 +275,7 @@ namespace paper.editor {
 
                         if (!transformController || !transformController.isActiveAndEnabled || !transformController.hovered) {
                             const gameObjects = Scene.activeScene.getRootGameObjects().concat(); // TODO
-                            gameObjects.unshift(this._touchEntity!);
+                            gameObjects.unshift(this._touchContainerEntity!);
 
                             const raycastInfos = Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
                             if (raycastInfos.length > 0) {
@@ -320,9 +292,7 @@ namespace paper.editor {
 
             if (this._keyDelete.isUp(false) && !this._keyDelete.event!.altKey && !this._keyDelete.event!.ctrlKey && !this._keyDelete.event!.shiftKey) {
                 if (Application.playerMode !== PlayerMode.Editor) {
-                    for (const gameObject of this._modelComponent.selectedGameObjects) {
-                        gameObject.destroy();
-                    }
+                    this._modelComponent.delete();
                 }
             }
 
@@ -346,22 +316,11 @@ namespace paper.editor {
                 this.lookAtSelected();
             }
 
-            this._modelComponent.update();
-
             if (transformController.isActiveAndEnabled) {
                 transformController.update(defaultPointer.position);
             }
 
-            this._boxesDrawer!.update();
-            this._boxColliderDrawer!.update();
-            this._sphereColliderDrawer!.update();
-            this._cylinderColliderDrawer!.update();
-            this._skeletonDrawer!.update();
-            this._cameraViewportDrawer!.update();
             this._gridDrawer!.update();
-
-            // this._worldAxisesDrawer!.update();
-
             this._updateCameras();
         }
 

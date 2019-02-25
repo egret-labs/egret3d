@@ -4,7 +4,9 @@ namespace paper {
     /**
      * 实体组件匹配器。
      */
-    export class Matcher<TEntity extends IEntity> implements IAllOfMatcher<TEntity>  {
+    export class Matcher<TEntity extends IEntity> extends BaseRelease<Matcher<TEntity>> implements IAllOfMatcher<TEntity>  {
+        private static readonly _instances: Matcher<IEntity>[] = [];
+
         /**
          * 创建匹配器。
          * @param componentClasses 必须包含的全部组件。
@@ -17,15 +19,25 @@ namespace paper {
          */
         public static create<TEntity extends IEntity>(componentEnabledFilter: false, ...componentClasses: IComponentClass<IComponent>[]): IAllOfMatcher<TEntity>;
         public static create<TEntity extends IEntity>(...args: any[]): IAllOfMatcher<TEntity> {
-            const matcher = new Matcher<TEntity>(args[0] !== false);
+            let instance: Matcher<TEntity>;
 
-            if (!matcher.componentEnabledFilter) {
+            if (this._instances.length > 0) {
+                instance = this._instances.pop()!;
+                instance._released = false;
+            }
+            else {
+                instance = new Matcher<TEntity>();
+            }
+
+            (instance.componentEnabledFilter as boolean) = args[0] !== false;
+
+            if (!instance.componentEnabledFilter) {
                 args.shift();
             }
 
-            matcher._distinct(args, matcher._allOfComponents);
+            instance._distinct(args, instance._allOfComponents);
 
-            return matcher;
+            return instance;
         }
 
         public readonly componentEnabledFilter: boolean = true;
@@ -37,8 +49,8 @@ namespace paper {
         private readonly _noneOfComponents: IComponentClass<IComponent>[] = [];
         private readonly _extraOfComponents: IComponentClass<IComponent>[] = [];
 
-        private constructor(componentEnabledFilter: boolean) {
-            this.componentEnabledFilter = componentEnabledFilter;
+        private constructor() {
+            super();
         }
 
         private _sortComponents(a: IComponentClass<IComponent>, b: IComponentClass<IComponent>) {
@@ -97,6 +109,15 @@ namespace paper {
             if (_components.length > 0) {
                 _components.length = 0;
             }
+        }
+
+        public onClear() {
+            this._id = "";
+            this._components.length = 0;
+            this._allOfComponents.length = 0;
+            this._anyOfComponents.length = 0;
+            this._noneOfComponents.length = 0;
+            this._extraOfComponents.length = 0;
         }
 
         public anyOf(...components: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity> {

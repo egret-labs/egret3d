@@ -8,6 +8,7 @@ namespace paper.editor {
 
         private readonly _controlLeft: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlLeft);
         private readonly _controlRight: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlRight);
+        private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
         private readonly _sceneOrEntityBuffer: (IScene | IEntity | null)[] = [];
         private _selectSceneOrEntity: IEntity | null = null;
@@ -90,6 +91,7 @@ namespace paper.editor {
 
             if (this._addEntityCount > 5) {
                 this._sceneOrEntityBuffer.push(entity);
+                
                 return false;
             }
 
@@ -129,41 +131,9 @@ namespace paper.editor {
         protected getMatchers() {
             return [
                 Matcher.create<GameObject>(false, egret3d.Transform),
-                Matcher.create<GameObject>(false, egret3d.Transform, SelectedFlag),
-                Matcher.create<GameObject>(false, egret3d.Transform, LastSelectedFlag),
+                Matcher.create<GameObject>(false, SelectedFlag),
+                Matcher.create<GameObject>(false, LastSelectedFlag),
             ];
-        }
-
-        public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
-            const groups = this.groups;
-
-            if (group === groups[0]) {
-                this._addSceneOrEntity(entity);
-            }
-            else if (group === groups[1]) {
-                const item = this._guiComponent.hierarchyItems[entity.uuid];
-                if (item) {
-                    item.selected = true;
-                }
-            }
-            else if (group === groups[2]) {
-            }
-        }
-
-        public onEntityRemoved(entity: GameObject, group: Group<GameObject>) {
-            const groups = this.groups;
-
-            if (group === groups[0]) {
-                this._removeSceneOrEntity(entity);
-            }
-            else if (group === groups[1]) {
-                const item = this._guiComponent.hierarchyItems[entity.uuid];
-                if (item) {
-                    item.selected = false;
-                }
-            }
-            else if (group === groups[2]) {
-            }
         }
 
         public onAwake() {
@@ -228,45 +198,59 @@ namespace paper.editor {
             this._selectSceneOrEntity = null;
         }
 
+        public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
+            const groups = this.groups;
+
+            if (group === groups[0]) {
+                this._addSceneOrEntity(entity);
+            }
+            else if (group === groups[1]) {
+                const item = this._guiComponent.hierarchyItems[entity.uuid];
+                if (item) {
+                    item.selected = true;
+                    this._openFolder(item);
+                }
+            }
+            else if (group === groups[2]) {
+            }
+        }
+
+        public onEntityRemoved(entity: GameObject, group: Group<GameObject>) {
+            const groups = this.groups;
+
+            if (group === groups[0]) {
+                this._removeSceneOrEntity(entity);
+            }
+            else if (group === groups[1]) {
+                const item = this._guiComponent.hierarchyItems[entity.uuid];
+                if (item) {
+                    item.selected = false;
+                }
+            }
+            else if (group === groups[2]) {
+            }
+        }
+
         public onTick() {
             if (this._guiComponent.hierarchy.closed || this._guiComponent.hierarchy.domElement.style.display === "none") {
                 return;
             }
 
-            const groups = this.groups;
             const selectSceneOrEntity = this._selectSceneOrEntity;
 
             if (selectSceneOrEntity) {
                 if (selectSceneOrEntity instanceof Entity) {
-                    const isCtrl = this._controlLeft.isHold(false) || this._controlRight.isHold(false);
-                    const lastSelectedEntity = groups[2].singleEntity;
+                    const isReplace = !this._controlLeft.isHold(false) && !this._controlRight.isHold(false);
+                    this._modelComponent.select(selectSceneOrEntity, isReplace);
+                }
+                else {
 
-                    if (selectSceneOrEntity.getComponent(SelectedFlag)) {
-                        if (isCtrl) {
-                            if (lastSelectedEntity === selectSceneOrEntity) {
-                                lastSelectedEntity.removeComponent(LastSelectedFlag);
-                            }
-
-                            selectSceneOrEntity.removeComponent(SelectedFlag);
-                        }
-                    }
-                    else {
-                        if (!isCtrl) {
-                            for (const entity of groups[1].entities) {
-                                entity.removeComponent(SelectedFlag);
-                            }
-                        }
-
-                        if (lastSelectedEntity) {
-                            lastSelectedEntity.removeComponent(LastSelectedFlag);
-                        }
-
-                        selectSceneOrEntity.addComponent(SelectedFlag);
-                        selectSceneOrEntity.addComponent(LastSelectedFlag);
-                    }
                 }
 
                 this._selectSceneOrEntity = null;
+            }
+            else if (egret3d.inputCollecter.getKey(egret3d.KeyCode.Escape).isUp()) {
+                this._modelComponent.select(null);
             }
         }
 
@@ -294,17 +278,6 @@ namespace paper.editor {
                 }
 
                 this._addEntityCount = 0;
-
-                // if (!this._selectItem) {  // Open and select folder.
-                //     const sceneOrEntity = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
-                //     const { hierarchyItems } = this._guiComponent;
-
-                //     if (sceneOrEntity && sceneOrEntity.uuid in hierarchyItems) {
-                //         this._selectItem = hierarchyItems[sceneOrEntity.uuid];
-                //         this._selectItem.selected = true;
-                //         this._openFolder(this._selectItem);
-                //     }
-                // }
             }
             else {
                 this._delayShow++;

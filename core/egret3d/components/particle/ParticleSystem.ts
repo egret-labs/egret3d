@@ -469,27 +469,21 @@ namespace egret3d.particle {
             }
         }
 
-        public onEnable() {
-            // for (const gameObject of this.groups[0].gameObjects) {
-            //     this._updateDrawCalls(gameObject);
-            // }
-        }
+        public onEntityAdded(entity: paper.GameObject) {
+            this._updateDrawCalls(entity, false);
 
-        public onAddGameObject(gameObject: paper.GameObject, _group: paper.GameObjectGroup) {
-            this._updateDrawCalls(gameObject, false);
-
-            const component = gameObject.getComponent(ParticleComponent) as ParticleComponent;
+            const component = entity.getComponent(ParticleComponent) as ParticleComponent;
             if (component.main.playOnAwake) {
                 component.play();
             }
         }
 
-        public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCallCollecter.removeDrawCalls(gameObject);
+        public onEntityRemoved(entity: paper.GameObject) {
+            this._drawCallCollecter.removeDrawCalls(entity);
             // component.stop();
         }
 
-        public onTick(deltaTime: number) {
+        public onFrame(deltaTime: number) {
             // if (deltaTime > 0.3) {
             //     deltaTime = 0.3;//防止dt过大，引起周期错乱
             // }
@@ -497,12 +491,6 @@ namespace egret3d.particle {
             for (const entity of this.groups[0].entities) {
                 (entity.getComponent(ParticleComponent) as ParticleComponent).update(dt);
             }
-        }
-
-        public onDisable() {
-            // for (const gameObject of this.groups[0].gameObjects) {
-            //     this._drawCallCollecter.removeDrawCalls(gameObject.renderer as ParticleRenderer);
-            // }
         }
     }
 }

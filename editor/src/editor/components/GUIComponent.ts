@@ -41,16 +41,19 @@ namespace paper.editor {
          */
         public readonly inspectorItems: { [key: string]: dat.GUI } = {};
 
+        private readonly _lastSelectedGroup: Group<GameObject> = Application.gameObjectContext.getGroup(
+            Matcher.create<GameObject>(false, egret3d.Transform, LastSelectedFlag)
+        );
+
         public initialize() {
             super.initialize();
 
             this.stats.showPanel(0);
         }
 
-        public openComponents(...args: IComponentClass<BaseComponent>[]) {
-            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
-            const selectedGameObject = modelComponent.selectedGameObject;
-            if (!selectedGameObject) {
+        public openComponents(...args: IComponentClass<IComponent>[]) {
+            const lastSelectedEntity = this._lastSelectedGroup.singleEntity;
+            if (!lastSelectedEntity) {
                 return;
             }
 
@@ -59,7 +62,7 @@ namespace paper.editor {
             }
 
             for (const componentClass of args) {
-                const component = selectedGameObject.getComponent(componentClass);
+                const component = lastSelectedEntity.getComponent(componentClass);
                 if (component && component.uuid in this.inspectorItems) {
                     this.inspectorItems[component.uuid].open();
                 }

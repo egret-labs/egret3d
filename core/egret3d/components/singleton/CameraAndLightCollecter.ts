@@ -16,7 +16,7 @@ namespace egret3d {
     @paper.singleton
     export class CameraAndLightCollecter extends paper.BaseComponent {
         /**
-         * 
+         * TODO
          */
         public lightCountDirty: LightCountDirty = LightCountDirty.None;
         /**

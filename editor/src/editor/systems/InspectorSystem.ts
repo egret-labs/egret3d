@@ -4,57 +4,44 @@ namespace paper.editor {
      * @internal
      */
     export class InspectorSystem extends BaseSystem<GameObject> {
-        private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
 
         private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
-            if (entity !== this._modelComponent.selectedGameObject) {
-                return;
-            }
+            // if (entity !== this._modelComponent.selectedGameObject) {
+            //     return;
+            // }
         }
 
         private _onComponentDestroy([entity, component]: [IEntity, IComponent]) {
-            if (entity !== this._modelComponent.selectedGameObject) {
-                return;
-            }
+            // if (entity !== this._modelComponent.selectedGameObject) {
+            //     return;
+            // }
 
-            const intem = this._guiComponent.inspectorItems[component.uuid];
-            delete this._guiComponent.inspectorItems[component.uuid];
+            // const intem = this._guiComponent.inspectorItems[component.uuid];
+            // delete this._guiComponent.inspectorItems[component.uuid];
 
-            if (intem && intem.parent) {
-                try {
-                    intem.parent.removeFolder(intem);
-                }
-                catch (e) {
-                }
-            }
-        }
-
-        private _onSceneSelected = (_c: any, value: Scene) => {
-            this._selectSceneOrGameObject(value);
-        }
-
-        private _onSceneUnselected = (_c: any, value: Scene) => {
-            this._selectSceneOrGameObject(null);
-        }
-
-        private _onGameObjectSelectedChange = (_c: any, value: GameObject) => {
-            this._selectSceneOrGameObject(this._modelComponent.selectedGameObject);
+            // if (intem && intem.parent) {
+            //     try {
+            //         intem.parent.removeFolder(intem);
+            //     }
+            //     catch (e) {
+            //     }
+            // }
         }
 
         private _componentOrPropertyGUIClickHandler = (gui: dat.GUI) => {
-            (window as any)["psc"] = gui.instance;
+            (window as any)["psc"] = (window as any)["epsc"] = gui.instance; // For quick debug.
         }
 
         private _saveSceneOrGameObject = () => {
-            if (this._modelComponent.selectedScene) {
-                const json = JSON.stringify(serialize(this._modelComponent.selectedScene));
-                console.info(json);
-            }
-            else {
-                const json = JSON.stringify(serialize(this._modelComponent.selectedGameObject!));
-                console.info(json);
-            }
+            // if (this._modelComponent.selectedScene) {
+            //     const json = JSON.stringify(serialize(this._modelComponent.selectedScene));
+            //     console.info(json);
+            // }
+            // else {
+            //     const json = JSON.stringify(serialize(this._modelComponent.selectedGameObject!));
+            //     console.info(json);
+            // }
         }
 
         private _destroySceneOrGameObject = () => {
@@ -157,7 +144,7 @@ namespace paper.editor {
 
                 await RES.getResAsync(v);
                 Scene.activeScene.destroy();
-                this._modelComponent.select(Scene.create(v));
+                // this._modelComponent.select(Scene.create(v));
             });
 
             inspector.add(options, "prefabs", this._getAssets("Prefab")).onChange(async (v: string | null) => {
@@ -167,16 +154,16 @@ namespace paper.editor {
 
                 await RES.getResAsync(v);
                 let gameObject: GameObject | null = null;
-                if (this._modelComponent.selectedGameObject) {
-                    const parent = this._modelComponent.selectedGameObject!;
-                    gameObject = Prefab.create(v, parent.scene!);
-                    gameObject!.parent = parent;
-                }
-                else {
-                    gameObject = Prefab.create(v, this._modelComponent.selectedScene || Scene.activeScene);
-                }
+                // if (this._modelComponent.selectedGameObject) {
+                //     const parent = this._modelComponent.selectedGameObject!;
+                //     gameObject = Prefab.create(v, parent.scene!);
+                //     gameObject!.parent = parent;
+                // }
+                // else {
+                gameObject = Prefab.create(v, Scene.activeScene);
+                // }
 
-                this._modelComponent.select(gameObject);
+                // this._modelComponent.select(gameObject);
             });
 
             if (sceneOrGameObject) {
@@ -557,27 +544,23 @@ namespace paper.editor {
             }
         }
 
+        protected getMatchers() {
+            return [
+                Matcher.create<GameObject>(false, egret3d.Transform, LastSelectedFlag),
+            ];
+        }
+
         public onAwake() {
         }
 
         public onEnable() {
             Component.onComponentCreated.add(this._onComponentCreated, this);
             Component.onComponentDestroy.add(this._onComponentDestroy, this);
-
-            ModelComponent.onSceneSelected.add(this._onSceneSelected, this);
-            ModelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
-            ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectedChange, this);
-
-            this._modelComponent.select(Scene.activeScene);
         }
 
         public onDisable() {
             Component.onComponentCreated.remove(this._onComponentCreated, this);
             Component.onComponentDestroy.remove(this._onComponentDestroy, this);
-
-            ModelComponent.onSceneSelected.remove(this._onSceneSelected, this);
-            ModelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
-            ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectedChange, this);
 
             const { inspectorItems } = this._guiComponent;
 
@@ -595,14 +578,31 @@ namespace paper.editor {
             }
         }
 
-        public onTick() {
+        public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
+            const groups = this.groups;
+
+            if (group === groups[0]) {
+                this._selectSceneOrGameObject(entity);
+            }
+        }
+
+        public onEntityRemoved(entity: GameObject, group: Group<GameObject>) {
+            const groups = this.groups;
+
+            if (group === groups[0]) {
+                this._selectSceneOrGameObject(null);
+            }
+        }
+
+        public onFrame() {
             const isInspectorShowed = !this._guiComponent.inspector.closed && this._guiComponent.inspector.domElement.style.display !== "none";
 
-            this._modelComponent.update(); // TODO
-
             if (isInspectorShowed) {
-                if (this._modelComponent.selectedGameObject) {
-                    this._modelComponent.selectedGameObject.transform.localEulerAngles; // TODO
+                const groups = this.groups;
+                const lastSelectedEntity = groups[0].singleEntity;
+
+                if (lastSelectedEntity) {
+                    lastSelectedEntity.transform.localEulerAngles; // TODO
                 }
             }
         }

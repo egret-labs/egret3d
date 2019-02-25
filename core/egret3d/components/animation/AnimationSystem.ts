@@ -271,7 +271,7 @@ namespace egret3d {
             }
         }
 
-        public onTick(deltaTime: number) {
+        public onFrame(deltaTime: number) {
             for (const entity of this.groups[0].entities) {
                 const animation = this._animation = entity.getComponent(Animation)!;
                 const animationController = animation.animationController!;

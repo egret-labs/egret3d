@@ -149,8 +149,6 @@ declare namespace dat {
     }
 }
 declare namespace paper.editor {
-}
-declare namespace paper.editor {
     abstract class BaseState {
         editorModel: EditorModel;
         autoClear: boolean;
@@ -164,339 +162,6 @@ declare namespace paper.editor {
         serialize(): any;
         deserialize(data: any): void;
     }
-}
-declare namespace paper.editor {
-    class EditorSceneModel {
-        private viewCache;
-        readonly editorScene: Scene;
-        private currentModel;
-        editorModel: EditorModel;
-        private cameraObject;
-        init(): void;
-    }
-}
-declare namespace paper.editor {
-    /**
-     * Represents a UUID as defined by rfc4122.
-     */
-    interface UUID {
-        /**
-         * @returns the canonical representation in sets of hexadecimal numbers separated by dashes.
-         */
-        asHex(): string;
-    }
-    function v4(): UUID;
-    function isUUID(value: string): boolean;
-    /**
-     * Parses a UUID that is of the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
-     * @param value A uuid string.
-     */
-    function parse(value: string): UUID;
-    function generateUuid(): string;
-}
-declare namespace paper {
-    /**
-     * 默认标识和自定义标识。
-     */
-    const enum DefaultTags {
-    }
-    /**
-     * 内置层级和自定义层级。
-     */
-    const enum Layer {
-    }
-}
-declare namespace egret3d {
-    /**
-     * 渲染排序。
-     */
-    const enum RenderQueue {
-    }
-    /**
-     *
-     */
-    const enum AttributeSemantics {
-    }
-    /**
-     *
-     */
-    const enum UniformSemantics {
-    }
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-    /**
-     *
-     */
-    class EditorComponent extends Component {
-        hideFlags: HideFlags;
-    }
-    /**
-     *
-     */
-    class ContainerEntityFlag extends EditorComponent {
-    }
-    /**
-     *
-     */
-    class TouchContainerEntityFlag extends EditorComponent {
-    }
-    /**
-     *
-     */
-    class HoveredFlag extends EditorComponent {
-    }
-    /**
-     *
-     */
-    class SelectedFlag extends EditorComponent {
-    }
-    /**
-     *
-     */
-    class LastSelectedFlag extends EditorComponent {
-    }
-    /**
-     *
-     */
-    class DeletedFlag extends EditorComponent {
-    }
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-    /**
-     *
-     */
-    type QuaryValues = {
-        FPS?: 0 | 1;
-        GUI?: 0 | 1;
-        DEBUG?: 0 | 1;
-    };
-    /**
-     *
-     */
-    const enum ShowState {
-        None = 0,
-        FPS = 1,
-        Hierarchy = 2,
-        Inspector = 4,
-        HierarchyAndInspector = 6,
-        All = 7,
-    }
-    /**
-     *
-     */
-    class GUIComponent extends BaseComponent {
-        showStates: ShowState;
-        quaryValues: QuaryValues;
-        readonly hierarchy: dat.GUI;
-        readonly inspector: dat.GUI;
-        readonly stats: Stats;
-        readonly renderPanel: Stats.Panel;
-        initialize(): void;
-        openComponents(...args: IComponentClass<BaseComponent>[]): void;
-    }
-}
-declare namespace paper.editor {
-    /**
-     *
-     */
-    class ModelComponent extends BaseComponent {
-        static readonly onSceneSelected: signals.Signal;
-        static readonly onSceneUnselected: signals.Signal;
-        static readonly onGameObjectSelectChanged: signals.Signal;
-        static readonly onGameObjectSelected: signals.Signal;
-        static readonly onGameObjectUnselected: signals.Signal;
-        /**
-         * 全部选中的实体。
-         */
-        readonly selectedGameObjects: GameObject[];
-        /**
-         * 选中的场景。
-         */
-        selectedScene: Scene | null;
-        /**
-         * 最后一个选中的实体。
-         */
-        selectedGameObject: GameObject | null;
-        private _editorModel;
-        private _onEditorSelectGameObjects(event);
-        private _onChangeProperty(data);
-        private _onChangeEditMode(mode);
-        private _onChangeEditType(type);
-        private _select(value, isReplace?);
-        private _unselect(value);
-        initialize(): void;
-        select(value: Scene | GameObject | null, isReplace?: boolean): void;
-        unselect(value: GameObject): void;
-        remove(value: GameObject): void;
-        update(): void;
-        changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
-    }
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-    /**
-     *
-     */
-    class WorldAxisesDrawer extends BaseComponent {
-        readonly cube: paper.GameObject;
-        readonly left: paper.GameObject;
-        readonly right: paper.GameObject;
-        readonly bottom: paper.GameObject;
-        readonly top: paper.GameObject;
-        readonly back: paper.GameObject;
-        readonly forward: paper.GameObject;
-        initialize(): void;
-        update(): void;
-    }
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-    /**
-     * 检测一个实例对象是否为已被自定义
-     * @param classInstance 实例对象
-     */
-    function isCustom(classInstance: any): boolean;
-    /**
-     * 获取一个实例对象的编辑信息
-     * @param classInstance 实例对象
-     */
-    function getEditInfo(classInstance: any): PropertyInfo[];
-    /**
-     * 获取一个实例对象某个属性的编辑类型
-     * @param classInstance 实例对象
-     * @param propName 属性名
-     */
-    function getEditType(classInstance: any, propName: string): paper.editor.EditType | null;
-    /**
-     * 编辑器事件
-     */
-    class EditorEvent extends BaseEvent {
-        static CHANGE_SCENE: string;
-        constructor(type: string, data?: any);
-    }
-    /**
-     * 编辑器
-     **/
-    class Editor {
-        private static editorSceneModel;
-        /**初始化 */
-        static init(): Promise<void>;
-        private static _activeEditorModel;
-        /**
-         * 当前激活的编辑模型
-         */
-        static readonly activeEditorModel: EditorModel;
-        private static setActiveModel(model);
-        private static activeScene(scene);
-        /**
-         * 定位对象到场景中心
-         * @param target 目标
-         */
-        static locateGambeObject(target: GameObject): void;
-        private static currentEditInfo;
-        /**
-         * 编辑场景
-         * @param sceneUrl 场景资源URL
-         */
-        static editScene(sceneUrl: string): Promise<void>;
-        /**
-         * 编辑预置体
-         * @param prefabUrl 预置体资源URL
-         */
-        static editPrefab(prefabUrl: string): Promise<void>;
-        /**
-         * 刷新
-         */
-        static refresh(): Promise<void>;
-        /**
-         * 撤销
-         */
-        static undo(): void;
-        /**
-         * 重做
-         */
-        static redo(): void;
-        static deserializeHistory(data: any): void;
-        static serializeHistory(): string;
-        private static eventDispatcher;
-        static addEventListener(type: string, fun: Function, thisObj: any, level?: number): void;
-        static removeEventListener(type: string, fun: Function, thisObj: any): void;
-        static dispatchEvent(event: BaseEvent): void;
-        private static initEditEnvironment();
-    }
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-    /**
-     * TODO
-     */
-    class SceneSystem extends BaseSystem<GameObject> {
-        private readonly _modelComponent;
-        private readonly _keyEscape;
-        private readonly _keyDelete;
-        private readonly _keyE;
-        private readonly _keyW;
-        private readonly _keyR;
-        private readonly _keyX;
-        private readonly _keyF;
-        private _transformController;
-        private _containerEntity;
-        private _touchEntity;
-        private _boxesDrawer;
-        private _boxColliderDrawer;
-        private _sphereColliderDrawer;
-        private _cylinderColliderDrawer;
-        private _skeletonDrawer;
-        private _cameraViewportDrawer;
-        private _worldAxisesDrawer;
-        private _gridDrawer;
-        private _cameraViewFrustum;
-        private _onGameObjectHovered;
-        private _onGameObjectSelectChanged;
-        private _onGameObjectSelected;
-        private _onGameObjectUnselected;
-        private _updateCameras();
-        lookAtSelected(): void;
-        protected getMatchers(): IAnyOfMatcher<IEntity>[];
-        onAwake(): void;
-        onEnable(): void;
-        onDisable(): void;
-        onTick(): void;
-        private static readonly _defalutPosition;
-        private _clearDefaultPointerDownPosition();
-    }
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-    function getQueryValues(uri: string): any;
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -631,6 +296,307 @@ declare namespace paper.editor {
         modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void>;
         private modifyMaterialUniformProperty(target, uniformType, propName, copyValue);
         private modifyMaterialGltfStates(target, propName, copyValue);
+    }
+}
+declare namespace paper.editor {
+    class EditorSceneModel {
+        private viewCache;
+        readonly editorScene: Scene;
+        private currentModel;
+        editorModel: EditorModel;
+        private cameraObject;
+        init(): void;
+    }
+}
+declare namespace paper.editor {
+    /**
+     * Represents a UUID as defined by rfc4122.
+     */
+    interface UUID {
+        /**
+         * @returns the canonical representation in sets of hexadecimal numbers separated by dashes.
+         */
+        asHex(): string;
+    }
+    function v4(): UUID;
+    function isUUID(value: string): boolean;
+    /**
+     * Parses a UUID that is of the format xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx.
+     * @param value A uuid string.
+     */
+    function parse(value: string): UUID;
+    function generateUuid(): string;
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+    /**
+     *
+     */
+    class EditorComponent extends Component {
+        hideFlags: HideFlags;
+    }
+    /**
+     *
+     */
+    class ContainerEntityFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class TouchContainerEntityFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class HoveredFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class SelectedFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class LastSelectedFlag extends EditorComponent {
+    }
+    /**
+     *
+     */
+    class DeletedFlag extends EditorComponent {
+    }
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+    /**
+     *
+     */
+    type QuaryValues = {
+        FPS?: 0 | 1;
+        GUI?: 0 | 1;
+        DEBUG?: 0 | 1;
+    };
+    /**
+     *
+     */
+    const enum ShowState {
+        None = 0,
+        FPS = 1,
+        Hierarchy = 2,
+        Inspector = 4,
+        HierarchyAndInspector = 6,
+        All = 7,
+    }
+    /**
+     *
+     */
+    class GUIComponent extends BaseComponent {
+        showStates: ShowState;
+        quaryValues: QuaryValues;
+        readonly hierarchy: dat.GUI;
+        readonly inspector: dat.GUI;
+        readonly stats: Stats;
+        readonly renderPanel: Stats.Panel;
+        private readonly _lastSelectedGroup;
+        initialize(): void;
+        openComponents(...args: IComponentClass<IComponent>[]): void;
+    }
+}
+declare namespace paper.editor {
+    /**
+     *
+     */
+    class ModelComponent extends BaseComponent {
+        /**
+         * 选中的场景。
+         */
+        selectedScene: Scene | null;
+        private _editorModel;
+        private readonly _selectedGroup;
+        private readonly _lastSelectedGroup;
+        private _onEditorSelectGameObjects(event);
+        private _onChangeProperty(data);
+        private _onChangeEditMode(mode);
+        private _onChangeEditType(type);
+        private _select(value, isReplace?);
+        private _unselect(value);
+        initialize(): void;
+        select(value: Scene | IEntity | null, isReplace?: boolean): void;
+        unselect(value: IEntity): void;
+        delete(value?: IEntity | null): void;
+        changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
+    }
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+    /**
+     *
+     */
+    class WorldAxisesDrawer extends BaseComponent {
+        readonly cube: paper.GameObject;
+        readonly left: paper.GameObject;
+        readonly right: paper.GameObject;
+        readonly bottom: paper.GameObject;
+        readonly top: paper.GameObject;
+        readonly back: paper.GameObject;
+        readonly forward: paper.GameObject;
+        initialize(): void;
+        update(): void;
+    }
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+    /**
+     * TODO
+     */
+    class SceneSystem extends BaseSystem<GameObject> {
+        private readonly _modelComponent;
+        private readonly _keyEscape;
+        private readonly _keyDelete;
+        private readonly _keyE;
+        private readonly _keyW;
+        private readonly _keyR;
+        private readonly _keyX;
+        private readonly _keyF;
+        private _transformController;
+        private _gizmosContainerEntity;
+        private _touchContainerEntity;
+        private _gridDrawer;
+        private _cameraViewFrustum;
+        private _updateCameras();
+        lookAtSelected(): void;
+        protected getMatchers(): IAnyOfMatcher<GameObject>[];
+        onAwake(): void;
+        onEnable(): void;
+        onDisable(): void;
+        onEntityAdded(entity: GameObject, group: Group<GameObject>): void;
+        onEntityRemoved(entity: GameObject, group: Group<GameObject>): void;
+        onTick(): void;
+        private static readonly _defalutPosition;
+        private _clearDefaultPointerDownPosition();
+    }
+}
+declare namespace paper.editor {
+    /**
+     * 检测一个实例对象是否为已被自定义
+     * @param classInstance 实例对象
+     */
+    function isCustom(classInstance: any): boolean;
+    /**
+     * 获取一个实例对象的编辑信息
+     * @param classInstance 实例对象
+     */
+    function getEditInfo(classInstance: any): PropertyInfo[];
+    /**
+     * 获取一个实例对象某个属性的编辑类型
+     * @param classInstance 实例对象
+     * @param propName 属性名
+     */
+    function getEditType(classInstance: any, propName: string): paper.editor.EditType | null;
+    /**
+     * 编辑器事件
+     */
+    class EditorEvent extends BaseEvent {
+        static CHANGE_SCENE: string;
+        constructor(type: string, data?: any);
+    }
+    /**
+     * 编辑器
+     **/
+    class Editor {
+        private static editorSceneModel;
+        /**初始化 */
+        static init(): Promise<void>;
+        private static _activeEditorModel;
+        /**
+         * 当前激活的编辑模型
+         */
+        static readonly activeEditorModel: EditorModel;
+        private static setActiveModel(model);
+        private static activeScene(scene);
+        /**
+         * 定位对象到场景中心
+         * @param target 目标
+         */
+        static locateGambeObject(target: GameObject): void;
+        private static currentEditInfo;
+        /**
+         * 编辑场景
+         * @param sceneUrl 场景资源URL
+         */
+        static editScene(sceneUrl: string): Promise<void>;
+        /**
+         * 编辑预置体
+         * @param prefabUrl 预置体资源URL
+         */
+        static editPrefab(prefabUrl: string): Promise<void>;
+        /**
+         * 刷新
+         */
+        static refresh(): Promise<void>;
+        /**
+         * 撤销
+         */
+        static undo(): void;
+        /**
+         * 重做
+         */
+        static redo(): void;
+        static deserializeHistory(data: any): void;
+        static serializeHistory(): string;
+        private static eventDispatcher;
+        static addEventListener(type: string, fun: Function, thisObj: any, level?: number): void;
+        static removeEventListener(type: string, fun: Function, thisObj: any): void;
+        static dispatchEvent(event: BaseEvent): void;
+        private static initEditEnvironment();
+    }
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+    function getQueryValues(uri: string): any;
+}
+declare namespace paper {
+    /**
+     * 默认标识和自定义标识。
+     */
+    const enum DefaultTags {
+    }
+    /**
+     * 内置层级和自定义层级。
+     */
+    const enum Layer {
+    }
+}
+declare namespace egret3d {
+    /**
+     * 渲染排序。
+     */
+    const enum RenderQueue {
+    }
+    /**
+     *
+     */
+    const enum AttributeSemantics {
+    }
+    /**
+     *
+     */
+    const enum UniformSemantics {
     }
 }
 declare namespace paper.editor {

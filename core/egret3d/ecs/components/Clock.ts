@@ -1,6 +1,9 @@
 namespace paper {
 
-    export interface ClockUpdateFlags { frameCount: number, tickCount: number }
+    export interface ClockUpdateFlags {
+        frameCount: number;
+        tickCount: number;
+    }
 
     /**
      * 全局时钟信息组件。
@@ -13,11 +16,11 @@ namespace paper {
         /**
          * 逻辑帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
          */
-        public tickInterval: number = 1.0 / 50.0;
+        public tickInterval: number = 1.0 / 60.0;
         /**
          * 渲染帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
          */
-        public frameInterval: number = 1.0 / 60.0
+        public frameInterval: number = 1.0 / 60.0;
         /**
          * 运行倍速
          * 
@@ -41,7 +44,6 @@ namespace paper {
         private _needReset: boolean = false;
         private _unusedFrameDelta: number = 0.0;
         private _unusedTickDelta: number = 0.0;
-        private _firstTicked: boolean;
 
         public initialize() {
             super.initialize();
@@ -68,8 +70,28 @@ namespace paper {
 
             const returnValue: ClockUpdateFlags = { frameCount: 0, tickCount: 0 };
 
+            if (this.tickInterval < this.frameInterval) { // 逻辑值的执行频率不能低于渲染帧。
+                this.tickInterval = this.frameInterval;
+            }
+
+            // 判断是否够一个逻辑帧
+            if (this.tickInterval) {
+                this._unusedTickDelta += this._unscaledDeltaTime;
+                if (this._unusedTickDelta >= this.tickInterval) {
+                    // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
+                    while (this._unusedTickDelta >= this.tickInterval && returnValue.tickCount < this.tickCompensateSpeed) {
+                        this._unusedTickDelta -= this.tickInterval;
+                        returnValue.tickCount++;
+                        this._tickCount++;
+                    }
+                }
+            } else { // tickInterval 未设置或者其值为零, 则表示跟随浏览器的帧率
+                returnValue.tickCount = 1;
+                this._tickCount++;
+            }
+
             // 判断渲染帧
-            if (this.frameInterval && this._firstTicked) { // 确保执行过一次逻辑帧之后再执行第一次渲染
+            if (this.frameInterval) { // 确保执行过一次逻辑帧之后再执行第一次渲染
                 this._unusedFrameDelta += this._unscaledDeltaTime;
                 if (this._unusedFrameDelta >= this.frameInterval) {
                     // 渲染帧不需要补帧
@@ -82,22 +104,6 @@ namespace paper {
                 this._frameCount++;
             }
 
-            // 判断是否够一个逻辑帧
-            if (this.tickInterval) {
-                this._unusedTickDelta += this._unscaledDeltaTime;
-                if (this._unusedTickDelta >= this.tickInterval) {
-                    // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
-                    while (this._unusedTickDelta >= this.tickInterval && returnValue.tickCount < this.tickCompensateSpeed) {
-                        this._unusedTickDelta -= this.tickInterval;
-                        returnValue.tickCount++;
-                        this._tickCount++;
-                        this._firstTicked = true;
-                    }
-                }
-            } else { // tickInterval 未设置或者其值为零, 则表示跟随浏览器的帧率
-                returnValue.tickCount = 1;
-                this._tickCount++;
-            }
             return returnValue;
         }
 
@@ -164,7 +170,6 @@ namespace paper {
          */
         public reset(): void {
             this._needReset = true;
-            this._firstTicked = true;
         }
     }
     /**

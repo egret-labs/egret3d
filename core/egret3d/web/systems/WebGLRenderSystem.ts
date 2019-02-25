@@ -588,7 +588,7 @@ namespace egret3d.webgl {
 
             for (const entity of this.groups[0].entities) {
                 const egret2DRenderer = entity.getComponent(Egret2DRenderer)!;
-                
+
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     if (egret2DRenderer._order < 0) {
                         egret2DRenderer._order = renderState.caches.egret2DOrderCount++;
@@ -637,6 +637,69 @@ namespace egret3d.webgl {
             collecter.currentCamera = null;
             collecter.currentShadowLight = null;
         }
+
+        protected getMatchers() {
+            return [
+                paper.Matcher.create<paper.GameObject>(Egret2DRenderer),
+            ];
+        }
+
+        public onAwake() {
+            const renderState = this._renderState;
+            renderState.render = this.render.bind(this);
+            renderState.draw = this.draw.bind(this);
+        }
+
+        public onFrame() {
+            if (!WebGLRenderState.webgl) {
+                return;
+            }
+
+            const { cameras } = this._cameraAndLightCollecter;
+
+            if (cameras.length > 0) { // Render cameras.
+                const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
+                const clock = paper.clock;
+                const renderState = this._renderState;
+                const editorScene = paper.Application.sceneManager.editorScene;
+
+                renderState.caches.egret2DOrderCount = 0;
+                renderState.caches.cullingMask = paper.Layer.Nothing;
+                renderState.caches.clockBuffer[0] = clock.time; // TODO more clock info.
+                this._cacheProgram = null;
+
+                // Render lights shadows. TODO 
+                // if (camera.cullingMask !== renderState.caches.cullingMask) {
+                const { lights } = this._cameraAndLightCollecter;
+
+                if (lights.length > 0) {
+                    for (const light of lights) {
+                        if (light.castShadows && light.shadow._onUpdate) {
+                            this._renderShadow(light);
+                        }
+                    }
+                }
+
+                //     renderState.caches.cullingMask = camera.cullingMask;
+                // }
+
+                for (const camera of cameras) {
+                    const scene = camera.gameObject.scene;
+
+                    if (
+                        camera.renderTarget
+                        || camera._previewRenderTarget
+                        || (isPlayerMode ? scene !== editorScene : scene === editorScene)
+                    ) {
+                        this.render(camera);
+                    }
+                }
+            }
+            else { // Clear stage background to black.
+                this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.BLACK);
+            }
+        }
+
 
         public render(camera: Camera, material: Material | null = null) {
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
@@ -844,68 +907,6 @@ namespace egret3d.webgl {
                 if (drawCall.drawCount >= 0) {
                     drawCall.drawCount++;
                 }
-            }
-        }
-
-        protected getMatchers() {
-            return [
-                paper.Matcher.create<paper.GameObject>(Egret2DRenderer),
-            ];
-        }
-
-        public onAwake() {
-            const renderState = this._renderState;
-            renderState.render = this.render.bind(this);
-            renderState.draw = this.draw.bind(this);
-        }
-
-        public onFrame() {
-            if (!WebGLRenderState.webgl) {
-                return;
-            }
-
-            const { cameras } = this._cameraAndLightCollecter;
-
-            if (cameras.length > 0) { // Render cameras.
-                const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
-                const clock = paper.clock;
-                const renderState = this._renderState;
-                const editorScene = paper.Application.sceneManager.editorScene;
-
-                renderState.caches.egret2DOrderCount = 0;
-                renderState.caches.cullingMask = paper.Layer.Nothing;
-                renderState.caches.clockBuffer[0] = clock.time; // TODO more clock info.
-                this._cacheProgram = null;
-
-                // Render lights shadows. TODO 
-                // if (camera.cullingMask !== renderState.caches.cullingMask) {
-                const { lights } = this._cameraAndLightCollecter;
-
-                if (lights.length > 0) {
-                    for (const light of lights) {
-                        if (light.castShadows && light.shadow._onUpdate) {
-                            this._renderShadow(light);
-                        }
-                    }
-                }
-
-                //     renderState.caches.cullingMask = camera.cullingMask;
-                // }
-
-                for (const camera of cameras) {
-                    const scene = camera.gameObject.scene;
-
-                    if (
-                        camera.renderTarget
-                        || camera._previewRenderTarget
-                        || (isPlayerMode ? scene !== editorScene : scene === editorScene)
-                    ) {
-                        this.render(camera);
-                    }
-                }
-            }
-            else { // Clear stage background to black.
-                this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.BLACK);
             }
         }
     }

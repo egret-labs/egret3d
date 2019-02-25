@@ -4,62 +4,51 @@ namespace paper.editor {
      */
     @singleton
     export class ModelComponent extends BaseComponent {
-        public static readonly onSceneSelected: signals.Signal = new signals.Signal();
-        public static readonly onSceneUnselected: signals.Signal = new signals.Signal();
-
-        public static readonly onGameObjectSelectChanged: signals.Signal = new signals.Signal();
-        public static readonly onGameObjectSelected: signals.Signal = new signals.Signal();
-        public static readonly onGameObjectUnselected: signals.Signal = new signals.Signal();
-        /**
-         * 全部选中的实体。
-         */
-        public readonly selectedGameObjects: GameObject[] = [];
         /**
          * 选中的场景。
          */
         public selectedScene: Scene | null = null;
-        /**
-         * 最后一个选中的实体。
-         */
-        public selectedGameObject: GameObject | null = null;
-
         //
         private _editorModel: editor.EditorModel | null = null;
 
+        private readonly _selectedGroup: Group<GameObject> = Application.gameObjectContext.getGroup(
+            Matcher.create<GameObject>(false, SelectedFlag)
+        );
+        private readonly _lastSelectedGroup: Group<GameObject> = Application.gameObjectContext.getGroup(
+            Matcher.create<GameObject>(false, LastSelectedFlag)
+        );
+
         private _onEditorSelectGameObjects(event: { data: GameObject[] }) {
-            for (const gameObject of this.selectedGameObjects) {
-                if (event.data.indexOf(gameObject) < 0) {
-                    this._unselect(gameObject);
-                }
-            }
+            this._select(null, true);
 
             for (const gameObject of event.data) {
-                this._select(gameObject);
+                this._select(gameObject, false);
             }
         }
 
         private _onChangeProperty(data: { propName: string, propValue: any, target: any }) {
-            const selectedGameObject = this.selectedGameObject;
-            if (selectedGameObject && (data.target instanceof egret3d.Transform) && data.propName) {
+            const lastSelectedEntity = this._lastSelectedGroup.singleEntity;
+
+            if (lastSelectedEntity && (data.target instanceof egret3d.Transform) && data.propName) {
                 const propName = <string>data.propName;
                 switch (propName) {
                     case "localPosition":
-                        selectedGameObject.transform.localPosition = data.propValue;
+                        lastSelectedEntity.transform.localPosition = data.propValue;
                         break;
                     case "localRotation":
-                        selectedGameObject.transform.localRotation = data.propValue;
+                        lastSelectedEntity.transform.localRotation = data.propValue;
                         break;
                     case "localScale":
-                        selectedGameObject.transform.localScale = data.propValue;
+                        lastSelectedEntity.transform.localScale = data.propValue;
                         break;
                     case "position":
-                        selectedGameObject.transform.position = data.propValue;
+                        lastSelectedEntity.transform.position = data.propValue;
                         break;
                     case "rotation":
-                        selectedGameObject.transform.rotation = data.propValue;
+                        lastSelectedEntity.transform.rotation = data.propValue;
                         break;
                     case "scale":
-                        selectedGameObject.transform.scale = data.propValue;
+                        lastSelectedEntity.transform.scale = data.propValue;
                         break;
                 }
             }
@@ -71,45 +60,45 @@ namespace paper.editor {
         }
 
         private _onChangeEditMode(mode: string) {
-
         }
 
         private _onChangeEditType(type: string) {
-
         }
 
-        private _select(value: Scene | GameObject | null, isReplace?: boolean) {
+        private _select(value: Scene | IEntity | null, isReplace?: boolean) {
             if (value) {
                 if (value instanceof Scene) {
                     if (this.selectedScene === value) {
                         return;
                     }
+
+                    isReplace = true;
                 }
-                else if (this.selectedGameObjects.indexOf(value) >= 0) {
+                else if (value.getComponent(SelectedFlag)) {
                     return;
                 }
-            }
 
-            if (!value || value instanceof Scene || this.selectedScene) {
+                if (this.selectedScene) {
+                    isReplace = true;
+                }
+            }
+            else {
                 isReplace = true;
             }
 
             if (isReplace) {
                 if (this.selectedScene) {
-                    const selectedScene = this.selectedScene;
                     this.selectedScene = null;
-                    ModelComponent.onSceneUnselected.dispatch(this, selectedScene);
                 }
-                else if (this.selectedGameObjects.length > 0) {
-                    const gameObjects = this.selectedGameObjects.concat();
-                    const selectedGameObject = this.selectedGameObject!;
-                    this.selectedGameObjects.length = 0;
-                    this.selectedGameObject = null;
+                else {
+                    const lastSelectedEntity = this._lastSelectedGroup.singleEntity;
 
-                    ModelComponent.onGameObjectSelectChanged.dispatch(this, selectedGameObject);
+                    if (lastSelectedEntity) {
+                        lastSelectedEntity.removeComponent(LastSelectedFlag);
+                    }
 
-                    for (const gameObject of gameObjects) {
-                        ModelComponent.onGameObjectUnselected.dispatch(this, gameObject);
+                    for (const entity of this._selectedGroup.entities) {
+                        entity.removeComponent(SelectedFlag);
                     }
                 }
             }
@@ -118,38 +107,23 @@ namespace paper.editor {
                 if (value instanceof Scene) {
                     (window as any)["pse"] = (window as any)["psgo"] = null; // For quick debug.
                     this.selectedScene = value;
-                    ModelComponent.onSceneSelected.dispatch(this, value);
                 }
                 else {
                     (window as any)["pse"] = (window as any)["psgo"] = value; // For quick debug.
-                    this.selectedGameObjects.push(value);
-                    this.selectedGameObject = value;
-                    ModelComponent.onGameObjectSelectChanged.dispatch(this, this.selectedGameObject);
-                    ModelComponent.onGameObjectSelected.dispatch(this, value);
+                    value.addComponent(SelectedFlag);
+                    value.addComponent(LastSelectedFlag);
                 }
             }
-
         }
 
-        private _unselect(value: GameObject) {
-            const index = this.selectedGameObjects.indexOf(value);
-            if (index < 0) {
-                throw new Error();
-            }
-
-            if (this.selectedGameObject === value) {
-                if (this.selectedGameObjects.length > 1) {
-                    this.selectedGameObject = this.selectedGameObjects[index - 1];
-                }
-                else {
-                    this.selectedGameObject = null;
+        private _unselect(value: IEntity) {
+            if (value.getComponent(SelectedFlag)) {
+                if (value.getComponent(LastSelectedFlag)) {
+                    value.removeComponent(LastSelectedFlag);
                 }
 
-                ModelComponent.onGameObjectSelectChanged.dispatch(this, value);
+                value.removeComponent(SelectedFlag);
             }
-
-            this.selectedGameObjects.splice(index, 1);
-            ModelComponent.onGameObjectUnselected.dispatch(this, value);
         }
 
         public initialize() {
@@ -173,34 +147,34 @@ namespace paper.editor {
             }
         }
 
-        public select(value: Scene | GameObject | null, isReplace?: boolean) {
-            this._select(value, isReplace);
-
-            if (this._editorModel !== null) {
-                this._editorModel.selectGameObject(this.selectedGameObjects);
+        public select(value: Scene | IEntity | null, isReplace?: boolean) {
+            if (this._editorModel) {
+                this._editorModel.selectGameObject(this._selectedGroup.entities as any);
+            }
+            else {
+                this._select(value, isReplace);
             }
         }
 
-        public unselect(value: GameObject) {
-            this._unselect(value);
-
-            if (this._editorModel !== null) {
-                this._editorModel.selectGameObject(this.selectedGameObjects);
+        public unselect(value: IEntity) {
+            if (this._editorModel) {
+                this._editorModel.selectGameObject(this._selectedGroup.entities as any);
             }
-        }
-        
-        public remove(value: GameObject) {
-            if (this._editorModel !== null) {
-                this._editorModel.deleteGameObject(this.selectedGameObjects);
+            else {
+                this._unselect(value);
             }
         }
 
-        public update() {
-            let i = this.selectedGameObjects.length;
-            while (i--) {
-                const gameObject = this.selectedGameObjects[0];
-                if (gameObject.isDestroyed) {
-                    this.unselect(gameObject);
+        public delete(value: IEntity | null = null) {
+            if (this._editorModel) {
+                this._editorModel.deleteGameObject(this._selectedGroup.entities as any);
+            }
+            else if (value) {
+                value.destroy();
+            }
+            else {
+                for (const entity of this._selectedGroup.entities) {
+                    entity.destroy();
                 }
             }
         }

@@ -54,132 +54,53 @@ namespace paper {
 
             return index < 0 ? systems.length : index;
         }
-        private _getSystemInsertIndexReversely(systems: BaseSystem<IEntity>[], order: SystemOrder) {
-            let index = -1;
-            const systemCount = systems.length;
-
-            if (systemCount > 0) {
-                if (order < systems[systemCount - 1].order) {
-                    return systemCount;
-                }
-                if (order >= systems[0].order) {
-                    return 0;
-                }
-            }
-
-            for (let i = 0; i < systemCount - 1; ++i) {
-                if (systems[i].order >= order && order > systems[i + 1].order) {
-                    index = i + 1;
-                    break;
-                }
-            }
-
-            return index < 0 ? systems.length : index;
-        }
         /**
-         * 
+         * @internal
          */
-        public preRegisterSystems(): void {
-            const preSystems = this._preSystems;
-            preSystems.sort((a, b) => { return a[2] - b[2]; });
+        public _startUp() {
+            for (const system of this._systems) {
+                if (system._enabled === system.enabled || !system.enabled) {
+                    continue;
+                }
 
-            for (const pair of preSystems) {
-                this.register.apply(this, pair);
-            }
+                system.onEnable && system.onEnable();
 
-            preSystems.length = 0;
-        }
-        /**
-         * 
-         */
-        public update(updateFlags: ClockUpdateFlags): void { // TODO: 太长需要重构
-            if (updateFlags.tickCount) {
-                for (const system of this._systems) {
-                    if (system._enabled === system.enabled || !system.enabled) {
-                        continue;
-                    }
+                if (DEBUG) {
+                    console.debug(egret.getQualifiedClassName(system), "enabled.");
+                }
 
-                    if (system.onEntityAdded) {
-                        for (const group of system.groups) {
-                            for (const entity of group.entities) {
-                                system.onEntityAdded(entity, group);
-                            }
+                if (system.onEntityAdded) {
+                    for (const group of system.groups) {
+                        for (const entity of group.entities) {
+                            system.onEntityAdded(entity, group);
                         }
                     }
-
-                    system.onEnable && system.onEnable();
-
-                    if (DEBUG) {
-                        console.debug(egret.getQualifiedClassName(system), "enabled.");
-                    }
-                }
-
-                for (const system of this._startSystems) {
-                    if (!system.enabled || !system._started) {
-                        continue;
-                    }
-
-                    system.onStart!();
-                    system._started = true;
                 }
             }
 
-            for (let i = 0; i < updateFlags.tickCount; i++) {
-                for (const system of this._tickSystems) {
-                    if (!system.enabled) {
-                        continue;
-                    }
-
-                    system.onTick && system.onTick(clock.lastTickDelta);
+            for (const system of this._startSystems) {
+                if (!system.enabled || !system._started) {
+                    continue;
                 }
+
+                system.onStart!();
+                system._started = true;
             }
+        }
+        /**
+         * @internal
+         */
+        public _tick(tickCount: uint) {
+            const reactiveSystems = this._reactiveSystems;
 
-            if (updateFlags.frameCount) {
-                for (const system of this._frameSystems) {
-                    system.onFrame && system.onFrame(clock.lastFrameDelta);
-                }
-                for (const system of this._frameCleanupSystems) {
-                    system.onFrameCleanup && system.onFrameCleanup(clock.lastFrameDelta);
-                }
-            }
-
-            if (updateFlags.tickCount) {
-                const reactiveSystems = this._reactiveSystems;
-
+            for (let i = 0; i < tickCount; ++i) {
                 for (const system of this._systems) {
-                    let startTime = 0;
-
-                    if (DEBUG) {
-                        (system.deltaTime as uint) = 0;
-                        startTime = clock.now;
-                    }
-
                     if (!system.enabled) {
                         continue;
                     }
 
-                    if (reactiveSystems.indexOf(system) >= 0) {
+                    if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
                         const collectors = system.collectors;
-
-                        if (system.onEntityAdded) {
-                            for (const collector of collectors) {
-                                for (const entity of collector.addedEntities) {
-                                    if (entity) {
-                                        system.onEntityAdded(entity, collector.group);
-                                    }
-                                }
-                            }
-                        }
-
-                        if (system.onComponentAdded) {
-                            for (const collector of collectors) {
-                                for (const component of collector.addedComponentes) {
-                                    if (component) {
-                                        system.onComponentAdded(component, collector);
-                                    }
-                                }
-                            }
-                        }
 
                         if (system.onComponentRemoved) {
                             for (const collector of collectors) {
@@ -201,61 +122,113 @@ namespace paper {
                             }
                         }
 
+                        if (system.onEntityAdded) {
+                            for (const collector of collectors) {
+                                for (const entity of collector.addedEntities) {
+                                    if (entity) {
+                                        system.onEntityAdded(entity, collector.group);
+                                    }
+                                }
+                            }
+                        }
+
+                        if (system.onComponentAdded) {
+                            for (const collector of collectors) {
+                                for (const component of collector.addedComponentes) {
+                                    if (component) {
+                                        system.onComponentAdded(component, collector);
+                                    }
+                                }
+                            }
+                        }
+
                         for (const collector of collectors) {
                             collector.clear();
                         }
                     }
 
-
-                    if (DEBUG) {
-                        (system.deltaTime as uint) += clock.now - startTime;
-                    }
+                    system.onTick && system.onTick(clock.lastTickDelta);
+                }
+            }
+        }
+        /**
+         * @internal
+         */
+        public _frame() {
+            for (const system of this._frameSystems) {
+                if (!system.enabled) {
+                    continue;
                 }
 
-                for (const system of this._tickCleanupSystems) {
+                system.onFrame!(clock.lastFrameDelta);
+            }
+        }
+        /**
+         * @internal
+         */
+        public _teardown(frameCount: uint) {
+            let i = 0;
+            if (frameCount) {
+                i = this._frameCleanupSystems.length;
+
+                while (i--) {
+                    const system = this._frameCleanupSystems[i];
                     if (!system.enabled) {
                         continue;
                     }
 
-                    let startTime = 0;
-
-                    if (DEBUG) {
-                        startTime = clock.now;
-                    }
-
-                    system.onTickCleanup && system.onTickCleanup(clock.lastTickDelta);
-
-                    if (DEBUG) {
-                        (system.deltaTime as uint) += clock.now - startTime;
-                    }
-                }
-
-                for (const system of this._systems) {
-                    if (system._enabled === system.enabled) {
-                        continue;
-                    }
-
-                    system._enabled = system.enabled;
-
-                    if (system.enabled) {
-                        continue;
-                    }
-
-                    system.onDisable && system.onDisable();
-
-                    if (system.onEntityRemoved) {
-                        for (const group of system.groups) {
-                            for (const entity of group.entities) {
-                                system.onEntityRemoved(entity, group);
-                            }
-                        }
-                    }
-
-                    if (DEBUG) {
-                        console.debug(egret.getQualifiedClassName(system), "disabled.");
-                    }
+                    system.onFrameCleanup!(clock.lastFrameDelta);
                 }
             }
+
+            i = this._tickCleanupSystems.length;
+            while (i--) {
+                const system = this._tickCleanupSystems[i];
+                if (!system.enabled) {
+                    continue;
+                }
+
+                system.onTickCleanup!(clock.lastFrameDelta);
+            }
+
+            for (const system of this._systems) {
+                if (system._enabled === system.enabled) {
+                    continue;
+                }
+
+                system._enabled = system.enabled;
+
+                if (system.enabled) {
+                    continue;
+                }
+
+                if (system.onEntityRemoved) {
+                    for (const group of system.groups) {
+                        for (const entity of group.entities) {
+                            system.onEntityRemoved(entity, group);
+                        }
+                    }
+                }
+
+                system.onDisable && system.onDisable();
+
+                if (DEBUG) {
+                    console.debug(egret.getQualifiedClassName(system), "disabled.");
+                }
+            }
+        }
+        /**
+         * 
+         */
+        public preRegisterSystems(): void {
+            const preSystems = this._preSystems;
+            preSystems.sort((a, b) => { return a[2] - b[2]; });
+
+            for (const pair of preSystems) {
+                this.register.apply(this, pair);
+            }
+
+            preSystems.length = 0;
         }
         /**
          * 在程序启动之前预注册一个指定的系统。
@@ -304,7 +277,7 @@ namespace paper {
             }
 
             if (system.onFrameCleanup) {
-                this._frameCleanupSystems.splice(this._getSystemInsertIndexReversely(this._frameCleanupSystems, order), 0, system);
+                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
             }
 
             if (system.onTick) {
@@ -312,7 +285,7 @@ namespace paper {
             }
 
             if (system.onTickCleanup) {
-                this._tickCleanupSystems.splice(this._getSystemInsertIndexReversely(this._tickCleanupSystems, order), 0, system);
+                this._tickCleanupSystems.splice(this._getSystemInsertIndex(this._tickCleanupSystems, order), 0, system);
             }
 
             system.initialize(config);
