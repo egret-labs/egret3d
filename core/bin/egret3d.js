@@ -6344,21 +6344,17 @@ var paper;
             return index < 0 ? systems.length : index;
         };
         SystemManager.prototype._reactive = function (system) {
-            var collectors = system.collectors;
-            if (system.onComponentRemoved) {
-                for (var _i = 0, collectors_1 = collectors; _i < collectors_1.length; _i++) {
-                    var collector = collectors_1[_i];
-                    for (var _a = 0, _b = collector.removedComponentes; _a < _b.length; _a++) {
-                        var component = _b[_a];
+            for (var _i = 0, _a = system.collectors; _i < _a.length; _i++) {
+                var collector = _a[_i];
+                if (system.onComponentRemoved) {
+                    for (var _b = 0, _c = collector.removedComponentes; _b < _c.length; _b++) {
+                        var component = _c[_b];
                         if (component) {
-                            system.onComponentRemoved(component, collector);
+                            system.onComponentRemoved(component, collector.group);
                         }
                     }
                 }
-            }
-            if (system.onEntityRemoved) {
-                for (var _c = 0, collectors_2 = collectors; _c < collectors_2.length; _c++) {
-                    var collector = collectors_2[_c];
+                if (system.onEntityRemoved) {
                     for (var _d = 0, _e = collector.removedEntities; _d < _e.length; _d++) {
                         var entity = _e[_d];
                         if (entity) {
@@ -6366,38 +6362,29 @@ var paper;
                         }
                     }
                 }
-            }
-            if (system.onEntityAdded) {
-                for (var _f = 0, collectors_3 = collectors; _f < collectors_3.length; _f++) {
-                    var collector = collectors_3[_f];
-                    for (var _g = 0, _h = collector.addedEntities; _g < _h.length; _g++) {
-                        var entity = _h[_g];
+                if (system.onEntityAdded) {
+                    for (var _f = 0, _g = collector.addedEntities; _f < _g.length; _f++) {
+                        var entity = _g[_f];
                         if (entity) {
                             system.onEntityAdded(entity, collector.group);
                         }
                     }
                 }
-            }
-            if (system.onComponentAdded) {
-                for (var _j = 0, collectors_4 = collectors; _j < collectors_4.length; _j++) {
-                    var collector = collectors_4[_j];
-                    for (var _k = 0, _l = collector.addedComponentes; _k < _l.length; _k++) {
-                        var component = _l[_k];
+                if (system.onComponentAdded) {
+                    for (var _h = 0, _j = collector.addedComponentes; _h < _j.length; _h++) {
+                        var component = _j[_h];
                         if (component) {
-                            system.onComponentAdded(component, collector);
+                            system.onComponentAdded(component, collector.group);
                         }
                     }
                 }
-            }
-            for (var _m = 0, collectors_5 = collectors; _m < collectors_5.length; _m++) {
-                var collector = collectors_5[_m];
                 collector.clear();
             }
         };
         /**
          * @internal
          */
-        SystemManager.prototype._startUp = function () {
+        SystemManager.prototype._startup = function () {
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (system._enabled === system.enabled || !system.enabled) {
@@ -6429,41 +6416,37 @@ var paper;
         /**
          * @internal
          */
-        SystemManager.prototype._tick = function (tickCount) {
-            // const reactiveSystems = this._reactiveSystems;
+        SystemManager.prototype._execute = function (tickCount, frameCount) {
+            var reactiveSystems = this._reactiveSystems;
             for (var i = 0; i < tickCount; ++i) {
-                for (var _i = 0, _a = this._tickSystems; _i < _a.length; _i++) {
+                for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                     var system = _a[_i];
                     if (!system.enabled) {
                         continue;
                     }
-                    // if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
-                    //     this._reactive(system);
-                    // }
-                    system.onTick && system.onTick(paper.clock.lastTickDelta);
+                    if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
+                        this._reactive(system);
+                    }
+                    system.onTick && system.onTick(paper.clock.tickInterval);
+                }
+            }
+            if (frameCount) {
+                for (var _b = 0, _c = this._systems; _b < _c.length; _b++) {
+                    var system = _c[_b];
+                    if (!system.enabled) {
+                        continue;
+                    }
+                    if (reactiveSystems.indexOf(system) >= 0) {
+                        this._reactive(system);
+                    }
+                    system.onFrame && system.onFrame(paper.clock.lastFrameDelta);
                 }
             }
         };
         /**
          * @internal
          */
-        SystemManager.prototype._frame = function () {
-            var reactiveSystems = this._reactiveSystems;
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (!system.enabled) {
-                    continue;
-                }
-                if (reactiveSystems.indexOf(system) >= 0) {
-                    this._reactive(system);
-                }
-                system.onFrame && system.onFrame(paper.clock.lastFrameDelta);
-            }
-        };
-        /**
-         * @internal
-         */
-        SystemManager.prototype._teardown = function (frameCount) {
+        SystemManager.prototype._cleanup = function (frameCount) {
             var i = 0;
             if (frameCount) {
                 i = this._frameCleanupSystems.length;
@@ -6483,6 +6466,11 @@ var paper;
                 }
                 system.onTickCleanup(paper.clock.lastFrameDelta);
             }
+        };
+        /**
+         * @internal
+         */
+        SystemManager.prototype._teardown = function () {
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
                 if (system._enabled === system.enabled) {
@@ -6549,17 +6537,17 @@ var paper;
             if (system.onEntityAdded || system.onComponentAdded || system.onComponentRemoved || system.onEntityRemoved) {
                 this._reactiveSystems.splice(this._getSystemInsertIndex(this._reactiveSystems, order), 0, system);
             }
-            if (system.onFrame) {
-                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
-            }
-            if (system.onFrameCleanup) {
-                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
-            }
             if (system.onTick) {
                 this._tickSystems.splice(this._getSystemInsertIndex(this._tickSystems, order), 0, system);
             }
             if (system.onTickCleanup) {
                 this._tickCleanupSystems.splice(this._getSystemInsertIndex(this._tickCleanupSystems, order), 0, system);
+            }
+            if (system.onFrame) {
+                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
+            }
+            if (system.onFrameCleanup) {
+                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
             }
             system.initialize(config);
             return system;
@@ -25717,14 +25705,10 @@ var paper;
             var _b = _a === void 0 ? { tickCount: 1, frameCount: 1 } : _a, tickCount = _b.tickCount, frameCount = _b.frameCount;
             var systemManager = this.systemManager;
             if (tickCount) {
-                systemManager._startUp();
-                systemManager._tick(tickCount);
-            }
-            if (frameCount) {
-                systemManager._frame();
-            }
-            if (tickCount) {
-                systemManager._teardown(frameCount);
+                systemManager._startup();
+                systemManager._execute(tickCount, frameCount);
+                systemManager._cleanup(frameCount);
+                systemManager._teardown();
             }
         };
         /**

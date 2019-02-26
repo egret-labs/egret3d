@@ -142,6 +142,7 @@ namespace paper.editor {
                 if (i + 1 > this._cameraDrawer.length) {
                     const entity = EditorMeshHelper.createIcon(`Camera Icon ${i}`, EditorDefaultTexture.CAMERA_ICON);
                     entity.parent = touchContainerEntity;
+                    entity.addComponent(PickedFlag);
                     this._cameraDrawer.push(entity);
                 }
 
@@ -160,7 +161,7 @@ namespace paper.editor {
                         drawer.transform.localPosition = entity.transform.position;
                         drawer.transform.localRotation = editorCamera.gameObject.transform.rotation; // TODO sprite
                         drawer.transform.setLocalScale(eyeDistance / 40.0);
-                        drawer.getComponent(GizmoPickComponent)!.pickTarget = entity;
+                        drawer.getComponent(PickedFlag)!.target = entity;
                     }
                     else {
                         drawer.enabled = false;
@@ -174,6 +175,7 @@ namespace paper.editor {
                 if (i + 1 > this._lightDrawer.length) {
                     const entity = EditorMeshHelper.createIcon(`Light Icon ${i}`, EditorDefaultTexture.LIGHT_ICON);
                     entity.parent = touchContainerEntity;
+                    entity.addComponent(PickedFlag);
                     this._lightDrawer.push(entity);
                 }
 
@@ -192,7 +194,7 @@ namespace paper.editor {
                         drawer.transform.localPosition = entity.transform.position;
                         drawer.transform.localRotation = editorCamera.gameObject.transform.rotation; // TODO sprite
                         drawer.transform.setLocalScale(eyeDistance / 40.0);
-                        drawer.getComponent(GizmoPickComponent)!.pickTarget = entity;
+                        drawer.getComponent(PickedFlag)!.target = entity;
                     }
                     else {
                         drawer.enabled = false;
@@ -442,7 +444,7 @@ namespace paper.editor {
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
             this._cameraViewFrustum.enabled = false;
 
-            {
+            { //
                 const drawer = this._skeletonDrawer;
                 const mesh = egret3d.Mesh.create(1024, 0, [gltf.AttributeSemantics.POSITION]);
                 const material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
@@ -490,7 +492,9 @@ namespace paper.editor {
                 this._skeletonDrawer!.transform.parent = entity.transform;
             }
             else if (group === groups[GroupIndex.LastSelectedTransform]) {
-                groups[GroupIndex.TransformController].singleEntity!.enabled = true;
+                if (this.enabled) {
+                    groups[GroupIndex.TransformController].singleEntity!.enabled = true;
+                }
             }
         }
 
@@ -498,9 +502,10 @@ namespace paper.editor {
             const groups = this.groups;
 
             if (group === groups[GroupIndex.LastSelectedTransform]) {
-                groups[GroupIndex.TransformController].singleEntity!.enabled = false;
+                if (this.enabled) {
+                    groups[GroupIndex.TransformController].singleEntity!.enabled = false;
+                }
             }
-
         }
 
         public onFrame() {

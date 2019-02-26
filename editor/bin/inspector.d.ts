@@ -366,8 +366,12 @@ declare namespace paper.editor {
      */
     class LastSelectedFlag extends EditorComponent {
     }
-}
-declare namespace paper.editor {
+    /**
+     *
+     */
+    class PickedFlag extends EditorComponent {
+        target: GameObject | null;
+    }
 }
 declare namespace paper.editor {
     /**
@@ -486,6 +490,8 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
      * 检测一个实例对象是否为已被自定义
      * @param classInstance 实例对象
@@ -559,8 +565,6 @@ declare namespace paper.editor {
         static dispatchEvent(event: BaseEvent): void;
         private static initEditEnvironment();
     }
-}
-declare namespace paper.editor {
 }
 declare namespace paper.editor {
     function getQueryValues(uri: string): any;

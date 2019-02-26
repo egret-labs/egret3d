@@ -56,56 +56,46 @@ namespace paper {
         }
 
         private _reactive(system: BaseSystem<IEntity>) {
-            const collectors = system.collectors;
-
-            if (system.onComponentRemoved) {
-                for (const collector of collectors) {
+            for (const collector of system.collectors) {
+                if (system.onComponentRemoved) {
                     for (const component of collector.removedComponentes) {
                         if (component) {
-                            system.onComponentRemoved(component, collector);
+                            system.onComponentRemoved(component, collector.group);
                         }
                     }
                 }
-            }
 
-            if (system.onEntityRemoved) {
-                for (const collector of collectors) {
+                if (system.onEntityRemoved) {
                     for (const entity of collector.removedEntities) {
                         if (entity) {
                             system.onEntityRemoved(entity, collector.group);
                         }
                     }
                 }
-            }
 
-            if (system.onEntityAdded) {
-                for (const collector of collectors) {
+                if (system.onEntityAdded) {
                     for (const entity of collector.addedEntities) {
                         if (entity) {
                             system.onEntityAdded(entity, collector.group);
                         }
                     }
                 }
-            }
 
-            if (system.onComponentAdded) {
-                for (const collector of collectors) {
+                if (system.onComponentAdded) {
                     for (const component of collector.addedComponentes) {
                         if (component) {
-                            system.onComponentAdded(component, collector);
+                            system.onComponentAdded(component, collector.group);
                         }
                     }
                 }
-            }
 
-            for (const collector of collectors) {
                 collector.clear();
             }
         }
         /**
          * @internal
          */
-        public _startUp() {
+        public _startup() {
             for (const system of this._systems) {
                 if (system._enabled === system.enabled || !system.enabled) {
                     continue;
@@ -138,45 +128,41 @@ namespace paper {
         /**
          * @internal
          */
-        public _tick(tickCount: uint) {
-            // const reactiveSystems = this._reactiveSystems;
+        public _execute(tickCount: uint, frameCount: uint) {
+            const reactiveSystems = this._reactiveSystems;
 
             for (let i = 0; i < tickCount; ++i) {
-                for (const system of this._tickSystems) { // this._systems
+                for (const system of this._systems) { // this._tickSystems
                     if (!system.enabled) {
                         continue;
                     }
 
-                    // if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
-                    //     this._reactive(system);
-                    // }
+                    if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
+                        this._reactive(system);
+                    }
 
-                    system.onTick && system.onTick(clock.lastTickDelta);
+                    system.onTick && system.onTick(clock.tickInterval);
+                }
+            }
+
+            if (frameCount) {
+                for (const system of this._systems) { // this._frameSystems
+                    if (!system.enabled) {
+                        continue;
+                    }
+
+                    if (reactiveSystems.indexOf(system) >= 0) {
+                        this._reactive(system);
+                    }
+
+                    system.onFrame && system.onFrame(clock.lastFrameDelta);
                 }
             }
         }
         /**
          * @internal
          */
-        public _frame() {
-            const reactiveSystems = this._reactiveSystems;
-
-            for (const system of this._systems) { // this._frameSystems
-                if (!system.enabled) {
-                    continue;
-                }
-
-                if (reactiveSystems.indexOf(system) >= 0) {
-                    this._reactive(system);
-                }
-
-                system.onFrame && system.onFrame(clock.lastFrameDelta);
-            }
-        }
-        /**
-         * @internal
-         */
-        public _teardown(frameCount: uint) {
+        public _cleanup(frameCount: uint) {
             let i = 0;
             if (frameCount) {
                 i = this._frameCleanupSystems.length;
@@ -200,7 +186,11 @@ namespace paper {
 
                 system.onTickCleanup!(clock.lastFrameDelta);
             }
-
+        }
+        /**
+         * @internal
+         */
+        public _teardown() {
             for (const system of this._systems) {
                 if (system._enabled === system.enabled) {
                     continue;
@@ -282,20 +272,20 @@ namespace paper {
                 this._reactiveSystems.splice(this._getSystemInsertIndex(this._reactiveSystems, order), 0, system);
             }
 
-            if (system.onFrame) {
-                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
-            }
-
-            if (system.onFrameCleanup) {
-                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
-            }
-
             if (system.onTick) {
                 this._tickSystems.splice(this._getSystemInsertIndex(this._tickSystems, order), 0, system);
             }
 
             if (system.onTickCleanup) {
                 this._tickCleanupSystems.splice(this._getSystemInsertIndex(this._tickCleanupSystems, order), 0, system);
+            }
+
+            if (system.onFrame) {
+                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
+            }
+
+            if (system.onFrameCleanup) {
+                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
             }
 
             system.initialize(config);

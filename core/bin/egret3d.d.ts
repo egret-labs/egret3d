@@ -4770,15 +4770,15 @@ declare namespace paper {
         /**
          * 充分非必要组件添加到实体时调用。
          * @param component 收集的实体组件。
-         * @param collector 收集实体组件的实体组。
+         * @param group 收集实体组件的实体组。
          */
-        onComponentAdded?(component: IComponent, collector: Collector<TEntity>): void;
+        onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
         /**
          * 充分非必要组件从实体移除时调用。
          * @param component 移除的实体组件。
-         * @param collector 移除实体组件的实体组。
+         * @param group 移除实体组件的实体组。
          */
-        onComponentRemoved?(component: IComponent, collector: Collector<TEntity>): void;
+        onComponentRemoved?(component: IComponent, group: Group<TEntity>): void;
         /**
          * 实体从系统移除时调用。
          * @param entity 移除的实体。

@@ -35,4 +35,10 @@ namespace paper.editor {
      */
     export class LastSelectedFlag extends EditorComponent {
     }
+    /**
+     * 
+     */
+    export class PickedFlag extends EditorComponent {
+        public target: GameObject | null = null;
+    }
 }

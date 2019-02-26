@@ -112,37 +112,27 @@ namespace paper.editor {
                     const event = defaultPointer.event!;
 
                     if (hoveredEntity) {
-                        if (hoveredEntity.getComponent(SelectedFlag)) {
+                        let pickedFlag = hoveredEntity.getComponent(PickedFlag);
+
+                        if (hoveredEntity.renderer instanceof egret3d.SkinnedMeshRenderer && !pickedFlag) {
+                            const animation = hoveredEntity.getComponentInParent(egret3d.Animation);
+
+                            if (animation) {
+                                pickedFlag = hoveredEntity.addComponent(PickedFlag);
+                                pickedFlag.target = animation.entity as GameObject;
+                            }
+                        }
+
+                        const targetEntity = pickedFlag ? pickedFlag.target! : hoveredEntity;
+
+                        if (targetEntity.getComponent(SelectedFlag)) {
                             if (event.ctrlKey) {
-                                this._modelComponent.unselect(hoveredEntity);
+                                this._modelComponent.unselect(targetEntity);
                             }
                         }
                         else {
                             if (defaultPointer.position.getDistance(defaultPointer.downPosition) < 5.0) {
-                                let replaceEntity: IEntity | null = null;
-
-                                if (hoveredEntity.renderer instanceof egret3d.SkinnedMeshRenderer) { //
-                                    const animation = hoveredEntity.getComponentInParent(egret3d.Animation);
-
-                                    if (animation) {
-                                        // Replace hovered entity.
-                                        hoveredEntity.removeComponent(HoveredFlag);
-                                        replaceEntity = animation.entity;
-                                        replaceEntity.addComponent(HoveredFlag);
-                                    }
-                                }
-                                else {
-                                    const gizmoPickComponent = hoveredEntity.getComponent(GizmoPickComponent);
-
-                                    if (gizmoPickComponent) {
-                                        // Replace hovered entity.
-                                        hoveredEntity.removeComponent(HoveredFlag);
-                                        replaceEntity = gizmoPickComponent.pickTarget!;
-                                        replaceEntity.addComponent(HoveredFlag);
-                                    }
-                                }
-
-                                this._modelComponent.select(replaceEntity || hoveredEntity, !event.ctrlKey);
+                                this._modelComponent.select(targetEntity, !event.ctrlKey);
                             }
                             else if (defaultPointer.event!.ctrlKey) {
                                 // TODO
@@ -195,32 +185,20 @@ namespace paper.editor {
                             transformController.hovered = null;
                         }
 
-                        if (!transformController.isActiveAndEnabled || !transformController.hovered) {
-                            let isSame = false;
-
-                            if (hoveredEntity) {
-                                const raycastInfos = Helper.raycastAll([hoveredEntity], defaultPointer.position.x, defaultPointer.position.y, true);
-                                if (raycastInfos.length > 0 && hoveredEntity === raycastInfos[0].transform!.entity) {
-                                    isSame = true;
-                                }
-                            }
-
-                            if (!isSame) {
-                                if (hoveredEntity) {
-                                    hoveredEntity.removeComponent(HoveredFlag);
-                                }
-
-                                const gameObjects = Scene.activeScene.getRootGameObjects().concat(); // TODO
-                                gameObjects.unshift(this._touchContainerEntity!);
-
-                                const raycastInfos = Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
-                                if (raycastInfos.length > 0) {
-                                    raycastInfos[0].transform!.gameObject.addComponent(HoveredFlag);
-                                }
-                            }
-                        }
-                        else if (hoveredEntity) {
+                        if (hoveredEntity) {
                             hoveredEntity.removeComponent(HoveredFlag);
+                        }
+
+                        if (!transformController.isActiveAndEnabled || !transformController.hovered) {
+                            const gameObjects = Scene.activeScene.getRootGameObjects().concat(); // TODO
+                            gameObjects.unshift(this._touchContainerEntity!);
+
+                            const raycastInfos = Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
+
+                            if (raycastInfos.length > 0) {
+                                const raycastEntity = raycastInfos[0].transform!.entity! as GameObject;
+                                raycastEntity.addComponent(HoveredFlag);
+                            }
                         }
                     }
                 }

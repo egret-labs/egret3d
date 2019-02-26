@@ -4196,29 +4196,20 @@ var paper;
         }(EditorComponent));
         editor.LastSelectedFlag = LastSelectedFlag;
         __reflect(LastSelectedFlag.prototype, "paper.editor.LastSelectedFlag");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
         /**
-         * @internal
+         *
          */
-        var GizmoPickComponent = (function (_super) {
-            __extends(GizmoPickComponent, _super);
-            function GizmoPickComponent() {
+        var PickedFlag = (function (_super) {
+            __extends(PickedFlag, _super);
+            function PickedFlag() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.pickTarget = null;
+                _this.target = null;
                 return _this;
             }
-            GizmoPickComponent.prototype.onDestroy = function () {
-                this.pickTarget = null;
-            };
-            return GizmoPickComponent;
-        }(paper.Behaviour));
-        editor.GizmoPickComponent = GizmoPickComponent;
-        __reflect(GizmoPickComponent.prototype, "paper.editor.GizmoPickComponent");
+            return PickedFlag;
+        }(EditorComponent));
+        editor.PickedFlag = PickedFlag;
+        __reflect(PickedFlag.prototype, "paper.editor.PickedFlag");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -5562,6 +5553,7 @@ var paper;
                     if (i + 1 > this._cameraDrawer.length) {
                         var entity = editor.EditorMeshHelper.createIcon("Camera Icon " + i, editor.EditorDefaultTexture.CAMERA_ICON);
                         entity.parent = touchContainerEntity;
+                        entity.addComponent(editor.PickedFlag);
                         this._cameraDrawer.push(entity);
                     }
                     var drawer = this._cameraDrawer[i];
@@ -5576,7 +5568,7 @@ var paper;
                             drawer.transform.localPosition = entity.transform.position;
                             drawer.transform.localRotation = editorCamera.gameObject.transform.rotation; // TODO sprite
                             drawer.transform.setLocalScale(eyeDistance / 40.0);
-                            drawer.getComponent(editor.GizmoPickComponent).pickTarget = entity;
+                            drawer.getComponent(editor.PickedFlag).target = entity;
                         }
                         else {
                             drawer.enabled = false;
@@ -5588,6 +5580,7 @@ var paper;
                     if (i + 1 > this._lightDrawer.length) {
                         var entity = editor.EditorMeshHelper.createIcon("Light Icon " + i, editor.EditorDefaultTexture.LIGHT_ICON);
                         entity.parent = touchContainerEntity;
+                        entity.addComponent(editor.PickedFlag);
                         this._lightDrawer.push(entity);
                     }
                     var drawer = this._lightDrawer[i];
@@ -5602,7 +5595,7 @@ var paper;
                             drawer.transform.localPosition = entity.transform.position;
                             drawer.transform.localRotation = editorCamera.gameObject.transform.rotation; // TODO sprite
                             drawer.transform.setLocalScale(eyeDistance / 40.0);
-                            drawer.getComponent(editor.GizmoPickComponent).pickTarget = entity;
+                            drawer.getComponent(editor.PickedFlag).target = entity;
                         }
                         else {
                             drawer.enabled = false;
@@ -5855,13 +5848,17 @@ var paper;
                     this._skeletonDrawer.transform.parent = entity.transform;
                 }
                 else if (group === groups[2 /* LastSelectedTransform */]) {
-                    groups[3 /* TransformController */].singleEntity.enabled = true;
+                    if (this.enabled) {
+                        groups[3 /* TransformController */].singleEntity.enabled = true;
+                    }
                 }
             };
             GizmosSystem.prototype.onEntityRemoved = function (entity, group) {
                 var groups = this.groups;
                 if (group === groups[2 /* LastSelectedTransform */]) {
-                    groups[3 /* TransformController */].singleEntity.enabled = false;
+                    if (this.enabled) {
+                        groups[3 /* TransformController */].singleEntity.enabled = false;
+                    }
                 }
             };
             GizmosSystem.prototype.onFrame = function () {
@@ -6815,33 +6812,23 @@ var paper;
                     else {
                         var event_1 = defaultPointer.event;
                         if (hoveredEntity) {
-                            if (hoveredEntity.getComponent(editor.SelectedFlag)) {
+                            var pickedFlag = hoveredEntity.getComponent(editor.PickedFlag);
+                            if (hoveredEntity.renderer instanceof egret3d.SkinnedMeshRenderer && !pickedFlag) {
+                                var animation = hoveredEntity.getComponentInParent(egret3d.Animation);
+                                if (animation) {
+                                    pickedFlag = hoveredEntity.addComponent(editor.PickedFlag);
+                                    pickedFlag.target = animation.entity;
+                                }
+                            }
+                            var targetEntity = pickedFlag ? pickedFlag.target : hoveredEntity;
+                            if (targetEntity.getComponent(editor.SelectedFlag)) {
                                 if (event_1.ctrlKey) {
-                                    this._modelComponent.unselect(hoveredEntity);
+                                    this._modelComponent.unselect(targetEntity);
                                 }
                             }
                             else {
                                 if (defaultPointer.position.getDistance(defaultPointer.downPosition) < 5.0) {
-                                    var replaceEntity = null;
-                                    if (hoveredEntity.renderer instanceof egret3d.SkinnedMeshRenderer) {
-                                        var animation = hoveredEntity.getComponentInParent(egret3d.Animation);
-                                        if (animation) {
-                                            // Replace hovered entity.
-                                            hoveredEntity.removeComponent(editor.HoveredFlag);
-                                            replaceEntity = animation.entity;
-                                            replaceEntity.addComponent(editor.HoveredFlag);
-                                        }
-                                    }
-                                    else {
-                                        var gizmoPickComponent = hoveredEntity.getComponent(editor.GizmoPickComponent);
-                                        if (gizmoPickComponent) {
-                                            // Replace hovered entity.
-                                            hoveredEntity.removeComponent(editor.HoveredFlag);
-                                            replaceEntity = gizmoPickComponent.pickTarget;
-                                            replaceEntity.addComponent(editor.HoveredFlag);
-                                        }
-                                    }
-                                    this._modelComponent.select(replaceEntity || hoveredEntity, !event_1.ctrlKey);
+                                    this._modelComponent.select(targetEntity, !event_1.ctrlKey);
                                 }
                                 else if (defaultPointer.event.ctrlKey) {
                                     // TODO
@@ -6887,28 +6874,17 @@ var paper;
                             else {
                                 transformController.hovered = null;
                             }
-                            if (!transformController.isActiveAndEnabled || !transformController.hovered) {
-                                var isSame = false;
-                                if (hoveredEntity) {
-                                    var raycastInfos = editor.Helper.raycastAll([hoveredEntity], defaultPointer.position.x, defaultPointer.position.y, true);
-                                    if (raycastInfos.length > 0 && hoveredEntity === raycastInfos[0].transform.entity) {
-                                        isSame = true;
-                                    }
-                                }
-                                if (!isSame) {
-                                    if (hoveredEntity) {
-                                        hoveredEntity.removeComponent(editor.HoveredFlag);
-                                    }
-                                    var gameObjects = paper.Scene.activeScene.getRootGameObjects().concat(); // TODO
-                                    gameObjects.unshift(this._touchContainerEntity);
-                                    var raycastInfos = editor.Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
-                                    if (raycastInfos.length > 0) {
-                                        raycastInfos[0].transform.gameObject.addComponent(editor.HoveredFlag);
-                                    }
-                                }
-                            }
-                            else if (hoveredEntity) {
+                            if (hoveredEntity) {
                                 hoveredEntity.removeComponent(editor.HoveredFlag);
+                            }
+                            if (!transformController.isActiveAndEnabled || !transformController.hovered) {
+                                var gameObjects = paper.Scene.activeScene.getRootGameObjects().concat(); // TODO
+                                gameObjects.unshift(this._touchContainerEntity);
+                                var raycastInfos = editor.Helper.raycastAll(gameObjects, defaultPointer.position.x, defaultPointer.position.y, true);
+                                if (raycastInfos.length > 0) {
+                                    var raycastEntity = raycastInfos[0].transform.entity;
+                                    raycastEntity.addComponent(editor.HoveredFlag);
+                                }
                             }
                         }
                     }
@@ -6946,6 +6922,73 @@ var paper;
         }(paper.BaseSystem));
         editor.SceneSystem = SceneSystem;
         __reflect(SceneSystem.prototype, "paper.editor.SceneSystem");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * @internal
+         */
+        var StatsSystem = (function (_super) {
+            __extends(StatsSystem, _super);
+            function StatsSystem() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._fpsIndex = 0;
+                _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
+                _this._fpsShowQueue = [true, false, false, true];
+                return _this;
+            }
+            StatsSystem.prototype._updateFPSShowState = function () {
+                if (this._guiComponent) {
+                    var statsDOM = this._guiComponent.stats.dom;
+                    if (this._guiComponent.showStates & 1 /* FPS */) {
+                        statsDOM.style.display = "block";
+                    }
+                    else {
+                        statsDOM.style.display = "none";
+                    }
+                }
+            };
+            StatsSystem.prototype.onAwake = function () {
+                var quaryValues = this._guiComponent.quaryValues;
+                if (quaryValues.FPS === 1 || (quaryValues.FPS !== 0 && !paper.Application.isMobile)) {
+                    this._guiComponent.showStates |= 1 /* FPS */;
+                    this._fpsIndex = 0;
+                }
+                else {
+                    this._fpsIndex = 1;
+                    this._updateFPSShowState();
+                }
+            };
+            StatsSystem.prototype.onTick = function () {
+                if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
+                    this._fpsIndex++;
+                    if (this._fpsIndex >= this._fpsShowQueue.length) {
+                        this._fpsIndex = 0;
+                    }
+                    if (this._fpsShowQueue[this._fpsIndex]) {
+                        this._guiComponent.showStates |= 1 /* FPS */;
+                    }
+                    else {
+                        this._guiComponent.showStates &= ~1 /* FPS */;
+                    }
+                    this._updateFPSShowState();
+                }
+                // TODO dc tc vc
+                var guiComponent = this._guiComponent;
+                guiComponent.stats.update();
+                guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["webgl"]["WebGLRenderSystem"]).deltaTime, 200);
+            };
+            StatsSystem.prototype.onFrame = function () {
+                var guiComponent = this._guiComponent;
+                guiComponent.stats.onFrame();
+            };
+            return StatsSystem;
+        }(paper.BaseSystem));
+        editor.StatsSystem = StatsSystem;
+        __reflect(StatsSystem.prototype, "paper.editor.StatsSystem");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 /// <reference path="./EventDispatcher.ts" />
@@ -7225,92 +7268,6 @@ var paper;
         }());
         editor.Editor = Editor;
         __reflect(Editor.prototype, "paper.editor.Editor");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        /**
-         * @internal
-         */
-        var EditorMeshHelper = (function () {
-            function EditorMeshHelper() {
-            }
-            EditorMeshHelper.createGameObject = function (name, mesh, material) {
-                if (mesh === void 0) { mesh = null; }
-                if (material === void 0) { material = null; }
-                var gameObject = paper.GameObject.create(name, "EditorOnly" /* EditorOnly */, paper.Scene.editorScene);
-                gameObject.layer = 64 /* Editor */;
-                if (mesh) {
-                    gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
-                }
-                if (material) {
-                    gameObject.addComponent(egret3d.MeshRenderer).material = material;
-                }
-                return gameObject;
-            };
-            EditorMeshHelper.createIcon = function (name, icon) {
-                var material = egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC); // TODO sprite raycast
-                material.setTexture(icon).setColor(egret3d.Color.RED).setBlend(2 /* Normal */, 4000 /* Overlay */ - 1, 1.0);
-                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material);
-                gameObject.addComponent(editor.GizmoPickComponent);
-                return gameObject;
-            };
-            EditorMeshHelper.createLine = function (name, color, opacity) {
-                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone());
-                gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(2 /* Normal */, 3000 /* Blend */, opacity);
-                return gameObject;
-            };
-            EditorMeshHelper.createBox = function (name, color, opacity) {
-                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone());
-                gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(2 /* Normal */, 3000 /* Blend */, opacity);
-                return gameObject;
-            };
-            EditorMeshHelper.createCircle = function (name, color, opacity) {
-                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone());
-                gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(2 /* Normal */, 3000 /* Blend */, opacity);
-                return gameObject;
-            };
-            EditorMeshHelper.createCameraWireframed = function (name, colorFrustum, colorCone, colorUp, colorTarget, colorCross) {
-                if (colorFrustum === void 0) { colorFrustum = egret3d.Color.create(1.0, 0.7, 0); }
-                if (colorCone === void 0) { colorCone = egret3d.Color.RED; }
-                if (colorUp === void 0) { colorUp = egret3d.Color.create(0, 0.7, 1); }
-                if (colorTarget === void 0) { colorTarget = egret3d.Color.WHITE; }
-                if (colorCross === void 0) { colorCross = egret3d.Color.create(0.2, 0.2, 0.2); }
-                var vertices = [], colors = [];
-                var verticeCount = 50;
-                for (var i = 0; i < verticeCount; i++) {
-                    vertices.push(0.0, 0.0, 0.0);
-                    if (i < 24) {
-                        colors.push(colorFrustum.r, colorFrustum.g, colorFrustum.b, colorFrustum.a);
-                    }
-                    else if (i < 32) {
-                        colors.push(colorCone.r, colorCone.g, colorCone.b, colorCone.a);
-                    }
-                    else if (i < 38) {
-                        colors.push(colorUp.r, colorUp.g, colorUp.b, colorUp.a);
-                    }
-                    else if (i < 40) {
-                        colors.push(colorTarget.r, colorTarget.g, colorTarget.b, colorTarget.a);
-                    }
-                    else {
-                        colors.push(colorCross.r, colorCross.g, colorCross.b, colorCross.a);
-                    }
-                }
-                var mesh = egret3d.Mesh.create(verticeCount, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
-                mesh.setAttributes("POSITION" /* POSITION */, vertices);
-                mesh.setAttributes("COLOR_0" /* COLOR_0 */, colors);
-                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                var material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
-                material.setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.8);
-                var gameObject = this.createGameObject(name, mesh, material);
-                return gameObject;
-            };
-            return EditorMeshHelper;
-        }());
-        editor.EditorMeshHelper = EditorMeshHelper;
-        __reflect(EditorMeshHelper.prototype, "paper.editor.EditorMeshHelper");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -9195,63 +9152,81 @@ var paper;
         /**
          * @internal
          */
-        var StatsSystem = (function (_super) {
-            __extends(StatsSystem, _super);
-            function StatsSystem() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._fpsIndex = 0;
-                _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
-                _this._fpsShowQueue = [true, false, false, true];
-                return _this;
+        var EditorMeshHelper = (function () {
+            function EditorMeshHelper() {
             }
-            StatsSystem.prototype._updateFPSShowState = function () {
-                if (this._guiComponent) {
-                    var statsDOM = this._guiComponent.stats.dom;
-                    if (this._guiComponent.showStates & 1 /* FPS */) {
-                        statsDOM.style.display = "block";
+            EditorMeshHelper.createGameObject = function (name, mesh, material) {
+                if (mesh === void 0) { mesh = null; }
+                if (material === void 0) { material = null; }
+                var gameObject = paper.GameObject.create(name, "EditorOnly" /* EditorOnly */, paper.Scene.editorScene);
+                gameObject.layer = 64 /* Editor */;
+                if (mesh) {
+                    gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
+                }
+                if (material) {
+                    gameObject.addComponent(egret3d.MeshRenderer).material = material;
+                }
+                return gameObject;
+            };
+            EditorMeshHelper.createIcon = function (name, icon) {
+                var material = egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC); // TODO sprite raycast
+                material.setTexture(icon).setColor(egret3d.Color.RED).setBlend(2 /* Normal */, 4000 /* Overlay */ - 1, 1.0);
+                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material);
+                return gameObject;
+            };
+            EditorMeshHelper.createLine = function (name, color, opacity) {
+                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone());
+                gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(2 /* Normal */, 3000 /* Blend */, opacity);
+                return gameObject;
+            };
+            EditorMeshHelper.createBox = function (name, color, opacity) {
+                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone());
+                gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(2 /* Normal */, 3000 /* Blend */, opacity);
+                return gameObject;
+            };
+            EditorMeshHelper.createCircle = function (name, color, opacity) {
+                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone());
+                gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(2 /* Normal */, 3000 /* Blend */, opacity);
+                return gameObject;
+            };
+            EditorMeshHelper.createCameraWireframed = function (name, colorFrustum, colorCone, colorUp, colorTarget, colorCross) {
+                if (colorFrustum === void 0) { colorFrustum = egret3d.Color.create(1.0, 0.7, 0); }
+                if (colorCone === void 0) { colorCone = egret3d.Color.RED; }
+                if (colorUp === void 0) { colorUp = egret3d.Color.create(0, 0.7, 1); }
+                if (colorTarget === void 0) { colorTarget = egret3d.Color.WHITE; }
+                if (colorCross === void 0) { colorCross = egret3d.Color.create(0.2, 0.2, 0.2); }
+                var vertices = [], colors = [];
+                var verticeCount = 50;
+                for (var i = 0; i < verticeCount; i++) {
+                    vertices.push(0.0, 0.0, 0.0);
+                    if (i < 24) {
+                        colors.push(colorFrustum.r, colorFrustum.g, colorFrustum.b, colorFrustum.a);
+                    }
+                    else if (i < 32) {
+                        colors.push(colorCone.r, colorCone.g, colorCone.b, colorCone.a);
+                    }
+                    else if (i < 38) {
+                        colors.push(colorUp.r, colorUp.g, colorUp.b, colorUp.a);
+                    }
+                    else if (i < 40) {
+                        colors.push(colorTarget.r, colorTarget.g, colorTarget.b, colorTarget.a);
                     }
                     else {
-                        statsDOM.style.display = "none";
+                        colors.push(colorCross.r, colorCross.g, colorCross.b, colorCross.a);
                     }
                 }
+                var mesh = egret3d.Mesh.create(verticeCount, 0, ["POSITION" /* POSITION */, "COLOR_0" /* COLOR_0 */]);
+                mesh.setAttributes("POSITION" /* POSITION */, vertices);
+                mesh.setAttributes("COLOR_0" /* COLOR_0 */, colors);
+                mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                var material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
+                material.setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent, 0.8);
+                var gameObject = this.createGameObject(name, mesh, material);
+                return gameObject;
             };
-            StatsSystem.prototype.onAwake = function () {
-                var quaryValues = this._guiComponent.quaryValues;
-                if (quaryValues.FPS === 1 || (quaryValues.FPS !== 0 && !paper.Application.isMobile)) {
-                    this._guiComponent.showStates |= 1 /* FPS */;
-                    this._fpsIndex = 0;
-                }
-                else {
-                    this._fpsIndex = 1;
-                    this._updateFPSShowState();
-                }
-            };
-            StatsSystem.prototype.onTick = function () {
-                if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
-                    this._fpsIndex++;
-                    if (this._fpsIndex >= this._fpsShowQueue.length) {
-                        this._fpsIndex = 0;
-                    }
-                    if (this._fpsShowQueue[this._fpsIndex]) {
-                        this._guiComponent.showStates |= 1 /* FPS */;
-                    }
-                    else {
-                        this._guiComponent.showStates &= ~1 /* FPS */;
-                    }
-                    this._updateFPSShowState();
-                }
-                // TODO dc tc vc
-                var guiComponent = this._guiComponent;
-                guiComponent.stats.update();
-                guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["webgl"]["WebGLRenderSystem"]).deltaTime, 200);
-            };
-            StatsSystem.prototype.onFrame = function () {
-                var guiComponent = this._guiComponent;
-                guiComponent.stats.onFrame();
-            };
-            return StatsSystem;
-        }(paper.BaseSystem));
-        editor.StatsSystem = StatsSystem;
-        __reflect(StatsSystem.prototype, "paper.editor.StatsSystem");
+            return EditorMeshHelper;
+        }());
+        editor.EditorMeshHelper = EditorMeshHelper;
+        __reflect(EditorMeshHelper.prototype, "paper.editor.EditorMeshHelper");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));

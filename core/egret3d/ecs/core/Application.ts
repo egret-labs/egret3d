@@ -74,17 +74,12 @@ namespace paper {
          */
         private _update({ tickCount, frameCount }: ClockUpdateFlags = { tickCount: 1, frameCount: 1 }) {
             const systemManager = this.systemManager;
-            if (tickCount) {
-                systemManager._startUp();
-                systemManager._tick(tickCount);
-            }
-
-            if (frameCount) {
-                systemManager._frame();
-            }
 
             if (tickCount) {
-                systemManager._teardown(frameCount);
+                systemManager._startup();
+                systemManager._execute(tickCount, frameCount);
+                systemManager._cleanup(frameCount);
+                systemManager._teardown();
             }
         }
         /**
