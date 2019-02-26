@@ -898,10 +898,10 @@ namespace egret3d.webgl {
                 // Draw.
                 if (primitive.indices !== undefined) {
                     const indexAccessor = mesh.getAccessor(primitive.indices);
-                    webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, bufferOffset);
+                    webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
                 }
                 else {
-                    webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
+                    webgl.drawArrays(drawMode, 0, vertexAccessor.count);
                 }
 
                 if (drawCall.drawCount >= 0) {
