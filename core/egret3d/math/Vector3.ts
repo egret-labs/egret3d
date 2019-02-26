@@ -311,13 +311,13 @@ namespace egret3d {
                 this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
             }
             else {
-                this.x = 0.0;
-                this.y = 0.0;
-                this.z = 0.0;
-
                 if (DEBUG) {
                     console.warn("Dividing by zero.");
                 }
+                
+                this.x = 0.0;
+                this.y = 0.0;
+                this.z = 0.0;
             }
 
             return this;

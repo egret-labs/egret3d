@@ -10,7 +10,7 @@ namespace paper {
         /**
          * 当渲染组件的材质列表改变时派发事件。
          */
-        public static readonly onMaterialsChanged: signals.Signal = new signals.Signal();
+        public static readonly onMaterialsChanged: signals.Signal<BaseRenderer> = new signals.Signal();
         /**
          * 该组件是否开启视锥剔除。
          */

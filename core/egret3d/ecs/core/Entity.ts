@@ -263,7 +263,7 @@ namespace paper {
             let result = false;
             const globalEntity = Application.sceneManager._globalEntity;
 
-            if (componentInstanceOrClass instanceof BaseComponent) { // Remove component by instance.
+            if (componentInstanceOrClass instanceof Component) { // Remove component by instance.
                 const componentClass = componentInstanceOrClass.constructor as IComponentClass<T>;
 
                 if (componentClass.isSingleton && globalEntity && this !== globalEntity) { // Singleton component.

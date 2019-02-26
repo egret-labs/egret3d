@@ -49,9 +49,6 @@ namespace paper {
 
             if (groups) {
                 for (const group of groups) {
-                    if (!group.matcher.componentEnabledFilter) {
-                        debugger;
-                    }
                     group.handleEvent(entity as TEntity, component, true);
                 }
             }

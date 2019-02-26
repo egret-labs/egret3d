@@ -197,5 +197,9 @@ namespace paper {
             this._enabled = value;
             this._setEnabled(value);
         }
+
+        public get isActiveAndEnabled(): boolean {
+            return this._enabled && this.entity.enabled;
+        }
     }
 }

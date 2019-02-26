@@ -27,6 +27,7 @@ namespace paper {
             return new Group<TEntity>(matcher);
         }
         /**
+         * 标记改组是否为行为收集组，仅为兼容 Behaviour 生命周期。
          * @internal
          */
         public readonly isBehaviour: boolean = false;
@@ -40,7 +41,7 @@ namespace paper {
         private _singleEntity: TEntity | null = null;
 
         private constructor(matcher: ICompoundMatcher<TEntity>) {
-            if (matcher.extraOfComponents.length === 1 && matcher.extraOfComponents[0] === Behaviour as any) { // TODO
+            if (matcher.extraOfComponents.length === 1 && matcher.extraOfComponents[0] === Behaviour as any) { // 行为组的特征。
                 this.isBehaviour = true;
             }
 
@@ -49,17 +50,28 @@ namespace paper {
             for (const scene of Application.sceneManager.scenes) {
                 for (const entity of scene.entities) {
                     this.handleEvent(entity as TEntity, null as any, true); // TODO context._entityClass
+                    // TODO extra component
                 }
             }
         }
-
+        /**
+         * 该组是否包含指定实体。
+         * @param entity 
+         */
         public containsEntity(entity: TEntity): boolean {
             return this._entities.indexOf(entity) >= 0;
         }
-
+        /**
+         * @int
+         * @param entity 
+         * @param component 
+         * @param isAdd 
+         */
         public handleEvent(entity: TEntity, component: IComponent, isAdd: boolean): void {
             if (this.isBehaviour) {
-                if ((component.constructor as IComponentClass<IComponent>).isBehaviour) {
+                const componentClass = component.constructor as IComponentClass<IComponent>;
+
+                if (componentClass.isBehaviour) {
                     const behaviours = this._behaviours;
                     const index = behaviours.indexOf(component as Behaviour);
 
@@ -83,7 +95,9 @@ namespace paper {
 
                 if (isAdd) {
                     if (index >= 0) {
-                        if (matcher.matchesExtra(component.constructor as IComponentClass<IComponent>)) {
+                        const componentClass = component.constructor as IComponentClass<IComponent>;
+
+                        if (matcher.matchesExtra(componentClass)) { // TODO
                             Group.onComponentEnabled.dispatch([this, component]);
                         }
                     }
@@ -95,7 +109,9 @@ namespace paper {
                     }
                 }
                 else if (index >= 0) {
-                    if (matcher.matchesExtra(component.constructor as IComponentClass<IComponent>)) {
+                    const componentClass = component.constructor as IComponentClass<IComponent>;
+
+                    if ((componentClass.allowMultiple && this._hasEnabledComponent(entity, component)) || matcher.matchesExtra(componentClass)) {
                         Group.onComponentDisabled.dispatch([this, component]);
                     }
                     else {
@@ -109,10 +125,28 @@ namespace paper {
             }
         }
 
+        private _hasEnabledComponent(entity: TEntity, component: IComponent) {
+            const components = entity.getComponents(component.constructor as IComponentClass<IComponent>);
+            
+            if (components.length > 0) {
+                for (const eachComponent of components) {
+                    if (eachComponent.isActiveAndEnabled) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+        /**
+         * 该组匹配的实体总数。
+         */
         public get entityCount(): uint {
             return this._entities.length;
         }
-
+        /**
+         * 该组匹配的所有实体。
+         */
         public get entities(): ReadonlyArray<TEntity> {
             const entities = this._entities;
 
@@ -123,7 +157,10 @@ namespace paper {
 
             return entities as ReadonlyArray<TEntity>;
         }
-
+        /**
+         * 该组匹配的所有行为组件。
+         * @internal
+         */
         public get behaviours(): ReadonlyArray<Behaviour | null> {
             const behaviours = this._behaviours;
 
@@ -134,11 +171,15 @@ namespace paper {
 
             return this._behaviours;
         }
-
+        /**
+         * 该组的匹配器。
+         */
         public get matcher(): Readonly<ICompoundMatcher<TEntity>> {
             return this._matcher;
         }
-
+        /**
+         * 该组匹配的单例实体。
+         */
         public get singleEntity(): TEntity | null {
             const entityCount = this._entityCount;
 

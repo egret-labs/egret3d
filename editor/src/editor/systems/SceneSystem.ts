@@ -42,7 +42,7 @@ namespace paper.editor {
 
         public onAwake() {
             // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
-            Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate + 1);
+            Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
         }
 
         public onEnable() {
@@ -86,7 +86,7 @@ namespace paper.editor {
             const groups = this.groups;
         }
 
-        public onTick() {
+        public onFrame() {
             const groups = this.groups;
             const hoveredEntity = groups[0].singleEntity;
             const lastSelectedEntity = this.groups[1].singleEntity;

@@ -409,6 +409,7 @@ declare namespace paper.editor {
         readonly inspector: dat.GUI;
         readonly stats: Stats;
         readonly renderPanel: Stats.Panel;
+        readonly drawCallPanel: Stats.Panel;
         private readonly _lastSelectedGroup;
         initialize(): void;
         openComponents(...args: IComponentClass<IComponent>[]): void;
@@ -498,7 +499,7 @@ declare namespace paper.editor {
         onDisable(): void;
         onEntityAdded(entity: GameObject, group: Group<GameObject>): void;
         onEntityRemoved(entity: GameObject, group: Group<GameObject>): void;
-        onTick(): void;
+        onFrame(): void;
         private static readonly _defalutPosition;
         private _clearDefaultPointerDownPosition();
     }

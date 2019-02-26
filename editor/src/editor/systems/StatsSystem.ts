@@ -51,18 +51,23 @@ namespace paper.editor {
                 this._updateFPSShowState();
             }
 
-            // TODO dc tc vc
+            // TODO tc vc
 
             const guiComponent = this._guiComponent!;
-            guiComponent.stats.update();
+            guiComponent.stats.update(); // TODO 每个面板独立
+        }
+
+        public onFrame() {
+            const guiComponent = this._guiComponent!;
+            guiComponent.stats.onFrame();
             guiComponent.renderPanel.update(
                 paper.Application.systemManager.getSystem((egret3d as any)["webgl"]["WebGLRenderSystem"])!.deltaTime,
                 200
             );
-        }
-        public onFrame() {
-            const guiComponent = this._guiComponent!;
-            guiComponent.stats.onFrame();
+            guiComponent.drawCallPanel.update(
+                egret3d.drawCallCollecter.drawCallCount,
+                1000,
+            );
         }
     }
 }

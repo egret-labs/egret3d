@@ -158,13 +158,12 @@ namespace egret3d {
         }
 
         private _dirtify(isLocalDirty: ConstrainBoolean, dirty: TransformDirty) {
-            let childDirty = dirty;
+
             if (isLocalDirty) {
                 this._localDirty |= dirty | TransformDirty.MIM;
 
                 if (dirty & TransformDirty.Rotation) {
                     this._localDirty |= TransformDirty.Scale | TransformDirty.Euler;
-                    childDirty |= TransformDirty.Position;
                 }
                 else if (dirty & TransformDirty.Scale) {
                     this._localDirty |= TransformDirty.Rotation;
@@ -251,7 +250,7 @@ namespace egret3d {
             }
 
             for (const child of this._children) {
-                child._dirtify(false, childDirty);
+                child._dirtify(false, TransformDirty.All);
             }
 
             if (!(this._worldDirty & dirty) || !(this._worldDirty & TransformDirty.Matrix)) {

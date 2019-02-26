@@ -11,7 +11,7 @@ namespace egret3d {
         /**
          * 当蒙皮网格渲染组件的网格资源改变时派发事件。
          */
-        public static readonly onMeshChanged: signals.Signal = new signals.Signal();
+        public static readonly onMeshChanged: signals.Signal<SkinnedMeshRenderer> = new signals.Signal();
         /**
          * 强制使用 cpu 蒙皮。
          * - 骨骼数超过硬件支持的最大骨骼数量，或顶点权重大于 4 个，需要使用 CPU 蒙皮。
@@ -165,6 +165,8 @@ namespace egret3d {
                     this.forceCPUSkin = true;
                     console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
                 }
+
+                this._update();
             }
         }
         /**

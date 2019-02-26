@@ -221,14 +221,21 @@ declare namespace paper {
         Begin = 0,
         Enable = 1000,
         Start = 2000,
-        FixedUpdate = 3000,
         Update = 4000,
+
         Animation = 5000,
+
         LateUpdate = 6000,
+
         BeforeRenderer = 7000,
         Renderer = 8000,
         Disable = 9000,
         End = 10000,
+        
+        /**
+         * @deprecated
+         */
+        FixedUpdate = 3000,
     }
     /**
      * 应用程序运行模式。
@@ -520,9 +527,13 @@ declare namespace paper {
          */
         readonly isDestroyed: boolean;
         /**
-         * 该组件的激活状态。
+         * 该组件自身的激活状态。
          */
         enabled: boolean;
+        /**
+         * 该组件全局的激活状态。
+         */
+        readonly isActiveAndEnabled: boolean;
         /**
          *
          */
@@ -705,15 +716,16 @@ declare namespace paper {
      */
     function deserializedIgnore(classPrototype: any, key: string): void;
     /**
-     * 通过装饰器标记组件允许在同一实体上添加多个实例。
-     * @param componentClass 组件类。
-     */
-    function allowMultiple(componentClass: IComponentClass<IComponent>): void;
-    /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
      */
     function singleton(componentClass: IComponentClass<IComponent>): void;
+    /**
+     * 通过装饰器标记组件允许在同一实体上添加多个实例。
+     * - 实体上允许添加相同的组件对实体组件系统并不友好，所以通常不要这么做。
+     * @param componentClass 组件类。
+     */
+    function allowMultiple(componentClass: IComponentClass<IComponent>): void;
     /**
      * 通过装饰器标记脚本组件是否在编辑模式也拥有生命周期。
      * @param componentClass 组件类。
@@ -1264,6 +1276,7 @@ declare namespace paper {
         dispatchEnabledEvent(enabled: boolean): void;
         readonly isDestroyed: boolean;
         enabled: boolean;
+        readonly isActiveAndEnabled: boolean;
     }
 }
 declare namespace egret3d {
@@ -3607,7 +3620,7 @@ declare namespace paper {
         /**
          * 当渲染组件的材质列表改变时派发事件。
          */
-        static readonly onMaterialsChanged: signals.Signal;
+        static readonly onMaterialsChanged: signals.Signal<BaseRenderer>;
         /**
          * 该组件是否开启视锥剔除。
          */
@@ -4267,12 +4280,34 @@ declare namespace paper {
         private readonly _behaviours;
         private _singleEntity;
         private constructor();
+        /**
+         * 该组是否包含指定实体。
+         * @param entity
+         */
         containsEntity(entity: TEntity): boolean;
+        /**
+         * @int
+         * @param entity
+         * @param component
+         * @param isAdd
+         */
         handleEvent(entity: TEntity, component: IComponent, isAdd: boolean): void;
+        private _hasEnabledComponent(entity, component);
+        /**
+         * 该组匹配的实体总数。
+         */
         readonly entityCount: uint;
+        /**
+         * 该组匹配的所有实体。
+         */
         readonly entities: ReadonlyArray<TEntity>;
-        readonly behaviours: ReadonlyArray<Behaviour | null>;
+        /**
+         * 该组的匹配器。
+         */
         readonly matcher: Readonly<ICompoundMatcher<TEntity>>;
+        /**
+         * 该组匹配的单例实体。
+         */
         readonly singleEntity: TEntity | null;
         /**
          * @deprecated
@@ -7126,6 +7161,10 @@ declare namespace egret3d {
      */
     class DrawCallCollecter extends paper.BaseComponent {
         /**
+         *
+         */
+        drawCallCount: uint;
+        /**
          * 专用于天空盒渲染的绘制信息。
          */
         readonly skyBox: DrawCall;
@@ -8442,10 +8481,13 @@ declare namespace egret3d {
         private readonly _materialFilter;
         private _updateDrawCalls(entity, checkState);
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
-        protected getListeners(): {
-            type: signals.Signal<any>;
+        protected getListeners(): ({
+            type: signals.Signal<MeshFilter>;
             listener: (component: paper.IComponent) => void;
-        }[];
+        } | {
+            type: signals.Signal<paper.BaseRenderer>;
+            listener: (component: paper.IComponent) => void;
+        })[];
         onEntityAdded(entity: paper.GameObject): void;
         onEntityRemoved(entity: paper.GameObject): void;
     }
@@ -8458,7 +8500,7 @@ declare namespace egret3d {
         /**
          * 当蒙皮网格渲染组件的网格资源改变时派发事件。
          */
-        static readonly onMeshChanged: signals.Signal;
+        static readonly onMeshChanged: signals.Signal<SkinnedMeshRenderer>;
         /**
          * 强制使用 cpu 蒙皮。
          * - 骨骼数超过硬件支持的最大骨骼数量，或顶点权重大于 4 个，需要使用 CPU 蒙皮。
@@ -8516,7 +8558,7 @@ declare namespace egret3d {
         private _updateDrawCalls(entity, checkState);
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
         protected getListeners(): {
-            type: signals.Signal<any>;
+            type: signals.Signal<paper.BaseRenderer>;
             listener: (component: paper.IComponent) => void;
         }[];
         onEntityAdded(entity: paper.GameObject): void;

@@ -65,7 +65,7 @@ namespace paper {
 
             if (this.transform) {
                 for (const child of this.transform.children) {
-                    (child.entity as GameObject)._setScene(value, false);
+                    (child.entity as this)._setScene(value, false);
                 }
             }
 
@@ -74,7 +74,7 @@ namespace paper {
 
                 if (this.transform) {
                     for (const child of this.transform.children) {
-                        (child.entity as GameObject)._setScene(null, true);
+                        (child.entity as this)._setScene(null, true);
                     }
                 }
             }
@@ -310,10 +310,10 @@ namespace paper {
         /**
          * 该实体的父级实体。
          */
-        public get parent(): GameObject | null {
-            return (this.transform && this.transform.parent) ? this.transform.parent.gameObject : null;
+        public get parent(): this | null {
+            return (this.transform && this.transform.parent) ? (this.transform.parent.gameObject as this) : null;
         }
-        public set parent(gameObject: GameObject | null) {
+        public set parent(gameObject: this | null) {
             if (this.transform) {
                 this.transform.parent = gameObject ? gameObject.transform : null;
             }
@@ -335,8 +335,8 @@ namespace paper {
         /**
          * @deprecated
          */
-        public get globalGameObject(): GameObject {
-            return GameObject.globalGameObject;
+        public get globalGameObject(): this {
+            return Application.sceneManager.globalEntity as this;
         }
     }
 }

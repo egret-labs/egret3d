@@ -629,16 +629,6 @@ var paper;
     //     console.log(componentClass);
     // }
     /**
-     * 通过装饰器标记组件允许在同一实体上添加多个实例。
-     * @param componentClass 组件类。
-     */
-    function allowMultiple(componentClass) {
-        if (!componentClass.isSingleton) {
-            componentClass.allowMultiple = true;
-        }
-    }
-    paper.allowMultiple = allowMultiple;
-    /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
      */
@@ -647,6 +637,17 @@ var paper;
         componentClass.allowMultiple = false;
     }
     paper.singleton = singleton;
+    /**
+     * 通过装饰器标记组件允许在同一实体上添加多个实例。
+     * - 实体上允许添加相同的组件对实体组件系统并不友好，所以通常不要这么做。
+     * @param componentClass 组件类。
+     */
+    function allowMultiple(componentClass) {
+        if (!componentClass.isSingleton) {
+            componentClass.allowMultiple = true;
+        }
+    }
+    paper.allowMultiple = allowMultiple;
     // executionOrder: number; TODO
     // /**
     //  * 通过装饰器标记脚本组件的生命周期优先级。（默认：0）
@@ -1463,6 +1464,13 @@ var paper;
                 }
                 this._enabled = value;
                 this._setEnabled(value);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Component.prototype, "isActiveAndEnabled", {
+            get: function () {
+                return this._enabled && this.entity.enabled;
             },
             enumerable: true,
             configurable: true
@@ -2298,12 +2306,12 @@ var egret3d;
                 this.z = (rawData[2] * x + rawData[6] * y + rawData[10] * z + rawData[14]) * w;
             }
             else {
-                this.x = 0.0;
-                this.y = 0.0;
-                this.z = 0.0;
                 if (true) {
                     console.warn("Dividing by zero.");
                 }
+                this.x = 0.0;
+                this.y = 0.0;
+                this.z = 0.0;
             }
             return this;
         };
@@ -3627,23 +3635,6 @@ var egret3d;
             extension.depthBuffer = depthBuffer;
             extension.stencilBuffer = stencilBuffer;
             //
-            if (source) {
-                if (ArrayBuffer.isView(source)) {
-                    config.buffers = [];
-                    config.buffers[0] = { byteLength: source.byteLength };
-                    image.bufferView = 0;
-                }
-                else {
-                    image.uri = source; // 兼容
-                    extension.width = source.width;
-                    extension.height = source.height;
-                }
-            }
-            else if (image.uri) {
-                var source_1 = image.uri;
-                extension.width = source_1.width;
-                extension.height = source_1.height;
-            }
             return config;
         };
         BaseTexture.prototype._formatLevelsAndSampler = function () {
@@ -3863,6 +3854,7 @@ var egret3d;
         Texture.create = function (parametersOrName, config, buffers) {
             var name;
             var texture;
+            var source;
             if (typeof parametersOrName === "string") {
                 name = parametersOrName;
             }
@@ -3872,6 +3864,28 @@ var egret3d;
                 if (ArrayBuffer.isView(parametersOrName.source)) {
                     buffers = [parametersOrName.source];
                 }
+                source = parametersOrName.source;
+            }
+            var gltfTexture = config.textures[0];
+            var image = config.images[gltfTexture.source];
+            var extension = gltfTexture.extensions.paper;
+            // const source = image.uri as gltf.ImageSource;
+            if (source) {
+                if (ArrayBuffer.isView(source)) {
+                    config.buffers = [];
+                    config.buffers[0] = { byteLength: source.byteLength };
+                    image.bufferView = 0;
+                }
+                else {
+                    image.uri = source; // 兼容
+                    extension.width = source.width;
+                    extension.height = source.height;
+                }
+            }
+            else if (image.uri) {
+                var imageSource = image.uri;
+                extension.width = imageSource.width;
+                extension.height = imageSource.height;
             }
             // Retargeting.
             texture = new egret3d.Texture();
@@ -5991,6 +6005,7 @@ var paper;
     var Group = (function () {
         function Group(matcher) {
             /**
+             * 标记改组是否为行为收集组，仅为兼容 Behaviour 生命周期。
              * @internal
              */
             this.isBehaviour = false;
@@ -6010,6 +6025,7 @@ var paper;
                 for (var _b = 0, _c = scene.entities; _b < _c.length; _b++) {
                     var entity = _c[_b];
                     this.handleEvent(entity, null, true); // TODO context._entityClass
+                    // TODO extra component
                 }
             }
         }
@@ -6019,12 +6035,23 @@ var paper;
         Group.create = function (matcher) {
             return new Group(matcher);
         };
+        /**
+         * 该组是否包含指定实体。
+         * @param entity
+         */
         Group.prototype.containsEntity = function (entity) {
             return this._entities.indexOf(entity) >= 0;
         };
+        /**
+         * @int
+         * @param entity
+         * @param component
+         * @param isAdd
+         */
         Group.prototype.handleEvent = function (entity, component, isAdd) {
             if (this.isBehaviour) {
-                if (component.constructor.isBehaviour) {
+                var componentClass = component.constructor;
+                if (componentClass.isBehaviour) {
                     var behaviours = this._behaviours;
                     var index = behaviours.indexOf(component);
                     if (isAdd) {
@@ -6046,7 +6073,8 @@ var paper;
                 var index = entities.indexOf(entity);
                 if (isAdd) {
                     if (index >= 0) {
-                        if (matcher.matchesExtra(component.constructor)) {
+                        var componentClass = component.constructor;
+                        if (matcher.matchesExtra(componentClass)) {
                             Group.onComponentEnabled.dispatch([this, component]);
                         }
                     }
@@ -6058,7 +6086,8 @@ var paper;
                     }
                 }
                 else if (index >= 0) {
-                    if (matcher.matchesExtra(component.constructor)) {
+                    var componentClass = component.constructor;
+                    if ((componentClass.allowMultiple && this._hasEnabledComponent(entity, component)) || matcher.matchesExtra(componentClass)) {
                         Group.onComponentDisabled.dispatch([this, component]);
                     }
                     else {
@@ -6071,7 +6100,22 @@ var paper;
                 }
             }
         };
+        Group.prototype._hasEnabledComponent = function (entity, component) {
+            var components = entity.getComponents(component.constructor);
+            if (components.length > 0) {
+                for (var _i = 0, components_1 = components; _i < components_1.length; _i++) {
+                    var eachComponent = components_1[_i];
+                    if (eachComponent.isActiveAndEnabled) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        };
         Object.defineProperty(Group.prototype, "entityCount", {
+            /**
+             * 该组匹配的实体总数。
+             */
             get: function () {
                 return this._entities.length;
             },
@@ -6079,6 +6123,9 @@ var paper;
             configurable: true
         });
         Object.defineProperty(Group.prototype, "entities", {
+            /**
+             * 该组匹配的所有实体。
+             */
             get: function () {
                 var entities = this._entities;
                 if (this._entitiesDirty) {
@@ -6091,6 +6138,10 @@ var paper;
             configurable: true
         });
         Object.defineProperty(Group.prototype, "behaviours", {
+            /**
+             * 该组匹配的所有行为组件。
+             * @internal
+             */
             get: function () {
                 var behaviours = this._behaviours;
                 if (this._behavioursDirty) {
@@ -6103,6 +6154,9 @@ var paper;
             configurable: true
         });
         Object.defineProperty(Group.prototype, "matcher", {
+            /**
+             * 该组的匹配器。
+             */
             get: function () {
                 return this._matcher;
             },
@@ -6110,6 +6164,9 @@ var paper;
             configurable: true
         });
         Object.defineProperty(Group.prototype, "singleEntity", {
+            /**
+             * 该组匹配的单例实体。
+             */
             get: function () {
                 var entityCount = this._entityCount;
                 if (entityCount === 0) {
@@ -6207,9 +6264,6 @@ var paper;
             if (groups) {
                 for (var _i = 0, groups_2 = groups; _i < groups_2.length; _i++) {
                     var group = groups_2[_i];
-                    if (!group.matcher.componentEnabledFilter) {
-                        debugger;
-                    }
                     group.handleEvent(entity, component, true);
                 }
             }
@@ -6418,16 +6472,24 @@ var paper;
          */
         SystemManager.prototype._execute = function (tickCount, frameCount) {
             var reactiveSystems = this._reactiveSystems;
+            var startTime = 0;
             for (var i = 0; i < tickCount; ++i) {
                 for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                     var system = _a[_i];
                     if (!system.enabled) {
                         continue;
                     }
+                    if (true) {
+                        system.deltaTime = 0;
+                        startTime = paper.clock.now;
+                    }
                     if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
                         this._reactive(system);
                     }
                     system.onTick && system.onTick(paper.clock.tickInterval);
+                    if (true) {
+                        system.deltaTime += paper.clock.now - startTime;
+                    }
                 }
             }
             if (frameCount) {
@@ -6436,10 +6498,16 @@ var paper;
                     if (!system.enabled) {
                         continue;
                     }
+                    if (true) {
+                        startTime = paper.clock.now;
+                    }
                     if (reactiveSystems.indexOf(system) >= 0) {
                         this._reactive(system);
                     }
                     system.onFrame && system.onFrame(paper.clock.lastFrameDelta);
+                    if (true) {
+                        system.deltaTime += paper.clock.now - startTime;
+                    }
                 }
             }
         };
@@ -6447,6 +6515,7 @@ var paper;
          * @internal
          */
         SystemManager.prototype._cleanup = function (frameCount) {
+            var startTime = 0;
             var i = 0;
             if (frameCount) {
                 i = this._frameCleanupSystems.length;
@@ -6455,7 +6524,13 @@ var paper;
                     if (!system.enabled) {
                         continue;
                     }
+                    if (true) {
+                        startTime = paper.clock.now;
+                    }
                     system.onFrameCleanup(paper.clock.lastFrameDelta);
+                    if (true) {
+                        system.deltaTime += paper.clock.now - startTime;
+                    }
                 }
             }
             i = this._tickCleanupSystems.length;
@@ -6464,7 +6539,13 @@ var paper;
                 if (!system.enabled) {
                     continue;
                 }
+                if (true) {
+                    startTime = paper.clock.now;
+                }
                 system.onTickCleanup(paper.clock.lastFrameDelta);
+                if (true) {
+                    system.deltaTime += paper.clock.now - startTime;
+                }
             }
         };
         /**
@@ -10989,8 +11070,8 @@ var paper;
                 return;
             }
             var index = 0;
-            for (var _i = 0, source_2 = source; _i < source_2.length; _i++) {
-                var component = source_2[_i];
+            for (var _i = 0, source_1 = source; _i < source_1.length; _i++) {
+                var component = source_1[_i];
                 paper.registerClass(component); // TODO
                 if (target.indexOf(component) < 0) {
                     target[index++] = component;
@@ -12766,7 +12847,7 @@ var egret3d;
             }
             for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
                 var child = _a[_i];
-                child._dirtify(false, dirty);
+                child._dirtify(false, 63 /* All */);
             }
             if (!(this._worldDirty & dirty) || !(this._worldDirty & 16 /* Matrix */)) {
                 this._worldDirty |= dirty | 48 /* MIM */;
@@ -14447,6 +14528,10 @@ var egret3d;
         __extends(DrawCallCollecter, _super);
         function DrawCallCollecter() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             *
+             */
+            _this.drawCallCount = 0;
             /**
              * 专用于天空盒渲染的绘制信息。
              */
@@ -18892,6 +18977,7 @@ var egret3d;
                     this.forceCPUSkin = true;
                     console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
                 }
+                this._update();
             }
         };
         /**
@@ -19758,6 +19844,7 @@ var egret;
                 }
                 var size = data.count * 3;
                 gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
+                egret3d.drawCallCollecter.drawCallCount++;
                 return size;
             };
             /**
@@ -19816,6 +19903,7 @@ var egret;
                     gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
                     // gl.bindTexture(gl.TEXTURE_2D, null);
                     gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
+                    egret3d.drawCallCollecter.drawCallCount++;
                     gl.stencilFunc(gl.EQUAL, level + 1, 0xFF);
                     gl.colorMask(true, true, true, true);
                     gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
@@ -19841,6 +19929,7 @@ var egret;
                         gl.stencilOp(gl.KEEP, gl.KEEP, gl.DECR);
                         // gl.bindTexture(gl.TEXTURE_2D, null);
                         gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
+                        egret3d.drawCallCollecter.drawCallCount++;
                         gl.stencilFunc(gl.EQUAL, level, 0xFF);
                         gl.colorMask(true, true, true, true);
                         gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
@@ -30675,6 +30764,9 @@ var egret3d;
                     this._renderState.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.BLACK);
                 }
             };
+            WebGLRenderSystem.prototype.onFrameCleanup = function () {
+                this._drawCallCollecter.drawCallCount = 0;
+            };
             WebGLRenderSystem.prototype.render = function (camera, material) {
                 if (material === void 0) { material = null; }
                 var cameraAndLightCollecter = this._cameraAndLightCollecter;
@@ -30852,11 +30944,12 @@ var egret3d;
                     // Draw.
                     if (primitive.indices !== undefined) {
                         var indexAccessor = mesh.getAccessor(primitive.indices);
-                        webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, bufferOffset);
+                        webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
                     }
                     else {
-                        webgl.drawArrays(drawMode, bufferOffset, vertexAccessor.count);
+                        webgl.drawArrays(drawMode, 0, vertexAccessor.count);
                     }
+                    this._drawCallCollecter.drawCallCount++;
                     if (drawCall.drawCount >= 0) {
                         drawCall.drawCount++;
                     }

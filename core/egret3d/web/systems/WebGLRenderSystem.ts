@@ -700,6 +700,9 @@ namespace egret3d.webgl {
             }
         }
 
+        public onFrameCleanup() {
+            this._drawCallCollecter.drawCallCount = 0;
+        }
 
         public render(camera: Camera, material: Material | null = null) {
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
@@ -903,6 +906,8 @@ namespace egret3d.webgl {
                 else {
                     webgl.drawArrays(drawMode, 0, vertexAccessor.count);
                 }
+
+                this._drawCallCollecter.drawCallCount++;
 
                 if (drawCall.drawCount >= 0) {
                     drawCall.drawCount++;

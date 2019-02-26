@@ -130,6 +130,7 @@ namespace paper {
          */
         public _execute(tickCount: uint, frameCount: uint) {
             const reactiveSystems = this._reactiveSystems;
+            let startTime = 0;
 
             for (let i = 0; i < tickCount; ++i) {
                 for (const system of this._systems) { // this._tickSystems
@@ -137,11 +138,20 @@ namespace paper {
                         continue;
                     }
 
+                    if (DEBUG) {
+                        (system.deltaTime as uint) = 0;
+                        startTime = clock.now;
+                    }
+
                     if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
                         this._reactive(system);
                     }
 
                     system.onTick && system.onTick(clock.tickInterval);
+
+                    if (DEBUG) {
+                        (system.deltaTime as uint) += clock.now - startTime;
+                    }
                 }
             }
 
@@ -151,11 +161,19 @@ namespace paper {
                         continue;
                     }
 
+                    if (DEBUG) {
+                        startTime = clock.now;
+                    }
+
                     if (reactiveSystems.indexOf(system) >= 0) {
                         this._reactive(system);
                     }
 
                     system.onFrame && system.onFrame(clock.lastFrameDelta);
+
+                    if (DEBUG) {
+                        (system.deltaTime as uint) += clock.now - startTime;
+                    }
                 }
             }
         }
@@ -163,7 +181,9 @@ namespace paper {
          * @internal
          */
         public _cleanup(frameCount: uint) {
+            let startTime = 0;
             let i = 0;
+
             if (frameCount) {
                 i = this._frameCleanupSystems.length;
 
@@ -173,18 +193,35 @@ namespace paper {
                         continue;
                     }
 
+                    if (DEBUG) {
+                        startTime = clock.now;
+                    }
+
                     system.onFrameCleanup!(clock.lastFrameDelta);
+
+                    if (DEBUG) {
+                        (system.deltaTime as uint) += clock.now - startTime;
+                    }
                 }
             }
 
             i = this._tickCleanupSystems.length;
+
             while (i--) {
                 const system = this._tickCleanupSystems[i];
                 if (!system.enabled) {
                     continue;
                 }
 
+                if (DEBUG) {
+                    startTime = clock.now;
+                }
+
                 system.onTickCleanup!(clock.lastFrameDelta);
+                
+                if (DEBUG) {
+                    (system.deltaTime as uint) += clock.now - startTime;
+                }
             }
         }
         /**

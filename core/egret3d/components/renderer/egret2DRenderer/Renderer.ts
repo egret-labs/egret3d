@@ -343,6 +343,9 @@ module egret.web {
 
             let size = data.count * 3;
             gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
+
+            egret3d.drawCallCollecter.drawCallCount++;
+
             return size;
         }
 
@@ -417,6 +420,7 @@ module egret.web {
 
                 // gl.bindTexture(gl.TEXTURE_2D, null);
                 gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
+                egret3d.drawCallCollecter.drawCallCount++;
 
                 gl.stencilFunc(gl.EQUAL, level + 1, 0xFF);
                 gl.colorMask(true, true, true, true);
@@ -448,6 +452,7 @@ module egret.web {
 
                     // gl.bindTexture(gl.TEXTURE_2D, null);
                     gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
+                    egret3d.drawCallCollecter.drawCallCount++;
 
                     gl.stencilFunc(gl.EQUAL, level, 0xFF);
                     gl.colorMask(true, true, true, true);

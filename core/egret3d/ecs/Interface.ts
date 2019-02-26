@@ -424,9 +424,13 @@ namespace paper {
          */
         readonly isDestroyed: boolean;
         /**
-         * 该组件的激活状态。
+         * 该组件自身的激活状态。
          */
         enabled: boolean;
+        /**
+         * 该组件全局的激活状态。
+         */
+        readonly isActiveAndEnabled: boolean;
         /**
          * 
          */
