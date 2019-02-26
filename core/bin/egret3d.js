@@ -7109,7 +7109,7 @@ var paper;
                 if (this._globalEnabledDirty) {
                     var parent_1 = this._parent;
                     if (!parent_1 || parent_1.isActiveAndEnabled) {
-                        this._globalEnabled = this._enabled;
+                        this._globalEnabled = this._enabled && this.entity.enabled;
                     }
                     else {
                         this._globalEnabled = false;

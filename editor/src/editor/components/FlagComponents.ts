@@ -38,6 +38,12 @@ namespace paper.editor {
     /**
      * 
      */
+    export class SceneSelectedFlag extends EditorComponent {
+        public scene: Scene | null = null;
+    }
+    /**
+     * 
+     */
     export class PickedFlag extends EditorComponent {
         public target: GameObject | null = null;
     }

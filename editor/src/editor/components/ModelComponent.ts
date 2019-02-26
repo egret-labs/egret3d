@@ -5,6 +5,14 @@ namespace paper.editor {
     @singleton
     export class ModelComponent extends BaseComponent {
         /**
+         * 
+         */
+        public readonly onSceneSelected: signals.Signal<Scene> = new signals.Signal();
+        /**
+         * 
+         */
+        public readonly onSceneUnselected: signals.Signal<Scene> = new signals.Signal();
+        /**
          * 选中的场景。
          */
         public selectedScene: Scene | null = null;
@@ -94,7 +102,9 @@ namespace paper.editor {
 
             if (isReplace) {
                 if (this.selectedScene) {
+                    const scene = this.selectedScene;
                     this.selectedScene = null;
+                    this.onSceneUnselected.dispatch(scene);
                 }
                 else {
                     for (const entity of this._selectedGroup.entities) {
@@ -107,6 +117,7 @@ namespace paper.editor {
                 if (value instanceof Scene) {
                     (window as any)["pse"] = (window as any)["psgo"] = null; // For quick debug.
                     this.selectedScene = value;
+                    this.onSceneSelected.dispatch(value);
                 }
                 else {
                     (window as any)["pse"] = (window as any)["psgo"] = value; // For quick debug.

@@ -11,7 +11,7 @@ namespace paper.editor {
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
         private readonly _sceneOrEntityBuffer: (IScene | IEntity | null)[] = [];
-        private _selectSceneOrEntity: IEntity | null = null;
+        private _selectSceneOrEntity: Scene | IEntity | null = null;
 
         private _onSceneCreated([scene, isActive]: [IScene, boolean]) {
             this._addSceneOrEntity(scene);
@@ -25,6 +25,22 @@ namespace paper.editor {
             if (this._sceneOrEntityBuffer.indexOf(transform.entity) < 0) {
                 this._removeSceneOrEntity(transform.entity);
                 this._sceneOrEntityBuffer.push(transform.entity);
+            }
+        }
+
+        private _onSceneSelected(scene: Scene) {
+            const item = this._getOrAddScene(scene);
+
+            if (item) {
+                item.selected = true;
+            }
+        }
+
+        private _onSceneUnselected(scene: Scene) {
+            const item = this._getOrAddScene(scene);
+
+            if (item) {
+                item.selected = false;
             }
         }
 
@@ -163,19 +179,22 @@ namespace paper.editor {
             Scene.onSceneCreated.add(this._onSceneCreated, this);
             Scene.onSceneDestroy.add(this._onSceneDestroy, this);
             BaseTransform.onTransformParentChanged.add(this._onTransformParentChanged, this);
+            this._modelComponent.onSceneSelected.add(this._onSceneSelected, this);
+            this._modelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
 
             this._sceneOrEntityBuffer.push(Application.sceneManager.globalScene);
+
             for (const entity of Application.sceneManager.globalScene.rootEntities) {
                 this._sceneOrEntityBuffer.push(entity);
             }
-
-            // this._modelComponent.select(Scene.activeScene);
         }
 
         public onDisable() {
-            Scene.onSceneCreated.remove(this._onSceneCreated);
-            Scene.onSceneDestroy.remove(this._onSceneDestroy);
-            BaseTransform.onTransformParentChanged.remove(this._onTransformParentChanged);
+            Scene.onSceneCreated.remove(this._onSceneCreated, this);
+            Scene.onSceneDestroy.remove(this._onSceneDestroy, this);
+            BaseTransform.onTransformParentChanged.remove(this._onTransformParentChanged, this);
+            this._modelComponent.onSceneSelected.remove(this._onSceneSelected, this);
+            this._modelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
 
             const { hierarchyItems } = this._guiComponent;
 
@@ -251,7 +270,7 @@ namespace paper.editor {
                     }
                 }
                 else {
-
+                    this._modelComponent.select(selectSceneOrEntity);
                 }
 
                 this._selectSceneOrEntity = null;

@@ -369,6 +369,12 @@ declare namespace paper.editor {
     /**
      *
      */
+    class SceneSelectedFlag extends EditorComponent {
+        scene: Scene | null;
+    }
+    /**
+     *
+     */
     class PickedFlag extends EditorComponent {
         target: GameObject | null;
     }
@@ -413,6 +419,14 @@ declare namespace paper.editor {
      *
      */
     class ModelComponent extends BaseComponent {
+        /**
+         *
+         */
+        readonly onSceneSelected: signals.Signal<Scene>;
+        /**
+         *
+         */
+        readonly onSceneUnselected: signals.Signal<Scene>;
         /**
          * 选中的场景。
          */

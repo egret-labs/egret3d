@@ -4,6 +4,7 @@ namespace paper.editor {
      * @internal
      */
     export class InspectorSystem extends BaseSystem<GameObject> {
+        private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
 
         private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
@@ -31,6 +32,14 @@ namespace paper.editor {
 
         private _componentOrPropertyGUIClickHandler = (gui: dat.GUI) => {
             (window as any)["psc"] = (window as any)["epsc"] = gui.instance; // For quick debug.
+        }
+
+        private _onSceneSelected(scene: Scene) {
+            this._selectSceneOrGameObject(scene);
+        }
+
+        private _onSceneUnselected(scene: Scene) {
+            this._selectSceneOrGameObject(null);
         }
 
         private _saveSceneOrGameObject = () => {
@@ -173,8 +182,12 @@ namespace paper.editor {
 
                 if (sceneOrGameObject instanceof Scene) { // Update scene.
                 }
-                else { // Update game object.
+                else { // Update entity.
                     for (const component of sceneOrGameObject.components) {
+                        if (component.hideFlags & HideFlags.Hide) {
+                            continue;
+                        }
+
                         const folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
                         folder.instance = component;
                         folder.open();
@@ -556,11 +569,15 @@ namespace paper.editor {
         public onEnable() {
             Component.onComponentCreated.add(this._onComponentCreated, this);
             Component.onComponentDestroy.add(this._onComponentDestroy, this);
+            this._modelComponent.onSceneSelected.add(this._onSceneSelected, this);
+            this._modelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
         }
 
         public onDisable() {
             Component.onComponentCreated.remove(this._onComponentCreated, this);
             Component.onComponentDestroy.remove(this._onComponentDestroy, this);
+            this._modelComponent.onSceneSelected.remove(this._onSceneSelected, this);
+            this._modelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
 
             const { inspectorItems } = this._guiComponent;
 
@@ -590,7 +607,9 @@ namespace paper.editor {
             const groups = this.groups;
 
             if (group === groups[0]) {
-                this._selectSceneOrGameObject(null);
+                if (!this._modelComponent.selectedScene) {
+                    this._selectSceneOrGameObject(null);
+                }
             }
         }
 

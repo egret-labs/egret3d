@@ -57,14 +57,17 @@ namespace paper.editor {
                 return;
             }
 
-            for (const k in this.inspectorItems) {
-                this.inspectorItems[k].close();
+            const inspectorItems = this.inspectorItems;
+
+            for (const k in inspectorItems) {
+                inspectorItems[k].close();
             }
 
             for (const componentClass of args) {
                 const component = lastSelectedEntity.getComponent(componentClass);
-                if (component && component.uuid in this.inspectorItems) {
-                    this.inspectorItems[component.uuid].open();
+
+                if (component && component.uuid in inspectorItems) {
+                    inspectorItems[component.uuid].open();
                 }
             }
         }

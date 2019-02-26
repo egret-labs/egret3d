@@ -4199,6 +4199,20 @@ var paper;
         /**
          *
          */
+        var SceneSelectedFlag = (function (_super) {
+            __extends(SceneSelectedFlag, _super);
+            function SceneSelectedFlag() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.scene = null;
+                return _this;
+            }
+            return SceneSelectedFlag;
+        }(EditorComponent));
+        editor.SceneSelectedFlag = SceneSelectedFlag;
+        __reflect(SceneSelectedFlag.prototype, "paper.editor.SceneSelectedFlag");
+        /**
+         *
+         */
         var PickedFlag = (function (_super) {
             __extends(PickedFlag, _super);
             function PickedFlag() {
@@ -4297,6 +4311,14 @@ var paper;
             function ModelComponent() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 /**
+                 *
+                 */
+                _this.onSceneSelected = new signals.Signal();
+                /**
+                 *
+                 */
+                _this.onSceneUnselected = new signals.Signal();
+                /**
                  * 选中的场景。
                  */
                 _this.selectedScene = null;
@@ -4371,7 +4393,9 @@ var paper;
                 }
                 if (isReplace) {
                     if (this.selectedScene) {
+                        var scene = this.selectedScene;
                         this.selectedScene = null;
+                        this.onSceneUnselected.dispatch(scene);
                     }
                     else {
                         for (var _i = 0, _a = this._selectedGroup.entities; _i < _a.length; _i++) {
@@ -4384,6 +4408,7 @@ var paper;
                     if (value instanceof paper.Scene) {
                         window["pse"] = window["psgo"] = null; // For quick debug.
                         this.selectedScene = value;
+                        this.onSceneSelected.dispatch(value);
                     }
                     else {
                         window["pse"] = window["psgo"] = value; // For quick debug.
@@ -5915,6 +5940,18 @@ var paper;
                     this._sceneOrEntityBuffer.push(transform.entity);
                 }
             };
+            HierarchySystem.prototype._onSceneSelected = function (scene) {
+                var item = this._getOrAddScene(scene);
+                if (item) {
+                    item.selected = true;
+                }
+            };
+            HierarchySystem.prototype._onSceneUnselected = function (scene) {
+                var item = this._getOrAddScene(scene);
+                if (item) {
+                    item.selected = false;
+                }
+            };
             HierarchySystem.prototype._addSceneOrEntity = function (value) {
                 this._sceneOrEntityBuffer.push(value);
             };
@@ -6015,17 +6052,20 @@ var paper;
                 paper.Scene.onSceneCreated.add(this._onSceneCreated, this);
                 paper.Scene.onSceneDestroy.add(this._onSceneDestroy, this);
                 paper.BaseTransform.onTransformParentChanged.add(this._onTransformParentChanged, this);
+                this._modelComponent.onSceneSelected.add(this._onSceneSelected, this);
+                this._modelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
                 this._sceneOrEntityBuffer.push(paper.Application.sceneManager.globalScene);
                 for (var _i = 0, _a = paper.Application.sceneManager.globalScene.rootEntities; _i < _a.length; _i++) {
                     var entity = _a[_i];
                     this._sceneOrEntityBuffer.push(entity);
                 }
-                // this._modelComponent.select(Scene.activeScene);
             };
             HierarchySystem.prototype.onDisable = function () {
-                paper.Scene.onSceneCreated.remove(this._onSceneCreated);
-                paper.Scene.onSceneDestroy.remove(this._onSceneDestroy);
-                paper.BaseTransform.onTransformParentChanged.remove(this._onTransformParentChanged);
+                paper.Scene.onSceneCreated.remove(this._onSceneCreated, this);
+                paper.Scene.onSceneDestroy.remove(this._onSceneDestroy, this);
+                paper.BaseTransform.onTransformParentChanged.remove(this._onTransformParentChanged, this);
+                this._modelComponent.onSceneSelected.remove(this._onSceneSelected, this);
+                this._modelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
                 var hierarchyItems = this._guiComponent.hierarchyItems;
                 for (var k in hierarchyItems) {
                     var item = hierarchyItems[k];
@@ -6090,6 +6130,7 @@ var paper;
                         }
                     }
                     else {
+                        this._modelComponent.select(selectSceneOrEntity);
                     }
                     this._selectSceneOrEntity = null;
                 }
@@ -6134,6 +6175,7 @@ var paper;
             __extends(InspectorSystem, _super);
             function InspectorSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
                 _this._guiComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.GUIComponent);
                 _this._componentOrPropertyGUIClickHandler = function (gui) {
                     window["psc"] = window["epsc"] = gui.instance; // For quick debug.
@@ -6176,6 +6218,12 @@ var paper;
                 //     catch (e) {
                 //     }
                 // }
+            };
+            InspectorSystem.prototype._onSceneSelected = function (scene) {
+                this._selectSceneOrGameObject(scene);
+            };
+            InspectorSystem.prototype._onSceneUnselected = function (scene) {
+                this._selectSceneOrGameObject(null);
             };
             InspectorSystem.prototype._getAssets = function (type) {
                 var added = [];
@@ -6298,6 +6346,9 @@ var paper;
                     else {
                         for (var _b = 0, _c = sceneOrGameObject.components; _b < _c.length; _b++) {
                             var component = _c[_b];
+                            if (component.hideFlags & 10 /* Hide */) {
+                                continue;
+                            }
                             var folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
                             folder.instance = component;
                             folder.open();
@@ -6616,10 +6667,14 @@ var paper;
             InspectorSystem.prototype.onEnable = function () {
                 paper.Component.onComponentCreated.add(this._onComponentCreated, this);
                 paper.Component.onComponentDestroy.add(this._onComponentDestroy, this);
+                this._modelComponent.onSceneSelected.add(this._onSceneSelected, this);
+                this._modelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
             };
             InspectorSystem.prototype.onDisable = function () {
                 paper.Component.onComponentCreated.remove(this._onComponentCreated, this);
                 paper.Component.onComponentDestroy.remove(this._onComponentDestroy, this);
+                this._modelComponent.onSceneSelected.remove(this._onSceneSelected, this);
+                this._modelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
                 var inspectorItems = this._guiComponent.inspectorItems;
                 for (var k in inspectorItems) {
                     var item = inspectorItems[k];
@@ -6642,7 +6697,9 @@ var paper;
             InspectorSystem.prototype.onEntityRemoved = function (entity, group) {
                 var groups = this.groups;
                 if (group === groups[0]) {
-                    this._selectSceneOrGameObject(null);
+                    if (!this._modelComponent.selectedScene) {
+                        this._selectSceneOrGameObject(null);
+                    }
                 }
             };
             InspectorSystem.prototype.onFrame = function () {
