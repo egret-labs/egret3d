@@ -267,7 +267,7 @@ namespace paper {
                 const parent = this._parent;
 
                 if (!parent || parent.isActiveAndEnabled) {
-                    this._globalEnabled = this._enabled;
+                    this._globalEnabled = this._enabled && this.entity.enabled;
                 }
                 else {
                     this._globalEnabled = false;
