@@ -65,6 +65,40 @@ namespace paper {
             Entity.onEntityDestroyed.dispatch(this);
         }
 
+        protected _setScene(value: Scene | null, dispatchEvent: boolean) {
+            if (value) {
+                if (this._scene) {
+                    this._scene._removeEntity(this);
+                }
+
+                value._addEntity(this);
+                this._scene = value;
+            }
+
+            if (dispatchEvent) {
+                Entity.onEntityAddedToScene.dispatch(this);
+            }
+        }
+
+        protected _setEnabled(value: boolean) {
+            for (const component of this._components) {
+                if (!component) {
+                    continue;
+                }
+
+                if (component.constructor === GroupComponent) {
+                    for (const componentInGroup of (component as GroupComponent).components) {
+                        if (componentInGroup.enabled) {
+                            componentInGroup.dispatchEnabledEvent(value);
+                        }
+                    }
+                }
+                else if (component.enabled) {
+                    component.dispatchEnabledEvent(value);
+                }
+            }
+        }
+
         protected _addComponent(component: IComponent, config?: any) {
             component.initialize(config);
 
@@ -103,21 +137,6 @@ namespace paper {
 
             Component.onComponentDestroyed.dispatch([this, component]);
             this._componentsDirty = true;
-        }
-
-        protected _setScene(value: Scene | null, dispatchEvent: boolean) {
-            if (value) {
-                if (this._scene) {
-                    this._scene._removeEntity(this);
-                }
-
-                value._addEntity(this);
-                this._scene = value;
-            }
-
-            if (dispatchEvent) {
-                Entity.onEntityAddedToScene.dispatch(this);
-            }
         }
 
         private _getComponent(componentClass: IComponentClass<IComponent>) {
@@ -530,24 +549,8 @@ namespace paper {
                 return;
             }
 
-            for (const component of this._components) {
-                if (!component) {
-                    continue;
-                }
-
-                if (component.constructor === GroupComponent) {
-                    for (const componentInGroup of (component as GroupComponent).components) {
-                        if (componentInGroup.enabled) {
-                            componentInGroup.dispatchEnabledEvent(value);
-                        }
-                    }
-                }
-                else if (component.enabled) {
-                    component.dispatchEnabledEvent(value);
-                }
-            }
-
             this._enabled = value;
+            this._setEnabled(value);
         }
 
         @serializedField

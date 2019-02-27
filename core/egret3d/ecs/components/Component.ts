@@ -157,7 +157,7 @@ namespace paper {
             this._isDestroyed = true;
         }
 
-        protected _setEnabled(value: boolean): void {
+        protected _setEnabled(value: boolean) {
             if ((this._lifeStates & ComponentLifeState.Initialized)) {
                 this.dispatchEnabledEvent(value);
             }

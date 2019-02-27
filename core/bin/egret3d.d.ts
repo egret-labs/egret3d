@@ -3413,9 +3413,10 @@ declare namespace paper {
          */
         constructor();
         protected _destroy(): void;
+        protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
+        protected _setEnabled(value: boolean): void;
         protected _addComponent(component: IComponent, config?: any): void;
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
-        protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
         private _getComponent(componentClass);
         private _isRequireComponent(componentClass);
         initialize(): void;
@@ -5217,6 +5218,7 @@ declare namespace paper {
         readonly renderer: BaseRenderer | null;
         protected _destroy(): void;
         protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
+        protected _setEnabled(value: boolean): void;
         protected _addComponent(component: IComponent, config?: any): void;
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
         uninitialize(): void;

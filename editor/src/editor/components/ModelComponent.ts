@@ -148,6 +148,8 @@ namespace paper.editor {
         }
 
         public initialize() {
+            super.initialize();
+
             if (Application.playerMode === PlayerMode.Editor) {
                 editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, () => {
                     if (this._editorModel) {

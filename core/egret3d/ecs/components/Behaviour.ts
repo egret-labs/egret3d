@@ -42,7 +42,7 @@ namespace paper {
             if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
                 (this.gameObject as GameObject) = this.entity as GameObject; //
 
-                if (this._enabled && this.gameObject.activeInHierarchy) {
+                if (this.isActiveAndEnabled) {
                     this.onAwake && this.onAwake!(config);
                     this._lifeStates |= ComponentLifeState.Awaked;
                 }

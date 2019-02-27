@@ -80,6 +80,29 @@ namespace paper {
             }
         }
 
+        protected _setEnabled(value: boolean) {
+            const transformParent = this.transform ? this.transform.parent : null;
+
+            if (!transformParent || transformParent.isActiveAndEnabled) {
+                for (const component of this._components) {
+                    if (!component) {
+                        continue;
+                    }
+
+                    if (component.constructor === GroupComponent) {
+                        for (const componentInGroup of (component as GroupComponent).components) {
+                            if (componentInGroup.enabled) {
+                                componentInGroup.dispatchEnabledEvent(value);
+                            }
+                        }
+                    }
+                    else if (component.enabled) {
+                        component.dispatchEnabledEvent(value);
+                    }
+                }
+            }
+        }
+
         protected _addComponent(component: IComponent, config?: any) {
             if (component instanceof BaseTransform) {
                 (this.transform as egret3d.Transform) = component as egret3d.Transform;
@@ -97,7 +120,7 @@ namespace paper {
 
             Component.onComponentCreated.dispatch([this, component]);
 
-            if (this.activeInHierarchy && component.enabled) {
+            if (component.isActiveAndEnabled) {
                 component.dispatchEnabledEvent(true);
             }
         }
@@ -139,11 +162,11 @@ namespace paper {
             }
 
             let result: T | null = null;
-            let parent = this.transform.parent;
+            let transformParent = this.transform.parent;
 
-            while (!result && parent) {
-                result = parent.gameObject.getComponent(componentClass, isExtends);
-                parent = parent.parent;
+            while (!result && transformParent) {
+                result = transformParent.gameObject.getComponent(componentClass, isExtends);
+                transformParent = transformParent.parent;
             }
 
             return result;
@@ -245,9 +268,9 @@ namespace paper {
 
             this.sendMessage(methodName as any, parameter, requireReceiver);
             //
-            const parent = this.transform.parent;
-            if (parent && parent.enabled) {
-                parent.gameObject.sendMessage(methodName as any, parameter, requireReceiver);
+            const transformParent = this.transform.parent;
+            if (transformParent && transformParent.enabled) {
+                transformParent.gameObject.sendMessage(methodName as any, parameter, requireReceiver);
             }
 
             return this;
@@ -285,9 +308,9 @@ namespace paper {
          * 该实体在场景中的激活状态。
          */
         public get activeInHierarchy(): boolean {
-            const parent = this.transform ? this.transform.parent : null;
+            const transformParent = this.transform ? this.transform.parent : null;
 
-            return this._enabled && (!parent || parent.isActiveAndEnabled);
+            return this._enabled && (!transformParent || transformParent.isActiveAndEnabled);
         }
         /**
          * 该实体的路径。
@@ -296,10 +319,11 @@ namespace paper {
             let path = this.name;
 
             if (this.transform) {
-                let parent = this.transform.parent;
-                while (parent) {
-                    path = parent.gameObject.name + "/" + path;
-                    parent = parent.parent;
+                let transformParent = this.transform.parent;
+
+                while (transformParent) {
+                    path = transformParent.gameObject.name + "/" + path;
+                    transformParent = transformParent.parent;
                 }
 
                 return this._scene!.name + "/" + path;

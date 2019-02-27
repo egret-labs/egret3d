@@ -12,6 +12,8 @@ namespace paper.editor {
         public static LIGHT_ICON: egret3d.Texture;
 
         public initialize() {
+            super.initialize();
+
             {
                 const image = new Image();
                 image.src = _icons.camera;

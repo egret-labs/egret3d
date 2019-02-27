@@ -2794,6 +2794,37 @@ var paper;
             this._scene = null;
             Entity.onEntityDestroyed.dispatch(this);
         };
+        Entity.prototype._setScene = function (value, dispatchEvent) {
+            if (value) {
+                if (this._scene) {
+                    this._scene._removeEntity(this);
+                }
+                value._addEntity(this);
+                this._scene = value;
+            }
+            if (dispatchEvent) {
+                Entity.onEntityAddedToScene.dispatch(this);
+            }
+        };
+        Entity.prototype._setEnabled = function (value) {
+            for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                var component = _a[_i];
+                if (!component) {
+                    continue;
+                }
+                if (component.constructor === paper.GroupComponent) {
+                    for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
+                        var componentInGroup = _c[_b];
+                        if (componentInGroup.enabled) {
+                            componentInGroup.dispatchEnabledEvent(value);
+                        }
+                    }
+                }
+                else if (component.enabled) {
+                    component.dispatchEnabledEvent(value);
+                }
+            }
+        };
         Entity.prototype._addComponent = function (component, config) {
             component.initialize(config);
             paper.Component.onComponentCreated.dispatch([this, component]);
@@ -2825,18 +2856,6 @@ var paper;
             }
             paper.Component.onComponentDestroyed.dispatch([this, component]);
             this._componentsDirty = true;
-        };
-        Entity.prototype._setScene = function (value, dispatchEvent) {
-            if (value) {
-                if (this._scene) {
-                    this._scene._removeEntity(this);
-                }
-                value._addEntity(this);
-                this._scene = value;
-            }
-            if (dispatchEvent) {
-                Entity.onEntityAddedToScene.dispatch(this);
-            }
         };
         Entity.prototype._getComponent = function (componentClass) {
             var componentIndex = componentClass.componentIndex;
@@ -3180,24 +3199,8 @@ var paper;
                 if (this._enabled === value || this._isDestroyed || this === paper.Application.sceneManager._globalEntity) {
                     return;
                 }
-                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                    var component = _a[_i];
-                    if (!component) {
-                        continue;
-                    }
-                    if (component.constructor === paper.GroupComponent) {
-                        for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
-                            var componentInGroup = _c[_b];
-                            if (componentInGroup.enabled) {
-                                componentInGroup.dispatchEnabledEvent(value);
-                            }
-                        }
-                    }
-                    else if (component.enabled) {
-                        component.dispatchEnabledEvent(value);
-                    }
-                }
                 this._enabled = value;
+                this._setEnabled(value);
             },
             enumerable: true,
             configurable: true
@@ -9020,6 +9023,28 @@ var paper;
                 }
             }
         };
+        GameObject.prototype._setEnabled = function (value) {
+            var transformParent = this.transform ? this.transform.parent : null;
+            if (!transformParent || transformParent.isActiveAndEnabled) {
+                for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
+                    var component = _a[_i];
+                    if (!component) {
+                        continue;
+                    }
+                    if (component.constructor === paper.GroupComponent) {
+                        for (var _b = 0, _c = component.components; _b < _c.length; _b++) {
+                            var componentInGroup = _c[_b];
+                            if (componentInGroup.enabled) {
+                                componentInGroup.dispatchEnabledEvent(value);
+                            }
+                        }
+                    }
+                    else if (component.enabled) {
+                        component.dispatchEnabledEvent(value);
+                    }
+                }
+            }
+        };
         GameObject.prototype._addComponent = function (component, config) {
             if (component instanceof paper.BaseTransform) {
                 this.transform = component;
@@ -9034,7 +9059,7 @@ var paper;
             }
             component.initialize(config);
             paper.Component.onComponentCreated.dispatch([this, component]);
-            if (this.activeInHierarchy && component.enabled) {
+            if (component.isActiveAndEnabled) {
                 component.dispatchEnabledEvent(true);
             }
         };
@@ -9071,10 +9096,10 @@ var paper;
                 return null;
             }
             var result = null;
-            var parent = this.transform.parent;
-            while (!result && parent) {
-                result = parent.gameObject.getComponent(componentClass, isExtends);
-                parent = parent.parent;
+            var transformParent = this.transform.parent;
+            while (!result && transformParent) {
+                result = transformParent.gameObject.getComponent(componentClass, isExtends);
+                transformParent = transformParent.parent;
             }
             return result;
         };
@@ -9173,9 +9198,9 @@ var paper;
             }
             this.sendMessage(methodName, parameter, requireReceiver);
             //
-            var parent = this.transform.parent;
-            if (parent && parent.enabled) {
-                parent.gameObject.sendMessage(methodName, parameter, requireReceiver);
+            var transformParent = this.transform.parent;
+            if (transformParent && transformParent.enabled) {
+                transformParent.gameObject.sendMessage(methodName, parameter, requireReceiver);
             }
             return this;
         };
@@ -9216,8 +9241,8 @@ var paper;
              * 该实体在场景中的激活状态。
              */
             get: function () {
-                var parent = this.transform ? this.transform.parent : null;
-                return this._enabled && (!parent || parent.isActiveAndEnabled);
+                var transformParent = this.transform ? this.transform.parent : null;
+                return this._enabled && (!transformParent || transformParent.isActiveAndEnabled);
             },
             enumerable: true,
             configurable: true
@@ -9229,10 +9254,10 @@ var paper;
             get: function () {
                 var path = this.name;
                 if (this.transform) {
-                    var parent_2 = this.transform.parent;
-                    while (parent_2) {
-                        path = parent_2.gameObject.name + "/" + path;
-                        parent_2 = parent_2.parent;
+                    var transformParent = this.transform.parent;
+                    while (transformParent) {
+                        path = transformParent.gameObject.name + "/" + path;
+                        transformParent = transformParent.parent;
                     }
                     return this._scene.name + "/" + path;
                 }
@@ -10712,7 +10737,7 @@ var paper;
         Behaviour.prototype.initialize = function (config) {
             if (paper.Application.playerMode !== 2 /* Editor */ || this.constructor.executeInEditMode) {
                 this.gameObject = this.entity; //
-                if (this._enabled && this.gameObject.activeInHierarchy) {
+                if (this.isActiveAndEnabled) {
                     this.onAwake && this.onAwake(config);
                     this._lifeStates |= 2 /* Awaked */;
                 }
@@ -12067,6 +12092,9 @@ var paper;
                 console.warn("Missing component.");
                 return false;
             }
+            if (source.hideFlags & 4 /* DontSave */) {
+                return false;
+            }
             if (source.extras && source.extras.linkedID) {
                 var rootPrefabObject = source.entity instanceof paper.GameObject ? _getPrefabRoot(source.entity) : source.entity;
                 var prefabName = rootPrefabObject.extras.prefab.name;
@@ -12149,7 +12177,7 @@ var paper;
                         if (source instanceof paper.Entity && (source.hideFlags & 4 /* DontSave */)) {
                             return undefined; // Pass.
                         }
-                        else if (source instanceof paper.Component && (source.hideFlags & 4 /* DontSave */)) {
+                        if (source instanceof paper.Component && (source.hideFlags & 4 /* DontSave */)) {
                             return undefined; // Pass.
                         }
                         if (parent) {

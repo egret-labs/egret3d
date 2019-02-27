@@ -4075,6 +4075,7 @@ var paper;
             }
             EditorDefaultTexture_1 = EditorDefaultTexture;
             EditorDefaultTexture.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
                 {
                     var image_1 = new Image();
                     image_1.src = _icons.camera;
@@ -4437,6 +4438,7 @@ var paper;
             };
             ModelComponent.prototype.initialize = function () {
                 var _this = this;
+                _super.prototype.initialize.call(this);
                 if (paper.Application.playerMode === 2 /* Editor */) {
                     editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, function () {
                         if (_this._editorModel) {
