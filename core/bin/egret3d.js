@@ -11451,15 +11451,12 @@ var paper;
     var KEY_CHILDREN = "children";
     // const KEY_MISSINGOBJECT: keyof MissingComponent = 'missingObject';
     function _getDeserializedKeys(serializedClass, keys) {
-        if (keys === void 0) { keys = null; }
+        if (keys === void 0) { keys = {}; }
         var serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
-            keys = keys || {};
-            for (var key in serializeKeys) {
-                var retargetKey = serializeKeys[key];
-                if (retargetKey) {
-                    keys[retargetKey] = key;
-                }
+            keys = keys;
+            for (var k in serializeKeys) {
+                keys[k] = serializeKeys[k] || k;
             }
         }
         if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
@@ -11898,8 +11895,8 @@ var paper;
         for (var k in _deserializers) {
             delete _deserializers[k];
         }
-        _defaultGameObject.transform.destroyChildren(); // Clear default prefabs.
-        _defaultGameObject.removeAllComponents(); // Clear default components.
+        _defaultGameObject.destroy();
+        _defaultGameObject = null;
         var serializeData = _serializeData;
         _serializeData = null;
         return serializeData;
@@ -12012,12 +12009,11 @@ var paper;
     }
     paper.serializeStruct = serializeStruct;
     function _getSerializedKeys(serializedClass, keys) {
-        if (keys === void 0) { keys = null; }
+        if (keys === void 0) { keys = {}; }
         var serializeKeys = serializedClass.__serializeKeys;
         if (serializeKeys) {
-            keys = keys || [];
-            for (var key in serializeKeys) {
-                keys.push(serializeKeys[key] || key);
+            for (var k in serializeKeys) {
+                keys[k] = serializeKeys[k] || k;
             }
         }
         if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
@@ -12100,8 +12096,7 @@ var paper;
     function _serializeChildren(source, target, equalTemplate, ignoreKeys) {
         var serializedKeys = _getSerializedKeys(source.constructor);
         if (serializedKeys) {
-            for (var _i = 0, serializedKeys_1 = serializedKeys; _i < serializedKeys_1.length; _i++) {
-                var k = serializedKeys_1[_i];
+            for (var k in serializedKeys) {
                 if (equalTemplate &&
                     (!ignoreKeys || ignoreKeys.indexOf(k) < 0) &&
                     equal(source[k], equalTemplate[k])) {
@@ -18737,7 +18732,7 @@ var egret3d;
             return _this;
         }
         MeshRendererSystem.prototype._updateDrawCalls = function (entity, checkState) {
-            if (checkState && (!this.groups[0].containsEntity(entity))) {
+            if (checkState && !this.groups[0].containsEntity(entity)) {
                 return;
             }
             var drawCallCollecter = this._drawCallCollecter;
@@ -18758,7 +18753,9 @@ var egret3d;
             }
             var materialFilter = this._materialFilter;
             var matrix = entity.getComponent(egret3d.Transform).localToWorldMatrix;
-            materialFilter.length = materialCount;
+            if (materialFilter.length < materialCount) {
+                materialFilter.length = materialCount;
+            }
             for (var i = 0; i < subMeshCount; ++i) {
                 var materialIndex = primitives[i].material;
                 var material = null;
@@ -18796,7 +18793,7 @@ var egret3d;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-            materialFilter.length = 0;
+            // materialFilter.length = 0;
         };
         MeshRendererSystem.prototype.getMatchers = function () {
             return [

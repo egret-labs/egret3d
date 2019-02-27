@@ -6199,14 +6199,15 @@ var paper;
                     window["psc"] = window["epsc"] = gui.instance; // For quick debug.
                 };
                 _this._saveSceneOrGameObject = function () {
-                    // if (this._modelComponent.selectedScene) {
-                    //     const json = JSON.stringify(serialize(this._modelComponent.selectedScene));
-                    //     console.info(json);
-                    // }
-                    // else {
-                    //     const json = JSON.stringify(serialize(this._modelComponent.selectedGameObject!));
-                    //     console.info(json);
-                    // }
+                    if (_this._modelComponent.selectedScene) {
+                        var json = JSON.stringify(paper.serialize(_this._modelComponent.selectedScene));
+                        console.info(json);
+                    }
+                    else {
+                        var lastSelectedEntity = _this.groups[0].singleEntity;
+                        var json = JSON.stringify(paper.serialize(lastSelectedEntity));
+                        console.info(json);
+                    }
                 };
                 _this._destroySceneOrGameObject = function () {
                     var selectedSceneOrGameObject = _this._guiComponent.inspector.instance;
@@ -6345,6 +6346,7 @@ var paper;
                             case 1:
                                 _a.sent();
                                 paper.Scene.activeScene.destroy();
+                                this._modelComponent.select(paper.Scene.create(v));
                                 return [2 /*return*/];
                         }
                     });
@@ -6368,6 +6370,8 @@ var paper;
                                 // }
                                 // else {
                                 gameObject = paper.Prefab.create(v, paper.Scene.activeScene);
+                                // }
+                                this._modelComponent.select(gameObject);
                                 return [2 /*return*/];
                         }
                     });

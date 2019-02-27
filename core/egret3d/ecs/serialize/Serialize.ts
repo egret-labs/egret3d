@@ -42,8 +42,8 @@ namespace paper {
             delete _deserializers[k];
         }
 
-        _defaultGameObject.transform.destroyChildren(); // Clear default prefabs.
-        _defaultGameObject.removeAllComponents(); // Clear default components.
+        _defaultGameObject.destroy();
+        _defaultGameObject = null;
 
         const serializeData = _serializeData;
         _serializeData = null;
@@ -179,13 +179,12 @@ namespace paper {
         return target;
     }
 
-    function _getSerializedKeys(serializedClass: IBaseClass, keys: string[] | null = null) {
+    function _getSerializedKeys(serializedClass: IBaseClass, keys: { [key: string]: string } = {}) {
         const serializeKeys = serializedClass.__serializeKeys;
-        if (serializeKeys) {
-            keys = keys || [];
 
-            for (const key in serializeKeys) {
-                keys.push(serializeKeys[key] || key);
+        if (serializeKeys) {
+            for (const k in serializeKeys) {
+                keys[k] = serializeKeys[k] || k;
             }
         }
 
@@ -254,6 +253,10 @@ namespace paper {
                 return false;
             }
 
+            if (source.hideFlags & HideFlags.DontSave) {
+                return false;
+            }
+
             if (source.extras && source.extras.linkedID) { // Prefab component.
                 const rootPrefabObject = source.entity instanceof GameObject ? _getPrefabRoot(source.entity) : source.entity;
                 const prefabName = rootPrefabObject.extras!.prefab!.name;
@@ -291,7 +294,7 @@ namespace paper {
         const serializedKeys = _getSerializedKeys(source.constructor as IBaseClass);
 
         if (serializedKeys) {
-            for (const k of serializedKeys) {
+            for (const k in serializedKeys) {
                 if (
                     equalTemplate &&
                     (!ignoreKeys || ignoreKeys.indexOf(k) < 0) &&
@@ -360,7 +363,8 @@ namespace paper {
                         if (source instanceof Entity && ((source as IEntity).hideFlags & paper.HideFlags.DontSave)) {
                             return undefined; // Pass.
                         }
-                        else if (source instanceof Component && ((source as IComponent).hideFlags & paper.HideFlags.DontSave)) {
+
+                        if (source instanceof Component && ((source as IComponent).hideFlags & paper.HideFlags.DontSave)) {
                             return undefined; // Pass.
                         }
 

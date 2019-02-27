@@ -8,16 +8,14 @@ namespace paper {
     const KEY_CHILDREN: keyof BaseTransform = "children";
     // const KEY_MISSINGOBJECT: keyof MissingComponent = 'missingObject';
 
-    function _getDeserializedKeys(serializedClass: IBaseClass, keys: { [key: string]: string } | null = null) {
+    function _getDeserializedKeys(serializedClass: IBaseClass, keys: { [key: string]: string } = {}) {
         const serializeKeys = serializedClass.__serializeKeys;
-        if (serializeKeys) {
-            keys = keys || {};
 
-            for (const key in serializeKeys) {
-                const retargetKey = serializeKeys[key];
-                if (retargetKey) {
-                    keys[retargetKey] = key;
-                }
+        if (serializeKeys) {
+            keys = keys;
+
+            for (const k in serializeKeys) {
+                keys[k] = serializeKeys[k] || k;
             }
         }
 

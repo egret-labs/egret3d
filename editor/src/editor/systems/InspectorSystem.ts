@@ -66,14 +66,15 @@ namespace paper.editor {
         }
 
         private _saveSceneOrGameObject = () => {
-            // if (this._modelComponent.selectedScene) {
-            //     const json = JSON.stringify(serialize(this._modelComponent.selectedScene));
-            //     console.info(json);
-            // }
-            // else {
-            //     const json = JSON.stringify(serialize(this._modelComponent.selectedGameObject!));
-            //     console.info(json);
-            // }
+            if (this._modelComponent.selectedScene) {
+                const json = JSON.stringify(serialize(this._modelComponent.selectedScene));
+                console.info(json);
+            }
+            else {
+                const lastSelectedEntity = this.groups[0].singleEntity!;
+                const json = JSON.stringify(serialize(lastSelectedEntity));
+                console.info(json);
+            }
         }
 
         private _destroySceneOrGameObject = () => {
