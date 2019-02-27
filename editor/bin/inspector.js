@@ -6218,30 +6218,47 @@ var paper;
             }
             InspectorSystem.prototype._onComponentCreated = function (_a) {
                 var entity = _a[0], component = _a[1];
-                // if (entity !== this._modelComponent.selectedGameObject) {
-                //     return;
-                // }
+                var lastSelectedEntity = this.groups[0].singleEntity;
+                if (lastSelectedEntity === entity) {
+                    this._addComponent(component);
+                }
             };
             InspectorSystem.prototype._onComponentDestroy = function (_a) {
-                // if (entity !== this._modelComponent.selectedGameObject) {
-                //     return;
-                // }
                 var entity = _a[0], component = _a[1];
-                // const intem = this._guiComponent.inspectorItems[component.uuid];
-                // delete this._guiComponent.inspectorItems[component.uuid];
-                // if (intem && intem.parent) {
-                //     try {
-                //         intem.parent.removeFolder(intem);
-                //     }
-                //     catch (e) {
-                //     }
-                // }
+                var lastSelectedEntity = this.groups[0].singleEntity;
+                if (lastSelectedEntity === entity) {
+                    this._removeComponent(component);
+                }
             };
             InspectorSystem.prototype._onSceneSelected = function (scene) {
                 this._selectSceneOrGameObject(scene);
             };
             InspectorSystem.prototype._onSceneUnselected = function (scene) {
                 this._selectSceneOrGameObject(null);
+            };
+            InspectorSystem.prototype._addComponent = function (component) {
+                var _a = this._guiComponent, inspector = _a.inspector, inspectorItems = _a.inspectorItems;
+                if (!(component.uuid in inspectorItems)) {
+                    var item = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
+                    item.instance = component;
+                    item.open();
+                    inspectorItems[component.uuid] = item;
+                    this._addToInspector(item);
+                }
+            };
+            InspectorSystem.prototype._removeComponent = function (component) {
+                var inspectorItems = this._guiComponent.inspectorItems;
+                if (component.uuid in inspectorItems) {
+                    var item = inspectorItems[component.uuid];
+                    delete inspectorItems[component.uuid];
+                    if (item.parent) {
+                        try {
+                            item.parent.removeFolder(item);
+                        }
+                        catch (e) {
+                        }
+                    }
+                }
             };
             InspectorSystem.prototype._getAssets = function (type) {
                 var added = [];
@@ -6367,11 +6384,11 @@ var paper;
                             if (component.hideFlags & 10 /* Hide */) {
                                 continue;
                             }
-                            var folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
-                            folder.instance = component;
-                            folder.open();
-                            this._guiComponent.inspectorItems[component.uuid] = folder;
-                            this._addToInspector(folder);
+                            var item = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
+                            item.instance = component;
+                            item.open();
+                            this._guiComponent.inspectorItems[component.uuid] = item;
+                            this._addToInspector(item);
                         }
                     }
                 }

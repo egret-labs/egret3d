@@ -117,7 +117,7 @@ namespace paper {
             }
 
             for (const system of this._startSystems) {
-                if (!system.enabled || !system._started) {
+                if (!system.enabled || system._started) {
                     continue;
                 }
 
@@ -147,7 +147,7 @@ namespace paper {
                         this._reactive(system);
                     }
 
-                    system.onTick && system.onTick(clock.tickInterval);
+                    system.onTick && system.onTick(clock.lastTickDelta);
 
                     if (DEBUG) {
                         (system.deltaTime as uint) += clock.now - startTime;
@@ -218,7 +218,7 @@ namespace paper {
                 }
 
                 system.onTickCleanup!(clock.lastFrameDelta);
-                
+
                 if (DEBUG) {
                     (system.deltaTime as uint) += clock.now - startTime;
                 }

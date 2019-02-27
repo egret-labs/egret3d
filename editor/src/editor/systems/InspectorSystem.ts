@@ -8,26 +8,19 @@ namespace paper.editor {
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
 
         private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
-            // if (entity !== this._modelComponent.selectedGameObject) {
-            //     return;
-            // }
+            const lastSelectedEntity = this.groups[0].singleEntity;
+
+            if (lastSelectedEntity === entity) {
+                this._addComponent(component);
+            }
         }
 
         private _onComponentDestroy([entity, component]: [IEntity, IComponent]) {
-            // if (entity !== this._modelComponent.selectedGameObject) {
-            //     return;
-            // }
+            const lastSelectedEntity = this.groups[0].singleEntity;
 
-            // const intem = this._guiComponent.inspectorItems[component.uuid];
-            // delete this._guiComponent.inspectorItems[component.uuid];
-
-            // if (intem && intem.parent) {
-            //     try {
-            //         intem.parent.removeFolder(intem);
-            //     }
-            //     catch (e) {
-            //     }
-            // }
+            if (lastSelectedEntity === entity) {
+                this._removeComponent(component);
+            }
         }
 
         private _componentOrPropertyGUIClickHandler = (gui: dat.GUI) => {
@@ -40,6 +33,36 @@ namespace paper.editor {
 
         private _onSceneUnselected(scene: Scene) {
             this._selectSceneOrGameObject(null);
+        }
+
+        private _addComponent(component: IComponent) {
+            const { inspector, inspectorItems } = this._guiComponent;
+
+            if (!(component.uuid in inspectorItems)) {
+                const item = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
+                item.instance = component;
+                item.open();
+
+                inspectorItems[component.uuid] = item;
+                this._addToInspector(item);
+            }
+        }
+
+        private _removeComponent(component: IComponent) {
+            const { inspectorItems } = this._guiComponent;
+
+            if (component.uuid in inspectorItems) {
+                const item = inspectorItems[component.uuid];
+                delete inspectorItems[component.uuid];
+
+                if (item.parent) {
+                    try {
+                        item.parent.removeFolder(item);
+                    }
+                    catch (e) {
+                    }
+                }
+            }
         }
 
         private _saveSceneOrGameObject = () => {
@@ -153,7 +176,7 @@ namespace paper.editor {
 
                 await RES.getResAsync(v);
                 Scene.activeScene.destroy();
-                // this._modelComponent.select(Scene.create(v));
+                this._modelComponent.select(Scene.create(v));
             });
 
             inspector.add(options, "prefabs", this._getAssets("Prefab")).onChange(async (v: string | null) => {
@@ -172,7 +195,7 @@ namespace paper.editor {
                 gameObject = Prefab.create(v, Scene.activeScene);
                 // }
 
-                // this._modelComponent.select(gameObject);
+                this._modelComponent.select(gameObject);
             });
 
             if (sceneOrGameObject) {
@@ -188,11 +211,11 @@ namespace paper.editor {
                             continue;
                         }
 
-                        const folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
-                        folder.instance = component;
-                        folder.open();
-                        this._guiComponent.inspectorItems[component.uuid] = folder;
-                        this._addToInspector(folder);
+                        const item = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
+                        item.instance = component;
+                        item.open();
+                        this._guiComponent.inspectorItems[component.uuid] = item;
+                        this._addToInspector(item);
                     }
                 }
             }

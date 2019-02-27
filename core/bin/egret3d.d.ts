@@ -221,21 +221,14 @@ declare namespace paper {
         Begin = 0,
         Enable = 1000,
         Start = 2000,
+        FixedUpdate = 3000,
         Update = 4000,
-
         Animation = 5000,
-
         LateUpdate = 6000,
-
         BeforeRenderer = 7000,
         Renderer = 8000,
         Disable = 9000,
         End = 10000,
-        
-        /**
-         * @deprecated
-         */
-        FixedUpdate = 3000,
     }
     /**
      * 应用程序运行模式。
@@ -5278,7 +5271,7 @@ declare namespace paper {
         /**
          * 该实体的父级实体。
          */
-        parent: GameObject | null;
+        parent: this | null;
         /**
          * @deprecated
          * @see paper.Scene#find()
@@ -5291,7 +5284,7 @@ declare namespace paper {
         /**
          * @deprecated
          */
-        readonly globalGameObject: GameObject;
+        readonly globalGameObject: this;
     }
 }
 declare namespace egret3d {

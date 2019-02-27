@@ -9,7 +9,7 @@ namespace egret3d {
         private readonly _materialFilter: boolean[] = [];
 
         private _updateDrawCalls(entity: paper.GameObject, checkState: boolean) {
-            if (checkState && (!this.groups[0].containsEntity(entity))) {
+            if (checkState && !this.groups[0].containsEntity(entity)) {
                 return;
             }
 
@@ -35,7 +35,10 @@ namespace egret3d {
 
             const materialFilter = this._materialFilter;
             const matrix = entity.getComponent(egret3d.Transform)!.localToWorldMatrix;
-            materialFilter.length = materialCount;
+
+            if (materialFilter.length < materialCount) {
+                materialFilter.length = materialCount;
+            }
 
             for (let i = 0; i < subMeshCount; ++i) { // Specified materials.
                 const materialIndex = primitives[i].material;
@@ -80,7 +83,7 @@ namespace egret3d {
                 }
             }
 
-            materialFilter.length = 0;
+            // materialFilter.length = 0;
         }
 
         protected getMatchers() {

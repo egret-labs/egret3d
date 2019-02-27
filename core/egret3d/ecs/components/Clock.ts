@@ -70,9 +70,9 @@ namespace paper {
 
             const returnValue: ClockUpdateFlags = { frameCount: 0, tickCount: 0 };
 
-            if (this.tickInterval < this.frameInterval) { // 逻辑值的执行频率不能低于渲染帧。
-                this.tickInterval = this.frameInterval;
-            }
+            // if (this.tickInterval < this.frameInterval) { // 逻辑值的执行频率不能低于渲染帧。
+            //     this.tickInterval = this.frameInterval;
+            // }
 
             // 判断是否够一个逻辑帧
             if (this.tickInterval) {
@@ -151,7 +151,7 @@ namespace paper {
          * 此次渲染帧的时长
          */
         public get lastFrameDelta(): number {
-            return (this.frameInterval || this._unscaledDeltaTime) * this.timeScale;
+            return this._unscaledDeltaTime * this.timeScale;
         }
         /**
          * 

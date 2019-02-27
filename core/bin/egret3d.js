@@ -2950,7 +2950,7 @@ var paper;
             }
             var result = false;
             var globalEntity = paper.Application.sceneManager._globalEntity;
-            if (componentInstanceOrClass instanceof paper.BaseComponent) {
+            if (componentInstanceOrClass instanceof paper.Component) {
                 var componentClass = componentInstanceOrClass.constructor;
                 if (componentClass.isSingleton && globalEntity && this !== globalEntity) {
                     return globalEntity.removeComponent(componentInstanceOrClass);
@@ -6460,7 +6460,7 @@ var paper;
             }
             for (var _f = 0, _g = this._startSystems; _f < _g.length; _f++) {
                 var system = _g[_f];
-                if (!system.enabled || !system._started) {
+                if (!system.enabled || system._started) {
                     continue;
                 }
                 system.onStart();
@@ -6486,7 +6486,7 @@ var paper;
                     if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
                         this._reactive(system);
                     }
-                    system.onTick && system.onTick(paper.clock.tickInterval);
+                    system.onTick && system.onTick(paper.clock.lastTickDelta);
                     if (true) {
                         system.deltaTime += paper.clock.now - startTime;
                     }
@@ -9279,7 +9279,7 @@ var paper;
              * @deprecated
              */
             get: function () {
-                return GameObject.globalGameObject;
+                return paper.Application.sceneManager.globalEntity;
             },
             enumerable: true,
             configurable: true
@@ -10813,9 +10813,9 @@ var paper;
                 this._unscaledDeltaTime = this._unscaledTime - lastTime;
             }
             var returnValue = { frameCount: 0, tickCount: 0 };
-            if (this.tickInterval < this.frameInterval) {
-                this.tickInterval = this.frameInterval;
-            }
+            // if (this.tickInterval < this.frameInterval) { // 逻辑值的执行频率不能低于渲染帧。
+            //     this.tickInterval = this.frameInterval;
+            // }
             // 判断是否够一个逻辑帧
             if (this.tickInterval) {
                 this._unusedTickDelta += this._unscaledDeltaTime;
@@ -10916,7 +10916,7 @@ var paper;
              * 此次渲染帧的时长
              */
             get: function () {
-                return (this.frameInterval || this._unscaledDeltaTime) * this.timeScale;
+                return this._unscaledDeltaTime * this.timeScale;
             },
             enumerable: true,
             configurable: true
