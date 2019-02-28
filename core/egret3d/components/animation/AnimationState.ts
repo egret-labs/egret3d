@@ -221,7 +221,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _applyRootMotion(x: number, y: number, z: number, weight: number, time: number) {
+        public _applyRootMotion(x: number, y: number, z: number, weight: number, time: number, animationChannel: AnimationChannel) {
             if (!this._animation.applyRootMotion) {
                 return;
             }
@@ -233,9 +233,23 @@ namespace egret3d {
             const transform = this._animation.gameObject.transform;
             const lastPosition = this._lastRootMotionPosition!;
 
-            if (lastPosition.w > time) {
+            if (this._animation.timeScale * this.timeScale > 0.0) {
+                if (lastPosition.w > time) {
+                    this._lastRootMotionRotation = 0.0;
+                    lastPosition.set(0.0, 0.0, 0.0, 0.0);
+                }
+            }
+            else if (lastPosition.w < time) {
+                const applyRootMotion = this.animationClip.applyRootMotion || ApplyRootMotion.XZ;
+                const outputBuffer = animationChannel.outputBuffer;
+                const index = outputBuffer.length - 3;
                 this._lastRootMotionRotation = 0.0;
-                lastPosition.clear();
+                lastPosition.set(
+                    (applyRootMotion & ApplyRootMotion.X) ? outputBuffer[index] : 0.0,
+                    (applyRootMotion & ApplyRootMotion.Y) ? outputBuffer[index + 1] : 0.0,
+                    (applyRootMotion & ApplyRootMotion.Z) ? outputBuffer[index + 2] : 0.0,
+                    this.animationClip.duration
+                );
             }
 
             const position = helpVector3A.set(x, y, z).subtract(lastPosition)

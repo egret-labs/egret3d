@@ -7688,6 +7688,9 @@ declare namespace egret3d.oimo {
          *
          */
         gravity: Readonly<IVector3>;
+        /**
+         *
+         */
         readonly oimoWorld: OIMO.World;
     }
 }

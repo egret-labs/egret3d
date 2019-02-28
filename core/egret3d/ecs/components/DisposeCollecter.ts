@@ -30,30 +30,6 @@ namespace paper {
 
             (disposeCollecter as DisposeCollecter) = this;
         }
-        /**
-         * @internal
-         */
-        public clear() {
-            if (this.scenes.length > 0) {
-                this.scenes.length = 0;
-            }
-
-            if (this.entities.length > 0) {
-                this.entities.length = 0;
-            }
-
-            if (this.components.length > 0) {
-                this.components.length = 0;
-            }
-
-            if (this.releases.length > 0) {
-                this.releases.length = 0;
-            }
-
-            if (this.assets.length > 0) {
-                this.assets.length = 0;
-            }
-        }
     }
     /**
      * 全局销毁信息收集组件实例。

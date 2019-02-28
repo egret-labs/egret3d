@@ -1436,8 +1436,9 @@ var paper;
             this._lifeStates |= 4 /* Initialized */;
         };
         Component.prototype.uninitialize = function () {
-            this._lifeStates = 0 /* None */;
+            delete this.entity._removedComponents[this.constructor.componentIndex];
             this.entity = null;
+            this._lifeStates = 0 /* None */;
         };
         Component.prototype.dispatchEnabledEvent = function (enabled) {
             if (enabled) {
@@ -2777,6 +2778,10 @@ var paper;
             _this._isDestroyed = true;
             _this._enabled = false;
             _this._components = [];
+            /**
+             * @internal
+             */
+            _this._removedComponents = [];
             _this._cachedComponents = [];
             _this._scene = null;
             return _this;
@@ -2828,6 +2833,7 @@ var paper;
             }
         };
         Entity.prototype._removeComponent = function (component, groupComponent) {
+            var componentClass = component.constructor;
             component.enabled = false;
             //
             paper.Component.onComponentDestroy.dispatch([this, component]);
@@ -2838,7 +2844,7 @@ var paper;
                     this._removeComponent(groupComponent, null);
                 }
             }
-            else if (component.constructor === paper.GroupComponent) {
+            else if (componentClass === paper.GroupComponent) {
                 groupComponent = component;
                 for (var _i = 0, _a = groupComponent.components; _i < _a.length; _i++) {
                     var componentInGroup = _a[_i];
@@ -2847,7 +2853,8 @@ var paper;
                 delete this._components[groupComponent.componentIndex];
             }
             else {
-                delete this._components[component.constructor.componentIndex];
+                this._removedComponents[componentClass.componentIndex] = component;
+                delete this._components[componentClass.componentIndex];
             }
             paper.Component.onComponentDestroyed.dispatch([this, component]);
             this._componentsDirty = true;
@@ -2884,6 +2891,7 @@ var paper;
             }
             this._componentsDirty = false;
             this._cachedComponents.length = 0;
+            this._removedComponents.length = 0;
             this._scene = null;
         };
         Entity.prototype.destroy = function () {
@@ -3102,6 +3110,14 @@ var paper;
             }
             return null;
         };
+        Entity.prototype.getRemovedComponent = function (componentClass) {
+            var componentIndex = componentClass.componentIndex;
+            var component = this._removedComponents[componentIndex];
+            if (component) {
+                return component;
+            }
+            return null;
+        };
         Entity.prototype.getComponents = function (componentClass, isExtends) {
             if (isExtends === void 0) { isExtends = false; }
             if (componentClass.isSingleton && this !== paper.Application.sceneManager._globalEntity) {
@@ -3279,7 +3295,7 @@ var paper;
             paper.serializedField
         ], Entity.prototype, "extras", void 0);
         __decorate([
-            paper.serializedField("_activeSelf") // TODO 反序列化 bug
+            paper.serializedField("_activeSelf")
         ], Entity.prototype, "_enabled", void 0);
         __decorate([
             paper.editor.property("CHECKBOX" /* CHECKBOX */)
@@ -11010,26 +11026,6 @@ var paper;
             _super.prototype.initialize.call(this);
             paper.disposeCollecter = this;
         };
-        /**
-         * @internal
-         */
-        DisposeCollecter.prototype.clear = function () {
-            if (this.scenes.length > 0) {
-                this.scenes.length = 0;
-            }
-            if (this.entities.length > 0) {
-                this.entities.length = 0;
-            }
-            if (this.components.length > 0) {
-                this.components.length = 0;
-            }
-            if (this.releases.length > 0) {
-                this.releases.length = 0;
-            }
-            if (this.assets.length > 0) {
-                this.assets.length = 0;
-            }
-        };
         DisposeCollecter = __decorate([
             paper.singleton
         ], DisposeCollecter);
@@ -11406,53 +11402,81 @@ var paper;
         __extends(DisableSystem, _super);
         function DisableSystem() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._cacheEntities = [];
+            _this._cacheComponents = [];
             _this._disposeCollecter = paper.Application.sceneManager.globalEntity.getComponent(paper.DisposeCollecter);
             return _this;
         }
         DisableSystem.prototype.onAwake = function () {
-            var _a = this._disposeCollecter, scenes = _a.scenes, entities = _a.entities, components = _a.components;
+            var _this = this;
+            var scenes = this._disposeCollecter.scenes;
             paper.Scene.onSceneDestroyed.add(function (scene) {
                 scenes.push(scene);
             });
             paper.Entity.onEntityDestroyed.add(function (entity) {
-                entities.push(entity);
+                _this._cacheEntities.push(entity);
             });
             paper.Component.onComponentDestroyed.add(function (_a) {
                 var entity = _a[0], component = _a[1];
-                components.push(component);
+                _this._cacheComponents.push(component);
             });
         };
         DisableSystem.prototype.onTickCleanup = function () {
-            var disposeCollecter = this._disposeCollecter;
-            for (var _i = 0, _a = disposeCollecter.scenes; _i < _a.length; _i++) {
-                var scene = _a[_i];
-                scene.uninitialize();
+            var _a = this._disposeCollecter, scenes = _a.scenes, entities = _a.entities, components = _a.components, releases = _a.releases, assets = _a.assets;
+            var _b = this, _cacheEntities = _b._cacheEntities, _cacheComponents = _b._cacheComponents;
+            if (components.length > 0) {
+                for (var _i = 0, components_2 = components; _i < components_2.length; _i++) {
+                    var component = components_2[_i];
+                    component.uninitialize();
+                }
+                components.length = 0;
             }
-            for (var _b = 0, _c = disposeCollecter.entities; _b < _c.length; _b++) {
-                var entity = _c[_b];
-                entity.uninitialize();
+            if (entities.length > 0) {
+                for (var _c = 0, entities_1 = entities; _c < entities_1.length; _c++) {
+                    var entity = entities_1[_c];
+                    entity.uninitialize();
+                }
+                entities.length = 0;
             }
-            for (var _d = 0, _e = disposeCollecter.components; _d < _e.length; _d++) {
-                var component = _e[_d];
-                component.uninitialize();
+            if (scenes.length > 0) {
+                for (var _d = 0, scenes_1 = scenes; _d < scenes_1.length; _d++) {
+                    var scene = scenes_1[_d];
+                    scene.uninitialize();
+                }
+                scenes.length = 0;
             }
-            for (var _f = 0, _g = disposeCollecter.releases; _f < _g.length; _f++) {
-                var instance = _g[_f];
-                var instances = instance.constructor._instances; // TODO
-                instance.onClear && instance.onClear();
-                instances.push(instance);
+            if (releases.length > 0) {
+                for (var _e = 0, releases_1 = releases; _e < releases_1.length; _e++) {
+                    var instance = releases_1[_e];
+                    var instances = instance.constructor._instances; // TODO
+                    instance.onClear && instance.onClear();
+                    instances.push(instance);
+                }
+                releases.length = 0;
             }
-            var assets = disposeCollecter.assets;
             if (assets.length > 0) {
-                for (var _h = 0, assets_1 = assets; _h < assets_1.length; _h++) {
-                    var asset = assets_1[_h];
+                for (var _f = 0, assets_1 = assets; _f < assets_1.length; _f++) {
+                    var asset = assets_1[_f];
                     if (asset.onReferenceCountChange(true)) {
                         console.debug("Auto dispose GPU memory.", asset.name);
                     }
                 }
                 assets.length = 0;
             }
-            disposeCollecter.clear();
+            if (_cacheEntities.length > 0) {
+                for (var _g = 0, _cacheEntities_1 = _cacheEntities; _g < _cacheEntities_1.length; _g++) {
+                    var entity = _cacheEntities_1[_g];
+                    entities.push(entity);
+                }
+                _cacheEntities.length = 0;
+            }
+            if (_cacheComponents.length > 0) {
+                for (var _h = 0, _cacheComponents_1 = _cacheComponents; _h < _cacheComponents_1.length; _h++) {
+                    var component = _cacheComponents_1[_h];
+                    components.push(component);
+                }
+                _cacheComponents.length = 0;
+            }
         };
         return DisableSystem;
     }(paper.BaseSystem));
@@ -14347,8 +14371,8 @@ var egret3d;
          */
         CameraAndLightCollecter.prototype.updateCameras = function (entities) {
             this.cameras.length = 0;
-            for (var _i = 0, entities_1 = entities; _i < entities_1.length; _i++) {
-                var entity = entities_1[_i];
+            for (var _i = 0, entities_2 = entities; _i < entities_2.length; _i++) {
+                var entity = entities_2[_i];
                 this.cameras.push(entity.getComponent(egret3d.Camera));
             }
         };
@@ -14359,8 +14383,8 @@ var egret3d;
             var directLightCount = 0, spotLightCount = 0, rectangleAreaLightCount = 0, pointLightCount = 0, hemisphereLightCount = 0;
             var _a = this, lights = _a.lights, directionalLights = _a.directionalLights, spotLights = _a.spotLights, rectangleAreaLights = _a.rectangleAreaLights, pointLights = _a.pointLights, hemisphereLights = _a.hemisphereLights;
             lights.length = 0;
-            for (var _i = 0, entities_2 = entities; _i < entities_2.length; _i++) {
-                var entity = entities_2[_i];
+            for (var _i = 0, entities_3 = entities; _i < entities_3.length; _i++) {
+                var entity = entities_3[_i];
                 var light = entity.getComponent(egret3d.BaseLight, true);
                 lights.push(light);
                 switch (light.constructor) {
@@ -20753,7 +20777,7 @@ var egret3d;
         /**
          * @internal
          */
-        AnimationState.prototype._applyRootMotion = function (x, y, z, weight, time) {
+        AnimationState.prototype._applyRootMotion = function (x, y, z, weight, time, animationChannel) {
             if (!this._animation.applyRootMotion) {
                 return;
             }
@@ -20762,9 +20786,18 @@ var egret3d;
             }
             var transform = this._animation.gameObject.transform;
             var lastPosition = this._lastRootMotionPosition;
-            if (lastPosition.w > time) {
+            if (this._animation.timeScale * this.timeScale > 0.0) {
+                if (lastPosition.w > time) {
+                    this._lastRootMotionRotation = 0.0;
+                    lastPosition.set(0.0, 0.0, 0.0, 0.0);
+                }
+            }
+            else if (lastPosition.w < time) {
+                var applyRootMotion = this.animationClip.applyRootMotion || 5 /* XZ */;
+                var outputBuffer = animationChannel.outputBuffer;
+                var index = outputBuffer.length - 3;
                 this._lastRootMotionRotation = 0.0;
-                lastPosition.clear();
+                lastPosition.set((applyRootMotion & 1 /* X */) ? outputBuffer[index] : 0.0, (applyRootMotion & 2 /* Y */) ? outputBuffer[index + 1] : 0.0, (applyRootMotion & 4 /* Z */) ? outputBuffer[index + 2] : 0.0, this.animationClip.duration);
             }
             var position = egret3d.helpVector3A.set(x, y, z).subtract(lastPosition)
                 .applyMatrix3(transform.localToParentMatrix).multiplyScalar(weight);
@@ -21347,7 +21380,7 @@ var egret3d;
                         z = 0.0;
                     }
                 }
-                animationState._applyRootMotion(x, y, z, weight, currentTime);
+                animationState._applyRootMotion(x, y, z, weight, currentTime, this);
             }
             else {
                 if (weight !== 1.0) {
@@ -21684,6 +21717,7 @@ var egret3d;
                 deltaTime *= animation.timeScale * animationState.timeScale;
                 animationState._time += deltaTime;
             }
+            var time = animationState._time;
             // const isBlendDirty = this._fadeState !== 0 || this._subFadeState === 0;
             var prevPlayState = animationState._playState;
             var prevPlayTimes = animationState.currentPlayTimes;
@@ -21692,12 +21726,12 @@ var egret3d;
             var duration = animationState.animationClip.duration;
             var totalTime = playTimes * duration;
             var currentTime = 0.0;
-            if (playTimes > 0 && (animationState._time >= totalTime || animationState._time <= -totalTime)) {
+            if (playTimes > 0 && (time >= totalTime || time <= -totalTime)) {
                 if (animationState._playState <= 0 && animationState._playheadEnabled) {
                     animationState._playState = 1;
                 }
                 animationState.currentPlayTimes = playTimes;
-                if (animationState._time >= totalTime) {
+                if (time >= totalTime) {
                     currentTime = duration;
                 }
                 else {
@@ -21708,14 +21742,14 @@ var egret3d;
                 if (animationState._playState !== 0 && animationState._playheadEnabled) {
                     animationState._playState = 0;
                 }
-                if (animationState._time < 0.0) {
-                    animationState._time = -animationState._time;
-                    animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    currentTime = duration - (animationState._time % duration);
+                if (time < 0.0) {
+                    time = -time;
+                    animationState.currentPlayTimes = (time / duration) >> 0;
+                    currentTime = duration - (time % duration);
                 }
                 else {
-                    animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    currentTime = animationState._time % duration;
+                    animationState.currentPlayTimes = (time / duration) >> 0;
+                    currentTime = time % duration;
                 }
             }
             currentTime += animationState.animationClip.position;
@@ -27251,12 +27285,19 @@ var paper;
         __extends(GroupComponent, _super);
         function GroupComponent() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.componentIndex = -1;
             _this.components = [];
             return _this;
         }
         GroupComponent.prototype.initialize = function (componentIndex) {
             _super.prototype.initialize.call(this);
             this.componentIndex = componentIndex;
+        };
+        GroupComponent.prototype.uninitialize = function () {
+            this.componentIndex = -1;
+            this.components.length = 0;
+            this.entity = null;
+            this._lifeStates = 0 /* None */;
         };
         GroupComponent.prototype.addComponent = function (component) {
             this.components.push(component);

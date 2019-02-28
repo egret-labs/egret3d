@@ -37,9 +37,13 @@ namespace paper {
 
         protected _componentsDirty: boolean = false;
         protected _isDestroyed: boolean = true;
-        @serializedField("_activeSelf") // TODO 反序列化 bug
+        @serializedField("_activeSelf")
         protected _enabled: boolean = false;
         protected readonly _components: (IComponent | undefined)[] = [];
+        /**
+         * @internal
+         */
+        public readonly _removedComponents: (IComponent | undefined)[] = [];
         protected readonly _cachedComponents: IComponent[] = [];
         protected _scene: Scene | null = null;
         /**
@@ -103,6 +107,7 @@ namespace paper {
         }
 
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void {
+            const componentClass = component.constructor as IComponentClass<IComponent>
             component.enabled = false;
             //
             Component.onComponentDestroy.dispatch([this, component]);
@@ -115,7 +120,7 @@ namespace paper {
                     this._removeComponent(groupComponent, null);
                 }
             }
-            else if (component.constructor === GroupComponent) {
+            else if (componentClass === GroupComponent) {
                 groupComponent = component as GroupComponent;
 
                 for (const componentInGroup of groupComponent.components) {
@@ -125,7 +130,8 @@ namespace paper {
                 delete this._components[groupComponent.componentIndex];
             }
             else {
-                delete this._components[(component.constructor as IComponentClass<IComponent>).componentIndex];
+                this._removedComponents[componentClass.componentIndex] = component;
+                delete this._components[componentClass.componentIndex];
             }
 
             Component.onComponentDestroyed.dispatch([this, component]);
@@ -175,6 +181,7 @@ namespace paper {
 
             this._componentsDirty = false;
             this._cachedComponents.length = 0;
+            this._removedComponents.length = 0;
             this._scene = null;
         }
 
@@ -435,6 +442,17 @@ namespace paper {
                         return component as T;
                     }
                 }
+            }
+
+            return null;
+        }
+
+        public getRemovedComponent<T extends IComponent>(componentClass: IComponentClass<T>): T | null {
+            const componentIndex = componentClass.componentIndex;
+            const component = this._removedComponents[componentIndex];
+
+            if (component) {
+                return component as T;
             }
 
             return null;

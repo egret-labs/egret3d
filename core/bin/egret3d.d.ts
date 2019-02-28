@@ -3427,6 +3427,7 @@ declare namespace paper {
         removeAllComponents<T extends IComponent>(componentClass?: IComponentClass<T>, isExtends?: boolean): boolean;
         getOrAddComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T;
         getComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T | null;
+        getRemovedComponent<T extends IComponent>(componentClass: IComponentClass<T>): T | null;
         getComponents<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T[];
         hasComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
         hasAnyComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;

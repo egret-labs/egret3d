@@ -168,8 +168,10 @@ namespace paper {
         }
 
         public uninitialize(): void {
-            this._lifeStates = ComponentLifeState.None;
+            delete (this.entity as Entity)._removedComponents[(this.constructor as IComponentClass<IComponent>).componentIndex];
+
             (this.entity as IEntity) = null!;
+            this._lifeStates = ComponentLifeState.None;
         }
 
         public dispatchEnabledEvent(enabled: boolean): void {

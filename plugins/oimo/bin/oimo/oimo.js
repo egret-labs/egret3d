@@ -42276,10 +42276,6 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
-        var _attributes = [
-            "POSITION" /* POSITION */,
-            "COLOR_0" /* COLOR_0 */,
-        ];
         var _material = null;
         /**
          *
@@ -42297,7 +42293,10 @@ var egret3d;
             RayTester.prototype.onStart = function () {
                 var meshFilter = this.gameObject.getOrAddComponent(egret3d.MeshFilter);
                 var meshRender = this.gameObject.getOrAddComponent(egret3d.MeshRenderer);
-                this._mesh = egret3d.Mesh.create(4, 0, _attributes);
+                this._mesh = egret3d.Mesh.create(4, 0, [
+                    "POSITION" /* POSITION */,
+                    "COLOR_0" /* COLOR_0 */,
+                ]);
                 var vertices = this._mesh.getVertices();
                 var colors = this._mesh.getColors();
                 vertices[0] = 0.0;
@@ -42643,7 +42642,7 @@ var egret3d;
             //     }
             // }
             PhysicsSystem.prototype.onEntityRemoved = function (entity, group) {
-                var rigidbody = entity.getComponent(oimo.Rigidbody);
+                var rigidbody = entity.getRemovedComponent(oimo.Rigidbody);
                 for (var _i = 0, _a = entity.getComponents(oimo.Joint, true); _i < _a.length; _i++) {
                     var joint = _a[_i];
                     this._oimoWorld.removeJoint(joint.oimoJoint);
@@ -42751,6 +42750,9 @@ var egret3d;
                 configurable: true
             });
             Object.defineProperty(PhysicsSystem.prototype, "oimoWorld", {
+                /**
+                 *
+                 */
                 get: function () {
                     return this._oimoWorld;
                 },

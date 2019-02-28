@@ -133,7 +133,7 @@ namespace egret3d.oimo {
         // }
 
         public onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
-            const rigidbody = entity.getComponent(Rigidbody)!;
+            const rigidbody = entity.getRemovedComponent(Rigidbody)!;
 
             for (const joint of entity.getComponents(Joint as any, true) as Joint<any>[]) {
                 this._oimoWorld.removeJoint(joint.oimoJoint);
