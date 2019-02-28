@@ -30,11 +30,7 @@ namespace examples.camera {
                 subCamera.viewport.set(0.0, 0.0, 0.5, 1.0).update();
                 subCamera.transform.setLocalPosition(0.0, 0.0, 0.0);
                 //
-                const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
-                if (modelComponent) {
-                    modelComponent.select(subCamera.gameObject);
-                    paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(egret3d.Camera);
-                }
+                selectGameObjectAndComponents(subCamera.gameObject, egret3d.Camera);
             }
 
             { // Main camera.

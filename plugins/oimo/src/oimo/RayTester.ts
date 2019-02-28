@@ -1,8 +1,4 @@
 namespace egret3d.oimo {
-    const _attributes: gltf.MeshAttributeType[] = [
-        gltf.MeshAttributeType.POSITION,
-        gltf.MeshAttributeType.COLOR_0,
-    ];
     let _material: Material = null!;
     /**
      * 
@@ -20,7 +16,10 @@ namespace egret3d.oimo {
             const meshFilter = this.gameObject.getOrAddComponent(MeshFilter);
             const meshRender = this.gameObject.getOrAddComponent(MeshRenderer);
 
-            this._mesh = Mesh.create(4, 0, _attributes);
+            this._mesh = Mesh.create(4, 0, [
+                gltf.AttributeSemantics.POSITION,
+                gltf.AttributeSemantics.COLOR_0,
+            ]);
             const vertices = this._mesh.getVertices()!;
             const colors = this._mesh.getColors()!;
 
@@ -55,11 +54,12 @@ namespace egret3d.oimo {
         }
 
         public onUpdate() {
+            const physicsSystem = paper.Application.systemManager.getSystem(PhysicsSystem)!;
             const transform = this.gameObject.transform;
             const matrix = transform.getWorldMatrix();
             const from = transform.getPosition();
             const to = matrix.transformVector3(Vector3.create(this.distance, 0.0, 0.0).release());
-            const raycastInfo = PhysicsSystem.getInstance().raycast(from, to, this.collisionMask);
+            const raycastInfo = physicsSystem.raycast(from, to, this.collisionMask);
 
             if (raycastInfo) {
                 this._hitted = true;

@@ -42326,11 +42326,12 @@ var egret3d;
                 meshFilter.mesh = this._mesh;
             };
             RayTester.prototype.onUpdate = function () {
+                var physicsSystem = paper.Application.systemManager.getSystem(oimo.PhysicsSystem);
                 var transform = this.gameObject.transform;
                 var matrix = transform.getWorldMatrix();
                 var from = transform.getPosition();
                 var to = matrix.transformVector3(egret3d.Vector3.create(this.distance, 0.0, 0.0).release());
-                var raycastInfo = oimo.PhysicsSystem.getInstance().raycast(from, to, this.collisionMask);
+                var raycastInfo = physicsSystem.raycast(from, to, this.collisionMask);
                 if (raycastInfo) {
                     this._hitted = true;
                     var inverseMatrix = matrix.clone().inverse();
@@ -42526,8 +42527,6 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
-        var _helpVector3 = egret3d.Vector3.create();
-        var _helpVector4 = egret3d.Vector4.create();
         /**
          *
          */
@@ -42535,19 +42534,6 @@ var egret3d;
             __extends(PhysicsSystem, _super);
             function PhysicsSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.interests = [
-                    [
-                        { componentClass: oimo.Rigidbody },
-                        {
-                            componentClass: [oimo.BoxCollider, oimo.SphereCollider],
-                            type: 4 /* Unessential */
-                        },
-                        {
-                            componentClass: [oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint],
-                            type: 4 /* Unessential */
-                        }
-                    ]
-                ];
                 _this._gravity = egret3d.Vector3.create(0.0, -9.80665, 0.0);
                 _this._rayCastClosest = new OIMO.RayCastClosest();
                 _this._contactCallback = new OIMO.ContactCallback();
@@ -42555,36 +42541,13 @@ var egret3d;
                 _this._oimoWorld = null;
                 return _this;
             }
-            /**
-             *
-             */
-            PhysicsSystem.getInstance = function () {
-                return this._instance;
-            };
-            PhysicsSystem.prototype.raycast = function (rayOrFrom, distanceOrTo, mask, raycastInfo) {
-                var rayCastClosest = this._rayCastClosest;
-                rayCastClosest.clear(); // TODO mask.
-                if (rayOrFrom instanceof egret3d.Ray) {
-                    distanceOrTo = _helpVector3.multiplyScalar(distanceOrTo || 100.0, rayOrFrom.direction).add(rayOrFrom.origin);
-                    rayOrFrom = rayOrFrom.origin;
-                }
-                this._oimoWorld.rayCast(rayOrFrom, distanceOrTo, rayCastClosest);
-                if (rayCastClosest.hit) {
-                    raycastInfo = raycastInfo || egret3d.RaycastInfo.create();
-                    raycastInfo.distance = egret3d.Vector3.getDistance(rayOrFrom, distanceOrTo) * rayCastClosest.fraction;
-                    raycastInfo.position.copy(rayCastClosest.position);
-                    if (raycastInfo.normal) {
-                        raycastInfo.normal.copy(rayCastClosest.normal);
-                    }
-                    raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
-                    raycastInfo.collider = rayCastClosest.shape.userData;
-                    return raycastInfo;
-                }
-                return null;
+            PhysicsSystem.prototype.getMatchers = function () {
+                return [
+                    paper.Matcher.create(oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint),
+                ];
             };
             PhysicsSystem.prototype.onAwake = function () {
                 var _this = this;
-                PhysicsSystem._instance = this;
                 this._oimoWorld = new OIMO.World();
                 this._oimoWorld.setGravity(this._gravity);
                 this._contactCallback.beginContact = function (contact) {
@@ -42596,11 +42559,11 @@ var egret3d;
                     _this._contactColliders.stay.push(contact);
                     var colliderA = contact.getShape1().userData;
                     var colliderB = contact.getShape2().userData;
-                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                    for (var _i = 0, _a = colliderA.entity.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
                         var behaviour = _a[_i];
                         behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
                     }
-                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                    for (var _b = 0, _c = colliderB.entity.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
                         var behaviour = _c[_b];
                         behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
                     }
@@ -42619,26 +42582,26 @@ var egret3d;
                     }
                     var colliderA = contact.getShape1().userData;
                     var colliderB = contact.getShape2().userData;
-                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                    for (var _i = 0, _a = colliderA.entity.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
                         var behaviour = _a[_i];
                         behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
                     }
-                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                    for (var _b = 0, _c = colliderB.entity.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
                         var behaviour = _c[_b];
                         behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
                     }
                 };
             };
-            PhysicsSystem.prototype.onAddGameObject = function (gameObject, group) {
-                var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                for (var _i = 0, _a = gameObject.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
+            PhysicsSystem.prototype.onEntityAdded = function (entity, group) {
+                var rigidbody = entity.getComponent(oimo.Rigidbody);
+                for (var _i = 0, _a = entity.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
                     var shape = _a[_i];
                     if (!shape.oimoShape._rigidBody) {
                         rigidbody.oimoRigidbody.addShape(shape.oimoShape);
                         // rigidbody._updateMass(rigidbody.oimoRigidbody);
                     }
                 }
-                for (var _b = 0, _c = gameObject.getComponents(oimo.Joint, true); _b < _c.length; _b++) {
+                for (var _b = 0, _c = entity.getComponents(oimo.Joint, true); _b < _c.length; _b++) {
                     var joint = _c[_b];
                     if (!joint.oimoJoint._world) {
                         this._oimoWorld.addJoint(joint.oimoJoint);
@@ -42646,115 +42609,132 @@ var egret3d;
                 }
                 this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
             };
-            PhysicsSystem.prototype.onAddComponent = function (component, group) {
-                if (group !== this.groups[0]) {
-                    return;
-                }
-                if (component instanceof oimo.BaseCollider) {
-                    if (!component.oimoShape._rigidBody) {
-                        var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
-                        rigidbody.oimoRigidbody.addShape(component.oimoShape);
-                        // rigidbody._updateMass(rigidbody.oimoRigidbody);
-                    }
-                    if (!component.oimoShape.getContactCallback()) {
-                        component.oimoShape.setContactCallback(this._contactCallback);
-                    }
-                }
-                else if (component instanceof oimo.Joint && !component.oimoJoint._world) {
-                    this._oimoWorld.addJoint(component.oimoJoint);
-                }
-            };
-            PhysicsSystem.prototype.onRemoveComponent = function (component, group) {
-                if (group !== this.groups[0]) {
-                    return;
-                }
-                if (component instanceof oimo.BaseCollider) {
-                    var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
-                    if (component.oimoShape._rigidBody) {
-                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
-                    }
-                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
-                }
-                else if (component instanceof oimo.Joint) {
-                    this._oimoWorld.removeJoint(component.oimoJoint);
-                }
-            };
-            PhysicsSystem.prototype.onRemoveGameObject = function (gameObject, group) {
-                var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                for (var _i = 0, _a = gameObject.getComponents(oimo.Joint, true); _i < _a.length; _i++) {
+            // public onAddComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup) {
+            //     if (group !== this.groups[0]) {
+            //         return;
+            //     }
+            //     if (component instanceof BaseCollider) {
+            //         if (!(component.oimoShape as any)._rigidBody) {
+            //             const rigidbody = component.entity.getComponent(Rigidbody) as Rigidbody;
+            //             rigidbody.oimoRigidbody.addShape(component.oimoShape);
+            //             // rigidbody._updateMass(rigidbody.oimoRigidbody);
+            //         }
+            //         if (!component.oimoShape.getContactCallback()) {
+            //             component.oimoShape.setContactCallback(this._contactCallback);
+            //         }
+            //     }
+            //     else if (component instanceof Joint && !(component.oimoJoint as any)._world) {
+            //         this._oimoWorld.addJoint(component.oimoJoint);
+            //     }
+            // }
+            // public onRemoveComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup) {
+            //     if (group !== this.groups[0]) {
+            //         return;
+            //     }
+            //     if (component instanceof BaseCollider) {
+            //         const rigidbody = component.entity.getComponent(Rigidbody) as Rigidbody;
+            //         if ((component.oimoShape as any)._rigidBody) {
+            //             rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+            //         }
+            //         // rigidbody._updateMass(rigidbody.oimoRigidbody);
+            //     }
+            //     else if (component instanceof Joint) {
+            //         this._oimoWorld.removeJoint(component.oimoJoint);
+            //     }
+            // }
+            PhysicsSystem.prototype.onEntityRemoved = function (entity, group) {
+                var rigidbody = entity.getComponent(oimo.Rigidbody);
+                for (var _i = 0, _a = entity.getComponents(oimo.Joint, true); _i < _a.length; _i++) {
                     var joint = _a[_i];
                     this._oimoWorld.removeJoint(joint.oimoJoint);
                 }
                 this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
             };
-            PhysicsSystem.prototype.onUpdate = function () {
-                var currentTimes = 0;
-                var fixedTime = this.clock.fixedTime;
-                var gameObjects = this.groups[0].gameObjects;
+            PhysicsSystem.prototype.onTick = function (deltaTime) {
+                var entities = this.groups[0].entities;
+                var helpVector3 = egret3d.Vector3.create().release();
+                var helpVector4 = egret3d.Vector4.create().release();
                 var oimoTransform = PhysicsSystem._helpTransform;
-                while (fixedTime >= this.clock.fixedDeltaTime && currentTimes++ < this.clock.maxFixedSubSteps) {
-                    for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
-                        var gameObject = gameObjects_1[_i];
-                        var transform = gameObject.transform;
-                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                        var oimoRigidbody = rigidbody.oimoRigidbody;
-                        switch (rigidbody.type) {
-                            case 2 /* KINEMATIC */:
-                            case 1 /* STATIC */:
-                                if (oimoRigidbody.isSleeping()) {
-                                }
-                                else {
-                                    var position = transform.getPosition();
-                                    var quaternion = transform.getRotation();
-                                    oimoTransform.setPosition(position);
-                                    oimoTransform.setOrientation(quaternion);
-                                    oimoRigidbody.setTransform(oimoTransform);
-                                }
-                                break;
-                        }
-                    }
-                    this._oimoWorld.step(this.clock.fixedDeltaTime);
-                    for (var _a = 0, gameObjects_2 = gameObjects; _a < gameObjects_2.length; _a++) {
-                        var gameObject = gameObjects_2[_a];
-                        var transform = gameObject.transform;
-                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                        var oimoRigidbody = rigidbody.oimoRigidbody;
-                        switch (rigidbody.type) {
-                            case 0 /* DYNAMIC */:
-                                if (oimoRigidbody.isSleeping()) {
-                                }
-                                else {
-                                    oimoRigidbody.getTransformTo(oimoTransform);
-                                    oimoTransform.getPositionTo(_helpVector3);
-                                    oimoTransform.getOrientationTo(_helpVector4);
-                                    transform.setPosition(_helpVector3);
-                                    transform.setRotation(_helpVector4);
-                                }
-                                break;
-                        }
-                    }
-                    //
-                    var stay = this._contactColliders.stay;
-                    if (stay.length > 0) {
-                        for (var _b = 0, stay_1 = stay; _b < stay_1.length; _b++) {
-                            var contact = stay_1[_b];
-                            var colliderA = contact.getShape1().userData;
-                            var colliderB = contact.getShape2().userData;
-                            for (var _c = 0, _d = colliderA.gameObject.getComponents(paper.Behaviour, true); _c < _d.length; _c++) {
-                                var behaviour = _d[_c];
-                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
+                for (var _i = 0, entities_1 = entities; _i < entities_1.length; _i++) {
+                    var entity = entities_1[_i];
+                    var transform = entity.transform;
+                    var rigidbody = entity.getComponent(oimo.Rigidbody);
+                    var oimoRigidbody = rigidbody.oimoRigidbody;
+                    switch (rigidbody.type) {
+                        case 2 /* KINEMATIC */:
+                        case 1 /* STATIC */:
+                            if (oimoRigidbody.isSleeping()) {
                             }
-                            for (var _e = 0, _f = colliderB.gameObject.getComponents(paper.Behaviour, true); _e < _f.length; _e++) {
-                                var behaviour = _f[_e];
-                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderA);
+                            else {
+                                var position = transform.getPosition();
+                                var quaternion = transform.getRotation();
+                                oimoTransform.setPosition(position);
+                                oimoTransform.setOrientation(quaternion);
+                                oimoRigidbody.setTransform(oimoTransform);
                             }
+                            break;
+                    }
+                }
+                this._oimoWorld.step(deltaTime);
+                for (var _a = 0, entities_2 = entities; _a < entities_2.length; _a++) {
+                    var gameObject = entities_2[_a];
+                    var transform = gameObject.transform;
+                    var rigidbody = gameObject.getComponent(oimo.Rigidbody);
+                    var oimoRigidbody = rigidbody.oimoRigidbody;
+                    switch (rigidbody.type) {
+                        case 0 /* DYNAMIC */:
+                            if (oimoRigidbody.isSleeping()) {
+                            }
+                            else {
+                                oimoRigidbody.getTransformTo(oimoTransform);
+                                oimoTransform.getPositionTo(helpVector3);
+                                oimoTransform.getOrientationTo(helpVector4);
+                                transform.setPosition(helpVector3);
+                                transform.setRotation(helpVector4);
+                            }
+                            break;
+                    }
+                }
+                //
+                var stay = this._contactColliders.stay;
+                if (stay.length > 0) {
+                    for (var _b = 0, stay_1 = stay; _b < stay_1.length; _b++) {
+                        var contact = stay_1[_b];
+                        var colliderA = contact.getShape1().userData;
+                        var colliderB = contact.getShape2().userData;
+                        // TODO 优化行为组件查询
+                        for (var _c = 0, _d = colliderA.entity.getComponents(paper.Behaviour, true); _c < _d.length; _c++) {
+                            var behaviour = _d[_c];
+                            behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
+                        }
+                        for (var _e = 0, _f = colliderB.entity.getComponents(paper.Behaviour, true); _e < _f.length; _e++) {
+                            var behaviour = _f[_e];
+                            behaviour.onCollisionStay && behaviour.onCollisionStay(colliderA);
                         }
                     }
-                    fixedTime -= this.clock.fixedDeltaTime;
                 }
             };
-            PhysicsSystem.prototype.onDestroy = function () {
-                // TODO
+            PhysicsSystem.prototype.raycast = function (rayOrFrom, distanceOrTo, mask, raycastInfo) {
+                var rayCastClosest = this._rayCastClosest;
+                rayCastClosest.clear(); // TODO mask.
+                if (rayOrFrom instanceof egret3d.Ray) {
+                    var helpVector3 = egret3d.Vector3.create().release();
+                    distanceOrTo = helpVector3.multiplyScalar(distanceOrTo || 100.0, rayOrFrom.direction).add(rayOrFrom.origin);
+                    rayOrFrom = rayOrFrom.origin;
+                }
+                this._oimoWorld.rayCast(rayOrFrom, distanceOrTo, rayCastClosest);
+                if (rayCastClosest.hit) {
+                    raycastInfo = raycastInfo || egret3d.RaycastInfo.create();
+                    raycastInfo.distance = egret3d.Vector3.getDistance(rayOrFrom, distanceOrTo) * rayCastClosest.fraction;
+                    raycastInfo.position.copy(rayCastClosest.position);
+                    if (raycastInfo.normal) {
+                        raycastInfo.normal.copy(rayCastClosest.normal);
+                    }
+                    raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
+                    raycastInfo.collider = rayCastClosest.shape.userData;
+                    return raycastInfo;
+                }
+                return null;
             };
             Object.defineProperty(PhysicsSystem.prototype, "gravity", {
                 /**
@@ -42777,7 +42757,6 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
-            PhysicsSystem._instance = null;
             /**
              * @internal
              */
@@ -42787,7 +42766,7 @@ var egret3d;
         oimo.PhysicsSystem = PhysicsSystem;
         __reflect(PhysicsSystem.prototype, "egret3d.oimo.PhysicsSystem");
         //
-        paper.Application.systemManager.preRegister(PhysicsSystem, 3000 /* FixedUpdate */);
+        paper.Application.systemManager.preRegister(PhysicsSystem, paper.Application.gameObjectContext, 3000 /* FixedUpdate */ - 1);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;

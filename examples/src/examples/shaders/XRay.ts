@@ -50,11 +50,7 @@ namespace examples.shaders {
                 gameObject.transform.setLocalPosition(2.0, 0.5, 0.0);
                 gameObject.addComponent(XRayEditor);
                 //
-                const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
-                if (modelComponent) {
-                    modelComponent.select(gameObject);
-                    paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(XRayEditor);
-                }
+                selectGameObjectAndComponents(gameObject, XRayEditor);
             }
 
             { // Create prefab.

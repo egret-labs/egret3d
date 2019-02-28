@@ -4265,7 +4265,6 @@ var paper;
                  * @internal
                  */
                 _this.inspectorItems = {};
-                _this._lastSelectedGroup = paper.Application.gameObjectContext.getGroup(paper.Matcher.create(false, editor.LastSelectedFlag));
                 return _this;
             }
             GUIComponent.prototype.initialize = function () {
@@ -4277,21 +4276,7 @@ var paper;
                 for (var _i = 0; _i < arguments.length; _i++) {
                     args[_i] = arguments[_i];
                 }
-                var lastSelectedEntity = this._lastSelectedGroup.singleEntity;
-                if (!lastSelectedEntity) {
-                    return;
-                }
-                var inspectorItems = this.inspectorItems;
-                for (var k in inspectorItems) {
-                    inspectorItems[k].close();
-                }
-                for (var _a = 0, args_1 = args; _a < args_1.length; _a++) {
-                    var componentClass = args_1[_a];
-                    var component = lastSelectedEntity.getComponent(componentClass);
-                    if (component && component.uuid in inspectorItems) {
-                        inspectorItems[component.uuid].open();
-                    }
-                }
+                console.warn("deprecated");
             };
             GUIComponent = __decorate([
                 paper.singleton
@@ -4314,17 +4299,13 @@ var paper;
             function ModelComponent() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 /**
-                 *
-                 */
-                _this.onSceneSelected = new signals.Signal();
-                /**
-                 *
-                 */
-                _this.onSceneUnselected = new signals.Signal();
-                /**
                  * 选中的场景。
                  */
                 _this.selectedScene = null;
+                /**
+                 *
+                 */
+                _this.openedComponents = [];
                 //
                 _this._editorModel = null;
                 _this._selectedGroup = paper.Application.gameObjectContext.getGroup(paper.Matcher.create(false, editor.SelectedFlag));
@@ -4396,9 +4377,7 @@ var paper;
                 }
                 if (isReplace) {
                     if (this.selectedScene) {
-                        var scene = this.selectedScene;
                         this.selectedScene = null;
-                        this.onSceneUnselected.dispatch(scene);
                     }
                     else {
                         for (var _i = 0, _a = this._selectedGroup.entities; _i < _a.length; _i++) {
@@ -4411,7 +4390,6 @@ var paper;
                     if (value instanceof paper.Scene) {
                         window["pse"] = window["psgo"] = null; // For quick debug.
                         this.selectedScene = value;
-                        this.onSceneSelected.dispatch(value);
                     }
                     else {
                         window["pse"] = window["psgo"] = value; // For quick debug.
@@ -4484,6 +4462,17 @@ var paper;
                         var entity = _a[_i];
                         entity.destroy();
                     }
+                }
+            };
+            ModelComponent.prototype.openComponents = function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i] = arguments[_i];
+                }
+                this.openedComponents.length = 0;
+                for (var _a = 0, args_1 = args; _a < args_1.length; _a++) {
+                    var component = args_1[_a];
+                    this.openedComponents.push(component);
                 }
             };
             ModelComponent.prototype.changeProperty = function (propName, propOldValue, propNewValue, target) {
@@ -5939,10 +5928,23 @@ var paper;
                 _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
                 _this._guiComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.GUIComponent);
                 _this._sceneOrEntityBuffer = [];
-                _this._selectSceneOrEntity = null;
+                _this._selectedItems = [];
                 _this._sceneOrGameObjectGUIClickHandler = function (gui) {
-                    _this._selectSceneOrEntity = gui.instance;
-                    // this._modelComponent.select(gui.instance, true);
+                    var selectSceneOrEntity = gui.instance;
+                    if (selectSceneOrEntity instanceof paper.Entity) {
+                        var isReplace = !_this._controlLeft.isHold(false) && !_this._controlRight.isHold(false);
+                        if (selectSceneOrEntity.getComponent(editor.SelectedFlag)) {
+                            if (!isReplace) {
+                                _this._modelComponent.unselect(selectSceneOrEntity);
+                            }
+                        }
+                        else {
+                            _this._modelComponent.select(selectSceneOrEntity, isReplace);
+                        }
+                    }
+                    else {
+                        _this._modelComponent.select(selectSceneOrEntity);
+                    }
                 };
                 return _this;
             }
@@ -5958,18 +5960,6 @@ var paper;
                 if (this._sceneOrEntityBuffer.indexOf(transform.entity) < 0) {
                     this._removeSceneOrEntity(transform.entity);
                     this._sceneOrEntityBuffer.push(transform.entity);
-                }
-            };
-            HierarchySystem.prototype._onSceneSelected = function (scene) {
-                var item = this._getOrAddScene(scene);
-                if (item) {
-                    item.selected = true;
-                }
-            };
-            HierarchySystem.prototype._onSceneUnselected = function (scene) {
-                var item = this._getOrAddScene(scene);
-                if (item) {
-                    item.selected = false;
                 }
             };
             HierarchySystem.prototype._addSceneOrEntity = function (value) {
@@ -6072,8 +6062,6 @@ var paper;
                 paper.Scene.onSceneCreated.add(this._onSceneCreated, this);
                 paper.Scene.onSceneDestroy.add(this._onSceneDestroy, this);
                 paper.BaseTransform.onTransformParentChanged.add(this._onTransformParentChanged, this);
-                this._modelComponent.onSceneSelected.add(this._onSceneSelected, this);
-                this._modelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
                 this._sceneOrEntityBuffer.push(paper.Application.sceneManager.globalScene);
                 for (var _i = 0, _a = paper.Application.sceneManager.globalScene.rootEntities; _i < _a.length; _i++) {
                     var entity = _a[_i];
@@ -6084,8 +6072,6 @@ var paper;
                 paper.Scene.onSceneCreated.remove(this._onSceneCreated, this);
                 paper.Scene.onSceneDestroy.remove(this._onSceneDestroy, this);
                 paper.BaseTransform.onTransformParentChanged.remove(this._onTransformParentChanged, this);
-                this._modelComponent.onSceneSelected.remove(this._onSceneSelected, this);
-                this._modelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
                 var hierarchyItems = this._guiComponent.hierarchyItems;
                 for (var k in hierarchyItems) {
                     var item = hierarchyItems[k];
@@ -6101,7 +6087,6 @@ var paper;
                 this._delayShow = 0;
                 this._addEntityCount = 0;
                 this._sceneOrEntityBuffer.length = 0;
-                this._selectSceneOrEntity = null;
             };
             HierarchySystem.prototype.onEntityAdded = function (entity, group) {
                 var groups = this.groups;
@@ -6109,11 +6094,11 @@ var paper;
                     this._addSceneOrEntity(entity);
                 }
                 else if (group === groups[1]) {
-                    var item = this._guiComponent.hierarchyItems[entity.uuid];
-                    if (item) {
-                        item.selected = true;
-                        this._openFolder(item);
+                    for (var _i = 0, _a = this._selectedItems; _i < _a.length; _i++) {
+                        var item = _a[_i];
+                        item.selected = false;
                     }
+                    this._selectedItems.length = 0;
                 }
                 else if (group === groups[2]) {
                 }
@@ -6133,30 +6118,11 @@ var paper;
                 }
             };
             HierarchySystem.prototype.onFrame = function () {
-                if (this._guiComponent.hierarchy.closed || this._guiComponent.hierarchy.domElement.style.display === "none") {
+                var _a = this._guiComponent, hierarchy = _a.hierarchy, hierarchyItems = _a.hierarchyItems;
+                if (hierarchy.closed || hierarchy.domElement.style.display === "none") {
                     return;
                 }
-                var selectSceneOrEntity = this._selectSceneOrEntity;
-                if (selectSceneOrEntity) {
-                    if (selectSceneOrEntity instanceof paper.Entity) {
-                        var isReplace = !this._controlLeft.isHold(false) && !this._controlRight.isHold(false);
-                        if (selectSceneOrEntity.getComponent(editor.SelectedFlag)) {
-                            if (!isReplace) {
-                                this._modelComponent.unselect(selectSceneOrEntity);
-                            }
-                        }
-                        else {
-                            this._modelComponent.select(selectSceneOrEntity, isReplace);
-                        }
-                    }
-                    else {
-                        this._modelComponent.select(selectSceneOrEntity);
-                    }
-                    this._selectSceneOrEntity = null;
-                }
-                else if (egret3d.inputCollecter.getKey("Escape" /* Escape */).isUp()) {
-                    this._modelComponent.select(null);
-                }
+                // Update item.
                 if (this._delayShow > 5) {
                     var sceneOrEntityBuffer = this._sceneOrEntityBuffer;
                     while (sceneOrEntityBuffer.length > 0) {
@@ -6176,6 +6142,27 @@ var paper;
                 }
                 else {
                     this._delayShow++;
+                }
+                // Update selected items.
+                var selectedScene = this._modelComponent.selectedScene;
+                var selectedEntities = this.groups[1].entities;
+                if (selectedScene) {
+                    var item = this._getOrAddScene(selectedScene);
+                    if (item && !item.selected) {
+                        item.selected = true;
+                        this._openFolder(item);
+                        this._selectedItems.push(item);
+                    }
+                }
+                else {
+                    for (var _i = 0, selectedEntities_3 = selectedEntities; _i < selectedEntities_3.length; _i++) {
+                        var entity = selectedEntities_3[_i];
+                        var item = hierarchyItems[entity.uuid];
+                        if (item && !item.selected) {
+                            item.selected = true;
+                            this._openFolder(item);
+                        }
+                    }
                 }
             };
             return HierarchySystem;
@@ -6232,12 +6219,6 @@ var paper;
                 if (lastSelectedEntity === entity) {
                     this._removeComponent(component);
                 }
-            };
-            InspectorSystem.prototype._onSceneSelected = function (scene) {
-                this._selectSceneOrGameObject(scene);
-            };
-            InspectorSystem.prototype._onSceneUnselected = function (scene) {
-                this._selectSceneOrGameObject(null);
             };
             InspectorSystem.prototype._addComponent = function (component) {
                 var _a = this._guiComponent, inspector = _a.inspector, inspectorItems = _a.inspectorItems;
@@ -6698,6 +6679,23 @@ var paper;
                     }
                 }
             };
+            InspectorSystem.prototype._updateOpenedComponents = function (lastSelectedEntity) {
+                var openedComponents = this._modelComponent.openedComponents;
+                var _a = this._guiComponent, inspector = _a.inspector, inspectorItems = _a.inspectorItems;
+                if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
+                    for (var k in inspectorItems) {
+                        inspectorItems[k].close();
+                    }
+                    for (var _i = 0, openedComponents_1 = openedComponents; _i < openedComponents_1.length; _i++) {
+                        var componentClass = openedComponents_1[_i];
+                        var component = lastSelectedEntity.getComponent(componentClass);
+                        if (component && component.uuid in inspectorItems) {
+                            inspectorItems[component.uuid].open();
+                        }
+                    }
+                    openedComponents.length = 0;
+                }
+            };
             InspectorSystem.prototype.getMatchers = function () {
                 return [
                     paper.Matcher.create(false, editor.LastSelectedFlag),
@@ -6708,14 +6706,10 @@ var paper;
             InspectorSystem.prototype.onEnable = function () {
                 paper.Component.onComponentCreated.add(this._onComponentCreated, this);
                 paper.Component.onComponentDestroy.add(this._onComponentDestroy, this);
-                this._modelComponent.onSceneSelected.add(this._onSceneSelected, this);
-                this._modelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
             };
             InspectorSystem.prototype.onDisable = function () {
                 paper.Component.onComponentCreated.remove(this._onComponentCreated, this);
                 paper.Component.onComponentDestroy.remove(this._onComponentDestroy, this);
-                this._modelComponent.onSceneSelected.remove(this._onSceneSelected, this);
-                this._modelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
                 var inspectorItems = this._guiComponent.inspectorItems;
                 for (var k in inspectorItems) {
                     var item = inspectorItems[k];
@@ -6744,12 +6738,35 @@ var paper;
                 }
             };
             InspectorSystem.prototype.onFrame = function () {
-                var isInspectorShowed = !this._guiComponent.inspector.closed && this._guiComponent.inspector.domElement.style.display !== "none";
+                var _a = this._guiComponent, inspector = _a.inspector, inspectorItems = _a.inspectorItems;
+                var isInspectorShowed = !inspector.closed && inspector.domElement.style.display !== "none";
                 if (isInspectorShowed) {
-                    var groups = this.groups;
-                    var lastSelectedEntity = groups[0].singleEntity;
-                    if (lastSelectedEntity) {
+                    var selectedScene = this._modelComponent.selectedScene;
+                    var lastSelectedEntity = this.groups[0].singleEntity;
+                    if (selectedScene) {
+                        if (selectedScene !== inspector.instance) {
+                            this._selectSceneOrGameObject(selectedScene);
+                        }
+                    }
+                    else if (lastSelectedEntity) {
+                        var openedComponents = this._modelComponent.openedComponents;
+                        if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
+                            for (var k in inspectorItems) {
+                                inspectorItems[k].close();
+                            }
+                            for (var _i = 0, openedComponents_2 = openedComponents; _i < openedComponents_2.length; _i++) {
+                                var componentClass = openedComponents_2[_i];
+                                var component = lastSelectedEntity.getComponent(componentClass);
+                                if (component && component.uuid in inspectorItems) {
+                                    inspectorItems[component.uuid].open();
+                                }
+                            }
+                            openedComponents.length = 0;
+                        }
                         lastSelectedEntity.transform.localEulerAngles; // TODO
+                    }
+                    else {
+                        this._selectSceneOrGameObject(null);
                     }
                 }
             };

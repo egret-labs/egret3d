@@ -42,35 +42,10 @@ namespace paper.editor {
          */
         public readonly inspectorItems: { [key: string]: dat.GUI } = {};
 
-        private readonly _lastSelectedGroup: Group<GameObject> = Application.gameObjectContext.getGroup(
-            Matcher.create<GameObject>(false, LastSelectedFlag)
-        );
-
         public initialize() {
             super.initialize();
 
             this.stats.showPanel(0);
-        }
-
-        public openComponents(...args: IComponentClass<IComponent>[]) {
-            const lastSelectedEntity = this._lastSelectedGroup.singleEntity;
-            if (!lastSelectedEntity) {
-                return;
-            }
-
-            const inspectorItems = this.inspectorItems;
-
-            for (const k in inspectorItems) {
-                inspectorItems[k].close();
-            }
-
-            for (const componentClass of args) {
-                const component = lastSelectedEntity.getComponent(componentClass);
-
-                if (component && component.uuid in inspectorItems) {
-                    inspectorItems[component.uuid].open();
-                }
-            }
         }
     }
 }

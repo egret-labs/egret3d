@@ -410,7 +410,6 @@ declare namespace paper.editor {
         readonly stats: Stats;
         readonly renderPanel: Stats.Panel;
         readonly drawCallPanel: Stats.Panel;
-        private readonly _lastSelectedGroup;
         initialize(): void;
         openComponents(...args: IComponentClass<IComponent>[]): void;
     }
@@ -421,17 +420,13 @@ declare namespace paper.editor {
      */
     class ModelComponent extends BaseComponent {
         /**
-         *
-         */
-        readonly onSceneSelected: signals.Signal<Scene>;
-        /**
-         *
-         */
-        readonly onSceneUnselected: signals.Signal<Scene>;
-        /**
          * 选中的场景。
          */
         selectedScene: Scene | null;
+        /**
+         *
+         */
+        readonly openedComponents: IComponentClass<IComponent>[];
         private _editorModel;
         private readonly _selectedGroup;
         private readonly _lastSelectedGroup;
@@ -445,6 +440,7 @@ declare namespace paper.editor {
         select(value: Scene | IEntity | null, isReplace?: boolean): void;
         unselect(value: IEntity): void;
         delete(value?: IEntity | null): void;
+        openComponents(...args: IComponentClass<IComponent>[]): void;
         changeProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void;
     }
 }

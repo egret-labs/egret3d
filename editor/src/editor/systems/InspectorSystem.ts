@@ -27,14 +27,6 @@ namespace paper.editor {
             (window as any)["psc"] = (window as any)["epsc"] = gui.instance; // For quick debug.
         }
 
-        private _onSceneSelected(scene: Scene) {
-            this._selectSceneOrGameObject(scene);
-        }
-
-        private _onSceneUnselected(scene: Scene) {
-            this._selectSceneOrGameObject(null);
-        }
-
         private _addComponent(component: IComponent) {
             const { inspector, inspectorItems } = this._guiComponent;
 
@@ -581,6 +573,27 @@ namespace paper.editor {
             }
         }
 
+        private _updateOpenedComponents(lastSelectedEntity: IEntity) {
+            const { openedComponents } = this._modelComponent;
+            const { inspector, inspectorItems } = this._guiComponent;
+
+            if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
+                for (const k in inspectorItems) {
+                    inspectorItems[k].close();
+                }
+
+                for (const componentClass of openedComponents) {
+                    const component = lastSelectedEntity.getComponent(componentClass);
+
+                    if (component && component.uuid in inspectorItems) {
+                        inspectorItems[component.uuid].open();
+                    }
+                }
+
+                openedComponents.length = 0;
+            }
+        }
+
         protected getMatchers() {
             return [
                 Matcher.create<GameObject>(false, LastSelectedFlag),
@@ -593,15 +606,11 @@ namespace paper.editor {
         public onEnable() {
             Component.onComponentCreated.add(this._onComponentCreated, this);
             Component.onComponentDestroy.add(this._onComponentDestroy, this);
-            this._modelComponent.onSceneSelected.add(this._onSceneSelected, this);
-            this._modelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
         }
 
         public onDisable() {
             Component.onComponentCreated.remove(this._onComponentCreated, this);
             Component.onComponentDestroy.remove(this._onComponentDestroy, this);
-            this._modelComponent.onSceneSelected.remove(this._onSceneSelected, this);
-            this._modelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
 
             const { inspectorItems } = this._guiComponent;
 
@@ -638,14 +647,41 @@ namespace paper.editor {
         }
 
         public onFrame() {
-            const isInspectorShowed = !this._guiComponent.inspector.closed && this._guiComponent.inspector.domElement.style.display !== "none";
+            const { inspector, inspectorItems } = this._guiComponent;
+            const isInspectorShowed = !inspector.closed && inspector.domElement.style.display !== "none";
 
             if (isInspectorShowed) {
-                const groups = this.groups;
-                const lastSelectedEntity = groups[0].singleEntity;
+                const selectedScene = this._modelComponent.selectedScene;
+                const lastSelectedEntity = this.groups[0].singleEntity;
 
-                if (lastSelectedEntity) {
+                if (selectedScene) {
+                    if (selectedScene !== inspector.instance) {
+                        this._selectSceneOrGameObject(selectedScene);
+                    }
+                }
+                else if (lastSelectedEntity) {
+                    const { openedComponents } = this._modelComponent;
+
+                    if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
+                        for (const k in inspectorItems) {
+                            inspectorItems[k].close();
+                        }
+
+                        for (const componentClass of openedComponents) {
+                            const component = lastSelectedEntity.getComponent(componentClass);
+
+                            if (component && component.uuid in inspectorItems) {
+                                inspectorItems[component.uuid].open();
+                            }
+                        }
+
+                        openedComponents.length = 0;
+                    }
+
                     lastSelectedEntity.transform.localEulerAngles; // TODO
+                }
+                else {
+                    this._selectSceneOrGameObject(null);
                 }
             }
         }

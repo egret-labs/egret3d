@@ -58,16 +58,11 @@ namespace examples {
     }
 
     export function selectGameObjectAndComponents(gameObject: paper.GameObject, ...args: paper.IComponentClass<paper.BaseComponent>[]) {
-        const globalGameObject = paper.GameObject.globalGameObject;
-        const modelComponent = globalGameObject.getComponent(paper.editor.ModelComponent);
-        const guiComponent = globalGameObject.getComponent(paper.editor.GUIComponent);
+        const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
 
         if (modelComponent) {
             modelComponent.select(gameObject);
-
-            if (guiComponent) {
-                guiComponent.openComponents.apply(guiComponent, args);
-            }
+            modelComponent.openComponents.apply(modelComponent, args);
         }
     }
 }

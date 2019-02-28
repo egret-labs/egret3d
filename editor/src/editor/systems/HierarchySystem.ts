@@ -8,10 +8,11 @@ namespace paper.editor {
 
         private readonly _controlLeft: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlLeft);
         private readonly _controlRight: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlRight);
+
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
         private readonly _sceneOrEntityBuffer: (IScene | IEntity | null)[] = [];
-        private _selectSceneOrEntity: Scene | IEntity | null = null;
+        private readonly _selectedItems: dat.GUI[] = [];
 
         private _onSceneCreated([scene, isActive]: [IScene, boolean]) {
             this._addSceneOrEntity(scene);
@@ -28,26 +29,24 @@ namespace paper.editor {
             }
         }
 
-        private _onSceneSelected(scene: Scene) {
-            const item = this._getOrAddScene(scene);
-
-            if (item) {
-                item.selected = true;
-            }
-        }
-
-        private _onSceneUnselected(scene: Scene) {
-            const item = this._getOrAddScene(scene);
-
-            if (item) {
-                item.selected = false;
-            }
-        }
-
         private _sceneOrGameObjectGUIClickHandler = (gui: dat.GUI) => {
-            this._selectSceneOrEntity = gui.instance;
+            const selectSceneOrEntity = gui.instance;
 
-            // this._modelComponent.select(gui.instance, true);
+            if (selectSceneOrEntity instanceof Entity) {
+                const isReplace = !this._controlLeft.isHold(false) && !this._controlRight.isHold(false);
+
+                if (selectSceneOrEntity.getComponent(SelectedFlag)) {
+                    if (!isReplace) {
+                        this._modelComponent.unselect(selectSceneOrEntity);
+                    }
+                }
+                else {
+                    this._modelComponent.select(selectSceneOrEntity, isReplace);
+                }
+            }
+            else {
+                this._modelComponent.select(selectSceneOrEntity);
+            }
         }
 
         private _addSceneOrEntity(value: IScene | IEntity) {
@@ -179,8 +178,6 @@ namespace paper.editor {
             Scene.onSceneCreated.add(this._onSceneCreated, this);
             Scene.onSceneDestroy.add(this._onSceneDestroy, this);
             BaseTransform.onTransformParentChanged.add(this._onTransformParentChanged, this);
-            this._modelComponent.onSceneSelected.add(this._onSceneSelected, this);
-            this._modelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
 
             this._sceneOrEntityBuffer.push(Application.sceneManager.globalScene);
 
@@ -193,8 +190,6 @@ namespace paper.editor {
             Scene.onSceneCreated.remove(this._onSceneCreated, this);
             Scene.onSceneDestroy.remove(this._onSceneDestroy, this);
             BaseTransform.onTransformParentChanged.remove(this._onTransformParentChanged, this);
-            this._modelComponent.onSceneSelected.remove(this._onSceneSelected, this);
-            this._modelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
 
             const { hierarchyItems } = this._guiComponent;
 
@@ -214,7 +209,6 @@ namespace paper.editor {
             this._delayShow = 0;
             this._addEntityCount = 0;
             this._sceneOrEntityBuffer.length = 0;
-            this._selectSceneOrEntity = null;
         }
 
         public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
@@ -224,11 +218,11 @@ namespace paper.editor {
                 this._addSceneOrEntity(entity);
             }
             else if (group === groups[1]) {
-                const item = this._guiComponent.hierarchyItems[entity.uuid];
-                if (item) {
-                    item.selected = true;
-                    this._openFolder(item);
+                for (const item of this._selectedItems) {
+                    item.selected = false;
                 }
+
+                this._selectedItems.length = 0;
             }
             else if (group === groups[2]) {
             }
@@ -242,6 +236,7 @@ namespace paper.editor {
             }
             else if (group === groups[1]) {
                 const item = this._guiComponent.hierarchyItems[entity.uuid];
+
                 if (item) {
                     item.selected = false;
                 }
@@ -251,34 +246,12 @@ namespace paper.editor {
         }
 
         public onFrame() {
-            if (this._guiComponent.hierarchy.closed || this._guiComponent.hierarchy.domElement.style.display === "none") {
+            const { hierarchy, hierarchyItems } = this._guiComponent;
+            if (hierarchy.closed || hierarchy.domElement.style.display === "none") {
                 return;
             }
 
-            const selectSceneOrEntity = this._selectSceneOrEntity;
-
-            if (selectSceneOrEntity) {
-                if (selectSceneOrEntity instanceof Entity) {
-                    const isReplace = !this._controlLeft.isHold(false) && !this._controlRight.isHold(false);
-                    if (selectSceneOrEntity.getComponent(SelectedFlag)) {
-                        if (!isReplace) {
-                            this._modelComponent.unselect(selectSceneOrEntity);
-                        }
-                    }
-                    else {
-                        this._modelComponent.select(selectSceneOrEntity, isReplace);
-                    }
-                }
-                else {
-                    this._modelComponent.select(selectSceneOrEntity);
-                }
-
-                this._selectSceneOrEntity = null;
-            }
-            else if (egret3d.inputCollecter.getKey(egret3d.KeyCode.Escape).isUp()) {
-                this._modelComponent.select(null);
-            }
-
+            // Update item.
             if (this._delayShow > 5) {
                 const sceneOrEntityBuffer = this._sceneOrEntityBuffer;
 
@@ -301,6 +274,30 @@ namespace paper.editor {
             }
             else {
                 this._delayShow++;
+            }
+
+            // Update selected items.
+            const selectedScene = this._modelComponent.selectedScene;
+            const selectedEntities = this.groups[1].entities;
+
+            if (selectedScene) {
+                const item = this._getOrAddScene(selectedScene);
+
+                if (item && !item.selected) {
+                    item.selected = true;
+                    this._openFolder(item);
+                    this._selectedItems.push(item);
+                }
+            }
+            else {
+                for (const entity of selectedEntities) {
+                    const item = hierarchyItems[entity.uuid];
+
+                    if (item && !item.selected) {
+                        item.selected = true;
+                        this._openFolder(item);
+                    }
+                }
             }
         }
     }

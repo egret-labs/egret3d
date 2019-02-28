@@ -143,7 +143,7 @@ namespace paper.editor {
                         }
                     }
                     else if (!event.ctrlKey && !event.shiftKey) {
-                        if (!this._modelComponent.selectedScene && !defaultPointer.downPosition.equal(SceneSystem._defalutPosition)) {
+                        if (!this._modelComponent.selectedScene && !defaultPointer.downPosition.equal(SceneSystem._defalutPosition)) { // TODO
                             this._modelComponent.select(Scene.activeScene);
                         }
                     }

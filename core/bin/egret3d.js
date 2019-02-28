@@ -10826,11 +10826,13 @@ var paper;
          * @returns 此次生成的渲染帧和逻辑帧数量, @see `ClockResult`
          */
         Clock.prototype.update = function (time) {
+            var isReseted = false;
             var now = (time || performance.now()) * 0.001;
             if (this._needReset) {
                 this._unscaledTime = now - this._beginTime;
                 this._unscaledDeltaTime = 0;
                 this._needReset = false;
+                isReseted = true;
             }
             else {
                 var lastTime = this._unscaledTime;
@@ -10842,7 +10844,7 @@ var paper;
             //     this.tickInterval = this.frameInterval;
             // }
             // 判断是否够一个逻辑帧
-            if (this.tickInterval) {
+            if (!isReseted && this.tickInterval) {
                 this._unusedTickDelta += this._unscaledDeltaTime;
                 if (this._unusedTickDelta >= this.tickInterval) {
                     // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
@@ -10858,7 +10860,7 @@ var paper;
                 this._tickCount++;
             }
             // 判断渲染帧
-            if (this.frameInterval) {
+            if (!isReseted && this.frameInterval) {
                 this._unusedFrameDelta += this._unscaledDeltaTime;
                 if (this._unusedFrameDelta >= this.frameInterval) {
                     // 渲染帧不需要补帧
@@ -25808,7 +25810,7 @@ var paper;
                 return;
             }
             timestamp = timestamp || performance.now();
-            var result = paper.clock && paper.clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
+            var result = paper.clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
             this._update(result);
             requestAnimationFrame(this._loop);
         };

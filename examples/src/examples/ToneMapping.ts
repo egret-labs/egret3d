@@ -100,11 +100,7 @@ namespace examples {
                 gameObject.transform.setLocalPosition(0.0, 50.0, 0.0).setLocalScale(200.0);
             }
             //
-            const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
-            if (modelComponent) {
-                modelComponent.select(paper.GameObject.globalGameObject);
-                paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(egret3d.RenderState);
-            }
+            selectGameObjectAndComponents(paper.GameObject.globalGameObject, egret3d.RenderState);
         }
     }
 }

@@ -72,11 +72,7 @@ namespace examples.camera {
                 mainCamera.backgroundColor.fromHex(0xFFFFFF);
                 mainCamera.gameObject.addComponent(behaviors.RotateAround);
                 //
-                const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
-                if (modelComponent) {
-                    modelComponent.select(mainCamera.gameObject);
-                    paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(Starter);
-                }
+                selectGameObjectAndComponents(mainCamera.gameObject, Starter);
             }
 
             { // Create lights.

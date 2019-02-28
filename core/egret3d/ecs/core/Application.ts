@@ -65,7 +65,7 @@ namespace paper {
             if (!this._isRunning) { return; }
 
             timestamp = timestamp || performance.now();
-            const result: ClockUpdateFlags = clock && clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
+            const result: ClockUpdateFlags = clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
             this._update(result);
             requestAnimationFrame(this._loop);
         }

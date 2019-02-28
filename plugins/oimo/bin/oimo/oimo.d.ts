@@ -7671,35 +7671,19 @@ declare namespace egret3d.oimo {
     /**
      *
      */
-    class PhysicsSystem extends paper.BaseSystem {
-        private static _instance;
-        /**
-         *
-         */
-        static getInstance(): PhysicsSystem;
-        readonly interests: ({
-            componentClass: typeof Rigidbody;
-        } | {
-            componentClass: (typeof BoxCollider | typeof SphereCollider)[];
-            type: paper.InterestType;
-        } | {
-            componentClass: (typeof SphericalJoint | typeof HingeJoint | typeof ConeTwistJoint)[];
-            type: paper.InterestType;
-        })[][];
+    class PhysicsSystem extends paper.BaseSystem<paper.GameObject> {
         private readonly _gravity;
         private readonly _rayCastClosest;
         private readonly _contactCallback;
         private readonly _contactColliders;
         private _oimoWorld;
+        protected getMatchers(): paper.INoneOfMatcher<paper.GameObject>[];
+        onAwake(): void;
+        onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
+        onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
+        onTick(deltaTime: number): void;
         raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
         raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        onAwake(): void;
-        onAddGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
-        onAddComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
-        onRemoveComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup): void;
-        onRemoveGameObject(gameObject: paper.GameObject, group: paper.GameObjectGroup): void;
-        onUpdate(): void;
-        onDestroy(): void;
         /**
          *
          */
@@ -7869,10 +7853,22 @@ declare namespace paper {
      */
     const enum Layer {
     }
+}
+declare namespace egret3d {
     /**
      * 渲染排序。
      */
     const enum RenderQueue {
+    }
+    /**
+     *
+     */
+    const enum AttributeSemantics {
+    }
+    /**
+     *
+     */
+    const enum UniformSemantics {
     }
 }
 declare namespace egret3d.oimo {
