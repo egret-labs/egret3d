@@ -97,7 +97,7 @@ namespace paper {
 
             Component.onComponentCreated.dispatch([this, component]);
 
-            if (this._enabled && component.enabled) {
+            if (component.isActiveAndEnabled) {
                 component.dispatchEnabledEvent(true);
             }
         }

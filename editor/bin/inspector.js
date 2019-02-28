@@ -4429,19 +4429,15 @@ var paper;
                 }
             };
             ModelComponent.prototype.select = function (value, isReplace) {
+                this._select(value, isReplace);
                 if (this._editorModel) {
                     this._editorModel.selectGameObject(this._selectedGroup.entities);
-                }
-                else {
-                    this._select(value, isReplace);
                 }
             };
             ModelComponent.prototype.unselect = function (value) {
+                this._unselect(value);
                 if (this._editorModel) {
                     this._editorModel.selectGameObject(this._selectedGroup.entities);
-                }
-                else {
-                    this._unselect(value);
                 }
             };
             ModelComponent.prototype.delete = function (value) {

@@ -114,13 +114,7 @@ namespace paper {
                 }
             }
 
-            component.initialize(config);
-
-            Component.onComponentCreated.dispatch([this, component]);
-
-            if (component.isActiveAndEnabled) {
-                component.dispatchEnabledEvent(true);
-            }
+            super._addComponent(component, config);
         }
 
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null) {

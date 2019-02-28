@@ -2776,9 +2776,6 @@ var paper;
             _this._componentsDirty = false;
             _this._isDestroyed = true;
             _this._enabled = false;
-            /**
-             * @internal
-             */
             _this._components = [];
             _this._cachedComponents = [];
             _this._scene = null;
@@ -2826,7 +2823,7 @@ var paper;
         Entity.prototype._addComponent = function (component, config) {
             component.initialize(config);
             paper.Component.onComponentCreated.dispatch([this, component]);
-            if (this._enabled && component.enabled) {
+            if (component.isActiveAndEnabled) {
                 component.dispatchEnabledEvent(true);
             }
         };
@@ -9059,11 +9056,7 @@ var paper;
                     this._beforeRenderBehaviorCount++;
                 }
             }
-            component.initialize(config);
-            paper.Component.onComponentCreated.dispatch([this, component]);
-            if (component.isActiveAndEnabled) {
-                component.dispatchEnabledEvent(true);
-            }
+            _super.prototype._addComponent.call(this, component, config);
         };
         GameObject.prototype._removeComponent = function (component, groupComponent) {
             _super.prototype._removeComponent.call(this, component, groupComponent);
@@ -11913,6 +11906,7 @@ var paper;
         }
         if (!_defaultGameObject) {
             _defaultGameObject = paper.GameObject.create("NoName" /* NoName */, "Untagged" /* Untagged */, paper.Application.sceneManager.globalScene);
+            _defaultGameObject.enabled = false;
         }
         _inline = inline;
         _serializeData = { version: paper.DATA_VERSION, assets: [], objects: [], components: [] };
@@ -14363,7 +14357,6 @@ var egret3d;
          */
         CameraAndLightCollecter.prototype.updateLights = function (entities) {
             var directLightCount = 0, spotLightCount = 0, rectangleAreaLightCount = 0, pointLightCount = 0, hemisphereLightCount = 0;
-            // const lights = [];
             var _a = this, lights = _a.lights, directionalLights = _a.directionalLights, spotLights = _a.spotLights, rectangleAreaLights = _a.rectangleAreaLights, pointLights = _a.pointLights, hemisphereLights = _a.hemisphereLights;
             lights.length = 0;
             for (var _i = 0, entities_2 = entities; _i < entities_2.length; _i++) {
@@ -14389,111 +14382,111 @@ var egret3d;
                 }
             }
             var defines = egret3d.renderState.defines;
-            if (directLightCount !== directionalLights.length) {
-                if (directLightCount > 0) {
-                    var define = defines.addDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */, directLightCount);
-                    if (define) {
-                        define.type = 0 /* None */;
-                    }
-                }
-                else {
-                    defines.removeDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */);
-                }
-                this.lightCountDirty |= LightCountDirty.DirectionalLight;
-                directionalLights.length = directLightCount;
-                var index = 0;
-                for (var _b = 0, lights_1 = lights; _b < lights_1.length; _b++) {
-                    var light = lights_1[_b];
-                    if (light.constructor !== egret3d.DirectionalLight) {
-                        continue;
-                    }
-                    directionalLights[index++] = light;
+            // if (directLightCount !== directionalLights.length) {
+            if (directLightCount > 0) {
+                var define = defines.addDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */, directLightCount);
+                if (define) {
+                    define.type = 0 /* None */;
                 }
             }
-            if (spotLightCount !== spotLights.length) {
-                if (spotLightCount > 0) {
-                    var define = defines.addDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */, spotLightCount);
-                    if (define) {
-                        define.type = 0 /* None */;
-                    }
+            else {
+                defines.removeDefine("NUM_DIR_LIGHTS" /* NUM_DIR_LIGHTS */);
+            }
+            this.lightCountDirty |= LightCountDirty.DirectionalLight;
+            directionalLights.length = directLightCount;
+            var index = 0;
+            for (var _b = 0, lights_1 = lights; _b < lights_1.length; _b++) {
+                var light = lights_1[_b];
+                if (light.constructor !== egret3d.DirectionalLight) {
+                    continue;
                 }
-                else {
-                    defines.removeDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */);
-                }
-                this.lightCountDirty |= LightCountDirty.SpotLight;
-                spotLights.length = spotLightCount;
-                var index = 0;
-                for (var _c = 0, lights_2 = lights; _c < lights_2.length; _c++) {
-                    var light = lights_2[_c];
-                    if (light.constructor !== egret3d.SpotLight) {
-                        continue;
-                    }
-                    spotLights[index++] = light;
+                directionalLights[index++] = light;
+            }
+            // }
+            // if (spotLightCount !== spotLights.length) {
+            if (spotLightCount > 0) {
+                var define = defines.addDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */, spotLightCount);
+                if (define) {
+                    define.type = 0 /* None */;
                 }
             }
-            if (rectangleAreaLightCount !== rectangleAreaLights.length) {
-                if (rectangleAreaLightCount > 0) {
-                    var define = defines.addDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */, rectangleAreaLightCount);
-                    if (define) {
-                        define.type = 0 /* None */;
-                    }
+            else {
+                defines.removeDefine("NUM_SPOT_LIGHTS" /* NUM_SPOT_LIGHTS */);
+            }
+            this.lightCountDirty |= LightCountDirty.SpotLight;
+            spotLights.length = spotLightCount;
+            index = 0;
+            for (var _c = 0, lights_2 = lights; _c < lights_2.length; _c++) {
+                var light = lights_2[_c];
+                if (light.constructor !== egret3d.SpotLight) {
+                    continue;
                 }
-                else {
-                    defines.removeDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */);
-                }
-                this.lightCountDirty |= LightCountDirty.RectangleAreaLight;
-                rectangleAreaLights.length = rectangleAreaLightCount;
-                var index = 0;
-                for (var _d = 0, lights_3 = lights; _d < lights_3.length; _d++) {
-                    var light = lights_3[_d];
-                    if (light.constructor !== egret3d.RectangleAreaLight) {
-                        continue;
-                    }
-                    rectangleAreaLights[index++] = light;
+                spotLights[index++] = light;
+            }
+            // }
+            // if (rectangleAreaLightCount !== rectangleAreaLights.length) {
+            if (rectangleAreaLightCount > 0) {
+                var define = defines.addDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */, rectangleAreaLightCount);
+                if (define) {
+                    define.type = 0 /* None */;
                 }
             }
-            if (pointLightCount !== pointLights.length) {
-                if (pointLightCount > 0) {
-                    var define = defines.addDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLightCount);
-                    if (define) {
-                        define.type = 0 /* None */;
-                    }
+            else {
+                defines.removeDefine("NUM_RECT_AREA_LIGHTS" /* NUM_RECT_AREA_LIGHTS */);
+            }
+            this.lightCountDirty |= LightCountDirty.RectangleAreaLight;
+            rectangleAreaLights.length = rectangleAreaLightCount;
+            index = 0;
+            for (var _d = 0, lights_3 = lights; _d < lights_3.length; _d++) {
+                var light = lights_3[_d];
+                if (light.constructor !== egret3d.RectangleAreaLight) {
+                    continue;
                 }
-                else {
-                    defines.removeDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */);
-                }
-                this.lightCountDirty |= LightCountDirty.PointLight;
-                pointLights.length = pointLightCount;
-                var index = 0;
-                for (var _e = 0, lights_4 = lights; _e < lights_4.length; _e++) {
-                    var light = lights_4[_e];
-                    if (light.constructor !== egret3d.PointLight) {
-                        continue;
-                    }
-                    pointLights[index++] = light;
+                rectangleAreaLights[index++] = light;
+            }
+            // }
+            // if (pointLightCount !== pointLights.length) {
+            if (pointLightCount > 0) {
+                var define = defines.addDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */, pointLightCount);
+                if (define) {
+                    define.type = 0 /* None */;
                 }
             }
-            if (hemisphereLightCount !== hemisphereLights.length) {
-                if (hemisphereLightCount > 0) {
-                    var define = defines.addDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLightCount);
-                    if (define) {
-                        define.type = 0 /* None */;
-                    }
+            else {
+                defines.removeDefine("NUM_POINT_LIGHTS" /* NUM_POINT_LIGHTS */);
+            }
+            this.lightCountDirty |= LightCountDirty.PointLight;
+            pointLights.length = pointLightCount;
+            index = 0;
+            for (var _e = 0, lights_4 = lights; _e < lights_4.length; _e++) {
+                var light = lights_4[_e];
+                if (light.constructor !== egret3d.PointLight) {
+                    continue;
                 }
-                else {
-                    defines.removeDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */);
-                }
-                this.lightCountDirty |= LightCountDirty.HemisphereLight;
-                hemisphereLights.length = hemisphereLightCount;
-                var index = 0;
-                for (var _f = 0, lights_5 = lights; _f < lights_5.length; _f++) {
-                    var light = lights_5[_f];
-                    if (light.constructor !== egret3d.HemisphereLight) {
-                        continue;
-                    }
-                    hemisphereLights[index++] = light;
+                pointLights[index++] = light;
+            }
+            // }
+            // if (hemisphereLightCount !== hemisphereLights.length) {
+            if (hemisphereLightCount > 0) {
+                var define = defines.addDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */, hemisphereLightCount);
+                if (define) {
+                    define.type = 0 /* None */;
                 }
             }
+            else {
+                defines.removeDefine("NUM_HEMI_LIGHTS" /* NUM_HEMI_LIGHTS */);
+            }
+            this.lightCountDirty |= LightCountDirty.HemisphereLight;
+            hemisphereLights.length = hemisphereLightCount;
+            index = 0;
+            for (var _f = 0, lights_5 = lights; _f < lights_5.length; _f++) {
+                var light = lights_5[_f];
+                if (light.constructor !== egret3d.HemisphereLight) {
+                    continue;
+                }
+                hemisphereLights[index++] = light;
+            }
+            // }
         };
         /**
          * 排序相机。

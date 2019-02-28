@@ -164,20 +164,18 @@ namespace paper.editor {
         }
 
         public select(value: Scene | IEntity | null, isReplace?: boolean) {
+            this._select(value, isReplace);
+
             if (this._editorModel) {
                 this._editorModel.selectGameObject(this._selectedGroup.entities as any);
-            }
-            else {
-                this._select(value, isReplace);
             }
         }
 
         public unselect(value: IEntity) {
+            this._unselect(value);
+
             if (this._editorModel) {
                 this._editorModel.selectGameObject(this._selectedGroup.entities as any);
-            }
-            else {
-                this._unselect(value);
             }
         }
 
