@@ -37,7 +37,7 @@ namespace paper {
             if (this.scenes.length > 0) {
                 this.scenes.length = 0;
             }
-            
+
             if (this.entities.length > 0) {
                 this.entities.length = 0;
             }
