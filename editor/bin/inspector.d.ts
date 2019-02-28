@@ -334,7 +334,7 @@ declare namespace paper.editor {
      *
      */
     class EditorComponent extends Component {
-        hideFlags: HideFlags;
+        initialize(): void;
     }
     /**
      * Gizmos 容器标记。
@@ -411,7 +411,6 @@ declare namespace paper.editor {
         readonly renderPanel: Stats.Panel;
         readonly drawCallPanel: Stats.Panel;
         initialize(): void;
-        openComponents(...args: IComponentClass<IComponent>[]): void;
     }
 }
 declare namespace paper.editor {

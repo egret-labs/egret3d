@@ -3,7 +3,11 @@ namespace paper.editor {
      * 
      */
     export class EditorComponent extends Component {
-        public hideFlags = HideFlags.HideAndDontSave;
+        public initialize() {
+            super.initialize();
+
+            this.hideFlags = HideFlags.HideAndDontSave;
+        }
     }
     /**
      * Gizmos 容器标记。

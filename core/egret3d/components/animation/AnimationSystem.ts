@@ -275,6 +275,7 @@ namespace egret3d {
             for (const entity of this.groups[0].entities) {
                 const animation = this._animation = entity.getComponent(Animation)!;
                 const animationController = animation.animationController!;
+
                 if (!animationController) {
                     continue;
                 }
@@ -329,6 +330,7 @@ namespace egret3d {
 
                 for (const layer of animationLayers) {
                     const mask = layer.mask as AnimationMask | null;
+                    
                     if (mask && mask._dirty) {
                         mask._dirty = false;
                     }

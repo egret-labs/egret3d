@@ -4117,10 +4117,12 @@ var paper;
         var EditorComponent = (function (_super) {
             __extends(EditorComponent, _super);
             function EditorComponent() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.hideFlags = 14 /* HideAndDontSave */;
-                return _this;
+                return _super !== null && _super.apply(this, arguments) || this;
             }
+            EditorComponent.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this.hideFlags = 14 /* HideAndDontSave */;
+            };
             return EditorComponent;
         }(paper.Component));
         editor.EditorComponent = EditorComponent;
@@ -4270,13 +4272,6 @@ var paper;
             GUIComponent.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
                 this.stats.showPanel(0);
-            };
-            GUIComponent.prototype.openComponents = function () {
-                var args = [];
-                for (var _i = 0; _i < arguments.length; _i++) {
-                    args[_i] = arguments[_i];
-                }
-                console.warn("deprecated");
             };
             GUIComponent = __decorate([
                 paper.singleton
@@ -6209,14 +6204,14 @@ var paper;
             InspectorSystem.prototype._onComponentCreated = function (_a) {
                 var entity = _a[0], component = _a[1];
                 var lastSelectedEntity = this.groups[0].singleEntity;
-                if (lastSelectedEntity === entity) {
+                if (lastSelectedEntity === entity && (component.hideFlags & 10 /* Hide */) === 0) {
                     this._addComponent(component);
                 }
             };
             InspectorSystem.prototype._onComponentDestroy = function (_a) {
                 var entity = _a[0], component = _a[1];
                 var lastSelectedEntity = this.groups[0].singleEntity;
-                if (lastSelectedEntity === entity) {
+                if (lastSelectedEntity === entity && (component.hideFlags & 10 /* Hide */) === 0) {
                     this._removeComponent(component);
                 }
             };

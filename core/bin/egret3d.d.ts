@@ -3404,7 +3404,6 @@ declare namespace paper {
         protected _componentsDirty: boolean;
         protected _isDestroyed: boolean;
         protected _enabled: boolean;
-        protected readonly _components: (IComponent | undefined)[];
         protected readonly _cachedComponents: IComponent[];
         protected _scene: Scene | null;
         /**

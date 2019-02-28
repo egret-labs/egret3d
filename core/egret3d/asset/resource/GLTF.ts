@@ -538,7 +538,7 @@ declare namespace gltf {
     /**
      * glTF index.
      */
-    export type Index = uint;//35713
+    export type Index = uint;
     /**
      * BufferView target.
      */

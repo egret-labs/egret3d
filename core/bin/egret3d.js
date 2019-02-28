@@ -2776,6 +2776,9 @@ var paper;
             _this._componentsDirty = false;
             _this._isDestroyed = true;
             _this._enabled = false;
+            /**
+             * @internal
+             */
             _this._components = [];
             _this._cachedComponents = [];
             _this._scene = null;
@@ -2788,11 +2791,6 @@ var paper;
                     this._removeComponent(component, null);
                 }
             }
-            this._scene._removeEntity(this);
-            this._isDestroyed = true;
-            this._components.length = 0;
-            this._scene = null;
-            Entity.onEntityDestroyed.dispatch(this);
         };
         Entity.prototype._setScene = function (value, dispatchEvent) {
             if (value) {
@@ -2906,6 +2904,11 @@ var paper;
             }
             Entity.onEntityDestroy.dispatch(this);
             this._destroy();
+            this._scene._removeEntity(this);
+            this._isDestroyed = true;
+            this._components.length = 0;
+            this._scene = null;
+            Entity.onEntityDestroyed.dispatch(this);
             return true;
         };
         Entity.prototype.addComponent = function (componentClass, config) {
@@ -9000,7 +9003,6 @@ var paper;
                 }
             }
             this._removeComponent(this.transform, null); // Remove transform at last.
-            _super.prototype._destroy.call(this);
         };
         GameObject.prototype._setScene = function (value, dispatchEvent) {
             if (this.transform && this.transform.parent && this.transform.parent.gameObject.scene !== value) {
@@ -10840,9 +10842,6 @@ var paper;
                 this._unscaledDeltaTime = this._unscaledTime - lastTime;
             }
             var returnValue = { frameCount: 0, tickCount: 0 };
-            // if (this.tickInterval < this.frameInterval) { // 逻辑值的执行频率不能低于渲染帧。
-            //     this.tickInterval = this.frameInterval;
-            // }
             // 判断是否够一个逻辑帧
             if (!isReseted && this.tickInterval) {
                 this._unusedTickDelta += this._unscaledDeltaTime;

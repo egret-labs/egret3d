@@ -6,7 +6,7 @@ namespace paper {
         public readonly componentIndex: uint;
         public readonly components: IComponent[] = [];
 
-        public initialize(componentIndex: uint): void {
+        public initialize(componentIndex: uint) {
             super.initialize();
 
             (this.componentIndex as uint) = componentIndex;

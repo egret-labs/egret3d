@@ -10,7 +10,7 @@ namespace paper.editor {
         private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
             const lastSelectedEntity = this.groups[0].singleEntity;
 
-            if (lastSelectedEntity === entity) {
+            if (lastSelectedEntity === entity && (component.hideFlags & HideFlags.Hide) === 0) {
                 this._addComponent(component);
             }
         }
@@ -18,7 +18,7 @@ namespace paper.editor {
         private _onComponentDestroy([entity, component]: [IEntity, IComponent]) {
             const lastSelectedEntity = this.groups[0].singleEntity;
 
-            if (lastSelectedEntity === entity) {
+            if (lastSelectedEntity === entity && (component.hideFlags & HideFlags.Hide) === 0) {
                 this._removeComponent(component);
             }
         }

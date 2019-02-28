@@ -52,8 +52,6 @@ namespace paper {
             }
 
             this._removeComponent(this.transform, null); // Remove transform at last.
-
-            super._destroy();
         }
 
         protected _setScene(value: Scene | null, dispatchEvent: boolean) {

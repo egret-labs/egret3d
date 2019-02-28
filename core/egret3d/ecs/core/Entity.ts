@@ -56,13 +56,6 @@ namespace paper {
                     this._removeComponent(component, null);
                 }
             }
-
-            this._scene!._removeEntity(this);
-
-            this._isDestroyed = true;
-            this._components.length = 0;
-            this._scene = null;
-            Entity.onEntityDestroyed.dispatch(this);
         }
 
         protected _setScene(value: Scene | null, dispatchEvent: boolean) {
@@ -204,6 +197,11 @@ namespace paper {
 
             Entity.onEntityDestroy.dispatch(this);
             this._destroy();
+            this._scene!._removeEntity(this);
+            this._isDestroyed = true;
+            this._components.length = 0;
+            this._scene = null;
+            Entity.onEntityDestroyed.dispatch(this);
 
             return true;
         }
