@@ -63,6 +63,7 @@ namespace egret3d {
             // const animationNode = animationState.animationNode;
 
             let weight = animationLayer.weight * animationState.weight;
+
             if (animationState._parent) {
                 weight *= animationState._parent._globalWeight;
             }
@@ -78,6 +79,8 @@ namespace egret3d {
                 animationState._time += deltaTime;
             }
 
+            let time = animationState._time;
+
             // const isBlendDirty = this._fadeState !== 0 || this._subFadeState === 0;
             const prevPlayState = animationState._playState;
             const prevPlayTimes = animationState.currentPlayTimes;
@@ -87,14 +90,14 @@ namespace egret3d {
             const totalTime = playTimes * duration;
             let currentTime = 0.0;
 
-            if (playTimes > 0 && (animationState._time >= totalTime || animationState._time <= -totalTime)) {
+            if (playTimes > 0 && (time >= totalTime || time <= -totalTime)) {
                 if (animationState._playState <= 0 && animationState._playheadEnabled) {
                     animationState._playState = 1;
                 }
 
                 animationState.currentPlayTimes = playTimes;
 
-                if (animationState._time >= totalTime) {
+                if (time >= totalTime) {
                     currentTime = duration;
                 }
                 else {
@@ -106,14 +109,14 @@ namespace egret3d {
                     animationState._playState = 0;
                 }
 
-                if (animationState._time < 0.0) {
-                    animationState._time = -animationState._time;
-                    animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    currentTime = duration - (animationState._time % duration);
+                if (time < 0.0) {
+                    time = -time;
+                    animationState.currentPlayTimes = (time / duration) >> 0;
+                    currentTime = duration - (time % duration);
                 }
                 else {
-                    animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    currentTime = animationState._time % duration;
+                    animationState.currentPlayTimes = (time / duration) >> 0;
+                    currentTime = time % duration;
                 }
             }
 

@@ -3540,6 +3540,7 @@ var paper;
                 _this.inspector = new dat.GUI({ closeOnTop: true, width: 300 });
                 _this.stats = new Stats();
                 _this.renderPanel = _this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
+                _this.drawCallPanel = _this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
                 /**
                  * @internal
                  */
@@ -4952,6 +4953,7 @@ var paper;
                 var guiComponent = this._guiComponent;
                 guiComponent.stats.update();
                 guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["webgl"]["WebGLRenderSystem"]).deltaTime, 200);
+                guiComponent.drawCallPanel.update(egret3d.drawCallCollecter.drawCallCount, 500);
                 if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
                     this._fpsIndex++;
                     if (this._fpsIndex >= this._fpsShowQueue.length) {
@@ -5854,10 +5856,10 @@ var paper;
                     return this._dirty;
                 },
                 set: function (v) {
-                    if (this._dirty !== v) {
-                        this._dirty = v;
-                        this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_DIRTY));
-                    }
+                    // if (this._dirty !== v) {
+                    this._dirty = v;
+                    this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_DIRTY));
+                    // }
                 },
                 enumerable: true,
                 configurable: true
@@ -7577,12 +7579,20 @@ var paper;
             };
             CreateGameObjectState.prototype.createGameObjectByType = function (createType) {
                 var obj = new paper.GameObject();
-                var meshFilter;
                 obj.name = createType.toLowerCase();
-                if (this.mesh) {
-                    meshFilter = obj.addComponent(egret3d.MeshFilter);
-                    meshFilter.mesh = this.mesh;
-                    obj.addComponent(egret3d.MeshRenderer);
+                if (createType === 'NODE_2D') {
+                    var component2D = obj.addComponent(egret3d.Egret2DRenderer);
+                    obj.layer = 32 /* UI */;
+                    var camera = obj.addComponent(egret3d.Camera);
+                    camera.cullingMask = 32 /* UI */;
+                }
+                else {
+                    var meshFilter = void 0;
+                    if (this.mesh) {
+                        meshFilter = obj.addComponent(egret3d.MeshFilter);
+                        meshFilter.mesh = this.mesh;
+                        obj.addComponent(egret3d.MeshRenderer);
+                    }
                 }
                 return obj;
             };

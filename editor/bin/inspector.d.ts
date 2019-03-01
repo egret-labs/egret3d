@@ -245,6 +245,7 @@ declare namespace paper.editor {
         readonly inspector: dat.GUI;
         readonly stats: Stats;
         readonly renderPanel: Stats.Panel;
+        readonly drawCallPanel: Stats.Panel;
         initialize(): void;
         openComponents(...args: IComponentClass<BaseComponent>[]): void;
     }

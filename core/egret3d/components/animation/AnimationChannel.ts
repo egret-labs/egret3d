@@ -141,7 +141,7 @@ namespace egret3d {
                     }
                 }
 
-                animationState._applyRootMotion(x, y, z, weight, currentTime);
+                animationState._applyRootMotion(x, y, z, weight, currentTime, this);
             }
             else {
                 if (weight !== 1.0) {

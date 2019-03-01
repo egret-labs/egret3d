@@ -135,6 +135,10 @@ namespace paper.editor {
                 paper.Application.systemManager.getSystem((egret3d as any)["webgl"]["WebGLRenderSystem"])!.deltaTime,
                 200
             );
+            guiComponent.drawCallPanel.update(
+                egret3d.drawCallCollecter.drawCallCount,
+                500
+            );
 
             if (egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyH).isDown(false)) {
                 this._fpsIndex++;

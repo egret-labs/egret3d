@@ -842,6 +842,8 @@ namespace egret3d.webgl {
                 if (drawCall.drawCount >= 0) {
                     drawCall.drawCount++;
                 }
+
+                drawCallCollecter.drawCallCount++;
             }
         }
 
@@ -855,6 +857,8 @@ namespace egret3d.webgl {
             if (!WebGLRenderState.webgl) {
                 return;
             }
+
+            drawCallCollecter.drawCallCount = 0;
 
             const { cameras } = this._cameraAndLightCollecter;
 

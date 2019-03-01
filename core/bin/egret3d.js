@@ -13011,6 +13011,10 @@ var egret3d;
         function DrawCallCollecter() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
+             *
+             */
+            _this.drawCallCount = 0;
+            /**
              * 专用于天空盒渲染的绘制信息。
              */
             _this.skyBox = egret3d.DrawCall.create();
@@ -18938,6 +18942,7 @@ var egret;
                 }
                 var size = data.count * 3;
                 gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
+                egret3d.drawCallCollecter.drawCallCount++;
                 return size;
             };
             /**
@@ -18996,6 +19001,7 @@ var egret;
                     gl.stencilOp(gl.KEEP, gl.KEEP, gl.INCR);
                     // gl.bindTexture(gl.TEXTURE_2D, null);
                     gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
+                    egret3d.drawCallCollecter.drawCallCount++;
                     gl.stencilFunc(gl.EQUAL, level + 1, 0xFF);
                     gl.colorMask(true, true, true, true);
                     gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
@@ -19021,6 +19027,7 @@ var egret;
                         gl.stencilOp(gl.KEEP, gl.KEEP, gl.DECR);
                         // gl.bindTexture(gl.TEXTURE_2D, null);
                         gl.drawElements(gl.TRIANGLES, size, gl.UNSIGNED_SHORT, offset * 2);
+                        egret3d.drawCallCollecter.drawCallCount++;
                         gl.stencilFunc(gl.EQUAL, level, 0xFF);
                         gl.colorMask(true, true, true, true);
                         gl.stencilOp(gl.KEEP, gl.KEEP, gl.KEEP);
@@ -19825,7 +19832,7 @@ var egret3d;
         /**
          * @internal
          */
-        AnimationState.prototype._applyRootMotion = function (x, y, z, weight, time) {
+        AnimationState.prototype._applyRootMotion = function (x, y, z, weight, time, animationChannel) {
             if (!this._animation.applyRootMotion) {
                 return;
             }
@@ -19834,9 +19841,18 @@ var egret3d;
             }
             var transform = this._animation.gameObject.transform;
             var lastPosition = this._lastRootMotionPosition;
-            if (lastPosition.w > time) {
+            if (this._animation.timeScale * this.timeScale > 0.0) {
+                if (lastPosition.w > time) {
+                    this._lastRootMotionRotation = 0.0;
+                    lastPosition.set(0.0, 0.0, 0.0, 0.0);
+                }
+            }
+            else if (lastPosition.w < time) {
+                var applyRootMotion = this.animationClip.applyRootMotion || 5 /* XZ */;
+                var outputBuffer = animationChannel.outputBuffer;
+                var index = outputBuffer.length - 3;
                 this._lastRootMotionRotation = 0.0;
-                lastPosition.clear();
+                lastPosition.set((applyRootMotion & 1 /* X */) ? outputBuffer[index] : 0.0, (applyRootMotion & 2 /* Y */) ? outputBuffer[index + 1] : 0.0, (applyRootMotion & 4 /* Z */) ? outputBuffer[index + 2] : 0.0, this.animationClip.duration);
             }
             var position = egret3d.helpVector3A.set(x, y, z).subtract(lastPosition)
                 .applyMatrix3(transform.localToParentMatrix).multiplyScalar(weight);
@@ -20419,7 +20435,7 @@ var egret3d;
                         z = 0.0;
                     }
                 }
-                animationState._applyRootMotion(x, y, z, weight, currentTime);
+                animationState._applyRootMotion(x, y, z, weight, currentTime, this);
             }
             else {
                 if (weight !== 1.0) {
@@ -20760,6 +20776,7 @@ var egret3d;
                 deltaTime *= animation.timeScale * animationState.timeScale;
                 animationState._time += deltaTime;
             }
+            var time = animationState._time;
             // const isBlendDirty = this._fadeState !== 0 || this._subFadeState === 0;
             var prevPlayState = animationState._playState;
             var prevPlayTimes = animationState.currentPlayTimes;
@@ -20768,12 +20785,12 @@ var egret3d;
             var duration = animationState.animationClip.duration;
             var totalTime = playTimes * duration;
             var currentTime = 0.0;
-            if (playTimes > 0 && (animationState._time >= totalTime || animationState._time <= -totalTime)) {
+            if (playTimes > 0 && (time >= totalTime || time <= -totalTime)) {
                 if (animationState._playState <= 0 && animationState._playheadEnabled) {
                     animationState._playState = 1;
                 }
                 animationState.currentPlayTimes = playTimes;
-                if (animationState._time >= totalTime) {
+                if (time >= totalTime) {
                     currentTime = duration;
                 }
                 else {
@@ -20784,14 +20801,14 @@ var egret3d;
                 if (animationState._playState !== 0 && animationState._playheadEnabled) {
                     animationState._playState = 0;
                 }
-                if (animationState._time < 0.0) {
-                    animationState._time = -animationState._time;
-                    animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    currentTime = duration - (animationState._time % duration);
+                if (time < 0.0) {
+                    time = -time;
+                    animationState.currentPlayTimes = (time / duration) >> 0;
+                    currentTime = duration - (time % duration);
                 }
                 else {
-                    animationState.currentPlayTimes = (animationState._time / duration) >> 0;
-                    currentTime = animationState._time % duration;
+                    animationState.currentPlayTimes = (time / duration) >> 0;
+                    currentTime = time % duration;
                 }
             }
             currentTime += animationState.animationClip.position;
@@ -29829,6 +29846,7 @@ var egret3d;
                     if (drawCall.drawCount >= 0) {
                         drawCall.drawCount++;
                     }
+                    egret3d.drawCallCollecter.drawCallCount++;
                 }
             };
             WebGLRenderSystem.prototype.onAwake = function () {
@@ -29840,6 +29858,7 @@ var egret3d;
                 if (!webgl_15.WebGLRenderState.webgl) {
                     return;
                 }
+                egret3d.drawCallCollecter.drawCallCount = 0;
                 var cameras = this._cameraAndLightCollecter.cameras;
                 if (cameras.length > 0) {
                     var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
