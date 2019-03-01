@@ -1,6 +1,6 @@
 namespace examples {
 
-    export function createGridRoom() {
+    export function createGridRoom(offsetY: number = 20.0) {
         { // Create light.
             paper.Scene.activeScene.fog.mode = egret3d.FogMode.Fog;
             paper.Scene.activeScene.fog.color.fromHex(0xFFFFFF);
@@ -20,7 +20,7 @@ namespace examples {
 
         const mesh = egret3d.MeshBuilder.createCube(
             40.0, 40.0, 40.0,
-            0.0, 20.0, 0.0,
+            0.0, offsetY, 0.0,
             40, 40, 40,
         );
         mesh.name = "custom/gridroom.mesh.bin";

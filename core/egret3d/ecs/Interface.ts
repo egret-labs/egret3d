@@ -128,9 +128,9 @@ namespace paper {
      * 应用程序运行模式。
      */
     export const enum PlayerMode {
-        Player = 0,
-        DebugPlayer = 1,
-        Editor = 2,
+        Player = 0b001,
+        DebugPlayer = 0b010,
+        Editor = 0b100,
     }
     /**
      * 
@@ -312,6 +312,20 @@ namespace paper {
         new(): TComponent;
     }
     /**
+     * 系统类接口。
+     */
+    export interface ISystemClass<TSystem extends ISystem<TEntity>, TEntity extends IEntity> {
+        /**
+         * 
+         */
+        readonly executeMode: PlayerMode;
+        /**
+         * 禁止实例化系统。
+         * @protected
+         */
+        new(...args: any[]): TSystem;
+    }
+    /**
      * 实体接口。
      */
     export interface IEntity extends IUUID {
@@ -462,6 +476,108 @@ namespace paper {
          * 
          */
         dispatchEnabledEvent(enabled: boolean): void;
+    }
+    /**
+     * 系统接口。
+     */
+    export interface ISystem<TEntity extends IEntity> {
+        /**
+         * 该系统是否被激活。
+         */
+        enabled: boolean;
+        /**
+         * 该系统的执行顺序。
+         */
+        readonly order: SystemOrder;
+        /**
+         * 该系统在调试模式时每帧消耗的时间，仅用于性能统计。（以毫秒为单位）
+         */
+        readonly deltaTime: uint;
+        /**
+         * 
+         */
+        readonly groups: ReadonlyArray<Group<TEntity>>;
+        /**
+         * 
+         */
+        readonly collectors: ReadonlyArray<Collector<TEntity>>;
+        /**
+         * @internal
+         */
+        initialize(config?: any): void;
+        /**
+         * @internal
+         */
+        uninitialize(): void;
+        /**
+         * 该系统初始化时调用。
+         * @param config 该系统被注册时可以传递的初始化数据。
+         */
+        onAwake?(config?: any): void;
+        /**
+         * 该系统被激活时调用。
+         * @see paper.BaseSystem#enabled
+         */
+        onEnable?(): void;
+        /**
+         * 该系统开始运行时调用。
+         */
+        onStart?(): void;
+        /**
+         * 充分非必要组件从实体移除时调用。
+         * @param component 移除的实体组件。
+         * @param group 移除实体组件的实体组。
+         */
+        onComponentRemoved?(component: IComponent, group: Group<TEntity>): void;
+        /**
+         * 实体从系统移除时调用。
+         * @param entity 移除的实体。
+         * @param group 移除实体的实体组。
+         */
+        onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * 实体被添加到系统时调用。
+         * @param entity 收集的实体。
+         * @param group 收集实体的实体组。
+         */
+        onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * 充分非必要组件添加到实体时调用。
+         * @param component 收集的实体组件。
+         * @param group 收集实体组件的实体组。
+         */
+        onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
+        /**
+         * 生成一个新的逻辑帧时调用
+         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
+         */
+        onTick?(deltaTime?: number): void;
+        /**
+         * 在新的逻辑帧的清理阶段调用
+         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
+         */
+        onTickCleanup?(deltaTime?: number): void;
+        /**
+         * 生成一个新的渲染帧时调用
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onFrame?(deltaTime?: number): void;
+        /**
+         * 在新的渲染帧的清理阶段调用
+         * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
+         */
+        onFrameCleanup?(deltaTime?: number): void;
+        /**
+         * 该系统被禁用时调用。
+         * @see paper.BaseSystem#enabled
+         */
+        onDisable?(): void;
+        /**
+         * 该系统被注销时调用。
+         * @see paper.SystemManager#unregister()
+         * @see paper.Application#systemManager
+         */
+        onDestroy?(): void;
     }
     /**
      * 实体组件匹配器接口。

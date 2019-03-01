@@ -2,6 +2,7 @@ namespace paper.editor {
     /**
      * TODO
      */
+    @executeMode(PlayerMode.DebugPlayer | PlayerMode.Editor)
     export class SceneSystem extends BaseSystem<GameObject> {
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
 
@@ -42,12 +43,9 @@ namespace paper.editor {
 
         public onAwake() {
             // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
-            Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
         }
 
         public onEnable() {
-            Application.systemManager.getSystem(GizmosSystem)!.enabled = true;
-
             const editorCamera = egret3d.Camera.editor;
             editorCamera.gameObject.addComponent(OrbitControls);
             editorCamera.enabled = true;
@@ -63,8 +61,6 @@ namespace paper.editor {
         }
 
         public onDisable() {
-            Application.systemManager.getSystem(GizmosSystem)!.enabled = false;
-
             const editorCamera = egret3d.Camera.editor;
             editorCamera.gameObject.removeComponent(OrbitControls);
             editorCamera.enabled = false;

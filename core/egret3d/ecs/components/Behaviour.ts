@@ -16,11 +16,8 @@ namespace paper {
      * - onDisable();
      * - onDestroy();
      */
+    @abstract
     export abstract class Behaviour extends BaseComponent {
-        /**
-         * @internal
-         */
-        public static readonly isAbstract: IComponentClass<IComponent> = Behaviour as any;
         /**
          * @internal
          */

@@ -3,41 +3,31 @@ namespace paper {
      * 基础系统。
      * - 全部系统的基类。
      */
-    export abstract class BaseSystem<TEntity extends IEntity> {
+    export abstract class BaseSystem<TEntity extends IEntity> implements ISystem<TEntity> {
+        /**
+         * 
+         */
+        public static readonly executeMode: PlayerMode = PlayerMode.Player | PlayerMode.DebugPlayer | PlayerMode.Editor;
         /**
          * @internal
          */
-        public static create<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): BaseSystem<TEntity> }, context: Context<TEntity>, order: SystemOrder): TSystem {
-            return new systemClass(context, order) as TSystem;
+        public static create<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(systemClass: ISystemClass<TSystem, TEntity>, context: Context<TEntity>, order: SystemOrder): TSystem {
+            return new systemClass(context, order);
         }
-        /**
-         * 该系统是否被激活。
-         */
+
         public enabled: boolean = true;
-        /**
-         * 该系统的执行顺序。
-         */
         public readonly order: SystemOrder = -1;
-        /**
-         * 该系统在调试模式时每帧消耗的时间，仅用于性能统计。（以毫秒为单位）
-         */
         public readonly deltaTime: uint = 0;
-        /**
-         * 
-         */
         public readonly groups: ReadonlyArray<Group<TEntity>> = [];
-        /**
-         * 
-         */
         public readonly collectors: ReadonlyArray<Collector<TEntity>> = [];
         /**
          * @internal
          */
-        public _started: boolean = false;
+        public _lastEnabled: boolean = false;
         /**
          * @internal
          */
-        public _enabled: boolean = false;
+        public _executeEnabled: boolean = false;
 
         private _context: Context<TEntity> | null = null; // 兼容 interests 2.0 移除。
         /**
@@ -63,12 +53,12 @@ namespace paper {
                 }
             }
 
-            if (!this.onEntityAdded && this.onAddGameObject) {
-                this.onEntityAdded = this.onAddGameObject;
+            if (!(this as ISystem<TEntity>).onEntityAdded && this.onAddGameObject) {
+                (this as ISystem<TEntity>).onEntityAdded = this.onAddGameObject;
             }
 
-            if (!this.onEntityRemoved && this.onRemoveGameObject) {
-                this.onEntityRemoved = this.onRemoveGameObject;
+            if (!(this as ISystem<TEntity>).onEntityRemoved && this.onRemoveGameObject) {
+                (this as ISystem<TEntity>).onEntityRemoved = this.onRemoveGameObject;
             }
         }
 
@@ -81,7 +71,7 @@ namespace paper {
          * @internal
          */
         public initialize(config?: any): void {
-            this.onAwake && this.onAwake(config);
+            (this as ISystem<TEntity>).onAwake && (this as ISystem<TEntity>).onAwake!(config);
         }
         /**
          * @internal
@@ -100,74 +90,19 @@ namespace paper {
         protected getListeners(): { type: signals.Signal, listener: (component: any) => void }[] | null {
             return null;
         }
-        /**
-         * 该系统初始化时调用。
-         * @param config 该系统被注册时可以传递的初始化数据。
-         */
+
         public onAwake?(config?: any): void;
-        /**
-         * 该系统被激活时调用。
-         * @see paper.BaseSystem#enabled
-         */
         public onEnable?(): void;
-        /**
-         * 该系统开始运行时调用。
-         */
         public onStart?(): void;
-        /**
-         * 实体被添加到系统时调用。
-         * @param entity 收集的实体。
-         * @param group 收集实体的实体组。
-         */
-        public onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
-        /**
-         * 充分非必要组件添加到实体时调用。
-         * @param component 收集的实体组件。
-         * @param group 收集实体组件的实体组。
-         */
-        public onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
-        /**
-         * 充分非必要组件从实体移除时调用。
-         * @param component 移除的实体组件。
-         * @param group 移除实体组件的实体组。
-         */
         public onComponentRemoved?(component: IComponent, group: Group<TEntity>): void;
-        /**
-         * 实体从系统移除时调用。
-         * @param entity 移除的实体。
-         * @param group 移除实体的实体组。
-         */
         public onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
-        /**
-         * 生成一个新的逻辑帧时调用
-         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
-         */
+        public onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
+        public onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
         public onTick?(deltaTime?: number): void;
-        /**
-         * 在新的逻辑帧的清理阶段调用
-         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
-         */
         public onTickCleanup?(deltaTime?: number): void;
-        /**
-         * 生成一个新的渲染帧时调用
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
         public onFrame?(deltaTime?: number): void;
-        /**
-         * 在新的渲染帧的清理阶段调用
-         * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
-         */
         public onFrameCleanup?(deltaTime?: number): void;
-        /**
-         * 该系统被禁用时调用。
-         * @see paper.BaseSystem#enabled
-         */
         public onDisable?(): void;
-        /**
-         * 该系统被注销时调用。
-         * @see paper.SystemManager#unregister()
-         * @see paper.Application#systemManager
-         */
         public onDestroy?(): void;
 
         /**

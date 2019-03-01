@@ -3,11 +3,8 @@ namespace paper {
      * 基础变换组件。
      * - 实现实体之间的父子关系。
      */
+    @abstract
     export abstract class BaseTransform extends BaseComponent {
-        /**
-         * @internal
-         */
-        public static readonly isAbstract: IComponentClass<IComponent> = BaseTransform as any;
         /**
          * 当变换组件的父级改变时派发事件。
          */

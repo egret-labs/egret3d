@@ -10,11 +10,8 @@ namespace egret3d.oimo {
      * 基础碰撞体组件。
      * - 全部碰撞体组件的基类。
      */
+    @paper.abstract
     export abstract class BaseCollider extends paper.BaseComponent implements egret3d.ICollider {
-        /**
-         * @internal
-         */
-        public static readonly isAbstract: paper.IComponentClass<paper.IComponent> = BaseCollider as any;
 
         protected static readonly _config: OIMO.ShapeConfig = new OIMO.ShapeConfig();
 

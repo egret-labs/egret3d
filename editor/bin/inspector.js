@@ -4412,7 +4412,7 @@ var paper;
             ModelComponent.prototype.initialize = function () {
                 var _this = this;
                 _super.prototype.initialize.call(this);
-                if (paper.Application.playerMode === 2 /* Editor */) {
+                if (paper.Application.playerMode === 4 /* Editor */) {
                     editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, function () {
                         if (_this._editorModel) {
                             _this._editorModel.removeEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, _this._onEditorSelectGameObjects, _this);
@@ -5314,14 +5314,13 @@ var paper;
             function EditorSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._isMobile = false;
-                _this._guiComponent = paper.Application.playerMode === 2 /* Editor */ ? null : paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
+                _this._guiComponent = paper.Application.playerMode === 4 /* Editor */ ? null : paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
                 return _this;
             }
             EditorSystem.prototype.onAwake = function () {
                 paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultTexture); // TODO
                 //
-                if (paper.Application.playerMode === 2 /* Editor */) {
-                    paper.Application.systemManager.register(editor.SceneSystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
+                if (paper.Application.playerMode === 4 /* Editor */) {
                 }
                 else {
                     var guiComponent_1 = this._guiComponent;
@@ -5372,16 +5371,18 @@ var paper;
                         guiComponent_1.hierarchy.close();
                         guiComponent_1.inspector.close();
                     }
-                    paper.Application.systemManager.register(editor.HierarchySystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
-                    paper.Application.systemManager.register(editor.InspectorSystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
-                    paper.Application.systemManager.register(editor.StatsSystem, paper.Application.gameObjectContext, 10000 /* End */);
                 }
+                paper.Application.systemManager.register(editor.HierarchySystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
+                paper.Application.systemManager.register(editor.InspectorSystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
+                paper.Application.systemManager.register(editor.SceneSystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
+                paper.Application.systemManager.register(editor.GizmosSystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
+                paper.Application.systemManager.register(editor.StatsSystem, paper.Application.gameObjectContext, 10000 /* End */);
             };
             EditorSystem.prototype.onStart = function () {
                 console.info("\u5C0F\u63D0\u793A\uFF1A\u901A\u8FC7 H \u952E\u5207\u6362 Inspector \u7684\u663E\u793A\u4E0E\u9690\u85CF\u3002");
             };
             EditorSystem.prototype.onFrame = function () {
-                if (paper.Application.playerMode === 2 /* Editor */) {
+                if (paper.Application.playerMode === 4 /* Editor */) {
                     return;
                 }
                 var _a = this._guiComponent, hierarchy = _a.hierarchy, inspector = _a.inspector;
@@ -5895,6 +5896,9 @@ var paper;
                 this._updateCollider();
                 this._updateGrid();
             };
+            GizmosSystem = __decorate([
+                paper.executeMode(2 /* DebugPlayer */ | 4 /* Editor */)
+            ], GizmosSystem);
             return GizmosSystem;
         }(paper.BaseSystem));
         editor.GizmosSystem = GizmosSystem;
@@ -5922,7 +5926,16 @@ var paper;
                 _this._selectedItems = [];
                 _this._sceneOrGameObjectGUIClickHandler = function (gui) {
                     var selectSceneOrEntity = gui.instance;
-                    if (selectSceneOrEntity instanceof paper.Entity) {
+                    if (selectSceneOrEntity instanceof paper.Scene) {
+                        if (selectSceneOrEntity.isDestroyed) {
+                            return;
+                        }
+                        _this._modelComponent.select(selectSceneOrEntity);
+                    }
+                    else if (selectSceneOrEntity instanceof paper.Entity) {
+                        if (selectSceneOrEntity.isDestroyed) {
+                            return;
+                        }
                         var isReplace = !_this._controlLeft.isHold(false) && !_this._controlRight.isHold(false);
                         if (selectSceneOrEntity.getComponent(editor.SelectedFlag)) {
                             if (!isReplace) {
@@ -5932,9 +5945,6 @@ var paper;
                         else {
                             _this._modelComponent.select(selectSceneOrEntity, isReplace);
                         }
-                    }
-                    else {
-                        _this._modelComponent.select(selectSceneOrEntity);
                     }
                 };
                 return _this;
@@ -6035,17 +6045,11 @@ var paper;
                     debug: false,
                 };
                 this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
-                    var sceneSystem = paper.Application.systemManager.getSystem(editor.SceneSystem);
-                    if (!sceneSystem) {
-                        sceneSystem = paper.Application.systemManager.register(editor.SceneSystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
-                    }
                     if (v) {
-                        paper.Application.playerMode = 1 /* DebugPlayer */;
-                        sceneSystem.enabled = true;
+                        paper.Application.playerMode = 2 /* DebugPlayer */;
                     }
                     else {
-                        paper.Application.playerMode = 0 /* Player */;
-                        sceneSystem.enabled = false;
+                        paper.Application.playerMode = 1 /* Player */;
                     }
                 });
             };
@@ -6156,6 +6160,9 @@ var paper;
                     }
                 }
             };
+            HierarchySystem = __decorate([
+                paper.executeMode(1 /* Player */ | 2 /* DebugPlayer */)
+            ], HierarchySystem);
             return HierarchySystem;
         }(paper.BaseSystem));
         editor.HierarchySystem = HierarchySystem;
@@ -6662,29 +6669,12 @@ var paper;
                         var index = 0;
                         for (var _i = 0, materials_1 = materials; _i < materials_1.length; _i++) {
                             var material = materials_1[_i];
-                            var folder = gui.addFolder("<" + index++ + ">");
+                            var folder = gui.addFolder("<" + index++ + "> " + (material.name || material.shader.name));
                             folder.instance = material;
                             this._addToInspector(folder);
                         }
                         break;
                     }
-                }
-            };
-            InspectorSystem.prototype._updateOpenedComponents = function (lastSelectedEntity) {
-                var openedComponents = this._modelComponent.openedComponents;
-                var _a = this._guiComponent, inspector = _a.inspector, inspectorItems = _a.inspectorItems;
-                if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
-                    for (var k in inspectorItems) {
-                        inspectorItems[k].close();
-                    }
-                    for (var _i = 0, openedComponents_1 = openedComponents; _i < openedComponents_1.length; _i++) {
-                        var componentClass = openedComponents_1[_i];
-                        var component = lastSelectedEntity.getComponent(componentClass);
-                        if (component && component.uuid in inspectorItems) {
-                            inspectorItems[component.uuid].open();
-                        }
-                    }
-                    openedComponents.length = 0;
                 }
             };
             InspectorSystem.prototype.getMatchers = function () {
@@ -6716,9 +6706,6 @@ var paper;
             };
             InspectorSystem.prototype.onEntityAdded = function (entity, group) {
                 var groups = this.groups;
-                if (group === groups[0]) {
-                    this._selectSceneOrGameObject(entity);
-                }
             };
             InspectorSystem.prototype.onEntityRemoved = function (entity, group) {
                 var groups = this.groups;
@@ -6740,13 +6727,16 @@ var paper;
                         }
                     }
                     else if (lastSelectedEntity) {
+                        if (lastSelectedEntity !== inspector.instance) {
+                            this._selectSceneOrGameObject(lastSelectedEntity);
+                        }
                         var openedComponents = this._modelComponent.openedComponents;
                         if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
                             for (var k in inspectorItems) {
                                 inspectorItems[k].close();
                             }
-                            for (var _i = 0, openedComponents_2 = openedComponents; _i < openedComponents_2.length; _i++) {
-                                var componentClass = openedComponents_2[_i];
+                            for (var _i = 0, openedComponents_1 = openedComponents; _i < openedComponents_1.length; _i++) {
+                                var componentClass = openedComponents_1[_i];
                                 var component = lastSelectedEntity.getComponent(componentClass);
                                 if (component && component.uuid in inspectorItems) {
                                     inspectorItems[component.uuid].open();
@@ -6756,11 +6746,14 @@ var paper;
                         }
                         lastSelectedEntity.transform.localEulerAngles; // TODO
                     }
-                    else {
+                    else if (inspector.instance) {
                         this._selectSceneOrGameObject(null);
                     }
                 }
             };
+            InspectorSystem = __decorate([
+                paper.executeMode(1 /* Player */ | 2 /* DebugPlayer */)
+            ], InspectorSystem);
             return InspectorSystem;
         }(paper.BaseSystem));
         editor.InspectorSystem = InspectorSystem;
@@ -6841,6 +6834,7 @@ var paper;
                 _this._transformControllerEntity = null;
                 return _this;
             }
+            SceneSystem_1 = SceneSystem;
             SceneSystem.prototype.lookAtSelected = function () {
                 var orbitControls = egret3d.Camera.editor.gameObject.getComponent(editor.OrbitControls);
                 orbitControls.distance = 10.0;
@@ -6862,10 +6856,8 @@ var paper;
             };
             SceneSystem.prototype.onAwake = function () {
                 // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
-                paper.Application.systemManager.register(editor.GizmosSystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
             };
             SceneSystem.prototype.onEnable = function () {
-                paper.Application.systemManager.getSystem(editor.GizmosSystem).enabled = true;
                 var editorCamera = egret3d.Camera.editor;
                 editorCamera.gameObject.addComponent(editor.OrbitControls);
                 editorCamera.enabled = true;
@@ -6879,7 +6871,6 @@ var paper;
                 this._transformControllerEntity.addComponent(editor.TransformController);
             };
             SceneSystem.prototype.onDisable = function () {
-                paper.Application.systemManager.getSystem(editor.GizmosSystem).enabled = false;
                 var editorCamera = egret3d.Camera.editor;
                 editorCamera.gameObject.removeComponent(editor.OrbitControls);
                 editorCamera.enabled = false;
@@ -6945,7 +6936,7 @@ var paper;
                             }
                         }
                         else if (!event_1.ctrlKey && !event_1.shiftKey) {
-                            if (!this._modelComponent.selectedScene && !defaultPointer.downPosition.equal(SceneSystem._defalutPosition)) {
+                            if (!this._modelComponent.selectedScene && !defaultPointer.downPosition.equal(SceneSystem_1._defalutPosition)) {
                                 this._modelComponent.select(paper.Scene.activeScene);
                             }
                         }
@@ -6999,7 +6990,7 @@ var paper;
                     this._modelComponent.select(null);
                 }
                 if (this._keyDelete.isUp(false) && !this._keyDelete.event.altKey && !this._keyDelete.event.ctrlKey && !this._keyDelete.event.shiftKey) {
-                    if (paper.Application.playerMode !== 2 /* Editor */) {
+                    if (paper.Application.playerMode !== 4 /* Editor */) {
                         this._modelComponent.delete();
                     }
                 }
@@ -7021,10 +7012,14 @@ var paper;
             };
             SceneSystem.prototype._clearDefaultPointerDownPosition = function () {
                 var defaultPointer = egret3d.inputCollecter.defaultPointer;
-                defaultPointer.downPosition.copy(SceneSystem._defalutPosition);
+                defaultPointer.downPosition.copy(SceneSystem_1._defalutPosition);
             };
             SceneSystem._defalutPosition = egret3d.Vector3.create(-1, -1, -1);
+            SceneSystem = SceneSystem_1 = __decorate([
+                paper.executeMode(2 /* DebugPlayer */ | 4 /* Editor */)
+            ], SceneSystem);
             return SceneSystem;
+            var SceneSystem_1;
         }(paper.BaseSystem));
         editor.SceneSystem = SceneSystem;
         __reflect(SceneSystem.prototype, "paper.editor.SceneSystem");
@@ -7368,7 +7363,7 @@ var paper;
                 egret3d.runEgret({
                     antialias: false,
                     alpha: false,
-                    playerMode: 2 /* Editor */,
+                    playerMode: 4 /* Editor */,
                 });
             };
             return Editor;

@@ -577,9 +577,9 @@ var paper;
      */
     var PlayerMode;
     (function (PlayerMode) {
-        PlayerMode[PlayerMode["Player"] = 0] = "Player";
-        PlayerMode[PlayerMode["DebugPlayer"] = 1] = "DebugPlayer";
-        PlayerMode[PlayerMode["Editor"] = 2] = "Editor";
+        PlayerMode[PlayerMode["Player"] = 1] = "Player";
+        PlayerMode[PlayerMode["DebugPlayer"] = 2] = "DebugPlayer";
+        PlayerMode[PlayerMode["Editor"] = 4] = "Editor";
     })(PlayerMode = paper.PlayerMode || (paper.PlayerMode = {}));
 })(paper || (paper = {}));
 var paper;
@@ -620,14 +620,14 @@ var paper;
         }
     }
     paper.deserializedIgnore = deserializedIgnore;
-    // /** TODO
-    //  * 通过装饰器标记组件是否为抽象组件。
-    //  * @param componentClass 组件类。
-    //  */
-    // export function abstract(componentClass: IComponentClass<IComponent>) {
-    //     (componentClass.__isAbstract as any) = componentClass;
-    //     console.log(componentClass);
-    // }
+    /**
+     * 通过装饰器标记组件是否为抽象组件。
+     * @param componentClass 组件类。
+     */
+    function abstract(componentClass) {
+        componentClass.isAbstract = componentClass;
+    }
+    paper.abstract = abstract;
     /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
@@ -679,6 +679,16 @@ var paper;
         };
     }
     paper.requireComponent = requireComponent;
+    /**
+     *
+     * @param executeMode
+     */
+    function executeMode(executeMode) {
+        return function (systemClass) {
+            systemClass.executeMode = executeMode;
+        };
+    }
+    paper.executeMode = executeMode;
     /**
      * 通过装饰器标记 API 已被废弃。
      * @param version 废弃的版本。
@@ -1370,7 +1380,7 @@ var paper;
             var _this = _super.call(this) || this;
             _this.hideFlags = 0 /* None */;
             _this.entity = null;
-            _this.extras = paper.Application.playerMode === 2 /* Editor */ ? {} : undefined;
+            _this.extras = paper.Application.playerMode === 4 /* Editor */ ? {} : undefined;
             _this._isDestroyed = true;
             _this._enabled = false;
             /**
@@ -1379,6 +1389,7 @@ var paper;
             _this._lifeStates = 0 /* None */;
             return _this;
         }
+        Component_1 = Component;
         /**
          * @internal
          */
@@ -1442,10 +1453,10 @@ var paper;
         };
         Component.prototype.dispatchEnabledEvent = function (enabled) {
             if (enabled) {
-                Component.onComponentEnabled.dispatch([this.entity, this]);
+                Component_1.onComponentEnabled.dispatch([this.entity, this]);
             }
             else {
-                Component.onComponentDisabled.dispatch([this.entity, this]);
+                Component_1.onComponentDisabled.dispatch([this.entity, this]);
             }
         };
         Object.defineProperty(Component.prototype, "isDestroyed", {
@@ -1515,7 +1526,7 @@ var paper;
         /**
          *
          */
-        Component.isAbstract = Component;
+        Component.isAbstract = Component_1;
         /**
          * 该组件实例是否为单例组件。
          */
@@ -1552,7 +1563,11 @@ var paper;
         __decorate([
             paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], Component.prototype, "enabled", null);
+        Component = Component_1 = __decorate([
+            paper.abstract
+        ], Component);
         return Component;
+        var Component_1;
     }(paper.BaseObject));
     paper.Component = Component;
     __reflect(Component.prototype, "paper.Component", ["paper.IComponent"]);
@@ -1857,10 +1872,9 @@ var paper;
             enumerable: true,
             configurable: true
         });
-        /**
-         * @internal
-         */
-        BaseComponent.isAbstract = BaseComponent;
+        BaseComponent = __decorate([
+            paper.abstract
+        ], BaseComponent);
         return BaseComponent;
     }(paper.Component));
     paper.BaseComponent = BaseComponent;
@@ -2773,7 +2787,7 @@ var paper;
             _this.name = "";
             _this.tag = "";
             _this.hideFlags = 0 /* None */;
-            _this.extras = paper.Application.playerMode === 2 /* Editor */ ? {} : undefined;
+            _this.extras = paper.Application.playerMode === 4 /* Editor */ ? {} : undefined;
             _this._componentsDirty = false;
             _this._isDestroyed = true;
             _this._enabled = false;
@@ -3985,6 +3999,7 @@ var paper;
             _this._materials = [egret3d.DefaultMaterials.MESH_BASIC.retain()]; // TODO
             return _this;
         }
+        BaseRenderer_1 = BaseRenderer;
         BaseRenderer.prototype._recalculateSphere = function () {
             var localBoundingBox = this.localBoundingBox; // Update localBoundingBox.
             var localToWorldMatrix = this.getBoundingTransform().localToWorldMatrix;
@@ -4106,7 +4121,7 @@ var paper;
                         material.retain();
                     }
                 }
-                BaseRenderer.onMaterialsChanged.dispatch(this);
+                BaseRenderer_1.onMaterialsChanged.dispatch(this);
             },
             enumerable: true,
             configurable: true
@@ -4140,7 +4155,7 @@ var paper;
                         value.retain();
                     }
                     materials[0] = value;
-                    BaseRenderer.onMaterialsChanged.dispatch(this);
+                    BaseRenderer_1.onMaterialsChanged.dispatch(this);
                 }
             },
             enumerable: true,
@@ -4156,10 +4171,6 @@ var paper;
             enumerable: true,
             configurable: true
         });
-        /**
-         * @internal
-         */
-        BaseRenderer.isAbstract = BaseRenderer;
         /**
          * 当渲染组件的材质列表改变时派发事件。
          */
@@ -4184,7 +4195,11 @@ var paper;
             paper.editor.property("MATERIAL_ARRAY" /* MATERIAL_ARRAY */),
             paper.serializedField("_materials")
         ], BaseRenderer.prototype, "materials", null);
+        BaseRenderer = BaseRenderer_1 = __decorate([
+            paper.abstract
+        ], BaseRenderer);
         return BaseRenderer;
+        var BaseRenderer_1;
     }(paper.BaseComponent));
     paper.BaseRenderer = BaseRenderer;
     __reflect(BaseRenderer.prototype, "paper.BaseRenderer", ["egret3d.IRaycast", "egret3d.ITransformObserver"]);
@@ -4376,7 +4391,7 @@ var paper;
             if (!this.config) {
                 return null;
             }
-            var isEditor = paper.Application.playerMode === 2 /* Editor */;
+            var isEditor = paper.Application.playerMode === 4 /* Editor */;
             var deserializer = new paper.Deserializer();
             var gameObject = deserializer.deserialize(this.config, keepUUID, isEditor, scene);
             if (gameObject && isEditor) {
@@ -6416,6 +6431,48 @@ var paper;
             }
             return index < 0 ? systems.length : index;
         };
+        /**
+         * @internal
+         */
+        SystemManager.prototype._startup = function () {
+            var playerMode = paper.Application.playerMode;
+            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
+                var system = _a[_i];
+                if (system.constructor.executeMode & playerMode) {
+                    if (system._executeEnabled && !system.enabled) {
+                        system.enabled = true;
+                    }
+                }
+                else if (system.enabled) {
+                    system.enabled = false;
+                    system._executeEnabled = true;
+                }
+                if (system._lastEnabled === system.enabled || !system.enabled) {
+                    continue;
+                }
+                system.onEnable && system.onEnable();
+                if (true) {
+                    console.debug(egret.getQualifiedClassName(system), "enabled.");
+                }
+                if (system.onEntityAdded) {
+                    for (var _b = 0, _c = system.groups; _b < _c.length; _b++) {
+                        var group = _c[_b];
+                        for (var _d = 0, _e = group.entities; _d < _e.length; _d++) {
+                            var entity = _e[_d];
+                            system.onEntityAdded(entity, group);
+                        }
+                    }
+                }
+            }
+            for (var _f = 0, _g = this._startSystems; _f < _g.length; _f++) {
+                var system = _g[_f];
+                if (!system.enabled || system._started) {
+                    continue;
+                }
+                system.onStart();
+                system._started = true;
+            }
+        };
         SystemManager.prototype._reactive = function (system) {
             for (var _i = 0, _a = system.collectors; _i < _a.length; _i++) {
                 var collector = _a[_i];
@@ -6452,38 +6509,6 @@ var paper;
                     }
                 }
                 collector.clear();
-            }
-        };
-        /**
-         * @internal
-         */
-        SystemManager.prototype._startup = function () {
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system._enabled === system.enabled || !system.enabled) {
-                    continue;
-                }
-                system.onEnable && system.onEnable();
-                if (true) {
-                    console.debug(egret.getQualifiedClassName(system), "enabled.");
-                }
-                if (system.onEntityAdded) {
-                    for (var _b = 0, _c = system.groups; _b < _c.length; _b++) {
-                        var group = _c[_b];
-                        for (var _d = 0, _e = group.entities; _d < _e.length; _d++) {
-                            var entity = _e[_d];
-                            system.onEntityAdded(entity, group);
-                        }
-                    }
-                }
-            }
-            for (var _f = 0, _g = this._startSystems; _f < _g.length; _f++) {
-                var system = _g[_f];
-                if (!system.enabled || system._started) {
-                    continue;
-                }
-                system.onStart();
-                system._started = true;
             }
         };
         /**
@@ -6573,10 +6598,10 @@ var paper;
         SystemManager.prototype._teardown = function () {
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
-                if (system._enabled === system.enabled) {
+                if (system._lastEnabled === system.enabled) {
                     continue;
                 }
-                system._enabled = system.enabled;
+                system._lastEnabled = system.enabled;
                 if (system.enabled) {
                     continue;
                 }
@@ -6996,6 +7021,7 @@ var paper;
             _this._parent = null;
             return _this;
         }
+        BaseTransform_1 = BaseTransform;
         /**
          * @internal
          */
@@ -7086,7 +7112,7 @@ var paper;
                 this.dispatchEnabledEvent(currentEnabled);
             }
             this._onChangeParent(false, worldTransformStays);
-            BaseTransform.onTransformParentChanged.dispatch([this, prevParent, parent]);
+            BaseTransform_1.onTransformParentChanged.dispatch([this, prevParent, parent]);
             return this;
         };
         /**
@@ -7255,10 +7281,6 @@ var paper;
             configurable: true
         });
         /**
-         * @internal
-         */
-        BaseTransform.isAbstract = BaseTransform;
-        /**
          * 当变换组件的父级改变时派发事件。
          */
         BaseTransform.onTransformParentChanged = new signals.Signal();
@@ -7266,7 +7288,11 @@ var paper;
             paper.serializedField,
             paper.deserializedIgnore
         ], BaseTransform.prototype, "children", null);
+        BaseTransform = BaseTransform_1 = __decorate([
+            paper.abstract
+        ], BaseTransform);
         return BaseTransform;
+        var BaseTransform_1;
     }(paper.BaseComponent));
     paper.BaseTransform = BaseTransform;
     __reflect(BaseTransform.prototype, "paper.BaseTransform");
@@ -7723,25 +7749,10 @@ var paper;
          */
         function BaseSystem(context, order) {
             if (order === void 0) { order = -1; }
-            /**
-             * 该系统是否被激活。
-             */
             this.enabled = true;
-            /**
-             * 该系统的执行顺序。
-             */
             this.order = -1;
-            /**
-             * 该系统在调试模式时每帧消耗的时间，仅用于性能统计。（以毫秒为单位）
-             */
             this.deltaTime = 0;
-            /**
-             *
-             */
             this.groups = [];
-            /**
-             *
-             */
             this.collectors = [];
             /**
              * @internal
@@ -7750,7 +7761,11 @@ var paper;
             /**
              * @internal
              */
-            this._enabled = false;
+            this._lastEnabled = false;
+            /**
+             * @internal
+             */
+            this._executeEnabled = false;
             this._context = null; // 兼容 interests 2.0 移除。
             /**
              * @deprecated
@@ -7878,10 +7893,14 @@ var paper;
             enumerable: true,
             configurable: true
         });
+        /**
+         *
+         */
+        BaseSystem.executeMode = 1 /* Player */ | 2 /* DebugPlayer */ | 4 /* Editor */;
         return BaseSystem;
     }());
     paper.BaseSystem = BaseSystem;
-    __reflect(BaseSystem.prototype, "paper.BaseSystem");
+    __reflect(BaseSystem.prototype, "paper.BaseSystem", ["paper.ISystem"]);
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -8424,10 +8443,6 @@ var egret3d;
             _super.prototype.uninitialize.call(this);
             this.shadow._renderTarget.dispose();
         };
-        /**
-         * @internal
-         */
-        BaseLight.__isAbstract = BaseLight;
         __decorate([
             paper.serializedField
         ], BaseLight.prototype, "cullingMask", void 0);
@@ -8447,6 +8462,9 @@ var egret3d;
             paper.serializedField,
             paper.editor.property("NESTED" /* NESTED */)
         ], BaseLight.prototype, "shadow", void 0);
+        BaseLight = __decorate([
+            paper.abstract
+        ], BaseLight);
         return BaseLight;
     }(paper.BaseComponent));
     egret3d.BaseLight = BaseLight;
@@ -8470,7 +8488,7 @@ var paper;
             if (!this.config) {
                 return null;
             }
-            var isEditor = paper.Application.playerMode === 2 /* Editor */;
+            var isEditor = paper.Application.playerMode === 4 /* Editor */;
             var deserializer = new paper.Deserializer();
             var scene = deserializer.deserialize(this.config, keepUUID);
             if (scene && isEditor) {
@@ -10738,7 +10756,7 @@ var paper;
          * @internal
          */
         Behaviour.prototype._destroy = function () {
-            if (paper.Application.playerMode !== 2 /* Editor */ || this.constructor.executeInEditMode) {
+            if (paper.Application.playerMode !== 4 /* Editor */ || this.constructor.executeInEditMode) {
                 if (this._lifeStates & 2 /* Awaked */) {
                     this.onDestroy && this.onDestroy();
                 }
@@ -10746,7 +10764,7 @@ var paper;
             _super.prototype._destroy.call(this);
         };
         Behaviour.prototype.initialize = function (config) {
-            if (paper.Application.playerMode !== 2 /* Editor */ || this.constructor.executeInEditMode) {
+            if (paper.Application.playerMode !== 4 /* Editor */ || this.constructor.executeInEditMode) {
                 this.gameObject = this.entity; //
                 if (this.isActiveAndEnabled) {
                     this.onAwake && this.onAwake(config);
@@ -10756,7 +10774,7 @@ var paper;
             _super.prototype.initialize.call(this, config);
         };
         Behaviour.prototype.dispatchEnabledEvent = function (enabled) {
-            if (paper.Application.playerMode !== 2 /* Editor */ || this.constructor.executeInEditMode) {
+            if (paper.Application.playerMode !== 4 /* Editor */ || this.constructor.executeInEditMode) {
                 if (enabled) {
                     if ((this._lifeStates & 2 /* Awaked */) === 0) {
                         this.onAwake && this.onAwake();
@@ -10773,11 +10791,10 @@ var paper;
         /**
          * @internal
          */
-        Behaviour.isAbstract = Behaviour;
-        /**
-         * @internal
-         */
         Behaviour.isBehaviour = true;
+        Behaviour = __decorate([
+            paper.abstract
+        ], Behaviour);
         return Behaviour;
     }(paper.BaseComponent));
     paper.Behaviour = Behaviour;
@@ -11273,7 +11290,7 @@ var paper;
             if (component._lifeStates & 8 /* Started */) {
                 return;
             }
-            if (paper.Application.playerMode === 2 /* Editor */ &&
+            if (paper.Application.playerMode === 4 /* Editor */ &&
                 !component.constructor.executeInEditMode) {
                 return;
             }
@@ -11854,7 +11871,7 @@ var paper;
                     }
                 }
                 // 重新设置 rootID（只有编辑模式需要处理该内容）
-                if (paper.Application.playerMode === 2 /* Editor */) {
+                if (paper.Application.playerMode === 4 /* Editor */) {
                     // 重新设置rootid的值
                     for (var uuid in this._prefabRootMap) {
                         var rootDeser = this._deserializers[uuid];
@@ -15033,7 +15050,7 @@ var egret3d;
         Pointer.prototype.isDown = function (value, isPlayerMode) {
             if (value === void 0) { value = 1 /* TouchContact */; }
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 1 /* Player */)) {
                 return false;
             }
             return (this.event.buttons & value) !== 0 && (this._prevButtons & value) === 0;
@@ -15045,7 +15062,7 @@ var egret3d;
         Pointer.prototype.isHold = function (value, isPlayerMode) {
             if (value === void 0) { value = 1 /* TouchContact */; }
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 1 /* Player */)) {
                 return false;
             }
             return (this.event.buttons & value) !== 0 && (this._prevButtons & value) !== 0;
@@ -15057,7 +15074,7 @@ var egret3d;
         Pointer.prototype.isUp = function (value, isPlayerMode) {
             if (value === void 0) { value = 1 /* TouchContact */; }
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 1 /* Player */)) {
                 return false;
             }
             return (this.event.buttons & value) === 0 && (this._prevButtons & value) !== 0;
@@ -15069,7 +15086,7 @@ var egret3d;
         Pointer.prototype.isMove = function (distance, isPlayerMode) {
             if (distance === void 0) { distance = 5; }
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 1 /* Player */)) {
                 return null;
             }
             return Math.abs(this.speed.x) > distance || Math.abs(this.speed.y) > distance;
@@ -15099,7 +15116,7 @@ var egret3d;
          */
         Key.prototype.isDown = function (isPlayerMode) {
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 1 /* Player */)) {
                 return false;
             }
             return egret3d.inputCollecter._downKeys.indexOf(this) >= 0;
@@ -15110,7 +15127,7 @@ var egret3d;
          */
         Key.prototype.isHold = function (isPlayerMode) {
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 1 /* Player */)) {
                 return false;
             }
             return egret3d.inputCollecter._holdKeys.indexOf(this) >= 0;
@@ -15121,7 +15138,7 @@ var egret3d;
          */
         Key.prototype.isUp = function (isPlayerMode) {
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 0 /* Player */)) {
+            if (!this.event || (isPlayerMode && paper.Application.playerMode !== 1 /* Player */)) {
                 return false;
             }
             return egret3d.inputCollecter._upKeys.indexOf(this) >= 0;
@@ -15286,7 +15303,7 @@ var egret3d;
          */
         InputCollecter.prototype.getDownPointers = function (isPlayerMode) {
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+            if (isPlayerMode && paper.Application.playerMode !== 1 /* Player */) {
                 return [];
             }
             return this._downPointers;
@@ -15296,7 +15313,7 @@ var egret3d;
          */
         InputCollecter.prototype.getHoldPointers = function (isPlayerMode) {
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+            if (isPlayerMode && paper.Application.playerMode !== 1 /* Player */) {
                 return [];
             }
             return this._holdPointers;
@@ -15306,7 +15323,7 @@ var egret3d;
          */
         InputCollecter.prototype.getUpPointers = function (isPlayerMode) {
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+            if (isPlayerMode && paper.Application.playerMode !== 1 /* Player */) {
                 return [];
             }
             return this._upPointers;
@@ -15316,7 +15333,7 @@ var egret3d;
          */
         InputCollecter.prototype.getDownKeys = function (isPlayerMode) {
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+            if (isPlayerMode && paper.Application.playerMode !== 1 /* Player */) {
                 return [];
             }
             return this._downKeys;
@@ -15326,7 +15343,7 @@ var egret3d;
          */
         InputCollecter.prototype.getHoldKeys = function (isPlayerMode) {
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+            if (isPlayerMode && paper.Application.playerMode !== 1 /* Player */) {
                 return [];
             }
             return this._holdKeys;
@@ -15336,7 +15353,7 @@ var egret3d;
          */
         InputCollecter.prototype.getUpKeys = function (isPlayerMode) {
             if (isPlayerMode === void 0) { isPlayerMode = true; }
-            if (isPlayerMode && paper.Application.playerMode !== 0 /* Player */) {
+            if (isPlayerMode && paper.Application.playerMode !== 1 /* Player */) {
                 return [];
             }
             return this._upKeys;
@@ -16956,10 +16973,9 @@ var egret3d;
             egret3d.renderState.draw(egret3d.drawCallCollecter.postprocessing, material);
             camerasAndLights.currentCamera = saveCamera; // TODO
         };
-        /**
-         * @internal
-         */
-        CameraPostprocessing.__isAbstract = CameraPostprocessing;
+        CameraPostprocessing = __decorate([
+            paper.abstract
+        ], CameraPostprocessing);
         return CameraPostprocessing;
     }(paper.BaseComponent));
     egret3d.CameraPostprocessing = CameraPostprocessing;
@@ -17663,7 +17679,7 @@ var paper;
             /**
              * 额外数据，仅保存在编辑器环境，项目发布时该数据将被移除。
              */
-            _this.extras = paper.Application.playerMode === 2 /* Editor */ ? {} : undefined;
+            _this.extras = paper.Application.playerMode === 4 /* Editor */ ? {} : undefined;
             _this._isDestroyed = true;
             _this._entitiesDirty = false;
             _this._entities = [];
@@ -17719,7 +17735,7 @@ var paper;
                 var scene = rawScene.createInstance();
                 if (scene) {
                     //#ifdef EGRET_3D
-                    if (combineStaticObjects && paper.Application.playerMode !== 2 /* Editor */) {
+                    if (combineStaticObjects && paper.Application.playerMode !== 4 /* Editor */) {
                         egret3d.combine(scene.gameObjects); // TODO
                     }
                     //#endif
@@ -19473,7 +19489,7 @@ var egret3d;
             return this._sortedEntities;
         };
         Egret2DRendererSystem.prototype._onTouchStart = function (pointer, signal) {
-            if (paper.Application.playerMode !== 0 /* Player */) {
+            if (paper.Application.playerMode !== 1 /* Player */) {
                 return;
             }
             var event = pointer.event;
@@ -19487,7 +19503,7 @@ var egret3d;
             }
         };
         Egret2DRendererSystem.prototype._onTouchMove = function (pointer, signal) {
-            if (paper.Application.playerMode !== 0 /* Player */) {
+            if (paper.Application.playerMode !== 1 /* Player */) {
                 return;
             }
             var event = pointer.event;
@@ -19501,7 +19517,7 @@ var egret3d;
             }
         };
         Egret2DRendererSystem.prototype._onTouchEnd = function (pointer, signal) {
-            if (paper.Application.playerMode !== 0 /* Player */) {
+            if (paper.Application.playerMode !== 1 /* Player */) {
                 return;
             }
             var event = pointer.event;
@@ -25810,7 +25826,7 @@ var paper;
             this.gameObjectContext = paper.Context.create(paper.GameObject);
             this._isFocused = false;
             this._isRunning = false;
-            this._playerMode = 0 /* Player */;
+            this._playerMode = 1 /* Player */;
             this._loop = this._loop.bind(this);
         }
         /**
@@ -25851,7 +25867,7 @@ var paper;
          *
          */
         ECS.prototype.initialize = function (options) {
-            this._playerMode = options.playerMode || 0 /* Player */;
+            this._playerMode = options.playerMode || 1 /* Player */;
             var _a = this, systemManager = _a.systemManager, gameObjectContext = _a.gameObjectContext;
             systemManager.register(paper.EnableSystem, gameObjectContext, 1000 /* Enable */);
             systemManager.register(paper.StartSystem, gameObjectContext, 2000 /* Start */);
@@ -25897,13 +25913,13 @@ var paper;
          */
         ECS.prototype.start = function () {
             switch (this._playerMode) {
-                case 2 /* Editor */:
+                case 4 /* Editor */:
                     this.pause();
                     this._update();
                     break;
-                case 0 /* Player */:
+                case 1 /* Player */:
                 // breakthrough
-                case 1 /* DebugPlayer */:
+                case 2 /* DebugPlayer */:
                     this.resume();
                     break;
                 default: break;
@@ -30783,7 +30799,7 @@ var egret3d;
                 }
                 var cameras = this._cameraAndLightCollecter.cameras;
                 if (cameras.length > 0) {
-                    var isPlayerMode = paper.Application.playerMode === 0 /* Player */;
+                    var isPlayerMode = paper.Application.playerMode === 1 /* Player */;
                     var clock = paper.clock;
                     var renderState_2 = this._renderState;
                     var editorScene = paper.Application.sceneManager.editorScene;
@@ -30869,7 +30885,7 @@ var egret3d;
                 material = material || drawCall.material;
                 if (renderer && renderer.gameObject._beforeRenderBehaviorCount > 0) {
                     var flag = false;
-                    var isEditor = paper.Application.playerMode === 2 /* Editor */;
+                    var isEditor = paper.Application.playerMode === 4 /* Editor */;
                     for (var _i = 0, _a = renderer.gameObject.components; _i < _a.length; _i++) {
                         var component = _a[_i];
                         if (component.constructor.isBehaviour &&

@@ -14,6 +14,7 @@ namespace paper {
      * - 所有组件的基类。
      * - 在纯粹的实体组件系统中，组件通常应只包含数据，不应有业务逻辑、行为和生命周期。
      */
+    @abstract
     export abstract class Component extends BaseObject implements IComponent {
         /**
          * 当组件被创建时派发事件。

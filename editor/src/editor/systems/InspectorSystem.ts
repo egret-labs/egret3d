@@ -3,6 +3,7 @@ namespace paper.editor {
     /**
      * @internal
      */
+    @executeMode(PlayerMode.Player | PlayerMode.DebugPlayer)
     export class InspectorSystem extends BaseSystem<GameObject> {
         private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
@@ -564,33 +565,12 @@ namespace paper.editor {
                     const materials = gui.instance as egret3d.Material[];
                     let index = 0;
                     for (const material of materials) {
-                        const folder = gui.addFolder(`<${index++} ${material.name || material.shader.name}>`);
+                        const folder = gui.addFolder(`<${index++}> ${material.name || material.shader.name}`);
                         folder.instance = material;
                         this._addToInspector(folder);
                     }
                     break;
                 }
-            }
-        }
-
-        private _updateOpenedComponents(lastSelectedEntity: IEntity) {
-            const { openedComponents } = this._modelComponent;
-            const { inspector, inspectorItems } = this._guiComponent;
-
-            if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
-                for (const k in inspectorItems) {
-                    inspectorItems[k].close();
-                }
-
-                for (const componentClass of openedComponents) {
-                    const component = lastSelectedEntity.getComponent(componentClass);
-
-                    if (component && component.uuid in inspectorItems) {
-                        inspectorItems[component.uuid].open();
-                    }
-                }
-
-                openedComponents.length = 0;
             }
         }
 
@@ -630,10 +610,6 @@ namespace paper.editor {
 
         public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
             const groups = this.groups;
-
-            if (group === groups[0]) {
-                this._selectSceneOrGameObject(entity);
-            }
         }
 
         public onEntityRemoved(entity: GameObject, group: Group<GameObject>) {
@@ -660,6 +636,10 @@ namespace paper.editor {
                     }
                 }
                 else if (lastSelectedEntity) {
+                    if (lastSelectedEntity !== inspector.instance) {
+                        this._selectSceneOrGameObject(lastSelectedEntity);
+                    }
+
                     const { openedComponents } = this._modelComponent;
 
                     if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
@@ -680,7 +660,7 @@ namespace paper.editor {
 
                     lastSelectedEntity.transform.localEulerAngles; // TODO
                 }
-                else {
+                else if (inspector.instance) {
                     this._selectSceneOrGameObject(null);
                 }
             }

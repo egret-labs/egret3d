@@ -41927,8 +41927,9 @@ var egret3d;
                 _this._oimoShape = null;
                 return _this;
             }
+            BaseCollider_1 = BaseCollider;
             BaseCollider.prototype._updateConfig = function () {
-                var config = BaseCollider._config;
+                var config = BaseCollider_1._config;
                 config.collisionGroup = this.gameObject.layer; // TODO 动态改变
                 config.collisionMask = this.collisionMask;
                 config.friction = this.friction;
@@ -42026,10 +42027,6 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
-            /**
-             * @internal
-             */
-            BaseCollider.isAbstract = BaseCollider;
             BaseCollider._config = new OIMO.ShapeConfig();
             __decorate([
                 paper.serializedField
@@ -42046,7 +42043,11 @@ var egret3d;
             __decorate([
                 paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
             ], BaseCollider.prototype, "density", null);
+            BaseCollider = BaseCollider_1 = __decorate([
+                paper.abstract
+            ], BaseCollider);
             return BaseCollider;
+            var BaseCollider_1;
         }(paper.BaseComponent));
         oimo.BaseCollider = BaseCollider;
         __reflect(BaseCollider.prototype, "egret3d.oimo.BaseCollider", ["egret3d.ICollider"]);
@@ -42079,6 +42080,7 @@ var egret3d;
                 _this._connectedBody = null;
                 return _this;
             }
+            BaseJoint_1 = BaseJoint;
             /**
              * 获取该关节承受的力。
              */
@@ -42201,7 +42203,7 @@ var egret3d;
             /**
              * @internal
              */
-            BaseJoint.isAbstract = BaseJoint;
+            BaseJoint.isAbstract = BaseJoint_1;
             __decorate([
                 paper.serializedField
             ], BaseJoint.prototype, "_anchor", void 0);
@@ -42232,7 +42234,11 @@ var egret3d;
             __decorate([
                 paper.editor.property("COMPONENT" /* COMPONENT */)
             ], BaseJoint.prototype, "connectedRigidbody", null);
+            BaseJoint = BaseJoint_1 = __decorate([
+                paper.abstract
+            ], BaseJoint);
             return BaseJoint;
+            var BaseJoint_1;
         }(paper.BaseComponent));
         oimo.BaseJoint = BaseJoint;
         __reflect(BaseJoint.prototype, "egret3d.oimo.BaseJoint");

@@ -44,14 +44,13 @@ namespace paper {
             keys.push(key);
         }
     }
-    // /** TODO
-    //  * 通过装饰器标记组件是否为抽象组件。
-    //  * @param componentClass 组件类。
-    //  */
-    // export function abstract(componentClass: IComponentClass<IComponent>) {
-    //     (componentClass.__isAbstract as any) = componentClass;
-    //     console.log(componentClass);
-    // }
+    /**
+     * 通过装饰器标记组件是否为抽象组件。
+     * @param componentClass 组件类。
+     */
+    export function abstract(componentClass: any) {
+        ((componentClass as IComponentClass<IComponent>).isAbstract as IComponentClass<IComponent>) = componentClass;
+    }
     /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
@@ -94,9 +93,19 @@ namespace paper {
     export function requireComponent(requireComponentClass: IComponentClass<IComponent>) {
         return function (componentClass: IComponentClass<IComponent>) {
             const requireComponents = componentClass.requireComponents!;
+
             if (requireComponents.indexOf(requireComponentClass) < 0) {
                 requireComponents.push(requireComponentClass);
             }
+        };
+    }
+    /**
+     * 
+     * @param executeMode 
+     */
+    export function executeMode(executeMode: PlayerMode) {
+        return function (systemClass: ISystemClass<ISystem<IEntity>, IEntity>) {
+            (systemClass.executeMode as PlayerMode) = executeMode;
         };
     }
     /**

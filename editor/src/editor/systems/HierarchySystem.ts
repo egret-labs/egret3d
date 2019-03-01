@@ -2,6 +2,7 @@ namespace paper.editor {
     /**
      * @internal
      */
+    @executeMode(PlayerMode.Player | PlayerMode.DebugPlayer)
     export class HierarchySystem extends BaseSystem<GameObject> {
         private _delayShow: uint = 0;
         private _addEntityCount: uint = 0;
@@ -32,7 +33,18 @@ namespace paper.editor {
         private _sceneOrGameObjectGUIClickHandler = (gui: dat.GUI) => {
             const selectSceneOrEntity = gui.instance;
 
-            if (selectSceneOrEntity instanceof Entity) {
+            if (selectSceneOrEntity instanceof Scene) {
+                if (selectSceneOrEntity.isDestroyed) {
+                    return;
+                }
+
+                this._modelComponent.select(selectSceneOrEntity);
+            }
+            else if (selectSceneOrEntity instanceof Entity) {
+                if (selectSceneOrEntity.isDestroyed) {
+                    return;
+                }
+
                 const isReplace = !this._controlLeft.isHold(false) && !this._controlRight.isHold(false);
 
                 if (selectSceneOrEntity.getComponent(SelectedFlag)) {
@@ -43,9 +55,6 @@ namespace paper.editor {
                 else {
                     this._modelComponent.select(selectSceneOrEntity, isReplace);
                 }
-            }
-            else {
-                this._modelComponent.select(selectSceneOrEntity);
             }
         }
 
@@ -157,19 +166,11 @@ namespace paper.editor {
             };
 
             this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-                let sceneSystem = Application.systemManager.getSystem(editor.SceneSystem);
-
-                if (!sceneSystem) {
-                    sceneSystem = Application.systemManager.register(editor.SceneSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
-                }
-
                 if (v) {
                     Application.playerMode = PlayerMode.DebugPlayer;
-                    sceneSystem.enabled = true;
                 }
                 else {
                     Application.playerMode = PlayerMode.Player;
-                    sceneSystem.enabled = false;
                 }
             });
         }

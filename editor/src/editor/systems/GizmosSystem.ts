@@ -22,6 +22,7 @@ namespace paper.editor {
     /**
      * @internal
      */
+    @executeMode(PlayerMode.DebugPlayer | PlayerMode.Editor)
     export class GizmosSystem extends BaseSystem<GameObject> {
         private readonly _selectedBoxDrawer: GameObject[] = [];
         private readonly _cameraDrawer: GameObject[] = [];

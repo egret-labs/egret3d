@@ -2,11 +2,8 @@ namespace paper {
     /**
      * 传统的基础组件。
      */
+    @abstract
     export abstract class BaseComponent extends Component {
-        /**
-         * @internal
-         */
-        public static readonly isAbstract: IComponentClass<IComponent> = BaseComponent as any;
         /**
          * 该组件的游戏实体。
          */

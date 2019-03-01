@@ -16,23 +16,23 @@ namespace paper {
         }
 
         private readonly _preSystems: [
-            { new(context: Context<IEntity>, order?: SystemOrder): BaseSystem<IEntity> },
+            ISystemClass<ISystem<IEntity>, IEntity>,
             Context<IEntity>,
             int,
             any
         ][] = [];
-        private readonly _systems: BaseSystem<IEntity>[] = [];
-        private readonly _startSystems: BaseSystem<IEntity>[] = [];
-        private readonly _reactiveSystems: BaseSystem<IEntity>[] = [];
-        private readonly _frameSystems: BaseSystem<IEntity>[] = [];
-        private readonly _frameCleanupSystems: BaseSystem<IEntity>[] = [];
-        private readonly _tickSystems: BaseSystem<IEntity>[] = [];
-        private readonly _tickCleanupSystems: BaseSystem<IEntity>[] = [];
+        private readonly _systems: ISystem<IEntity>[] = [];
+        private readonly _startSystems: ISystem<IEntity>[] = [];
+        private readonly _reactiveSystems: ISystem<IEntity>[] = [];
+        private readonly _frameSystems: ISystem<IEntity>[] = [];
+        private readonly _frameCleanupSystems: ISystem<IEntity>[] = [];
+        private readonly _tickSystems: ISystem<IEntity>[] = [];
+        private readonly _tickCleanupSystems: ISystem<IEntity>[] = [];
 
         private constructor() {
         }
 
-        private _getSystemInsertIndex(systems: BaseSystem<IEntity>[], order: SystemOrder) {
+        private _getSystemInsertIndex(systems: ISystem<IEntity>[], order: SystemOrder) {
             let index = -1;
             const systemCount = systems.length;
 
@@ -54,8 +54,54 @@ namespace paper {
 
             return index < 0 ? systems.length : index;
         }
+        /**
+         * @internal
+         */
+        public _startup() {
+            const playerMode = Application.playerMode;
+            for (const system of this._systems) {
+                if ((system.constructor as ISystemClass<ISystem<IEntity>, IEntity>).executeMode & playerMode) {
+                    if ((system as BaseSystem<IEntity>)._executeEnabled && !system.enabled) {
+                        system.enabled = true;
+                    }
+                }
+                else if (system.enabled) {
+                    system.enabled = false;
+                    (system as BaseSystem<IEntity>)._executeEnabled = true;
+                }
 
-        private _reactive(system: BaseSystem<IEntity>) {
+                if ((system as BaseSystem<IEntity>)._lastEnabled === system.enabled || !system.enabled) {
+                    continue;
+                }
+
+                system.onEnable && system.onEnable();
+
+                if (DEBUG) {
+                    console.debug(egret.getQualifiedClassName(system), "enabled.");
+                }
+
+                if (system.onEntityAdded) {
+                    for (const group of system.groups) {
+                        for (const entity of group.entities) {
+                            system.onEntityAdded(entity, group);
+                        }
+                    }
+                }
+            }
+
+            for (const system of this._startSystems) {
+                if (!system.enabled) {
+                    continue;
+                }
+
+                if (system.onStart) {
+                    system.onStart();
+                    system.onStart = undefined;
+                }
+            }
+        }
+
+        private _reactive(system: ISystem<IEntity>) {
             for (const collector of system.collectors) {
                 if (system.onComponentRemoved) {
                     for (const component of collector.removedComponentes) {
@@ -90,39 +136,6 @@ namespace paper {
                 }
 
                 collector.clear();
-            }
-        }
-        /**
-         * @internal
-         */
-        public _startup() {
-            for (const system of this._systems) {
-                if (system._enabled === system.enabled || !system.enabled) {
-                    continue;
-                }
-
-                system.onEnable && system.onEnable();
-
-                if (DEBUG) {
-                    console.debug(egret.getQualifiedClassName(system), "enabled.");
-                }
-
-                if (system.onEntityAdded) {
-                    for (const group of system.groups) {
-                        for (const entity of group.entities) {
-                            system.onEntityAdded(entity, group);
-                        }
-                    }
-                }
-            }
-
-            for (const system of this._startSystems) {
-                if (!system.enabled || system._started) {
-                    continue;
-                }
-
-                system.onStart!();
-                system._started = true;
             }
         }
         /**
@@ -229,11 +242,11 @@ namespace paper {
          */
         public _teardown() {
             for (const system of this._systems) {
-                if (system._enabled === system.enabled) {
+                if ((system as BaseSystem<IEntity>)._lastEnabled === system.enabled) {
                     continue;
                 }
 
-                system._enabled = system.enabled;
+                (system as BaseSystem<IEntity>)._lastEnabled = system.enabled;
 
                 if (system.enabled) {
                     continue;
@@ -270,8 +283,8 @@ namespace paper {
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
-        public preRegister<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(
-            systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem },
+        public preRegister<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(
+            systemClass: ISystemClass<TSystem, TEntity>,
             context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any
         ): SystemManager {
             if (this._systems.length > 0) {
@@ -286,8 +299,8 @@ namespace paper {
         /**
          * 为程序注册一个指定的系统。
          */
-        public register<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(
-            systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem },
+        public register<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(
+            systemClass: ISystemClass<TSystem, TEntity>,
             context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any
         ): TSystem {
             let system = this.getSystem(systemClass);
@@ -332,10 +345,12 @@ namespace paper {
         /**
          * 从程序已注册的全部系统中获取一个指定的系统。
          */
-        public getSystem<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: { new(context: Context<TEntity>, order?: SystemOrder): TSystem }): TSystem | null {
+        public getSystem<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(
+            systemClass: ISystemClass<TSystem, TEntity>,
+        ): TSystem | null {
             for (const system of this._systems) {
                 if (system && system.constructor === systemClass) {
-                    return system as TSystem;
+                    return <any>system as TSystem;
                 }
             }
 
@@ -344,7 +359,7 @@ namespace paper {
         /**
          * 程序已注册的全部系统。
          */
-        public get systems(): ReadonlyArray<BaseSystem<IEntity>> {
+        public get systems(): ReadonlyArray<ISystem<IEntity>> {
             return this._systems;
         }
     }

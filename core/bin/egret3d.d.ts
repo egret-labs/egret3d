@@ -234,9 +234,9 @@ declare namespace paper {
      * 应用程序运行模式。
      */
     const enum PlayerMode {
-        Player = 0,
-        DebugPlayer = 1,
-        Editor = 2,
+        Player = 1,
+        DebugPlayer = 2,
+        Editor = 4,
     }
     /**
      *
@@ -408,6 +408,20 @@ declare namespace paper {
         new (): TComponent;
     }
     /**
+     * 系统类接口。
+     */
+    interface ISystemClass<TSystem extends ISystem<TEntity>, TEntity extends IEntity> {
+        /**
+         *
+         */
+        readonly executeMode: PlayerMode;
+        /**
+         * 禁止实例化系统。
+         * @protected
+         */
+        new (...args: any[]): TSystem;
+    }
+    /**
      * 实体接口。
      */
     interface IEntity extends IUUID {
@@ -554,6 +568,100 @@ declare namespace paper {
          *
          */
         dispatchEnabledEvent(enabled: boolean): void;
+    }
+    /**
+     * 系统接口。
+     */
+    interface ISystem<TEntity extends IEntity> {
+        /**
+         * 该系统是否被激活。
+         */
+        enabled: boolean;
+        /**
+         * 该系统的执行顺序。
+         */
+        readonly order: SystemOrder;
+        /**
+         * 该系统在调试模式时每帧消耗的时间，仅用于性能统计。（以毫秒为单位）
+         */
+        readonly deltaTime: uint;
+        /**
+         *
+         */
+        readonly groups: ReadonlyArray<Group<TEntity>>;
+        /**
+         *
+         */
+        readonly collectors: ReadonlyArray<Collector<TEntity>>;
+        /**
+         * 该系统初始化时调用。
+         * @param config 该系统被注册时可以传递的初始化数据。
+         */
+        onAwake?(config?: any): void;
+        /**
+         * 该系统被激活时调用。
+         * @see paper.BaseSystem#enabled
+         */
+        onEnable?(): void;
+        /**
+         * 该系统开始运行时调用。
+         */
+        onStart?(): void;
+        /**
+         * 实体被添加到系统时调用。
+         * @param entity 收集的实体。
+         * @param group 收集实体的实体组。
+         */
+        onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * 充分非必要组件添加到实体时调用。
+         * @param component 收集的实体组件。
+         * @param group 收集实体组件的实体组。
+         */
+        onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
+        /**
+         * 充分非必要组件从实体移除时调用。
+         * @param component 移除的实体组件。
+         * @param group 移除实体组件的实体组。
+         */
+        onComponentRemoved?(component: IComponent, group: Group<TEntity>): void;
+        /**
+         * 实体从系统移除时调用。
+         * @param entity 移除的实体。
+         * @param group 移除实体的实体组。
+         */
+        onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * 生成一个新的逻辑帧时调用
+         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
+         */
+        onTick?(deltaTime?: number): void;
+        /**
+         * 在新的逻辑帧的清理阶段调用
+         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
+         */
+        onTickCleanup?(deltaTime?: number): void;
+        /**
+         * 生成一个新的渲染帧时调用
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onFrame?(deltaTime?: number): void;
+        /**
+         * 在新的渲染帧的清理阶段调用
+         * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
+         */
+        onFrameCleanup?(deltaTime?: number): void;
+        /**
+         * 该系统被禁用时调用。
+         * @see paper.BaseSystem#enabled
+         */
+        onDisable?(): void;
+        /**
+         * 该系统被注销时调用。
+         * @see paper.SystemManager#unregister()
+         * @see paper.Application#systemManager
+         */
+        onDestroy?(): void;
     }
     /**
      * 实体组件匹配器接口。
@@ -709,6 +817,11 @@ declare namespace paper {
      */
     function deserializedIgnore(classPrototype: any, key: string): void;
     /**
+     * 通过装饰器标记组件是否为抽象组件。
+     * @param componentClass 组件类。
+     */
+    function abstract(componentClass: any): void;
+    /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
      */
@@ -729,6 +842,11 @@ declare namespace paper {
      * @param requireComponentClass 依赖的组件类。
      */
     function requireComponent(requireComponentClass: IComponentClass<IComponent>): (componentClass: IComponentClass<IComponent>) => void;
+    /**
+     *
+     * @param executeMode
+     */
+    function executeMode(executeMode: PlayerMode): (systemClass: ISystemClass<ISystem<IEntity>, IEntity>) => void;
     /**
      * 通过装饰器标记 API 已被废弃。
      * @param version 废弃的版本。
@@ -4367,25 +4485,19 @@ declare namespace paper {
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
-        preRegister<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: {
-            new (context: Context<TEntity>, order?: SystemOrder): TSystem;
-        }, context: Context<TEntity>, order?: SystemOrder, config?: any): SystemManager;
+        preRegister<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(systemClass: ISystemClass<TSystem, TEntity>, context: Context<TEntity>, order?: SystemOrder, config?: any): SystemManager;
         /**
          * 为程序注册一个指定的系统。
          */
-        register<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: {
-            new (context: Context<TEntity>, order?: SystemOrder): TSystem;
-        }, context: Context<TEntity>, order?: SystemOrder, config?: any): TSystem;
+        register<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(systemClass: ISystemClass<TSystem, TEntity>, context: Context<TEntity>, order?: SystemOrder, config?: any): TSystem;
         /**
          * 从程序已注册的全部系统中获取一个指定的系统。
          */
-        getSystem<TEntity extends IEntity, TSystem extends BaseSystem<TEntity>>(systemClass: {
-            new (context: Context<TEntity>, order?: SystemOrder): TSystem;
-        }): TSystem | null;
+        getSystem<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(systemClass: ISystemClass<TSystem, TEntity>): TSystem | null;
         /**
          * 程序已注册的全部系统。
          */
-        readonly systems: ReadonlyArray<BaseSystem<IEntity>>;
+        readonly systems: ReadonlyArray<ISystem<IEntity>>;
     }
 }
 declare namespace paper {
@@ -4738,26 +4850,15 @@ declare namespace paper {
      * 基础系统。
      * - 全部系统的基类。
      */
-    abstract class BaseSystem<TEntity extends IEntity> {
+    abstract class BaseSystem<TEntity extends IEntity> implements ISystem<TEntity> {
         /**
-         * 该系统是否被激活。
+         *
          */
+        static readonly executeMode: PlayerMode;
         enabled: boolean;
-        /**
-         * 该系统的执行顺序。
-         */
         readonly order: SystemOrder;
-        /**
-         * 该系统在调试模式时每帧消耗的时间，仅用于性能统计。（以毫秒为单位）
-         */
         readonly deltaTime: uint;
-        /**
-         *
-         */
         readonly groups: ReadonlyArray<Group<TEntity>>;
-        /**
-         *
-         */
         readonly collectors: ReadonlyArray<Collector<TEntity>>;
         private _context;
         /**
@@ -4777,74 +4878,18 @@ declare namespace paper {
             type: signals.Signal;
             listener: (component: any) => void;
         }[] | null;
-        /**
-         * 该系统初始化时调用。
-         * @param config 该系统被注册时可以传递的初始化数据。
-         */
         onAwake?(config?: any): void;
-        /**
-         * 该系统被激活时调用。
-         * @see paper.BaseSystem#enabled
-         */
         onEnable?(): void;
-        /**
-         * 该系统开始运行时调用。
-         */
         onStart?(): void;
-        /**
-         * 实体被添加到系统时调用。
-         * @param entity 收集的实体。
-         * @param group 收集实体的实体组。
-         */
         onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
-        /**
-         * 充分非必要组件添加到实体时调用。
-         * @param component 收集的实体组件。
-         * @param group 收集实体组件的实体组。
-         */
         onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
-        /**
-         * 充分非必要组件从实体移除时调用。
-         * @param component 移除的实体组件。
-         * @param group 移除实体组件的实体组。
-         */
         onComponentRemoved?(component: IComponent, group: Group<TEntity>): void;
-        /**
-         * 实体从系统移除时调用。
-         * @param entity 移除的实体。
-         * @param group 移除实体的实体组。
-         */
         onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
-        /**
-         * 生成一个新的逻辑帧时调用
-         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
-         */
         onTick?(deltaTime?: number): void;
-        /**
-         * 在新的逻辑帧的清理阶段调用
-         * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
-         */
         onTickCleanup?(deltaTime?: number): void;
-        /**
-         * 生成一个新的渲染帧时调用
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
         onFrame?(deltaTime?: number): void;
-        /**
-         * 在新的渲染帧的清理阶段调用
-         * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
-         */
         onFrameCleanup?(deltaTime?: number): void;
-        /**
-         * 该系统被禁用时调用。
-         * @see paper.BaseSystem#enabled
-         */
         onDisable?(): void;
-        /**
-         * 该系统被注销时调用。
-         * @see paper.SystemManager#unregister()
-         * @see paper.Application#systemManager
-         */
         onDestroy?(): void;
         /**
          * @deprecated

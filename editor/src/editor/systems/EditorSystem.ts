@@ -14,7 +14,6 @@ namespace paper.editor {
             GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture); // TODO
             //
             if (Application.playerMode === PlayerMode.Editor) {
-                Application.systemManager.register(SceneSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
             }
             else {
                 const guiComponent = this._guiComponent!;
@@ -72,11 +71,13 @@ namespace paper.editor {
                     guiComponent.hierarchy.close();
                     guiComponent.inspector.close();
                 }
-
-                Application.systemManager.register(HierarchySystem, Application.gameObjectContext, SystemOrder.LateUpdate);
-                Application.systemManager.register(InspectorSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
-                Application.systemManager.register(StatsSystem, Application.gameObjectContext, SystemOrder.End);
             }
+
+            Application.systemManager.register(HierarchySystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(InspectorSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(SceneSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(StatsSystem, Application.gameObjectContext, SystemOrder.End);
         }
 
         public onStart() {
