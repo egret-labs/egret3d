@@ -44,6 +44,24 @@ namespace egret3d {
         readonly colliderType: ColliderType;
     }
     /**
+     * 立方体碰撞组件接口。
+     */
+    export interface IBoxCollider extends ICollider {
+        /**
+         * 描述该碰撞体的立方体。
+         */
+        readonly box: Box;
+    }
+    /**
+     * 球体碰撞组件接口。
+     */
+    export interface ISphereCollider extends ICollider {
+        /**
+         * 描述该碰撞体的球体。
+         */
+        readonly sphere: Sphere;
+    }
+    /**
      * 射线检测接口。
      */
     export interface IRaycast {

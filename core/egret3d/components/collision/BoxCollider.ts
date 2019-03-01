@@ -1,23 +1,13 @@
 namespace egret3d {
     /**
-     * 立方体碰撞组件接口。
-     */
-    export interface IBoxCollider extends ICollider {
-        readonly box: Box;
-    }
-
-    /**
      * 立方体碰撞组件。
      */
     @paper.allowMultiple
     export class BoxCollider extends paper.BaseComponent implements IBoxCollider, IRaycast {
         public readonly colliderType: ColliderType = ColliderType.Box;
 
-        /**
-         * 描述该组件的立方体。
-         */
-        @paper.serializedField("aabb")
         @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.serializedField("aabb")
         public readonly box: Box = Box.ONE.clone();
 
         public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {

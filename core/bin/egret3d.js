@@ -15580,9 +15580,6 @@ var egret3d;
         function BoxCollider() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.colliderType = egret3d.ColliderType.Box;
-            /**
-             * 描述该组件的立方体。
-             */
             _this.box = egret3d.Box.ONE.clone();
             return _this;
         }
@@ -15615,8 +15612,8 @@ var egret3d;
             configurable: true
         });
         __decorate([
-            paper.serializedField("aabb"),
-            paper.editor.property("NESTED" /* NESTED */)
+            paper.editor.property("NESTED" /* NESTED */),
+            paper.serializedField("aabb")
         ], BoxCollider.prototype, "box", void 0);
         BoxCollider = __decorate([
             paper.allowMultiple
@@ -15636,9 +15633,6 @@ var egret3d;
         function SphereCollider() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             _this.colliderType = egret3d.ColliderType.Sphere;
-            /**
-             * 描述该组件的球体。
-             */
             _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
             return _this;
         }

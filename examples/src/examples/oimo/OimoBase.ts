@@ -29,7 +29,7 @@ namespace examples.oimo {
                 const rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);
                 const boxCollider = gameObject.addComponent(egret3d.oimo.BoxCollider);
                 rigidbody.type = egret3d.oimo.RigidbodyType.STATIC;
-                boxCollider.size = groundSize;
+                boxCollider.box.size = groundSize;
                 groundSize.release();
             }
 
@@ -51,7 +51,7 @@ namespace examples.oimo {
 
                     const rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);
                     const boxCollider = gameObject.addComponent(egret3d.oimo.BoxCollider);
-                    boxCollider.size = cubeSize;
+                    boxCollider.box.size = cubeSize;
                     rigidbody.mass = 1.0;
                 }
             }

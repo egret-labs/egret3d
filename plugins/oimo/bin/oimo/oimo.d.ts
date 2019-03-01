@@ -7406,24 +7406,7 @@ declare module OIMO {
 
 declare namespace egret3d.oimo {
     /**
-     * 刚体类型。
-     */
-    const enum RigidbodyType {
-        /**
-         * 动态。
-         */
-        DYNAMIC = 0,
-        /**
-         * 静态。
-         */
-        STATIC = 1,
-        /**
-         * 动力学。
-         */
-        KINEMATIC = 2,
-    }
-    /**
-     * 刚体。
+     * 刚体组件。
      */
     class Rigidbody extends paper.BaseComponent {
         private static readonly _config;
@@ -7436,262 +7419,179 @@ declare namespace egret3d.oimo {
         private readonly _values;
         private _oimoRigidbody;
         protected _createRigidbody(): OIMO.RigidBody;
-        private _addShapes();
+        private _checkRigidbody(message?);
         /**
-         *
+         * 将该刚体唤醒。
          */
-        wakeUp(): void;
+        wakeUp(): this;
         /**
-         *
+         * 将该刚体休眠。
          */
-        sleep(): void;
+        sleep(): this;
         /**
-         *
+         * 增加该刚体的线性速度。
          */
-        applyForce(force: Readonly<IVector3>, positionInWorld: Readonly<IVector3>): void;
+        addLinearVelocity(veloctity: Readonly<IVector3>): this;
         /**
-         *
+         * 增加该刚体的角速度。
          */
-        applyForceToCenter(force: Readonly<IVector3>): void;
+        addAngularVelocity(veloctity: Readonly<IVector3>): this;
         /**
-         *
+         * 对该刚体施加力。
          */
-        applyImpulse(impulse: Readonly<IVector3>, position: Readonly<IVector3>): void;
+        applyForce(force: Readonly<IVector3>, worldPosition: Readonly<IVector3>): this;
         /**
-         *
+         * 对该刚体的中心点施加力。
          */
-        applyTorque(torque: Readonly<IVector3>): void;
+        applyForceToCenter(force: Readonly<IVector3>): this;
         /**
-         *
+         * 对该刚体施加扭转力。
+         */
+        applyTorque(torque: Readonly<IVector3>): this;
+        /**
+         * 对该刚体施加冲量。
+         */
+        applyImpulse(impulse: Readonly<IVector3>, worldPosition: Readonly<IVector3>): this;
+        /**
+         * 对该刚体施加线性冲量。
+         */
+        applyLinearImpulse(impulse: Readonly<IVector3>): this;
+        /**
+         * 对该刚体施加角冲量。
+         */
+        applyAngularImpulse(impulse: Readonly<IVector3>): this;
+        /**
+         * 该刚体是否正在休眠。
          */
         readonly isSleeping: boolean;
         /**
-         * 刚体类型。
+         * 该刚体此次休眠的累计时间。
+         */
+        readonly sleepTime: number;
+        /**
+         * 该刚体的类型。
          */
         type: RigidbodyType;
         /**
-         *
+         * 该刚体的质量。
          */
         mass: number;
         /**
-         *
+         * 该刚体的重力缩放系数。
          */
         gravityScale: number;
         /**
-         *
+         * 该刚体的线性阻尼。
          */
         linearDamping: number;
         /**
-         *
+         * 该刚体的旋转阻尼。
          */
         angularDamping: number;
         /**
-         *
+         * 该刚体的线性速度。
          */
-        linearVelocity: Readonly<IVector3>;
+        linearVelocity: Readonly<Vector3>;
         /**
-         *
+         * 该刚体的角速度。
          */
-        angularVelocity: Readonly<IVector3>;
+        angularVelocity: Readonly<Vector3>;
         /**
-         *
+         * 该刚体的 OIMO 刚体。
          */
         readonly oimoRigidbody: OIMO.RigidBody;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     * 碰撞体基类。
+     * 基础碰撞体组件。
+     * - 全部碰撞体组件的基类。
      */
     abstract class BaseCollider extends paper.BaseComponent implements egret3d.ICollider {
         protected static readonly _config: OIMO.ShapeConfig;
         readonly colliderType: egret3d.ColliderType;
         /**
-         * [CollisionGroup, CollisionMask, Friction, Restitution, Density];
+         * [CollisionMask, Friction, Restitution, Density];
          */
         protected readonly _values: Float32Array;
         protected _oimoShape: OIMO.Shape;
         protected abstract _createShape(): OIMO.Shape;
         protected _updateConfig(): OIMO.ShapeConfig;
         /**
-         *
-         */
-        collisionGroup: paper.Layer;
-        /**
-         *
+         * 该碰撞体的碰撞掩码。
          */
         collisionMask: paper.Layer;
         /**
-         *
+         * 该碰撞体的摩擦力。
          */
         friction: number;
         /**
-         *
+         * 该碰撞体的恢复系数。
          */
         restitution: number;
         /**
-         *
+         * 该碰撞体的密度。
+         * - 单位为`千克/立方米`。
          */
         density: number;
         /**
-         *
+         * 该碰撞体的 OIMO 碰撞体。
          */
         readonly oimoShape: OIMO.Shape;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     * 关节类型。
+     * 基础关节组件。
+     * - 全部关节组件的基类。
      */
-    enum JointType {
-        Spherical,
-        Prismatic,
-        Hinge,
-        Cylindrical,
-        ConeTwist,
-        Universal,
-    }
-    /**
-     * 关节基类。
-     */
-    abstract class Joint<T extends OIMO.Joint> extends paper.BaseComponent {
+    abstract class BaseJoint<T extends OIMO.Joint> extends paper.BaseComponent {
         /**
          * 关节类型。
          */
         readonly jointType: JointType;
         protected readonly _anchor: Vector3;
         /**
-         *
+         * CollisionEnabled, UseGlobalAnchor
+         * 0, 0,
          */
         protected readonly _values: Float32Array;
-        protected _connectedBody: Rigidbody | null;
-        protected _rigidbody: Rigidbody;
         protected _oimoJoint: T;
+        protected _rigidbody: Rigidbody;
+        protected _connectedBody: Rigidbody | null;
         protected abstract _createJoint(): T;
         /**
-         *
+         * 获取该关节承受的力。
          */
-        getAppliedForce(out?: IVector3): IVector3;
+        getAppliedForce(out?: Vector3): Vector3;
         /**
-         *
+         * 获取该关节承受的扭矩。
          */
-        getAppliedTorque(out?: IVector3): IVector3;
+        getAppliedTorque(out?: Vector3): Vector3;
         /**
-         *
+         * 该关节所连接的两个刚体之前是否允许碰撞。
          */
         collisionEnabled: boolean;
         /**
-         *
+         * 该关节的锚点是否为世界坐标系。
          */
-        useGlobalAnchor: boolean;
+        useWorldAnchor: boolean;
         /**
-         *
+         * 该关节在锚点。
          */
-        anchor: Readonly<IVector3>;
+        anchor: Readonly<Vector3>;
         /**
-         *
-         */
-        connectedRigidbody: Rigidbody | null;
-        /**
-         *
+         * 该关节依附的刚体。
          */
         readonly rigidbody: Rigidbody;
         /**
-         *
+         * 该关节连接的刚体。
+         */
+        connectedRigidbody: Rigidbody | null;
+        /**
+         * 该关节的 OIMO 关节。
          */
         readonly oimoJoint: T;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class ConeCollider extends BaseCollider {
-        readonly colliderType: ColliderType;
-        private _radius;
-        private _height;
-        protected _createShape(): OIMO.Shape;
-        /**
-         *
-         */
-        radius: number;
-        /**
-         *
-         */
-        height: number;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class RayTester extends paper.Behaviour {
-        distance: number;
-        collisionMask: paper.Layer;
-        private _hitted;
-        private _mesh;
-        onStart(): void;
-        onUpdate(): void;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class BoxCollider extends BaseCollider {
-        readonly colliderType: ColliderType;
-        protected readonly _size: Vector3;
-        protected _createShape(): OIMO.Shape;
-        /**
-         *
-         */
-        size: Readonly<IVector3>;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class CapsuleCollider extends BaseCollider {
-        readonly colliderType: ColliderType;
-        private _radius;
-        private _height;
-        protected _createShape(): OIMO.Shape;
-        /**
-         *
-         */
-        radius: number;
-        /**
-         *
-         */
-        height: number;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class PhysicsSystem extends paper.BaseSystem<paper.GameObject> {
-        private readonly _gravity;
-        private readonly _rayCastClosest;
-        private readonly _contactCallback;
-        private readonly _contactColliders;
-        private _oimoWorld;
-        protected getMatchers(): paper.INoneOfMatcher<paper.GameObject>[];
-        onAwake(): void;
-        onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
-        onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
-        onTick(deltaTime: number): void;
-        raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        /**
-         *
-         */
-        gravity: Readonly<IVector3>;
-        /**
-         *
-         */
-        readonly oimoWorld: OIMO.World;
     }
 }
 declare namespace egret3d.oimo {
@@ -7711,138 +7611,6 @@ declare namespace egret3d.oimo {
          *
          */
         height: number;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class SphereCollider extends BaseCollider {
-        readonly colliderType: ColliderType;
-        private _radius;
-        protected _createShape(): OIMO.Shape;
-        /**
-         *
-         */
-        radius: number;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class ConeTwistJoint extends Joint<OIMO.RagdollJoint> {
-        private static readonly _config;
-        private static readonly _swingSpringDamper;
-        private static readonly _twistSpringDamper;
-        private static readonly _twistLimitMotor;
-        readonly jointType: JointType;
-        private readonly _twistAxis;
-        private readonly _swingAxis;
-        private readonly _valuesB;
-        protected _createJoint(): OIMO.RagdollJoint;
-        /**
-         *
-         */
-        twistFrequency: number;
-        /**
-         *
-         */
-        twistDampingRatio: number;
-        /**
-         *
-         */
-        twistUseSymplecticEuler: boolean;
-        /**
-         *
-         */
-        swingFrequency: number;
-        /**
-         *
-         */
-        swingDampingRatio: number;
-        /**
-         *
-         */
-        swingUseSymplecticEuler: boolean;
-        /**
-         *
-         */
-        lowerLimit: number;
-        /**
-         *
-         */
-        upperLimit: number;
-        /**
-         *
-         */
-        motorSpeed: number;
-        /**
-         *
-         */
-        motorTorque: number;
-        /**
-         *
-         */
-        maxSwingAngleX: number;
-        /**
-         *
-         */
-        maxSwingAngleZ: number;
-        /**
-         *
-         */
-        twistAxis: Readonly<IVector3>;
-        /**
-         *
-         */
-        swingAxis: Readonly<IVector3>;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
-    class HingeJoint extends Joint<OIMO.RevoluteJoint> {
-        private static readonly _config;
-        private static readonly _springDamper;
-        private static readonly _limitMotor;
-        readonly jointType: JointType;
-        private readonly _axis;
-        private readonly _valuesB;
-        protected _createJoint(): OIMO.RevoluteJoint;
-        /**
-         *
-         */
-        frequency: number;
-        /**
-         *
-         */
-        dampingRatio: number;
-        /**
-         *
-         */
-        useSymplecticEuler: boolean;
-        /**
-         *
-         */
-        lowerLimit: number;
-        /**
-         *
-         */
-        upperLimit: number;
-        /**
-         *
-         */
-        motorSpeed: number;
-        /**
-         *
-         */
-        motorTorque: number;
-        /**
-         *
-         */
-        axis: Readonly<IVector3>;
     }
 }
 declare namespace paper {
@@ -7878,12 +7646,234 @@ declare namespace egret3d.oimo {
     /**
      *
      */
-    class SphericalJoint extends Joint<OIMO.SphericalJoint> {
+    class PhysicsSystem extends paper.BaseSystem<paper.GameObject> {
+        private readonly _gravity;
+        private readonly _rayCastClosest;
+        private readonly _contactCallback;
+        private readonly _contactColliders;
+        private _oimoWorld;
+        protected getMatchers(): paper.INoneOfMatcher<paper.GameObject>[];
+        onAwake(): void;
+        onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
+        onComponentAdded(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>): void;
+        onComponentRemoved(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>): void;
+        onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
+        onTick(deltaTime: number): void;
+        raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        /**
+         *
+         */
+        gravity: Readonly<IVector3>;
+        /**
+         *
+         */
+        readonly oimoWorld: OIMO.World;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     * 立方体碰撞组件。
+     */
+    class BoxCollider extends BaseCollider implements IBoxCollider {
+        readonly colliderType: ColliderType;
+        readonly box: Box;
+        protected _createShape(): OIMO.Shape;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class CapsuleCollider extends BaseCollider {
+        readonly colliderType: ColliderType;
+        private _radius;
+        private _height;
+        protected _createShape(): OIMO.Shape;
+        /**
+         *
+         */
+        radius: number;
+        /**
+         *
+         */
+        height: number;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class ConeCollider extends BaseCollider {
+        readonly colliderType: ColliderType;
+        private _radius;
+        private _height;
+        protected _createShape(): OIMO.Shape;
+        /**
+         *
+         */
+        radius: number;
+        /**
+         *
+         */
+        height: number;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     * 刚体类型。
+     */
+    const enum RigidbodyType {
+        /**
+         * 动态。
+         */
+        DYNAMIC = 0,
+        /**
+         * 静态。
+         */
+        STATIC = 1,
+        /**
+         * 动力学。
+         */
+        KINEMATIC = 2,
+    }
+    /**
+     * 关节类型。
+     */
+    enum JointType {
+        Spherical,
+        Prismatic,
+        Hinge,
+        Cylindrical,
+        ConeTwist,
+        Universal,
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     * 球体碰撞组件。
+     */
+    class SphereCollider extends BaseCollider implements ISphereCollider {
+        readonly colliderType: ColliderType;
+        readonly sphere: Sphere;
+        protected _createShape(): OIMO.Shape;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class RayTester extends paper.Behaviour {
+        distance: number;
+        collisionMask: paper.Layer;
+        private _hitted;
+        private _mesh;
+        onStart(): void;
+        onUpdate(): void;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class ConeTwistJoint extends BaseJoint<OIMO.RagdollJoint> {
+        private static readonly _config;
+        private static readonly _swingSpringDamper;
+        private static readonly _twistSpringDamper;
+        private static readonly _twistLimitMotor;
+        readonly jointType: JointType;
+        readonly swingSpringDamper: SpringDamper;
+        readonly twistSpringDamper: SpringDamper;
+        readonly twistLimitMotor: RotationalLimitMotor;
+        private readonly _twistAxis;
+        private readonly _swingAxis;
+        protected readonly _values: Float32Array;
+        protected _createJoint(): OIMO.RagdollJoint;
+        /**
+         *
+         */
+        maxSwingAngleX: number;
+        /**
+         *
+         */
+        maxSwingAngleZ: number;
+        /**
+         *
+         */
+        twistAxis: Readonly<Vector3>;
+        /**
+         *
+         */
+        swingAxis: Readonly<Vector3>;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class HingeJoint extends BaseJoint<OIMO.RevoluteJoint> {
+        private static readonly _config;
+        private static readonly _springDamper;
+        private static readonly _rotationalLimitMotor;
+        readonly jointType: JointType;
+        readonly springDamper: SpringDamper;
+        readonly limitMotor: RotationalLimitMotor;
+        private readonly _axis;
+        protected _createJoint(): OIMO.RevoluteJoint;
+        /**
+         *
+         */
+        axis: Readonly<Vector3>;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class RotationalLimitMotor implements paper.ISerializable {
+        private readonly _values;
+        private constructor();
+        serialize(): Float32Array;
+        deserialize(value: [number, number, number, number]): this;
+        /**
+         *
+         */
+        lowerLimit: number;
+        /**
+         *
+         */
+        upperLimit: number;
+        /**
+         *
+         */
+        motorSpeed: number;
+        /**
+         *
+         */
+        motorTorque: number;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class SphericalJoint extends BaseJoint<OIMO.SphericalJoint> {
         private static readonly _config;
         private static readonly _springDamper;
         readonly jointType: JointType;
-        private readonly _valuesB;
+        readonly springDamper: SpringDamper;
         protected _createJoint(): OIMO.SphericalJoint;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     *
+     */
+    class SpringDamper implements paper.ISerializable {
+        private readonly _values;
+        private constructor();
+        serialize(): Float32Array;
+        deserialize(value: [number, number, number]): this;
         /**
          *
          */
@@ -7902,80 +7892,27 @@ declare namespace egret3d.oimo {
     /**
      *
      */
-    class UniversalJoint extends Joint<OIMO.UniversalJoint> {
+    class UniversalJoint extends BaseJoint<OIMO.UniversalJoint> {
         private static readonly _config;
         private static readonly _springDamperY;
         private static readonly _springDamperZ;
         private static readonly _limitMotorY;
         private static readonly _limitMotorZ;
         readonly jointType: JointType;
+        readonly springDamperY: SpringDamper;
+        readonly springDamperZ: SpringDamper;
+        readonly limitMotorY: RotationalLimitMotor;
+        readonly limitMotorZ: RotationalLimitMotor;
         private readonly _axisY;
         private readonly _axisZ;
-        private readonly _valuesB;
         protected _createJoint(): OIMO.UniversalJoint;
         /**
          *
          */
-        frequencyY: number;
+        axisY: Readonly<Vector3>;
         /**
          *
          */
-        dampingRatioY: number;
-        /**
-         *
-         */
-        useSymplecticEulerY: boolean;
-        /**
-         *
-         */
-        frequencyZ: number;
-        /**
-         *
-         */
-        dampingRatioZ: number;
-        /**
-         *
-         */
-        useSymplecticEulerZ: boolean;
-        /**
-         *
-         */
-        lowerLimitY: number;
-        /**
-         *
-         */
-        upperLimitY: number;
-        /**
-         *
-         */
-        motorSpeedY: number;
-        /**
-         *
-         */
-        motorTorqueY: number;
-        /**
-         *
-         */
-        lowerLimitZ: number;
-        /**
-         *
-         */
-        upperLimitZ: number;
-        /**
-         *
-         */
-        motorSpeedZ: number;
-        /**
-         *
-         */
-        motorTorqueZ: number;
-        /**
-         *
-         */
-        axisY: Readonly<IVector3>;
-        /**
-         *
-         */
-        axisZ: Readonly<IVector3>;
+        axisZ: Readonly<Vector3>;
     }
 }

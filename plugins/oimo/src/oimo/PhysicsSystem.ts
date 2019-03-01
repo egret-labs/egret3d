@@ -85,7 +85,7 @@ namespace egret3d.oimo {
                 }
             }
 
-            for (const joint of entity.getComponents(Joint as any, true) as Joint<OIMO.Joint>[]) {
+            for (const joint of entity.getComponents(BaseJoint as any, true) as BaseJoint<OIMO.Joint>[]) {
                 if (!(joint.oimoJoint as any)._world) {
                     this._oimoWorld.addJoint(joint.oimoJoint);
                 }
@@ -94,48 +94,50 @@ namespace egret3d.oimo {
             this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
         }
 
-        // public onAddComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup) {
-        //     if (group !== this.groups[0]) {
-        //         return;
-        //     }
+        public onComponentAdded(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>) {
+            if (group !== this.groups[0]) {
+                return;
+            }
 
-        //     if (component instanceof BaseCollider) {
-        //         if (!(component.oimoShape as any)._rigidBody) {
-        //             const rigidbody = component.entity.getComponent(Rigidbody) as Rigidbody;
-        //             rigidbody.oimoRigidbody.addShape(component.oimoShape);
-        //             // rigidbody._updateMass(rigidbody.oimoRigidbody);
-        //         }
+            if (component instanceof BaseCollider) {
+                if (!(component.oimoShape as any)._rigidBody) {
+                    const rigidbody = component.entity.getComponent(Rigidbody)!;
 
-        //         if (!component.oimoShape.getContactCallback()) {
-        //             component.oimoShape.setContactCallback(this._contactCallback);
-        //         }
-        //     }
-        //     else if (component instanceof Joint && !(component.oimoJoint as any)._world) {
-        //         this._oimoWorld.addJoint(component.oimoJoint);
-        //     }
-        // }
+                    rigidbody.oimoRigidbody.addShape(component.oimoShape);
+                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
+                }
 
-        // public onRemoveComponent(component: BaseCollider | Joint<any>, group: paper.GameObjectGroup) {
-        //     if (group !== this.groups[0]) {
-        //         return;
-        //     }
+                if (!component.oimoShape.getContactCallback()) {
+                    component.oimoShape.setContactCallback(this._contactCallback);
+                }
+            }
+            else if (component instanceof BaseJoint && !(component.oimoJoint as any)._world) {
+                this._oimoWorld.addJoint(component.oimoJoint);
+            }
+        }
 
-        //     if (component instanceof BaseCollider) {
-        //         const rigidbody = component.entity.getComponent(Rigidbody) as Rigidbody;
-        //         if ((component.oimoShape as any)._rigidBody) {
-        //             rigidbody.oimoRigidbody.removeShape(component.oimoShape);
-        //         }
-        //         // rigidbody._updateMass(rigidbody.oimoRigidbody);
-        //     }
-        //     else if (component instanceof Joint) {
-        //         this._oimoWorld.removeJoint(component.oimoJoint);
-        //     }
-        // }
+        public onComponentRemoved(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>) {
+            if (group !== this.groups[0]) {
+                return;
+            }
+
+            if (component instanceof BaseCollider) {
+                const rigidbody = component.entity.getComponent(Rigidbody)!;
+
+                if ((component.oimoShape as any)._rigidBody) {
+                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                }
+                // rigidbody._updateMass(rigidbody.oimoRigidbody);
+            }
+            else if (component instanceof BaseJoint) {
+                this._oimoWorld.removeJoint(component.oimoJoint);
+            }
+        }
 
         public onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const rigidbody = entity.getRemovedComponent(Rigidbody)!;
 
-            for (const joint of entity.getComponents(Joint as any, true) as Joint<any>[]) {
+            for (const joint of entity.getComponents(BaseJoint as any, true) as BaseJoint<any>[]) {
                 this._oimoWorld.removeJoint(joint.oimoJoint);
             }
 

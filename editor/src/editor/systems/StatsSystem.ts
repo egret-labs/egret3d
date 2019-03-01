@@ -66,7 +66,7 @@ namespace paper.editor {
             );
             guiComponent.drawCallPanel.update(
                 egret3d.drawCallCollecter.drawCallCount,
-                1000,
+                500,
             );
         }
     }

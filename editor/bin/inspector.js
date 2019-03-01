@@ -4431,19 +4431,19 @@ var paper;
             ModelComponent.prototype.select = function (value, isReplace) {
                 this._select(value, isReplace);
                 if (this._editorModel) {
-                    this._editorModel.selectGameObject(this._selectedGroup.entities);
+                    this._editorModel.selectGameObject(this._selectedGroup.entities.concat());
                 }
             };
             ModelComponent.prototype.unselect = function (value) {
                 this._unselect(value);
                 if (this._editorModel) {
-                    this._editorModel.selectGameObject(this._selectedGroup.entities);
+                    this._editorModel.selectGameObject(this._selectedGroup.entities.concat());
                 }
             };
             ModelComponent.prototype.delete = function (value) {
                 if (value === void 0) { value = null; }
                 if (this._editorModel) {
-                    this._editorModel.deleteGameObject(this._selectedGroup.entities);
+                    this._editorModel.deleteGameObject(this._selectedGroup.entities.concat());
                 }
                 else if (value) {
                     value.destroy();
@@ -7090,7 +7090,7 @@ var paper;
                 var guiComponent = this._guiComponent;
                 guiComponent.stats.onFrame();
                 guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["webgl"]["WebGLRenderSystem"]).deltaTime, 200);
-                guiComponent.drawCallPanel.update(egret3d.drawCallCollecter.drawCallCount, 1000);
+                guiComponent.drawCallPanel.update(egret3d.drawCallCollecter.drawCallCount, 500);
             };
             return StatsSystem;
         }(paper.BaseSystem));

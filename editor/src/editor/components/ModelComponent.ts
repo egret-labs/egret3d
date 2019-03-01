@@ -167,7 +167,7 @@ namespace paper.editor {
             this._select(value, isReplace);
 
             if (this._editorModel) {
-                this._editorModel.selectGameObject(this._selectedGroup.entities as any);
+                this._editorModel.selectGameObject(this._selectedGroup.entities.concat() as any);
             }
         }
 
@@ -175,13 +175,13 @@ namespace paper.editor {
             this._unselect(value);
 
             if (this._editorModel) {
-                this._editorModel.selectGameObject(this._selectedGroup.entities as any);
+                this._editorModel.selectGameObject(this._selectedGroup.entities.concat() as any);
             }
         }
 
         public delete(value: IEntity | null = null) {
             if (this._editorModel) {
-                this._editorModel.deleteGameObject(this._selectedGroup.entities as any);
+                this._editorModel.deleteGameObject(this._selectedGroup.entities.concat() as any);
             }
             else if (value) {
                 value.destroy();

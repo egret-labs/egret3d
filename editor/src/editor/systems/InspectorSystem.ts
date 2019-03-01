@@ -564,7 +564,7 @@ namespace paper.editor {
                     const materials = gui.instance as egret3d.Material[];
                     let index = 0;
                     for (const material of materials) {
-                        const folder = gui.addFolder(`<${index++}>`);
+                        const folder = gui.addFolder(`<${index++} ${material.name || material.shader.name}>`);
                         folder.instance = material;
                         this._addToInspector(folder);
                     }

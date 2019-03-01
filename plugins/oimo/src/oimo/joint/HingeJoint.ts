@@ -1,34 +1,27 @@
 namespace egret3d.oimo {
-    const enum ValueType {
-        // SpringDamper
-        Frequency,
-        DampingRatio,
-        UseSymplecticEuler,
-        // LimitMotor
-        LowerLimit,
-        UpperLimit,
-        MotorSpeed,
-        MotorTorque,
-    }
     /**
      * 
      */
     @paper.requireComponent(Rigidbody)
     @paper.allowMultiple
-    export class HingeJoint extends Joint<OIMO.RevoluteJoint> {
+    export class HingeJoint extends BaseJoint<OIMO.RevoluteJoint> {
         private static readonly _config: OIMO.RevoluteJointConfig = new OIMO.RevoluteJointConfig();
         private static readonly _springDamper: OIMO.SpringDamper = new OIMO.SpringDamper();
-        private static readonly _limitMotor: OIMO.RotationalLimitMotor = new OIMO.RotationalLimitMotor();
+        private static readonly _rotationalLimitMotor: OIMO.RotationalLimitMotor = new OIMO.RotationalLimitMotor();
 
         public readonly jointType: JointType = JointType.Hinge;
 
+        @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.serializedField
+        public readonly springDamper: SpringDamper = SpringDamper.create();
+
+        @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.serializedField
+        public readonly limitMotor: RotationalLimitMotor = RotationalLimitMotor.create();
+
+        @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
         private readonly _axis: Vector3 = Vector3.UP.clone();
-        @paper.serializedField
-        private readonly _valuesB: Float32Array = new Float32Array([
-            0.0, 0.0, 0,
-            -180.0, 180.0, 0.0, 0.0,
-        ]);
 
         protected _createJoint() {
             if (!this._connectedBody) {
@@ -36,40 +29,41 @@ namespace egret3d.oimo {
                 throw new Error();
             }
 
-            this._rigidbody = this.gameObject.getComponent(Rigidbody) as Rigidbody;
+            this._rigidbody = this.gameObject.getComponent(Rigidbody)!;
 
             const config = HingeJoint._config;
             config.allowCollision = this.collisionEnabled;
 
-            if (this.useGlobalAnchor) {
+            if (this.useWorldAnchor) {
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._axis as any
                 );
             }
             else {
-                const matrix = this.gameObject.transform.getWorldMatrix();
-                const anchor = Vector3.create().applyMatrix(matrix, this._anchor);
-                const axis = Vector3.create().applyMatrix(matrix, this._axis);
+                const matrix = this.gameObject.transform.localToWorldMatrix;
+                const anchor = Vector3.create().applyMatrix(matrix, this._anchor).release();
+                const axis = Vector3.create().applyMatrix(matrix, this._axis).release();
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any, axis as any
                 );
-                anchor.release();
-                axis.release();
             }
 
             config.springDamper = HingeJoint._springDamper;
-            config.limitMotor = HingeJoint._limitMotor;
-            config.springDamper.frequency = this.frequency;
-            config.springDamper.dampingRatio = this.dampingRatio;
-            config.springDamper.useSymplecticEuler = this.useSymplecticEuler;
-            config.limitMotor.lowerLimit = this.lowerLimit * DEG_RAD;
-            config.limitMotor.upperLimit = this.upperLimit * DEG_RAD;
-            config.limitMotor.motorSpeed = this.motorSpeed * DEG_RAD;
-            config.limitMotor.motorTorque = this.motorTorque;
+            config.limitMotor = HingeJoint._rotationalLimitMotor;
+            config.springDamper.frequency = this.springDamper.frequency;
+            config.springDamper.dampingRatio = this.springDamper.dampingRatio;
+            config.springDamper.useSymplecticEuler = this.springDamper.useSymplecticEuler;
+            config.limitMotor.lowerLimit = this.limitMotor.lowerLimit;
+            config.limitMotor.upperLimit = this.limitMotor.upperLimit;
+            config.limitMotor.motorSpeed = this.limitMotor.motorSpeed;
+            config.limitMotor.motorTorque = this.limitMotor.motorTorque;
 
             const joint = new OIMO.RevoluteJoint(config);
+            this.springDamper._oimoSpringDamper = joint.getSpringDamper();
+            this.limitMotor._oimoRotationalLimitMotor = joint.getLimitMotor();
+
             joint.userData = this;
 
             return joint;
@@ -77,113 +71,16 @@ namespace egret3d.oimo {
         /**
          * 
          */
-        public get frequency() {
-            return this._valuesB[ValueType.Frequency];
-        }
-        public set frequency(value: number) {
-            this._valuesB[ValueType.Frequency] = value;
-
-            if (this._oimoJoint) {
-                const springDamper = (this._oimoJoint as OIMO.RevoluteJoint).getSpringDamper();
-                springDamper.frequency = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get dampingRatio() {
-            return this._valuesB[ValueType.DampingRatio];
-        }
-        public set dampingRatio(value: number) {
-            this._valuesB[ValueType.DampingRatio] = value;
-
-            if (this._oimoJoint) {
-                const springDamper = (this._oimoJoint as OIMO.RevoluteJoint).getSpringDamper();
-                springDamper.dampingRatio = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get useSymplecticEuler() {
-            return this._valuesB[ValueType.UseSymplecticEuler] > 0;
-        }
-        public set useSymplecticEuler(value: boolean) {
-            this._valuesB[ValueType.UseSymplecticEuler] = value ? 1 : 0;
-
-            if (this._oimoJoint) {
-                const springDamper = (this._oimoJoint as OIMO.RevoluteJoint).getSpringDamper();
-                springDamper.useSymplecticEuler = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get lowerLimit() {
-            return this._valuesB[ValueType.LowerLimit];
-        }
-        public set lowerLimit(value: number) {
-            this._valuesB[ValueType.LowerLimit] = value;
-
-            if (this._oimoJoint) {
-                const limitMotor = (this._oimoJoint as OIMO.RevoluteJoint).getLimitMotor();
-                limitMotor.lowerLimit = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get upperLimit() {
-            return this._valuesB[ValueType.UpperLimit];
-        }
-        public set upperLimit(value: number) {
-            this._valuesB[ValueType.UpperLimit] = value;
-
-            if (this._oimoJoint) {
-                const limitMotor = (this._oimoJoint as OIMO.RevoluteJoint).getLimitMotor();
-                limitMotor.upperLimit = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get motorSpeed() {
-            return this._valuesB[ValueType.MotorSpeed];
-        }
-        public set motorSpeed(value: number) {
-            this._valuesB[ValueType.MotorSpeed] = value;
-
-            if (this._oimoJoint) {
-                const limitMotor = (this._oimoJoint as OIMO.RevoluteJoint).getLimitMotor();
-                limitMotor.motorSpeed = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get motorTorque() {
-            return this._valuesB[ValueType.MotorTorque];
-        }
-        public set motorTorque(value: number) {
-            this._valuesB[ValueType.MotorTorque] = value;
-
-            if (this._oimoJoint) {
-                const limitMotor = (this._oimoJoint as OIMO.RevoluteJoint).getLimitMotor();
-                limitMotor.motorTorque = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get axis() {
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        public get axis(): Readonly<Vector3> {
             return this._axis;
         }
-        public set axis(value: Readonly<IVector3>) {
-            if (this._oimoJoint) {
-                console.warn("Cannot change the axis after the joint has been created.");
-            }
-            else {
+        public set axis(value: Readonly<Vector3>) {
+            if (!this._oimoJoint) {
                 this._axis.normalize(value);
+            }
+            else if (DEBUG) {
+                console.warn("Cannot change the axis after the joint has been created.");
             }
         }
     }

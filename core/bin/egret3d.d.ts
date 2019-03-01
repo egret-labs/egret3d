@@ -7586,6 +7586,24 @@ declare namespace egret3d {
         readonly colliderType: ColliderType;
     }
     /**
+     * 立方体碰撞组件接口。
+     */
+    interface IBoxCollider extends ICollider {
+        /**
+         * 描述该碰撞体的立方体。
+         */
+        readonly box: Box;
+    }
+    /**
+     * 球体碰撞组件接口。
+     */
+    interface ISphereCollider extends ICollider {
+        /**
+         * 描述该碰撞体的球体。
+         */
+        readonly sphere: Sphere;
+    }
+    /**
      * 射线检测接口。
      */
     interface IRaycast {
@@ -7618,19 +7636,10 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     * 立方体碰撞组件接口。
-     */
-    interface IBoxCollider extends ICollider {
-        readonly box: Box;
-    }
-    /**
      * 立方体碰撞组件。
      */
     class BoxCollider extends paper.BaseComponent implements IBoxCollider, IRaycast {
         readonly colliderType: ColliderType;
-        /**
-         * 描述该组件的立方体。
-         */
         readonly box: Box;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
         /**
@@ -7641,20 +7650,10 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 球体碰撞组件接口。
-     * TODO 使用碰撞接口
-     */
-    interface ISphereCollider extends ICollider {
-        readonly sphere: Sphere;
-    }
-    /**
      * 球体碰撞组件。
      */
     class SphereCollider extends paper.BaseComponent implements ISphereCollider, IRaycast {
         readonly colliderType: ColliderType;
-        /**
-         * 描述该组件的球体。
-         */
         readonly sphere: Sphere;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
