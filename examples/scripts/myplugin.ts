@@ -25,8 +25,16 @@ export class ModifyDefaultResJSONPlugin implements plugins.Command {
 
     async onFile(file: plugins.File) {
         if (this.root && file.origin.indexOf("default.res.json") >= 0) {
-            const content = file.contents.toString().replace(new RegExp(this.root, "gi"), "");
-            file.contents = new Buffer(content);
+            const jsonContent: { resources: { url: string, name: string }[] } = JSON.parse(file.contents.toString());
+            for (const data of jsonContent.resources) {
+                if (data.url.indexOf(this.root) === 0) {
+                    data.url = data.url.replace(this.root, "");
+                }
+                if (data.name.indexOf(this.root) === 0) {
+                    data.name = data.name.replace(this.root, "");
+                }
+            }
+            file.contents = new Buffer(JSON.stringify(jsonContent, null, 4));
         }
 
         return file;
