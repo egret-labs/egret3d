@@ -114,7 +114,7 @@ namespace egret3d {
         private _nativeTransform: boolean = false;
         private _dirtyMask: DirtyMask = DirtyMask.All;
         private _opvalue: number = 1.0;
-        private _fov: number = Math.PI * 0.25;
+        private _fov: number = Const.PI_QUARTER;
         private _near: number = 0.3;
         private _far: number = 1000.0;
         private _size: number = 1.0;
@@ -439,7 +439,7 @@ namespace egret3d {
          * 透视投影的视野。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Math.PI - 0.01, step: 0.01 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Const.PI - 0.01, step: 0.01 })
         public get fov(): number {
             return this._fov;
         }
@@ -447,8 +447,8 @@ namespace egret3d {
             if (value !== value || value < 0.01) {
                 value = 0.01;
             }
-            else if (value > Math.PI - 0.01) {
-                value = Math.PI - 0.01;
+            else if (value > Const.PI - 0.01) {
+                value = Const.PI - 0.01;
             }
 
             if (this._fov === value) {

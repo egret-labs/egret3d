@@ -4890,7 +4890,7 @@ var paper;
                     var tempQuaternion = quaternion.clone().release();
                     var tempQuaternion2 = quaternion.clone().release();
                     var alignVector = egret3d.Vector3.create().release();
-                    alignVector.copy(this._eye).applyQuaternion(tempQuaternion.inverse());
+                    alignVector.copy(eye).applyQuaternion(tempQuaternion.inverse());
                     {
                         tempQuaternion.fromAxis(egret3d.Vector3.RIGHT, Math.atan2(alignVector.y, -alignVector.z));
                         tempQuaternion.multiply(tempQuaternion2, tempQuaternion);
@@ -4916,14 +4916,14 @@ var paper;
                         pickZ.setRotation(tempQuaternion);
                     }
                     {
-                        tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                        tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                         var axisE = this.rotate.transform.find("AxisE" /* AxisE */);
                         var pickE = this.rotate.transform.find("E" /* E */);
                         axisE.setRotation(tempQuaternion2);
                         pickE.setRotation(tempQuaternion2);
                     }
                     {
-                        tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                        tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                         var axisXYZE = this.rotate.transform.find("AxisXYZE" /* AxisXYZE */);
                         axisXYZE.setRotation(tempQuaternion2);
                     }
@@ -5711,6 +5711,7 @@ var paper;
             };
             GizmosSystem.prototype._updateCollider = function () {
                 var groups = this.groups;
+                var editorCamera = egret3d.Camera.editor;
                 var containerEntity = groups[0 /* GizmosContainer */].singleEntity;
                 var boxColliderEntities = groups[11 /* SelectedBoxColliders */].entities;
                 var boxColliderDrawer = this._boxColliderDrawer;
@@ -5749,7 +5750,7 @@ var paper;
                             continue;
                         }
                         if (drawerIndex >= sphereColliderDrawer.length) {
-                            var entity_2 = editor.EditorMeshHelper.createGameObject("SphereCollider " + drawerIndex);
+                            var entity_2 = editor.EditorMeshHelper.createGameObject("Sphere Collider " + drawerIndex);
                             entity_2.parent = containerEntity;
                             editor.EditorMeshHelper.createCircle("AxisX", egret3d.Color.YELLOW, 0.4).transform
                                 .setParent(entity_2.transform);
@@ -5785,18 +5786,34 @@ var paper;
                             entity_3.parent = containerEntity;
                             editor.EditorMeshHelper.createCircle("Top", egret3d.Color.YELLOW, 0.4).transform
                                 .setParent(entity_3.transform).setLocalPosition(0.0, 0.5, 0.0).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
-                            editor.EditorMeshHelper.createLine("Height", egret3d.Color.YELLOW, 0.4).transform
-                                .setParent(entity_3.transform).setLocalPosition(0.0, -0.5, 0.0);
                             editor.EditorMeshHelper.createCircle("Bottom", egret3d.Color.YELLOW, 0.4).transform
                                 .setParent(entity_3.transform).setLocalPosition(0.0, -0.5, 0.0).setLocalEuler(-Math.PI * 0.5, 0.0, 0.0);
+                            editor.EditorMeshHelper.createLine("Left", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_3.transform).setLocalPosition(-0.5, -0.5, 0.0);
+                            editor.EditorMeshHelper.createLine("Right", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_3.transform).setLocalPosition(0.5, -0.5, 0.0);
                             cylinderColliderDrawer.push(entity_3);
                         }
                         var drawer = cylinderColliderDrawer[drawerIndex];
+                        var sideLength = Math.sqrt(1.0 + Math.pow(component.bottomRadius - component.topRadius, 2.0));
+                        var sideRadian = Math.atan2(component.bottomRadius - component.topRadius, 1.0);
                         drawer.enabled = true;
                         drawer.transform.localPosition.applyMatrix(entity.transform.localToWorldMatrix, component.center).update();
                         drawer.transform.localRotation = entity.transform.rotation;
                         drawer.transform.find("Top").transform.setLocalScale(component.topRadius * 2.0);
                         drawer.transform.find("Bottom").transform.setLocalScale(component.bottomRadius * 2.0);
+                        var forward = editorCamera.transform.getForward().release();
+                        var up = drawer.transform.getUp().release();
+                        var plane = egret3d.Plane.create(up);
+                        drawer.transform.rotateOnAxis(up, plane.getProjectionPoint(forward).release().getAngle(egret3d.Vector3.RIGHT));
+                        drawer.transform.find("Left").transform
+                            .setLocalPosition(-component.bottomRadius, -0.5, 0.0)
+                            .setLocalEuler(0.0, 0.0, -sideRadian)
+                            .setLocalScale(1.0, sideLength, 1.0);
+                        drawer.transform.find("Right").transform
+                            .setLocalPosition(component.bottomRadius, -0.5, 0.0)
+                            .setLocalEuler(0.0, 0.0, sideRadian)
+                            .setLocalScale(1.0, sideLength, 1.0);
                         drawer.transform.localScale.set(1.0, component.height, 1.0).multiply(entity.transform.scale).update();
                         drawerIndex++;
                     }

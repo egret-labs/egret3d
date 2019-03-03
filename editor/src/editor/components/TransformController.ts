@@ -248,7 +248,7 @@ namespace paper.editor {
                 const tempQuaternion = quaternion.clone().release();
                 const tempQuaternion2 = quaternion.clone().release();
                 const alignVector = egret3d.Vector3.create().release();
-                alignVector.copy(this._eye).applyQuaternion(tempQuaternion.inverse());
+                alignVector.copy(eye).applyQuaternion(tempQuaternion.inverse());
 
                 {
                     tempQuaternion.fromAxis(egret3d.Vector3.RIGHT, Math.atan2(alignVector.y, -alignVector.z));
@@ -278,7 +278,7 @@ namespace paper.editor {
                 }
 
                 {
-                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                     const axisE = this.rotate.transform.find(AxisName.AxisE)!;
                     const pickE = this.rotate.transform.find(AxisName.E)!;
                     axisE.setRotation(tempQuaternion2);
@@ -286,7 +286,7 @@ namespace paper.editor {
                 }
 
                 {
-                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                     const axisXYZE = this.rotate.transform.find(AxisName.AxisXYZE)!;
                     axisXYZE.setRotation(tempQuaternion2);
                 }

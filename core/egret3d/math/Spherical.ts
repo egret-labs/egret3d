@@ -89,7 +89,7 @@ namespace egret3d {
 
         public makeSafe() {
             const EPS = 0.000001;
-            this.phi = Math.max(EPS, Math.min(Math.PI - EPS, this.phi));
+            this.phi = Math.max(EPS, Math.min(Const.PI - EPS, this.phi));
 
             return this;
         }

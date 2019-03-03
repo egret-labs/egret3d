@@ -21,8 +21,8 @@ namespace egret3d {
          * 该聚光灯产生的光锥夹角范围。（弧度制）
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Math.PI - 0.01 })
-        public angle: number = Math.PI / 0.3;
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Const.PI - 0.01 })
+        public angle: number = Const.PI / 0.3;
         /**
          * 该聚光灯产生的光锥半影。
          */

@@ -204,7 +204,7 @@ namespace egret3d.particle {
     }
 
     function _randomPostionCircle(out: Vector3) {
-        const angle = Math.random() * Math.PI * 2;
+        const angle = Math.random() * Const.PI_DOUBLE;
         out.x = Math.cos(angle);
         out.y = Math.sin(angle);
     }
@@ -218,7 +218,7 @@ namespace egret3d.particle {
     }
 
     function _randomPositionArcCircle(arc: number, out: Vector3) {
-        arc *= Math.PI / 180.0;
+        arc *= Const.DEG_RAD;
         const angle = Math.random() * arc;
         out.x = Math.cos(angle);
         out.y = Math.sin(angle);
@@ -233,7 +233,7 @@ namespace egret3d.particle {
 
     function _randomPositionSphere(out: Vector3) {
         const ranZ = Math.random() * 2 - 1.0;
-        const angle = Math.random() * Math.PI * 2;
+        const angle = Math.random() * Const.PI_DOUBLE;
         const range = Math.sqrt(1.0 - ranZ * ranZ);
 
         out.x = Math.cos(angle) * range;
@@ -262,7 +262,7 @@ namespace egret3d.particle {
         position.y = temp.y * shape.radius;
         position.z = temp.z * shape.radius;
 
-        const angle = shape.angle * Math.PI / 180.0;
+        const angle = shape.angle * Const.DEG_RAD;
         const sinValue = Math.sin(angle);
         const cosValue = Math.cos(angle);
         if (shape.randomDirection) {
@@ -289,7 +289,7 @@ namespace egret3d.particle {
         position.y = temp.y * shape.radius;
         position.z = 0;
 
-        const angle = shape.angle * Math.PI / 180.0;
+        const angle = shape.angle * Const.DEG_RAD;
         const sinValue = Math.sin(angle);
         const cosValue = Math.cos(angle);
 

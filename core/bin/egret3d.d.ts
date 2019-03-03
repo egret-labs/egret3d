@@ -608,18 +608,6 @@ declare namespace paper {
          */
         onStart?(): void;
         /**
-         * 实体被添加到系统时调用。
-         * @param entity 收集的实体。
-         * @param group 收集实体的实体组。
-         */
-        onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
-        /**
-         * 充分非必要组件添加到实体时调用。
-         * @param component 收集的实体组件。
-         * @param group 收集实体组件的实体组。
-         */
-        onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
-        /**
          * 充分非必要组件从实体移除时调用。
          * @param component 移除的实体组件。
          * @param group 移除实体组件的实体组。
@@ -631,6 +619,18 @@ declare namespace paper {
          * @param group 移除实体的实体组。
          */
         onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * 实体被添加到系统时调用。
+         * @param entity 收集的实体。
+         * @param group 收集实体的实体组。
+         */
+        onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * 充分非必要组件添加到实体时调用。
+         * @param component 收集的实体组件。
+         * @param group 收集实体组件的实体组。
+         */
+        onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
         /**
          * 生成一个新的逻辑帧时调用
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
@@ -4881,10 +4881,10 @@ declare namespace paper {
         onAwake?(config?: any): void;
         onEnable?(): void;
         onStart?(): void;
-        onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
-        onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
         onComponentRemoved?(component: IComponent, group: Group<TEntity>): void;
         onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
+        onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
+        onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
         onTick?(deltaTime?: number): void;
         onTickCleanup?(deltaTime?: number): void;
         onFrame?(deltaTime?: number): void;
@@ -5019,6 +5019,7 @@ declare namespace egret3d {
         PI = 3.141592653589793,
         PI_HALF = 1.5707963267948966,
         PI_QUARTER = 0.7853981633974483,
+        PI_DOUBLE = 6.283185307179586,
         /**
          * 弧度制到角度制相乘的系数。
          */
@@ -10508,7 +10509,32 @@ declare namespace egret3d {
         * @param thetaLength 垂直覆盖弧度。
         */
         static createSphere(radius?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: uint, heightSegments?: uint, phiStart?: number, phiLength?: number, thetaStart?: number, thetaLength?: number): Mesh;
+        /**
+         *
+         * @param radius
+         * @param tube
+         * @param tubularSegments
+         * @param radialSegments
+         * @param p
+         * @param q
+         */
         static createTorusKnot(radius?: number, tube?: number, tubularSegments?: uint, radialSegments?: uint, p?: number, q?: number): Mesh;
+        /**
+         * 创建胶囊体网格。
+         * @param radius 半径。
+         * @param height 圆柱体高度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param widthSegments 球体宽度分段。
+         * @param heightSegments 球体高度分段。
+         * @param middleSegments 圆柱体高度分段。
+         * @param phiStart 水平起始弧度。
+         * @param phiLength 水平覆盖弧度。
+         * @param thetaStart 垂直起始弧度。
+         * @param thetaLength 垂直覆盖弧度。
+         */
+        static createCapsule(radius?: number, height?: number, centerOffsetX?: number, centerOffsetY?: number, centerOffsetZ?: number, widthSegments?: uint, heightSegments?: uint, middleSegments?: uint, phiStart?: number, phiLength?: number, thetaStart?: number, thetaLength?: number): Mesh;
         private static _createPolyhedron(vertices, indices, radius, detail);
         private constructor();
     }

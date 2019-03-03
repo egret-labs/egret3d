@@ -3,6 +3,12 @@ namespace egret3d {
      * 几何平面。
      */
     export class Plane extends paper.BaseRelease<Plane> implements paper.ICCS<Plane>, paper.ISerializable, IRaycast {
+        public static UP: Readonly<Plane> = new Plane().set(Vector3.UP, 0.0);
+        public static DOWN: Readonly<Plane> = new Plane().set(Vector3.DOWN, 0.0);
+        public static LEFT: Readonly<Plane> = new Plane().set(Vector3.BACK, 0.0);
+        public static RIGHT: Readonly<Plane> = new Plane().set(Vector3.BACK, 0.0);
+        public static FORWARD: Readonly<Plane> = new Plane().set(Vector3.FORWARD, 0.0);
+        public static BACK: Readonly<Plane> = new Plane().set(Vector3.BACK, 0.0);
 
         private static readonly _instances: Plane[] = [];
         /**
@@ -54,7 +60,7 @@ namespace egret3d {
             return this.set(value.normal, value.constant);
         }
 
-        public set(normal: Readonly<IVector3>, constant: number) {
+        public set(normal: Readonly<IVector3>, constant: number = 0.0) {
             this.constant = constant;
             this.normal.copy(normal);
 
