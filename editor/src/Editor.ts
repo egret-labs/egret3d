@@ -22,7 +22,7 @@ namespace paper.editor {
                 if (proto.constructor.prototype.hasOwnProperty('__props__')) {
                     retrunList = retrunList.concat(proto.constructor.prototype['__props__']);
                 }
-                proto=proto.constructor.prototype.__proto__;
+                proto = proto.constructor.prototype.__proto__;
                 continue;
             }
             break;
@@ -105,7 +105,7 @@ namespace paper.editor {
          * 定位对象到场景中心
          * @param target 目标
          */
-        public static locateGambeObject(target:GameObject){
+        public static locateGambeObject(target: GameObject) {
             paper.Application.systemManager.getSystem(SceneSystem)!.lookAtSelected();
         }
         private static currentEditInfo: { url: string, type: string };
@@ -214,6 +214,8 @@ namespace paper.editor {
                 alpha: false,
                 playerMode: PlayerMode.Editor,
             });
+            paper.clock.tickInterval = 1.0 / 30.0;
+            paper.clock.frameInterval = 1.0 / 30.0;
         }
     }
 }

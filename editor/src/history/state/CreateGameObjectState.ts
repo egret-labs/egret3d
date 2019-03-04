@@ -14,7 +14,7 @@ namespace paper.editor {
             state.mesh = mesh;
             return state;
         }
-        public infos: { parentUUID: string|null, serializeData: any|null }[];
+        public infos: { parentUUID: string | null, serializeData: any | null }[];
         public createType: string;
         public addList: string[];
         private mesh: egret3d.Mesh;
@@ -42,13 +42,13 @@ namespace paper.editor {
                     this.infos.push({ parentUUID: null, serializeData: null });
                 }
                 for (let i: number = 0; i < this.infos.length; i++) {
-                    let obj: GameObject|null;
+                    let obj: GameObject | null;
                     if (this.isFirst) {
                         obj = this.createGameObjectByType(this.createType);
                         this.infos[i].serializeData = serialize(obj);
                     }
                     else {
-                        obj = new Deserializer().deserialize(this.infos[i].serializeData, true,false,this.editorModel.scene);
+                        obj = new Deserializer().deserialize(this.infos[i].serializeData, true, false, this.editorModel.scene);
                     }
                     let parent = this.editorModel.getGameObjectByUUid(this.infos[i].parentUUID!);
                     if (parent)
@@ -63,15 +63,15 @@ namespace paper.editor {
         }
 
         private createGameObjectByType(createType: string): GameObject {
-            let obj: GameObject = new GameObject();
+            let obj: GameObject = GameObject.create();
             obj.name = createType.toLowerCase();
-            if(createType==='NODE_2D'){
-                let component2D:egret3d.Egret2DRenderer=obj.addComponent(egret3d.Egret2DRenderer);
-                obj.layer=Layer.UI;
-                let camera:egret3d.Camera=obj.addComponent(egret3d.Camera);
-                camera.cullingMask=Layer.UI;
+            if (createType === 'NODE_2D') {
+                let component2D: egret3d.Egret2DRenderer = obj.addComponent(egret3d.Egret2DRenderer);
+                obj.layer = Layer.UI;
+                let camera: egret3d.Camera = obj.addComponent(egret3d.Camera);
+                camera.cullingMask = Layer.UI;
             }
-            else{
+            else {
                 let meshFilter: egret3d.MeshFilter;
                 if (this.mesh) {
                     meshFilter = obj.addComponent(egret3d.MeshFilter);
