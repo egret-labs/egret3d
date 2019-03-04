@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 圆柱（锥）碰撞体组件。
+     * 胶囊体碰撞组件。
      * - 与 Y 轴对齐。
      */
     @paper.allowMultiple

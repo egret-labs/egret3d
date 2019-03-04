@@ -143,14 +143,15 @@ namespace egret3d {
             const a = dx * dx + dz * dz;
             const b = p1x * dx + p1z * dz;
             const c = (p1x * p1x + p1z * p1z) - radius2;
-            const D = b * b - a * c;
+            const d = b * b - a * c;
 
-            if (D < 0.0) return false;
+            if (d < 0.0) return false;
 
             if (a > 0.0) {
-                const sqrtD = Math.sqrt(D);
-                tminxz = (-b - sqrtD) / a;
-                tmaxxz = (-b + sqrtD) / a;
+                const sqrtD = Math.sqrt(d);
+                const ia = 1.0 / a;
+                tminxz = (-b - sqrtD) * ia;
+                tmaxxz = (-b + sqrtD) * ia;
 
                 if (tminxz >= 1.0 || tmaxxz <= 0.0) return false;
             }

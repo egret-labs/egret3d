@@ -7,8 +7,8 @@ namespace egret3d.oimo {
         Density,
     }
     /**
-     * 基础碰撞体组件。
-     * - 全部碰撞体组件的基类。
+     * 基础碰撞组件。
+     * - 全部碰撞组件的基类。
      */
     @paper.abstract
     export abstract class BaseCollider extends paper.BaseComponent implements egret3d.ICollider {

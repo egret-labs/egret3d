@@ -1,60 +1,24 @@
 namespace egret3d.oimo {
     /**
-     * 
+     * 圆柱体碰撞组件。
+     * - 与 Y 轴对齐。
      */
     @paper.requireComponent(Rigidbody)
-    export class CylinderCollider extends BaseCollider {
+    export class CylinderCollider extends BaseCollider implements ICylinderCollider {
         public readonly colliderType: ColliderType = ColliderType.Cylinder;
 
+        @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
-        private _radius: number = 1.0;
-        @paper.serializedField
-        private _height: number = 1.0;
+        public readonly cylinder: Cylinder = Cylinder.create(Vector3.ZERO, 0.5, 0.5, 1.0);
 
         protected _createShape() {
             const config = this._updateConfig();
-            config.geometry = new OIMO.CylinderGeometry(this._radius, this._height * 0.5);
+            config.geometry = new OIMO.CylinderGeometry(this.cylinder.bottomRadius, this.cylinder.height * 0.5);
 
             const shape = new OIMO.Shape(config);
             shape.userData = this;
 
             return shape;
-        }
-        /**
-         * 
-         */
-        public get radius(): number {
-            return this._radius;
-        }
-        public set radius(value: number) {
-            if (this._radius === value) {
-                return;
-            }
-
-            if (this._oimoShape) {
-                console.warn("Cannot change the radius after the collider has been created.");
-            }
-            else {
-                this._radius = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get height(): number {
-            return this._height;
-        }
-        public set height(value: number) {
-            if (this._height === value) {
-                return;
-            }
-
-            if (this._oimoShape) {
-                console.warn("Cannot change the height after the collider has been created.");
-            }
-            else {
-                this._height = value;
-            }
         }
     }
 }

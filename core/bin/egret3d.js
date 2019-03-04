@@ -18374,7 +18374,7 @@ var egret3d;
             var _a = this, topRadius = _a.topRadius, bottomRadius = _a.bottomRadius, height = _a.height, center = _a.center;
             var begin = egret3d.helpVector3A.copy(ray.origin).subtract(center);
             var end = egret3d.helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin);
-            // Oimo CylinderGeometr, ConeGeometry. TODO
+            var isCone = topRadius !== bottomRadius;
             var p1x = begin.x;
             var p1y = begin.y;
             var p1z = begin.z;
@@ -18382,11 +18382,6 @@ var egret3d;
             var p2y = end.y;
             var p2z = end.z;
             var halfHeight = height * 0.5;
-            var radius = this.bottomRadius;
-            // const dRadius = this.bottomRadius - this.topRadius;
-            // const ddd = Math.sqrt(dRadius * dRadius + height * height);
-            // const sinTheta = dRadius / ddd;
-            // const cosTheta = height / ddd;
             var dx = p2x - p1x;
             var dy = p2y - p1y;
             var dz = p2z - p1z;
@@ -18417,24 +18412,83 @@ var egret3d;
             // XZ
             var tminxz = 0.0;
             var tmaxxz = 1.0;
-            var a = dx * dx + dz * dz;
-            var b = p1x * dx + p1z * dz;
-            var c = (p1x * p1x + p1z * p1z) - radius * radius;
-            var d = b * b - a * c;
-            if (d < 0.0)
-                return false;
-            if (a > 0.0) {
-                var sqrtD = Math.sqrt(d);
-                tminxz = (-b - sqrtD) / a;
-                tmaxxz = (-b + sqrtD) / a;
-                if (tminxz >= 1.0 || tmaxxz <= 0.0)
-                    return false;
+            var sinTheta = 0.0;
+            var cosTheta = 0.0;
+            if (isCone) {
+                var dRadius = bottomRadius - topRadius;
+                var cc = Math.sqrt(dRadius * dRadius + height * height);
+                var offsetY = height / dRadius * bottomRadius - halfHeight;
+                sinTheta = dRadius / cc;
+                cosTheta = height / cc;
+                p1y -= offsetY; // translate so that the new origin be (0, -offsetY, 0)
+                var cos2 = cosTheta * cosTheta;
+                var a = cos2 * (dx * dx + dy * dy + dz * dz) - dy * dy;
+                var b = cos2 * (p1x * dx + p1y * dy + p1z * dz) - p1y * dy;
+                var c = cos2 * (p1x * p1x + p1y * p1y + p1z * p1z) - p1y * p1y;
+                var d = b * b - a * c;
+                if (a !== 0.0) {
+                    if (d < 0.0)
+                        return false;
+                    var sqrtD = Math.sqrt(d);
+                    var ia = 1.0 / a;
+                    if (a < 0.0) {
+                        if (dy > 0.0) {
+                            tminxz = 0.0;
+                            tmaxxz = (-b + sqrtD) * ia;
+                            if (tmaxxz <= 0.0)
+                                return false;
+                        }
+                        else {
+                            tminxz = (-b - sqrtD) * ia;
+                            tmaxxz = 1.0;
+                            if (tminxz >= 1.0)
+                                return false;
+                        }
+                    }
+                    else {
+                        tminxz = (-b - sqrtD) * ia;
+                        tmaxxz = (-b + sqrtD) * ia;
+                        if (tminxz >= 1.0 || tmaxxz <= 0.0)
+                            return false;
+                    }
+                }
+                else {
+                    var t = -c / (2.0 * b);
+                    if (b > 0.0) {
+                        tminxz = 0.0;
+                        tmaxxz = t;
+                        if (t <= 0.0)
+                            return false;
+                    }
+                    else {
+                        tminxz = t;
+                        tmaxxz = 1.0;
+                        if (t >= 1.0)
+                            return false;
+                    }
+                }
+                p1y += offsetY; // revert translation
             }
             else {
-                if (c >= 0.0)
+                var a = dx * dx + dz * dz;
+                var b = p1x * dx + p1z * dz;
+                var c = (p1x * p1x + p1z * p1z) - bottomRadius * bottomRadius;
+                var d = b * b - a * c;
+                if (d < 0.0)
                     return false;
-                tminxz = 0.0;
-                tmaxxz = 1.0;
+                if (a > 0.0) {
+                    var sqrtD = Math.sqrt(d);
+                    tminxz = (-b - sqrtD) / a;
+                    tmaxxz = (-b + sqrtD) / a;
+                    if (tminxz >= 1.0 || tmaxxz <= 0.0)
+                        return false;
+                }
+                else {
+                    if (c >= 0.0)
+                        return false;
+                    tminxz = 0.0;
+                    tmaxxz = 1.0;
+                }
             }
             var min;
             if (tmaxxz <= tminy || tmaxy <= tminxz)
@@ -18453,6 +18507,10 @@ var egret3d;
                     return false; // the ray starts from inside
                 if (raycastInfo && raycastInfo.normal) {
                     raycastInfo.normal.set(p1x + dx * min, 0.0, p1z + dz * min).normalize();
+                    if (isCone) {
+                        raycastInfo.normal.multiplyScalar(cosTheta);
+                        raycastInfo.normal.y += sinTheta;
+                    }
                 }
             }
             if (raycastInfo) {
@@ -25899,13 +25957,14 @@ var egret3d;
             var a = dx * dx + dz * dz;
             var b = p1x * dx + p1z * dz;
             var c = (p1x * p1x + p1z * p1z) - radius2;
-            var D = b * b - a * c;
-            if (D < 0.0)
+            var d = b * b - a * c;
+            if (d < 0.0)
                 return false;
             if (a > 0.0) {
-                var sqrtD = Math.sqrt(D);
-                tminxz = (-b - sqrtD) / a;
-                tmaxxz = (-b + sqrtD) / a;
+                var sqrtD = Math.sqrt(d);
+                var ia = 1.0 / a;
+                tminxz = (-b - sqrtD) * ia;
+                tmaxxz = (-b + sqrtD) * ia;
                 if (tminxz >= 1.0 || tmaxxz <= 0.0)
                     return false;
             }
@@ -25922,10 +25981,12 @@ var egret3d;
                     // hit: side
                     min = tminxz;
                     if (raycastInfo) {
+                        var px = p1x + min * dx;
+                        var py = p1z + min * dy;
                         raycastInfo.distance = min;
-                        raycastInfo.position.set(p1x + min * dx, crossY, p1z + min * dz).add(center);
+                        raycastInfo.position.set(px, crossY, py).add(center);
                         if (raycastInfo.normal) {
-                            raycastInfo.normal.set(p1x + dx * min, 0.0, p1z + dz * min).normalize();
+                            raycastInfo.normal.set(px, 0.0, py).normalize();
                         }
                     }
                     return true;
