@@ -11,7 +11,7 @@ namespace paper.editor {
         private readonly _guiComponent: GUIComponent | null = Application.playerMode === PlayerMode.Editor ? null : GameObject.globalGameObject.getOrAddComponent(GUIComponent);
 
         public onAwake() {
-            GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture); // TODO
+            GameObject.globalGameObject.getOrAddComponent(EditorDefaultAsset); // TODO
             //
             if (Application.playerMode === PlayerMode.Editor) {
             }

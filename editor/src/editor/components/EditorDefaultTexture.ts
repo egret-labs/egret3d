@@ -7,12 +7,21 @@ namespace paper.editor {
      * @internal
      */
     @singleton
-    export class EditorDefaultTexture extends BaseComponent {
+    export class EditorDefaultAsset extends Component {
+        public static CIRCLE_LINE_HALF: egret3d.Mesh;
+
         public static CAMERA_ICON: egret3d.Texture;
         public static LIGHT_ICON: egret3d.Texture;
 
         public initialize() {
             super.initialize();
+
+            {
+                const mesh = egret3d.MeshBuilder.createCircle(0.5, 0.5);
+                mesh.name = "builtin/circle_line_half.mesh.bin";
+                paper.Asset.register(mesh);
+                EditorDefaultAsset.CIRCLE_LINE_HALF = mesh;
+            }
 
             {
                 const image = new Image();
@@ -21,7 +30,7 @@ namespace paper.editor {
                     const texture = egret3d.Texture.create({
                         source: image
                     }).setLiner(true).setRepeat(false).setMipmap(false);
-                    EditorDefaultTexture.CAMERA_ICON = texture;
+                    EditorDefaultAsset.CAMERA_ICON = texture;
                 };
             }
 
@@ -32,7 +41,7 @@ namespace paper.editor {
                     const texture = egret3d.Texture.create({
                         source: image
                     }).setLiner(true).setRepeat(false).setMipmap(false);
-                    EditorDefaultTexture.LIGHT_ICON = texture;
+                    EditorDefaultAsset.LIGHT_ICON = texture;
                 };
             }
         }

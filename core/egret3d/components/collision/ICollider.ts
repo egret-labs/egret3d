@@ -37,7 +37,7 @@ namespace egret3d {
      * 碰撞体接口。
      * - 为多物理引擎统一接口。
      */
-    export interface ICollider extends paper.BaseComponent {
+    export interface ICollider extends paper.BaseComponent { // TODO paper.IComponent
         /**
          * 碰撞体类型。
          */
@@ -60,6 +60,29 @@ namespace egret3d {
          * 描述该碰撞体的球体。
          */
         readonly sphere: Sphere;
+    }
+    /**
+     * 圆柱（锥）体碰撞组件接口。
+     */
+    export interface ICylinderCollider extends ICollider {
+        /**
+         * 描述该碰撞体的圆柱（锥）体。
+         */
+        readonly cylinder: Cylinder;
+    }
+    /**
+     * 胶囊体碰撞组件接口。
+     */
+    export interface ICapsuleCollider extends ICollider {
+        /**
+         * 描述该碰撞体的胶囊体。
+         */
+        readonly capsule: Capsule;
+    }
+    /**
+     * 网格碰撞组件接口。
+     */
+    export interface IMeshCollider extends ICollider {
     }
     /**
      * 射线检测接口。

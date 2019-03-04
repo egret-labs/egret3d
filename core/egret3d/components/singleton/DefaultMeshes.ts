@@ -31,7 +31,6 @@ namespace egret3d {
             // TODO 颜色，更多类型。
 
             const attributesA = [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0];
-            const attributesB = [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.NORMAL, gltf.AttributeSemantics.TEXCOORD_0];
 
             { // TRIANGLE.
                 const mesh = Mesh.create(3, 0, attributesA);

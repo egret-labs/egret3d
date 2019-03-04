@@ -18,6 +18,7 @@ namespace egret3d {
         }
 
         public backfaceCulling: boolean = true;
+        public modifyNormal: boolean = false;
         public subMeshIndex: int = -1;
         public triangleIndex: int = -1;
         /**
@@ -82,6 +83,8 @@ namespace egret3d {
         }
 
         public clear(): this {
+            this.backfaceCulling = true;
+            this.modifyNormal = false;
             this.subMeshIndex = -1;
             this.triangleIndex = -1;
             this.distance = -1.0;

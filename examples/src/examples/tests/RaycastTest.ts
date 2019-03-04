@@ -90,9 +90,17 @@ namespace examples {
 
                 {
                     const cylinderCollider = gameObject.addComponent(egret3d.CylinderCollider);
-                    cylinderCollider.topRadius = 1.0;
-                    cylinderCollider.bottomRadius = 1.0;
-                    cylinderCollider.center.set(-1.0, 0.0, 0.0);
+                    cylinderCollider.cylinder.topRadius = 1.0;
+                    cylinderCollider.cylinder.bottomRadius = 1.0;
+                    cylinderCollider.cylinder.height = 1.0;
+                    cylinderCollider.cylinder.center.set(-1.0, 0.0, 0.0);
+                }
+
+                {
+                    const capsuleCollider = gameObject.addComponent(egret3d.CapsuleCollider);
+                    capsuleCollider.capsule.radius = 0.25;
+                    capsuleCollider.capsule.height = 0.5;
+                    capsuleCollider.capsule.center.set(0.0, 2.0, 0.0);
                 }
 
                 const line = paper.GameObject.create("ColliderRaycast");

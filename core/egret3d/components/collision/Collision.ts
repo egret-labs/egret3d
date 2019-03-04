@@ -83,6 +83,35 @@ namespace egret3d {
         // TODO renderQueue.
         return a.distance - b.distance;
     }
+
+    export function _colliderRaycast(collider: ICollider, raycaster: IRaycast, preRaycaster: IRaycast | null, ray: Readonly<Ray>, raycastInfo?: RaycastInfo, modifyNormal?: boolean) {
+        const transform = collider.gameObject.transform;
+        const worldToLocalMatrix = transform.worldToLocalMatrix;
+        const localRay = helpRay.applyMatrix(worldToLocalMatrix, ray);
+
+        if ((!preRaycaster || preRaycaster.raycast(localRay)) && raycaster.raycast(localRay, raycastInfo)) {
+            if (raycastInfo) {
+                const localToWorldMatrix = transform.localToWorldMatrix;
+                raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
+                raycastInfo.transform = transform;
+                raycastInfo.collider = collider;
+
+                const normal = raycastInfo.normal;
+                if (normal) {
+                    if (modifyNormal && raycastInfo.modifyNormal) {
+                        normal.applyMatrix3(helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                    }
+                    else {
+                        normal.applyDirection(localToWorldMatrix);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
     /**
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
@@ -114,6 +143,7 @@ namespace egret3d {
             const boxColliders = gameObject.getComponents(BoxCollider);
             const sphereColliders = gameObject.getComponents(SphereCollider);
             const cylinderColliders = gameObject.getComponents(CylinderCollider);
+            const capsuleColliders = gameObject.getComponents(CapsuleCollider);
             const meshColliders = gameObject.getComponents(MeshCollider);
 
             if (boxColliders.length > 0) {
@@ -152,6 +182,23 @@ namespace egret3d {
 
             if (cylinderColliders.length > 0) {
                 for (const collider of cylinderColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
+
+                    if (raycastInfo) {
+                        if (_raycastCollider(ray, collider, raycastInfo, hit)) {
+                            hit = true;
+                        }
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
+                    }
+                }
+            }
+
+            if (capsuleColliders.length > 0) {
+                for (const collider of capsuleColliders) {
                     if (!collider.enabled) {
                         continue;
                     }

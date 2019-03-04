@@ -47,6 +47,13 @@ namespace paper.editor {
             return gameObject;
         }
 
+        public static createCircleHalf(name: string, color: egret3d.Color, opacity: number) {
+            const gameObject = this.createGameObject(name, EditorDefaultAsset.CIRCLE_LINE_HALF, egret3d.DefaultMaterials.LINEDASHED.clone());
+            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, opacity);
+
+            return gameObject;
+        }
+
         public static createCameraWireframed(name: string,
             colorFrustum: egret3d.Color = egret3d.Color.create(1.0, 0.7, 0),
             colorCone: egret3d.Color = egret3d.Color.RED,

@@ -4068,14 +4068,20 @@ var paper;
         /**
          * @internal
          */
-        var EditorDefaultTexture = (function (_super) {
-            __extends(EditorDefaultTexture, _super);
-            function EditorDefaultTexture() {
+        var EditorDefaultAsset = (function (_super) {
+            __extends(EditorDefaultAsset, _super);
+            function EditorDefaultAsset() {
                 return _super !== null && _super.apply(this, arguments) || this;
             }
-            EditorDefaultTexture_1 = EditorDefaultTexture;
-            EditorDefaultTexture.prototype.initialize = function () {
+            EditorDefaultAsset_1 = EditorDefaultAsset;
+            EditorDefaultAsset.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
+                {
+                    var mesh = egret3d.MeshBuilder.createCircle(0.5, 0.5);
+                    mesh.name = "builtin/circle_line_half.mesh.bin";
+                    paper.Asset.register(mesh);
+                    EditorDefaultAsset_1.CIRCLE_LINE_HALF = mesh;
+                }
                 {
                     var image_1 = new Image();
                     image_1.src = _icons.camera;
@@ -4083,7 +4089,7 @@ var paper;
                         var texture = egret3d.Texture.create({
                             source: image_1
                         }).setLiner(true).setRepeat(false).setMipmap(false);
-                        EditorDefaultTexture_1.CAMERA_ICON = texture;
+                        EditorDefaultAsset_1.CAMERA_ICON = texture;
                     };
                 }
                 {
@@ -4093,18 +4099,18 @@ var paper;
                         var texture = egret3d.Texture.create({
                             source: image_2
                         }).setLiner(true).setRepeat(false).setMipmap(false);
-                        EditorDefaultTexture_1.LIGHT_ICON = texture;
+                        EditorDefaultAsset_1.LIGHT_ICON = texture;
                     };
                 }
             };
-            EditorDefaultTexture = EditorDefaultTexture_1 = __decorate([
+            EditorDefaultAsset = EditorDefaultAsset_1 = __decorate([
                 paper.singleton
-            ], EditorDefaultTexture);
-            return EditorDefaultTexture;
-            var EditorDefaultTexture_1;
-        }(paper.BaseComponent));
-        editor.EditorDefaultTexture = EditorDefaultTexture;
-        __reflect(EditorDefaultTexture.prototype, "paper.editor.EditorDefaultTexture");
+            ], EditorDefaultAsset);
+            return EditorDefaultAsset;
+            var EditorDefaultAsset_1;
+        }(paper.Component));
+        editor.EditorDefaultAsset = EditorDefaultAsset;
+        __reflect(EditorDefaultAsset.prototype, "paper.editor.EditorDefaultAsset");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -5318,7 +5324,7 @@ var paper;
                 return _this;
             }
             EditorSystem.prototype.onAwake = function () {
-                paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultTexture); // TODO
+                paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultAsset); // TODO
                 //
                 if (paper.Application.playerMode === 4 /* Editor */) {
                 }
@@ -5453,6 +5459,7 @@ var paper;
             GroupIndex[GroupIndex["SelectedBoxColliders"] = 11] = "SelectedBoxColliders";
             GroupIndex[GroupIndex["SelectedSphereColliders"] = 12] = "SelectedSphereColliders";
             GroupIndex[GroupIndex["SelectedCylinderColliders"] = 13] = "SelectedCylinderColliders";
+            GroupIndex[GroupIndex["SelectedCapsuleColliders"] = 14] = "SelectedCapsuleColliders";
         })(GroupIndex || (GroupIndex = {}));
         var _girdStep = 5;
         /**
@@ -5468,6 +5475,7 @@ var paper;
                 _this._boxColliderDrawer = [];
                 _this._sphereColliderDrawer = [];
                 _this._cylinderColliderDrawer = [];
+                _this._capsuleColliderDrawer = [];
                 _this._gridA = null;
                 _this._gridB = null;
                 _this._hoverBox = null;
@@ -5561,7 +5569,7 @@ var paper;
                 var cameraPosition = editorCamera.gameObject.transform.position;
                 for (var i = 0, l = Math.max(this._cameraDrawer.length, cameraEntities.length); i < l; ++i) {
                     if (i + 1 > this._cameraDrawer.length) {
-                        var entity = editor.EditorMeshHelper.createIcon("Camera Icon " + i, editor.EditorDefaultTexture.CAMERA_ICON);
+                        var entity = editor.EditorMeshHelper.createIcon("Camera Icon " + i, editor.EditorDefaultAsset.CAMERA_ICON);
                         entity.parent = touchContainerEntity;
                         entity.addComponent(editor.PickedFlag);
                         this._cameraDrawer.push(entity);
@@ -5588,7 +5596,7 @@ var paper;
                 var lightEntities = groups[8 /* AllLights */].entities;
                 for (var i = 0, l = Math.max(this._lightDrawer.length, lightEntities.length); i < l; ++i) {
                     if (i + 1 > this._lightDrawer.length) {
-                        var entity = editor.EditorMeshHelper.createIcon("Light Icon " + i, editor.EditorDefaultTexture.LIGHT_ICON);
+                        var entity = editor.EditorMeshHelper.createIcon("Light Icon " + i, editor.EditorDefaultAsset.LIGHT_ICON);
                         entity.parent = touchContainerEntity;
                         entity.addComponent(editor.PickedFlag);
                         this._lightDrawer.push(entity);
@@ -5753,11 +5761,11 @@ var paper;
                             var entity_2 = editor.EditorMeshHelper.createGameObject("Sphere Collider " + drawerIndex);
                             entity_2.parent = containerEntity;
                             editor.EditorMeshHelper.createCircle("AxisX", egret3d.Color.YELLOW, 0.4).transform
-                                .setParent(entity_2.transform);
+                                .setParent(entity_2.transform).setLocalEulerAngles(0.0, 90.0, 0.0);
                             editor.EditorMeshHelper.createCircle("AxisY", egret3d.Color.YELLOW, 0.4).transform
-                                .setParent(entity_2.transform).setLocalEuler(0.0, 0.0, Math.PI * 0.5);
+                                .setParent(entity_2.transform).setLocalEulerAngles(90.0, 0.0, 0.0);
                             editor.EditorMeshHelper.createCircle("AxisZ", egret3d.Color.YELLOW, 0.4).transform
-                                .setParent(entity_2.transform).setLocalEuler(0.0, Math.PI * 0.5, 0.0);
+                                .setParent(entity_2.transform);
                             sphereColliderDrawer.push(entity_2);
                         }
                         var drawer = sphereColliderDrawer[drawerIndex];
@@ -5792,34 +5800,121 @@ var paper;
                                 .setParent(entity_3.transform).setLocalPosition(-0.5, -0.5, 0.0);
                             editor.EditorMeshHelper.createLine("Right", egret3d.Color.YELLOW, 0.4).transform
                                 .setParent(entity_3.transform).setLocalPosition(0.5, -0.5, 0.0);
+                            editor.EditorMeshHelper.createLine("Back", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_3.transform).setLocalPosition(0.0, -0.5, -0.5);
+                            editor.EditorMeshHelper.createLine("Forward", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_3.transform).setLocalPosition(0.0, -0.5, 0.5);
                             cylinderColliderDrawer.push(entity_3);
                         }
                         var drawer = cylinderColliderDrawer[drawerIndex];
-                        var sideLength = Math.sqrt(1.0 + Math.pow(component.bottomRadius - component.topRadius, 2.0));
-                        var sideRadian = Math.atan2(component.bottomRadius - component.topRadius, 1.0);
+                        var sideLength = Math.sqrt(1.0 + Math.pow(component.cylinder.bottomRadius - component.cylinder.topRadius, 2.0));
+                        var sideRadian = Math.atan2(component.cylinder.bottomRadius - component.cylinder.topRadius, 1.0);
                         drawer.enabled = true;
-                        drawer.transform.localPosition.applyMatrix(entity.transform.localToWorldMatrix, component.center).update();
+                        drawer.transform.localPosition.applyMatrix(entity.transform.localToWorldMatrix, component.cylinder.center).update();
                         drawer.transform.localRotation = entity.transform.rotation;
-                        drawer.transform.find("Top").transform.setLocalScale(component.topRadius * 2.0);
-                        drawer.transform.find("Bottom").transform.setLocalScale(component.bottomRadius * 2.0);
-                        var forward = editorCamera.transform.getForward().release();
-                        var up = drawer.transform.getUp().release();
-                        var plane = egret3d.Plane.create(up);
-                        drawer.transform.rotateOnAxis(up, plane.getProjectionPoint(forward).release().getAngle(egret3d.Vector3.RIGHT));
+                        drawer.transform.find("Top").transform.setLocalScale(component.cylinder.topRadius * 2.0);
+                        drawer.transform.find("Bottom").transform.setLocalScale(component.cylinder.bottomRadius * 2.0);
                         drawer.transform.find("Left").transform
-                            .setLocalPosition(-component.bottomRadius, -0.5, 0.0)
+                            .setLocalPosition(-component.cylinder.bottomRadius, -0.5, 0.0)
                             .setLocalEuler(0.0, 0.0, -sideRadian)
                             .setLocalScale(1.0, sideLength, 1.0);
                         drawer.transform.find("Right").transform
-                            .setLocalPosition(component.bottomRadius, -0.5, 0.0)
+                            .setLocalPosition(component.cylinder.bottomRadius, -0.5, 0.0)
                             .setLocalEuler(0.0, 0.0, sideRadian)
                             .setLocalScale(1.0, sideLength, 1.0);
-                        drawer.transform.localScale.set(1.0, component.height, 1.0).multiply(entity.transform.scale).update();
+                        drawer.transform.find("Back").transform
+                            .setLocalPosition(0.0, -0.5, -component.cylinder.bottomRadius)
+                            .setLocalEuler(sideRadian, 0.0, 0.0)
+                            .setLocalScale(1.0, sideLength, 1.0);
+                        drawer.transform.find("Forward").transform
+                            .setLocalPosition(0.0, -0.5, component.cylinder.bottomRadius)
+                            .setLocalEuler(-sideRadian, 0.0, 0.0)
+                            .setLocalScale(1.0, sideLength, 1.0);
+                        drawer.transform.localScale.set(1.0, component.cylinder.height, 1.0).multiply(entity.transform.scale).update();
                         drawerIndex++;
                     }
                 }
                 for (var i = drawerIndex, l = cylinderColliderDrawer.length; i < l; ++i) {
                     cylinderColliderDrawer[i].enabled = false;
+                }
+                var capsuleColliderEntities = groups[14 /* SelectedCapsuleColliders */].entities;
+                var capsuleColliderDrawer = this._capsuleColliderDrawer;
+                drawerIndex = 0;
+                for (var _j = 0, capsuleColliderEntities_1 = capsuleColliderEntities; _j < capsuleColliderEntities_1.length; _j++) {
+                    var entity = capsuleColliderEntities_1[_j];
+                    for (var _k = 0, _l = entity.getComponents(egret3d.CapsuleCollider); _k < _l.length; _k++) {
+                        var component = _l[_k];
+                        if (!component.enabled) {
+                            continue;
+                        }
+                        var capsule = component.capsule;
+                        var diameter = capsule.radius * 2.0;
+                        var halfHeight = capsule.height * 0.5;
+                        if (drawerIndex >= capsuleColliderDrawer.length) {
+                            var entity_4 = editor.EditorMeshHelper.createGameObject("Capsule Collider " + drawerIndex);
+                            entity_4.parent = containerEntity;
+                            editor.EditorMeshHelper.createCircleHalf("TopX", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform);
+                            editor.EditorMeshHelper.createCircleHalf("TopZ", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform).setLocalEulerAngles(0.0, 90.0, 0.0);
+                            editor.EditorMeshHelper.createCircle("Top", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform).setLocalEulerAngles(90.0, 0.0, 0.0);
+                            editor.EditorMeshHelper.createLine("Left", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform).setLocalPosition(-0.5, -0.5, 0.0);
+                            editor.EditorMeshHelper.createLine("Right", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform).setLocalPosition(0.5, -0.5, 0.0);
+                            editor.EditorMeshHelper.createLine("Back", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform).setLocalPosition(0.0, -0.5, -0.5);
+                            editor.EditorMeshHelper.createLine("Forward", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform).setLocalPosition(0.0, -0.5, 0.5);
+                            editor.EditorMeshHelper.createCircle("Bottom", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform).setLocalEulerAngles(-90.0, 0.0, 0.0);
+                            editor.EditorMeshHelper.createCircleHalf("BottomX", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform).setLocalEulerAngles(180.0, 0.0, 0.0);
+                            editor.EditorMeshHelper.createCircleHalf("BottomZ", egret3d.Color.YELLOW, 0.4).transform
+                                .setParent(entity_4.transform).setLocalEulerAngles(180.0, 90.0, 0.0);
+                            capsuleColliderDrawer.push(entity_4);
+                        }
+                        var drawer = capsuleColliderDrawer[drawerIndex];
+                        drawer.enabled = true;
+                        drawer.transform.localPosition.applyMatrix(entity.transform.localToWorldMatrix, capsule.center).update();
+                        drawer.transform.localRotation = entity.transform.rotation;
+                        drawer.transform.find("TopX").transform
+                            .setLocalPosition(0.0, halfHeight, 0.0)
+                            .setLocalScale(diameter, diameter, 1.0);
+                        drawer.transform.find("TopZ").transform
+                            .setLocalPosition(0.0, halfHeight, 0.0)
+                            .setLocalScale(diameter, diameter, 1.0);
+                        drawer.transform.find("Top").transform
+                            .setLocalPosition(0.0, halfHeight, 0.0)
+                            .setLocalScale(diameter, diameter, 1.0);
+                        drawer.transform.find("Left").transform
+                            .setLocalPosition(-capsule.radius, -halfHeight, 0.0)
+                            .setLocalScale(1.0, capsule.height, 1.0);
+                        drawer.transform.find("Right").transform
+                            .setLocalPosition(capsule.radius, -halfHeight, 0.0)
+                            .setLocalScale(1.0, capsule.height, 1.0);
+                        drawer.transform.find("Back").transform
+                            .setLocalPosition(0.0, -halfHeight, -capsule.radius)
+                            .setLocalScale(1.0, capsule.height, 1.0);
+                        drawer.transform.find("Forward").transform
+                            .setLocalPosition(0.0, -halfHeight, capsule.radius)
+                            .setLocalScale(1.0, capsule.height, 1.0);
+                        drawer.transform.find("Bottom").transform
+                            .setLocalPosition(0.0, -halfHeight, 0.0)
+                            .setLocalScale(diameter, diameter, 1.0);
+                        drawer.transform.find("BottomX").transform
+                            .setLocalPosition(0.0, -halfHeight, 0.0)
+                            .setLocalScale(diameter, diameter, 1.0);
+                        drawer.transform.find("BottomZ").transform
+                            .setLocalPosition(0.0, -halfHeight, 0.0)
+                            .setLocalScale(diameter, diameter, 1.0);
+                        drawer.transform.localScale.set(1.0, 1.0, 1.0).multiply(entity.transform.scale).update();
+                        drawerIndex++;
+                    }
+                }
+                for (var i = drawerIndex, l = capsuleColliderDrawer.length; i < l; ++i) {
+                    capsuleColliderDrawer[i].enabled = false;
                 }
             };
             GizmosSystem.prototype.getMatchers = function () {
@@ -5841,6 +5936,7 @@ var paper;
                     paper.Matcher.create(egret3d.Transform, egret3d.BoxCollider, editor.SelectedFlag),
                     paper.Matcher.create(egret3d.Transform, egret3d.SphereCollider, editor.SelectedFlag),
                     paper.Matcher.create(egret3d.Transform, egret3d.CylinderCollider, editor.SelectedFlag),
+                    paper.Matcher.create(egret3d.Transform, egret3d.CapsuleCollider, editor.SelectedFlag),
                 ];
             };
             GizmosSystem.prototype.onEnable = function () {
@@ -5872,6 +5968,7 @@ var paper;
                 this._boxColliderDrawer.length = 0;
                 this._sphereColliderDrawer.length = 0;
                 this._cylinderColliderDrawer.length = 0;
+                this._capsuleColliderDrawer.length = 0;
                 this._hoverBox = null;
                 this._skeletonDrawer = null;
                 this._cameraViewFrustum = null;
@@ -9305,6 +9402,11 @@ var paper;
             };
             EditorMeshHelper.createCircle = function (name, color, opacity) {
                 var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone());
+                gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(2 /* Normal */, 3000 /* Blend */, opacity);
+                return gameObject;
+            };
+            EditorMeshHelper.createCircleHalf = function (name, color, opacity) {
+                var gameObject = this.createGameObject(name, editor.EditorDefaultAsset.CIRCLE_LINE_HALF, egret3d.DefaultMaterials.LINEDASHED.clone());
                 gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(2 /* Normal */, 3000 /* Blend */, opacity);
                 return gameObject;
             };
