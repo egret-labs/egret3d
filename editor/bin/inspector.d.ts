@@ -164,6 +164,8 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
     const context: EventDispatcher;
     enum selectItemType {
         GAMEOBJECT = 0,
@@ -499,7 +501,39 @@ declare namespace paper.editor {
         private _clearDefaultPointerDownPosition();
     }
 }
+declare namespace paper {
+    /**
+     * 默认标识和自定义标识。
+     */
+    const enum DefaultTags {
+    }
+    /**
+     * 内置层级和自定义层级。
+     */
+    const enum Layer {
+    }
+}
+declare namespace egret3d {
+    /**
+     * 渲染排序。
+     */
+    const enum RenderQueue {
+    }
+    /**
+     *
+     */
+    const enum AttributeSemantics {
+    }
+    /**
+     *
+     */
+    const enum UniformSemantics {
+    }
+}
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
+    function getQueryValues(uri: string): any;
 }
 declare namespace paper.editor {
     /**
@@ -574,38 +608,6 @@ declare namespace paper.editor {
         static removeEventListener(type: string, fun: Function, thisObj: any): void;
         static dispatchEvent(event: BaseEvent): void;
         private static initEditEnvironment();
-    }
-}
-declare namespace paper.editor {
-    function getQueryValues(uri: string): any;
-}
-declare namespace paper {
-    /**
-     * 默认标识和自定义标识。
-     */
-    const enum DefaultTags {
-    }
-    /**
-     * 内置层级和自定义层级。
-     */
-    const enum Layer {
-    }
-}
-declare namespace egret3d {
-    /**
-     * 渲染排序。
-     */
-    const enum RenderQueue {
-    }
-    /**
-     *
-     */
-    const enum AttributeSemantics {
-    }
-    /**
-     *
-     */
-    const enum UniformSemantics {
     }
 }
 declare namespace paper.editor {
@@ -874,6 +876,4 @@ declare namespace paper.editor {
         serialize(): any;
         deserialize(data: any): void;
     }
-}
-declare namespace paper.editor {
 }

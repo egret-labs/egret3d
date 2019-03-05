@@ -439,20 +439,20 @@ namespace egret3d {
         /**
          * 该立方体的最小点。
          */
-        public get minimum(): Readonly<IVector3> {
+        public get minimum(): Readonly<Vector3> {
             return this._minimum;
         }
         /**
          * 该立方体的最大点。
          */
-        public get maximum(): Readonly<IVector3> {
+        public get maximum(): Readonly<Vector3> {
             return this._maximum;
         }
         /**
          * 该立方体的尺寸。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3, { minimum: 0.0 })
-        public get size(): Readonly<IVector3> {
+        public get size(): Readonly<Vector3> {
             if (this._dirtySize) {
                 if (this.isEmpty) {
                     this._size.copy(Vector3.ZERO);
@@ -466,7 +466,7 @@ namespace egret3d {
 
             return this._size;
         }
-        public set size(value: Readonly<IVector3>) {
+        public set size(value: Readonly<Vector3>) {
             if (this.isEmpty) {
                 return;
             }
@@ -483,7 +483,7 @@ namespace egret3d {
          * 该立方体的中心点。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
-        public get center(): Readonly<IVector3> {
+        public get center(): Readonly<Vector3> {
             if (this._dirtyCenter) {
                 if (this.isEmpty) {
                     this._center.copy(Vector3.ZERO);
@@ -497,7 +497,7 @@ namespace egret3d {
 
             return this._center;
         }
-        public set center(value: Readonly<IVector3>) {
+        public set center(value: Readonly<Vector3>) {
             if (this.isEmpty) {
                 return;
             }

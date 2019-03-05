@@ -92,51 +92,36 @@ namespace paper {
                 const matcher = this._matcher;
                 const entities = this._entities;
                 const index = entities.indexOf(entity);
+                const componentClass = component ? component.constructor as IComponentClass<IComponent> : null;
 
-                if (isAdd) {
-                    if (index >= 0) {
-                        const componentClass = component.constructor as IComponentClass<IComponent>;
-
-                        if (matcher.matchesExtra(componentClass)) { // TODO
-                            Group.onComponentEnabled.dispatch([this, component]);
-                        }
-                    }
-                    else if (matcher.matches(entity)) {
-                        entities[entities.length] = entity;
-                        this._entityCount++;
-                        this._singleEntity = entity;
-                        Group.onEntityAdded.dispatch([this, entity]);
-                    }
-                }
-                else if (index >= 0) {
-                    const componentClass = component.constructor as IComponentClass<IComponent>;
-
-                    if ((componentClass.allowMultiple && this._hasEnabledComponent(entity, component)) || matcher.matchesExtra(componentClass)) {
+                switch (matcher.matches(entity, componentClass, isAdd, index >= 0)) {
+                    case -2:
                         Group.onComponentDisabled.dispatch([this, component]);
-                    }
-                    else {
+                        break;
+
+                    case -1:
                         entities[index] = null;
                         this._entitiesDirty = true;
                         this._entityCount--;
                         this._singleEntity = null;
                         Group.onEntityRemoved.dispatch([this, entity]);
-                    }
+                        break;
+
+                    case 0:
+                        break;
+
+                    case 1:
+                        entities[entities.length] = entity;
+                        this._entityCount++;
+                        this._singleEntity = entity;
+                        Group.onEntityAdded.dispatch([this, entity]);
+                        break;
+
+                    case 2:
+                        Group.onComponentEnabled.dispatch([this, component]);
+                        break;
                 }
             }
-        }
-
-        private _hasEnabledComponent(entity: TEntity, component: IComponent) {
-            const components = entity.getComponents(component.constructor as IComponentClass<IComponent>);
-            
-            if (components.length > 0) {
-                for (const eachComponent of components) {
-                    if (eachComponent.isActiveAndEnabled) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
         /**
          * 该组匹配的实体总数。
@@ -182,6 +167,11 @@ namespace paper {
          */
         public get singleEntity(): TEntity | null {
             const entityCount = this._entityCount;
+
+            if (this._entitiesDirty) {
+                utility.filterArray(this._entities, null);
+                this._entitiesDirty = false;
+            }
 
             if (entityCount === 0) {
                 return null;

@@ -1,6 +1,6 @@
 namespace paper {
 
-    const _components: IComponentClass<IComponent>[] = [];
+    const _indices: uint[] = [];
     /**
      * 实体组件匹配器。
      */
@@ -82,33 +82,41 @@ namespace paper {
         private _merge() {
             if (this._allOfComponents.length > 0) {
                 for (const component of this._allOfComponents) {
-                    _components.push(component);
+                    this._components.push(component);
                 }
             }
 
             if (this._anyOfComponents.length > 0) {
                 for (const component of this._anyOfComponents) {
-                    _components.push(component);
+                    this._components.push(component);
                 }
             }
 
             if (this._noneOfComponents.length > 0) {
                 for (const component of this._noneOfComponents) {
-                    _components.push(component);
+                    this._components.push(component);
                 }
             }
 
             if (this._extraOfComponents.length > 0) {
                 for (const component of this._extraOfComponents) {
-                    _components.push(component);
+                    this._components.push(component);
+                }
+            }
+        }
+
+        private _hasEnabledComponent(entity: TEntity, component: IComponentClass<IComponent>) {
+            const components = entity.getComponents(component);
+
+            if (components.length > 0) {
+                for (const eachComponent of components) {
+                    if (eachComponent.isActiveAndEnabled) {
+                        return true;
+                    }
                 }
             }
 
-            this._distinct(_components, this._components);
-
-            if (_components.length > 0) {
-                _components.length = 0;
-            }
+            return false;
         }
 
         public onClear() {
@@ -150,34 +158,128 @@ namespace paper {
             return this;
         }
 
-        public matches(entity: TEntity): boolean {
-            const componentEnabledFilter = this.componentEnabledFilter;
+        public matches(entity: TEntity, component: IComponentClass<IComponent> | null, isAdd: boolean, isAdded: boolean): -2 | -1 | 0 | 1 | 2 {
+            const { componentEnabledFilter, _allOfComponents, _anyOfComponents, _noneOfComponents, _extraOfComponents } = this;
 
-            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents, componentEnabledFilter))
-                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents, componentEnabledFilter))
-                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents, componentEnabledFilter));
-        }
+            if (component) {
+                const isNoneOf = _noneOfComponents.length > 0 && _noneOfComponents.indexOf(component) >= 0;
 
-        public matchesExtra(component: IComponentClass<IComponent>): boolean {
-            return this._extraOfComponents.length > 0 && this._extraOfComponents.indexOf(component) >= 0;
+                if (isNoneOf) {
+                    if (isAdd === isAdded) {
+                        if (isAdd) {
+                            // remove
+                            return -1;
+                        }
+                        else if (
+                            (_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
+                            (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter)) &&
+                            !entity.hasAnyComponents(_noneOfComponents, componentEnabledFilter)
+                        ) {
+                            // add
+                            return 1;
+                        }
+                    }
+                }
+                else if (isAdd) {
+                    if (isAdded) {
+                        if (_extraOfComponents.length > 0 && _extraOfComponents.indexOf(component) >= 0) {
+                            // add extra
+                            return 2;
+                        }
+                    }
+                    else if (
+                        (_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
+                        (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter))
+                    ) {
+                        // add
+                        return 1;
+                    }
+                }
+                else if (isAdded) {
+                    if (_extraOfComponents.length > 0 && _extraOfComponents.indexOf(component) >= 0) {
+                        // remove extra
+                        return 2;
+                    }
+                    else if (
+                        (_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
+                        (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter))
+                    ) {
+                    }
+                    else {
+                        // remove
+                        return -1;
+                    }
+                }
+            }
+            else if (!isAdded) {
+                if (
+                    (_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
+                    (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter)) &&
+                    (_noneOfComponents.length === 0 || !entity.hasAnyComponents(_noneOfComponents, componentEnabledFilter))
+                ) {
+                    if (isAdd) {
+                        // add
+                        return 1;
+                    }
+                    else {
+                        // remove
+                        return -1;
+                    }
+                }
+            }
+
+            return 0;
         }
 
         public get id(): string {
             if (!this._id) {
-                this._merge();
+                this._id = (this.componentEnabledFilter ? "E" : "C");
 
-                const indices = [] as uint[];
-                for (const component of this._components) {
-                    indices.push(component.componentIndex);
+                if (this._allOfComponents.length > 0) {
+                    for (const component of this._allOfComponents) {
+                        _indices.push(component.componentIndex);
+                    }
+
+                    this._id += " All " + _indices.join(",");
+                    _indices.length = 0;
                 }
 
-                this._id = (this.componentEnabledFilter ? "E" : "") + indices.join(",");
+                if (this._anyOfComponents.length > 0) {
+                    for (const component of this._anyOfComponents) {
+                        _indices.push(component.componentIndex);
+                    }
+
+                    this._id += " Any " + _indices.join(",");
+                    _indices.length = 0;
+                }
+
+                if (this._noneOfComponents.length > 0) {
+                    for (const component of this._noneOfComponents) {
+                        _indices.push(component.componentIndex);
+                    }
+
+                    this._id += " None " + _indices.join(",");
+                    _indices.length = 0;
+                }
+
+                if (this._extraOfComponents.length > 0) {
+                    for (const component of this._extraOfComponents) {
+                        _indices.push(component.componentIndex);
+                    }
+
+                    this._id += " Extra " + _indices.join(",");
+                    _indices.length = 0;
+                }
             }
 
             return this._id;
         }
 
         public get components(): ReadonlyArray<IComponentClass<IComponent>> {
+            if (this._components.length === 0) {
+                this._merge();
+            }
+
             return this._components;
         }
 

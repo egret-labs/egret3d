@@ -600,12 +600,7 @@ namespace paper {
          * 指定的实体是否与该匹配器的规则相匹配。
          * @param entity 指定的实体。
          */
-        matches(entity: TEntity): boolean;
-        /**
-         * 指定的组件是否与该匹配器的额外规则相匹配。
-         * @param component 指定的组件。
-         */
-        matchesExtra(component: IComponentClass<IComponent>): boolean;
+        matches(entity: TEntity, component: IComponentClass<IComponent> | null, isAdd: boolean, isAdded: boolean): -2 | -1 | 0 | 1 | 2;
     }
     /**
      * 

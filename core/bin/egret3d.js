@@ -3181,8 +3181,26 @@ var paper;
                     return false;
                 }
                 var component = components[index];
-                if (!component || (componentEnabled && !component.enabled)) {
+                if (!component) {
                     return false;
+                }
+                if (componentEnabled) {
+                    if (component.constructor === paper.GroupComponent) {
+                        var flag = false;
+                        for (var _i = 0, _a = component.components; _i < _a.length; _i++) {
+                            var childComponent = _a[_i];
+                            if (!childComponent.isActiveAndEnabled) {
+                                flag = true;
+                                break;
+                            }
+                        }
+                        if (!flag) {
+                            return false;
+                        }
+                    }
+                    else if (!component.isActiveAndEnabled) {
+                        return false;
+                    }
                 }
             }
             return true;
@@ -3193,8 +3211,23 @@ var paper;
                 var index = componentClasses[i].componentIndex;
                 if (index >= 0) {
                     var component = components[index];
-                    if (component && (!componentEnabled || component.enabled)) {
-                        return true;
+                    if (component) {
+                        if (componentEnabled) {
+                            if (component.constructor === paper.GroupComponent) {
+                                for (var _i = 0, _a = component.components; _i < _a.length; _i++) {
+                                    var childComponent = _a[_i];
+                                    if (childComponent.isActiveAndEnabled) {
+                                        return true;
+                                    }
+                                }
+                            }
+                            else if (component.isActiveAndEnabled) {
+                                return true;
+                            }
+                        }
+                        else {
+                            return true;
+                        }
                     }
                 }
             }
@@ -6108,46 +6141,31 @@ var paper;
                 var matcher = this._matcher;
                 var entities = this._entities;
                 var index = entities.indexOf(entity);
-                if (isAdd) {
-                    if (index >= 0) {
-                        var componentClass = component.constructor;
-                        if (matcher.matchesExtra(componentClass)) {
-                            Group.onComponentEnabled.dispatch([this, component]);
-                        }
-                    }
-                    else if (matcher.matches(entity)) {
-                        entities[entities.length] = entity;
-                        this._entityCount++;
-                        this._singleEntity = entity;
-                        Group.onEntityAdded.dispatch([this, entity]);
-                    }
-                }
-                else if (index >= 0) {
-                    var componentClass = component.constructor;
-                    if ((componentClass.allowMultiple && this._hasEnabledComponent(entity, component)) || matcher.matchesExtra(componentClass)) {
+                var componentClass = component ? component.constructor : null;
+                switch (matcher.matches(entity, componentClass, isAdd, index >= 0)) {
+                    case -2:
                         Group.onComponentDisabled.dispatch([this, component]);
-                    }
-                    else {
+                        break;
+                    case -1:
                         entities[index] = null;
                         this._entitiesDirty = true;
                         this._entityCount--;
                         this._singleEntity = null;
                         Group.onEntityRemoved.dispatch([this, entity]);
-                    }
+                        break;
+                    case 0:
+                        break;
+                    case 1:
+                        entities[entities.length] = entity;
+                        this._entityCount++;
+                        this._singleEntity = entity;
+                        Group.onEntityAdded.dispatch([this, entity]);
+                        break;
+                    case 2:
+                        Group.onComponentEnabled.dispatch([this, component]);
+                        break;
                 }
             }
-        };
-        Group.prototype._hasEnabledComponent = function (entity, component) {
-            var components = entity.getComponents(component.constructor);
-            if (components.length > 0) {
-                for (var _i = 0, components_1 = components; _i < components_1.length; _i++) {
-                    var eachComponent = components_1[_i];
-                    if (eachComponent.isActiveAndEnabled) {
-                        return true;
-                    }
-                }
-            }
-            return false;
         };
         Object.defineProperty(Group.prototype, "entityCount", {
             /**
@@ -6206,6 +6224,10 @@ var paper;
              */
             get: function () {
                 var entityCount = this._entityCount;
+                if (this._entitiesDirty) {
+                    paper.utility.filterArray(this._entities, null);
+                    this._entitiesDirty = false;
+                }
                 if (entityCount === 0) {
                     return null;
                 }
@@ -11475,8 +11497,8 @@ var paper;
             var _a = this._disposeCollecter, scenes = _a.scenes, entities = _a.entities, components = _a.components, releases = _a.releases, assets = _a.assets;
             var _b = this, _cacheEntities = _b._cacheEntities, _cacheComponents = _b._cacheComponents;
             if (components.length > 0) {
-                for (var _i = 0, components_2 = components; _i < components_2.length; _i++) {
-                    var component = components_2[_i];
+                for (var _i = 0, components_1 = components; _i < components_1.length; _i++) {
+                    var component = components_1[_i];
                     component.uninitialize();
                 }
                 components.length = 0;
@@ -15684,7 +15706,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 圆柱（锥）碰撞体组件。
+     * 圆柱（锥）体碰撞组件。
      * - 与 Y 轴对齐。
      */
     var CylinderCollider = (function (_super) {
@@ -15712,7 +15734,7 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
-    var _components = [];
+    var _indices = [];
     /**
      * 实体组件匹配器。
      */
@@ -15773,31 +15795,39 @@ var paper;
             if (this._allOfComponents.length > 0) {
                 for (var _i = 0, _a = this._allOfComponents; _i < _a.length; _i++) {
                     var component = _a[_i];
-                    _components.push(component);
+                    this._components.push(component);
                 }
             }
             if (this._anyOfComponents.length > 0) {
                 for (var _b = 0, _c = this._anyOfComponents; _b < _c.length; _b++) {
                     var component = _c[_b];
-                    _components.push(component);
+                    this._components.push(component);
                 }
             }
             if (this._noneOfComponents.length > 0) {
                 for (var _d = 0, _e = this._noneOfComponents; _d < _e.length; _d++) {
                     var component = _e[_d];
-                    _components.push(component);
+                    this._components.push(component);
                 }
             }
             if (this._extraOfComponents.length > 0) {
                 for (var _f = 0, _g = this._extraOfComponents; _f < _g.length; _f++) {
                     var component = _g[_f];
-                    _components.push(component);
+                    this._components.push(component);
                 }
             }
-            this._distinct(_components, this._components);
-            if (_components.length > 0) {
-                _components.length = 0;
+        };
+        Matcher.prototype._hasEnabledComponent = function (entity, component) {
+            var components = entity.getComponents(component);
+            if (components.length > 0) {
+                for (var _i = 0, components_2 = components; _i < components_2.length; _i++) {
+                    var eachComponent = components_2[_i];
+                    if (eachComponent.isActiveAndEnabled) {
+                        return true;
+                    }
+                }
             }
+            return false;
         };
         Matcher.prototype.onClear = function () {
             this._id = "";
@@ -15840,25 +15870,103 @@ var paper;
             this._distinct(components, this._extraOfComponents);
             return this;
         };
-        Matcher.prototype.matches = function (entity) {
-            var componentEnabledFilter = this.componentEnabledFilter;
-            return (this._allOfComponents.length === 0 || entity.hasComponents(this._allOfComponents, componentEnabledFilter))
-                && (this._anyOfComponents.length === 0 || entity.hasAnyComponents(this._anyOfComponents, componentEnabledFilter))
-                && (this._noneOfComponents.length === 0 || !entity.hasAnyComponents(this._noneOfComponents, componentEnabledFilter));
-        };
-        Matcher.prototype.matchesExtra = function (component) {
-            return this._extraOfComponents.length > 0 && this._extraOfComponents.indexOf(component) >= 0;
+        Matcher.prototype.matches = function (entity, component, isAdd, isAdded) {
+            var _a = this, componentEnabledFilter = _a.componentEnabledFilter, _allOfComponents = _a._allOfComponents, _anyOfComponents = _a._anyOfComponents, _noneOfComponents = _a._noneOfComponents, _extraOfComponents = _a._extraOfComponents;
+            if (component) {
+                var isNoneOf = _noneOfComponents.length > 0 && _noneOfComponents.indexOf(component) >= 0;
+                if (isNoneOf) {
+                    if (isAdd === isAdded) {
+                        if (isAdd) {
+                            // remove
+                            return -1;
+                        }
+                        else if ((_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
+                            (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter)) &&
+                            !entity.hasAnyComponents(_noneOfComponents, componentEnabledFilter)) {
+                            // add
+                            return 1;
+                        }
+                    }
+                }
+                else if (isAdd) {
+                    if (isAdded) {
+                        if (_extraOfComponents.length > 0 && _extraOfComponents.indexOf(component) >= 0) {
+                            // add extra
+                            return 2;
+                        }
+                    }
+                    else if ((_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
+                        (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter))) {
+                        // add
+                        return 1;
+                    }
+                }
+                else if (isAdded) {
+                    if (_extraOfComponents.length > 0 && _extraOfComponents.indexOf(component) >= 0) {
+                        // remove extra
+                        return 2;
+                    }
+                    else if ((_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
+                        (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter))) {
+                    }
+                    else {
+                        // remove
+                        return -1;
+                    }
+                }
+            }
+            else if (!isAdded) {
+                if ((_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
+                    (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter)) &&
+                    (_noneOfComponents.length === 0 || !entity.hasAnyComponents(_noneOfComponents, componentEnabledFilter))) {
+                    if (isAdd) {
+                        // add
+                        return 1;
+                    }
+                    else {
+                        // remove
+                        return -1;
+                    }
+                }
+            }
+            return 0;
         };
         Object.defineProperty(Matcher.prototype, "id", {
             get: function () {
                 if (!this._id) {
-                    this._merge();
-                    var indices = [];
-                    for (var _i = 0, _a = this._components; _i < _a.length; _i++) {
-                        var component = _a[_i];
-                        indices.push(component.componentIndex);
+                    this._id = (this.componentEnabledFilter ? "E" : "C");
+                    if (this._allOfComponents.length > 0) {
+                        for (var _i = 0, _a = this._allOfComponents; _i < _a.length; _i++) {
+                            var component = _a[_i];
+                            _indices.push(component.componentIndex);
+                        }
+                        this._id += " All " + _indices.join(",");
+                        _indices.length = 0;
                     }
-                    this._id = (this.componentEnabledFilter ? "E" : "") + indices.join(",");
+                    if (this._anyOfComponents.length > 0) {
+                        for (var _b = 0, _c = this._anyOfComponents; _b < _c.length; _b++) {
+                            var component = _c[_b];
+                            _indices.push(component.componentIndex);
+                        }
+                        this._id += " Any " + _indices.join(",");
+                        _indices.length = 0;
+                    }
+                    if (this._noneOfComponents.length > 0) {
+                        for (var _d = 0, _e = this._noneOfComponents; _d < _e.length; _d++) {
+                            var component = _e[_d];
+                            _indices.push(component.componentIndex);
+                        }
+                        this._id += " None " + _indices.join(",");
+                        _indices.length = 0;
+                    }
+                    if (this._extraOfComponents.length > 0) {
+                        for (var _f = 0, _g = this._extraOfComponents; _f < _g.length; _f++) {
+                            var component = _g[_f];
+                            _indices.push(component.componentIndex);
+                        }
+                        this._id += " Extra " + _indices.join(",");
+                        _indices.length = 0;
+                    }
                 }
                 return this._id;
             },
@@ -15867,6 +15975,9 @@ var paper;
         });
         Object.defineProperty(Matcher.prototype, "components", {
             get: function () {
+                if (this._components.length === 0) {
+                    this._merge();
+                }
                 return this._components;
             },
             enumerable: true,
@@ -18418,9 +18529,9 @@ var egret3d;
                 var dRadius = bottomRadius - topRadius;
                 var cc = Math.sqrt(dRadius * dRadius + height * height);
                 var offsetY = height / dRadius * bottomRadius - halfHeight;
+                p1y -= offsetY; // translate so that the new origin be (0, -offsetY, 0)
                 sinTheta = dRadius / cc;
                 cosTheta = height / cc;
-                p1y -= offsetY; // translate so that the new origin be (0, -offsetY, 0)
                 var cos2 = cosTheta * cosTheta;
                 var a = cos2 * (dx * dx + dy * dy + dz * dz) - dy * dy;
                 var b = cos2 * (p1x * dx + p1y * dy + p1z * dz) - p1y * dy;
@@ -32069,7 +32180,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 圆柱（锥）碰撞体组件。
+     * 胶囊体碰撞组件。
      * - 与 Y 轴对齐。
      */
     var CapsuleCollider = (function (_super) {

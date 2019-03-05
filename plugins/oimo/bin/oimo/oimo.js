@@ -41910,8 +41910,8 @@ var egret3d;
             ValueType[ValueType["Density"] = 3] = "Density";
         })(ValueType || (ValueType = {}));
         /**
-         * 基础碰撞体组件。
-         * - 全部碰撞体组件的基类。
+         * 基础碰撞组件。
+         * - 全部碰撞组件的基类。
          */
         var BaseCollider = (function (_super) {
             __extends(BaseCollider, _super);
@@ -42249,79 +42249,35 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
-         *
+         * 圆柱体碰撞组件。
+         * - 与 Y 轴对齐。
          */
         var CylinderCollider = (function (_super) {
             __extends(CylinderCollider, _super);
             function CylinderCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Cylinder;
-                _this._radius = 1.0;
-                _this._height = 1.0;
+                _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
                 return _this;
             }
             CylinderCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.CylinderGeometry(this._radius, this._height * 0.5);
+                config.geometry = new OIMO.CylinderGeometry(this.cylinder.bottomRadius, this.cylinder.height * 0.5);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
             };
-            Object.defineProperty(CylinderCollider.prototype, "radius", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._radius;
-                },
-                set: function (value) {
-                    if (this._radius === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the radius after the collider has been created.");
-                    }
-                    else {
-                        this._radius = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(CylinderCollider.prototype, "height", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._height;
-                },
-                set: function (value) {
-                    if (this._height === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the height after the collider has been created.");
-                    }
-                    else {
-                        this._height = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], CylinderCollider.prototype, "_radius", void 0);
-            __decorate([
-                paper.serializedField
-            ], CylinderCollider.prototype, "_height", void 0);
+            ], CylinderCollider.prototype, "cylinder", void 0);
             CylinderCollider = __decorate([
                 paper.requireComponent(oimo.Rigidbody)
             ], CylinderCollider);
             return CylinderCollider;
         }(oimo.BaseCollider));
         oimo.CylinderCollider = CylinderCollider;
-        __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider");
+        __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider", ["egret3d.ICylinderCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -42614,79 +42570,35 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
-         *
+         * 胶囊体碰撞组件。
+         * - 与 Y 轴对齐。
          */
         var CapsuleCollider = (function (_super) {
             __extends(CapsuleCollider, _super);
             function CapsuleCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Capsule;
-                _this._radius = 1.0;
-                _this._height = 1.0;
+                _this.capsule = egret3d.Capsule.create(egret3d.Vector3.ZERO, 0.25, 0.5);
                 return _this;
             }
             CapsuleCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.CapsuleGeometry(this._radius, this._height * 0.5);
+                config.geometry = new OIMO.CapsuleGeometry(this.capsule.radius, this.capsule.height * 0.5);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
             };
-            Object.defineProperty(CapsuleCollider.prototype, "radius", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._radius;
-                },
-                set: function (value) {
-                    if (this._radius === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the radius after the collider has been created.");
-                    }
-                    else {
-                        this._radius = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(CapsuleCollider.prototype, "height", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._height;
-                },
-                set: function (value) {
-                    if (this._height === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the height after the collider has been created.");
-                    }
-                    else {
-                        this._height = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], CapsuleCollider.prototype, "_radius", void 0);
-            __decorate([
-                paper.serializedField
-            ], CapsuleCollider.prototype, "_height", void 0);
+            ], CapsuleCollider.prototype, "capsule", void 0);
             CapsuleCollider = __decorate([
                 paper.requireComponent(oimo.Rigidbody)
             ], CapsuleCollider);
             return CapsuleCollider;
         }(oimo.BaseCollider));
         oimo.CapsuleCollider = CapsuleCollider;
-        __reflect(CapsuleCollider.prototype, "egret3d.oimo.CapsuleCollider");
+        __reflect(CapsuleCollider.prototype, "egret3d.oimo.CapsuleCollider", ["egret3d.ICapsuleCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -42694,79 +42606,35 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
-         *
+         * 圆锥体碰撞组件。
+         * - 与 Y 轴对齐。
          */
         var ConeCollider = (function (_super) {
             __extends(ConeCollider, _super);
             function ConeCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Cone;
-                _this._radius = 1.0;
-                _this._height = 1.0;
+                _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.0, 0.5, 1.0);
                 return _this;
             }
             ConeCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.ConeGeometry(this._radius, this._height * 0.5);
+                config.geometry = new OIMO.ConeGeometry(this.cylinder.bottomRadius, this.cylinder.height * 0.5);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
             };
-            Object.defineProperty(ConeCollider.prototype, "radius", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._radius;
-                },
-                set: function (value) {
-                    if (this._radius === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the radius after the collider has been created.");
-                    }
-                    else {
-                        this._radius = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeCollider.prototype, "height", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._height;
-                },
-                set: function (value) {
-                    if (this._height === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the height after the collider has been created.");
-                    }
-                    else {
-                        this._height = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], ConeCollider.prototype, "_radius", void 0);
-            __decorate([
-                paper.serializedField
-            ], ConeCollider.prototype, "_height", void 0);
+            ], ConeCollider.prototype, "cylinder", void 0);
             ConeCollider = __decorate([
                 paper.requireComponent(oimo.Rigidbody)
             ], ConeCollider);
             return ConeCollider;
         }(oimo.BaseCollider));
         oimo.ConeCollider = ConeCollider;
-        __reflect(ConeCollider.prototype, "egret3d.oimo.ConeCollider");
+        __reflect(ConeCollider.prototype, "egret3d.oimo.ConeCollider", ["egret3d.ICylinderCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;

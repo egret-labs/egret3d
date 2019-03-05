@@ -684,12 +684,7 @@ declare namespace paper {
          * 指定的实体是否与该匹配器的规则相匹配。
          * @param entity 指定的实体。
          */
-        matches(entity: TEntity): boolean;
-        /**
-         * 指定的组件是否与该匹配器的额外规则相匹配。
-         * @param component 指定的组件。
-         */
-        matchesExtra(component: IComponentClass<IComponent>): boolean;
+        matches(entity: TEntity, component: IComponentClass<IComponent> | null, isAdd: boolean, isAdded: boolean): -2 | -1 | 0 | 1 | 2;
     }
     /**
      *
@@ -4406,7 +4401,6 @@ declare namespace paper {
          * @param isAdd
          */
         handleEvent(entity: TEntity, component: IComponent, isAdd: boolean): void;
-        private _hasEnabledComponent(entity, component);
         /**
          * 该组匹配的实体总数。
          */
@@ -4831,19 +4825,19 @@ declare namespace egret3d {
         /**
          * 该立方体的最小点。
          */
-        readonly minimum: Readonly<IVector3>;
+        readonly minimum: Readonly<Vector3>;
         /**
          * 该立方体的最大点。
          */
-        readonly maximum: Readonly<IVector3>;
+        readonly maximum: Readonly<Vector3>;
         /**
          * 该立方体的尺寸。
          */
-        size: Readonly<IVector3>;
+        size: Readonly<Vector3>;
         /**
          * 该立方体的中心点。
          */
-        center: Readonly<IVector3>;
+        center: Readonly<Vector3>;
     }
 }
 declare namespace paper {
@@ -7784,7 +7778,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 圆柱（锥）碰撞体组件。
+     * 圆柱（锥）体碰撞组件。
      * - 与 Y 轴对齐。
      */
     class CylinderCollider extends paper.BaseComponent implements ICylinderCollider, IRaycast {
@@ -7821,12 +7815,12 @@ declare namespace paper {
         private _sortComponents(a, b);
         private _distinct(source, target);
         private _merge();
+        private _hasEnabledComponent(entity, component);
         onClear(): void;
         anyOf(...components: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity>;
         noneOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
         extraOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
-        matches(entity: TEntity): boolean;
-        matchesExtra(component: IComponentClass<IComponent>): boolean;
+        matches(entity: TEntity, component: IComponentClass<IComponent> | null, isAdd: boolean, isAdded: boolean): -2 | -1 | 0 | 1 | 2;
         readonly id: string;
         readonly components: ReadonlyArray<IComponentClass<IComponent>>;
         readonly allOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
@@ -12063,7 +12057,7 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 圆柱（锥）碰撞体组件。
+     * 胶囊体碰撞组件。
      * - 与 Y 轴对齐。
      */
     class CapsuleCollider extends paper.BaseComponent implements ICapsuleCollider, IRaycast {

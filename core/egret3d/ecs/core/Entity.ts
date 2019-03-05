@@ -513,8 +513,28 @@ namespace paper {
 
                 const component = components[index];
 
-                if (!component || (componentEnabled && !component.enabled)) {
+                if (!component) {
                     return false;
+                }
+
+                if (componentEnabled) {
+                    if (component.constructor === GroupComponent) {
+                        let flag = false;
+
+                        for (const childComponent of (component as GroupComponent).components) {
+                            if (!childComponent.isActiveAndEnabled) { // TODO 匹配性能优化
+                                flag = true;
+                                break;
+                            }
+                        }
+
+                        if (!flag) {
+                            return false;
+                        }
+                    }
+                    else if (!component.isActiveAndEnabled) { // TODO 匹配性能优化
+                        return false;
+                    }
                 }
             }
 
@@ -530,8 +550,22 @@ namespace paper {
                 if (index >= 0) {
                     const component = components[index];
 
-                    if (component && (!componentEnabled || component.enabled)) {
-                        return true;
+                    if (component) {
+                        if (componentEnabled) {
+                            if (component.constructor === GroupComponent) {
+                                for (const childComponent of (component as GroupComponent).components) {
+                                    if (childComponent.isActiveAndEnabled) { // TODO 匹配性能优化
+                                        return true;
+                                    }
+                                }
+                            }
+                            else if (component.isActiveAndEnabled) { // TODO 匹配性能优化
+                                return true;
+                            }
+                        }
+                        else {
+                            return true;
+                        }
                     }
                 }
             }

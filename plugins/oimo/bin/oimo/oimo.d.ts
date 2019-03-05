@@ -7504,8 +7504,8 @@ declare namespace egret3d.oimo {
 }
 declare namespace egret3d.oimo {
     /**
-     * 基础碰撞体组件。
-     * - 全部碰撞体组件的基类。
+     * 基础碰撞组件。
+     * - 全部碰撞组件的基类。
      */
     abstract class BaseCollider extends paper.BaseComponent implements egret3d.ICollider {
         protected static readonly _config: OIMO.ShapeConfig;
@@ -7596,21 +7596,13 @@ declare namespace egret3d.oimo {
 }
 declare namespace egret3d.oimo {
     /**
-     *
+     * 圆柱体碰撞组件。
+     * - 与 Y 轴对齐。
      */
-    class CylinderCollider extends BaseCollider {
+    class CylinderCollider extends BaseCollider implements ICylinderCollider {
         readonly colliderType: ColliderType;
-        private _radius;
-        private _height;
+        readonly cylinder: Cylinder;
         protected _createShape(): OIMO.Shape;
-        /**
-         *
-         */
-        radius: number;
-        /**
-         *
-         */
-        height: number;
     }
 }
 declare namespace paper {
@@ -7683,40 +7675,24 @@ declare namespace egret3d.oimo {
 }
 declare namespace egret3d.oimo {
     /**
-     *
+     * 胶囊体碰撞组件。
+     * - 与 Y 轴对齐。
      */
-    class CapsuleCollider extends BaseCollider {
+    class CapsuleCollider extends BaseCollider implements ICapsuleCollider {
         readonly colliderType: ColliderType;
-        private _radius;
-        private _height;
+        readonly capsule: Capsule;
         protected _createShape(): OIMO.Shape;
-        /**
-         *
-         */
-        radius: number;
-        /**
-         *
-         */
-        height: number;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     *
+     * 圆锥体碰撞组件。
+     * - 与 Y 轴对齐。
      */
-    class ConeCollider extends BaseCollider {
+    class ConeCollider extends BaseCollider implements ICylinderCollider {
         readonly colliderType: ColliderType;
-        private _radius;
-        private _height;
+        readonly cylinder: Cylinder;
         protected _createShape(): OIMO.Shape;
-        /**
-         *
-         */
-        radius: number;
-        /**
-         *
-         */
-        height: number;
     }
 }
 declare namespace egret3d.oimo {
