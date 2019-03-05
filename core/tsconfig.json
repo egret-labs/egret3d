@@ -108,6 +108,7 @@
         "egret3d/components/collision/CapsuleCollider.ts",
         "egret3d/components/collision/MeshCollider.ts",
         "egret3d/components/collision/Collision.ts",
+        "egret3d/components/collision/CollisionSystem.ts",
 
         "egret3d/components/camera/Camera.ts",
         "egret3d/components/camera/CameraPostprocessing.ts",
@@ -176,7 +177,6 @@
         "egret3d/util/stream.ts",
         "egret3d/util/utils.ts",
 
-        "egret3d/web/WebGLUtility.ts",
         "egret3d/web/WebGLRenderState.ts",
         "egret3d/web/resource/WebGLProgramBinder.ts",
         "egret3d/web/resource/WebGLShader.ts",

@@ -13986,6 +13986,12 @@ var egret3d;
                 DefaultMeshes_1.SPHERE = mesh;
             }
             {
+                var mesh = egret3d.MeshBuilder.createCapsule();
+                mesh.name = "builtin/capsule.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes_1.CAPSULE = mesh;
+            }
+            {
                 var mesh = egret3d.Mesh.create(4, 2, attributesA);
                 mesh.name = "builtin/line_x.mesh.bin";
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;

@@ -3,6 +3,7 @@ namespace egret3d {
      * 网格渲染组件。
      * - 用于渲染网格筛选组件提供的网格资源。
      */
+    @paper.requireComponent(MeshFilter)
     export class MeshRenderer extends paper.BaseRenderer {
         protected _lightmapIndex: number = -1;
         /**
@@ -14,10 +15,10 @@ namespace egret3d {
          * @private
          */
         public recalculateLocalBox() {
-            const meshFilter = this.entity.getComponent(MeshFilter);
+            const meshFilter = this.entity.getComponent(MeshFilter)!;
             this._localBoundingBox.clear();
 
-            if (meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+            if (meshFilter.mesh && !meshFilter.mesh.isDisposed) {
                 const vertices = meshFilter.mesh.getVertices()!;
                 const position = helpVector3A;
 
@@ -38,9 +39,9 @@ namespace egret3d {
             }
 
             const transform = this.entity.getComponent(Transform);
-            const meshFilter = this.entity.getComponent(MeshFilter);
+            const meshFilter = this.entity.getComponent(MeshFilter)!;
 
-            if (transform && meshFilter && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+            if (transform && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
                 const localToWorldMatrix = transform.localToWorldMatrix;
                 meshFilter.mesh.getTriangle(triangleIndex, out);
                 out.a.applyMatrix(localToWorldMatrix);
@@ -53,9 +54,9 @@ namespace egret3d {
 
         public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
             const transform = this.entity.getComponent(Transform);
-            const meshFilter = this.entity.getComponent(MeshFilter);
+            const meshFilter = this.entity.getComponent(MeshFilter)!;
 
-            if (transform && meshFilter && meshFilter.enabled && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
+            if (transform && meshFilter.enabled && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
                 let raycastMesh = false;
                 let raycastInfo: RaycastInfo | undefined = undefined;
                 const worldToLocalMatrix = transform.worldToLocalMatrix;

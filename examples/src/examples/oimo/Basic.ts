@@ -1,36 +1,37 @@
 namespace examples.oimo {
 
-    export class OimoBase {
+    export class Basic {
+
         async start() {
-            // Create camera.
-            egret3d.Camera.main;
+            // Load resource config.
+            await RES.loadConfig("default.res.json", "resource/");
+            //
+            paper.Application.systemManager.register(StarterSystem, paper.Application.gameObjectContext);
+        }
+    }
 
-            { // Create light.
-                const gameObject = paper.GameObject.create("Light");
-                gameObject.transform.setLocalPosition(1.0, 10.0, -1.0);
-                gameObject.transform.lookAt(egret3d.Vector3.ZERO);
+    class StarterSystem extends paper.BaseSystem<paper.GameObject> {
 
-                const light = gameObject.addComponent(egret3d.DirectionalLight);
-                light.intensity = 0.5;
-                light.castShadows = true;
-                light.shadow.bias = -0.001;
-                light.shadow.size = 20.0;
-            }
+        public onEnable() {
+            //
+            egret3d.Camera.main.entity.addComponent(behaviors.RotateAround);
+            //
+            createGridRoom(10.0);
 
             { // Create ground.
-                const groundSize = egret3d.Vector3.create(10.0, 0.1, 10.0);
-                const gameObject = egret3d.creater.createGameObject("Ground", {
+                const groundSize = egret3d.Vector3.create(10.0, 0.2, 10.0).release();
+                const entity = egret3d.creater.createGameObject("Ground", {
                     mesh: egret3d.DefaultMeshes.CUBE,
                     material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT),
+                    castShadows: true,
                     receiveShadows: true,
                 });
-                gameObject.transform.setLocalScale(groundSize);
+                entity.transform.setLocalScale(groundSize);
 
-                const rigidbody = gameObject.addComponent(egret3d.oimo.Rigidbody);
-                const boxCollider = gameObject.addComponent(egret3d.oimo.BoxCollider);
+                const rigidbody = entity.addComponent(egret3d.oimo.Rigidbody);
+                const boxCollider = entity.addComponent(egret3d.oimo.BoxCollider);
                 rigidbody.type = egret3d.oimo.RigidbodyType.STATIC;
                 boxCollider.box.size = groundSize;
-                groundSize.release();
             }
 
             { // Create cubes.
@@ -55,23 +56,20 @@ namespace examples.oimo {
                     rigidbody.mass = 1.0;
                 }
             }
-
-            paper.Application.sceneManager.globalEntity.addComponent(TeleportRigidBodies);
         }
-    }
 
-    class TeleportRigidBodies extends paper.Behaviour {
         public top: number = 20.0;
         public bottom: number = -20.0;
         public area: number = 10.0;
 
-        public onUpdate() {
+        public onFrameCleanup() {
             const pos = egret3d.Vector3.create().release();
             const physicsSystem = paper.Application.systemManager.getSystem(egret3d.oimo.PhysicsSystem)!;
             let rigidBody = physicsSystem.oimoWorld.getRigidBodyList();
 
             while (rigidBody !== null) {
                 rigidBody.getPositionTo(pos as any);
+
                 if (pos.y < this.bottom) {
                     pos.y = this.top;
                     pos.x = Math.random() * this.area - this.area * 0.5;

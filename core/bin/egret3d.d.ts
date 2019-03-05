@@ -6953,6 +6953,7 @@ declare namespace egret3d {
         static CYLINDER: Mesh;
         static TORUS: Mesh;
         static SPHERE: Mesh;
+        static CAPSULE: Mesh;
         static LINE_X: Mesh;
         static LINE_Y: Mesh;
         static LINE_Z: Mesh;
