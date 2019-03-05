@@ -88,7 +88,7 @@ namespace egret3d {
 
         protected getMatchers() {
             return [
-                paper.Matcher.create<paper.GameObject>(Transform, MeshRenderer),
+                paper.Matcher.create<paper.GameObject>(Transform, MeshFilter, MeshRenderer),
             ];
         }
 

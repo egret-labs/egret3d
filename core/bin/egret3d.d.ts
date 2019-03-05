@@ -1074,6 +1074,155 @@ declare namespace paper.editor {
         value: any;
     }[];
 }
+declare namespace paper {
+    /**
+     * 基础资源。
+     * - 全部资源的基类。
+     */
+    abstract class Asset extends BaseObject {
+        /**
+         * 将一个资源注册为全局可访问资源。
+         * - 引用计数加 1 。
+         */
+        static register(asset: Asset): boolean;
+        /**
+         * 通过资源名获取一个已注册的指定资源。
+         */
+        static find<T extends Asset>(name: string): T | null;
+        /**
+         * 资源名称。
+         */
+        name: string;
+        protected _referenceCount: int;
+        /**
+         * 请使用 `T.create()` 创建实例。
+         */
+        protected constructor();
+        /**
+         * 该资源内部初始化。
+         * - 重写此方法时，必须调用 `super.initialize();`。
+         */
+        initialize(...args: any[]): void;
+        /**
+         * 该资源的引用计数加一。
+         */
+        retain(): this;
+        /**
+         * 该资源的引用计数减一。
+         */
+        release(): this;
+        /**
+         * 释放该资源。
+         * - 重写此方法时，必须调用 `super.dispose();`。
+         * @returns 释放是否成功。（已经释放过的资源，无法再次释放）
+         */
+        dispose(): boolean;
+        /**
+         *
+         * @param isZero
+         */
+        onReferenceCountChange?(isZero: boolean): boolean;
+        /**
+         * 该资源是否已经被释放。
+         */
+        readonly isDisposed: boolean;
+        /**
+         * 该资源的引用计数。
+         * - 当引用计数为 0 时，该资源将在本帧末尾被释放。
+         */
+        readonly referenceCount: uint;
+    }
+}
+declare namespace paper {
+    /**
+     * 基础组件。
+     * - 所有组件的基类。
+     * - 在纯粹的实体组件系统中，组件通常应只包含数据，不应有业务逻辑、行为和生命周期。
+     */
+    abstract class Component extends BaseObject implements IComponent {
+        /**
+         * 当组件被创建时派发事件。
+         */
+        static readonly onComponentCreated: signals.Signal<[IEntity, IComponent]>;
+        /**
+         * 当组件被激活时派发事件。
+         */
+        static readonly onComponentEnabled: signals.Signal<[IEntity, IComponent]>;
+        /**
+         * 当组件被禁用时派发事件。
+         */
+        static readonly onComponentDisabled: signals.Signal<[IEntity, IComponent]>;
+        /**
+         * 当组件将要被销毁时派发事件。
+         */
+        static readonly onComponentDestroy: signals.Signal<[IEntity, IComponent]>;
+        /**
+         * 当组件被销毁时派发事件。
+         */
+        static readonly onComponentDestroyed: signals.Signal<[IEntity, IComponent]>;
+        /**
+         *
+         */
+        static createDefaultEnabled: boolean;
+        /**
+         * 该组件的实例是否在编辑模式拥有生命周期。
+         */
+        static readonly executeInEditMode: boolean;
+        /**
+         * 是否允许在同一实体上添加多个该组件的实例。
+         */
+        static readonly allowMultiple: boolean;
+        /**
+         * 该组件实例依赖的其他前置组件。
+         */
+        static readonly requireComponents: IComponentClass<IComponent>[] | null;
+        /**
+         *
+         */
+        static readonly isAbstract: IComponentClass<IComponent>;
+        /**
+         * 该组件实例是否为单例组件。
+         */
+        static readonly isSingleton: boolean;
+        /**
+         *
+         */
+        static readonly isBehaviour: boolean;
+        /**
+         * 该组件实例索引。
+         */
+        static readonly componentIndex: int;
+        /**
+         * 所有已注册的单例组件类。
+         */
+        private static readonly _allAbstractComponents;
+        /**
+         * 所有已注册的单例组件类。
+         */
+        private static readonly _allSingletonComponents;
+        /**
+         * 所有已注册的组件类。
+         */
+        private static readonly _allComponents;
+        hideFlags: HideFlags;
+        readonly entity: IEntity;
+        extras?: ComponentExtras;
+        protected _isDestroyed: boolean;
+        protected _enabled: boolean;
+        /**
+         * 禁止实例化组件。
+         * @protected
+         */
+        constructor();
+        protected _setEnabled(value: boolean): void;
+        initialize(config?: any): void;
+        uninitialize(): void;
+        dispatchEnabledEvent(enabled: boolean): void;
+        readonly isDestroyed: boolean;
+        enabled: boolean;
+        readonly isActiveAndEnabled: boolean;
+    }
+}
 declare namespace egret3d {
     /**
      * 二维向量接口。
@@ -1234,155 +1383,6 @@ declare namespace egret3d {
          * @deprecated
          */
         static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2;
-    }
-}
-declare namespace paper {
-    /**
-     * 基础资源。
-     * - 全部资源的基类。
-     */
-    abstract class Asset extends BaseObject {
-        /**
-         * 将一个资源注册为全局可访问资源。
-         * - 引用计数加 1 。
-         */
-        static register(asset: Asset): boolean;
-        /**
-         * 通过资源名获取一个已注册的指定资源。
-         */
-        static find<T extends Asset>(name: string): T | null;
-        /**
-         * 资源名称。
-         */
-        name: string;
-        protected _referenceCount: int;
-        /**
-         * 请使用 `T.create()` 创建实例。
-         */
-        protected constructor();
-        /**
-         * 该资源内部初始化。
-         * - 重写此方法时，必须调用 `super.initialize();`。
-         */
-        initialize(...args: any[]): void;
-        /**
-         * 该资源的引用计数加一。
-         */
-        retain(): this;
-        /**
-         * 该资源的引用计数减一。
-         */
-        release(): this;
-        /**
-         * 释放该资源。
-         * - 重写此方法时，必须调用 `super.dispose();`。
-         * @returns 释放是否成功。（已经释放过的资源，无法再次释放）
-         */
-        dispose(): boolean;
-        /**
-         *
-         * @param isZero
-         */
-        onReferenceCountChange?(isZero: boolean): boolean;
-        /**
-         * 该资源是否已经被释放。
-         */
-        readonly isDisposed: boolean;
-        /**
-         * 该资源的引用计数。
-         * - 当引用计数为 0 时，该资源将在本帧末尾被释放。
-         */
-        readonly referenceCount: uint;
-    }
-}
-declare namespace paper {
-    /**
-     * 基础组件。
-     * - 所有组件的基类。
-     * - 在纯粹的实体组件系统中，组件通常应只包含数据，不应有业务逻辑、行为和生命周期。
-     */
-    abstract class Component extends BaseObject implements IComponent {
-        /**
-         * 当组件被创建时派发事件。
-         */
-        static readonly onComponentCreated: signals.Signal<[IEntity, IComponent]>;
-        /**
-         * 当组件被激活时派发事件。
-         */
-        static readonly onComponentEnabled: signals.Signal<[IEntity, IComponent]>;
-        /**
-         * 当组件被禁用时派发事件。
-         */
-        static readonly onComponentDisabled: signals.Signal<[IEntity, IComponent]>;
-        /**
-         * 当组件将要被销毁时派发事件。
-         */
-        static readonly onComponentDestroy: signals.Signal<[IEntity, IComponent]>;
-        /**
-         * 当组件被销毁时派发事件。
-         */
-        static readonly onComponentDestroyed: signals.Signal<[IEntity, IComponent]>;
-        /**
-         *
-         */
-        static createDefaultEnabled: boolean;
-        /**
-         * 该组件的实例是否在编辑模式拥有生命周期。
-         */
-        static readonly executeInEditMode: boolean;
-        /**
-         * 是否允许在同一实体上添加多个该组件的实例。
-         */
-        static readonly allowMultiple: boolean;
-        /**
-         * 该组件实例依赖的其他前置组件。
-         */
-        static readonly requireComponents: IComponentClass<IComponent>[] | null;
-        /**
-         *
-         */
-        static readonly isAbstract: IComponentClass<IComponent>;
-        /**
-         * 该组件实例是否为单例组件。
-         */
-        static readonly isSingleton: boolean;
-        /**
-         *
-         */
-        static readonly isBehaviour: boolean;
-        /**
-         * 该组件实例索引。
-         */
-        static readonly componentIndex: int;
-        /**
-         * 所有已注册的单例组件类。
-         */
-        private static readonly _allAbstractComponents;
-        /**
-         * 所有已注册的单例组件类。
-         */
-        private static readonly _allSingletonComponents;
-        /**
-         * 所有已注册的组件类。
-         */
-        private static readonly _allComponents;
-        hideFlags: HideFlags;
-        readonly entity: IEntity;
-        extras?: ComponentExtras;
-        protected _isDestroyed: boolean;
-        protected _enabled: boolean;
-        /**
-         * 禁止实例化组件。
-         * @protected
-         */
-        constructor();
-        protected _setEnabled(value: boolean): void;
-        initialize(config?: any): void;
-        uninitialize(): void;
-        dispatchEnabledEvent(enabled: boolean): void;
-        readonly isDestroyed: boolean;
-        enabled: boolean;
-        readonly isActiveAndEnabled: boolean;
     }
 }
 declare namespace egret3d {
@@ -2944,100 +2944,6 @@ declare namespace gltf {
         extras?: any;
     }
 }
-declare namespace paper {
-    /**
-     * 传统的基础组件。
-     */
-    abstract class BaseComponent extends Component {
-        /**
-         * 该组件的游戏实体。
-         */
-        readonly gameObject: GameObject;
-        protected _setEnabled(value: boolean): void;
-        initialize(config?: any): void;
-        uninitialize(): void;
-        /**
-         * 该组件在场景的激活状态。
-         */
-        readonly isActiveAndEnabled: boolean;
-        /**
-         *
-         */
-        readonly transform: egret3d.Transform;
-    }
-}
-declare namespace egret3d {
-    /**
-     * glTF 资源。
-     */
-    abstract class GLTFAsset extends paper.Asset {
-        /**
-         *
-         */
-        static getComponentTypeCount(type: gltf.ComponentType): uint;
-        /**
-         *
-         */
-        static getAccessorTypeCount(type: gltf.AccessorType): uint;
-        /**
-         * @private
-         */
-        static createConfig(): GLTF;
-        /**
-         * @private
-         */
-        static parseFromBinary(array: Uint32Array): {
-            config: GLTF;
-            buffers: ArrayBufferView[];
-        } | undefined;
-        /**
-         * Buffer 列表。
-         */
-        readonly buffers: Array<ArrayBufferView>;
-        /**
-         * 配置。
-         */
-        readonly config: GLTF;
-        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, ...args: Array<any>): void;
-        dispose(): boolean;
-        /**
-         *
-         */
-        updateAccessorTypeCount(): this;
-        /**
-         * 根据指定 BufferView 创建二进制数组。
-         */
-        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): ArrayBufferView;
-        /**
-         * 根据指定 Accessor 创建二进制数组。
-         */
-        createTypeArrayFromAccessor(accessor: gltf.Accessor, offset?: uint, count?: uint): ArrayBufferView;
-        /**
-         * 通过 Accessor 获取指定 BufferLength。
-         */
-        getBufferLength(accessor: gltf.Accessor): uint;
-        /**
-         * 通过 Accessor 获取指定 BufferOffset。
-         */
-        getBufferOffset(accessor: gltf.Accessor): uint;
-        /**
-         * 通过 Accessor 获取指定 Buffer。
-         */
-        getBuffer(accessor: gltf.Accessor): ArrayBufferView;
-        /**
-         * 通过 Accessor 获取指定 BufferView。
-         */
-        getBufferView(accessor: gltf.Accessor): gltf.BufferView;
-        /**
-         * 通过 Accessor 索引，获取指定 Accessor。
-         */
-        getAccessor(index: gltf.Index): gltf.Accessor;
-        /**
-         * 获取节点。
-         */
-        getNode(index: gltf.Index): gltf.Node;
-    }
-}
 declare namespace egret3d {
     /**
      * 三维向量接口。
@@ -3491,528 +3397,97 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * 基础实体。
+     * 传统的基础组件。
      */
-    abstract class Entity extends BaseObject implements IEntity {
+    abstract class BaseComponent extends Component {
         /**
-         * 当实体添加到场景时派发事件。
+         * 该组件的游戏实体。
          */
-        static readonly onEntityAddedToScene: signals.Signal<IEntity>;
-        /**
-         * 当实体将要被销毁时派发事件。
-         */
-        static readonly onEntityDestroy: signals.Signal<IEntity>;
-        /**
-         * 当实体被销毁时派发事件。
-         */
-        static readonly onEntityDestroyed: signals.Signal<IEntity>;
-        /**
-         *
-         */
-        static createDefaultEnabled: boolean;
-        name: string;
-        tag: DefaultTags | string;
-        hideFlags: HideFlags;
-        extras?: EntityExtras;
-        protected _componentsDirty: boolean;
-        protected _isDestroyed: boolean;
-        protected _enabled: boolean;
-        protected readonly _components: (IComponent | undefined)[];
-        protected readonly _cachedComponents: IComponent[];
-        protected _scene: Scene | null;
-        /**
-         * 禁止实例化实体。
-         * @protected
-         */
-        constructor();
-        protected _destroy(): void;
-        protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
+        readonly gameObject: GameObject;
         protected _setEnabled(value: boolean): void;
-        protected _addComponent(component: IComponent, config?: any): void;
-        protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
-        private _getComponent(componentClass);
-        private _isRequireComponent(componentClass);
-        initialize(): void;
+        initialize(config?: any): void;
         uninitialize(): void;
-        destroy(): boolean;
-        addComponent<T extends IComponent>(componentClass: IComponentClass<T>, config?: any): T;
-        removeComponent<T extends IComponent>(componentInstanceOrClass: IComponentClass<T> | T, isExtends?: boolean): boolean;
-        removeAllComponents<T extends IComponent>(componentClass?: IComponentClass<T>, isExtends?: boolean): boolean;
-        getOrAddComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T;
-        getComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T | null;
-        getRemovedComponent<T extends IComponent>(componentClass: IComponentClass<T>): T | null;
-        getComponents<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T[];
-        hasComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
-        hasAnyComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
-        readonly isDestroyed: boolean;
-        dontDestroy: boolean;
-        enabled: boolean;
-        readonly components: ReadonlyArray<IComponent>;
-        scene: Scene;
+        /**
+         * 该组件在场景的激活状态。
+         */
+        readonly isActiveAndEnabled: boolean;
+        /**
+         *
+         */
+        readonly transform: egret3d.Transform;
     }
 }
 declare namespace egret3d {
     /**
-     * 三角形。
+     * glTF 资源。
      */
-    class Triangle extends paper.BaseRelease<Triangle> implements paper.ICCS<Triangle>, paper.ISerializable, IRaycast {
-        private static readonly _instances;
-        /**
-         * 创建一个三角形实例。
-         * -   a
-         * -  /·\
-         * - b - c
-         * @param a 点 A。
-         * @param b 点 B。
-         * @param c 点 C。
-         */
-        static create(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): Triangle;
-        /**
-         * 通过三个点确定一个三角形，获取该三角形的法线。
-         * -   a
-         * -  /·\
-         * - b - c
-         * @param a 点 A。
-         * @param b 点 B。
-         * @param c 点 C。
-         * @param out 法线结果。
-         */
-        static getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3): Vector3;
-        /**
-         * 点 A。
-         */
-        readonly a: Vector3;
-        /**
-         * 点 B。
-         */
-        readonly b: Vector3;
-        /**
-         * 点 C。
-         */
-        readonly c: Vector3;
-        /**
-         * 请使用 `egret3d.Triangle.create()` 创建实例。
-         * @see egret3d.Triangle.create()
-         */
-        private constructor();
-        serialize(): number[];
-        deserialize(element: Readonly<[number, number, number, number, number, number, number, number, number]>): void;
-        copy(value: Readonly<Triangle>): this;
-        clone(): Triangle;
-        set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
-        fromArray(array: ArrayLike<number>, offsetA?: number, offsetB?: number, offsetC?: number): void;
-        /**
-         * 获取该三角形的中心点。
-         * @param out 输出。
-         */
-        getCenter(out?: Vector3): Vector3;
-        /**
-         * 获取该三角形的法线。
-         * @param out 输出。
-         */
-        getNormal(out?: Vector3): Vector3;
-        /**
-         *
-         * @param u
-         * @param v
-         * @param out
-         */
-        getPointAt(u: number, v: number, out?: Vector3): Vector3;
-        /**
-         * 获取一个点到该三角形的最近点。
-         * @param point 一个点。
-         * @param out 最近点。
-         */
-        getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-        /**
-         * 获取该三角形的面积。
-         * - 该值是实时计算的。
-         */
-        readonly area: number;
-    }
-}
-declare namespace egret3d {
-    /**
-     *
-     */
-    interface CreateTextureParameters extends gltf.Sampler, GLTFTextureExtension {
-        /**
-         * 纹理数据源。
-         */
-        source?: gltf.ImageSource | ArrayBufferView | null;
-    }
-    /**
-     * 基础纹理资源。
-     * - 纹理资源的基类。
-     */
-    abstract class BaseTexture extends GLTFAsset {
-        protected static _createConfig(createTextureParameters: CreateTextureParameters): GLTF;
-        type: gltf.TextureType;
-        protected _sourceDirty: boolean;
-        protected _levels: uint;
-        protected _gltfTexture: GLTFTexture;
-        protected _image: gltf.Image;
-        protected _sampler: gltf.Sampler;
-        private _formatLevelsAndSampler();
+    abstract class GLTFAsset extends paper.Asset {
         /**
          *
          */
-        setLiner(value: boolean): this;
+        static getComponentTypeCount(type: gltf.ComponentType): uint;
         /**
          *
          */
-        setRepeat(value: boolean): this;
-        /**
-         *
-         */
-        setMipmap(value: boolean): this;
-        /**
-         *
-         */
-        readonly isPowerOfTwo: boolean;
-        /**
-         *
-         */
-        readonly format: gltf.TextureFormat;
-        /**
-         *
-         */
-        readonly levels: uint;
-        /**
-         *
-         */
-        readonly width: uint;
-        /**
-         *
-         */
-        readonly height: uint;
-        /**
-         *
-         */
-        readonly sampler: gltf.Sampler;
-        /**
-         *
-         */
-        readonly gltfTexture: GLTFTexture;
-    }
-    /**
-     * 纹理资源。
-     */
-    class Texture extends BaseTexture {
-        /**
-         *
-         * @param parameters
-         */
-        static create(parameters: CreateTextureParameters): Texture;
+        static getAccessorTypeCount(type: gltf.AccessorType): uint;
         /**
          * @private
          */
-        static create(name: string, config: GLTF, buffers?: ReadonlyArray<ArrayBufferView>): Texture;
-        /**
-         *
-         */
-        static createColorTexture(name: string, r: number, g: number, b: number): Texture;
-        /**
-         *
-         * @param source
-         */
-        uploadTexture(source?: gltf.ImageSource): this;
-    }
-}
-declare namespace paper {
-    /**
-     * 基础渲染组件。
-     */
-    abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast, egret3d.ITransformObserver {
-        /**
-         * 当渲染组件的材质列表改变时派发事件。
-         */
-        static readonly onMaterialsChanged: signals.Signal<BaseRenderer>;
-        /**
-         * 该组件是否开启视锥剔除。
-         */
-        frustumCulled: boolean;
-        private _boundingSphereDirty;
-        protected _receiveShadows: boolean;
-        protected _castShadows: boolean;
-        protected readonly _boundingSphere: egret3d.Sphere;
-        protected readonly _localBoundingBox: egret3d.Box;
-        protected readonly _materials: (egret3d.Material | null)[];
-        protected _recalculateSphere(): void;
-        initialize(): void;
-        uninitialize(): void;
+        static createConfig(): GLTF;
         /**
          * @private
          */
-        onTransformChange(): void;
+        static parseFromBinary(array: Uint32Array): {
+            config: GLTF;
+            buffers: ArrayBufferView[];
+        } | undefined;
         /**
-         * 重新计算 AABB。
+         * Buffer 列表。
          */
-        abstract recalculateLocalBox(): void;
-        abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
-        abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
+        readonly buffers: Array<ArrayBufferView>;
         /**
-         *
+         * 配置。
          */
-        getBoundingTransform(): egret3d.Transform;
-        /**
-         * 该组件是否接收投影。
-         */
-        receiveShadows: boolean;
-        /**
-         * 该组件是否产生投影。
-         */
-        castShadows: boolean;
-        /**
-         * 该组件的本地包围盒。
-         */
-        readonly localBoundingBox: Readonly<egret3d.Box>;
-        /**
-         * 基于该组件本地包围盒生成的世界包围球，用于摄像机视锥剔除。
-         */
-        readonly boundingSphere: Readonly<egret3d.Sphere>;
-        /**
-         * 该组件的材质列表。
-         */
-        materials: ReadonlyArray<egret3d.Material | null>;
-        /**
-         * 该组件材质列表中的第一个材质。
-         */
-        material: egret3d.Material | null;
-        /**
-         * @deprecated
-         */
-        readonly aabb: Readonly<egret3d.Box>;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 射线检测信息。
-     */
-    class RaycastInfo extends paper.BaseRelease<RaycastInfo> {
-        private static readonly _instances;
-        /**
-         * 创建一个射线检测信息实例。
-         */
-        static create(): RaycastInfo;
-        backfaceCulling: boolean;
-        modifyNormal: boolean;
-        subMeshIndex: int;
-        triangleIndex: int;
-        /**
-         * 交点到射线起始点的距离。
-         * - 如果未相交则为 -1.0。
-         */
-        distance: number;
-        /**
-         * 相交的点。
-         */
-        readonly position: Vector3;
-        /**
-         * 相交的 UV 坐标。
-         */
-        readonly coord: Vector2;
-        /**
-         * 相交的法线。
-         * - 提供法线向量将计算法线。
-         */
-        normal: Vector3 | null;
-        textureCoordA: Vector2 | null;
-        textureCoordB: Vector2 | null;
-        /**
-         * 相交的变换组件。（如果有的话）
-         */
-        transform: Transform | null;
-        /**
-         * 相交的碰撞组件。（如果有的话）
-         */
-        collider: ICollider | null;
-        /**
-         * 相交的刚体组件。（如果有的话）
-         */
-        rigidbody: any | null;
-        private constructor();
-        onClear(): void;
-        copy(value: Readonly<RaycastInfo>): this;
-        clear(): this;
-    }
-}
-declare namespace paper {
-    /**
-     * 基础预制体资源。
-     * - 预制体资源和场景资源的基类。
-     */
-    abstract class BasePrefabAsset extends Asset {
-        /**
-         *
-         */
-        readonly config: ISerializedData;
-        constructor(config: ISerializedData, name: string);
+        readonly config: GLTF;
+        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, ...args: Array<any>): void;
         dispose(): boolean;
-        disposeAssets(): void;
+        /**
+         *
+         */
+        updateAccessorTypeCount(): this;
+        /**
+         * 根据指定 BufferView 创建二进制数组。
+         */
+        createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): ArrayBufferView;
+        /**
+         * 根据指定 Accessor 创建二进制数组。
+         */
+        createTypeArrayFromAccessor(accessor: gltf.Accessor, offset?: uint, count?: uint): ArrayBufferView;
+        /**
+         * 通过 Accessor 获取指定 BufferLength。
+         */
+        getBufferLength(accessor: gltf.Accessor): uint;
+        /**
+         * 通过 Accessor 获取指定 BufferOffset。
+         */
+        getBufferOffset(accessor: gltf.Accessor): uint;
+        /**
+         * 通过 Accessor 获取指定 Buffer。
+         */
+        getBuffer(accessor: gltf.Accessor): ArrayBufferView;
+        /**
+         * 通过 Accessor 获取指定 BufferView。
+         */
+        getBufferView(accessor: gltf.Accessor): gltf.BufferView;
+        /**
+         * 通过 Accessor 索引，获取指定 Accessor。
+         */
+        getAccessor(index: gltf.Index): gltf.Accessor;
+        /**
+         * 获取节点。
+         */
+        getNode(index: gltf.Index): gltf.Node;
     }
-    /**
-     * 预制体资源。
-     */
-    class Prefab extends BasePrefabAsset {
-        /**
-         * 通过预置体资源创建一个实体实例到激活或指定的场景。
-         * @param name 资源的名称。
-         */
-        static create(name: string): GameObject | null;
-        /**
-         * @param name 资源的名称。
-         * @param x X 坐标。
-         * @param y Y 坐标。
-         * @param z Z 坐标。
-         */
-        static create(name: string, x: number, y: number, z: number): GameObject | null;
-        /**
-         * @param name 资源的名称。
-         * @param scene 指定的场景。
-         */
-        static create(name: string, scene: IScene): GameObject | null;
-        /**
-         * @param name 资源的名称。
-         * @param x X 坐标。
-         * @param y Y 坐标。
-         * @param z Z 坐标。
-         * @param scene 指定的场景。
-         */
-        static create(name: string, x: number, y: number, z: number, scene: IScene): GameObject | null;
-        /**
-         * @deprecated
-         */
-        createInstance(scene?: IScene | null, keepUUID?: boolean): GameObject | null;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 全局渲染状态组件。
-     */
-    class RenderState extends paper.BaseComponent {
-        version: number;
-        standardDerivativesEnabled: boolean;
-        textureFloatEnabled: boolean;
-        fragDepthEnabled: boolean;
-        textureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
-        shaderTextureLOD: any;
-        maxTextures: uint;
-        maxVertexTextures: uint;
-        maxTextureSize: uint;
-        maxCubemapSize: uint;
-        maxRenderBufferize: uint;
-        maxVertexUniformVectors: uint;
-        maxAnisotropy: uint;
-        maxBoneCount: uint;
-        maxPrecision: string;
-        commonExtensions: string;
-        vertexExtensions: string;
-        fragmentExtensions: string;
-        commonDefines: string;
-        vertexDefines: string;
-        fragmentDefines: string;
-        readonly clearColor: Color;
-        readonly viewport: Rectangle;
-        readonly defines: Defines;
-        readonly defaultCustomShaderChunks: Readonly<{
-            [key: string]: string;
-        }>;
-        /**
-         *
-         */
-        readonly caches: {
-            useLightMap: boolean;
-            castShadows: boolean;
-            receiveShadows: boolean;
-            cullingMask: paper.Layer;
-            boneCount: number;
-            egret2DOrderCount: number;
-            clockBuffer: Float32Array;
-            skyBoxTexture: BaseTexture | null;
-        };
-        renderTarget: RenderTexture | null;
-        customShaderChunks: {
-            [key: string]: string;
-        } | null;
-        /**
-         *
-         */
-        render: (camera: Camera, material?: Material) => void;
-        /**
-         *
-         */
-        draw: (drawCall: DrawCall, material?: Material | null) => void;
-        private _logarithmicDepthBuffer;
-        private _gammaInput;
-        private _gammaOutput;
-        private _gammaFactor;
-        private _toneMapping;
-        protected readonly _stateEnables: ReadonlyArray<gltf.EnableState>;
-        protected readonly _cacheStateEnable: {
-            [key: string]: boolean | undefined;
-        };
-        protected _getCommonExtensions(): void;
-        protected _getCommonDefines(): void;
-        protected _getEncodingComponents(encoding: TextureEncoding): string[];
-        protected _getToneMappingFunction(toneMapping: ToneMapping): string;
-        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding): string;
-        protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding): string;
-        initialize(config: RunOptions): void;
-        /**
-         *
-         */
-        updateRenderTarget(renderTarget: RenderTexture | null): void;
-        /**
-         *
-         */
-        updateViewport(viewport: Rectangle, renderTarget: RenderTexture | null): void;
-        /**
-         *
-         */
-        clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void;
-        /**
-         *
-         */
-        copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level?: uint): void;
-        /**
-         *
-         */
-        clearState(): void;
-        /**
-         *
-         */
-        logarithmicDepthBuffer: boolean;
-        /**
-         *
-         */
-        gammaInput: boolean;
-        /**
-         *
-         */
-        gammaOutput: boolean;
-        /**
-         *
-         */
-        gammaFactor: number;
-        /**
-         *
-         */
-        toneMapping: ToneMapping;
-        /**
-         *
-         */
-        toneMappingExposure: number;
-        /**
-         *
-         */
-        toneMappingWhitePoint: number;
-    }
-    /**
-     * 全局渲染状态组件实例。
-     */
-    const renderState: RenderState;
 }
 declare namespace egret3d {
     /**
@@ -4359,72 +3834,546 @@ declare namespace egret3d {
         private static _orthographicProjectLH(width, height, znear, zfar, out);
     }
 }
+declare namespace egret3d {
+    /**
+     * 三角形。
+     */
+    class Triangle extends paper.BaseRelease<Triangle> implements paper.ICCS<Triangle>, paper.ISerializable, IRaycast {
+        private static readonly _instances;
+        /**
+         * 创建一个三角形实例。
+         * -   a
+         * -  /·\
+         * - b - c
+         * @param a 点 A。
+         * @param b 点 B。
+         * @param c 点 C。
+         */
+        static create(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): Triangle;
+        /**
+         * 通过三个点确定一个三角形，获取该三角形的法线。
+         * -   a
+         * -  /·\
+         * - b - c
+         * @param a 点 A。
+         * @param b 点 B。
+         * @param c 点 C。
+         * @param out 法线结果。
+         */
+        static getNormal(a: Readonly<IVector3>, b: Readonly<IVector3>, c: Readonly<IVector3>, out: Vector3): Vector3;
+        /**
+         * 点 A。
+         */
+        readonly a: Vector3;
+        /**
+         * 点 B。
+         */
+        readonly b: Vector3;
+        /**
+         * 点 C。
+         */
+        readonly c: Vector3;
+        /**
+         * 请使用 `egret3d.Triangle.create()` 创建实例。
+         * @see egret3d.Triangle.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(element: Readonly<[number, number, number, number, number, number, number, number, number]>): void;
+        copy(value: Readonly<Triangle>): this;
+        clone(): Triangle;
+        set(a?: Readonly<IVector3>, b?: Readonly<IVector3>, c?: Readonly<IVector3>): this;
+        fromArray(array: ArrayLike<number>, offsetA?: number, offsetB?: number, offsetC?: number): void;
+        /**
+         * 获取该三角形的中心点。
+         * @param out 输出。
+         */
+        getCenter(out?: Vector3): Vector3;
+        /**
+         * 获取该三角形的法线。
+         * @param out 输出。
+         */
+        getNormal(out?: Vector3): Vector3;
+        /**
+         *
+         * @param u
+         * @param v
+         * @param out
+         */
+        getPointAt(u: number, v: number, out?: Vector3): Vector3;
+        /**
+         * 获取一个点到该三角形的最近点。
+         * @param point 一个点。
+         * @param out 最近点。
+         */
+        getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        /**
+         * 获取该三角形的面积。
+         * - 该值是实时计算的。
+         */
+        readonly area: number;
+    }
+}
 declare namespace paper {
     /**
-     * 实体组。
-     * - 根据匹配器收集指定特征的实体。
+     * 基础渲染组件。
      */
-    class Group<TEntity extends IEntity> {
+    abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast, egret3d.ITransformObserver {
         /**
-         * 当实体添加到组时派发事件。
+         * 当渲染组件的材质列表改变时派发事件。
          */
-        static readonly onEntityAdded: signals.Signal<[Group<IEntity>, IEntity]>;
+        static readonly onMaterialsChanged: signals.Signal<BaseRenderer>;
         /**
-         * 当实体从组中移除时派发事件。
+         * 该组件是否开启视锥剔除。
          */
-        static readonly onEntityRemoved: signals.Signal<[Group<IEntity>, IEntity]>;
+        frustumCulled: boolean;
+        private _boundingSphereDirty;
+        protected _receiveShadows: boolean;
+        protected _castShadows: boolean;
+        protected readonly _boundingSphere: egret3d.Sphere;
+        protected readonly _localBoundingBox: egret3d.Box;
+        protected readonly _materials: (egret3d.Material | null)[];
+        protected _recalculateSphere(): void;
+        initialize(): void;
+        uninitialize(): void;
         /**
-         * 当组中实体添加非必要组件时派发事件。
+         * @private
          */
-        static readonly onComponentEnabled: signals.Signal<[Group<IEntity>, IComponent]>;
+        onTransformChange(): void;
         /**
-         * 当组中实体移除非必要组件时派发事件。
+         * 重新计算 AABB。
          */
-        static readonly onComponentDisabled: signals.Signal<[Group<IEntity>, IComponent]>;
-        private _entitiesDirty;
-        private _behavioursDirty;
-        private _entityCount;
-        private readonly _matcher;
-        private readonly _entities;
-        private readonly _behaviours;
-        private _singleEntity;
+        abstract recalculateLocalBox(): void;
+        abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
+        abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
+        /**
+         *
+         */
+        getBoundingTransform(): egret3d.Transform;
+        /**
+         * 该组件是否接收投影。
+         */
+        receiveShadows: boolean;
+        /**
+         * 该组件是否产生投影。
+         */
+        castShadows: boolean;
+        /**
+         * 该组件的本地包围盒。
+         */
+        readonly localBoundingBox: Readonly<egret3d.Box>;
+        /**
+         * 基于该组件本地包围盒生成的世界包围球，用于摄像机视锥剔除。
+         */
+        readonly boundingSphere: Readonly<egret3d.Sphere>;
+        /**
+         * 该组件的材质列表。
+         */
+        materials: ReadonlyArray<egret3d.Material | null>;
+        /**
+         * 该组件材质列表中的第一个材质。
+         */
+        material: egret3d.Material | null;
+        /**
+         * @deprecated
+         */
+        readonly aabb: Readonly<egret3d.Box>;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 射线检测信息。
+     */
+    class RaycastInfo extends paper.BaseRelease<RaycastInfo> {
+        private static readonly _instances;
+        /**
+         * 创建一个射线检测信息实例。
+         */
+        static create(): RaycastInfo;
+        backfaceCulling: boolean;
+        modifyNormal: boolean;
+        subMeshIndex: int;
+        triangleIndex: int;
+        /**
+         * 交点到射线起始点的距离。
+         * - 如果未相交则为 -1.0。
+         */
+        distance: number;
+        /**
+         * 相交的点。
+         */
+        readonly position: Vector3;
+        /**
+         * 相交的 UV 坐标。
+         */
+        readonly coord: Vector2;
+        /**
+         * 相交的法线。
+         * - 提供法线向量将计算法线。
+         */
+        normal: Vector3 | null;
+        textureCoordA: Vector2 | null;
+        textureCoordB: Vector2 | null;
+        /**
+         * 相交的变换组件。（如果有的话）
+         */
+        transform: Transform | null;
+        /**
+         * 相交的碰撞组件。（如果有的话）
+         */
+        collider: ICollider | null;
+        /**
+         * 相交的刚体组件。（如果有的话）
+         */
+        rigidbody: any | null;
         private constructor();
+        onClear(): void;
+        copy(value: Readonly<RaycastInfo>): this;
+        clear(): this;
+    }
+}
+declare namespace egret3d {
+    /**
+     *
+     */
+    interface CreateTextureParameters extends gltf.Sampler, GLTFTextureExtension {
         /**
-         * 该组是否包含指定实体。
-         * @param entity
+         * 纹理数据源。
          */
-        containsEntity(entity: TEntity): boolean;
+        source?: gltf.ImageSource | ArrayBufferView | null;
+    }
+    /**
+     * 基础纹理资源。
+     * - 纹理资源的基类。
+     */
+    abstract class BaseTexture extends GLTFAsset {
+        protected static _createConfig(createTextureParameters: CreateTextureParameters): GLTF;
+        type: gltf.TextureType;
+        protected _sourceDirty: boolean;
+        protected _levels: uint;
+        protected _gltfTexture: GLTFTexture;
+        protected _image: gltf.Image;
+        protected _sampler: gltf.Sampler;
+        private _formatLevelsAndSampler();
         /**
-         * @int
-         * @param entity
-         * @param component
-         * @param isAdd
+         *
          */
-        handleEvent(entity: TEntity, component: IComponent, isAdd: boolean): void;
+        setLiner(value: boolean): this;
         /**
-         * 该组匹配的实体总数。
+         *
          */
-        readonly entityCount: uint;
+        setRepeat(value: boolean): this;
         /**
-         * 该组匹配的所有实体。
+         *
          */
-        readonly entities: ReadonlyArray<TEntity>;
+        setMipmap(value: boolean): this;
         /**
-         * 该组的匹配器。
+         *
          */
-        readonly matcher: Readonly<ICompoundMatcher<TEntity>>;
+        readonly isPowerOfTwo: boolean;
         /**
-         * 该组匹配的单例实体。
+         *
          */
-        readonly singleEntity: TEntity | null;
+        readonly format: gltf.TextureFormat;
+        /**
+         *
+         */
+        readonly levels: uint;
+        /**
+         *
+         */
+        readonly width: uint;
+        /**
+         *
+         */
+        readonly height: uint;
+        /**
+         *
+         */
+        readonly sampler: gltf.Sampler;
+        /**
+         *
+         */
+        readonly gltfTexture: GLTFTexture;
+    }
+    /**
+     * 纹理资源。
+     */
+    class Texture extends BaseTexture {
+        /**
+         *
+         * @param parameters
+         */
+        static create(parameters: CreateTextureParameters): Texture;
+        /**
+         * @private
+         */
+        static create(name: string, config: GLTF, buffers?: ReadonlyArray<ArrayBufferView>): Texture;
+        /**
+         *
+         */
+        static createColorTexture(name: string, r: number, g: number, b: number): Texture;
+        /**
+         *
+         * @param source
+         */
+        uploadTexture(source?: gltf.ImageSource): this;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 全局渲染状态组件。
+     */
+    class RenderState extends paper.BaseComponent {
+        version: number;
+        standardDerivativesEnabled: boolean;
+        textureFloatEnabled: boolean;
+        fragDepthEnabled: boolean;
+        textureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
+        shaderTextureLOD: any;
+        maxTextures: uint;
+        maxVertexTextures: uint;
+        maxTextureSize: uint;
+        maxCubemapSize: uint;
+        maxRenderBufferize: uint;
+        maxVertexUniformVectors: uint;
+        maxAnisotropy: uint;
+        maxBoneCount: uint;
+        maxPrecision: string;
+        commonExtensions: string;
+        vertexExtensions: string;
+        fragmentExtensions: string;
+        commonDefines: string;
+        vertexDefines: string;
+        fragmentDefines: string;
+        readonly clearColor: Color;
+        readonly viewport: Rectangle;
+        readonly defines: Defines;
+        readonly defaultCustomShaderChunks: Readonly<{
+            [key: string]: string;
+        }>;
+        /**
+         *
+         */
+        readonly caches: {
+            useLightMap: boolean;
+            castShadows: boolean;
+            receiveShadows: boolean;
+            cullingMask: paper.Layer;
+            boneCount: number;
+            egret2DOrderCount: number;
+            clockBuffer: Float32Array;
+            skyBoxTexture: BaseTexture | null;
+        };
+        renderTarget: RenderTexture | null;
+        customShaderChunks: {
+            [key: string]: string;
+        } | null;
+        /**
+         *
+         */
+        render: (camera: Camera, material?: Material) => void;
+        /**
+         *
+         */
+        draw: (drawCall: DrawCall, material?: Material | null) => void;
+        private _logarithmicDepthBuffer;
+        private _gammaInput;
+        private _gammaOutput;
+        private _gammaFactor;
+        private _toneMapping;
+        protected readonly _stateEnables: ReadonlyArray<gltf.EnableState>;
+        protected readonly _cacheStateEnable: {
+            [key: string]: boolean | undefined;
+        };
+        protected _getCommonExtensions(): void;
+        protected _getCommonDefines(): void;
+        protected _getEncodingComponents(encoding: TextureEncoding): string[];
+        protected _getToneMappingFunction(toneMapping: ToneMapping): string;
+        protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding): string;
+        protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding): string;
+        initialize(config: RunOptions): void;
+        /**
+         *
+         */
+        updateRenderTarget(renderTarget: RenderTexture | null): void;
+        /**
+         *
+         */
+        updateViewport(viewport: Rectangle, renderTarget: RenderTexture | null): void;
+        /**
+         *
+         */
+        clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void;
+        /**
+         *
+         */
+        copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level?: uint): void;
+        /**
+         *
+         */
+        clearState(): void;
+        /**
+         *
+         */
+        logarithmicDepthBuffer: boolean;
+        /**
+         *
+         */
+        gammaInput: boolean;
+        /**
+         *
+         */
+        gammaOutput: boolean;
+        /**
+         *
+         */
+        gammaFactor: number;
+        /**
+         *
+         */
+        toneMapping: ToneMapping;
+        /**
+         *
+         */
+        toneMappingExposure: number;
+        /**
+         *
+         */
+        toneMappingWhitePoint: number;
+    }
+    /**
+     * 全局渲染状态组件实例。
+     */
+    const renderState: RenderState;
+}
+declare namespace egret3d {
+    /**
+     * 网格过滤组件。
+     * - 为网格渲染组件提供网格资源。
+     */
+    class MeshFilter extends paper.BaseComponent {
+        /**
+         * 当网格过滤组件的网格资源改变时派发事件。
+         */
+        static readonly onMeshChanged: signals.Signal<MeshFilter>;
+        private _mesh;
+        /**
+         * 该组件的网格资源。
+         */
+        mesh: Mesh | null;
+    }
+}
+declare namespace paper {
+    /**
+     * 基础预制体资源。
+     * - 预制体资源和场景资源的基类。
+     */
+    abstract class BasePrefabAsset extends Asset {
+        /**
+         *
+         */
+        readonly config: ISerializedData;
+        constructor(config: ISerializedData, name: string);
+        dispose(): boolean;
+        disposeAssets(): void;
+    }
+    /**
+     * 预制体资源。
+     */
+    class Prefab extends BasePrefabAsset {
+        /**
+         * 通过预置体资源创建一个实体实例到激活或指定的场景。
+         * @param name 资源的名称。
+         */
+        static create(name: string): GameObject | null;
+        /**
+         * @param name 资源的名称。
+         * @param x X 坐标。
+         * @param y Y 坐标。
+         * @param z Z 坐标。
+         */
+        static create(name: string, x: number, y: number, z: number): GameObject | null;
+        /**
+         * @param name 资源的名称。
+         * @param scene 指定的场景。
+         */
+        static create(name: string, scene: IScene): GameObject | null;
+        /**
+         * @param name 资源的名称。
+         * @param x X 坐标。
+         * @param y Y 坐标。
+         * @param z Z 坐标。
+         * @param scene 指定的场景。
+         */
+        static create(name: string, x: number, y: number, z: number, scene: IScene): GameObject | null;
         /**
          * @deprecated
          */
-        hasGameObject(entity: TEntity): boolean;
+        createInstance(scene?: IScene | null, keepUUID?: boolean): GameObject | null;
+    }
+}
+declare namespace paper {
+    /**
+     * 基础实体。
+     */
+    abstract class Entity extends BaseObject implements IEntity {
         /**
-         * @deprecated
+         * 当实体添加到场景时派发事件。
          */
-        readonly gameObjects: ReadonlyArray<TEntity>;
+        static readonly onEntityAddedToScene: signals.Signal<IEntity>;
+        /**
+         * 当实体将要被销毁时派发事件。
+         */
+        static readonly onEntityDestroy: signals.Signal<IEntity>;
+        /**
+         * 当实体被销毁时派发事件。
+         */
+        static readonly onEntityDestroyed: signals.Signal<IEntity>;
+        /**
+         *
+         */
+        static createDefaultEnabled: boolean;
+        name: string;
+        tag: DefaultTags | string;
+        hideFlags: HideFlags;
+        extras?: EntityExtras;
+        protected _componentsDirty: boolean;
+        protected _isDestroyed: boolean;
+        protected _enabled: boolean;
+        protected readonly _components: (IComponent | undefined)[];
+        protected readonly _cachedComponents: IComponent[];
+        protected _scene: Scene | null;
+        /**
+         * 禁止实例化实体。
+         * @protected
+         */
+        constructor();
+        protected _destroy(): void;
+        protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
+        protected _setEnabled(value: boolean): void;
+        protected _addComponent(component: IComponent, config?: any): void;
+        protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
+        private _getComponent(componentClass);
+        private _isRequireComponent(componentClass);
+        initialize(): void;
+        uninitialize(): void;
+        destroy(): boolean;
+        addComponent<T extends IComponent>(componentClass: IComponentClass<T>, config?: any): T;
+        removeComponent<T extends IComponent>(componentInstanceOrClass: IComponentClass<T> | T, isExtends?: boolean): boolean;
+        removeAllComponents<T extends IComponent>(componentClass?: IComponentClass<T>, isExtends?: boolean): boolean;
+        getOrAddComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T;
+        getComponent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T | null;
+        getRemovedComponent<T extends IComponent>(componentClass: IComponentClass<T>): T | null;
+        getComponents<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T[];
+        hasComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
+        hasAnyComponents(componentClasses: IComponentClass<IComponent>[], componentEnabled: boolean): boolean;
+        readonly isDestroyed: boolean;
+        dontDestroy: boolean;
+        enabled: boolean;
+        readonly components: ReadonlyArray<IComponent>;
+        scene: Scene;
     }
 }
 declare namespace paper {
@@ -5079,38 +5028,6 @@ declare namespace paper {
 }
 declare namespace egret3d {
     /**
-     * 网格渲染组件。
-     * - 用于渲染网格筛选组件提供的网格资源。
-     */
-    class MeshRenderer extends paper.BaseRenderer {
-        protected _lightmapIndex: number;
-        /**
-         * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
-         */
-        protected readonly _lightmapScaleOffset: Vector4;
-        /**
-         * @private
-         */
-        recalculateLocalBox(): void;
-        /**
-         * 实时获取网格资源的指定三角形顶点位置。
-         * @param triangleIndex 三角形索引。
-         * @param out
-         */
-        getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
-        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
-        /**
-         * 该组件的光照图索引。
-         */
-        lightmapIndex: int;
-        /**
-         * TODO
-         */
-        readonly lightmapScaleOffset: Readonly<Vector4>;
-    }
-}
-declare namespace egret3d {
-    /**
      * 四元数。
      */
     class Quaternion extends Vector4 {
@@ -5232,6 +5149,38 @@ declare namespace egret3d {
         toEuler(out?: Vector3, order?: EulerOrder): Vector3;
     }
 }
+declare namespace egret3d {
+    /**
+     * 网格渲染组件。
+     * - 用于渲染网格筛选组件提供的网格资源。
+     */
+    class MeshRenderer extends paper.BaseRenderer {
+        protected _lightmapIndex: number;
+        /**
+         * 如果该属性合并到 UV2 中，会破坏网格共享，共享的网格无法拥有不同的 lightmap UV。
+         */
+        protected readonly _lightmapScaleOffset: Vector4;
+        /**
+         * @private
+         */
+        recalculateLocalBox(): void;
+        /**
+         * 实时获取网格资源的指定三角形顶点位置。
+         * @param triangleIndex 三角形索引。
+         * @param out
+         */
+        getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
+        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
+        /**
+         * 该组件的光照图索引。
+         */
+        lightmapIndex: int;
+        /**
+         * TODO
+         */
+        readonly lightmapScaleOffset: Readonly<Vector4>;
+    }
+}
 declare namespace paper {
     /**
      * 游戏实体。
@@ -5329,6 +5278,74 @@ declare namespace paper {
          * @deprecated
          */
         readonly globalGameObject: this;
+    }
+}
+declare namespace paper {
+    /**
+     * 实体组。
+     * - 根据匹配器收集指定特征的实体。
+     */
+    class Group<TEntity extends IEntity> {
+        /**
+         * 当实体添加到组时派发事件。
+         */
+        static readonly onEntityAdded: signals.Signal<[Group<IEntity>, IEntity]>;
+        /**
+         * 当实体从组中移除时派发事件。
+         */
+        static readonly onEntityRemoved: signals.Signal<[Group<IEntity>, IEntity]>;
+        /**
+         * 当组中实体添加非必要组件时派发事件。
+         */
+        static readonly onComponentEnabled: signals.Signal<[Group<IEntity>, IComponent]>;
+        /**
+         * 当组中实体移除非必要组件时派发事件。
+         */
+        static readonly onComponentDisabled: signals.Signal<[Group<IEntity>, IComponent]>;
+        private _entitiesDirty;
+        private _behavioursDirty;
+        private _entityCount;
+        private readonly _matcher;
+        private readonly _entities;
+        private readonly _behaviours;
+        private _singleEntity;
+        private constructor();
+        /**
+         * 该组是否包含指定实体。
+         * @param entity
+         */
+        containsEntity(entity: TEntity): boolean;
+        /**
+         * @int
+         * @param entity
+         * @param component
+         * @param isAdd
+         */
+        handleEvent(entity: TEntity, component: IComponent, isAdd: boolean): void;
+        /**
+         * 该组匹配的实体总数。
+         */
+        readonly entityCount: uint;
+        /**
+         * 该组匹配的所有实体。
+         */
+        readonly entities: ReadonlyArray<TEntity>;
+        /**
+         * 该组的匹配器。
+         */
+        readonly matcher: Readonly<ICompoundMatcher<TEntity>>;
+        /**
+         * 该组匹配的单例实体。
+         */
+        readonly singleEntity: TEntity | null;
+        /**
+         * @deprecated
+         */
+        hasGameObject(entity: TEntity): boolean;
+        /**
+         * @deprecated
+         */
+        readonly gameObjects: ReadonlyArray<TEntity>;
     }
 }
 declare namespace egret3d {
@@ -5678,21 +5695,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d.webgl {
-}
-declare namespace paper {
-    /**
-     * 已丢失或不支持的组件数据备份。
-     */
-    class MissingComponent extends Component {
-        /**
-         * 丢失的组件类名
-         */
-        readonly missingClass: string;
-        /**
-         * 已丢失或不支持的组件数据。
-         */
-        missingObject: any | null;
-    }
 }
 declare namespace paper.utility {
     /**
@@ -6512,6 +6514,13 @@ declare namespace egret3d {
      *
      */
     type RunOptions = {
+        /**
+         *
+         */
+        playerMode?: paper.PlayerMode;
+        /**
+         *
+         */
         defaultScene?: string;
         /**
          * 舞台宽。
@@ -6536,7 +6545,6 @@ declare namespace egret3d {
         antialiasSamples?: number;
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
-        playerMode?: paper.PlayerMode;
     };
 }
 declare namespace egret3d {
@@ -6953,7 +6961,6 @@ declare namespace egret3d {
         static CYLINDER: Mesh;
         static TORUS: Mesh;
         static SPHERE: Mesh;
-        static CAPSULE: Mesh;
         static LINE_X: Mesh;
         static LINE_Y: Mesh;
         static LINE_Z: Mesh;
@@ -7777,17 +7784,6 @@ declare namespace egret3d {
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }
-declare namespace egret3d {
-    /**
-     * 圆柱（锥）体碰撞组件。
-     * - 与 Y 轴对齐。
-     */
-    class CylinderCollider extends paper.BaseComponent implements ICylinderCollider, IRaycast {
-        readonly colliderType: ColliderType;
-        readonly cylinder: Cylinder;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-    }
-}
 declare namespace paper {
     /**
      * 实体组件匹配器。
@@ -7816,7 +7812,6 @@ declare namespace paper {
         private _sortComponents(a, b);
         private _distinct(source, target);
         private _merge();
-        private _hasEnabledComponent(entity, component);
         onClear(): void;
         anyOf(...components: IComponentClass<IComponent>[]): IAnyOfMatcher<TEntity>;
         noneOf(...components: IComponentClass<IComponent>[]): INoneOfMatcher<TEntity>;
@@ -7828,6 +7823,17 @@ declare namespace paper {
         readonly anyOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         readonly noneOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         readonly extraOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 胶囊体碰撞组件。
+     * - 与 Y 轴对齐。
+     */
+    class CapsuleCollider extends paper.BaseComponent implements ICapsuleCollider, IRaycast {
+        readonly colliderType: ColliderType;
+        readonly capsule: Capsule;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }
 declare namespace egret3d {
@@ -7864,6 +7870,8 @@ declare namespace egret3d {
      * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      */
     function raycastAll(ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>, maxDistance?: number, cullingMask?: paper.Layer, raycastMesh?: boolean, backfaceCulling?: boolean): RaycastInfo[];
+}
+declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
@@ -8415,23 +8423,6 @@ declare namespace egret3d {
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }
-declare namespace egret3d {
-    /**
-     * 网格过滤组件。
-     * - 为网格渲染组件提供网格资源。
-     */
-    class MeshFilter extends paper.BaseComponent {
-        /**
-         * 当网格过滤组件的网格资源改变时派发事件。
-         */
-        static readonly onMeshChanged: signals.Signal<MeshFilter>;
-        private _mesh;
-        /**
-         * 该组件的网格资源。
-         */
-        mesh: Mesh | null;
-    }
-}
 declare namespace paper {
     /**
      * 场景。
@@ -8543,6 +8534,49 @@ declare namespace paper {
          * @deprecated
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 几何胶囊体。
+     * - 与 Y 轴对齐。
+     */
+    class Capsule extends paper.BaseRelease<Capsule> implements paper.ICCS<Capsule>, paper.ISerializable, IRaycast {
+        private static readonly _instances;
+        /**
+         * 创建一个几何胶囊体。
+         * @param center 中心点。
+         * @param radius 半径。
+         */
+        static create(center?: Readonly<IVector3>, radius?: number, height?: number): Capsule;
+        /**
+         * 该胶囊体的半径。
+         */
+        radius: number;
+        /**
+         * 该胶囊体圆柱部分的高度。
+         */
+        height: number;
+        /**
+         * 该胶囊体的中心点。
+         */
+        readonly center: Vector3;
+        /**
+         * 请使用 `egret3d.Capsule.create()` 创建实例。
+         * @see egret3d.Capsule.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number, number]>): this;
+        clone(): Capsule;
+        copy(value: Readonly<Capsule>): this;
+        set(center: Readonly<IVector3>, radius: number, height: number): this;
+        /**
+         * 该几何体是否包含指定的点。
+         * @param point 一个点。
+         */
+        contains(point: Readonly<IVector3>): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }
 declare namespace egret3d {
@@ -9942,49 +9976,6 @@ declare namespace egret3d.creater {
 }
 declare namespace egret3d {
     /**
-     * 几何胶囊体。
-     * - 与 Y 轴对齐。
-     */
-    class Capsule extends paper.BaseRelease<Capsule> implements paper.ICCS<Capsule>, paper.ISerializable, IRaycast {
-        private static readonly _instances;
-        /**
-         * 创建一个几何胶囊体。
-         * @param center 中心点。
-         * @param radius 半径。
-         */
-        static create(center?: Readonly<IVector3>, radius?: number, height?: number): Capsule;
-        /**
-         * 该胶囊体的半径。
-         */
-        radius: number;
-        /**
-         * 该胶囊体圆柱部分的高度。
-         */
-        height: number;
-        /**
-         * 该胶囊体的中心点。
-         */
-        readonly center: Vector3;
-        /**
-         * 请使用 `egret3d.Capsule.create()` 创建实例。
-         * @see egret3d.Capsule.create()
-         */
-        private constructor();
-        serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number, number]>): this;
-        clone(): Capsule;
-        copy(value: Readonly<Capsule>): this;
-        set(center: Readonly<IVector3>, radius: number, height: number): this;
-        /**
-         * 该几何体是否包含指定的点。
-         * @param point 一个点。
-         */
-        contains(point: Readonly<IVector3>): boolean;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
-    }
-}
-declare namespace egret3d {
-    /**
      *
      * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
@@ -10102,6 +10093,94 @@ declare namespace egret3d {
          */
         getDistanceToPlane(plane: Readonly<Plane>): number;
     }
+}
+declare namespace paper {
+    /**
+     * 应用程序。
+     *
+     * ### 自动刷新和被动刷新
+     *
+     * 默认情况下
+     *
+     * - 自动刷新: 会以无限循环方式刷新, `PlayerMode.Player` 模式默认为自动刷新
+     * - 被动刷新: 不会启动循环, 需要刷新时需调用 `update()` 方法, `PlayerMode.Editor` 模式为被动刷新
+     *
+     * 在运行过程中可随时调用 `resume()` 切换到自动刷新, 或者调用 `pause()` 切换为被动刷新
+     *
+     * ### 限制帧频
+     *
+     * - 通过设置 `clock.frameInterval` 来设置渲染帧间隔(秒)
+     * - 通过设置 `clock.tickInterval` 来设置逻辑帧间隔(秒)
+     * - 在帧补偿的时候, 为了尽快达到同步, `clock.update()` 会在同步之前忽略此间隔, 也就是说在这种情况下, 帧率会增加, 只有逻辑帧会补偿
+     */
+    class ECS {
+        private static _instance;
+        /**
+         * 应用程序单例。
+         */
+        static getInstance(): ECS;
+        private constructor();
+        /**
+         * 当应用程序的播放模式改变时派发事件。
+         */
+        readonly onPlayerModeChange: signals.Signal<PlayerMode>;
+        /**
+         * 引擎版本。
+         */
+        readonly version: string;
+        /**
+         * 系统管理器。
+         */
+        readonly systemManager: SystemManager;
+        /**
+         * 场景管理器。
+         */
+        readonly sceneManager: SceneManager;
+        /**
+         *
+         */
+        readonly gameObjectContext: Context<GameObject>;
+        private _isFocused;
+        private _isRunning;
+        private _playerMode;
+        /**
+         * core updating loop
+         */
+        private _loop(timestamp?);
+        /**
+         * including calculating, status updating, rerendering and logical updating
+         */
+        private _update({tickCount, frameCount}?);
+        /**
+         *
+         */
+        initialize(options: RunOptions): void;
+        /**
+         * engine start
+         *
+         * TODO:
+         */
+        start(): void;
+        /**
+         * 显式更新
+         *
+         * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
+         * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
+         */
+        update(): void;
+        /**
+         *
+         */
+        readonly isMobile: boolean;
+        /**
+         * 运行模式。
+         */
+        playerMode: PlayerMode;
+    }
+    /**
+     * 应用程序单例。
+     */
+    const Application: ECS;
 }
 declare namespace egret3d {
     /**
@@ -10365,94 +10444,6 @@ declare namespace egret3d {
         setShader(value: Shader): this | undefined;
     }
 }
-declare namespace paper {
-    /**
-     * 应用程序。
-     *
-     * ### 自动刷新和被动刷新
-     *
-     * 默认情况下
-     *
-     * - 自动刷新: 会以无限循环方式刷新, `PlayerMode.Player` 模式默认为自动刷新
-     * - 被动刷新: 不会启动循环, 需要刷新时需调用 `update()` 方法, `PlayerMode.Editor` 模式为被动刷新
-     *
-     * 在运行过程中可随时调用 `resume()` 切换到自动刷新, 或者调用 `pause()` 切换为被动刷新
-     *
-     * ### 限制帧频
-     *
-     * - 通过设置 `clock.frameInterval` 来设置渲染帧间隔(秒)
-     * - 通过设置 `clock.tickInterval` 来设置逻辑帧间隔(秒)
-     * - 在帧补偿的时候, 为了尽快达到同步, `clock.update()` 会在同步之前忽略此间隔, 也就是说在这种情况下, 帧率会增加, 只有逻辑帧会补偿
-     */
-    class ECS {
-        private static _instance;
-        /**
-         * 应用程序单例。
-         */
-        static getInstance(): ECS;
-        private constructor();
-        /**
-         * 当应用程序的播放模式改变时派发事件。
-         */
-        readonly onPlayerModeChange: signals.Signal<PlayerMode>;
-        /**
-         * 引擎版本。
-         */
-        readonly version: string;
-        /**
-         * 系统管理器。
-         */
-        readonly systemManager: SystemManager;
-        /**
-         * 场景管理器。
-         */
-        readonly sceneManager: SceneManager;
-        /**
-         *
-         */
-        readonly gameObjectContext: Context<GameObject>;
-        private _isFocused;
-        private _isRunning;
-        private _playerMode;
-        /**
-         * core updating loop
-         */
-        private _loop(timestamp?);
-        /**
-         * including calculating, status updating, rerendering and logical updating
-         */
-        private _update({tickCount, frameCount}?);
-        /**
-         *
-         */
-        initialize(options: RunOptions): void;
-        /**
-         * engine start
-         *
-         * TODO:
-         */
-        start(): void;
-        /**
-         * 显式更新
-         *
-         * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
-         * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
-         */
-        update(): void;
-        /**
-         *
-         */
-        readonly isMobile: boolean;
-        /**
-         * 运行模式。
-         */
-        playerMode: PlayerMode;
-    }
-    /**
-     * 应用程序单例。
-     */
-    const Application: ECS;
-}
 declare namespace egret3d {
     /**
      *
@@ -10530,6 +10521,8 @@ declare namespace egret3d {
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
         toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
     }
+}
+declare namespace paper {
 }
 declare namespace egret3d {
     /**
@@ -12023,31 +12016,34 @@ declare namespace egret3d.utils {
 }
 declare namespace egret3d.webgl {
 }
+declare namespace egret3d.webgl {
+}
+declare namespace egret3d.webgl {
+}
+declare namespace egret3d.webgl {
+}
+declare namespace egret3d.webgl {
+}
+declare namespace egret3d.webgl {
+}
+declare namespace egret3d.webgl {
+}
+declare namespace egret3d.webgl {
+}
 declare namespace paper {
-}
-declare namespace egret3d.webgl {
-}
-declare namespace egret3d.webgl {
-}
-declare namespace egret3d.webgl {
-}
-declare namespace egret3d.webgl {
-}
-declare namespace egret3d.webgl {
-}
-declare namespace egret3d.webgl {
-}
-interface Window {
-    canvas: HTMLCanvasElement;
-    gltf: any;
-    paper: any;
-    egret3d: any;
-}
-declare namespace egret3d.webgl {
-}
-declare namespace egret3d.webgl {
-}
-declare namespace egret3d.webgl {
+    /**
+     * 已丢失或不支持的组件数据备份。
+     */
+    class MissingComponent extends Component {
+        /**
+         * 丢失的组件类名
+         */
+        readonly missingClass: string;
+        /**
+         * 已丢失或不支持的组件数据。
+         */
+        missingObject: any | null;
+    }
 }
 declare namespace egret3d {
     /**
@@ -12056,14 +12052,20 @@ declare namespace egret3d {
      */
     function runEgret(options?: RunOptions): void;
 }
+interface Window {
+    gltf: any;
+    paper: any;
+    egret3d: any;
+    canvas: HTMLCanvasElement;
+}
 declare namespace egret3d {
     /**
-     * 胶囊体碰撞组件。
+     * 圆柱（锥）体碰撞组件。
      * - 与 Y 轴对齐。
      */
-    class CapsuleCollider extends paper.BaseComponent implements ICapsuleCollider, IRaycast {
+    class CylinderCollider extends paper.BaseComponent implements ICylinderCollider, IRaycast {
         readonly colliderType: ColliderType;
-        readonly capsule: Capsule;
+        readonly cylinder: Cylinder;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
     }
 }

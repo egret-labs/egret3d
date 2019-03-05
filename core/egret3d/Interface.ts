@@ -340,7 +340,6 @@ namespace egret3d {
         "pointShadowMap[0]": gltf.UniformSemantics._POINTSHADOWMAP,
         "spotShadowMap[0]": gltf.UniformSemantics._SPOTSHADOWMAP,
     };
-
     /**
      * 
      */
@@ -370,6 +369,13 @@ namespace egret3d {
      * 
      */
     export type RunOptions = {
+        /**
+         * 
+         */
+        playerMode?: paper.PlayerMode;
+        /**
+         * 
+         */
         defaultScene?: string;
         /**
          * 舞台宽。
@@ -396,7 +402,5 @@ namespace egret3d {
 
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
-
-        playerMode?: paper.PlayerMode;
     };
 }

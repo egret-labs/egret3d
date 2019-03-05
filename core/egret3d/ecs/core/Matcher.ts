@@ -105,20 +105,6 @@ namespace paper {
             }
         }
 
-        private _hasEnabledComponent(entity: TEntity, component: IComponentClass<IComponent>) {
-            const components = entity.getComponents(component);
-
-            if (components.length > 0) {
-                for (const eachComponent of components) {
-                    if (eachComponent.isActiveAndEnabled) {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
         public onClear() {
             this._id = "";
             this._components.length = 0;

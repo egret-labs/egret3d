@@ -522,7 +522,7 @@ namespace paper {
                         let flag = false;
 
                         for (const childComponent of (component as GroupComponent).components) {
-                            if (!childComponent.isActiveAndEnabled) { // TODO 匹配性能优化
+                            if (childComponent.isActiveAndEnabled) { // TODO 匹配性能优化
                                 flag = true;
                                 break;
                             }

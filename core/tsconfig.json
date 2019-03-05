@@ -177,18 +177,17 @@
         "egret3d/util/stream.ts",
         "egret3d/util/utils.ts",
 
-        "egret3d/web/WebGLRenderState.ts",
         "egret3d/web/resource/WebGLProgramBinder.ts",
         "egret3d/web/resource/WebGLShader.ts",
         "egret3d/web/resource/WebGLTexture.ts",
         "egret3d/web/resource/WebGLRenderTexture.ts",
         "egret3d/web/resource/WebGLMesh.ts",
-
         "egret3d/web/systems/BeginSystem.ts",
         "egret3d/web/systems/WebGLRenderSystem.ts",
         "egret3d/web/systems/InputSystem.ts",
-        "egret3d/web/systems/EndSystem.ts",
-        "egret3d/web/RunEgret.ts",
+        "egret3d/web/WebGLRenderState.ts",
+
+        "egret3d/RunEgret.ts",
 
         "egret3d/Deprecated.ts"
     ]
