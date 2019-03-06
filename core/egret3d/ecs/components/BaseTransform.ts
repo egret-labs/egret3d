@@ -68,7 +68,7 @@ namespace paper {
 
             for (const child of this._children) {
                 if (child.entity.enabled) {
-                    for (const component of child.gameObject.components) {
+                    for (const component of child.entity.components) {
                         if (component.enabled) {
                             component.dispatchEnabledEvent(enabled);
                         }
@@ -250,7 +250,7 @@ namespace paper {
 
             let ancestor: this | null = child;
 
-            while (ancestor !== this && ancestor !== null) {
+            while (ancestor !== this && ancestor) {
                 ancestor = ancestor._parent;
             }
 

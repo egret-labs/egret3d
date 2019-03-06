@@ -557,7 +557,7 @@ namespace egret3d.webgl {
             renderState.updateViewport(camera.viewport, renderTarget);
             renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
             // Skybox.
-            const skyBox = camera.gameObject.getComponent(SkyBox);
+            const skyBox = camera.entity.getComponent(SkyBox);
             if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                 const skyBoxDrawCall = this._drawCallCollecter.skyBox;
                 const material = skyBox.material;
@@ -696,7 +696,7 @@ namespace egret3d.webgl {
                 // }
 
                 for (const camera of cameras) {
-                    const scene = camera.gameObject.scene;
+                    const scene = camera.entity.scene;
 
                     if (
                         camera.renderTarget
@@ -724,7 +724,7 @@ namespace egret3d.webgl {
                 camera._update();
                 //
                 let isPostprocessing = false;
-                const postprocessings = camera.gameObject.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
+                const postprocessings = camera.entity.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
 
                 if (postprocessings.length > 0) {
                     for (const postprocessing of postprocessings) {
@@ -768,7 +768,7 @@ namespace egret3d.webgl {
                 let flag = false;
                 const isEditor = paper.Application.playerMode === paper.PlayerMode.Editor;
 
-                for (const component of renderer.gameObject.components) {
+                for (const component of renderer.entity.components) {
                     if (
                         (component.constructor as paper.IComponentClass<paper.IComponent>).isBehaviour &&
                         (!isEditor || (component.constructor as paper.IComponentClass<paper.Behaviour>).executeInEditMode) &&

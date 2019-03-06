@@ -20,7 +20,7 @@ namespace paper.editor {
             }
         }
 
-        public onAwake() {
+        public onEnable() {
             const quaryValues = this._guiComponent.quaryValues;
 
             if (quaryValues.FPS === 1 || (quaryValues.FPS !== 0 && !paper.Application.isMobile)) {

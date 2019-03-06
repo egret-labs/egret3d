@@ -160,7 +160,7 @@ namespace paper.editor {
             ];
         }
 
-        public onAwake() {
+        public onEnable() {
             const sceneOptions = {
                 debug: false,
             };
@@ -173,9 +173,7 @@ namespace paper.editor {
                     Application.playerMode = PlayerMode.Player;
                 }
             });
-        }
 
-        public onEnable() {
             Scene.onSceneCreated.add(this._onSceneCreated, this);
             Scene.onSceneDestroy.add(this._onSceneDestroy, this);
             BaseTransform.onTransformParentChanged.add(this._onTransformParentChanged, this);

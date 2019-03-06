@@ -2981,7 +2981,7 @@ var paper;
             function StatsSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._fpsIndex = 0;
-                _this._guiComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
+                _this._guiComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.GUIComponent);
                 _this._fpsShowQueue = [true, false, false, true];
                 return _this;
             }
@@ -2996,7 +2996,7 @@ var paper;
                     }
                 }
             };
-            StatsSystem.prototype.onAwake = function () {
+            StatsSystem.prototype.onEnable = function () {
                 var quaryValues = this._guiComponent.quaryValues;
                 if (quaryValues.FPS === 1 || (quaryValues.FPS !== 0 && !paper.Application.isMobile)) {
                     this._guiComponent.showStates |= 1 /* FPS */;
@@ -4328,11 +4328,6 @@ var paper;
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.showStates = 0 /* None */;
                 _this.quaryValues = {};
-                _this.hierarchy = new dat.GUI({ closeOnTop: true, width: 300 });
-                _this.inspector = new dat.GUI({ closeOnTop: true, width: 300 });
-                _this.stats = new Stats();
-                _this.renderPanel = _this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
-                _this.drawCallPanel = _this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
                 /**
                  * @internal
                  */
@@ -4345,13 +4340,20 @@ var paper;
             }
             GUIComponent.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
-                this.stats.showPanel(0);
+                if (paper.Application.playerMode !== 4 /* Editor */) {
+                    this.hierarchy = new dat.GUI({ closeOnTop: true, width: 300 });
+                    this.inspector = new dat.GUI({ closeOnTop: true, width: 300 });
+                    this.stats = new Stats();
+                    this.renderPanel = this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
+                    this.drawCallPanel = this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
+                    this.stats.showPanel(0);
+                }
             };
             GUIComponent = __decorate([
                 paper.singleton
             ], GUIComponent);
             return GUIComponent;
-        }(paper.BaseComponent));
+        }(paper.Component));
         editor.GUIComponent = GUIComponent;
         __reflect(GUIComponent.prototype, "paper.editor.GUIComponent");
     })(editor = paper.editor || (paper.editor = {}));
@@ -4549,7 +4551,7 @@ var paper;
                 paper.singleton
             ], ModelComponent);
             return ModelComponent;
-        }(paper.BaseComponent));
+        }(paper.Component));
         editor.ModelComponent = ModelComponent;
         __reflect(ModelComponent.prototype, "paper.editor.ModelComponent");
     })(editor = paper.editor || (paper.editor = {}));
@@ -5388,11 +5390,11 @@ var paper;
             function EditorSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this._isMobile = false;
-                _this._guiComponent = paper.Application.playerMode === 4 /* Editor */ ? null : paper.GameObject.globalGameObject.getOrAddComponent(editor.GUIComponent);
+                _this._guiComponent = paper.Application.sceneManager.globalEntity.addComponent(editor.GUIComponent);
                 return _this;
             }
             EditorSystem.prototype.onAwake = function () {
-                paper.GameObject.globalGameObject.getOrAddComponent(editor.EditorDefaultAsset); // TODO
+                paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.EditorDefaultAsset); // TODO
                 //
                 if (paper.Application.playerMode === 4 /* Editor */) {
                 }
@@ -6185,7 +6187,7 @@ var paper;
                 _this._addEntityCount = 0;
                 _this._controlLeft = egret3d.inputCollecter.getKey("ControlLeft" /* ControlLeft */);
                 _this._controlRight = egret3d.inputCollecter.getKey("ControlRight" /* ControlRight */);
-                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
+                _this._modelComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.ModelComponent);
                 _this._guiComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.GUIComponent);
                 _this._sceneOrEntityBuffer = [];
                 _this._selectedItems = [];
@@ -6305,7 +6307,7 @@ var paper;
                     paper.Matcher.create(false, editor.LastSelectedFlag),
                 ];
             };
-            HierarchySystem.prototype.onAwake = function () {
+            HierarchySystem.prototype.onEnable = function () {
                 var sceneOptions = {
                     debug: false,
                 };
@@ -6317,8 +6319,6 @@ var paper;
                         paper.Application.playerMode = 1 /* Player */;
                     }
                 });
-            };
-            HierarchySystem.prototype.onEnable = function () {
                 paper.Scene.onSceneCreated.add(this._onSceneCreated, this);
                 paper.Scene.onSceneDestroy.add(this._onSceneDestroy, this);
                 paper.BaseTransform.onTransformParentChanged.add(this._onTransformParentChanged, this);
@@ -6445,7 +6445,7 @@ var paper;
             __extends(InspectorSystem, _super);
             function InspectorSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
+                _this._modelComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.ModelComponent);
                 _this._guiComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.GUIComponent);
                 _this._componentOrPropertyGUIClickHandler = function (gui) {
                     window["psc"] = window["epsc"] = gui.instance; // For quick debug.
@@ -6947,8 +6947,6 @@ var paper;
                     paper.Matcher.create(false, editor.LastSelectedFlag),
                 ];
             };
-            InspectorSystem.prototype.onAwake = function () {
-            };
             InspectorSystem.prototype.onEnable = function () {
                 paper.Component.onComponentCreated.add(this._onComponentCreated, this);
                 paper.Component.onComponentDestroy.add(this._onComponentDestroy, this);
@@ -7086,7 +7084,7 @@ var paper;
             __extends(SceneSystem, _super);
             function SceneSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._modelComponent = paper.GameObject.globalGameObject.getOrAddComponent(editor.ModelComponent);
+                _this._modelComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.ModelComponent);
                 _this._keyEscape = egret3d.inputCollecter.getKey("Escape" /* Escape */);
                 _this._keyDelete = egret3d.inputCollecter.getKey("Delete" /* Delete */);
                 _this._keyE = egret3d.inputCollecter.getKey("KeyE" /* KeyE */);
@@ -7118,9 +7116,6 @@ var paper;
                         .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
                     paper.Matcher.create(egret3d.Transform, editor.LastSelectedFlag),
                 ];
-            };
-            SceneSystem.prototype.onAwake = function () {
-                // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
             };
             SceneSystem.prototype.onEnable = function () {
                 var editorCamera = egret3d.Camera.editor;

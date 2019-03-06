@@ -580,9 +580,6 @@ namespace paper.editor {
             ];
         }
 
-        public onAwake() {
-        }
-
         public onEnable() {
             Component.onComponentCreated.add(this._onComponentCreated, this);
             Component.onComponentDestroy.add(this._onComponentDestroy, this);

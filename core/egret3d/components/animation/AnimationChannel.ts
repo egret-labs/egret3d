@@ -319,7 +319,7 @@ namespace egret3d {
             const outputBuffer = this.outputBuffer;
             const frameIndex = this.getFrameIndex(currentTime);
             //
-            (this.binder as paper.BaseComponent).gameObject.activeSelf = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
+            (this.binder as paper.BaseComponent).entity.enabled = (frameIndex >= 0 ? outputBuffer[frameIndex] : outputBuffer[0]) !== 0;
 
         }
 

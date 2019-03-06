@@ -404,7 +404,7 @@ declare namespace paper.editor {
     /**
      *
      */
-    class GUIComponent extends BaseComponent {
+    class GUIComponent extends Component {
         showStates: ShowState;
         quaryValues: QuaryValues;
         readonly hierarchy: dat.GUI;
@@ -419,7 +419,7 @@ declare namespace paper.editor {
     /**
      *
      */
-    class ModelComponent extends BaseComponent {
+    class ModelComponent extends Component {
         /**
          * 选中的场景。
          */
@@ -491,7 +491,6 @@ declare namespace paper.editor {
         private _transformControllerEntity;
         lookAtSelected(): void;
         protected getMatchers(): IAnyOfMatcher<GameObject>[];
-        onAwake(): void;
         onEnable(): void;
         onDisable(): void;
         onEntityAdded(entity: GameObject, group: Group<GameObject>): void;

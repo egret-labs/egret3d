@@ -51,9 +51,8 @@ namespace paper.editor {
                 (this.stats as Stats) = new Stats();
                 (this.renderPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
                 (this.drawCallPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
+                this.stats.showPanel(0);
             }
-
-            this.stats.showPanel(0);
         }
     }
 }

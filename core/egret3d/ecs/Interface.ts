@@ -336,7 +336,7 @@ namespace paper {
         /**
          * 该实体的激活状态。
          */
-        readonly enabled: boolean;
+        enabled: boolean;
         /**
          * 该实体是否可以被销毁。
          * - 当此值为 `true` 时，将会被添加到全局场景，反之将被添加到激活场景。

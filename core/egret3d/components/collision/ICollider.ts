@@ -85,6 +85,12 @@ namespace egret3d {
     export interface IMeshCollider extends ICollider {
     }
     /**
+     * 
+     */
+    export interface IRigidbody {
+
+    }
+    /**
      * 射线检测接口。
      */
     export interface IRaycast {

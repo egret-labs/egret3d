@@ -255,7 +255,7 @@ namespace egret3d {
         for (const gameObjectOrComponent of gameObjectsOrComponents) {
             _raycastAll(
                 ray,
-                gameObjectOrComponent.constructor === paper.GameObject ? gameObjectOrComponent as paper.GameObject : (gameObjectOrComponent as paper.BaseComponent).gameObject,
+                gameObjectOrComponent instanceof paper.Entity ? gameObjectOrComponent as paper.GameObject : (gameObjectOrComponent as paper.BaseComponent).gameObject,
                 maxDistance, cullingMask, raycastMesh, backfaceCulling, raycastInfos
             );
         }

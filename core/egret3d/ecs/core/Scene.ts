@@ -203,7 +203,7 @@ namespace paper {
         }
 
         public find<TEntity extends IEntity>(name: string): TEntity | null {
-            for (const entity of this._entities) {
+            for (const entity of this._entities) { // TODO root entities.
                 if (entity.name === name) {
                     return entity as TEntity;
                 }
@@ -261,9 +261,9 @@ namespace paper {
 
             if (this._entitiesDirty) {
                 rootEntities.length = 0;
-                
+
                 for (const entity of this._entities) {
-                    if (entity instanceof GameObject && !entity.transform.parent) {
+                    if (!(entity instanceof GameObject) || !entity.transform.parent) {
                         rootEntities.push(entity);
                     }
                 }

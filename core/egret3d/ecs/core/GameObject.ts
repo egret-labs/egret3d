@@ -55,7 +55,7 @@ namespace paper {
         }
 
         protected _setScene(value: Scene | null, dispatchEvent: boolean) {
-            if (this.transform && this.transform.parent && this.transform.parent.gameObject.scene !== value) { // TODO
+            if (this.transform && this.transform.parent && this.transform.parent.entity.scene !== value) { // TODO
                 this.transform.parent = null;
             }
 
@@ -145,26 +145,31 @@ namespace paper {
         }
         /**
          * 获取一个自己或父级中指定的组件实例。
+         * - 仅查找处于激活状态的父级实体。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
-        public getComponentInParent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false) {
+        public getComponentInParent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false): T | null {
             if (this._isDestroyed) {
                 return null;
             }
 
-            let result: T | null = null;
-            let transformParent = this.transform.parent;
+            let component = this.getComponent(componentClass, isExtends);
 
-            while (!result && transformParent) {
-                result = transformParent.gameObject.getComponent(componentClass, isExtends);
-                transformParent = transformParent.parent;
+            if (!component) {
+                let parent = this.transform.parent;
+
+                while (!component && parent && parent.enabled && parent.entity.enabled) {
+                    component = parent.gameObject.getComponentInParent(componentClass, isExtends);
+                    parent = parent.parent;
+                }
             }
 
-            return result;
+            return component;
         }
         /**
          * 获取一个自己或子（孙）级中指定的组件实例。
+         * - 仅查找处于激活状态的子（孙）级实体。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
@@ -175,11 +180,14 @@ namespace paper {
 
             let component = this.getComponent(componentClass, isExtends);
 
-            if (!component) {
+            if (!component && this.transform.enabled) {
                 for (const child of this.transform.children) {
-                    component = child.gameObject.getComponentInChildren(componentClass, isExtends);
-                    if (component) {
-                        break;
+                    if (child.enabled && child.entity.enabled) {
+                        component = child.gameObject.getComponentInChildren(componentClass, isExtends);
+
+                        if (component) {
+                            break;
+                        }
                     }
                 }
             }
@@ -190,8 +198,9 @@ namespace paper {
          * 获取全部自己和子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
+         * @param includeInactive 是否尝试查找处于未激活状态的子（孙）级实体。（默认 `false`）
          */
-        public getComponentsInChildren<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, components: T[] | null = null) {
+        public getComponentsInChildren<T extends IComponent>(componentClass: IComponentClass<T>, isExtends: boolean = false, includeInactive: boolean = false, components: T[] | null = null) {
             components = components || [];
 
             if (this._isDestroyed) {
@@ -219,8 +228,12 @@ namespace paper {
                 }
             }
 
-            for (const child of this.transform.children) {
-                child.gameObject.getComponentsInChildren(componentClass, isExtends, components);
+            if (this.transform.enabled) {
+                for (const child of this.transform.children) {
+                    if (includeInactive || (child.enabled && child.entity.enabled)) {
+                        child.gameObject.getComponentsInChildren(componentClass, isExtends, includeInactive, components);
+                    }
+                }
             }
 
             return components;
@@ -260,9 +273,10 @@ namespace paper {
 
             this.sendMessage(methodName as any, parameter, requireReceiver);
             //
-            const transformParent = this.transform.parent;
-            if (transformParent && transformParent.enabled) {
-                transformParent.gameObject.sendMessage(methodName as any, parameter, requireReceiver);
+            const parent = this.transform.parent;
+
+            if (parent && parent.enabled) {
+                parent.gameObject.sendMessageUpwards(methodName as any, parameter, requireReceiver);
             }
 
             return this;
@@ -314,7 +328,7 @@ namespace paper {
                 let transformParent = this.transform.parent;
 
                 while (transformParent) {
-                    path = transformParent.gameObject.name + "/" + path;
+                    path = transformParent.entity.name + "/" + path;
                     transformParent = transformParent.parent;
                 }
 
@@ -329,9 +343,9 @@ namespace paper {
         public get parent(): this | null {
             return (this.transform && this.transform.parent) ? (this.transform.parent.gameObject as this) : null;
         }
-        public set parent(gameObject: this | null) {
+        public set parent(value: this | null) {
             if (this.transform) {
-                this.transform.parent = gameObject ? gameObject.transform : null;
+                this.transform.parent = value ? value.transform : null;
             }
         }
 

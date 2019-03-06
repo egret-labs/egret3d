@@ -41,10 +41,6 @@ namespace paper.editor {
             ];
         }
 
-        public onAwake() {
-            // GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture);
-        }
-
         public onEnable() {
             const editorCamera = egret3d.Camera.editor;
             editorCamera.gameObject.addComponent(OrbitControls);
