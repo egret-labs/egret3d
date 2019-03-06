@@ -13,6 +13,36 @@ namespace paper.editor {
         public static CAMERA_ICON: egret3d.Texture;
         public static LIGHT_ICON: egret3d.Texture;
 
+        /**专门为编辑器写的API，解决再调用纹理时纹理尚未加载完毕的问题 */
+        public static async initializeForEditor(): Promise<void> {
+            return new Promise<void>((resolve) => {
+                let mapList = [
+                    { target: "CAMERA_ICON", img: _icons.camera },
+                    { target: "LIGHT_ICON", img: _icons.light },
+                ]
+                let index = 0;
+                let loadNext = () => {
+                    if (index < mapList.length) {
+                        const image = new Image();
+                        image.src = _icons.camera;
+                        image.onload = () => {
+                            const texture = egret3d.Texture.create({
+                                source: image
+                            }).setLiner(true).setRepeat(false).setMipmap(false);
+                            (EditorDefaultAsset as any)[mapList[index].target] = texture;
+
+                            index++;
+                            loadNext()
+                        };
+                    }
+                    else {
+                        resolve();
+                    }
+                }
+                loadNext();
+            })
+        }
+
         public initialize() {
             super.initialize();
 
@@ -24,25 +54,29 @@ namespace paper.editor {
             }
 
             {
-                const image = new Image();
-                image.src = _icons.camera;
-                image.onload = () => {
-                    const texture = egret3d.Texture.create({
-                        source: image
-                    }).setLiner(true).setRepeat(false).setMipmap(false);
-                    EditorDefaultAsset.CAMERA_ICON = texture;
-                };
+                if (!EditorDefaultAsset.CAMERA_ICON) {
+                    const image = new Image();
+                    image.src = _icons.camera;
+                    image.onload = () => {
+                        const texture = egret3d.Texture.create({
+                            source: image
+                        }).setLiner(true).setRepeat(false).setMipmap(false);
+                        EditorDefaultAsset.CAMERA_ICON = texture;
+                    };
+                }
             }
 
             {
-                const image = new Image();
-                image.src = _icons.light;
-                image.onload = () => {
-                    const texture = egret3d.Texture.create({
-                        source: image
-                    }).setLiner(true).setRepeat(false).setMipmap(false);
-                    EditorDefaultAsset.LIGHT_ICON = texture;
-                };
+                if (!EditorDefaultAsset.LIGHT_ICON) {
+                    const image = new Image();
+                    image.src = _icons.light;
+                    image.onload = () => {
+                        const texture = egret3d.Texture.create({
+                            source: image
+                        }).setLiner(true).setRepeat(false).setMipmap(false);
+                        EditorDefaultAsset.LIGHT_ICON = texture;
+                    };
+                }
             }
         }
     }

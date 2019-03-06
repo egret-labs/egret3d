@@ -64,6 +64,8 @@ namespace paper.editor {
             this.eventDispatcher = new EventDispatcher();
             //覆盖生成 uuid 的方式。
             paper.createUUID = generateUuid;
+            //处理一些不和谐内容
+            await this.preDo();
             //初始化编辑环境
             this.initEditEnvironment();
             //允许重新加载
@@ -207,6 +209,9 @@ namespace paper.editor {
         }
         public static dispatchEvent(event: BaseEvent): void {
             this.eventDispatcher.dispatchEvent(event);
+        }
+        private static async preDo(){
+            await EditorDefaultAsset.initializeForEditor();
         }
         private static initEditEnvironment() {
             egret3d.runEgret({
