@@ -2,6 +2,7 @@ namespace paper.editor {
     /**
      * @internal
      */
+    @executeMode(PlayerMode.Player | PlayerMode.DebugPlayer)
     export class StatsSystem extends BaseSystem<GameObject> {
         private _fpsIndex: uint = 0;
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);

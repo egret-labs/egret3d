@@ -7408,7 +7408,7 @@ declare namespace egret3d.oimo {
     /**
      * 刚体组件。
      */
-    class Rigidbody extends paper.BaseComponent {
+    class Rigidbody extends paper.BaseComponent implements egret3d.IRigidbody {
         private static readonly _config;
         private static readonly _massData;
         private readonly _linearVelocity;
@@ -7460,6 +7460,10 @@ declare namespace egret3d.oimo {
          * 对该刚体施加角冲量。
          */
         applyAngularImpulse(impulse: Readonly<IVector3>): this;
+        /**
+         *
+         */
+        syncTransform(): this;
         /**
          * 该刚体是否正在休眠。
          */
@@ -7651,8 +7655,8 @@ declare namespace egret3d.oimo {
         onComponentRemoved(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>): void;
         onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
         onTick(deltaTime: number): void;
-        raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        raycast(ray: Ray, distance: number, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
         /**
          *
          */

@@ -12,6 +12,12 @@ namespace examples.oimo {
 
     class StarterSystem extends paper.BaseSystem<paper.GameObject> {
 
+        protected getMatchers() {
+            return [
+                paper.Matcher.create<paper.GameObject>(egret3d.Transform, egret3d.oimo.Rigidbody),
+            ];
+        }
+
         public onEnable() {
             //
             egret3d.Camera.main.entity.addComponent(behaviors.RotateAround);
@@ -62,23 +68,16 @@ namespace examples.oimo {
         public bottom: number = -20.0;
         public area: number = 10.0;
 
-        public onFrameCleanup() {
-            const pos = egret3d.Vector3.create().release();
-            const physicsSystem = paper.Application.systemManager.getSystem(egret3d.oimo.PhysicsSystem)!;
-            let rigidBody = physicsSystem.oimoWorld.getRigidBodyList();
-
-            while (rigidBody !== null) {
-                rigidBody.getPositionTo(pos as any);
-
-                if (pos.y < this.bottom) {
-                    pos.y = this.top;
-                    pos.x = Math.random() * this.area - this.area * 0.5;
-                    pos.z = Math.random() * this.area - this.area * 0.5;
-                    rigidBody.setPosition(pos as any);
-                    rigidBody.setLinearVelocity(egret3d.Vector3.ZERO as any);
+        public onTickCleanup() {
+            for (const entity of this.groups[0].entities) {
+                if (entity.transform.localPosition.y < this.bottom) {
+                    entity.transform.setLocalPosition(
+                        Math.random() * this.area - this.area * 0.5,
+                        this.top,
+                        Math.random() * this.area - this.area * 0.5
+                    );
+                    entity.getComponent(egret3d.oimo.Rigidbody)!.syncTransform().linearVelocity = egret3d.Vector3.ZERO;
                 }
-
-                rigidBody = rigidBody.getNext();
             }
         }
     }

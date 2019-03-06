@@ -8,108 +8,113 @@ namespace egret3d {
     export class CollisionSystem extends paper.BaseSystem<paper.GameObject>{
         private readonly _contactCollecter: ContactCollecter = paper.Application.sceneManager.globalEntity.getComponent(ContactCollecter)!;
 
-        private _sortRaycastInfo(a: RaycastInfo, b: RaycastInfo) {
-            return a.distance - b.distance;
-        }
+        private _raycast(ray: Readonly<Ray>, entity: paper.GameObject, raycastConfig?: RaycastConfig, raycastInfo?: RaycastInfo) {
+            const cullingMask = raycastConfig ? raycastConfig.layerMask || paper.Layer.Default : paper.Layer.Default;
 
-        private _raycast(ray: Readonly<Ray>, entity: paper.GameObject, raycastMesh: boolean = false, raycastInfo?: RaycastInfo) {
-            if (raycastMesh) {
-                if (
-                    entity.renderer && entity.renderer.enabled &&
-                    entity.renderer.raycast(ray, raycastInfo, true)
-                ) {
-                    if (raycastInfo) {
-                        raycastInfo.transform = entity.transform;
-                    }
-
-                    return true;
-                }
-
+            if (
+                (entity.hideFlags & paper.HideFlags.Hide) ||
+                (entity.layer & cullingMask) === 0
+            ) {
                 return false;
             }
-            else {
-                const boxColliders = entity.getComponents(BoxCollider);
 
-                if (boxColliders.length > 0) {
-                    for (const collider of boxColliders) {
-                        if (!collider.enabled) {
-                            continue;
-                        }
+            let maxDistance2 = raycastConfig ? raycastConfig.maxDistance || 0.0 : 0.0;
 
-                        if (raycastInfo) {
-                            this._raycastCollider(ray, collider, raycastInfo);
-                        }
-                        else if (collider.raycast(ray)) {
-                            return true;
-                        }
+            if (maxDistance2 > 0.0) {
+                maxDistance2 *= maxDistance2;
+
+                if (entity.transform.position.getSquaredDistance(ray.origin) >= maxDistance2) {
+                    return false;
+                }
+            }
+
+            if (raycastConfig && raycastConfig.raycastMesh) {
+                if (entity.renderer && entity.renderer.raycast(ray, raycastInfo, true)) {
+                    return true;
+                }
+            }
+
+            const boxColliders = entity.getComponents(BoxCollider);
+
+            if (boxColliders.length > 0) {
+                for (const collider of boxColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
+
+                    if (raycastInfo) {
+                        this._raycastCollider(ray, collider, raycastInfo);
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
                     }
                 }
+            }
 
-                const sphereColliders = entity.getComponents(SphereCollider);
+            const sphereColliders = entity.getComponents(SphereCollider);
 
-                if (sphereColliders.length > 0) {
-                    for (const collider of sphereColliders) {
-                        if (!collider.enabled) {
-                            continue;
-                        }
+            if (sphereColliders.length > 0) {
+                for (const collider of sphereColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
 
-                        if (raycastInfo) {
-                            this._raycastCollider(ray, collider, raycastInfo);
-                        }
-                        else if (collider.raycast(ray)) {
-                            return true;
-                        }
+                    if (raycastInfo) {
+                        this._raycastCollider(ray, collider, raycastInfo);
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
                     }
                 }
+            }
 
-                const cylinderColliders = entity.getComponents(CylinderCollider);
+            const cylinderColliders = entity.getComponents(CylinderCollider);
 
-                if (cylinderColliders.length > 0) {
-                    for (const collider of cylinderColliders) {
-                        if (!collider.enabled) {
-                            continue;
-                        }
+            if (cylinderColliders.length > 0) {
+                for (const collider of cylinderColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
 
-                        if (raycastInfo) {
-                            this._raycastCollider(ray, collider, raycastInfo);
-                        }
-                        else if (collider.raycast(ray)) {
-                            return true;
-                        }
+                    if (raycastInfo) {
+                        this._raycastCollider(ray, collider, raycastInfo);
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
                     }
                 }
+            }
 
-                const capsuleColliders = entity.getComponents(CapsuleCollider);
+            const capsuleColliders = entity.getComponents(CapsuleCollider);
 
-                if (capsuleColliders.length > 0) {
-                    for (const collider of capsuleColliders) {
-                        if (!collider.enabled) {
-                            continue;
-                        }
+            if (capsuleColliders.length > 0) {
+                for (const collider of capsuleColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
 
-                        if (raycastInfo) {
-                            this._raycastCollider(ray, collider, raycastInfo);
-                        }
-                        else if (collider.raycast(ray)) {
-                            return true;
-                        }
+                    if (raycastInfo) {
+                        this._raycastCollider(ray, collider, raycastInfo);
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
                     }
                 }
+            }
 
-                const meshColliders = entity.getComponents(MeshCollider);
+            const meshColliders = entity.getComponents(MeshCollider);
 
-                if (meshColliders.length > 0) {
-                    for (const collider of meshColliders) {
-                        if (!collider.enabled) {
-                            continue;
-                        }
+            if (meshColliders.length > 0) {
+                for (const collider of meshColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
 
-                        if (raycastInfo) {
-                            this._raycastCollider(ray, collider, raycastInfo);
-                        }
-                        else if (collider.raycast(ray)) {
-                            return true;
-                        }
+                    if (raycastInfo) {
+                        this._raycastCollider(ray, collider, raycastInfo);
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
                     }
                 }
             }
@@ -147,63 +152,20 @@ namespace egret3d {
             return false;
         }
 
-        private _raycastChildren(ray: Readonly<Ray>, entity: paper.GameObject,
-            raycastConfig?: RaycastConfig, raycastInfo?: RaycastConfig
-        ) {
-            const raycastxxx = RaycastInfo.create();
-            raycastxxx.backfaceCulling = backfaceCulling;
+        // public raycast(ray: Readonly<Ray>, raycastConfig?: RaycastConfig, raycastInfo?: RaycastInfo): boolean {
 
-            if (entity.layer & cullingMask) {
-                if (raycastMesh) {
-                    if (
-                        entity.renderer && entity.renderer.enabled &&
-                        entity.renderer.raycast(ray, raycastInfo, raycastMesh)
-                    ) {
-                        raycastInfo.transform = entity.transform;
-                    }
-                }
-                else {
-                    this._raycast(ray, entity, false, raycastInfo);
-                }
-            }
+        //     if (raycastInfo) {
+        //         for (const entity of this.groups[1].entities) {
+        //             this._raycast(ray, entity, raycastConfig, raycastInfo);
+        //         }
+        //     }
+        //     else {
 
-            if (raycastInfo.transform) {
-                if (maxDistance <= 0.0 || raycastInfo.distance <= maxDistance) {
-                    raycastInfos.push(raycastInfo);
-                }
-                else {
-                    raycastInfo.transform = null;
-                    raycastInfo.release();
-                }
-            }
-            else {
-                raycastInfo.transform = null;
-                raycastInfo.release();
-            }
-
-            return true;
-        }
-
-        public raycast(ray: Readonly<Ray>, raycastConfig?: RaycastConfig, raycastInfo?: RaycastInfo): boolean;
-        public raycast(ray: Readonly<Ray>, entity: paper.GameObject, raycastMesh?: boolean, raycastInfo?: RaycastInfo): boolean;
-        public raycast(ray: Readonly<Ray>, raycastConfigOrEntity?: RaycastConfig | paper.GameObject, raycastInfoOrRaycastMesh?: RaycastInfo | boolean, raycastInfo?: RaycastInfo): boolean {
-            if (raycastConfigOrEntity && raycastConfigOrEntity instanceof paper.Entity) {
-                return this._raycast(ray, raycastConfigOrEntity, raycastInfoOrRaycastMesh as boolean, raycastInfo);
-            }
-
-            const raycastInfos = [] as RaycastInfo[];
-
-            for (const entity of this.groups[1].entities) {
-                if ((entity.hideFlags & paper.HideFlags.Hide) || !entity.activeInHierarchy) {
-                    return false;
-                }
-                this._raycastChildren(
-                    ray, entity, raycastConfig, raycastInfoOrRaycastMesh as (RaycastConfig | undefined), raycastInfos
-                );
-            }
-
-            raycastInfos.sort(this._sortRaycastInfo);
-        }
+        //         for (const entity of this.groups[1].entities) {
+        //             this._raycast(ray, entity, raycastConfig);
+        //         }
+        //     }
+        // }
 
         protected getMatchers() {
             return [

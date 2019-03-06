@@ -432,7 +432,7 @@ declare namespace paper {
         /**
          * 该实体的激活状态。
          */
-        readonly enabled: boolean;
+        enabled: boolean;
         /**
          * 该实体是否可以被销毁。
          * - 当此值为 `true` 时，将会被添加到全局场景，反之将被添加到激活场景。
@@ -3796,9 +3796,21 @@ declare namespace egret3d {
          * 创建一个射线检测信息实例。
          */
         static create(): RaycastInfo;
+        /**
+         *
+         */
         backfaceCulling: boolean;
+        /**
+         *
+         */
         modifyNormal: boolean;
+        /**
+         *
+         */
         subMeshIndex: int;
+        /**
+         *
+         */
         triangleIndex: int;
         /**
          * 交点到射线起始点的距离。
@@ -3810,7 +3822,7 @@ declare namespace egret3d {
          */
         readonly position: Vector3;
         /**
-         * 相交的 UV 坐标。
+         * 三角形或几何面相交的 UV 坐标。
          */
         readonly coord: Vector2;
         /**
@@ -3818,7 +3830,13 @@ declare namespace egret3d {
          * - 提供法线向量将计算法线。
          */
         normal: Vector3 | null;
+        /**
+         *
+         */
         textureCoordA: Vector2 | null;
+        /**
+         *
+         */
         textureCoordB: Vector2 | null;
         /**
          * 相交的变换组件。（如果有的话）
@@ -5267,12 +5285,14 @@ declare namespace paper {
         uninitialize(): void;
         /**
          * 获取一个自己或父级中指定的组件实例。
+         * - 仅查找处于激活状态的父级实体。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
         getComponentInParent<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean): T | null;
         /**
          * 获取一个自己或子（孙）级中指定的组件实例。
+         * - 仅查找处于激活状态的子（孙）级实体。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
          */
@@ -5281,8 +5301,9 @@ declare namespace paper {
          * 获取全部自己和子（孙）级中指定的组件实例。
          * @param componentClass 组件类。
          * @param isExtends 是否尝试获取全部派生自此组件的实例。
+         * @param includeInactive 是否尝试查找处于未激活状态的子（孙）级实体。（默认 `false`）
          */
-        getComponentsInChildren<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean, components?: T[] | null): T[];
+        getComponentsInChildren<T extends IComponent>(componentClass: IComponentClass<T>, isExtends?: boolean, includeInactive?: boolean, components?: T[] | null): T[];
         /**
          * 向该实体已激活的全部 Behaviour 组件发送消息。
          * @param methodName
@@ -7660,6 +7681,14 @@ declare namespace egret3d {
         Mesh = 6,
     }
     /**
+     *
+     */
+    type RaycastConfig = {
+        raycastMesh?: boolean;
+        layerMask?: paper.Layer;
+        maxDistance?: number;
+    };
+    /**
      * 碰撞体接口。
      * - 为多物理引擎统一接口。
      */
@@ -7709,6 +7738,11 @@ declare namespace egret3d {
      * 网格碰撞组件接口。
      */
     interface IMeshCollider extends ICollider {
+    }
+    /**
+     *
+     */
+    interface IRigidbody {
     }
     /**
      * 射线检测接口。

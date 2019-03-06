@@ -10,7 +10,7 @@ namespace egret3d.oimo {
     /**
      * 刚体组件。
      */
-    export class Rigidbody extends paper.BaseComponent {
+    export class Rigidbody extends paper.BaseComponent implements egret3d.IRigidbody {
         private static readonly _config: OIMO.RigidBodyConfig = new OIMO.RigidBodyConfig();
         private static readonly _massData: OIMO.MassData = new OIMO.MassData();
 
@@ -33,18 +33,12 @@ namespace egret3d.oimo {
             config.linearVelocity = this._linearVelocity as any; // 
             config.angularVelocity = this._angularVelocity as any; // 
 
-            const rigidbody = new OIMO.RigidBody(config);
-            const oimoTransform = PhysicsSystem._helpTransform;
-            const transform = this.gameObject.transform;
-
-            oimoTransform.setPosition(transform.position as any);
-            oimoTransform.setOrientation(transform.rotation as any);
-            rigidbody.setTransform(oimoTransform);
-            rigidbody.userData = this;
+            const oimoRigidbody = new OIMO.RigidBody(config);
+            oimoRigidbody.userData = this;
             // this._updateMass(rigidbody); // TODO update mesh and type.
-            rigidbody.setGravityScale(this.gravityScale);
+            oimoRigidbody.setGravityScale(this.gravityScale);
 
-            return rigidbody;
+            return oimoRigidbody;
         }
         /**
          * @internal
@@ -170,6 +164,25 @@ namespace egret3d.oimo {
         public applyAngularImpulse(impulse: Readonly<IVector3>): this {
             if (this._checkRigidbody()) {
                 this._oimoRigidbody.applyAngularImpulse(impulse as any);
+            }
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public syncTransform(transform?: Transform): this {
+            const oimoRigidbody = this._oimoRigidbody;
+
+            if (oimoRigidbody) {
+                const oimoTransform = PhysicsSystem._helpTransform;
+                if (!transform) {
+                    transform = this.gameObject.transform;
+                }
+
+                oimoTransform.setPosition(transform.position as any);
+                oimoTransform.setOrientation(transform.rotation as any);
+                oimoRigidbody.setTransform(oimoTransform);
             }
 
             return this;
@@ -327,6 +340,7 @@ namespace egret3d.oimo {
         public get oimoRigidbody(): OIMO.RigidBody {
             if (!this._oimoRigidbody) {
                 this._oimoRigidbody = this._createRigidbody();
+                this.syncTransform();
             }
 
             return this._oimoRigidbody;

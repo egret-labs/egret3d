@@ -17,7 +17,7 @@ namespace egret3d.oimo {
 
         protected getMatchers() {
             return [
-                paper.Matcher.create<paper.GameObject>(Rigidbody).extraOf(
+                paper.Matcher.create<paper.GameObject>(egret3d.Transform, Rigidbody).extraOf(
                     BoxCollider, SphereCollider,
                     SphericalJoint, HingeJoint, ConeTwistJoint,
                 ),
@@ -161,8 +161,8 @@ namespace egret3d.oimo {
                         if (oimoRigidbody.isSleeping()) {
                         }
                         else {
-                            const position = transform.getPosition();
-                            const quaternion = transform.getRotation();
+                            const position = transform.position;
+                            const quaternion = transform.rotation;
                             oimoTransform.setPosition(position as any);
                             oimoTransform.setOrientation(quaternion as any);
                             oimoRigidbody.setTransform(oimoTransform);
@@ -212,9 +212,9 @@ namespace egret3d.oimo {
             }
         }
 
-        public raycast(ray: Ray, distance: number, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        public raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        public raycast(rayOrFrom: Ray | Readonly<IVector3>, distanceOrTo: number | Readonly<IVector3>, mask?: paper.CullingMask, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Ray, distance: number, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        public raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        public raycast(rayOrFrom: Ray | Readonly<IVector3>, distanceOrTo: number | Readonly<IVector3>, mask?: paper.Layer, raycastInfo?: RaycastInfo) {
             const rayCastClosest = this._rayCastClosest;
             rayCastClosest.clear(); // TODO mask.
 

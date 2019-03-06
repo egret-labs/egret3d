@@ -41574,16 +41574,11 @@ var egret3d;
                 config.angularDamping = this.angularDamping;
                 config.linearVelocity = this._linearVelocity; // 
                 config.angularVelocity = this._angularVelocity; // 
-                var rigidbody = new OIMO.RigidBody(config);
-                var oimoTransform = oimo.PhysicsSystem._helpTransform;
-                var transform = this.gameObject.transform;
-                oimoTransform.setPosition(transform.position);
-                oimoTransform.setOrientation(transform.rotation);
-                rigidbody.setTransform(oimoTransform);
-                rigidbody.userData = this;
+                var oimoRigidbody = new OIMO.RigidBody(config);
+                oimoRigidbody.userData = this;
                 // this._updateMass(rigidbody); // TODO update mesh and type.
-                rigidbody.setGravityScale(this.gravityScale);
-                return rigidbody;
+                oimoRigidbody.setGravityScale(this.gravityScale);
+                return oimoRigidbody;
             };
             /**
              * @internal
@@ -41697,6 +41692,20 @@ var egret3d;
             Rigidbody.prototype.applyAngularImpulse = function (impulse) {
                 if (this._checkRigidbody()) {
                     this._oimoRigidbody.applyAngularImpulse(impulse);
+                }
+                return this;
+            };
+            /**
+             *
+             */
+            Rigidbody.prototype.syncTransform = function () {
+                var oimoRigidbody = this._oimoRigidbody;
+                if (oimoRigidbody) {
+                    var oimoTransform = oimo.PhysicsSystem._helpTransform;
+                    var transform = this.gameObject.transform;
+                    oimoTransform.setPosition(transform.position);
+                    oimoTransform.setOrientation(transform.rotation);
+                    oimoRigidbody.setTransform(oimoTransform);
                 }
                 return this;
             };
@@ -41869,6 +41878,7 @@ var egret3d;
                 get: function () {
                     if (!this._oimoRigidbody) {
                         this._oimoRigidbody = this._createRigidbody();
+                        this.syncTransform();
                     }
                     return this._oimoRigidbody;
                 },
@@ -41895,7 +41905,7 @@ var egret3d;
             return Rigidbody;
         }(paper.BaseComponent));
         oimo.Rigidbody = Rigidbody;
-        __reflect(Rigidbody.prototype, "egret3d.oimo.Rigidbody");
+        __reflect(Rigidbody.prototype, "egret3d.oimo.Rigidbody", ["egret3d.IRigidbody"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -42294,13 +42304,13 @@ var egret3d;
                 _this._gravity = egret3d.Vector3.create(0.0, -9.80665, 0.0);
                 _this._rayCastClosest = new OIMO.RayCastClosest();
                 _this._contactCallback = new OIMO.ContactCallback();
-                _this._contactColliders = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
+                _this._contactColliders = paper.Application.sceneManager.globalEntity.getOrAddComponent(egret3d.ContactCollecter);
                 _this._oimoWorld = null;
                 return _this;
             }
             PhysicsSystem.prototype.getMatchers = function () {
                 return [
-                    paper.Matcher.create(oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint),
+                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint),
                 ];
             };
             PhysicsSystem.prototype.onAwake = function () {
@@ -42423,8 +42433,8 @@ var egret3d;
                             if (oimoRigidbody.isSleeping()) {
                             }
                             else {
-                                var position = transform.getPosition();
-                                var quaternion = transform.getRotation();
+                                var position = transform.position;
+                                var quaternion = transform.rotation;
                                 oimoTransform.setPosition(position);
                                 oimoTransform.setOrientation(quaternion);
                                 oimoRigidbody.setTransform(oimoTransform);
