@@ -3,7 +3,7 @@ namespace paper.editor {
      * 
      */
     @singleton
-    export class ModelComponent extends BaseComponent {
+    export class ModelComponent extends Component {
         /**
          * 选中的场景。
          */

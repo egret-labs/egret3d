@@ -4,7 +4,7 @@ namespace paper.editor {
      */
     export class StatsSystem extends BaseSystem<GameObject> {
         private _fpsIndex: uint = 0;
-        private readonly _guiComponent: GUIComponent = GameObject.globalGameObject.getOrAddComponent(GUIComponent);
+        private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
         private readonly _fpsShowQueue: boolean[] = [true, false, false, true];
 
         private _updateFPSShowState() {

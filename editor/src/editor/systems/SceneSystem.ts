@@ -4,7 +4,7 @@ namespace paper.editor {
      */
     @executeMode(PlayerMode.DebugPlayer | PlayerMode.Editor)
     export class SceneSystem extends BaseSystem<GameObject> {
-        private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
+        private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
 
         private readonly _keyEscape: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.Escape);
         private readonly _keyDelete: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.Delete);

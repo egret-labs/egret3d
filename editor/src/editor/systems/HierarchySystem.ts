@@ -10,7 +10,7 @@ namespace paper.editor {
         private readonly _controlLeft: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlLeft);
         private readonly _controlRight: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlRight);
 
-        private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
+        private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
         private readonly _sceneOrEntityBuffer: (IScene | IEntity | null)[] = [];
         private readonly _selectedItems: dat.GUI[] = [];

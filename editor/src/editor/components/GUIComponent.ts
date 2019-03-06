@@ -24,15 +24,15 @@ namespace paper.editor {
      * 
      */
     @singleton
-    export class GUIComponent extends BaseComponent {
+    export class GUIComponent extends Component {
 
         public showStates: ShowState = ShowState.None;
         public quaryValues: QuaryValues = {};
-        public readonly hierarchy: dat.GUI = new dat.GUI({ closeOnTop: true, width: 300 });
-        public readonly inspector: dat.GUI = new dat.GUI({ closeOnTop: true, width: 300 });
-        public readonly stats: Stats = new Stats();
-        public readonly renderPanel: Stats.Panel = this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
-        public readonly drawCallPanel: Stats.Panel = this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
+        public readonly hierarchy: dat.GUI;
+        public readonly inspector: dat.GUI;
+        public readonly stats: Stats;
+        public readonly renderPanel: Stats.Panel;
+        public readonly drawCallPanel: Stats.Panel;
         /**
          * @internal
          */
@@ -44,6 +44,14 @@ namespace paper.editor {
 
         public initialize() {
             super.initialize();
+
+            if (Application.playerMode !== PlayerMode.Editor) {
+                (this.hierarchy as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
+                (this.inspector as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
+                (this.stats as Stats) = new Stats();
+                (this.renderPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
+                (this.drawCallPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
+            }
 
             this.stats.showPanel(0);
         }

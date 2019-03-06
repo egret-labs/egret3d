@@ -5,7 +5,7 @@ namespace paper.editor {
      */
     @executeMode(PlayerMode.Player | PlayerMode.DebugPlayer)
     export class InspectorSystem extends BaseSystem<GameObject> {
-        private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
+        private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
 
         private _onComponentCreated([entity, component]: [IEntity, IComponent]) {

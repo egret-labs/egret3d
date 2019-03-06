@@ -504,7 +504,9 @@ namespace egret3d.webgl {
 
         private _updateAttributes(program: WebGLProgramBinder, mesh: Mesh, subMeshIndex: number) {
             const webgl = WebGLRenderState.webgl!;
+            const renderState = this._renderState;
             const attributes = mesh.glTFMesh.primitives[subMeshIndex].attributes;
+            let attributeCount = 0;
             //
             if ((mesh as WebGLMesh).vbo) {
                 webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, (mesh as WebGLMesh).vbo);
@@ -531,6 +533,16 @@ namespace egret3d.webgl {
                 else {
                     webgl.disableVertexAttribArray(location);
                 }
+
+                attributeCount++;
+            }
+            //
+            if (attributeCount !== renderState.caches.attributeCount) {
+                for (let i = attributeCount, l = renderState.caches.attributeCount; i < l; ++i) {
+                    webgl.disableVertexAttribArray(i);
+                }
+
+                renderState.caches.attributeCount = attributeCount;
             }
             // ibo.
             const ibo = (mesh as WebGLMesh).ibos[subMeshIndex];

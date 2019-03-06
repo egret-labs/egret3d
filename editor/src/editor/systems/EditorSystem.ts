@@ -8,10 +8,10 @@ namespace paper.editor {
      */
     export class EditorSystem extends BaseSystem<GameObject> {
         private _isMobile: boolean = false;
-        private readonly _guiComponent: GUIComponent | null = Application.playerMode === PlayerMode.Editor ? null : GameObject.globalGameObject.getOrAddComponent(GUIComponent);
+        private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.addComponent(GUIComponent);
 
         public onAwake() {
-            GameObject.globalGameObject.getOrAddComponent(EditorDefaultAsset); // TODO
+            Application.sceneManager.globalEntity.getOrAddComponent(EditorDefaultAsset); // TODO
             //
             if (Application.playerMode === PlayerMode.Editor) {
             }
