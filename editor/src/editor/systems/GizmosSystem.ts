@@ -515,13 +515,15 @@ namespace paper.editor {
                 }
             }
 
-            for (const entity of groups[GroupIndex.OimoSelectedBoxColliders].entities) {
-                for (const component of entity.getComponents(egret3d.oimo.BoxCollider)) {
-                    if (!component.enabled) {
-                        continue;
-                    }
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoSelectedBoxColliders].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.BoxCollider)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
 
-                    this._updateBoxColliderDrawer(entity, component, drawerIndex++, false);
+                        this._updateBoxColliderDrawer(entity, component, drawerIndex++, false);
+                    }
                 }
             }
 
@@ -542,13 +544,15 @@ namespace paper.editor {
                 }
             }
 
-            for (const entity of groups[GroupIndex.OimoSelectedSphereColliders].entities) {
-                for (const component of entity.getComponents(egret3d.oimo.SphereCollider)) {
-                    if (!component.enabled) {
-                        continue;
-                    }
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoSelectedSphereColliders].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.SphereCollider)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
 
-                    this._updateSphereColliderDrawer(entity, component, drawerIndex++, false);
+                        this._updateSphereColliderDrawer(entity, component, drawerIndex++, false);
+                    }
                 }
             }
 
@@ -569,23 +573,25 @@ namespace paper.editor {
                 }
             }
 
-            for (const entity of groups[GroupIndex.OimoSelectedCylinderColliders].entities) {
-                for (const component of entity.getComponents(egret3d.oimo.CylinderCollider)) {
-                    if (!component.enabled) {
-                        continue;
-                    }
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoSelectedCylinderColliders].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.CylinderCollider)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
 
-                    this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
+                        this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
+                    }
                 }
-            }
 
-            for (const entity of groups[GroupIndex.OimoSelectedConeColliders].entities) {
-                for (const component of entity.getComponents(egret3d.oimo.ConeCollider)) {
-                    if (!component.enabled) {
-                        continue;
+                for (const entity of groups[GroupIndex.OimoSelectedConeColliders].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.ConeCollider)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
+
+                        this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
                     }
-
-                    this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
                 }
             }
 
@@ -606,13 +612,15 @@ namespace paper.editor {
                 }
             }
 
-            for (const entity of groups[GroupIndex.OimoSelectedCapsuleColliders].entities) {
-                for (const component of entity.getComponents(egret3d.oimo.CapsuleCollider)) {
-                    if (!component.enabled) {
-                        continue;
-                    }
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoSelectedCapsuleColliders].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.CapsuleCollider)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
 
-                    this._updateCapsuleColliderDrawer(entity, component, drawerIndex++, false);
+                        this._updateCapsuleColliderDrawer(entity, component, drawerIndex++, false);
+                    }
                 }
             }
 
@@ -622,7 +630,7 @@ namespace paper.editor {
         }
 
         protected getMatchers() {
-            return [
+            const matchers = [
                 Matcher.create<GameObject>(false, egret3d.Transform, GizmosContainerFlag),
                 Matcher.create<GameObject>(false, egret3d.Transform, TouchContainerFlag),
                 Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag), // Last selected transform
@@ -643,13 +651,19 @@ namespace paper.editor {
                 Matcher.create<GameObject>(egret3d.Transform, egret3d.SphereCollider).anyOf(HoveredFlag, SelectedFlag), // Selected sphere colliders
                 Matcher.create<GameObject>(egret3d.Transform, egret3d.CylinderCollider).anyOf(HoveredFlag, SelectedFlag), // Selected cylinder colliders
                 Matcher.create<GameObject>(egret3d.Transform, egret3d.CapsuleCollider).anyOf(HoveredFlag, SelectedFlag), // Selected capsule colliders
-
-                Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.BoxCollider).anyOf(HoveredFlag, SelectedFlag),
-                Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.SphereCollider).anyOf(HoveredFlag, SelectedFlag),
-                Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.CylinderCollider).anyOf(HoveredFlag, SelectedFlag),
-                Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.ConeCollider).anyOf(HoveredFlag, SelectedFlag),
-                Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.CapsuleCollider).anyOf(HoveredFlag, SelectedFlag),
             ];
+
+            if (egret3d.oimo) {
+                matchers.push(
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.BoxCollider).anyOf(HoveredFlag, SelectedFlag),
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.SphereCollider).anyOf(HoveredFlag, SelectedFlag),
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.CylinderCollider).anyOf(HoveredFlag, SelectedFlag),
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.ConeCollider).anyOf(HoveredFlag, SelectedFlag),
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.CapsuleCollider).anyOf(HoveredFlag, SelectedFlag),
+                );
+            }
+
+            return matchers;
         }
 
         public onEnable() {

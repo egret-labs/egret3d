@@ -147,17 +147,11 @@ namespace egret3d {
             return false;
         }
 
-        private _raycastChildren(
-            ray: Readonly<Ray>, entity: paper.GameObject,
-            maxDistance: number, cullingMask: paper.Layer, raycastMesh: boolean, backfaceCulling: boolean,
-            raycastInfos: RaycastInfo[]
+        private _raycastChildren(ray: Readonly<Ray>, entity: paper.GameObject,
+            raycastConfig?: RaycastConfig, raycastInfo?: RaycastConfig
         ) {
-            if ((entity.hideFlags & paper.HideFlags.Hide) || !entity.activeInHierarchy) {
-                return false;
-            }
-
-            const raycastInfo = RaycastInfo.create();
-            raycastInfo.backfaceCulling = backfaceCulling;
+            const raycastxxx = RaycastInfo.create();
+            raycastxxx.backfaceCulling = backfaceCulling;
 
             if (entity.layer & cullingMask) {
                 if (raycastMesh) {
@@ -187,37 +181,29 @@ namespace egret3d {
                 raycastInfo.release();
             }
 
-            if (!raycastInfo.transform) {
-                for (const child of entity.transform.children) {
-                    this._raycastChildren(ray, child.gameObject, maxDistance, cullingMask, raycastMesh, backfaceCulling, raycastInfos);
-                }
-            }
-
             return true;
         }
 
-        // public raycast(ray: Readonly<Ray>, raycastMesh?: boolean, raycastInfo?: RaycastInfo): boolean;
-        // public raycast(ray: Readonly<Ray>, entity: paper.GameObject, raycastMesh?: boolean, raycastInfo?: RaycastInfo): boolean;
-        // public raycast(ray: Readonly<Ray>, raycastMeshOrEntity?: boolean | paper.GameObject, raycastInfoOrRaycastMesh?: RaycastInfo | boolean, raycastInfo?: RaycastInfo): boolean {
-        //     if (raycastMeshOrEntity && raycastMeshOrEntity instanceof paper.Entity) {
-        //         return this._raycast(ray, raycastMeshOrEntity, raycastInfoOrRaycastMesh as boolean, raycastInfo);
-        //     }
+        public raycast(ray: Readonly<Ray>, raycastConfig?: RaycastConfig, raycastInfo?: RaycastInfo): boolean;
+        public raycast(ray: Readonly<Ray>, entity: paper.GameObject, raycastMesh?: boolean, raycastInfo?: RaycastInfo): boolean;
+        public raycast(ray: Readonly<Ray>, raycastConfigOrEntity?: RaycastConfig | paper.GameObject, raycastInfoOrRaycastMesh?: RaycastInfo | boolean, raycastInfo?: RaycastInfo): boolean {
+            if (raycastConfigOrEntity && raycastConfigOrEntity instanceof paper.Entity) {
+                return this._raycast(ray, raycastConfigOrEntity, raycastInfoOrRaycastMesh as boolean, raycastInfo);
+            }
 
-        //     const raycastInfos = [] as RaycastInfo[];
+            const raycastInfos = [] as RaycastInfo[];
 
-        //     if (raycastMeshOrEntity as boolean) {
-        //         for (const entity of this.groups[1].entities) {
-        //             this._raycastChildren(
-        //                 ray, entity, maxDistance, cullingMask, raycastMesh, raycastInfos
-        //             );
-        //         }
+            for (const entity of this.groups[1].entities) {
+                if ((entity.hideFlags & paper.HideFlags.Hide) || !entity.activeInHierarchy) {
+                    return false;
+                }
+                this._raycastChildren(
+                    ray, entity, raycastConfig, raycastInfoOrRaycastMesh as (RaycastConfig | undefined), raycastInfos
+                );
+            }
 
-        //         raycastInfos.sort(this._sortRaycastInfo);
-        //     }
-        //     else {
-
-        //     }
-        // }
+            raycastInfos.sort(this._sortRaycastInfo);
+        }
 
         protected getMatchers() {
             return [

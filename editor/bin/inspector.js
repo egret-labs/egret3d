@@ -5966,14 +5966,16 @@ var paper;
                         this._updateBoxColliderDrawer(entity, component, drawerIndex++, true);
                     }
                 }
-                for (var _d = 0, _e = groups[15 /* OimoSelectedBoxColliders */].entities; _d < _e.length; _d++) {
-                    var entity = _e[_d];
-                    for (var _f = 0, _g = entity.getComponents(egret3d.oimo.BoxCollider); _f < _g.length; _f++) {
-                        var component = _g[_f];
-                        if (!component.enabled) {
-                            continue;
+                if (egret3d.oimo) {
+                    for (var _d = 0, _e = groups[15 /* OimoSelectedBoxColliders */].entities; _d < _e.length; _d++) {
+                        var entity = _e[_d];
+                        for (var _f = 0, _g = entity.getComponents(egret3d.oimo.BoxCollider); _f < _g.length; _f++) {
+                            var component = _g[_f];
+                            if (!component.enabled) {
+                                continue;
+                            }
+                            this._updateBoxColliderDrawer(entity, component, drawerIndex++, false);
                         }
-                        this._updateBoxColliderDrawer(entity, component, drawerIndex++, false);
                     }
                 }
                 for (var i = drawerIndex, l = boxColliderDrawer.length; i < l; ++i) {
@@ -5991,14 +5993,16 @@ var paper;
                         this._updateSphereColliderDrawer(entity, component, drawerIndex++, true);
                     }
                 }
-                for (var _m = 0, _o = groups[16 /* OimoSelectedSphereColliders */].entities; _m < _o.length; _m++) {
-                    var entity = _o[_m];
-                    for (var _p = 0, _q = entity.getComponents(egret3d.oimo.SphereCollider); _p < _q.length; _p++) {
-                        var component = _q[_p];
-                        if (!component.enabled) {
-                            continue;
+                if (egret3d.oimo) {
+                    for (var _m = 0, _o = groups[16 /* OimoSelectedSphereColliders */].entities; _m < _o.length; _m++) {
+                        var entity = _o[_m];
+                        for (var _p = 0, _q = entity.getComponents(egret3d.oimo.SphereCollider); _p < _q.length; _p++) {
+                            var component = _q[_p];
+                            if (!component.enabled) {
+                                continue;
+                            }
+                            this._updateSphereColliderDrawer(entity, component, drawerIndex++, false);
                         }
-                        this._updateSphereColliderDrawer(entity, component, drawerIndex++, false);
                     }
                 }
                 for (var i = drawerIndex, l = sphereColliderDrawer.length; i < l; ++i) {
@@ -6016,24 +6020,26 @@ var paper;
                         this._updateCylinderColliderDrawer(entity, component, drawerIndex++, true);
                     }
                 }
-                for (var _v = 0, _w = groups[17 /* OimoSelectedCylinderColliders */].entities; _v < _w.length; _v++) {
-                    var entity = _w[_v];
-                    for (var _x = 0, _y = entity.getComponents(egret3d.oimo.CylinderCollider); _x < _y.length; _x++) {
-                        var component = _y[_x];
-                        if (!component.enabled) {
-                            continue;
+                if (egret3d.oimo) {
+                    for (var _v = 0, _w = groups[17 /* OimoSelectedCylinderColliders */].entities; _v < _w.length; _v++) {
+                        var entity = _w[_v];
+                        for (var _x = 0, _y = entity.getComponents(egret3d.oimo.CylinderCollider); _x < _y.length; _x++) {
+                            var component = _y[_x];
+                            if (!component.enabled) {
+                                continue;
+                            }
+                            this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
                         }
-                        this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
                     }
-                }
-                for (var _z = 0, _0 = groups[18 /* OimoSelectedConeColliders */].entities; _z < _0.length; _z++) {
-                    var entity = _0[_z];
-                    for (var _1 = 0, _2 = entity.getComponents(egret3d.oimo.ConeCollider); _1 < _2.length; _1++) {
-                        var component = _2[_1];
-                        if (!component.enabled) {
-                            continue;
+                    for (var _z = 0, _0 = groups[18 /* OimoSelectedConeColliders */].entities; _z < _0.length; _z++) {
+                        var entity = _0[_z];
+                        for (var _1 = 0, _2 = entity.getComponents(egret3d.oimo.ConeCollider); _1 < _2.length; _1++) {
+                            var component = _2[_1];
+                            if (!component.enabled) {
+                                continue;
+                            }
+                            this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
                         }
-                        this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
                     }
                 }
                 for (var i = drawerIndex, l = cylinderColliderDrawer.length; i < l; ++i) {
@@ -6051,14 +6057,16 @@ var paper;
                         this._updateCapsuleColliderDrawer(entity, component, drawerIndex++, true);
                     }
                 }
-                for (var _7 = 0, _8 = groups[19 /* OimoSelectedCapsuleColliders */].entities; _7 < _8.length; _7++) {
-                    var entity = _8[_7];
-                    for (var _9 = 0, _10 = entity.getComponents(egret3d.oimo.CapsuleCollider); _9 < _10.length; _9++) {
-                        var component = _10[_9];
-                        if (!component.enabled) {
-                            continue;
+                if (egret3d.oimo) {
+                    for (var _7 = 0, _8 = groups[19 /* OimoSelectedCapsuleColliders */].entities; _7 < _8.length; _7++) {
+                        var entity = _8[_7];
+                        for (var _9 = 0, _10 = entity.getComponents(egret3d.oimo.CapsuleCollider); _9 < _10.length; _9++) {
+                            var component = _10[_9];
+                            if (!component.enabled) {
+                                continue;
+                            }
+                            this._updateCapsuleColliderDrawer(entity, component, drawerIndex++, false);
                         }
-                        this._updateCapsuleColliderDrawer(entity, component, drawerIndex++, false);
                     }
                 }
                 for (var i = drawerIndex, l = capsuleColliderDrawer.length; i < l; ++i) {
@@ -6066,7 +6074,7 @@ var paper;
                 }
             };
             GizmosSystem.prototype.getMatchers = function () {
-                return [
+                var matchers = [
                     paper.Matcher.create(false, egret3d.Transform, editor.GizmosContainerFlag),
                     paper.Matcher.create(false, egret3d.Transform, editor.TouchContainerFlag),
                     paper.Matcher.create(egret3d.Transform, editor.LastSelectedFlag),
@@ -6085,12 +6093,11 @@ var paper;
                     paper.Matcher.create(egret3d.Transform, egret3d.SphereCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
                     paper.Matcher.create(egret3d.Transform, egret3d.CylinderCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
                     paper.Matcher.create(egret3d.Transform, egret3d.CapsuleCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
-                    paper.Matcher.create(egret3d.Transform, egret3d.oimo.BoxCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
-                    paper.Matcher.create(egret3d.Transform, egret3d.oimo.SphereCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
-                    paper.Matcher.create(egret3d.Transform, egret3d.oimo.CylinderCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
-                    paper.Matcher.create(egret3d.Transform, egret3d.oimo.ConeCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
-                    paper.Matcher.create(egret3d.Transform, egret3d.oimo.CapsuleCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
                 ];
+                if (egret3d.oimo) {
+                    matchers.push(paper.Matcher.create(egret3d.Transform, egret3d.oimo.BoxCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.SphereCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CylinderCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.ConeCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CapsuleCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag));
+                }
+                return matchers;
             };
             GizmosSystem.prototype.onEnable = function () {
                 this._gridA = this._createGrid("Grid A");
