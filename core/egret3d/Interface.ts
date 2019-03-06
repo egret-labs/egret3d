@@ -106,14 +106,18 @@ namespace egret3d {
         EmissiveIntensity = "emissiveIntensity",
         FlipEnvMap = "flipEnvMap",
         MaxMipLevel = "maxMipLevel",
+
+        Rotation = "rotation",
+        Scale2D = "scale2D",
+        Center = "center",
     }
     /**
      * Shader宏定义排序。
      */
     export const enum ShaderDefineOrder {
         GammaFactor = 1,
-        DecodingFun  = 2,
-        EncodingFun  = 3,
+        DecodingFun = 2,
+        EncodingFun = 3,
     }
     /**
      * 
@@ -339,6 +343,8 @@ namespace egret3d {
         "directionalShadowMap[0]": gltf.UniformSemantics._DIRECTIONSHADOWMAP,
         "pointShadowMap[0]": gltf.UniformSemantics._POINTSHADOWMAP,
         "spotShadowMap[0]": gltf.UniformSemantics._SPOTSHADOWMAP,
+        "rotation": gltf.UniformSemantics._ROTATION,
+        "scale2D": gltf.UniformSemantics._SCALE2D,
     };
 
     /**

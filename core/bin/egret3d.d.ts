@@ -1505,6 +1505,8 @@ declare namespace gltf {
         _FOG_DENSITY = "_FOG_DENSITY",
         _FOG_NEAR = "_FOG_NEAR",
         _FOG_FAR = "_FOG_FAR",
+        _ROTATION = "_ROTATION",
+        _SCALE2D = "_SCALE2D",
     }
     const enum AccessorType {
         SCALAR = "SCALAR",
@@ -5436,6 +5438,9 @@ declare namespace egret3d {
         EmissiveIntensity = "emissiveIntensity",
         FlipEnvMap = "flipEnvMap",
         MaxMipLevel = "maxMipLevel",
+        Rotation = "rotation",
+        Scale2D = "scale2D",
+        Center = "center",
     }
     /**
      * Shader宏定义排序。
@@ -6043,6 +6048,7 @@ declare namespace egret3d {
         static TRIANGLE: Mesh;
         static QUAD: Mesh;
         static QUAD_PARTICLE: Mesh;
+        static SPRITE: Mesh;
         static PLANE: Mesh;
         static CUBE: Mesh;
         static PYRAMID: Mesh;
@@ -10919,11 +10925,9 @@ declare namespace egret3d.ShaderLib {
                     "name": string;
                     "attributes": {};
                     "uniforms": {
-                        "rotation": {
-                            "type": number;
-                        };
                         "center": {
                             "type": number;
+                            "value": number[];
                         };
                         "uvTransform": {
                             "type": number;

@@ -316,6 +316,15 @@ namespace egret3d.webgl {
                         webgl.uniform4fv(location, renderState.caches.clockBuffer);
                         break;
 
+                    case gltf.UniformSemantics._ROTATION:
+                        webgl.uniform1f(location, renderer!.transform.euler.z);
+                        break;
+
+                    case gltf.UniformSemantics._SCALE2D:
+                        const scale = renderer!.transform.scale;
+                        webgl.uniform2f(location, scale.x, scale.y);
+                        break;
+
                     case gltf.UniformSemantics._LIGHTMAPTEX:
                         const lightmapIndex = (renderer as MeshRenderer).lightmapIndex;
                         if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {

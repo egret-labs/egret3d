@@ -5675,7 +5675,7 @@ var paper;
                 return gameObject;
             };
             EditorMeshHelper.createLine = function (name, color, opacity) {
-                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone());
+                var gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.MESH_LAMBERT.clone());
                 gameObject.getComponent(egret3d.MeshRenderer).material.setColor(color).setBlend(2 /* Normal */, 3000 /* Blend */, opacity);
                 return gameObject;
             };
