@@ -31,7 +31,6 @@ namespace paper {
             super._destroy();
 
             this._children.length > 0 && (this._children.length = 0);
-            this._parent = null;
         }
         /**
          * @internal
@@ -42,6 +41,7 @@ namespace paper {
             if (children.indexOf(child) < 0) {
                 children.push(child);
                 (child.entity.scene as Scene)._rootEntitiesDirty = true;
+                child._parent = this;
 
                 return true;
             }
@@ -58,6 +58,7 @@ namespace paper {
             if (index >= 0) {
                 children.splice(index, 1);
                 (child.entity.scene as Scene)._rootEntitiesDirty = true;
+                child._parent = null;
 
                 return true;
             }
@@ -119,7 +120,6 @@ namespace paper {
             }
 
             this._globalEnabledDirty = true;
-            this._parent = parent;
 
             const currentEnabled = this.isActiveAndEnabled;
 
