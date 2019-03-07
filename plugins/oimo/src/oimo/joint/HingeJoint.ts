@@ -23,6 +23,10 @@ namespace egret3d.oimo {
         @paper.serializedField
         private readonly _axis: Vector3 = Vector3.UP.clone();
 
+        protected readonly _values: Float32Array = new Float32Array([
+            0, 0,
+        ]);
+
         protected _createJoint() {
             if (!this._connectedBody) {
                 // TODO

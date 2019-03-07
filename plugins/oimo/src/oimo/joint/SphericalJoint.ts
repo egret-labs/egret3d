@@ -14,6 +14,10 @@ namespace egret3d.oimo {
         @paper.serializedField
         public readonly springDamper: SpringDamper = SpringDamper.create();
 
+        protected readonly _values: Float32Array = new Float32Array([
+            0, 0,
+        ]);
+
         protected _createJoint() {
             if (!this._connectedBody) {
                 // TODO

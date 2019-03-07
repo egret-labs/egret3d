@@ -6,6 +6,7 @@ namespace examples.oimo {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
             //
+            paper.Application.systemManager.register(TouchJointSystem, paper.Application.gameObjectContext);
             paper.Application.systemManager.register(StarterSystem, paper.Application.gameObjectContext);
         }
     }

@@ -1,60 +1,30 @@
 namespace egret3d {
 
-    const _helpVector3 = Vector3.create();
-    const _helpRaycastInfo = RaycastInfo.create();
+    let _helpVector3: Vector3 | null = null;
+    let _helpRaycastInfo: RaycastInfo | null = null;
     /**
-     * @internal
+     * 碰撞系统。
      */
     export class CollisionSystem extends paper.BaseSystem<paper.GameObject>{
         private readonly _contactCollecter: ContactCollecter = paper.Application.sceneManager.globalEntity.getComponent(ContactCollecter)!;
 
-        private _raycast(ray: Readonly<Ray>, entity: paper.GameObject, raycastConfig: RaycastConfig | null, raycastInfo: RaycastInfo | null) {
-            const cullingMask = raycastConfig !== null ? raycastConfig.layerMask || paper.Layer.Default : paper.Layer.Default;
-
+        private _raycast(ray: Readonly<Ray>, entity: paper.GameObject, cullingMask: paper.Layer = paper.Layer.Default, maxDistance: float = 0.0, raycastInfo: RaycastInfo | null) {
             if (
-                (entity.hideFlags & paper.HideFlags.Hide) ||
+                (entity.hideFlags & paper.HideFlags.Hide) !== 0 ||
                 (entity.layer & cullingMask) === 0
             ) {
                 return false;
             }
 
-            let maxDistance2 = raycastConfig ? raycastConfig.maxDistance || 0.0 : 0.0;
+            if (maxDistance > 0.0) {
+                maxDistance *= maxDistance;
 
-            if (maxDistance2 > 0.0) {
-                maxDistance2 *= maxDistance2;
-
-                if (entity.transform.position.getSquaredDistance(ray.origin) >= maxDistance2) {
+                if (entity.transform.position.getSquaredDistance(ray.origin) >= maxDistance) {
                     return false;
                 }
             }
 
             let isHit = false;
-
-            if (raycastConfig && raycastConfig.raycastMesh) {
-                if (entity.renderer !== null) {
-                    if (raycastInfo !== null) {
-                        const helpRaycastInfo = _helpRaycastInfo;
-                        helpRaycastInfo.clear();
-                        helpRaycastInfo.backfaceCulling = raycastInfo.backfaceCulling;
-                        helpRaycastInfo.modifyNormal = raycastInfo.modifyNormal;
-                        helpRaycastInfo.normal = raycastInfo.normal !== null ? _helpVector3 : null;
-
-                        if (entity.renderer.raycast(ray, helpRaycastInfo)) {
-                            if (!raycastInfo.transform || raycastInfo.distance > helpRaycastInfo.distance) {
-                                raycastInfo.copy(helpRaycastInfo);
-                            }
-
-                            isHit = true;
-                        }
-                    }
-                    else {
-                        isHit = entity.renderer.raycast(ray, null);
-                    }
-                }
-
-                return isHit;
-            }
-
             const boxColliders = entity.getComponents(BoxCollider);
 
             if (boxColliders.length > 0) {
@@ -144,13 +114,13 @@ namespace egret3d {
         }
 
         private _raycastCollider(ray: Readonly<Ray>, collider: ICollider & IRaycast, raycastInfo: RaycastInfo) {
-            const helpRaycastInfo = _helpRaycastInfo;
+            const helpRaycastInfo = _helpRaycastInfo!;
             helpRaycastInfo.backfaceCulling = raycastInfo.backfaceCulling;
             helpRaycastInfo.modifyNormal = raycastInfo.modifyNormal;
             helpRaycastInfo.normal = raycastInfo.normal ? _helpVector3 : null;
 
             if (collider.raycast(ray, helpRaycastInfo)) {
-                if (!raycastInfo.transform || raycastInfo.distance > helpRaycastInfo.distance) {
+                if (raycastInfo.transform === null || raycastInfo.distance > helpRaycastInfo.distance) {
                     raycastInfo.copy(helpRaycastInfo);
                 }
 
@@ -160,17 +130,27 @@ namespace egret3d {
             return false;
         }
 
-        public raycast(ray: Readonly<Ray>, raycastConfig: RaycastConfig | null = null, raycastInfo: RaycastInfo | null = null): boolean {
+        public raycast(ray: Readonly<Ray>, cullingMask: paper.Layer = paper.Layer.Default, maxDistance: float = 0.0, raycastInfo: RaycastInfo | null = null): boolean {
+            const { entities } = this.groups[0];
+
             if (raycastInfo !== null) {
-                for (const entity of this.groups[1].entities) {
-                    this._raycast(ray, entity, raycastConfig, raycastInfo);
+                let isHit = false;
+
+                _helpVector3 = Vector3.create().release();
+                _helpRaycastInfo = RaycastInfo.create().release();
+
+                for (const entity of entities) {
+                    isHit = this._raycast(ray, entity, cullingMask, maxDistance, raycastInfo) || isHit;
                 }
 
-                return raycastInfo.transform !== null;
+                _helpVector3 = null;
+                _helpRaycastInfo = null;
+
+                return isHit;
             }
 
-            for (const entity of this.groups[1].entities) {
-                if (this._raycast(ray, entity, raycastConfig, null)) {
+            for (const entity of entities) {
+                if (this._raycast(ray, entity, cullingMask, maxDistance, null)) {
                     return true;
                 }
             }
@@ -182,8 +162,6 @@ namespace egret3d {
             return [
                 paper.Matcher.create<paper.GameObject>(Transform)
                     .anyOf(BoxCollider, SphereCollider, CylinderCollider, CapsuleCollider, MeshCollider),
-                paper.Matcher.create<paper.GameObject>(Transform)
-                    .anyOf(MeshRenderer, SkinnedMeshRenderer, particle.ParticleRenderer),
             ];
         }
 

@@ -3848,7 +3848,7 @@ declare namespace egret3d {
         /**
          * 相交的刚体组件。（如果有的话）
          */
-        rigidbody: any | null;
+        rigidbody: IRigidbody | null;
         private constructor();
         onClear(): void;
         copy(value: Readonly<RaycastInfo>): this;
@@ -7717,14 +7717,6 @@ declare namespace egret3d {
         Mesh = 6,
     }
     /**
-     *
-     */
-    type RaycastConfig = {
-        raycastMesh?: boolean;
-        layerMask?: paper.Layer;
-        maxDistance?: number;
-    };
-    /**
      * 碰撞体接口。
      * - 为多物理引擎统一接口。
      */
@@ -7941,6 +7933,17 @@ declare namespace egret3d {
     function raycastAll(ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>, maxDistance?: number, cullingMask?: paper.Layer, raycastMesh?: boolean, backfaceCulling?: boolean): RaycastInfo[];
 }
 declare namespace egret3d {
+    /**
+     * 碰撞系统。
+     */
+    class CollisionSystem extends paper.BaseSystem<paper.GameObject> {
+        private readonly _contactCollecter;
+        private _raycast(ray, entity, cullingMask, maxDistance, raycastInfo);
+        private _raycastCollider(ray, collider, raycastInfo);
+        raycast(ray: Readonly<Ray>, cullingMask?: paper.Layer, maxDistance?: float, raycastInfo?: RaycastInfo | null): boolean;
+        protected getMatchers(): paper.IAnyOfMatcher<paper.GameObject>[];
+        onTickCleanup(): void;
+    }
 }
 declare namespace egret3d {
     /**

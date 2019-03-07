@@ -3,6 +3,7 @@ namespace egret3d.oimo {
     /**
      * 
      */
+    @paper.executeMode(paper.PlayerMode.Player | paper.PlayerMode.DebugPlayer)
     export class PhysicsSystem extends paper.BaseSystem<paper.GameObject> {
         /**
          * @internal
@@ -197,39 +198,31 @@ namespace egret3d.oimo {
             }
         }
 
-        public raycast(ray: Ray, distance: number, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        public raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        public raycast(rayOrFrom: Ray | Readonly<IVector3>, distanceOrTo: number | Readonly<IVector3>, mask?: paper.Layer, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, cullingMask: paper.Layer = paper.Layer.Default, maxDistance: float = 0.0, raycastInfo: RaycastInfo | null = null): boolean {
             const rayCastClosest = this._rayCastClosest;
-            rayCastClosest.clear(); // TODO mask.
+            rayCastClosest.clear(); // TODO culling Mask.
 
-            if (rayOrFrom instanceof Ray) {
-                const helpVector3 = Vector3.create().release();
-                distanceOrTo = helpVector3.multiplyScalar((distanceOrTo as number) || 100.0, rayOrFrom.direction).add(rayOrFrom.origin);
-                rayOrFrom = rayOrFrom.origin;
-            }
-
+            const end = Vector3.create().multiplyScalar(maxDistance > 0.0 ? maxDistance : 100000.0, ray.direction).add(ray.origin).release(); // TODO 精度问题。
             this._oimoWorld.rayCast(
-                rayOrFrom as any, distanceOrTo as any,
+                ray.origin as any, end as any,
                 rayCastClosest
             );
 
-            if (rayCastClosest.hit) {
-                raycastInfo = raycastInfo || RaycastInfo.create();
-                raycastInfo.distance = Vector3.getDistance(rayOrFrom as Readonly<IVector3>, distanceOrTo as Readonly<IVector3>) * rayCastClosest.fraction;
+            if (rayCastClosest.hit && raycastInfo) {
+                raycastInfo.distance = Vector3.getDistance(ray.origin as Readonly<IVector3>, end) * rayCastClosest.fraction;
                 raycastInfo.position.copy(rayCastClosest.position);
 
                 if (raycastInfo.normal) {
                     raycastInfo.normal.copy(rayCastClosest.normal);
                 }
 
-                raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
                 raycastInfo.collider = rayCastClosest.shape.userData;
+                raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData; // TODO
 
-                return raycastInfo;
+                return true;
             }
 
-            return null;
+            return false;
         }
         /**
          * 

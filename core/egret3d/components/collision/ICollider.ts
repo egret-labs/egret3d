@@ -34,14 +34,6 @@ namespace egret3d {
         Mesh,
     }
     /**
-     * 
-     */
-    export type RaycastConfig = {
-        raycastMesh?: boolean;
-        layerMask?: paper.Layer;
-        maxDistance?: number;
-    };
-    /**
      * 碰撞体接口。
      * - 为多物理引擎统一接口。
      */

@@ -69,7 +69,7 @@ namespace egret3d {
         /**
          * 相交的刚体组件。（如果有的话）
          */
-        public rigidbody: any | null = null;
+        public rigidbody: IRigidbody | null = null;
 
         private constructor() {
             super();
@@ -80,6 +80,7 @@ namespace egret3d {
         }
 
         public copy(value: Readonly<RaycastInfo>): this {
+            // Input ?
             this.subMeshIndex = value.subMeshIndex;
             this.triangleIndex = value.triangleIndex;
             this.distance = value.distance;

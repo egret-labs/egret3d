@@ -4318,6 +4318,7 @@ var egret3d;
             this.clear();
         };
         RaycastInfo.prototype.copy = function (value) {
+            // Input ?
             this.subMeshIndex = value.subMeshIndex;
             this.triangleIndex = value.triangleIndex;
             this.distance = value.distance;
@@ -16374,10 +16375,10 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var _helpVector3 = egret3d.Vector3.create();
-    var _helpRaycastInfo = egret3d.RaycastInfo.create();
+    var _helpVector3 = null;
+    var _helpRaycastInfo = null;
     /**
-     * @internal
+     * 碰撞系统。
      */
     var CollisionSystem = (function (_super) {
         __extends(CollisionSystem, _super);
@@ -16386,41 +16387,20 @@ var egret3d;
             _this._contactCollecter = paper.Application.sceneManager.globalEntity.getComponent(egret3d.ContactCollecter);
             return _this;
         }
-        CollisionSystem.prototype._raycast = function (ray, entity, raycastConfig, raycastInfo) {
-            var cullingMask = raycastConfig !== null ? raycastConfig.layerMask || 1 /* Default */ : 1 /* Default */;
-            if ((entity.hideFlags & 10 /* Hide */) ||
+        CollisionSystem.prototype._raycast = function (ray, entity, cullingMask, maxDistance, raycastInfo) {
+            if (cullingMask === void 0) { cullingMask = 1 /* Default */; }
+            if (maxDistance === void 0) { maxDistance = 0.0; }
+            if ((entity.hideFlags & 10 /* Hide */) !== 0 ||
                 (entity.layer & cullingMask) === 0) {
                 return false;
             }
-            var maxDistance2 = raycastConfig ? raycastConfig.maxDistance || 0.0 : 0.0;
-            if (maxDistance2 > 0.0) {
-                maxDistance2 *= maxDistance2;
-                if (entity.transform.position.getSquaredDistance(ray.origin) >= maxDistance2) {
+            if (maxDistance > 0.0) {
+                maxDistance *= maxDistance;
+                if (entity.transform.position.getSquaredDistance(ray.origin) >= maxDistance) {
                     return false;
                 }
             }
             var isHit = false;
-            if (raycastConfig && raycastConfig.raycastMesh) {
-                if (entity.renderer !== null) {
-                    if (raycastInfo !== null) {
-                        var helpRaycastInfo = _helpRaycastInfo;
-                        helpRaycastInfo.clear();
-                        helpRaycastInfo.backfaceCulling = raycastInfo.backfaceCulling;
-                        helpRaycastInfo.modifyNormal = raycastInfo.modifyNormal;
-                        helpRaycastInfo.normal = raycastInfo.normal !== null ? _helpVector3 : null;
-                        if (entity.renderer.raycast(ray, helpRaycastInfo)) {
-                            if (!raycastInfo.transform || raycastInfo.distance > helpRaycastInfo.distance) {
-                                raycastInfo.copy(helpRaycastInfo);
-                            }
-                            isHit = true;
-                        }
-                    }
-                    else {
-                        isHit = entity.renderer.raycast(ray, null);
-                    }
-                }
-                return isHit;
-            }
             var boxColliders = entity.getComponents(egret3d.BoxCollider);
             if (boxColliders.length > 0) {
                 for (var _i = 0, boxColliders_2 = boxColliders; _i < boxColliders_2.length; _i++) {
@@ -16504,26 +16484,33 @@ var egret3d;
             helpRaycastInfo.modifyNormal = raycastInfo.modifyNormal;
             helpRaycastInfo.normal = raycastInfo.normal ? _helpVector3 : null;
             if (collider.raycast(ray, helpRaycastInfo)) {
-                if (!raycastInfo.transform || raycastInfo.distance > helpRaycastInfo.distance) {
+                if (raycastInfo.transform === null || raycastInfo.distance > helpRaycastInfo.distance) {
                     raycastInfo.copy(helpRaycastInfo);
                 }
                 return true;
             }
             return false;
         };
-        CollisionSystem.prototype.raycast = function (ray, raycastConfig, raycastInfo) {
-            if (raycastConfig === void 0) { raycastConfig = null; }
+        CollisionSystem.prototype.raycast = function (ray, cullingMask, maxDistance, raycastInfo) {
+            if (cullingMask === void 0) { cullingMask = 1 /* Default */; }
+            if (maxDistance === void 0) { maxDistance = 0.0; }
             if (raycastInfo === void 0) { raycastInfo = null; }
+            var entities = this.groups[0].entities;
             if (raycastInfo !== null) {
-                for (var _i = 0, _a = this.groups[1].entities; _i < _a.length; _i++) {
-                    var entity = _a[_i];
-                    this._raycast(ray, entity, raycastConfig, raycastInfo);
+                var isHit = false;
+                _helpVector3 = egret3d.Vector3.create().release();
+                _helpRaycastInfo = egret3d.RaycastInfo.create().release();
+                for (var _i = 0, entities_4 = entities; _i < entities_4.length; _i++) {
+                    var entity = entities_4[_i];
+                    isHit = this._raycast(ray, entity, cullingMask, maxDistance, raycastInfo) || isHit;
                 }
-                return raycastInfo.transform !== null;
+                _helpVector3 = null;
+                _helpRaycastInfo = null;
+                return isHit;
             }
-            for (var _b = 0, _c = this.groups[1].entities; _b < _c.length; _b++) {
-                var entity = _c[_b];
-                if (this._raycast(ray, entity, raycastConfig, null)) {
+            for (var _a = 0, entities_5 = entities; _a < entities_5.length; _a++) {
+                var entity = entities_5[_a];
+                if (this._raycast(ray, entity, cullingMask, maxDistance, null)) {
                     return true;
                 }
             }
@@ -16533,8 +16520,6 @@ var egret3d;
             return [
                 paper.Matcher.create(egret3d.Transform)
                     .anyOf(egret3d.BoxCollider, egret3d.SphereCollider, egret3d.CylinderCollider, egret3d.CapsuleCollider, egret3d.MeshCollider),
-                paper.Matcher.create(egret3d.Transform)
-                    .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
             ];
         };
         CollisionSystem.prototype.onTickCleanup = function () {
@@ -18711,7 +18696,7 @@ var egret3d;
             if (raycastInfo === void 0) { raycastInfo = null; }
             var _a = this, topRadius = _a.topRadius, bottomRadius = _a.bottomRadius, height = _a.height, center = _a.center;
             var begin = egret3d.helpVector3A.copy(ray.origin).subtract(center);
-            var end = egret3d.helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin);
+            var end = egret3d.helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin); // TODO 精度问题。
             var isCone = topRadius !== bottomRadius;
             var p1x = begin.x;
             var p1y = begin.y;
@@ -26252,7 +26237,7 @@ var egret3d;
             var _a = this, radius = _a.radius, center = _a.center;
             var halfHeight = this.height * 0.5;
             var begin = egret3d.helpVector3A.copy(ray.origin).subtract(center);
-            var end = egret3d.helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin);
+            var end = egret3d.helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin); // TODO 精度问题。
             var p1x = begin.x;
             var p1y = begin.y;
             var p1z = begin.z;
@@ -27698,7 +27683,7 @@ var paper;
             /**
              * 引擎版本。
              */
-            this.version = "1.4.0.001";
+            this.version = "1.5.0.001";
             /**
              * 系统管理器。
              */
