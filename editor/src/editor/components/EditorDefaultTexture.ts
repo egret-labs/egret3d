@@ -24,7 +24,7 @@ namespace paper.editor {
                 let loadNext = () => {
                     if (index < mapList.length) {
                         const image = new Image();
-                        image.src = _icons.camera;
+                        image.src = mapList[index].img;
                         image.onload = () => {
                             const texture = egret3d.Texture.create({
                                 source: image
