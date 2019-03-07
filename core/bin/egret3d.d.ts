@@ -3624,7 +3624,7 @@ declare namespace egret3d {
          * @param out 最近点。
          */
         getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         /**
          * 获取该三角形的面积。
          * - 该值是实时计算的。
@@ -3750,8 +3750,7 @@ declare namespace paper {
          * 重新计算 AABB。
          */
         abstract recalculateLocalBox(): void;
-        abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
-        abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
+        abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo: egret3d.RaycastInfo | null): boolean;
         /**
          *
          */
@@ -3849,7 +3848,7 @@ declare namespace egret3d {
         /**
          * 相交的刚体组件。（如果有的话）
          */
-        rigidbody: any | null;
+        rigidbody: IRigidbody | null;
         private constructor();
         onClear(): void;
         copy(value: Readonly<RaycastInfo>): this;
@@ -4158,88 +4157,119 @@ declare namespace egret3d {
      * 4x4 矩阵。
      */
     class Matrix4 extends paper.BaseRelease<Matrix4> implements paper.ICCS<Matrix4>, paper.ISerializable {
-        /**
-         * 一个静态的恒等矩阵。
-         * - 请注意不要修改该值。
-         */
-        static readonly IDENTITY: Readonly<Matrix4>;
         private static readonly _instances;
         /**
          * 创建一个矩阵。
-         * @param rawData
-         * @param offsetOrByteOffset
+         * @param arrayBuffer
+         * @param byteOffset
          */
-        static create(rawData?: ArrayLike<number>, offsetOrByteOffset?: number): Matrix4;
+        static create(arrayBuffer?: ArrayBuffer | null, byteOffset?: uint): Matrix4;
         /**
-         * 矩阵原始数据。
-         * @readonly
+         * 该矩阵的数据。
          */
-        rawData: Float32Array;
+        readonly rawData: Float32Array;
         /**
          * 请使用 `egret3d.Matrix4.create()` 创建实例。
          * @see egret3d.Matrix4.create()
-         * @deprecated
          */
-        constructor(rawData?: ArrayLike<number>, offsetOrByteOffset?: number);
+        private constructor();
         serialize(): Float32Array;
-        deserialize(value: Readonly<[number, number, number, number, number, number, number, number, number, number, number, number, number, number, number, number]>): this;
+        deserialize(value: Readonly<[float, float, float, float, float, float, float, float, float, float, float, float, float, float, float, float]>): this;
         copy(value: Readonly<Matrix4>): this;
-        clone(): Matrix4;
-        set(n11: number, n12: number, n13: number, n14: number, n21: number, n22: number, n23: number, n24: number, n31: number, n32: number, n33: number, n34: number, n41: number, n42: number, n43: number, n44: number): this;
+        clone(): this;
+        set(n11: float, n12: float, n13: float, n14: float, n21: float, n22: float, n23: float, n24: float, n31: float, n32: float, n33: float, n34: float, n41: float, n42: float, n43: float, n44: float): this;
         /**
          * 将该矩阵转换为恒等矩阵。
          */
         identity(): this;
-        fromArray(array: ArrayLike<number>, offset?: number): this;
-        fromBuffer(buffer: ArrayBuffer, byteOffset?: number): this;
+        /**
+         * 通过类数组中的数值设置该矩阵。
+         * @param array 类数组。
+         * @param offset 索引偏移。
+         * - 默认 `0`。
+         */
+        fromArray(array: ArrayLike<float>, offset?: uint): this;
+        /**
+         *
+         */
+        fromBuffer(buffer: ArrayBuffer, byteOffset?: uint): this;
         /**
          * 通过平移向量设置该矩阵。
          * @param translate 平移向量。
          * @param rotationAndScaleStays 是否保留该矩阵的旋转和数据。
+         * - 默认 `false`。
          */
         fromTranslate(translate: Readonly<IVector3>, rotationAndScaleStays?: boolean): this;
         /**
          * 通过四元数旋转设置该矩阵。
          * @param rotation 四元数旋转。
          * @param translateStays 是否保留该矩阵的平移数据。
+         * - 默认 `false`。
          */
-        fromRotation(rotation: Readonly<Quaternion>, translateStays?: boolean): this;
+        fromRotation(rotation: Readonly<IVector4>, translateStays?: boolean): this;
         /**
          * 通过欧拉旋转设置该矩阵。
          * @param euler 欧拉旋转。
          * @param order 欧拉旋转顺序。
+         * - 默认 `egret3d.EulerOrder.YXZ`。
          * @param translateStays 是否保留该矩阵的平移数据。
+         * - 默认 `false`。
          */
         fromEuler(euler: Readonly<IVector3>, order?: EulerOrder, translateStays?: boolean): this;
         /**
          * 通过缩放向量设置该矩阵。
          * @param scale 缩放向量。
          * @param translateStays 是否保留该矩阵的平移数据。
+         * - 默认 `false`。
          */
         fromScale(scale: Readonly<IVector3>, translateStays?: boolean): this;
         /**
          * 通过绕 X 轴的旋转角度设置该矩阵。
-         * @param angle 旋转角。（弧度制）
+         * @param angle 旋转角。
+         * - 弧度制。
          */
-        fromRotationX(angle: number): this;
+        fromRotationX(angle: float): this;
         /**
          * 通过绕 Y 轴的旋转角度设置该矩阵。
-         * @param theta 旋转角。（弧度制）
+         * @param angle 旋转角。
+         * - 弧度制。
          */
-        fromRotationY(theta: number): this;
+        fromRotationY(angle: float): this;
         /**
          * 通过绕 Z 轴的旋转角度设置该矩阵。
-         * @param theta 旋转角。（弧度制）
+         * @param angle 旋转角。
+         * - 弧度制。
          */
-        fromRotationZ(theta: number): this;
+        fromRotationZ(angle: float): this;
         /**
          * 通过旋转轴设置该矩阵。
          * - 假设旋转轴已被归一化。
          * @param axis 旋转轴。
-         * @param angle 旋转角。（弧度制）
+         * @param angle 旋转角。
+         * - 弧度制。
          */
-        fromAxis(axis: Readonly<IVector3>, angle: number): this;
-        fromProjection(fov: number, near: number, far: number, size: number, opvalue: number, asp: number, matchFactor: number): Matrix4;
+        fromAxis(axis: Readonly<IVector3>, angle: float): this;
+        perspectiveProjectMatrix(left: float, right: float, top: float, bottom: float, near: float, far: float): this;
+        orthographicProjectLH(width: float, height: float, znear: float, zfar: float): this;
+        /**
+         * 根据投影参数设置该矩阵。
+         * @param fov 投影视角。
+         * - 透视投影
+         * @param near 投影近平面。
+         * @param far 投影远平面。
+         * @param size 投影尺寸。
+         * - 正交投影
+         * @param opvalue 透视投影和正交投影的插值系数。
+         * - `0.0` ~ `1.0`
+         * - `0.0` 正交投影。
+         * - `1.0` 透视投影。
+         * @param asp 投影宽高比。
+         * @param matchFactor 宽高适配的插值系数。
+         * - `0.0` ~ `1.0`
+         * - `0.0` 以高适配。
+         * - `1.0` 以宽适配。
+         */
+        fromProjection(fov: float, near: float, far: float, size: float, opvalue: float, asp: float, matchFactor: float): this;
         /**
          * 通过 X、Y、Z 轴设置该矩阵。
          * @param axisX X 轴。
@@ -4260,8 +4290,16 @@ declare namespace egret3d {
          * @param rotation 四元数旋转。
          * @param scale 缩放向量。
          */
-        decompose(translation?: Vector3 | null, rotation?: Quaternion | null, scale?: Vector3 | null): this;
-        extractRotation(input?: Readonly<Matrix4>): this;
+        decompose(translation?: IVector3 | null, rotation?: Quaternion | null, scale?: IVector3 | null): this;
+        /**
+         *
+         */
+        extractRotation(): this;
+        /**
+         *
+         * @param input
+         */
+        extractRotation(input: Readonly<Matrix4>): this;
         /**
          * 转置该矩阵。
          */
@@ -4285,14 +4323,14 @@ declare namespace egret3d {
          * - v *= scaler
          * @param scalar 标量。
          */
-        multiplyScalar(scalar: number): this;
+        multiplyScalar(scalar: float): this;
         /**
          * 将输入矩阵与一个标量相乘的结果写入该矩阵。
          * - v = input * scaler
          * @param scalar 标量。
-         * @param input 收入矩阵。
+         * @param input 输入矩阵。
          */
-        multiplyScalar(scalar: number, input: Readonly<Matrix4>): this;
+        multiplyScalar(scalar: float, input: Readonly<Matrix4>): this;
         /**
          * 将该矩阵乘以一个矩阵。
          * - v *= matrix
@@ -4315,20 +4353,20 @@ declare namespace egret3d {
         /**
          * 将该矩阵和目标矩阵插值的结果写入该矩阵。
          * - v = v * (1 - t) + to * t
-         * - 插值因子不会被限制在 0 ~ 1。
          * @param to 目标矩阵。
          * @param t 插值因子。
+         * - 插值因子不会被限制在 `0.0` ~ `1.0`。
          */
-        lerp(to: Readonly<Matrix4>, t: number): this;
+        lerp(to: Readonly<Matrix4>, t: float): this;
         /**
          * 将两个矩阵插值的结果写入该矩阵。
          * - v = from * (1 - t) + to * t
-         * - 插值因子不会被限制在 0 ~ 1。
          * @param from 起始矩阵。
          * @param to 目标矩阵。
          * @param t 插值因子。
+         * - 插值因子不会被限制在 `0.0` ~ `1.0`。
          */
-        lerp(from: Readonly<Matrix4>, to: Readonly<Matrix4>, t: number): this;
+        lerp(from: Readonly<Matrix4>, to: Readonly<Matrix4>, t: float): this;
         /**
          * 设置该矩阵，使其 Z 轴正方向与起始点到目标点的方向相一致。
          * - 矩阵的缩放值将被覆盖。
@@ -4347,35 +4385,33 @@ declare namespace egret3d {
         /**
          * 将该旋转矩阵转换为数组。
          * @param array 数组。
-         * @param offset 数组偏移。
+         * @param offset 索引偏移。
+         * - 默认 `0`。
          */
-        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        toArray(array?: float[] | Float32Array | null, offset?: uint): float[] | Float32Array;
         /**
          * 将该旋转矩阵转换为欧拉旋转。
-         * @param euler 欧拉旋转。（弧度制）
+         * @param euler 欧拉旋转。
+         * - 弧度制。
          * @param order 欧拉旋转顺序。
+         * - 默认 `egret3d.EulerOrder.YXZ`。
          */
-        toEuler(euler?: Vector3, order?: EulerOrder): Vector3;
+        toEuler(euler?: Vector3 | null, order?: EulerOrder): Vector3;
         /**
          * 获取该矩阵的行列式。
          * - 该值是实时计算的。
          */
-        readonly determinant: number;
+        readonly determinant: float;
         /**
          * 获取该矩阵的最大缩放值。
          * - 该值是实时计算的。
          */
-        readonly maxScaleOnAxis: number;
+        readonly maxScaleOnAxis: float;
         /**
-         * @deprecated
+         * 一个静态的恒等矩阵。
+         * - 注意：请不要修改该值。
          */
-        transformVector3(value: Vector3, out?: Vector3): Vector3;
-        /**
-         * @deprecated
-         */
-        transformNormal(value: Vector3, out?: Vector3): Vector3;
-        private static _perspectiveProjectMatrix(left, right, top, bottom, near, far, out);
-        private static _orthographicProjectLH(width, height, znear, zfar, out);
+        static readonly IDENTITY: Readonly<Matrix4>;
     }
 }
 declare namespace paper {
@@ -4832,7 +4868,7 @@ declare namespace egret3d {
          * 该立方体是否包含指定的点或立方体。
          */
         contains(pointOrBox: Readonly<IVector3 | Box>): boolean;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         /**
          * 该立方体是否为空。
          */
@@ -5117,7 +5153,7 @@ declare namespace egret3d {
          * @param out
          */
         getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
-        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         /**
          * 该组件的光照图索引。
          */
@@ -5582,7 +5618,7 @@ declare namespace egret3d {
         /**
          *
          */
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, vertices?: Float32Array | null): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null, vertices?: Float32Array | null): boolean;
         /**
          *
          */
@@ -6130,7 +6166,7 @@ declare namespace egret3d {
          * @param value 点。
          */
         getDistance(value: Readonly<IVector3>): number;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }
 declare namespace paper {
@@ -7681,14 +7717,6 @@ declare namespace egret3d {
         Mesh = 6,
     }
     /**
-     *
-     */
-    type RaycastConfig = {
-        raycastMesh?: boolean;
-        layerMask?: paper.Layer;
-        maxDistance?: number;
-    };
-    /**
      * 碰撞体接口。
      * - 为多物理引擎统一接口。
      */
@@ -7753,7 +7781,7 @@ declare namespace egret3d {
          * @param ray 射线。
          * @param raycastInfo 是否将检测的详细数据写入 raycastInfo。
          */
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null): boolean;
     }
 }
 declare namespace egret3d {
@@ -7800,7 +7828,7 @@ declare namespace egret3d {
     class BoxCollider extends paper.BaseComponent implements IBoxCollider, IRaycast {
         readonly colliderType: ColliderType;
         readonly box: Box;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         /**
          * @deprecated
          */
@@ -7814,7 +7842,7 @@ declare namespace egret3d {
     class SphereCollider extends paper.BaseComponent implements ISphereCollider, IRaycast {
         readonly colliderType: ColliderType;
         readonly sphere: Sphere;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }
 declare namespace paper {
@@ -7866,7 +7894,7 @@ declare namespace egret3d {
     class CapsuleCollider extends paper.BaseComponent implements ICapsuleCollider, IRaycast {
         readonly colliderType: ColliderType;
         readonly capsule: Capsule;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }
 declare namespace egret3d {
@@ -7877,7 +7905,7 @@ declare namespace egret3d {
         readonly colliderType: ColliderType;
         protected readonly _localBoundingBox: Box;
         private _mesh;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         /**
          * 该组件的网格资源。
          */
@@ -7885,7 +7913,7 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d {
-    function _colliderRaycast(collider: ICollider, raycaster: IRaycast, preRaycaster: IRaycast | null, ray: Readonly<Ray>, raycastInfo?: RaycastInfo, modifyNormal?: boolean): boolean;
+    function _colliderRaycast(collider: ICollider, raycaster: IRaycast, preRaycaster: IRaycast | null, ray: Readonly<Ray>, raycastInfo: RaycastInfo | null, modifyNormal?: boolean): boolean;
     /**
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
@@ -7893,7 +7921,7 @@ declare namespace egret3d {
      * @param raycastMesh 是否检测网格。（需要消耗较多的 CPU 性能，尤其是蒙皮网格）
      * @param raycastInfo
      */
-    function raycast(ray: Readonly<Ray>, gameObject: Readonly<paper.GameObject>, raycastMesh?: boolean, raycastInfo?: RaycastInfo): boolean;
+    function raycast(ray: Readonly<Ray>, gameObject: Readonly<paper.GameObject>, raycastMesh?: boolean, raycastInfo?: RaycastInfo | null): boolean;
     /**
      * 用世界空间坐标系的射线检测指定的实体或组件列表。
      * @param ray 射线。
@@ -7905,6 +7933,17 @@ declare namespace egret3d {
     function raycastAll(ray: Readonly<Ray>, gameObjectsOrComponents: ReadonlyArray<paper.GameObject | paper.BaseComponent>, maxDistance?: number, cullingMask?: paper.Layer, raycastMesh?: boolean, backfaceCulling?: boolean): RaycastInfo[];
 }
 declare namespace egret3d {
+    /**
+     * 碰撞系统。
+     */
+    class CollisionSystem extends paper.BaseSystem<paper.GameObject> {
+        private readonly _contactCollecter;
+        private _raycast(ray, entity, cullingMask, maxDistance, raycastInfo);
+        private _raycastCollider(ray, collider, raycastInfo);
+        raycast(ray: Readonly<Ray>, cullingMask?: paper.Layer, maxDistance?: float, raycastInfo?: RaycastInfo | null): boolean;
+        protected getMatchers(): paper.IAnyOfMatcher<paper.GameObject>[];
+        onTickCleanup(): void;
+    }
 }
 declare namespace egret3d {
     /**
@@ -8453,7 +8492,7 @@ declare namespace egret3d {
          * @param point 一个点。
          */
         contains(point: Readonly<IVector3>): boolean;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }
 declare namespace egret3d {
@@ -8522,7 +8561,6 @@ declare namespace paper {
          */
         extras?: any;
         private _isDestroyed;
-        private _entitiesDirty;
         private readonly _entities;
         private readonly _rootEntities;
         private constructor();
@@ -8642,7 +8680,7 @@ declare namespace egret3d {
          * - 采用 CPU 蒙皮指定顶点。
          */
         getTriangle(triangleIndex: uint, out?: Triangle): Triangle;
-        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         /**
          *
          */
@@ -8701,7 +8739,7 @@ declare namespace egret3d {
         initialize(): void;
         uninitialize(): void;
         recalculateLocalBox(): void;
-        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
+        raycast(p1: Readonly<Ray>, p2?: RaycastInfo | null): boolean;
         /**
          * screen position to ui position
          * @version paper 1.0
@@ -9881,7 +9919,7 @@ declare namespace egret3d.particle {
         private _mesh;
         uninitialize(): void;
         recalculateLocalBox(): void;
-        raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         /**
          *
          */
@@ -10021,7 +10059,7 @@ declare namespace egret3d {
          * @param point 一个点。
          */
         contains(point: Readonly<IVector3>): boolean;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }
 declare namespace egret3d {
@@ -10568,7 +10606,7 @@ declare namespace egret3d {
         getDistance(point: Readonly<IVector3>): number;
         getProjectionPoint(point: Readonly<IVector3>, output?: Vector3): Vector3;
         getCoplanarPoint(output?: Vector3): Vector3;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
     }
 }
@@ -12101,6 +12139,6 @@ declare namespace egret3d {
     class CylinderCollider extends paper.BaseComponent implements ICylinderCollider, IRaycast {
         readonly colliderType: ColliderType;
         readonly cylinder: Cylinder;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }

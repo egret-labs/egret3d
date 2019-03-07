@@ -51,31 +51,19 @@ namespace egret3d {
             return out;
         }
 
-        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const transform = this.entity.getComponent(Transform);
             const meshFilter = this.entity.getComponent(MeshFilter);
 
             if (transform && meshFilter && meshFilter.enabled && meshFilter.mesh && !meshFilter.mesh.isDisposed) {
-                let raycastMesh = false;
-                let raycastInfo: RaycastInfo | undefined = undefined;
                 const worldToLocalMatrix = transform.worldToLocalMatrix;
-                const localRay = helpRay.applyMatrix(worldToLocalMatrix, p1);
+                const localRay = helpRay.applyMatrix(worldToLocalMatrix, ray);
                 const localBoundingBox = this.localBoundingBox;
 
-                if (p2) {
-                    if (p2 === true) {
-                        raycastMesh = true;
-                    }
-                    else {
-                        raycastMesh = p3 || false;
-                        raycastInfo = p2;
-                    }
-                }
-
-                if (raycastMesh ? localBoundingBox.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo) : localBoundingBox.raycast(localRay, raycastInfo)) {
+                if (localBoundingBox.raycast(localRay) && meshFilter.mesh.raycast(localRay, raycastInfo)) {
                     if (raycastInfo) { // Update local raycast info to world.
                         const localToWorldMatrix = transform.localToWorldMatrix;
-                        raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
+                        raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
                         raycastInfo.transform = transform;
 
                         const normal = raycastInfo.normal;

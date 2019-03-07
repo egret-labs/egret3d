@@ -3,6 +3,7 @@ namespace egret3d.oimo {
     /**
      * 
      */
+    @paper.executeMode(paper.PlayerMode.Player | paper.PlayerMode.DebugPlayer)
     export class PhysicsSystem extends paper.BaseSystem<paper.GameObject> {
         /**
          * @internal
@@ -18,8 +19,8 @@ namespace egret3d.oimo {
         protected getMatchers() {
             return [
                 paper.Matcher.create<paper.GameObject>(egret3d.Transform, Rigidbody).extraOf(
-                    BoxCollider, SphereCollider,
-                    SphericalJoint, HingeJoint, ConeTwistJoint,
+                    BoxCollider, SphereCollider, CylinderCollider, ConeCollider, CapsuleCollider,
+                    SphericalJoint, HingeJoint, ConeTwistJoint, UniversalJoint,
                 ),
             ];
         }
@@ -75,6 +76,30 @@ namespace egret3d.oimo {
             };
         }
 
+        public onComponentRemoved(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>) {
+            if (component instanceof BaseCollider) {
+                const rigidbody = component.entity.getComponent(Rigidbody)!;
+
+                if ((component.oimoShape as any)._rigidBody) {
+                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                }
+                // rigidbody._updateMass(rigidbody.oimoRigidbody);
+            }
+            else if (component instanceof BaseJoint) {
+                this._oimoWorld.removeJoint(component.oimoJoint);
+            }
+        }
+
+        public onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
+            const rigidbody = entity.getRemovedComponent(Rigidbody) || entity.getComponent(Rigidbody)!;
+
+            for (const joint of entity.getComponents(BaseJoint as any, true) as BaseJoint<any>[]) {
+                this._oimoWorld.removeJoint(joint.oimoJoint);
+            }
+
+            this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+        }
+
         public onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const rigidbody = entity.getComponent(Rigidbody)!;
 
@@ -95,10 +120,6 @@ namespace egret3d.oimo {
         }
 
         public onComponentAdded(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>) {
-            if (group !== this.groups[0]) {
-                return;
-            }
-
             if (component instanceof BaseCollider) {
                 if (!(component.oimoShape as any)._rigidBody) {
                     const rigidbody = component.entity.getComponent(Rigidbody)!;
@@ -116,34 +137,6 @@ namespace egret3d.oimo {
             }
         }
 
-        public onComponentRemoved(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>) {
-            if (group !== this.groups[0]) {
-                return;
-            }
-
-            if (component instanceof BaseCollider) {
-                const rigidbody = component.entity.getComponent(Rigidbody)!;
-
-                if ((component.oimoShape as any)._rigidBody) {
-                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
-                }
-                // rigidbody._updateMass(rigidbody.oimoRigidbody);
-            }
-            else if (component instanceof BaseJoint) {
-                this._oimoWorld.removeJoint(component.oimoJoint);
-            }
-        }
-
-        public onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
-            const rigidbody = entity.getRemovedComponent(Rigidbody)!;
-
-            for (const joint of entity.getComponents(BaseJoint as any, true) as BaseJoint<any>[]) {
-                this._oimoWorld.removeJoint(joint.oimoJoint);
-            }
-
-            this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
-        }
-
         public onTick(deltaTime: number) {
             const entities = this.groups[0].entities;
             const helpVector3 = Vector3.create().release();
@@ -151,21 +144,14 @@ namespace egret3d.oimo {
             const oimoTransform = PhysicsSystem._helpTransform;
 
             for (const entity of entities) {
-                const transform = entity.transform;
                 const rigidbody = entity.getComponent(Rigidbody)!;
-                const oimoRigidbody = rigidbody.oimoRigidbody;
 
                 switch (rigidbody.type) {
                     case RigidbodyType.KINEMATIC:
-                    case RigidbodyType.STATIC:
-                        if (oimoRigidbody.isSleeping()) {
+                        if (rigidbody.isSleeping) {
                         }
                         else {
-                            const position = transform.position;
-                            const quaternion = transform.rotation;
-                            oimoTransform.setPosition(position as any);
-                            oimoTransform.setOrientation(quaternion as any);
-                            oimoRigidbody.setTransform(oimoTransform);
+                            rigidbody.syncTransform();
                         }
                         break;
                 }
@@ -212,39 +198,31 @@ namespace egret3d.oimo {
             }
         }
 
-        public raycast(ray: Ray, distance: number, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        public raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        public raycast(rayOrFrom: Ray | Readonly<IVector3>, distanceOrTo: number | Readonly<IVector3>, mask?: paper.Layer, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, cullingMask: paper.Layer = paper.Layer.Default, maxDistance: float = 0.0, raycastInfo: RaycastInfo | null = null): boolean {
             const rayCastClosest = this._rayCastClosest;
-            rayCastClosest.clear(); // TODO mask.
+            rayCastClosest.clear(); // TODO culling Mask.
 
-            if (rayOrFrom instanceof Ray) {
-                const helpVector3 = Vector3.create().release();
-                distanceOrTo = helpVector3.multiplyScalar((distanceOrTo as number) || 100.0, rayOrFrom.direction).add(rayOrFrom.origin);
-                rayOrFrom = rayOrFrom.origin;
-            }
-
+            const end = Vector3.create().multiplyScalar(maxDistance > 0.0 ? maxDistance : 100000.0, ray.direction).add(ray.origin).release(); // TODO 精度问题。
             this._oimoWorld.rayCast(
-                rayOrFrom as any, distanceOrTo as any,
+                ray.origin as any, end as any,
                 rayCastClosest
             );
 
-            if (rayCastClosest.hit) {
-                raycastInfo = raycastInfo || RaycastInfo.create();
-                raycastInfo.distance = Vector3.getDistance(rayOrFrom as Readonly<IVector3>, distanceOrTo as Readonly<IVector3>) * rayCastClosest.fraction;
+            if (rayCastClosest.hit && raycastInfo) {
+                raycastInfo.distance = Vector3.getDistance(ray.origin as Readonly<IVector3>, end) * rayCastClosest.fraction;
                 raycastInfo.position.copy(rayCastClosest.position);
 
                 if (raycastInfo.normal) {
                     raycastInfo.normal.copy(rayCastClosest.normal);
                 }
 
-                raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
                 raycastInfo.collider = rayCastClosest.shape.userData;
+                raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData; // TODO
 
-                return raycastInfo;
+                return true;
             }
 
-            return null;
+            return false;
         }
         /**
          * 

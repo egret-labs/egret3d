@@ -40004,13 +40004,14 @@ oimo_dynamics_rigidbody_RigidBody.prototype = {
 		shape._next = null;
 		shape._prev = null;
 		this._numShapes--;
+		var rigidBody = shape._rigidBody;
 		shape._rigidBody = null;
 		if(this._world != null) {
 			var _this = this._world;
 			_this._broadPhase.destroyProxy(shape._proxy);
 			shape._proxy = null;
 			shape._id = -1;
-			var cl = shape._rigidBody._contactLinkList;
+			var cl = rigidBody._contactLinkList;
 			while(cl != null) {
 				var n = cl._next;
 				var c = cl._contact;
@@ -41698,11 +41699,13 @@ var egret3d;
             /**
              *
              */
-            Rigidbody.prototype.syncTransform = function () {
+            Rigidbody.prototype.syncTransform = function (transform) {
                 var oimoRigidbody = this._oimoRigidbody;
                 if (oimoRigidbody) {
                     var oimoTransform = oimo.PhysicsSystem._helpTransform;
-                    var transform = this.gameObject.transform;
+                    if (!transform) {
+                        transform = this.gameObject.transform;
+                    }
                     oimoTransform.setPosition(transform.position);
                     oimoTransform.setOrientation(transform.rotation);
                     oimoRigidbody.setTransform(oimoTransform);
@@ -42150,7 +42153,7 @@ var egret3d;
             });
             Object.defineProperty(BaseJoint.prototype, "anchor", {
                 /**
-                 * 该关节在锚点。
+                 * 该关节的锚点。
                  */
                 get: function () {
                     return this._anchor;
@@ -42308,9 +42311,10 @@ var egret3d;
                 _this._oimoWorld = null;
                 return _this;
             }
+            PhysicsSystem_1 = PhysicsSystem;
             PhysicsSystem.prototype.getMatchers = function () {
                 return [
-                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint),
+                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.CylinderCollider, oimo.ConeCollider, oimo.CapsuleCollider, oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint, oimo.UniversalJoint),
                 ];
             };
             PhysicsSystem.prototype.onAwake = function () {
@@ -42359,6 +42363,26 @@ var egret3d;
                     }
                 };
             };
+            PhysicsSystem.prototype.onComponentRemoved = function (component, group) {
+                if (component instanceof oimo.BaseCollider) {
+                    var rigidbody = component.entity.getComponent(oimo.Rigidbody);
+                    if (component.oimoShape._rigidBody) {
+                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                    }
+                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
+                }
+                else if (component instanceof oimo.BaseJoint) {
+                    this._oimoWorld.removeJoint(component.oimoJoint);
+                }
+            };
+            PhysicsSystem.prototype.onEntityRemoved = function (entity, group) {
+                var rigidbody = entity.getRemovedComponent(oimo.Rigidbody) || entity.getComponent(oimo.Rigidbody);
+                for (var _i = 0, _a = entity.getComponents(oimo.BaseJoint, true); _i < _a.length; _i++) {
+                    var joint = _a[_i];
+                    this._oimoWorld.removeJoint(joint.oimoJoint);
+                }
+                this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+            };
             PhysicsSystem.prototype.onEntityAdded = function (entity, group) {
                 var rigidbody = entity.getComponent(oimo.Rigidbody);
                 for (var _i = 0, _a = entity.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
@@ -42377,9 +42401,6 @@ var egret3d;
                 this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
             };
             PhysicsSystem.prototype.onComponentAdded = function (component, group) {
-                if (group !== this.groups[0]) {
-                    return;
-                }
                 if (component instanceof oimo.BaseCollider) {
                     if (!component.oimoShape._rigidBody) {
                         var rigidbody = component.entity.getComponent(oimo.Rigidbody);
@@ -42394,50 +42415,20 @@ var egret3d;
                     this._oimoWorld.addJoint(component.oimoJoint);
                 }
             };
-            PhysicsSystem.prototype.onComponentRemoved = function (component, group) {
-                if (group !== this.groups[0]) {
-                    return;
-                }
-                if (component instanceof oimo.BaseCollider) {
-                    var rigidbody = component.entity.getComponent(oimo.Rigidbody);
-                    if (component.oimoShape._rigidBody) {
-                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
-                    }
-                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
-                }
-                else if (component instanceof oimo.BaseJoint) {
-                    this._oimoWorld.removeJoint(component.oimoJoint);
-                }
-            };
-            PhysicsSystem.prototype.onEntityRemoved = function (entity, group) {
-                var rigidbody = entity.getRemovedComponent(oimo.Rigidbody);
-                for (var _i = 0, _a = entity.getComponents(oimo.BaseJoint, true); _i < _a.length; _i++) {
-                    var joint = _a[_i];
-                    this._oimoWorld.removeJoint(joint.oimoJoint);
-                }
-                this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
-            };
             PhysicsSystem.prototype.onTick = function (deltaTime) {
                 var entities = this.groups[0].entities;
                 var helpVector3 = egret3d.Vector3.create().release();
                 var helpVector4 = egret3d.Vector4.create().release();
-                var oimoTransform = PhysicsSystem._helpTransform;
+                var oimoTransform = PhysicsSystem_1._helpTransform;
                 for (var _i = 0, entities_1 = entities; _i < entities_1.length; _i++) {
                     var entity = entities_1[_i];
-                    var transform = entity.transform;
                     var rigidbody = entity.getComponent(oimo.Rigidbody);
-                    var oimoRigidbody = rigidbody.oimoRigidbody;
                     switch (rigidbody.type) {
                         case 2 /* KINEMATIC */:
-                        case 1 /* STATIC */:
-                            if (oimoRigidbody.isSleeping()) {
+                            if (rigidbody.isSleeping) {
                             }
                             else {
-                                var position = transform.position;
-                                var quaternion = transform.rotation;
-                                oimoTransform.setPosition(position);
-                                oimoTransform.setOrientation(quaternion);
-                                oimoRigidbody.setTransform(oimoTransform);
+                                rigidbody.syncTransform();
                             }
                             break;
                     }
@@ -42481,27 +42472,25 @@ var egret3d;
                     }
                 }
             };
-            PhysicsSystem.prototype.raycast = function (rayOrFrom, distanceOrTo, mask, raycastInfo) {
+            PhysicsSystem.prototype.raycast = function (ray, cullingMask, maxDistance, raycastInfo) {
+                if (cullingMask === void 0) { cullingMask = 1 /* Default */; }
+                if (maxDistance === void 0) { maxDistance = 0.0; }
+                if (raycastInfo === void 0) { raycastInfo = null; }
                 var rayCastClosest = this._rayCastClosest;
-                rayCastClosest.clear(); // TODO mask.
-                if (rayOrFrom instanceof egret3d.Ray) {
-                    var helpVector3 = egret3d.Vector3.create().release();
-                    distanceOrTo = helpVector3.multiplyScalar(distanceOrTo || 100.0, rayOrFrom.direction).add(rayOrFrom.origin);
-                    rayOrFrom = rayOrFrom.origin;
-                }
-                this._oimoWorld.rayCast(rayOrFrom, distanceOrTo, rayCastClosest);
-                if (rayCastClosest.hit) {
-                    raycastInfo = raycastInfo || egret3d.RaycastInfo.create();
-                    raycastInfo.distance = egret3d.Vector3.getDistance(rayOrFrom, distanceOrTo) * rayCastClosest.fraction;
+                rayCastClosest.clear(); // TODO culling Mask.
+                var end = egret3d.Vector3.create().multiplyScalar(maxDistance > 0.0 ? maxDistance : 100000.0, ray.direction).add(ray.origin).release(); // TODO 精度问题。
+                this._oimoWorld.rayCast(ray.origin, end, rayCastClosest);
+                if (rayCastClosest.hit && raycastInfo) {
+                    raycastInfo.distance = egret3d.Vector3.getDistance(ray.origin, end) * rayCastClosest.fraction;
                     raycastInfo.position.copy(rayCastClosest.position);
                     if (raycastInfo.normal) {
                         raycastInfo.normal.copy(rayCastClosest.normal);
                     }
-                    raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
                     raycastInfo.collider = rayCastClosest.shape.userData;
-                    return raycastInfo;
+                    raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData; // TODO
+                    return true;
                 }
-                return null;
+                return false;
             };
             Object.defineProperty(PhysicsSystem.prototype, "gravity", {
                 /**
@@ -42531,7 +42520,11 @@ var egret3d;
              * @internal
              */
             PhysicsSystem._helpTransform = new OIMO.Transform();
+            PhysicsSystem = PhysicsSystem_1 = __decorate([
+                paper.executeMode(1 /* Player */ | 2 /* DebugPlayer */)
+            ], PhysicsSystem);
             return PhysicsSystem;
+            var PhysicsSystem_1;
         }(paper.BaseSystem));
         oimo.PhysicsSystem = PhysicsSystem;
         __reflect(PhysicsSystem.prototype, "egret3d.oimo.PhysicsSystem");
@@ -42719,124 +42712,108 @@ var egret3d;
         __reflect(SphereCollider.prototype, "egret3d.oimo.SphereCollider", ["egret3d.ISphereCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var oimo;
-    (function (oimo) {
-        var _material = null;
-        /**
-         *
-         */
-        var RayTester = (function (_super) {
-            __extends(RayTester, _super);
-            function RayTester() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.distance = 10.0;
-                _this.collisionMask = 4294967295 /* Everything */;
-                _this._hitted = false;
-                _this._mesh = null;
-                return _this;
-            }
-            RayTester.prototype.onStart = function () {
-                var meshFilter = this.gameObject.getOrAddComponent(egret3d.MeshFilter);
-                var meshRender = this.gameObject.getOrAddComponent(egret3d.MeshRenderer);
-                this._mesh = egret3d.Mesh.create(4, 0, [
-                    "POSITION" /* POSITION */,
-                    "COLOR_0" /* COLOR_0 */,
-                ]);
-                var vertices = this._mesh.getVertices();
-                var colors = this._mesh.getColors();
-                vertices[0] = 0.0;
-                vertices[1] = 0.0;
-                vertices[2] = 0.0;
-                vertices[3] = 0.0;
-                vertices[4] = 0.0;
-                vertices[5] = this.distance;
-                vertices[6] = 0.0;
-                vertices[7] = 0.0;
-                vertices[8] = this.distance;
-                vertices[9] = 0.0;
-                vertices[10] = 0.0;
-                vertices[11] = this.distance;
-                for (var i = 0, l = colors.length; i < l; i += 4) {
-                    colors[i + 0] = 0.0;
-                    colors[i + 1] = 1.0;
-                    colors[i + 2] = 0.0;
-                    colors[i + 3] = 0.7;
-                }
-                this._mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                if (!_material) {
-                    _material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
-                }
-                meshRender.materials = [_material];
-                meshFilter.mesh = this._mesh;
-            };
-            RayTester.prototype.onUpdate = function () {
-                var physicsSystem = paper.Application.systemManager.getSystem(oimo.PhysicsSystem);
-                var transform = this.gameObject.transform;
-                var matrix = transform.getWorldMatrix();
-                var from = transform.getPosition();
-                var to = matrix.transformVector3(egret3d.Vector3.create(this.distance, 0.0, 0.0).release());
-                var raycastInfo = physicsSystem.raycast(from, to, this.collisionMask);
-                if (raycastInfo) {
-                    this._hitted = true;
-                    var inverseMatrix = matrix.clone().inverse();
-                    var v = raycastInfo.normal.applyMatrix(inverseMatrix).multiplyScalar(1.0);
-                    var vertices = this._mesh.getVertices();
-                    var colors = this._mesh.getColors();
-                    inverseMatrix.release();
-                    vertices[3] = raycastInfo.distance;
-                    vertices[4] = 0.0;
-                    vertices[5] = 0.0;
-                    vertices[6] = raycastInfo.distance;
-                    vertices[7] = 0.0;
-                    vertices[8] = 0.0;
-                    vertices[9] = v.x + raycastInfo.distance;
-                    vertices[10] = v.y;
-                    vertices[11] = v.z;
-                    for (var i = 2 * 4, l = colors.length; i < l; i += 4) {
-                        colors[i + 0] = 1.0;
-                        colors[i + 1] = 0.0;
-                        colors[i + 2] = 0.0;
-                        colors[i + 3] = 0.7;
-                    }
-                    this._mesh.uploadVertexBuffer();
-                    raycastInfo.release();
-                }
-                else if (this._hitted) {
-                    this._hitted = false;
-                    var vertices = this._mesh.getVertices();
-                    var colors = this._mesh.getColors();
-                    vertices[3] = 0.0;
-                    vertices[4] = 0.0;
-                    vertices[5] = this.distance;
-                    vertices[6] = 0.0;
-                    vertices[7] = 0.0;
-                    vertices[8] = this.distance;
-                    vertices[9] = 0.0;
-                    vertices[10] = 0.0;
-                    vertices[11] = this.distance;
-                    for (var i = 2 * 4, l = colors.length; i < l; i += 4) {
-                        colors[i + 0] = 0.0;
-                        colors[i + 1] = 1.0;
-                        colors[i + 2] = 0.0;
-                        colors[i + 3] = 0.7;
-                    }
-                    this._mesh.uploadVertexBuffer();
-                }
-            };
-            __decorate([
-                paper.serializedField
-            ], RayTester.prototype, "distance", void 0);
-            __decorate([
-                paper.serializedField
-            ], RayTester.prototype, "collisionMask", void 0);
-            return RayTester;
-        }(paper.Behaviour));
-        oimo.RayTester = RayTester;
-        __reflect(RayTester.prototype, "egret3d.oimo.RayTester");
-    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
-})(egret3d || (egret3d = {}));
+// namespace egret3d.oimo {
+//     let _material: Material = null!;
+//     /**
+//      * 
+//      */
+//     export class RayTester extends paper.Behaviour {
+//         @paper.serializedField
+//         public distance: number = 10.0;
+//         @paper.serializedField
+//         public collisionMask: paper.Layer = paper.Layer.Everything;
+//         private _hitted: boolean = false;
+//         private _mesh: Mesh = null!;
+//         public onStart() {
+//             const meshFilter = this.gameObject.getOrAddComponent(MeshFilter);
+//             const meshRender = this.gameObject.getOrAddComponent(MeshRenderer);
+//             this._mesh = Mesh.create(4, 0, [
+//                 gltf.AttributeSemantics.POSITION,
+//                 gltf.AttributeSemantics.COLOR_0,
+//             ]);
+//             const vertices = this._mesh.getVertices()!;
+//             const colors = this._mesh.getColors()!;
+//             vertices[0] = 0.0;
+//             vertices[1] = 0.0;
+//             vertices[2] = 0.0;
+//             vertices[3] = 0.0;
+//             vertices[4] = 0.0;
+//             vertices[5] = this.distance;
+//             vertices[6] = 0.0;
+//             vertices[7] = 0.0;
+//             vertices[8] = this.distance;
+//             vertices[9] = 0.0;
+//             vertices[10] = 0.0;
+//             vertices[11] = this.distance;
+//             for (let i = 0, l = colors.length; i < l; i += 4) {
+//                 colors[i + 0] = 0.0;
+//                 colors[i + 1] = 1.0;
+//                 colors[i + 2] = 0.0;
+//                 colors[i + 3] = 0.7;
+//             }
+//             this._mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+//             if (!_material) {
+//                 _material = Material.create(DefaultShaders.LINEDASHED);
+//             }
+//             meshRender.materials = [_material];
+//             meshFilter.mesh = this._mesh;
+//         }
+//         public onUpdate() {
+//             const physicsSystem = paper.Application.systemManager.getSystem(PhysicsSystem)!;
+//             const transform = this.gameObject.transform;
+//             const matrix = transform.getWorldMatrix();
+//             const from = transform.getPosition();
+//             const to = matrix.transformVector3(Vector3.create(this.distance, 0.0, 0.0).release());
+//             const raycastInfo = physicsSystem.raycast(from, to, this.collisionMask);
+//             if (raycastInfo) {
+//                 this._hitted = true;
+//                 const inverseMatrix = matrix.clone().inverse();
+//                 const v = raycastInfo.normal!.applyMatrix(inverseMatrix).multiplyScalar(1.0);
+//                 const vertices = this._mesh.getVertices()!;
+//                 const colors = this._mesh.getColors()!;
+//                 inverseMatrix.release();
+//                 vertices[3] = raycastInfo.distance;
+//                 vertices[4] = 0.0;
+//                 vertices[5] = 0.0;
+//                 vertices[6] = raycastInfo.distance;
+//                 vertices[7] = 0.0;
+//                 vertices[8] = 0.0;
+//                 vertices[9] = v.x + raycastInfo.distance;
+//                 vertices[10] = v.y;
+//                 vertices[11] = v.z;
+//                 for (let i = 2 * 4, l = colors.length; i < l; i += 4) {
+//                     colors[i + 0] = 1.0;
+//                     colors[i + 1] = 0.0;
+//                     colors[i + 2] = 0.0;
+//                     colors[i + 3] = 0.7;
+//                 }
+//                 this._mesh.uploadVertexBuffer();
+//                 raycastInfo.release();
+//             }
+//             else if (this._hitted) {
+//                 this._hitted = false;
+//                 const vertices = this._mesh.getVertices()!;
+//                 const colors = this._mesh.getColors()!;
+//                 vertices[3] = 0.0;
+//                 vertices[4] = 0.0;
+//                 vertices[5] = this.distance;
+//                 vertices[6] = 0.0;
+//                 vertices[7] = 0.0;
+//                 vertices[8] = this.distance;
+//                 vertices[9] = 0.0;
+//                 vertices[10] = 0.0;
+//                 vertices[11] = this.distance;
+//                 for (let i = 2 * 4, l = colors.length; i < l; i += 4) {
+//                     colors[i + 0] = 0.0;
+//                     colors[i + 1] = 1.0;
+//                     colors[i + 2] = 0.0;
+//                     colors[i + 3] = 0.7;
+//                 }
+//                 this._mesh.uploadVertexBuffer();
+//             }
+//         }
+//     }
+// } 
 var egret3d;
 (function (egret3d) {
     var oimo;
@@ -43040,6 +43017,9 @@ var egret3d;
                 _this.springDamper = oimo.SpringDamper.create();
                 _this.limitMotor = oimo.RotationalLimitMotor.create();
                 _this._axis = egret3d.Vector3.UP.clone();
+                _this._values = new Float32Array([
+                    0, 0,
+                ]);
                 return _this;
             }
             HingeJoint_1 = HingeJoint;
@@ -43134,7 +43114,7 @@ var egret3d;
             ValueType[ValueType["MotorTorque"] = 3] = "MotorTorque";
         })(ValueType || (ValueType = {}));
         /**
-         *
+         * 关节的旋转限位马达设置。
          */
         var RotationalLimitMotor = (function () {
             function RotationalLimitMotor() {
@@ -43257,6 +43237,9 @@ var egret3d;
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.jointType = oimo.JointType.Spherical;
                 _this.springDamper = oimo.SpringDamper.create();
+                _this._values = new Float32Array([
+                    0, 0,
+                ]);
                 return _this;
             }
             SphericalJoint_1 = SphericalJoint;
@@ -43313,7 +43296,7 @@ var egret3d;
             ValueType[ValueType["UseSymplecticEuler"] = 2] = "UseSymplecticEuler";
         })(ValueType || (ValueType = {}));
         /**
-         *
+         * 关节的弹簧和阻尼器设置。
          */
         var SpringDamper = (function () {
             function SpringDamper() {
@@ -43421,6 +43404,9 @@ var egret3d;
                 _this.limitMotorZ = oimo.RotationalLimitMotor.create();
                 _this._axisY = egret3d.Vector3.FORWARD.clone();
                 _this._axisZ = egret3d.Vector3.FORWARD.clone();
+                _this._values = new Float32Array([
+                    0, 0,
+                ]);
                 return _this;
             }
             UniversalJoint_1 = UniversalJoint;

@@ -7463,7 +7463,7 @@ declare namespace egret3d.oimo {
         /**
          *
          */
-        syncTransform(): this;
+        syncTransform(transform?: Transform): this;
         /**
          * 该刚体是否正在休眠。
          */
@@ -7581,7 +7581,7 @@ declare namespace egret3d.oimo {
          */
         useWorldAnchor: boolean;
         /**
-         * 该关节在锚点。
+         * 该关节的锚点。
          */
         anchor: Readonly<Vector3>;
         /**
@@ -7650,13 +7650,12 @@ declare namespace egret3d.oimo {
         private _oimoWorld;
         protected getMatchers(): paper.INoneOfMatcher<paper.GameObject>[];
         onAwake(): void;
-        onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
-        onComponentAdded(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>): void;
         onComponentRemoved(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>): void;
         onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
+        onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
+        onComponentAdded(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>): void;
         onTick(deltaTime: number): void;
-        raycast(ray: Ray, distance: number, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
-        raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
+        raycast(ray: Readonly<Ray>, cullingMask?: paper.Layer, maxDistance?: float, raycastInfo?: RaycastInfo | null): boolean;
         /**
          *
          */
@@ -7743,19 +7742,6 @@ declare namespace egret3d.oimo {
     /**
      *
      */
-    class RayTester extends paper.Behaviour {
-        distance: number;
-        collisionMask: paper.Layer;
-        private _hitted;
-        private _mesh;
-        onStart(): void;
-        onUpdate(): void;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     *
-     */
     class ConeTwistJoint extends BaseJoint<OIMO.RagdollJoint> {
         private static readonly _config;
         private static readonly _swingSpringDamper;
@@ -7799,6 +7785,7 @@ declare namespace egret3d.oimo {
         readonly springDamper: SpringDamper;
         readonly limitMotor: RotationalLimitMotor;
         private readonly _axis;
+        protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.RevoluteJoint;
         /**
          *
@@ -7808,7 +7795,7 @@ declare namespace egret3d.oimo {
 }
 declare namespace egret3d.oimo {
     /**
-     *
+     * 关节的旋转限位马达设置。
      */
     class RotationalLimitMotor implements paper.ISerializable {
         private readonly _values;
@@ -7842,12 +7829,13 @@ declare namespace egret3d.oimo {
         private static readonly _springDamper;
         readonly jointType: JointType;
         readonly springDamper: SpringDamper;
+        protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.SphericalJoint;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     *
+     * 关节的弹簧和阻尼器设置。
      */
     class SpringDamper implements paper.ISerializable {
         private readonly _values;
@@ -7885,6 +7873,7 @@ declare namespace egret3d.oimo {
         readonly limitMotorZ: RotationalLimitMotor;
         private readonly _axisY;
         private readonly _axisZ;
+        protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.UniversalJoint;
         /**
          *

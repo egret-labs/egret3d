@@ -27,7 +27,6 @@ namespace examples.tests {
                 line.transform.setLocalPosition(0.0, 3.0, -2.0);
                 line.addComponent(behaviors.RotateAround).target = gameObject;
                 const rendererRaycast = line.addComponent(behaviors.RendererRaycast);
-                rendererRaycast.raycastMesh = true;
                 rendererRaycast.target = gameObject;
 
                 //
@@ -43,7 +42,6 @@ namespace examples.tests {
                 line.transform.setLocalPosition(0.0, 0.0, -2.0);
                 line.addComponent(behaviors.RotateAround).target = gameObject;
                 const rendererRaycast = line.addComponent(behaviors.RendererRaycast);
-                rendererRaycast.raycastMesh = true;
                 rendererRaycast.target = gameObject;
             }
 
@@ -58,7 +56,6 @@ namespace examples.tests {
                 const line = paper.GameObject.create("SkinnedMeshRendererRaycast");
                 line.transform.setLocalPosition(-3.0, 0.5, -2.0);
                 const rendererRaycast = line.addComponent(behaviors.RendererRaycast);
-                rendererRaycast.raycastMesh = true;
                 rendererRaycast.target = gameObject.getComponentInChildren(egret3d.SkinnedMeshRenderer)!.gameObject;
 
                 //

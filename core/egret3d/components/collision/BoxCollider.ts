@@ -11,7 +11,7 @@ namespace egret3d {
         @paper.serializedField("aabb")
         public readonly box: Box = Box.create(Vector3.MINUS_ONE, Vector3.ONE).expand(0.5);
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             return _colliderRaycast(this, this.box, null, ray, raycastInfo, false);
         }
 

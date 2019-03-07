@@ -252,7 +252,7 @@ namespace egret3d {
         /**
          * 
          */
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo, vertices?: Float32Array | null) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null, vertices: Float32Array | null = null) {
             let subMeshIndex = 0;
             const helpTriangleA = _helpTriangleA;
             const helpTriangleB = _helpTriangleB;

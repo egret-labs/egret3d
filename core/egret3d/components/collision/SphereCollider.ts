@@ -11,7 +11,7 @@ namespace egret3d {
         @paper.editor.property(paper.editor.EditType.NESTED)
         public readonly sphere: Sphere = Sphere.create(Vector3.ZERO, 0.5);
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             return _colliderRaycast(this, this.sphere, null, ray, raycastInfo, true);
         }
     }

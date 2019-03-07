@@ -40,7 +40,7 @@ namespace paper {
         /**
          * 引擎版本。
          */
-        public readonly version: string = "1.4.0.001";
+        public readonly version: string = "1.5.0.001";
         /**
          * 系统管理器。
          */

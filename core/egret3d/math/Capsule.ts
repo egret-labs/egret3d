@@ -118,11 +118,11 @@ namespace egret3d {
         }
 
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const { radius, center } = this;
             const halfHeight = this.height * 0.5;
             const begin = helpVector3A.copy(ray.origin).subtract(center);
-            const end = helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin);
+            const end = helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin); // TODO 精度问题。
 
             const p1x = begin.x;
             const p1y = begin.y;

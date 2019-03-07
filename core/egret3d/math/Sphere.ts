@@ -136,7 +136,7 @@ namespace egret3d {
             return this.center.getDistance(value) - this.radius;
         }
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const radius2 = this.radius * this.radius;
             const v1 = helpVector3A.subtract(this.center, ray.origin);
             const tca = v1.dot(ray.direction);

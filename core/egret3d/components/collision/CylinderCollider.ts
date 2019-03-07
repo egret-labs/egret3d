@@ -12,7 +12,7 @@ namespace egret3d {
         @paper.serializedField
         public readonly cylinder: Cylinder = Cylinder.create(Vector3.ZERO, 0.5, 0.5, 1.0);
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             return _colliderRaycast(this, this.cylinder, null, ray, raycastInfo, true);
         }
     }

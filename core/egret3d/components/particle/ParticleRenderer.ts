@@ -167,27 +167,15 @@ namespace egret3d.particle {
             this._localBoundingBox.copy(Box.ONE);
         }
 
-        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
-            let raycastMesh = false;
-            let raycastInfo: RaycastInfo | undefined = undefined;
-            const localRay = helpRay.applyMatrix(this.gameObject.transform.worldToLocalMatrix, p1);
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
+            const localRay = helpRay.applyMatrix(this.gameObject.transform.worldToLocalMatrix, ray);
             const localBoundingBox = this.localBoundingBox;
-
-            if (p2) {
-                if (p2 === true) {
-                    raycastMesh = true;
-                }
-                else {
-                    raycastMesh = p3 || false;
-                    raycastInfo = p2;
-                }
-            }
 
             if (localBoundingBox.raycast(localRay, raycastInfo)) {
                 if (raycastInfo) { // Update local raycast info to world.
                     const worldMatrix = this.gameObject.transform.localToWorldMatrix;
                     raycastInfo.position.applyMatrix(worldMatrix);
-                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position);
+                    raycastInfo.distance = ray.origin.getDistance(raycastInfo.position);
                 }
 
                 return true;

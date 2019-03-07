@@ -5,7 +5,7 @@ namespace egret3d.oimo {
         UseSymplecticEuler,
     }
     /**
-     * 
+     * 关节的弹簧和阻尼器设置。
      */
     export class SpringDamper implements paper.ISerializable {
         /**

@@ -22,7 +22,7 @@ namespace egret3d {
             this._mesh = null;
         }
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const mesh = this._mesh;
 
             if (mesh) {

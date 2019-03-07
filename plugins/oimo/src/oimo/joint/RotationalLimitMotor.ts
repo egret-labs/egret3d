@@ -6,7 +6,7 @@ namespace egret3d.oimo {
         MotorTorque,
     }
     /**
-     * 
+     * 关节的旋转限位马达设置。
      */
     export class RotationalLimitMotor implements paper.ISerializable {
         /**

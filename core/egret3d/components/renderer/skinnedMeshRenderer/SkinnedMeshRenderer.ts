@@ -232,42 +232,20 @@ namespace egret3d {
             return out;
         }
 
-        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const mesh = this._mesh;
             const boneMatrices = this.boneMatrices;
             if (!mesh || mesh.isDisposed || !boneMatrices) {
                 return false;
             }
 
-            let raycastMesh = false;
-            let raycastInfo: RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
             const boundingTransform = this.getBoundingTransform();
-            const localRay = helpRay.applyMatrix(boundingTransform.worldToLocalMatrix, p1);
+            const localRay = helpRay.applyMatrix(boundingTransform.worldToLocalMatrix, ray);
             const localBoundingBox = this.localBoundingBox;
 
-            if (p2) {
-                if (p2 === true) {
-                    raycastMesh = true;
-                }
-                else {
-                    raycastMesh = p3 || false;
-                    raycastInfo = p2;
-                }
-            }
-
-            if (raycastMesh) {
-                if (localBoundingBox.raycast(localRay) && mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0)!)) {
-                    if (raycastInfo) {
-                        raycastInfo.transform = transform;
-                    }
-
-                    return true;
-                }
-            }
-            else if (localBoundingBox.raycast(localRay, raycastInfo)) {
-                if (raycastInfo) { // Update local raycast info to world.
-                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(boundingTransform.localToWorldMatrix));
+            if (localBoundingBox.raycast(localRay) && mesh.raycast(ray, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0)!)) {
+                if (raycastInfo) {
                     raycastInfo.transform = transform;
                 }
 

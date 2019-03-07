@@ -93,7 +93,7 @@ namespace egret3d.oimo {
             }
         }
         /**
-         * 该关节在锚点。
+         * 该关节的锚点。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get anchor(): Readonly<Vector3> {
