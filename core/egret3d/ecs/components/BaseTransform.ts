@@ -20,17 +20,13 @@ namespace paper {
          * @internal
          */
         public _destroy() {
-            for (const child of this._children) {
-                child.entity.destroy();
-            }
+            this.destroyChildren();
 
             if (this._parent) {
                 this._parent._removeChild(this);
             }
 
             super._destroy();
-
-            this._children.length > 0 && (this._children.length = 0);
         }
         /**
          * @internal
@@ -141,6 +137,8 @@ namespace paper {
             while (i--) {
                 children[i].entity.destroy();
             }
+
+            children.length > 0 && (children.length = 0);
         }
         /**
          * 
