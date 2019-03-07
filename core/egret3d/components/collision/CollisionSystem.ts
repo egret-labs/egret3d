@@ -9,7 +9,7 @@ namespace egret3d {
         private readonly _contactCollecter: ContactCollecter = paper.Application.sceneManager.globalEntity.getComponent(ContactCollecter)!;
 
         private _raycast(ray: Readonly<Ray>, entity: paper.GameObject, raycastConfig: RaycastConfig | null, raycastInfo: RaycastInfo | null) {
-            const cullingMask = raycastConfig ? raycastConfig.layerMask || paper.Layer.Default : paper.Layer.Default;
+            const cullingMask = raycastConfig !== null ? raycastConfig.layerMask || paper.Layer.Default : paper.Layer.Default;
 
             if (
                 (entity.hideFlags & paper.HideFlags.Hide) ||
@@ -28,10 +28,31 @@ namespace egret3d {
                 }
             }
 
+            let isHit = false;
+
             if (raycastConfig && raycastConfig.raycastMesh) {
-                if (entity.renderer && entity.renderer.raycast(ray, raycastInfo)) {
-                    return true;
+                if (entity.renderer !== null) {
+                    if (raycastInfo !== null) {
+                        const helpRaycastInfo = _helpRaycastInfo;
+                        helpRaycastInfo.clear();
+                        helpRaycastInfo.backfaceCulling = raycastInfo.backfaceCulling;
+                        helpRaycastInfo.modifyNormal = raycastInfo.modifyNormal;
+                        helpRaycastInfo.normal = raycastInfo.normal !== null ? _helpVector3 : null;
+
+                        if (entity.renderer.raycast(ray, helpRaycastInfo)) {
+                            if (!raycastInfo.transform || raycastInfo.distance > helpRaycastInfo.distance) {
+                                raycastInfo.copy(helpRaycastInfo);
+                            }
+
+                            isHit = true;
+                        }
+                    }
+                    else {
+                        isHit = entity.renderer.raycast(ray, null);
+                    }
                 }
+
+                return isHit;
             }
 
             const boxColliders = entity.getComponents(BoxCollider);
@@ -42,8 +63,8 @@ namespace egret3d {
                         continue;
                     }
 
-                    if (raycastInfo) {
-                        this._raycastCollider(ray, collider, raycastInfo);
+                    if (raycastInfo !== null) {
+                        isHit = this._raycastCollider(ray, collider, raycastInfo) || isHit;
                     }
                     else if (collider.raycast(ray)) {
                         return true;
@@ -59,8 +80,8 @@ namespace egret3d {
                         continue;
                     }
 
-                    if (raycastInfo) {
-                        this._raycastCollider(ray, collider, raycastInfo);
+                    if (raycastInfo !== null) {
+                        isHit = this._raycastCollider(ray, collider, raycastInfo) || isHit;
                     }
                     else if (collider.raycast(ray)) {
                         return true;
@@ -76,8 +97,8 @@ namespace egret3d {
                         continue;
                     }
 
-                    if (raycastInfo) {
-                        this._raycastCollider(ray, collider, raycastInfo);
+                    if (raycastInfo !== null) {
+                        isHit = this._raycastCollider(ray, collider, raycastInfo) || isHit;
                     }
                     else if (collider.raycast(ray)) {
                         return true;
@@ -93,8 +114,8 @@ namespace egret3d {
                         continue;
                     }
 
-                    if (raycastInfo) {
-                        this._raycastCollider(ray, collider, raycastInfo);
+                    if (raycastInfo !== null) {
+                        isHit = this._raycastCollider(ray, collider, raycastInfo) || isHit;
                     }
                     else if (collider.raycast(ray)) {
                         return true;
@@ -110,8 +131,8 @@ namespace egret3d {
                         continue;
                     }
 
-                    if (raycastInfo) {
-                        this._raycastCollider(ray, collider, raycastInfo);
+                    if (raycastInfo !== null) {
+                        isHit = this._raycastCollider(ray, collider, raycastInfo) || isHit;
                     }
                     else if (collider.raycast(ray)) {
                         return true;
@@ -119,11 +140,7 @@ namespace egret3d {
                 }
             }
 
-            if (raycastInfo && raycastInfo.transform) {
-                return true;
-            }
-
-            return false;
+            return isHit;
         }
 
         private _raycastCollider(ray: Readonly<Ray>, collider: ICollider & IRaycast, raycastInfo: RaycastInfo) {
@@ -132,18 +149,9 @@ namespace egret3d {
             helpRaycastInfo.modifyNormal = raycastInfo.modifyNormal;
             helpRaycastInfo.normal = raycastInfo.normal ? _helpVector3 : null;
 
-            if (
-                collider.raycast(ray, helpRaycastInfo) &&
-                (!raycastInfo.transform || raycastInfo.distance > helpRaycastInfo.distance)
-            ) {
-                const transform = collider.gameObject.transform;
-                raycastInfo.distance = helpRaycastInfo.distance;
-                raycastInfo.position.copy(helpRaycastInfo.position);
-                raycastInfo.transform = transform;
-                raycastInfo.collider = collider;
-
-                if (raycastInfo.normal) {
-                    raycastInfo.normal.copy(helpRaycastInfo.normal!);
+            if (collider.raycast(ray, helpRaycastInfo)) {
+                if (!raycastInfo.transform || raycastInfo.distance > helpRaycastInfo.distance) {
+                    raycastInfo.copy(helpRaycastInfo);
                 }
 
                 return true;
