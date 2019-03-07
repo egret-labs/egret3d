@@ -95,7 +95,10 @@ namespace paper {
         public extras?: any = Application.playerMode === PlayerMode.Editor ? {} : undefined;
 
         private _isDestroyed: boolean = true;
-        private _entitiesDirty: boolean = false;
+        /**
+         * @internal
+         */
+        public _rootEntitiesDirty: boolean = false;
         private readonly _entities: IEntity[] = [];
         private readonly _rootEntities: IEntity[] = [];
 
@@ -110,7 +113,7 @@ namespace paper {
 
             if (entities.indexOf(entity) < 0) {
                 entities.push(entity);
-                this._entitiesDirty = true;
+                this._rootEntitiesDirty = true;
 
                 return true;
             }
@@ -126,7 +129,7 @@ namespace paper {
 
             if (index >= 0) {
                 entities.splice(index, 1);
-                this._entitiesDirty = true;
+                this._rootEntitiesDirty = true;
 
                 return true;
             }
@@ -144,7 +147,7 @@ namespace paper {
                 this.extras = {};
             }
 
-            this._entitiesDirty = false;
+            this._rootEntitiesDirty = false;
             this._entities.length = 0;
             this._rootEntities.length = 0;
 
@@ -171,7 +174,7 @@ namespace paper {
                 return false;
             }
 
-            if (this === sceneManager.globalScene || this === sceneManager.globalScene) {
+            if (this === sceneManager.globalScene || this === sceneManager.editorScene) {
                 // console.warn("The scene has been destroyed.");
                 return false;
             }
@@ -191,7 +194,7 @@ namespace paper {
             }
 
             this._isDestroyed = true;
-            this._entitiesDirty = true;
+            this._rootEntitiesDirty = true;
             entities.length = 0;
             Scene.onSceneDestroyed.dispatch(this);
 
@@ -259,7 +262,7 @@ namespace paper {
         public get rootEntities(): ReadonlyArray<IEntity> {
             const rootEntities = this._rootEntities;
 
-            if (this._entitiesDirty) {
+            if (this._rootEntitiesDirty) {
                 rootEntities.length = 0;
 
                 for (const entity of this._entities) {
@@ -268,7 +271,7 @@ namespace paper {
                     }
                 }
 
-                this._entitiesDirty = false;
+                this._rootEntitiesDirty = false;
             }
 
             return rootEntities;

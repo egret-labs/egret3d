@@ -107,6 +107,6 @@ namespace egret3d {
          * @param ray 射线。
          * @param raycastInfo 是否将检测的详细数据写入 raycastInfo。
          */
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null): boolean;
     }
 }

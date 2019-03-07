@@ -321,7 +321,7 @@ namespace egret3d {
                 ((pointOrBox as IVector3).z > min.z) && ((pointOrBox as IVector3).z < max.z);
         }
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             if (this.isEmpty) {
                 return false;
             }

@@ -118,7 +118,7 @@ namespace egret3d {
         }
 
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const { radius, center } = this;
             const halfHeight = this.height * 0.5;
             const begin = helpVector3A.copy(ray.origin).subtract(center);

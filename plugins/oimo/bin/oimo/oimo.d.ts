@@ -7463,7 +7463,7 @@ declare namespace egret3d.oimo {
         /**
          *
          */
-        syncTransform(): this;
+        syncTransform(transform?: Transform): this;
         /**
          * 该刚体是否正在休眠。
          */
@@ -7650,10 +7650,10 @@ declare namespace egret3d.oimo {
         private _oimoWorld;
         protected getMatchers(): paper.INoneOfMatcher<paper.GameObject>[];
         onAwake(): void;
-        onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
-        onComponentAdded(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>): void;
         onComponentRemoved(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>): void;
         onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
+        onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>): void;
+        onComponentAdded(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>): void;
         onTick(deltaTime: number): void;
         raycast(ray: Ray, distance: number, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;
         raycast(from: Readonly<IVector3>, to: Readonly<IVector3>, mask?: paper.Layer, raycastInfo?: RaycastInfo): RaycastInfo | null;

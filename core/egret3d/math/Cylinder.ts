@@ -108,7 +108,7 @@ namespace egret3d {
             return (dX * dX + dZ * dZ) <= dRadius * dRadius;
         }
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const { topRadius, bottomRadius, height, center } = this;
             const begin = helpVector3A.copy(ray.origin).subtract(center);
             const end = helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin);

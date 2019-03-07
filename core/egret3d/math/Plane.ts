@@ -143,7 +143,7 @@ namespace egret3d {
             return output.copy(this.normal).multiplyScalar(-this.constant);
         }
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const t = ray.getDistanceToPlane(this);
             if (t > 0.0) {
                 if (raycastInfo) {

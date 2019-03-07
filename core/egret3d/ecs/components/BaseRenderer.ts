@@ -64,8 +64,7 @@ namespace paper {
          */
         public abstract recalculateLocalBox(): void;
 
-        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
-        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
+        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo: egret3d.RaycastInfo | null): boolean;
         /**
          * 
          */

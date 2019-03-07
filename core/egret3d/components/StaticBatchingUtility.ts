@@ -77,7 +77,7 @@ namespace egret3d {
         const meshData = meshFilter.mesh;
 
         //合并筛选的条件:层级_光照贴图索引_材质0_材质1... ：256_0_234_532...
-        let key: string = target.layer + "_" +  meshRenderer.lightmapIndex + "_";
+        let key: string = target.layer + "_" + meshRenderer.lightmapIndex + "_";
         materials.forEach(e => { key = key + "_" + e!.uuid; });
 
         if (!out[key]) {
@@ -172,8 +172,8 @@ namespace egret3d {
                         helpVec3_1.y = positionBuffer[j + 1];
                         helpVec3_1.z = positionBuffer[j + 2];
                         //转换成世界坐标后在转换为合并节点的本地坐标
-                        worldMatrix.transformVector3(helpVec3_1, helpVec3_2);
-                        helpInverseMatrix.transformVector3(helpVec3_2, helpVec3_1);
+                        helpVec3_2.applyMatrix(worldMatrix, helpVec3_1);
+                        helpVec3_1.applyMatrix(helpInverseMatrix, helpVec3_2);
                         //
                         tempVertexBuffers[gltf.AttributeSemantics.POSITION].push(helpVec3_1.x, helpVec3_1.y, helpVec3_1.z);
                     }
@@ -191,9 +191,7 @@ namespace egret3d {
                                 helpVec3_1.y = normalBuffer[j + 1];
                                 helpVec3_1.z = normalBuffer[j + 2];
 
-                                worldMatrix.transformNormal(helpVec3_1);
-                                helpInverseMatrix.transformNormal(helpVec3_1);
-                                helpVec3_1.normalize();
+                                helpVec3_1.applyDirection(worldMatrix).applyDirection(helpInverseMatrix);
                                 target[startIndex + j] = helpVec3_1.x;
                                 target[startIndex + j + 1] = helpVec3_1.y;
                                 target[startIndex + j + 2] = helpVec3_1.z;

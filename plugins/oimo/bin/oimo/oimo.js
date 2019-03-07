@@ -41698,11 +41698,13 @@ var egret3d;
             /**
              *
              */
-            Rigidbody.prototype.syncTransform = function () {
+            Rigidbody.prototype.syncTransform = function (transform) {
                 var oimoRigidbody = this._oimoRigidbody;
                 if (oimoRigidbody) {
                     var oimoTransform = oimo.PhysicsSystem._helpTransform;
-                    var transform = this.gameObject.transform;
+                    if (!transform) {
+                        transform = this.gameObject.transform;
+                    }
                     oimoTransform.setPosition(transform.position);
                     oimoTransform.setOrientation(transform.rotation);
                     oimoRigidbody.setTransform(oimoTransform);
@@ -42310,7 +42312,7 @@ var egret3d;
             }
             PhysicsSystem.prototype.getMatchers = function () {
                 return [
-                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint),
+                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.CylinderCollider, oimo.ConeCollider, oimo.CapsuleCollider, oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint, oimo.UniversalJoint),
                 ];
             };
             PhysicsSystem.prototype.onAwake = function () {
@@ -42359,6 +42361,26 @@ var egret3d;
                     }
                 };
             };
+            PhysicsSystem.prototype.onComponentRemoved = function (component, group) {
+                if (component instanceof oimo.BaseCollider) {
+                    var rigidbody = component.entity.getComponent(oimo.Rigidbody);
+                    if (component.oimoShape._rigidBody) {
+                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                    }
+                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
+                }
+                else if (component instanceof oimo.BaseJoint) {
+                    this._oimoWorld.removeJoint(component.oimoJoint);
+                }
+            };
+            PhysicsSystem.prototype.onEntityRemoved = function (entity, group) {
+                var rigidbody = entity.getRemovedComponent(oimo.Rigidbody) || entity.getComponent(oimo.Rigidbody);
+                for (var _i = 0, _a = entity.getComponents(oimo.BaseJoint, true); _i < _a.length; _i++) {
+                    var joint = _a[_i];
+                    this._oimoWorld.removeJoint(joint.oimoJoint);
+                }
+                this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+            };
             PhysicsSystem.prototype.onEntityAdded = function (entity, group) {
                 var rigidbody = entity.getComponent(oimo.Rigidbody);
                 for (var _i = 0, _a = entity.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
@@ -42377,9 +42399,6 @@ var egret3d;
                 this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
             };
             PhysicsSystem.prototype.onComponentAdded = function (component, group) {
-                if (group !== this.groups[0]) {
-                    return;
-                }
                 if (component instanceof oimo.BaseCollider) {
                     if (!component.oimoShape._rigidBody) {
                         var rigidbody = component.entity.getComponent(oimo.Rigidbody);
@@ -42394,29 +42413,6 @@ var egret3d;
                     this._oimoWorld.addJoint(component.oimoJoint);
                 }
             };
-            PhysicsSystem.prototype.onComponentRemoved = function (component, group) {
-                if (group !== this.groups[0]) {
-                    return;
-                }
-                if (component instanceof oimo.BaseCollider) {
-                    var rigidbody = component.entity.getComponent(oimo.Rigidbody);
-                    if (component.oimoShape._rigidBody) {
-                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
-                    }
-                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
-                }
-                else if (component instanceof oimo.BaseJoint) {
-                    this._oimoWorld.removeJoint(component.oimoJoint);
-                }
-            };
-            PhysicsSystem.prototype.onEntityRemoved = function (entity, group) {
-                var rigidbody = entity.getRemovedComponent(oimo.Rigidbody);
-                for (var _i = 0, _a = entity.getComponents(oimo.BaseJoint, true); _i < _a.length; _i++) {
-                    var joint = _a[_i];
-                    this._oimoWorld.removeJoint(joint.oimoJoint);
-                }
-                this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
-            };
             PhysicsSystem.prototype.onTick = function (deltaTime) {
                 var entities = this.groups[0].entities;
                 var helpVector3 = egret3d.Vector3.create().release();
@@ -42424,20 +42420,13 @@ var egret3d;
                 var oimoTransform = PhysicsSystem._helpTransform;
                 for (var _i = 0, entities_1 = entities; _i < entities_1.length; _i++) {
                     var entity = entities_1[_i];
-                    var transform = entity.transform;
                     var rigidbody = entity.getComponent(oimo.Rigidbody);
-                    var oimoRigidbody = rigidbody.oimoRigidbody;
                     switch (rigidbody.type) {
                         case 2 /* KINEMATIC */:
-                        case 1 /* STATIC */:
-                            if (oimoRigidbody.isSleeping()) {
+                            if (rigidbody.isSleeping) {
                             }
                             else {
-                                var position = transform.position;
-                                var quaternion = transform.rotation;
-                                oimoTransform.setPosition(position);
-                                oimoTransform.setOrientation(quaternion);
-                                oimoRigidbody.setTransform(oimoTransform);
+                                rigidbody.syncTransform();
                             }
                             break;
                     }

@@ -184,7 +184,7 @@ namespace paper {
                 else if (isAdded) {
                     if (_extraOfComponents.length > 0 && _extraOfComponents.indexOf(component) >= 0) {
                         // remove extra
-                        return 2;
+                        return -2;
                     }
                     else if (
                         (_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&

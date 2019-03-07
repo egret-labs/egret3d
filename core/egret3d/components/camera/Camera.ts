@@ -792,7 +792,7 @@ namespace egret3d {
             const { w, h } = this.renderTargetSize;
             const worldToClipMatrix = this.worldToClipMatrix;
             const ndcPos = helpVector3A;
-            worldToClipMatrix.transformVector3(worldPos, ndcPos);
+            ndcPos.applyMatrix(worldToClipMatrix, worldPos);
             outScreenPos.x = (ndcPos.x + 1.0) * w * 0.5;
             outScreenPos.y = (1.0 - ndcPos.y) * h * 0.5;
         }

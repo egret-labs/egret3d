@@ -12,7 +12,7 @@ namespace egret3d {
         @paper.serializedField
         public readonly capsule: Capsule = Capsule.create(Vector3.ZERO, 0.25, 0.5);
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             return _colliderRaycast(this, this.capsule, null, ray, raycastInfo, true);
         }
     }

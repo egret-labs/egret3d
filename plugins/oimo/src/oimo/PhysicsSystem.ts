@@ -18,8 +18,8 @@ namespace egret3d.oimo {
         protected getMatchers() {
             return [
                 paper.Matcher.create<paper.GameObject>(egret3d.Transform, Rigidbody).extraOf(
-                    BoxCollider, SphereCollider,
-                    SphericalJoint, HingeJoint, ConeTwistJoint,
+                    BoxCollider, SphereCollider, CylinderCollider, ConeCollider, CapsuleCollider,
+                    SphericalJoint, HingeJoint, ConeTwistJoint, UniversalJoint,
                 ),
             ];
         }
@@ -75,6 +75,30 @@ namespace egret3d.oimo {
             };
         }
 
+        public onComponentRemoved(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>) {
+            if (component instanceof BaseCollider) {
+                const rigidbody = component.entity.getComponent(Rigidbody)!;
+
+                if ((component.oimoShape as any)._rigidBody) {
+                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                }
+                // rigidbody._updateMass(rigidbody.oimoRigidbody);
+            }
+            else if (component instanceof BaseJoint) {
+                this._oimoWorld.removeJoint(component.oimoJoint);
+            }
+        }
+
+        public onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
+            const rigidbody = entity.getRemovedComponent(Rigidbody) || entity.getComponent(Rigidbody)!;
+
+            for (const joint of entity.getComponents(BaseJoint as any, true) as BaseJoint<any>[]) {
+                this._oimoWorld.removeJoint(joint.oimoJoint);
+            }
+
+            this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+        }
+
         public onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const rigidbody = entity.getComponent(Rigidbody)!;
 
@@ -95,10 +119,6 @@ namespace egret3d.oimo {
         }
 
         public onComponentAdded(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>) {
-            if (group !== this.groups[0]) {
-                return;
-            }
-
             if (component instanceof BaseCollider) {
                 if (!(component.oimoShape as any)._rigidBody) {
                     const rigidbody = component.entity.getComponent(Rigidbody)!;
@@ -116,34 +136,6 @@ namespace egret3d.oimo {
             }
         }
 
-        public onComponentRemoved(component: BaseCollider | BaseJoint<OIMO.Joint>, group: paper.Group<paper.GameObject>) {
-            if (group !== this.groups[0]) {
-                return;
-            }
-
-            if (component instanceof BaseCollider) {
-                const rigidbody = component.entity.getComponent(Rigidbody)!;
-
-                if ((component.oimoShape as any)._rigidBody) {
-                    rigidbody.oimoRigidbody.removeShape(component.oimoShape);
-                }
-                // rigidbody._updateMass(rigidbody.oimoRigidbody);
-            }
-            else if (component instanceof BaseJoint) {
-                this._oimoWorld.removeJoint(component.oimoJoint);
-            }
-        }
-
-        public onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
-            const rigidbody = entity.getRemovedComponent(Rigidbody)!;
-
-            for (const joint of entity.getComponents(BaseJoint as any, true) as BaseJoint<any>[]) {
-                this._oimoWorld.removeJoint(joint.oimoJoint);
-            }
-
-            this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
-        }
-
         public onTick(deltaTime: number) {
             const entities = this.groups[0].entities;
             const helpVector3 = Vector3.create().release();
@@ -151,21 +143,14 @@ namespace egret3d.oimo {
             const oimoTransform = PhysicsSystem._helpTransform;
 
             for (const entity of entities) {
-                const transform = entity.transform;
                 const rigidbody = entity.getComponent(Rigidbody)!;
-                const oimoRigidbody = rigidbody.oimoRigidbody;
 
                 switch (rigidbody.type) {
                     case RigidbodyType.KINEMATIC:
-                    case RigidbodyType.STATIC:
-                        if (oimoRigidbody.isSleeping()) {
+                        if (rigidbody.isSleeping) {
                         }
                         else {
-                            const position = transform.position;
-                            const quaternion = transform.rotation;
-                            oimoTransform.setPosition(position as any);
-                            oimoTransform.setOrientation(quaternion as any);
-                            oimoRigidbody.setTransform(oimoTransform);
+                            rigidbody.syncTransform();
                         }
                         break;
                 }

@@ -8,7 +8,7 @@ namespace egret3d {
     export class CollisionSystem extends paper.BaseSystem<paper.GameObject>{
         private readonly _contactCollecter: ContactCollecter = paper.Application.sceneManager.globalEntity.getComponent(ContactCollecter)!;
 
-        private _raycast(ray: Readonly<Ray>, entity: paper.GameObject, raycastConfig?: RaycastConfig, raycastInfo?: RaycastInfo) {
+        private _raycast(ray: Readonly<Ray>, entity: paper.GameObject, raycastConfig: RaycastConfig | null, raycastInfo: RaycastInfo | null) {
             const cullingMask = raycastConfig ? raycastConfig.layerMask || paper.Layer.Default : paper.Layer.Default;
 
             if (
@@ -29,7 +29,7 @@ namespace egret3d {
             }
 
             if (raycastConfig && raycastConfig.raycastMesh) {
-                if (entity.renderer && entity.renderer.raycast(ray, raycastInfo, true)) {
+                if (entity.renderer && entity.renderer.raycast(ray, raycastInfo)) {
                     return true;
                 }
             }
@@ -152,20 +152,23 @@ namespace egret3d {
             return false;
         }
 
-        // public raycast(ray: Readonly<Ray>, raycastConfig?: RaycastConfig, raycastInfo?: RaycastInfo): boolean {
+        public raycast(ray: Readonly<Ray>, raycastConfig: RaycastConfig | null = null, raycastInfo: RaycastInfo | null = null): boolean {
+            if (raycastInfo !== null) {
+                for (const entity of this.groups[1].entities) {
+                    this._raycast(ray, entity, raycastConfig, raycastInfo);
+                }
 
-        //     if (raycastInfo) {
-        //         for (const entity of this.groups[1].entities) {
-        //             this._raycast(ray, entity, raycastConfig, raycastInfo);
-        //         }
-        //     }
-        //     else {
+                return raycastInfo.transform !== null;
+            }
 
-        //         for (const entity of this.groups[1].entities) {
-        //             this._raycast(ray, entity, raycastConfig);
-        //         }
-        //     }
-        // }
+            for (const entity of this.groups[1].entities) {
+                if (this._raycast(ray, entity, raycastConfig, null)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
 
         protected getMatchers() {
             return [

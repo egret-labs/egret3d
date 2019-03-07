@@ -46,7 +46,7 @@ namespace egret3d {
             if (raycastMesh) {
                 if (
                     gameObject.renderer && gameObject.renderer.enabled &&
-                    gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)
+                    gameObject.renderer.raycast(ray, raycastInfo)
                 ) {
                     raycastInfo.transform = gameObject.transform;
                 }
@@ -84,12 +84,12 @@ namespace egret3d {
         return a.distance - b.distance;
     }
 
-    export function _colliderRaycast(collider: ICollider, raycaster: IRaycast, preRaycaster: IRaycast | null, ray: Readonly<Ray>, raycastInfo?: RaycastInfo, modifyNormal?: boolean) {
+    export function _colliderRaycast(collider: ICollider, raycaster: IRaycast, preRaycaster: IRaycast | null, ray: Readonly<Ray>, raycastInfo: RaycastInfo | null, modifyNormal: boolean = false) {
         const transform = collider.gameObject.transform;
         const worldToLocalMatrix = transform.worldToLocalMatrix;
         const localRay = helpRay.applyMatrix(worldToLocalMatrix, ray);
 
-        if ((!preRaycaster || preRaycaster.raycast(localRay)) && raycaster.raycast(localRay, raycastInfo)) {
+        if ((!preRaycaster || preRaycaster.raycast(localRay, null)) && raycaster.raycast(localRay, raycastInfo)) {
             if (raycastInfo) {
                 const localToWorldMatrix = transform.localToWorldMatrix;
                 raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
@@ -121,12 +121,12 @@ namespace egret3d {
      */
     export function raycast(
         ray: Readonly<Ray>, gameObject: Readonly<paper.GameObject>,
-        raycastMesh: boolean = false, raycastInfo?: RaycastInfo
+        raycastMesh: boolean = false, raycastInfo: RaycastInfo | null = null
     ) {
         if (raycastMesh) {
             if (
                 gameObject.renderer && gameObject.renderer.enabled &&
-                gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)
+                gameObject.renderer.raycast(ray, raycastInfo)
             ) {
                 if (raycastInfo) {
                     raycastInfo.transform = gameObject.transform;
