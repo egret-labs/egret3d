@@ -218,6 +218,7 @@ namespace egret3d.oimo {
 
                 raycastInfo.collider = rayCastClosest.shape.userData;
                 raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData; // TODO
+                raycastInfo.transform = (raycastInfo.rigidbody as egret3d.oimo.Rigidbody).gameObject!.transform;
 
                 return true;
             }
