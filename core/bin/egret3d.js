@@ -7082,7 +7082,6 @@ var paper;
             }
             _super.prototype._destroy.call(this);
             this._children.length > 0 && (this._children.length = 0);
-            this._parent = null;
         };
         /**
          * @internal
@@ -7091,6 +7090,7 @@ var paper;
             var children = this._children;
             if (children.indexOf(child) < 0) {
                 children.push(child);
+                child._parent = this;
                 return true;
             }
             return false;
@@ -7103,6 +7103,7 @@ var paper;
             var index = children.indexOf(child);
             if (index >= 0) {
                 children.splice(index, 1);
+                child._parent = null;
                 return true;
             }
             return false;
@@ -7153,7 +7154,6 @@ var paper;
                 parent._addChild(this);
             }
             this._globalEnabledDirty = true;
-            this._parent = parent;
             var currentEnabled = this.isActiveAndEnabled;
             if (prevEnabled !== currentEnabled) {
                 this.dispatchEnabledEvent(currentEnabled);

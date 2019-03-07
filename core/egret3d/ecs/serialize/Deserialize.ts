@@ -140,7 +140,7 @@ namespace paper {
             if (clazz) {
                 const hasLink = KEY_EXTRAS in componentSource && (componentSource[KEY_EXTRAS] as ComponentExtras).linkedID;
 
-                if (clazz === egret3d.Transform) {
+                if (clazz === egret3d.Transform) { // TODO
                     componentTarget = this.components[componentSource.uuid] as BaseTransform;
 
                     if (KEY_CHILDREN in componentSource) { // Link transform children.
