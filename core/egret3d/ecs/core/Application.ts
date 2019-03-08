@@ -63,6 +63,10 @@ namespace paper {
          */
         private _loop(timestamp?: number) {
             if (!this._isRunning) { return; }
+            if (!timestamp) {//TODO 解决微信和web上时间不统一
+                requestAnimationFrame(this._loop);
+                return;
+            }
 
             timestamp = timestamp || performance.now();
             const result: ClockUpdateFlags = clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
