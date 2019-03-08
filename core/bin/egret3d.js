@@ -31476,6 +31476,7 @@ var egret3d;
                         }
                         egret2DRenderer._draw();
                         renderState.clearState();
+                        this._cacheProgram = null; //防止2d的program污染3d的
                     }
                 }
             };
@@ -31535,7 +31536,7 @@ var egret3d;
                     renderState_2.caches.egret2DOrderCount = 0;
                     renderState_2.caches.cullingMask = 0 /* Nothing */;
                     renderState_2.caches.clockBuffer[0] = clock.time; // TODO more clock info.
-                    this._cacheProgram = null;
+                    // this._cacheProgram = null;
                     // Render lights shadows. TODO 
                     // if (camera.cullingMask !== renderState.caches.cullingMask) {
                     var lights = this._cameraAndLightCollecter.lights;
