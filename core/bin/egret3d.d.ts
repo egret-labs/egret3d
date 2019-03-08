@@ -5381,7 +5381,7 @@ declare namespace paper {
          */
         parent: this | null;
         /**
-         *
+         * @deprecated
          * @see paper.Scene#find()
          */
         static find(name: string, scene?: Scene | null): GameObject | null;
