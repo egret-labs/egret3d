@@ -16531,6 +16531,10 @@ var egret3d;
              *
              */
             _this.zdist = -1;
+            /**
+             * TODO
+             */
+            _this.count = 0;
             return _this;
         }
         /**
@@ -24306,25 +24310,51 @@ var egret3d;
     egret3d.MAX_VERTEX_COUNT_PER_BUFFER = 50000;
     //
     var helpVec3_1 = egret3d.Vector3.create();
-    var helpVec3_2 = egret3d.Vector3.create();
     var helpInverseMatrix = egret3d.Matrix4.create();
     //缓存已经校验过的对象，用于过滤
-    var cacheInstances = [];
+    var cacheUUIDs = [];
     var beforeCombineCount = 0;
+    var CombineInstance = (function () {
+        function CombineInstance() {
+            this.verticesCount = 0;
+            this.indicesCount = 0;
+            this.lightmapIndex = -1;
+            this.meshAttribute = {};
+            this.materials = [];
+            this.instances = [];
+        }
+        return CombineInstance;
+    }());
+    __reflect(CombineInstance.prototype, "CombineInstance");
+    function _copyAccessorBuffer(mesh, accessor, target, offset) {
+        var buffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(accessor));
+        var count = buffer.length;
+        for (var i = 0; i < count; i++) {
+            target[offset + i] = buffer[i];
+        }
+    }
+    function _fillBuffer(target, offset, count, defaultValue) {
+        var defaultValueCount = defaultValue.length;
+        for (var i = 0; i < count; i++) {
+            for (var j = 0; j < defaultValueCount; j++) {
+                target[offset++] = defaultValue[j];
+            }
+        }
+    }
     /**
      * 尝试对场景内所有静态对象合并
      */
-    function autoCombine(scene) {
+    function combineScene(scene) {
         combine(scene.gameObjects);
     }
-    egret3d.autoCombine = autoCombine;
+    egret3d.combineScene = combineScene;
     /**
      * 尝试合并静态对象列表。
      * @param instances
      * @param root
      */
     function combine(instances) {
-        cacheInstances.length = 0;
+        cacheUUIDs.length = 0;
         beforeCombineCount = 0;
         var allCombines = {};
         //1.通过材质填充合并列表
@@ -24343,7 +24373,7 @@ var egret3d;
             }
         }
         console.log("combine", beforeCombineCount, "to", afterCombineCount, "save", beforeCombineCount - afterCombineCount);
-        cacheInstances.length = 0;
+        cacheUUIDs.length = 0;
     }
     egret3d.combine = combine;
     /**
@@ -24353,10 +24383,10 @@ var egret3d;
      */
     function _colletCombineInstance(target, out, root) {
         //过滤重复的对象
-        if (cacheInstances.indexOf(target.uuid) >= 0) {
+        if (cacheUUIDs.indexOf(target.uuid) >= 0) {
             return;
         }
-        cacheInstances.push(target.uuid);
+        cacheUUIDs.push(target.uuid);
         //
         for (var _i = 0, _a = target.transform.children; _i < _a.length; _i++) {
             var child = _a[_i];
@@ -24387,7 +24417,7 @@ var egret3d;
         var combines = out[key];
         //找相同材质合成列表的最后一个，如果最后一个顶点超过允许最大数了，就新建一个，下个批次处理
         var combine = combines[combines.length - 1];
-        if (combine.vertexCount + meshData.vertexCount > egret3d.MAX_VERTEX_COUNT_PER_BUFFER) {
+        if (combine.verticesCount + meshData.vertexCount > egret3d.MAX_VERTEX_COUNT_PER_BUFFER) {
             combine = new CombineInstance();
             out[key].push(combine);
         }
@@ -24395,6 +24425,10 @@ var egret3d;
         if (!combine.root) {
             combine.root = root ? root : target;
             combine.lightmapIndex = meshRenderer.lightmapIndex;
+            for (var _b = 0, materials_5 = materials; _b < materials_5.length; _b++) {
+                var mat = materials_5[_b];
+                combine.materials.push(mat);
+            }
         }
         //适配最大格式
         var primitives = meshData.glTFMesh.primitives;
@@ -24403,14 +24437,13 @@ var egret3d;
             for (var attStr in primitives[i].attributes) {
                 var attrType = attStr;
                 if (!combine.meshAttribute[attrType]) {
-                    combine.vertexBufferSize += meshData.getAccessor(primitive.attributes[attStr]).typeCount;
+                    combine.meshAttribute[attrType] = attrType;
                 }
-                combine.meshAttribute[attrType] = attrType;
             }
-            combine.indexBufferTotalSize += meshData.getBufferLength(meshData.getAccessor(primitive.indices)) / Uint16Array.BYTES_PER_ELEMENT;
+            combine.indicesCount += meshData.getBufferLength(meshData.getAccessor(primitive.indices)) / Uint16Array.BYTES_PER_ELEMENT;
         }
         //
-        combine.vertexCount += meshData.vertexCount;
+        combine.verticesCount += meshData.vertexCount;
         combine.instances.push(target);
     }
     /**
@@ -24421,8 +24454,10 @@ var egret3d;
         var combineMesh = _combineMesh(combineInstance);
         var combineRoot = combineInstance.root;
         //把合成好的放入root中，重新绘制
-        var meshFilter = combineRoot.getComponent(egret3d.MeshFilter);
+        var meshFilter = combineRoot.getOrAddComponent(egret3d.MeshFilter);
         meshFilter.mesh = combineMesh;
+        // const meshRenderer = combineRoot.getOrAddComponent(MeshRenderer);
+        // meshRenderer.materials = combineInstance.materials;
     }
     /**
      * 合并拥有共享材质的渲染对象
@@ -24431,17 +24466,29 @@ var egret3d;
      */
     function _combineMesh(combineInstance) {
         //
-        helpInverseMatrix.copy(combineInstance.root.transform.worldToLocalMatrix);
+        var root = combineInstance.root;
         var meshAttribute = combineInstance.meshAttribute;
-        var lightmapScaleOffset = combineInstance.root.renderer.lightmapScaleOffset;
-        var newAttribute = [];
-        var tempIndexBuffers = [];
-        var tempVertexBuffers = {};
+        var lightmapScaleOffset = root.renderer.lightmapScaleOffset;
+        var combineAttributes = [];
         for (var key in meshAttribute) {
-            tempVertexBuffers[key] = [];
-            newAttribute.push(key);
+            combineAttributes.push(key);
         }
         //
+        var combineMesh = egret3d.Mesh.create(combineInstance.verticesCount, combineInstance.indicesCount, combineAttributes);
+        combineMesh.drawMode = 35048 /* Dynamic */;
+        var combinePosition = combineMesh.getVertices();
+        var combineNormal = combineMesh.getNormals();
+        var combineUV0 = combineMesh.getUVs();
+        var combineUV1 = combineMesh.getAttributes("TEXCOORD_1" /* TEXCOORD_1 */);
+        var combineColor0 = combineMesh.getColors();
+        var combineJoint0 = combineMesh.getAttributes("JOINTS_0" /* JOINTS_0 */);
+        var combineWeight0 = combineMesh.getAttributes("WEIGHTS_0" /* WEIGHTS_0 */);
+        var combineIndices = combineMesh.getIndices();
+        //
+        helpInverseMatrix.copy(root.transform.worldToLocalMatrix);
+        var subIndexBuffersCount = [];
+        //
+        var positonIndex = 0, normalIndex = 0, color0Index = 0, color1Index = 0, uv0Index = 0, uv1Index = 0, jointIndex = 0, weightIndex = 0, indexIndex = 0;
         var startIndex = 0;
         var endIndex = 0;
         for (var _i = 0, _a = combineInstance.instances; _i < _a.length; _i++) {
@@ -24461,212 +24508,130 @@ var egret3d;
                     var orginVertexCount = mesh.vertexCount;
                     var orginAttributes = primitives[i].attributes;
                     var positionBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.POSITION));
-                    //vertexBuffers
-                    for (var j = 0; j < positionBuffer.length; j += 3) {
-                        helpVec3_1.x = positionBuffer[j + 0];
-                        helpVec3_1.y = positionBuffer[j + 1];
-                        helpVec3_1.z = positionBuffer[j + 2];
+                    for (var j = 0, l = positionBuffer.length; j < l; j += 3) {
                         //转换成世界坐标后在转换为合并节点的本地坐标
-                        worldMatrix.transformVector3(helpVec3_1, helpVec3_2);
-                        helpInverseMatrix.transformVector3(helpVec3_2, helpVec3_1);
-                        //
-                        tempVertexBuffers["POSITION" /* POSITION */].push(helpVec3_1.x, helpVec3_1.y, helpVec3_1.z);
+                        helpVec3_1.fromArray(positionBuffer, j).applyMatrix(worldMatrix).applyMatrix(helpInverseMatrix);
+                        combinePosition[positonIndex++] = helpVec3_1.x;
+                        combinePosition[positonIndex++] = helpVec3_1.y;
+                        combinePosition[positonIndex++] = helpVec3_1.z;
                     }
-                    //
                     if (meshAttribute["NORMAL" /* NORMAL */]) {
                         if (orginAttributes.NORMAL) {
                             var normalBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.NORMAL));
-                            var target = tempVertexBuffers["NORMAL" /* NORMAL */];
-                            var count = normalBuffer.length;
-                            var startIndex_1 = target.length;
-                            target.length += count;
-                            for (var j = 0; j < count; j += 3) {
-                                helpVec3_1.x = normalBuffer[j + 0];
-                                helpVec3_1.y = normalBuffer[j + 1];
-                                helpVec3_1.z = normalBuffer[j + 2];
-                                worldMatrix.transformNormal(helpVec3_1);
-                                helpInverseMatrix.transformNormal(helpVec3_1);
-                                helpVec3_1.normalize();
-                                target[startIndex_1 + j] = helpVec3_1.x;
-                                target[startIndex_1 + j + 1] = helpVec3_1.y;
-                                target[startIndex_1 + j + 2] = helpVec3_1.z;
+                            for (var j = 0, l = normalBuffer.length; j < l; j += 3) {
+                                helpVec3_1.fromArray(normalBuffer, j).applyDirection(worldMatrix).applyDirection(helpInverseMatrix);
+                                combineNormal[normalIndex++] = helpVec3_1.x;
+                                combineNormal[normalIndex++] = helpVec3_1.y;
+                                combineNormal[normalIndex++] = helpVec3_1.z;
                             }
-                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.NORMAL, tempVertexBuffers[gltf.AttributeSemanticType.NORMAL]);
                         }
                         else {
-                            _fillDefaultArray(tempVertexBuffers["NORMAL" /* NORMAL */], orginVertexCount, [0, 0, 0]);
-                        }
-                    }
-                    // if (meshAttribute[gltf.AttributeSemanticType.TANGENT]) { TODO
-                    //     if (orginAttributes.TANGENT) {
-                    //         const tangentBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TANGENT)) as Float32Array;
-                    //         const target = tempVertexBuffers[gltf.AttributeSemanticType.TANGENT];
-                    //         const count = tangentBuffer.length;
-                    //         let startIndex = target.length;
-                    //         target.length += count;
-                    //         for (let j = 0; j < count; j += 4) {
-                    //             helpVec3_1.x = tangentBuffer[j + 0];
-                    //             helpVec3_1.y = tangentBuffer[j + 1];
-                    //             helpVec3_1.z = tangentBuffer[j + 2];
-                    //             worldMatrix.transformNormal(helpVec3_1);
-                    //             helpInverseMatrix.transformNormal(helpVec3_1);
-                    //             helpVec3_1.normalize();
-                    //             target[startIndex + j] = helpVec3_1.x;
-                    //             target[startIndex + j + 1] = helpVec3_1.y;
-                    //             target[startIndex + j + 2] = helpVec3_1.z;
-                    //             target[startIndex + j + 3] = tangentBuffer[j + 3];
-                    //         }
-                    //         // _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.AttributeSemanticType.TANGENT]);
-                    //     } else {
-                    //         _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemanticType.TANGENT], orginVertexCount, [0, 0, 0, 1]);
-                    //     }
-                    // }
-                    if (meshAttribute["COLOR_0" /* COLOR_0 */]) {
-                        if (orginAttributes.COLOR_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_0, tempVertexBuffers["COLOR_0" /* COLOR_0 */]);
-                        }
-                        else {
-                            _fillDefaultArray(tempVertexBuffers["COLOR_0" /* COLOR_0 */], orginVertexCount, [1, 1, 1, 1]);
+                            _fillBuffer(combineNormal, normalIndex, orginVertexCount, [0, 0, 0]);
+                            normalIndex += orginVertexCount * 3;
                         }
                     }
                     if (meshAttribute["TEXCOORD_0" /* TEXCOORD_0 */]) {
                         if (orginAttributes.TEXCOORD_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers["TEXCOORD_0" /* TEXCOORD_0 */]);
+                            _copyAccessorBuffer(mesh, orginAttributes.TEXCOORD_0, combineUV0, uv0Index);
                         }
                         else {
-                            _fillDefaultArray(tempVertexBuffers["TEXCOORD_0" /* TEXCOORD_0 */], orginVertexCount, [0, 0]);
+                            _fillBuffer(combineUV0, uv0Index, orginVertexCount, [0, 0]);
                         }
+                        uv0Index += orginVertexCount * 2;
                     }
                     if (meshAttribute["TEXCOORD_1" /* TEXCOORD_1 */]) {
                         if (combineInstance.lightmapIndex >= 0) {
                             //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
-                            var uvBuffer = orginAttributes.TEXCOORD_1 ?
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) :
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0));
+                            var uvAccessor = orginAttributes.TEXCOORD_1 ? mesh.getAccessor(orginAttributes.TEXCOORD_1) : mesh.getAccessor(orginAttributes.TEXCOORD_0);
+                            var uvBuffer = mesh.createTypeArrayFromAccessor(uvAccessor);
                             //
-                            for (var j = 0; j < uvBuffer.length; j += 2) {
+                            for (var j = 0, l = uvBuffer.length; j < l; j += 2) {
                                 var u = uvBuffer[j + 0];
                                 var v = uvBuffer[j + 1];
                                 u = ((u * orginLightmapScaleOffset.x + orginLightmapScaleOffset.z) - lightmapScaleOffset.z) / lightmapScaleOffset.x;
                                 v = ((v * orginLightmapScaleOffset.y - orginLightmapScaleOffset.y - orginLightmapScaleOffset.w) + lightmapScaleOffset.w + lightmapScaleOffset.x) / lightmapScaleOffset.x;
-                                tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */].push(u, v);
+                                combineUV1[uv1Index++] = u;
+                                combineUV1[uv1Index++] = v;
                             }
-                            // if (orginAttributes.TEXCOORD_1 !== undefined) {
-                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.AttributeSemanticType.TEXCOORD_1]);
-                            // }
-                            // else {
-                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.AttributeSemanticType.TEXCOORD_1]);
-                            // }
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1 !== undefined) {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */]);
+                                _copyAccessorBuffer(mesh, orginAttributes.TEXCOORD_1, combineUV1, uv1Index);
                             }
                             else {
-                                _fillDefaultArray(tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */], orginVertexCount, [0, 0]);
+                                _fillBuffer(combineUV1, uv1Index, orginVertexCount, [0, 0]);
                             }
+                            uv1Index += orginVertexCount * 2;
                         }
                     }
-                    if (meshAttribute["JOINTS_0" /* JOINTS_0 */]) {
-                        if (orginAttributes.JOINTS_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.JOINTS_0, tempVertexBuffers["JOINTS_0" /* JOINTS_0 */]);
+                    if (meshAttribute["COLOR_0" /* COLOR_0 */]) {
+                        if (orginAttributes.COLOR_0) {
+                            _copyAccessorBuffer(mesh, orginAttributes.COLOR_0, combineColor0, color0Index);
                         }
                         else {
-                            _fillDefaultArray(tempVertexBuffers["JOINTS_0" /* JOINTS_0 */], orginVertexCount, [0, 0, 0, 0]);
+                            _fillBuffer(combineColor0, color0Index, orginVertexCount, [1, 1, 1, 1]);
                         }
-                    }
-                    if (meshAttribute["WEIGHTS_0" /* WEIGHTS_0 */]) {
-                        if (orginAttributes.WEIGHTS_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.WEIGHTS_0, tempVertexBuffers["WEIGHTS_0" /* WEIGHTS_0 */]);
-                        }
-                        else {
-                            _fillDefaultArray(tempVertexBuffers["WEIGHTS_0" /* WEIGHTS_0 */], orginVertexCount, [1, 0, 0, 0]);
-                        }
+                        color0Index += orginVertexCount * 4;
                     }
                     if (meshAttribute["COLOR_1" /* COLOR_1 */]) {
                         if (orginAttributes.COLOR_1) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_1, tempVertexBuffers["COLOR_1" /* COLOR_1 */]);
+                            _copyAccessorBuffer(mesh, orginAttributes.COLOR_1, combineColor0, color1Index);
                         }
                         else {
-                            _fillDefaultArray(tempVertexBuffers["COLOR_1" /* COLOR_1 */], orginVertexCount, [1, 1, 1, 1]);
+                            _fillBuffer(combineColor0, color1Index, orginVertexCount, [1, 1, 1, 1]);
                         }
+                        color1Index += orginVertexCount * 4;
+                    }
+                    if (meshAttribute["JOINTS_0" /* JOINTS_0 */]) {
+                        if (orginAttributes.JOINTS_0) {
+                            _copyAccessorBuffer(mesh, orginAttributes.JOINTS_0, combineJoint0, jointIndex);
+                        }
+                        else {
+                            _fillBuffer(combineJoint0, jointIndex, orginVertexCount, [0, 0, 0, 0]);
+                        }
+                        jointIndex += orginVertexCount * 4;
+                    }
+                    if (meshAttribute["WEIGHTS_0" /* WEIGHTS_0 */]) {
+                        if (orginAttributes.WEIGHTS_0) {
+                            _copyAccessorBuffer(mesh, orginAttributes.WEIGHTS_0, combineWeight0, weightIndex);
+                        }
+                        else {
+                            _fillBuffer(combineWeight0, weightIndex, orginVertexCount, [1, 0, 0, 0]);
+                        }
+                        weightIndex += orginVertexCount * 4;
                     }
                 }
-                var subIndexBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices));
-                // //indexBuffers
-                if (!tempIndexBuffers[i]) {
-                    tempIndexBuffers[i] = [];
-                }
-                for (var j = 0; j < subIndexBuffer.length; j++) {
-                    var index = subIndexBuffer[j] + startIndex;
-                    tempIndexBuffers[i].push(index);
+                var indicesBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices));
+                for (var j = 0, l = indicesBuffer.length; j < l; j++) {
+                    var index = indicesBuffer[j] + startIndex;
+                    combineIndices[indexIndex++] = index;
                     endIndex = index > endIndex ? index : endIndex;
                 }
+                if (!subIndexBuffersCount[i]) {
+                    subIndexBuffersCount[i] = 0;
+                }
+                subIndexBuffersCount[i] += indicesBuffer.length;
             }
             startIndex = endIndex + 1;
             meshFilter.mesh = null;
         }
-        var combineMesh = egret3d.Mesh.create(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute);
-        combineMesh.drawMode = 35048 /* Dynamic */;
-        var newVertexBuffers = new Float32Array(combineMesh.buffers[0].buffer); // 这里依赖了 buffers 必须是两个分离的 buffer TODO
-        var newIndexBuffers = combineMesh.buffers[1];
-        var iv = 0;
-        for (var key in tempVertexBuffers) {
-            var arr = tempVertexBuffers[key];
-            for (var _b = 0, arr_1 = arr; _b < arr_1.length; _b++) {
-                var v = arr_1[_b];
-                newVertexBuffers[iv++] = v;
-            }
-        }
-        var ii = 0;
-        for (var key in tempIndexBuffers) {
-            var arr = tempIndexBuffers[key];
-            for (var _c = 0, arr_2 = arr; _c < arr_2.length; _c++) {
-                var v = arr_2[_c];
-                newIndexBuffers[ii++] = v;
-            }
-        }
         var indicesCount = 0;
-        for (var i = 1; i < tempIndexBuffers.length; i++) {
-            var subLen = tempIndexBuffers[i].length;
+        for (var i = 1, l = subIndexBuffersCount.length; i < l; i++) {
+            var subLen = subIndexBuffersCount[i];
             //第一个submesh在构造函数中已经添加，需要手动添加后续的
-            combineMesh.addSubMesh(indicesCount, subLen, i);
+            combineMesh.addSubMesh(subLen, i);
             indicesCount += subLen;
         }
         return combineMesh;
     }
-    function _copyAccessorBufferArray(mesh, accessor, target) {
-        var buffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(accessor));
-        var count = buffer.length;
-        var startIndex = target.length;
-        target.length += count;
-        for (var i = 0; i < count; i++) {
-            target[startIndex + i] = buffer[i];
-        }
+    /**
+     * 尝试对场景内所有静态对象合并
+     * @deprecated
+     */
+    function autoCombine(scene) {
+        combine(scene.gameObjects);
     }
-    function _fillDefaultArray(target, count, defaultValue) {
-        var startIndex = target.length;
-        var defaultValueCount = defaultValue.length;
-        target.length += count * defaultValueCount;
-        for (var i = 0; i < count; i++) {
-            for (var j = 0; j < defaultValueCount; j++) {
-                target[startIndex++] = defaultValue[j];
-            }
-        }
-    }
-    var CombineInstance = (function () {
-        function CombineInstance() {
-            this.vertexCount = 0;
-            this.vertexBufferSize = 0;
-            this.indexBufferTotalSize = 0;
-            this.lightmapIndex = -1;
-            this.meshAttribute = {};
-            this.root = null;
-            this.instances = [];
-        }
-        return CombineInstance;
-    }());
-    __reflect(CombineInstance.prototype, "CombineInstance");
+    egret3d.autoCombine = autoCombine;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -29691,12 +29656,26 @@ var egret3d;
                 if (cameraAndLightCollecter.currentCamera !== camera) {
                     cameraAndLightCollecter.currentCamera = camera;
                     camera._update();
+                    //TODO
+                    if (camera.gameObject._beforeRenderBehaviors.length > 0) {
+                        var flag = false;
+                        for (var _i = 0, _a = camera.gameObject._beforeRenderBehaviors; _i < _a.length; _i++) {
+                            var behaviour = _a[_i];
+                            if (!behaviour.isActiveAndEnabled) {
+                                continue;
+                            }
+                            flag = !behaviour.onBeforeRender() || flag;
+                        }
+                        if (flag) {
+                            return;
+                        }
+                    }
                     //
                     var isPostprocessing = false;
                     var postprocessings = camera.gameObject.getComponents(egret3d.CameraPostprocessing, true);
                     if (postprocessings.length > 0) {
-                        for (var _i = 0, postprocessings_1 = postprocessings; _i < postprocessings_1.length; _i++) {
-                            var postprocessing = postprocessings_1[_i];
+                        for (var _b = 0, postprocessings_1 = postprocessings; _b < postprocessings_1.length; _b++) {
+                            var postprocessing = postprocessings_1[_b];
                             if (postprocessing.isActiveAndEnabled) {
                                 isPostprocessing = true;
                                 break;
@@ -29709,8 +29688,8 @@ var egret3d;
                     }
                     else {
                         this._render(camera, camera.postprocessingRenderTarget, material);
-                        for (var _a = 0, postprocessings_2 = postprocessings; _a < postprocessings_2.length; _a++) {
-                            var postprocessing = postprocessings_2[_a];
+                        for (var _c = 0, postprocessings_2 = postprocessings; _c < postprocessings_2.length; _c++) {
+                            var postprocessing = postprocessings_2[_c];
                             if (postprocessing.isActiveAndEnabled) {
                                 this._backupCamera = camera;
                                 postprocessing.onRender(camera);
@@ -29856,7 +29835,7 @@ var egret3d;
                     // Draw.
                     if (primitive.indices !== undefined) {
                         var indexAccessor = mesh.getAccessor(primitive.indices);
-                        webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
+                        webgl.drawElements(drawMode, drawCall.count || indexAccessor.count, indexAccessor.componentType, 0); //TODO 暂时不支持交错
                     }
                     else {
                         webgl.drawArrays(drawMode, 0, vertexAccessor.count);
@@ -30562,13 +30541,13 @@ var egret3d;
             /**
              * 此帧的非透明绘制信息列表。
              * - 已进行视锥剔除的。
-             * @internal
+             * TODO
              */
             this.opaqueCalls = [];
             /**
              * 此帧的透明绘制信息列表。
              * - 已进行视锥剔除的。
-             * @internal
+             * TODO
              */
             this.transparentCalls = [];
             /**

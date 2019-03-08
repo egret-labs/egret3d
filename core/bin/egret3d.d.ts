@@ -7485,6 +7485,10 @@ declare namespace egret3d {
          *
          */
         zdist: number;
+        /**
+         * TODO
+         */
+        count?: number;
         private constructor();
         onClear(): void;
     }
@@ -9187,13 +9191,18 @@ declare namespace egret3d {
     /**
      * 尝试对场景内所有静态对象合并
      */
-    function autoCombine(scene: paper.Scene): void;
+    function combineScene(scene: paper.Scene): void;
     /**
      * 尝试合并静态对象列表。
      * @param instances
      * @param root
      */
     function combine(instances: ReadonlyArray<paper.GameObject>): void;
+    /**
+     * 尝试对场景内所有静态对象合并
+     * @deprecated
+     */
+    function autoCombine(scene: paper.Scene): void;
 }
 declare namespace egret3d.creater {
     /**
@@ -11346,6 +11355,18 @@ declare namespace egret3d {
          *
          */
         logDepthBufFC: number;
+        /**
+         * 此帧的非透明绘制信息列表。
+         * - 已进行视锥剔除的。
+         * TODO
+         */
+        readonly opaqueCalls: DrawCall[];
+        /**
+         * 此帧的透明绘制信息列表。
+         * - 已进行视锥剔除的。
+         * TODO
+         */
+        readonly transparentCalls: DrawCall[];
         private readonly _camera;
         private readonly _drawCallCollecter;
         private readonly _cameraAndLightCollecter;

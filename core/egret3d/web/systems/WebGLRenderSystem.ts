@@ -658,6 +658,22 @@ namespace egret3d.webgl {
             if (cameraAndLightCollecter.currentCamera !== camera) { //如果相等，没必要在更新摄像机
                 cameraAndLightCollecter.currentCamera = camera;
                 camera._update();
+
+                //TODO
+                if (camera.gameObject._beforeRenderBehaviors.length > 0) {
+                    let flag = false;
+
+                    for (const behaviour of camera.gameObject._beforeRenderBehaviors) {
+                        if (!behaviour.isActiveAndEnabled) {
+                            continue;
+                        }
+                        flag = !behaviour.onBeforeRender!() || flag;
+                    }
+
+                    if (flag) {
+                        return;
+                    }
+                }
                 //
                 let isPostprocessing = false;
                 const postprocessings = camera.gameObject.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
@@ -842,7 +858,7 @@ namespace egret3d.webgl {
                 // Draw.
                 if (primitive.indices !== undefined) {
                     const indexAccessor = mesh.getAccessor(primitive.indices);
-                    webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
+                    webgl.drawElements(drawMode, drawCall.count || indexAccessor.count, indexAccessor.componentType, 0);//TODO 暂时不支持交错
                 }
                 else {
                     webgl.drawArrays(drawMode, 0, vertexAccessor.count);

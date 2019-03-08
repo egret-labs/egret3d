@@ -3,16 +3,41 @@ namespace egret3d {
     export const MAX_VERTEX_COUNT_PER_BUFFER: number = 50000;
     //
     const helpVec3_1 = Vector3.create();
-    const helpVec3_2 = Vector3.create();
     const helpInverseMatrix = Matrix4.create();
     //缓存已经校验过的对象，用于过滤
-    const cacheInstances: string[] = [];
+    const cacheUUIDs: string[] = [];
 
     let beforeCombineCount: number = 0;
+
+    class CombineInstance {
+        public verticesCount: number = 0;
+        public indicesCount: number = 0;
+        public lightmapIndex: number = -1;
+        public meshAttribute: { [key: string]: gltf.AttributeSemantics } = {};
+        public root: paper.GameObject;
+        public materials: (Material | null)[] = [];
+        public readonly instances: paper.GameObject[] = [];
+    }
+    function _copyAccessorBuffer(mesh: Mesh, accessor: number, target: Float32Array, offset: number) {
+        const buffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(accessor)) as Float32Array;
+        const count = buffer.length;
+        for (let i = 0; i < count; i++) {
+            target[offset + i] = buffer[i];
+        }
+    }
+
+    function _fillBuffer(target: Float32Array, offset: number, count: number, defaultValue: number[]) {
+        const defaultValueCount = defaultValue.length;
+        for (let i = 0; i < count; i++) {
+            for (let j = 0; j < defaultValueCount; j++) {
+                target[offset++] = defaultValue[j];
+            }
+        }
+    }
     /**
      * 尝试对场景内所有静态对象合并
      */
-    export function autoCombine(scene: paper.Scene): void {
+    export function combineScene(scene: paper.Scene): void {
         combine(scene.gameObjects);
     }
     /**
@@ -21,7 +46,7 @@ namespace egret3d {
      * @param root 
      */
     export function combine(instances: ReadonlyArray<paper.GameObject>): void {
-        cacheInstances.length = 0;
+        cacheUUIDs.length = 0;
         beforeCombineCount = 0;
         const allCombines: { [key: string]: CombineInstance[] } = {};
         //1.通过材质填充合并列表
@@ -39,8 +64,7 @@ namespace egret3d {
         }
 
         console.log("combine", beforeCombineCount, "to", afterCombineCount, "save", beforeCombineCount - afterCombineCount);
-
-        cacheInstances.length = 0;
+        cacheUUIDs.length = 0;
     }
     /**
      * TODO(root暂时不支持)尝试合并静态对象列表，如果root有值，合并后可以操作root对象的transform，来实现整体移动，旋转，缩放；反之，相同材质列表的第一个对象为合并节点。
@@ -49,11 +73,11 @@ namespace egret3d {
      */
     function _colletCombineInstance(target: paper.GameObject, out: { [key: string]: CombineInstance[] }, root?: paper.GameObject) {
         //过滤重复的对象
-        if (cacheInstances.indexOf(target.uuid) >= 0) {
+        if (cacheUUIDs.indexOf(target.uuid) >= 0) {
             return;
         }
 
-        cacheInstances.push(target.uuid);
+        cacheUUIDs.push(target.uuid);
         //
         for (const child of target.transform.children) {
             if (child) {
@@ -77,7 +101,7 @@ namespace egret3d {
         const meshData = meshFilter.mesh;
 
         //合并筛选的条件:层级_光照贴图索引_材质0_材质1... ：256_0_234_532...
-        let key: string = target.layer + "_" +  meshRenderer.lightmapIndex + "_";
+        let key: string = target.layer + "_" + meshRenderer.lightmapIndex + "_";
         materials.forEach(e => { key = key + "_" + e!.uuid; });
 
         if (!out[key]) {
@@ -88,7 +112,7 @@ namespace egret3d {
         const combines = out[key];
         //找相同材质合成列表的最后一个，如果最后一个顶点超过允许最大数了，就新建一个，下个批次处理
         let combine = combines[combines.length - 1];
-        if (combine.vertexCount + meshData.vertexCount > MAX_VERTEX_COUNT_PER_BUFFER) {
+        if (combine.verticesCount + meshData.vertexCount > MAX_VERTEX_COUNT_PER_BUFFER) {
             combine = new CombineInstance();
             out[key].push(combine);
         }
@@ -96,6 +120,9 @@ namespace egret3d {
         if (!combine.root) {
             combine.root = root ? root : target;
             combine.lightmapIndex = meshRenderer.lightmapIndex;
+            for (const mat of materials) {
+                combine.materials.push(mat);
+            }
         }
         //适配最大格式
         const primitives = meshData.glTFMesh.primitives;
@@ -104,15 +131,14 @@ namespace egret3d {
             for (const attStr in primitives[i].attributes) {
                 const attrType = attStr as gltf.AttributeSemantics;
                 if (!combine.meshAttribute[attrType]) {
-                    combine.vertexBufferSize += meshData.getAccessor(primitive.attributes[attStr]!).typeCount!;
+                    combine.meshAttribute[attrType] = attrType;
                 }
-                combine.meshAttribute[attrType] = attrType;
             }
 
-            combine.indexBufferTotalSize += meshData.getBufferLength(meshData.getAccessor(primitive.indices!)) / Uint16Array.BYTES_PER_ELEMENT;
+            combine.indicesCount += meshData.getBufferLength(meshData.getAccessor(primitive.indices!)) / Uint16Array.BYTES_PER_ELEMENT;
         }
         //
-        combine.vertexCount += meshData.vertexCount;
+        combine.verticesCount += meshData.vertexCount;
         combine.instances.push(target);
     }
     /**
@@ -121,10 +147,12 @@ namespace egret3d {
      */
     function _combineInstance(combineInstance: CombineInstance): void {
         const combineMesh = _combineMesh(combineInstance);
-        const combineRoot = combineInstance.root!;
+        const combineRoot = combineInstance.root;
         //把合成好的放入root中，重新绘制
-        const meshFilter = combineRoot.getComponent(MeshFilter)!;
+        const meshFilter = combineRoot.getOrAddComponent(MeshFilter)!;
         meshFilter.mesh = combineMesh;
+        const meshRenderer = combineRoot.getOrAddComponent(MeshRenderer);
+        meshRenderer.materials = combineInstance.materials;
     }
 
     /**
@@ -134,19 +162,32 @@ namespace egret3d {
      */
     function _combineMesh(combineInstance: CombineInstance): Mesh {
         //
-        helpInverseMatrix.copy(combineInstance.root!.transform.worldToLocalMatrix);
-
+        const root = combineInstance.root;
         const meshAttribute = combineInstance.meshAttribute;
-        const lightmapScaleOffset = (combineInstance.root!.renderer as MeshRenderer).lightmapScaleOffset;
-        const newAttribute: gltf.AttributeSemantics[] = [];
-        const tempIndexBuffers: number[][] = [];
-        const tempVertexBuffers: { [key: string]: number[] } = {};
+        const lightmapScaleOffset = (root.renderer as MeshRenderer).lightmapScaleOffset;
+        const combineAttributes: gltf.AttributeSemantics[] = [];
 
         for (const key in meshAttribute) {
-            tempVertexBuffers[key] = [];
-            newAttribute.push(key as gltf.AttributeSemantics);
+            combineAttributes.push(key as gltf.AttributeSemantics);
         }
         //
+        const combineMesh = Mesh.create(combineInstance.verticesCount, combineInstance.indicesCount, combineAttributes);
+        combineMesh.drawMode = gltf.DrawMode.Dynamic;
+
+        const combinePosition = combineMesh.getVertices() as Float32Array;
+        const combineNormal = combineMesh.getNormals() as Float32Array;
+        const combineUV0 = combineMesh.getUVs() as Float32Array;
+        const combineUV1 = combineMesh.getAttributes(gltf.AttributeSemantics.TEXCOORD_1) as Float32Array;
+        const combineColor0 = combineMesh.getColors() as Float32Array;
+        const combineJoint0 = combineMesh.getAttributes(gltf.AttributeSemantics.JOINTS_0) as Float32Array;
+        const combineWeight0 = combineMesh.getAttributes(gltf.AttributeSemantics.WEIGHTS_0) as Float32Array;
+
+        const combineIndices = combineMesh.getIndices() as Uint16Array;
+        //
+        helpInverseMatrix.copy(root.transform.worldToLocalMatrix);
+        const subIndexBuffersCount: number[] = [];
+        //
+        let positonIndex = 0, normalIndex = 0, color0Index = 0, color1Index = 0, uv0Index = 0, uv1Index = 0, jointIndex = 0, weightIndex = 0, indexIndex = 0;
         let startIndex = 0;
         let endIndex = 0;
         for (const instance of combineInstance.instances) {
@@ -166,217 +207,129 @@ namespace egret3d {
                     const orginVertexCount = mesh.vertexCount;
                     const orginAttributes = primitives[i].attributes;
                     const positionBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.POSITION!)) as Float32Array;
-                    //vertexBuffers
-                    for (let j = 0; j < positionBuffer.length; j += 3) {
-                        helpVec3_1.x = positionBuffer[j + 0];
-                        helpVec3_1.y = positionBuffer[j + 1];
-                        helpVec3_1.z = positionBuffer[j + 2];
+                    for (let j = 0, l = positionBuffer.length; j < l; j += 3) {
                         //转换成世界坐标后在转换为合并节点的本地坐标
-                        worldMatrix.transformVector3(helpVec3_1, helpVec3_2);
-                        helpInverseMatrix.transformVector3(helpVec3_2, helpVec3_1);
-                        //
-                        tempVertexBuffers[gltf.AttributeSemantics.POSITION].push(helpVec3_1.x, helpVec3_1.y, helpVec3_1.z);
+                        helpVec3_1.fromArray(positionBuffer, j).applyMatrix(worldMatrix).applyMatrix(helpInverseMatrix);
+
+                        combinePosition[positonIndex++] = helpVec3_1.x;
+                        combinePosition[positonIndex++] = helpVec3_1.y;
+                        combinePosition[positonIndex++] = helpVec3_1.z;
                     }
-                    //
                     if (meshAttribute[gltf.AttributeSemantics.NORMAL]) {
                         if (orginAttributes.NORMAL) {
                             const normalBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.NORMAL)) as Float32Array;
-                            const target = tempVertexBuffers[gltf.AttributeSemantics.NORMAL];
-                            const count = normalBuffer.length;
-                            const startIndex = target.length;
+                            for (let j = 0, l = normalBuffer.length; j < l; j += 3) {
+                                helpVec3_1.fromArray(normalBuffer, j).applyDirection(worldMatrix).applyDirection(helpInverseMatrix);
 
-                            target.length += count;
-                            for (let j = 0; j < count; j += 3) {
-                                helpVec3_1.x = normalBuffer[j + 0];
-                                helpVec3_1.y = normalBuffer[j + 1];
-                                helpVec3_1.z = normalBuffer[j + 2];
-
-                                worldMatrix.transformNormal(helpVec3_1);
-                                helpInverseMatrix.transformNormal(helpVec3_1);
-                                helpVec3_1.normalize();
-                                target[startIndex + j] = helpVec3_1.x;
-                                target[startIndex + j + 1] = helpVec3_1.y;
-                                target[startIndex + j + 2] = helpVec3_1.z;
+                                combineNormal[normalIndex++] = helpVec3_1.x;
+                                combineNormal[normalIndex++] = helpVec3_1.y;
+                                combineNormal[normalIndex++] = helpVec3_1.z;
                             }
-                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.NORMAL, tempVertexBuffers[gltf.AttributeSemanticType.NORMAL]);
                         } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.NORMAL], orginVertexCount, [0, 0, 0]);
-                        }
-                    }
-                    // if (meshAttribute[gltf.AttributeSemanticType.TANGENT]) { TODO
-                    //     if (orginAttributes.TANGENT) {
-                    //         const tangentBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TANGENT)) as Float32Array;
-                    //         const target = tempVertexBuffers[gltf.AttributeSemanticType.TANGENT];
-                    //         const count = tangentBuffer.length;
-                    //         let startIndex = target.length;
-
-                    //         target.length += count;
-                    //         for (let j = 0; j < count; j += 4) {
-                    //             helpVec3_1.x = tangentBuffer[j + 0];
-                    //             helpVec3_1.y = tangentBuffer[j + 1];
-                    //             helpVec3_1.z = tangentBuffer[j + 2];
-
-                    //             worldMatrix.transformNormal(helpVec3_1);
-                    //             helpInverseMatrix.transformNormal(helpVec3_1);
-                    //             helpVec3_1.normalize();
-
-                    //             target[startIndex + j] = helpVec3_1.x;
-                    //             target[startIndex + j + 1] = helpVec3_1.y;
-                    //             target[startIndex + j + 2] = helpVec3_1.z;
-                    //             target[startIndex + j + 3] = tangentBuffer[j + 3];
-                    //         }
-                    //         // _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.AttributeSemanticType.TANGENT]);
-                    //     } else {
-                    //         _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemanticType.TANGENT], orginVertexCount, [0, 0, 0, 1]);
-                    //     }
-                    // }
-                    if (meshAttribute[gltf.AttributeSemantics.COLOR_0]) {
-                        if (orginAttributes.COLOR_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_0, tempVertexBuffers[gltf.AttributeSemantics.COLOR_0]);
-                        } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.COLOR_0], orginVertexCount, [1, 1, 1, 1]);
+                            _fillBuffer(combineNormal, normalIndex, orginVertexCount, [0, 0, 0]);
+                            normalIndex += orginVertexCount * 3;
                         }
                     }
                     if (meshAttribute[gltf.AttributeSemantics.TEXCOORD_0]) {
                         if (orginAttributes.TEXCOORD_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_0]);
+                            _copyAccessorBuffer(mesh, orginAttributes.TEXCOORD_0, combineUV0, uv0Index);
                         } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_0], orginVertexCount, [0, 0]);
+                            _fillBuffer(combineUV0, uv0Index, orginVertexCount, [0, 0]);
                         }
+                        uv0Index += orginVertexCount * 2;
                     }
                     if (meshAttribute[gltf.AttributeSemantics.TEXCOORD_1]) {
                         if (combineInstance.lightmapIndex >= 0) {
                             //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
-                            const uvBuffer = orginAttributes.TEXCOORD_1 ?
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) as Float32Array :
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0!)) as Float32Array;
+                            const uvAccessor = orginAttributes.TEXCOORD_1 ? mesh.getAccessor(orginAttributes.TEXCOORD_1) : mesh.getAccessor(orginAttributes.TEXCOORD_0!);
+                            const uvBuffer = mesh.createTypeArrayFromAccessor(uvAccessor) as Float32Array;
                             //
-                            for (let j = 0; j < uvBuffer.length; j += 2) {
+                            for (let j = 0, l = uvBuffer.length; j < l; j += 2) {
                                 let u = uvBuffer[j + 0];
                                 let v = uvBuffer[j + 1];
                                 u = ((u * orginLightmapScaleOffset.x + orginLightmapScaleOffset.z) - lightmapScaleOffset.z) / lightmapScaleOffset.x;
                                 v = ((v * orginLightmapScaleOffset.y - orginLightmapScaleOffset.y - orginLightmapScaleOffset.w) + lightmapScaleOffset.w + lightmapScaleOffset.x) / lightmapScaleOffset.x;
 
-                                tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_1].push(u, v);
+                                combineUV1[uv1Index++] = u;
+                                combineUV1[uv1Index++] = v;
                             }
-                            // if (orginAttributes.TEXCOORD_1 !== undefined) {
-                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.AttributeSemanticType.TEXCOORD_1]);
-                            // }
-                            // else {
-                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.AttributeSemanticType.TEXCOORD_1]);
-                            // }
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1 !== undefined) {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_1]);
+                                _copyAccessorBuffer(mesh, orginAttributes.TEXCOORD_1, combineUV1, uv1Index);
                             }
                             else {
-                                _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.TEXCOORD_1], orginVertexCount, [0, 0]);
+                                _fillBuffer(combineUV1, uv1Index, orginVertexCount, [0, 0]);
                             }
+                            uv1Index += orginVertexCount * 2;
                         }
                     }
-                    if (meshAttribute[gltf.AttributeSemantics.JOINTS_0]) {
-                        if (orginAttributes.JOINTS_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.JOINTS_0, tempVertexBuffers[gltf.AttributeSemantics.JOINTS_0]);
-                        }
-                        else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.JOINTS_0], orginVertexCount, [0, 0, 0, 0]);
-                        }
-                    }
-                    if (meshAttribute[gltf.AttributeSemantics.WEIGHTS_0]) {
-                        if (orginAttributes.WEIGHTS_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.WEIGHTS_0, tempVertexBuffers[gltf.AttributeSemantics.WEIGHTS_0]);
+                    if (meshAttribute[gltf.AttributeSemantics.COLOR_0]) {
+                        if (orginAttributes.COLOR_0) {
+                            _copyAccessorBuffer(mesh, orginAttributes.COLOR_0, combineColor0, color0Index);
                         } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.WEIGHTS_0], orginVertexCount, [1, 0, 0, 0]);
+                            _fillBuffer(combineColor0, color0Index, orginVertexCount, [1, 1, 1, 1]);
                         }
+                        color0Index += orginVertexCount * 4;
                     }
                     if (meshAttribute[gltf.AttributeSemantics.COLOR_1]) {
                         if (orginAttributes.COLOR_1) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_1, tempVertexBuffers[gltf.AttributeSemantics.COLOR_1]);
+                            _copyAccessorBuffer(mesh, orginAttributes.COLOR_1, combineColor0, color1Index);
                         } else {
-                            _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemantics.COLOR_1], orginVertexCount, [1, 1, 1, 1]);
+                            _fillBuffer(combineColor0, color1Index, orginVertexCount, [1, 1, 1, 1]);
                         }
+                        color1Index += orginVertexCount * 4;
+                    }
+                    if (meshAttribute[gltf.AttributeSemantics.JOINTS_0]) {
+                        if (orginAttributes.JOINTS_0) {
+                            _copyAccessorBuffer(mesh, orginAttributes.JOINTS_0, combineJoint0, jointIndex);
+                        }
+                        else {
+                            _fillBuffer(combineJoint0, jointIndex, orginVertexCount, [0, 0, 0, 0]);
+                        }
+                        jointIndex += orginVertexCount * 4;
+                    }
+                    if (meshAttribute[gltf.AttributeSemantics.WEIGHTS_0]) {
+                        if (orginAttributes.WEIGHTS_0) {
+                            _copyAccessorBuffer(mesh, orginAttributes.WEIGHTS_0, combineWeight0, weightIndex);
+                        } else {
+                            _fillBuffer(combineWeight0, weightIndex, orginVertexCount, [1, 0, 0, 0]);
+                        }
+                        weightIndex += orginVertexCount * 4;
                     }
                 }
 
-                const subIndexBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices!)) as Uint16Array;
-                // //indexBuffers
-                if (!tempIndexBuffers[i]) {
-                    tempIndexBuffers[i] = [];
-                }
-                for (let j = 0; j < subIndexBuffer.length; j++) {
-                    const index = subIndexBuffer[j] + startIndex;
-                    tempIndexBuffers[i].push(index);
+                const indicesBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices!)) as Uint16Array;
+                for (let j = 0, l = indicesBuffer.length; j < l; j++) {
+                    const index = indicesBuffer[j] + startIndex;
+                    combineIndices[indexIndex++] = index;
                     endIndex = index > endIndex ? index : endIndex;
                 }
+                if(!subIndexBuffersCount[i]){
+                    subIndexBuffersCount[i] = 0;
+                }
+                subIndexBuffersCount[i] += indicesBuffer.length;
             }
             startIndex = endIndex + 1;
 
             meshFilter.mesh = null;
         }
-
-        const combineMesh = Mesh.create(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute);
-        combineMesh.drawMode = gltf.DrawMode.Dynamic;
-
-        const newVertexBuffers = new Float32Array(combineMesh.buffers[0].buffer); // 这里依赖了 buffers 必须是两个分离的 buffer TODO
-        const newIndexBuffers = combineMesh.buffers[1] as Uint16Array;
-        let iv = 0;
-        for (const key in tempVertexBuffers) {
-            const arr = tempVertexBuffers[key] as number[];
-            for (const v of arr) {
-                newVertexBuffers[iv++] = v;
-            }
-        }
-        let ii = 0;
-        for (const key in tempIndexBuffers) {
-            const arr = tempIndexBuffers[key] as number[];
-            for (const v of arr) {
-                newIndexBuffers[ii++] = v;
-            }
-        }
-
-        let indicesCount = 0;
-        for (let i = 1; i < tempIndexBuffers.length; i++) {
-            const subLen = tempIndexBuffers[i].length;
+        //TODO submesh创建有问题
+        for (let i = 1, l = subIndexBuffersCount.length; i < l; i++) {
+            const subLen = subIndexBuffersCount[i];
             //第一个submesh在构造函数中已经添加，需要手动添加后续的
-            combineMesh.addSubMesh(indicesCount, subLen, i);
-
-            indicesCount += subLen;
+            combineMesh.addSubMesh(subLen, i);
         }
 
         return combineMesh;
     }
 
-    function _copyAccessorBufferArray(mesh: Mesh, accessor: number, target: number[]) {
-        const buffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(accessor)) as Float32Array;
-        const count = buffer.length;
-        const startIndex = target.length;
 
-        target.length += count;
-        for (let i = 0; i < count; i++) {
-            target[startIndex + i] = buffer[i];
-        }
-    }
-
-    function _fillDefaultArray(target: number[], count: number, defaultValue: number[]) {
-        let startIndex = target.length;
-        const defaultValueCount = defaultValue.length;
-        target.length += count * defaultValueCount;
-
-        for (let i = 0; i < count; i++) {
-            for (let j = 0; j < defaultValueCount; j++) {
-                target[startIndex++] = defaultValue[j];
-            }
-        }
-    }
-
-    class CombineInstance {
-        public vertexCount: number = 0;
-        public vertexBufferSize: number = 0;
-        public indexBufferTotalSize: number = 0;
-        public lightmapIndex: number = -1;
-        public meshAttribute: { [key: string]: gltf.AttributeSemantics } = {};
-        public root: paper.GameObject | null = null;
-        public readonly instances: paper.GameObject[] = [];
+    /**
+     * 尝试对场景内所有静态对象合并
+     * @deprecated
+     */
+    export function autoCombine(scene: paper.Scene): void {
+        combine(scene.gameObjects);
     }
 }

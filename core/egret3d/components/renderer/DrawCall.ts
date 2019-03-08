@@ -46,6 +46,10 @@ namespace egret3d {
          * 
          */
         public zdist: number = -1;
+        /**
+         * TODO
+         */
+        public count?: number = 0;
 
         private constructor() {
             super();
