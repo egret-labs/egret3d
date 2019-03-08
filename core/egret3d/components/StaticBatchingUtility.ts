@@ -13,6 +13,7 @@ namespace egret3d {
         public verticesCount: number = 0;
         public indicesCount: number = 0;
         public lightmapIndex: number = -1;
+        public primitiveIndices: number[] = [];
         public meshAttribute: { [key: string]: gltf.AttributeSemantics } = {};
         public root: paper.GameObject;
         public materials: (Material | null)[] = [];
@@ -134,8 +135,13 @@ namespace egret3d {
                     combine.meshAttribute[attrType] = attrType;
                 }
             }
-
-            combine.indicesCount += meshData.getBufferLength(meshData.getAccessor(primitive.indices!)) / Uint16Array.BYTES_PER_ELEMENT;
+            //
+            // if (!combine.primitiveIndices[i]) {
+            //     combine.primitiveIndices[i] = 0;
+            // }
+            const indicesCount = meshData.getBufferLength(meshData.getAccessor(primitive.indices!)) / Uint16Array.BYTES_PER_ELEMENT;
+            // combine.primitiveIndices[i] += indicesCount;
+            combine.indicesCount += indicesCount;
         }
         //
         combine.verticesCount += meshData.vertexCount;
@@ -171,7 +177,7 @@ namespace egret3d {
             combineAttributes.push(key as gltf.AttributeSemantics);
         }
         //
-        const combineMesh = Mesh.create(combineInstance.verticesCount, combineInstance.indicesCount, combineAttributes);
+        const combineMesh = Mesh.create(combineInstance.verticesCount, combineInstance.primitiveIndices[0], combineAttributes);
         combineMesh.drawMode = gltf.DrawMode.Dynamic;
 
         const combinePosition = combineMesh.getVertices() as Float32Array;
@@ -181,7 +187,6 @@ namespace egret3d {
         const combineColor0 = combineMesh.getColors() as Float32Array;
         const combineJoint0 = combineMesh.getAttributes(gltf.AttributeSemantics.JOINTS_0) as Float32Array;
         const combineWeight0 = combineMesh.getAttributes(gltf.AttributeSemantics.WEIGHTS_0) as Float32Array;
-
         const combineIndices = combineMesh.getIndices() as Uint16Array;
         //
         helpInverseMatrix.copy(root.transform.worldToLocalMatrix);
@@ -305,7 +310,7 @@ namespace egret3d {
                     combineIndices[indexIndex++] = index;
                     endIndex = index > endIndex ? index : endIndex;
                 }
-                if(!subIndexBuffersCount[i]){
+                if (!subIndexBuffersCount[i]) {
                     subIndexBuffersCount[i] = 0;
                 }
                 subIndexBuffersCount[i] += indicesBuffer.length;
