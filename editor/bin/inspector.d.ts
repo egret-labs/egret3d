@@ -606,6 +606,7 @@ declare namespace paper.editor {
         static addEventListener(type: string, fun: Function, thisObj: any, level?: number): void;
         static removeEventListener(type: string, fun: Function, thisObj: any): void;
         static dispatchEvent(event: BaseEvent): void;
+        private static preDo();
         private static initEditEnvironment();
     }
 }

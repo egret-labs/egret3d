@@ -49,7 +49,7 @@ namespace paper {
             super.initialize();
 
             (Time as Clock) = (clock as Clock) = this;
-            this._beginTime = performance.now() * 0.001;
+            // this._beginTime = performance.now() * 0.001;//TODO 解决微信和web上时间不统一
         }
         /**
          * @internal
@@ -57,7 +57,10 @@ namespace paper {
          */
         public update(time?: number): ClockUpdateFlags {
             let isReseted = false;
-            const now = (time || performance.now()) * 0.001;
+            let now = (time || performance.now()) * 0.001;
+            if(!this._beginTime){
+                this._beginTime = now;
+            }
 
             if (this._needReset) { // 刚刚恢复, 需要重置间隔
                 this._unscaledTime = now - this._beginTime;

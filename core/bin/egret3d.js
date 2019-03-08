@@ -11000,7 +11000,7 @@ var paper;
         Clock.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             paper.Time = paper.clock = this;
-            this._beginTime = performance.now() * 0.001;
+            // this._beginTime = performance.now() * 0.001;//TODO 解决微信和web上时间不统一
         };
         /**
          * @internal
@@ -11009,6 +11009,9 @@ var paper;
         Clock.prototype.update = function (time) {
             var isReseted = false;
             var now = (time || performance.now()) * 0.001;
+            if (!this._beginTime) {
+                this._beginTime = now;
+            }
             if (this._needReset) {
                 this._unscaledTime = now - this._beginTime;
                 this._unscaledDeltaTime = 0;
@@ -27715,6 +27718,10 @@ var paper;
          */
         ECS.prototype._loop = function (timestamp) {
             if (!this._isRunning) {
+                return;
+            }
+            if (!timestamp) {
+                requestAnimationFrame(this._loop);
                 return;
             }
             timestamp = timestamp || performance.now();

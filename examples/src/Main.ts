@@ -1,7 +1,7 @@
 
 async function main() {
-    exampleStart();
-    // new examples.SceneTest().start();
+    // exampleStart();
+    new examples.EUITest().start();
 }
 
 namespace examples {
