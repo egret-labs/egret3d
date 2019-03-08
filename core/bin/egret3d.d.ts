@@ -316,11 +316,11 @@ declare namespace paper {
         /**
          *
          */
-        version?: number;
+        version?: string;
         /**
          *
          */
-        compatibleVersion?: number;
+        compatibleVersion?: string;
         /**
          * 所有资源。
          */
@@ -4567,11 +4567,17 @@ declare namespace paper {
         private _addScene([scene, isActive]);
         private _removeScene(scene);
         /**
-         *
-         * @param name
-         * @param isActive
+         * 创建一个空场景。
+         * @param name 该场景的名称。
+         * @param isActive 是否将该场景设置为激活场景。
+         * - 默认 `true`。
          */
-        createScene(name: string, isActive?: boolean): Scene;
+        createEmptyScene(name: string, isActive?: boolean): Scene;
+        /**
+         * 通过指定的场景资源创建一个场景。
+         * @param resourceName 该场景的资源名称。
+         */
+        createScene(resourceName: string, combineStaticObjects?: boolean): Scene | null;
         /**
          * 卸载程序中的全部场景。
          * - 不包含全局场景。
@@ -5375,10 +5381,10 @@ declare namespace paper {
          */
         parent: this | null;
         /**
-         * @deprecated
+         *
          * @see paper.Scene#find()
          */
-        static find(name: string, scene?: Scene | null): IEntity | null;
+        static find(name: string, scene?: Scene | null): GameObject | null;
         /**
          * @deprecated
          */
@@ -6248,11 +6254,11 @@ declare namespace paper {
     /**
      * @private
      */
-    const DATA_VERSION: number;
+    const DATA_VERSION: string;
     /**
      * @private
      */
-    const DATA_VERSIONS: number[];
+    const DATA_VERSIONS: string[];
     /**
      * @private
      */

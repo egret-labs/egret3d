@@ -29,7 +29,6 @@ namespace paper {
         public tag: DefaultTags | string = "";
 
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).HideFlags) }) // TODO
         public hideFlags: HideFlags = HideFlags.None;
 
         @serializedField

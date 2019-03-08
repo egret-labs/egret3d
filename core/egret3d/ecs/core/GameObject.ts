@@ -354,7 +354,7 @@ namespace paper {
          * @see paper.Scene#find()
          */
         public static find(name: string, scene: Scene | null = null) {
-            return (scene || Application.sceneManager.activeScene).find(name);
+            return (scene || Application.sceneManager.activeScene).find<GameObject>(name);
         }
         /**
          * @deprecated

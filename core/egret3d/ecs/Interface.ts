@@ -204,11 +204,11 @@ namespace paper {
         /**
          * 
          */
-        version?: number;
+        version?: string;
         /**
          * 
          */
-        compatibleVersion?: number;
+        compatibleVersion?: string;
         /**
          * 所有资源。
          */

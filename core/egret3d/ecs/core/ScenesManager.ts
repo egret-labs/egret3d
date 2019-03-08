@@ -56,12 +56,20 @@ namespace paper {
             }
         }
         /**
-         * 
-         * @param name 
-         * @param isActive 
+         * 创建一个空场景。
+         * @param name 该场景的名称。
+         * @param isActive 是否将该场景设置为激活场景。
+         * - 默认 `true`。
          */
-        public createScene(name: string, isActive: boolean = true): Scene {
+        public createEmptyScene(name: string, isActive: boolean = true): Scene {
             return Scene.createEmpty(name, isActive);
+        }
+        /**
+         * 通过指定的场景资源创建一个场景。
+         * @param resourceName 该场景的资源名称。
+         */
+        public createScene(resourceName: string, combineStaticObjects: boolean = true): Scene | null {
+            return Scene.create(resourceName, combineStaticObjects);
         }
         /**
          * 卸载程序中的全部场景。
@@ -120,7 +128,7 @@ namespace paper {
          */
         public get globalScene(): Scene {
             if (!this._globalScene) {
-                this._globalScene = this.createScene(DefaultNames.Global, false);
+                this._globalScene = this.createEmptyScene(DefaultNames.Global, false);
                 this._scenes.pop(); // Remove global scene from scenes.
             }
 
@@ -132,7 +140,7 @@ namespace paper {
          */
         public get editorScene(): Scene {
             if (!this._editorScene) {
-                this._editorScene = this.createScene(DefaultNames.Editor, false);
+                this._editorScene = this.createEmptyScene(DefaultNames.Editor, false);
                 this._scenes.pop(); // Remove editor scene from scenes.
             }
 
@@ -145,7 +153,7 @@ namespace paper {
             const scenes = this._scenes;
 
             if (scenes.length === 0) {
-                this.createScene(DefaultNames.NoName);
+                this.createEmptyScene(DefaultNames.NoName);
             }
 
             return scenes[0];

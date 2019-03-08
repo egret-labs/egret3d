@@ -4145,6 +4145,38 @@ var paper;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             EditorDefaultAsset_1 = EditorDefaultAsset;
+            /**专门为编辑器写的API，解决再调用纹理时纹理尚未加载完毕的问题 */
+            EditorDefaultAsset.initializeForEditor = function () {
+                return __awaiter(this, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        return [2 /*return*/, new Promise(function (resolve) {
+                                var mapList = [
+                                    { target: "CAMERA_ICON", img: _icons.camera },
+                                    { target: "LIGHT_ICON", img: _icons.light },
+                                ];
+                                var index = 0;
+                                var loadNext = function () {
+                                    if (index < mapList.length) {
+                                        var image_1 = new Image();
+                                        image_1.src = mapList[index].img;
+                                        image_1.onload = function () {
+                                            var texture = egret3d.Texture.create({
+                                                source: image_1
+                                            }).setLiner(true).setRepeat(false).setMipmap(false);
+                                            EditorDefaultAsset_1[mapList[index].target] = texture;
+                                            index++;
+                                            loadNext();
+                                        };
+                                    }
+                                    else {
+                                        resolve();
+                                    }
+                                };
+                                loadNext();
+                            })];
+                    });
+                });
+            };
             EditorDefaultAsset.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
                 {
@@ -4154,24 +4186,28 @@ var paper;
                     EditorDefaultAsset_1.CIRCLE_LINE_HALF = mesh;
                 }
                 {
-                    var image_1 = new Image();
-                    image_1.src = _icons.camera;
-                    image_1.onload = function () {
-                        var texture = egret3d.Texture.create({
-                            source: image_1
-                        }).setLiner(true).setRepeat(false).setMipmap(false);
-                        EditorDefaultAsset_1.CAMERA_ICON = texture;
-                    };
+                    if (!EditorDefaultAsset_1.CAMERA_ICON) {
+                        var image_2 = new Image();
+                        image_2.src = _icons.camera;
+                        image_2.onload = function () {
+                            var texture = egret3d.Texture.create({
+                                source: image_2
+                            }).setLiner(true).setRepeat(false).setMipmap(false);
+                            EditorDefaultAsset_1.CAMERA_ICON = texture;
+                        };
+                    }
                 }
                 {
-                    var image_2 = new Image();
-                    image_2.src = _icons.light;
-                    image_2.onload = function () {
-                        var texture = egret3d.Texture.create({
-                            source: image_2
-                        }).setLiner(true).setRepeat(false).setMipmap(false);
-                        EditorDefaultAsset_1.LIGHT_ICON = texture;
-                    };
+                    if (!EditorDefaultAsset_1.LIGHT_ICON) {
+                        var image_3 = new Image();
+                        image_3.src = _icons.light;
+                        image_3.onload = function () {
+                            var texture = egret3d.Texture.create({
+                                source: image_3
+                            }).setLiner(true).setRepeat(false).setMipmap(false);
+                            EditorDefaultAsset_1.LIGHT_ICON = texture;
+                        };
+                    }
                 }
             };
             EditorDefaultAsset = EditorDefaultAsset_1 = __decorate([
@@ -5458,6 +5494,9 @@ var paper;
                 paper.Application.systemManager.register(editor.StatsSystem, paper.Application.gameObjectContext, 10000 /* End */);
             };
             EditorSystem.prototype.onStart = function () {
+                if (paper.Application.playerMode === 4 /* Editor */) {
+                    return;
+                }
                 console.info("\u5C0F\u63D0\u793A\uFF1A\u901A\u8FC7 H \u952E\u5207\u6362 Inspector \u7684\u663E\u793A\u4E0E\u9690\u85CF\u3002");
             };
             EditorSystem.prototype.onFrame = function () {
@@ -7503,13 +7542,18 @@ var paper;
                                 this.eventDispatcher = new editor.EventDispatcher();
                                 //覆盖生成 uuid 的方式。
                                 paper.createUUID = editor.generateUuid;
+                                //处理一些不和谐内容
+                                return [4 /*yield*/, this.preDo()];
+                            case 1:
+                                //处理一些不和谐内容
+                                _a.sent();
                                 //初始化编辑环境
                                 this.initEditEnvironment();
                                 //允许重新加载
                                 RES.FEATURE_FLAG.FIX_DUPLICATE_LOAD = 0;
                                 //初始化资源
                                 return [4 /*yield*/, RES.loadConfig("resource/default.res.json", "resource/")];
-                            case 1:
+                            case 2:
                                 //初始化资源
                                 _a.sent();
                                 //初始化编辑场景
@@ -7690,6 +7734,18 @@ var paper;
             };
             Editor.dispatchEvent = function (event) {
                 this.eventDispatcher.dispatchEvent(event);
+            };
+            Editor.preDo = function () {
+                return __awaiter(this, void 0, void 0, function () {
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0: return [4 /*yield*/, editor.EditorDefaultAsset.initializeForEditor()];
+                            case 1:
+                                _a.sent();
+                                return [2 /*return*/];
+                        }
+                    });
+                });
             };
             Editor.initEditEnvironment = function () {
                 egret3d.runEgret({

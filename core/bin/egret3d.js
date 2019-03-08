@@ -1952,7 +1952,7 @@ var egret3d;
          */
         GLTFAsset.createConfig = function () {
             var config = {
-                version: "4",
+                version: "5",
                 asset: {
                     version: "2.0"
                 },
@@ -3335,8 +3335,7 @@ var paper;
             paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.DefaultTags) }) // TODO
         ], Entity.prototype, "tag", void 0);
         __decorate([
-            paper.serializedField,
-            paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.HideFlags) }) // TODO
+            paper.serializedField
         ], Entity.prototype, "hideFlags", void 0);
         __decorate([
             paper.serializedField
@@ -6822,13 +6821,22 @@ var paper;
             }
         };
         /**
-         *
-         * @param name
-         * @param isActive
+         * 创建一个空场景。
+         * @param name 该场景的名称。
+         * @param isActive 是否将该场景设置为激活场景。
+         * - 默认 `true`。
          */
-        SceneManager.prototype.createScene = function (name, isActive) {
+        SceneManager.prototype.createEmptyScene = function (name, isActive) {
             if (isActive === void 0) { isActive = true; }
             return paper.Scene.createEmpty(name, isActive);
+        };
+        /**
+         * 通过指定的场景资源创建一个场景。
+         * @param resourceName 该场景的资源名称。
+         */
+        SceneManager.prototype.createScene = function (resourceName, combineStaticObjects) {
+            if (combineStaticObjects === void 0) { combineStaticObjects = true; }
+            return paper.Scene.create(resourceName, combineStaticObjects);
         };
         /**
          * 卸载程序中的全部场景。
@@ -6891,7 +6899,7 @@ var paper;
              */
             get: function () {
                 if (!this._globalScene) {
-                    this._globalScene = this.createScene("Global" /* Global */, false);
+                    this._globalScene = this.createEmptyScene("Global" /* Global */, false);
                     this._scenes.pop(); // Remove global scene from scenes.
                 }
                 return this._globalScene;
@@ -6906,7 +6914,7 @@ var paper;
              */
             get: function () {
                 if (!this._editorScene) {
-                    this._editorScene = this.createScene("Editor" /* Editor */, false);
+                    this._editorScene = this.createEmptyScene("Editor" /* Editor */, false);
                     this._scenes.pop(); // Remove editor scene from scenes.
                 }
                 return this._editorScene;
@@ -6921,7 +6929,7 @@ var paper;
             get: function () {
                 var scenes = this._scenes;
                 if (scenes.length === 0) {
-                    this.createScene("NoName" /* NoName */);
+                    this.createEmptyScene("NoName" /* NoName */);
                 }
                 return scenes[0];
             },
@@ -9378,7 +9386,7 @@ var paper;
             configurable: true
         });
         /**
-         * @deprecated
+         *
          * @see paper.Scene#find()
          */
         GameObject.find = function (name, scene) {
@@ -12035,7 +12043,7 @@ var paper;
     /**
      * @private
      */
-    paper.DATA_VERSION = 5;
+    paper.DATA_VERSION = "5";
     /**
      * @private
      */
@@ -12146,7 +12154,7 @@ var paper;
             }
             return true;
         }
-        if (egret.is(source, "paper.ISerializable")) {
+        if (source[KEY_SERIALIZE] !== null) {
             return equal(source.serialize(), target.serialize());
         }
         if (source instanceof paper.BaseObject) {
@@ -12314,7 +12322,7 @@ var paper;
                     }
                     return target;
                 }
-                if (egret.is(source, "paper.ISerializable")) {
+                if (source[KEY_SERIALIZE] !== null) {
                     return source.serialize();
                 }
                 if (source instanceof paper.BaseObject) {

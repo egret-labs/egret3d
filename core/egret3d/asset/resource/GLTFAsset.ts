@@ -66,7 +66,7 @@ namespace egret3d {
          */
         public static createConfig(): GLTF {
             const config: GLTF = {
-                version: "4",
+                version: "5",
                 asset: {
                     version: "2.0"
                 },
