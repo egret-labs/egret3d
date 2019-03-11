@@ -80,7 +80,7 @@ namespace egret3d.webgl {
             }
 
             const webglVersions = /^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION));
-            this.version = webglVersions ? parseFloat(webglVersions[1]) : 1.0;
+            this.version = webglVersions ? parseFloat(webglVersions[1]).toString() : "1";
             // use dfdx and dfdy must enable OES_standard_derivatives
             this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
             this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");

@@ -1,6 +1,5 @@
 import * as fs from "fs";
 import * as path from "path";
-import * as gltf from "./GLTF";
 import * as shaderConfig from "./ShaderConfig";
 export function createConfig() {
     const config = {
@@ -11,7 +10,7 @@ export function createConfig() {
         extensions: {},
         extensionsRequired: ["paper", "KHR_techniques_webgl"],
         extensionsUsed: ["paper", "KHR_techniques_webgl"],
-    } as gltf.GLTFEgret;
+    } as egret3d.GLTF;
 
     return config;
 }
@@ -22,7 +21,7 @@ export function createGLTFExtensionsConfig() {
         KHR_techniques_webgl: {
             shaders: [],
             techniques: [],
-        },
+        } as any, // TODO ?!?!
         paper: {},
     };
 
@@ -115,7 +114,7 @@ export function parseAttribute(name: string): gltf.Attribute | null {
 }
 
 export function parseUniform(string: string, name: string): gltf.Uniform | null {
-    const uniform: gltf.Uniform = { type: gltf.UniformType.INT };
+    const uniform: gltf.Uniform = { type: gltf.UniformType.INT, value: undefined };
     //系统内置的
     if (name in shaderConfig.UNIFORM_TEMPLATE) {
         if (shaderConfig.UNIFORM_TEMPLATE[name].semantic) {
@@ -153,7 +152,7 @@ export function parseUniform(string: string, name: string): gltf.Uniform | null 
     return uniform;
 }
 
-export function checkValid(asset: gltf.GLTFEgret) {
+export function checkValid(asset: egret3d.GLTF) {
     //先检查顶点和片段是否都在
     const KHR_techniques_webgl = asset.extensions.KHR_techniques_webgl!;
     {
@@ -168,12 +167,12 @@ export function checkValid(asset: gltf.GLTFEgret) {
             return false;
         }
 
-        if (shaders[0].type !== gltf.ShaderStage.VERTEX_SHADER && shaders[0].type !== gltf.ShaderStage.FRAGMENT_SHADER) {
+        if (shaders[0].type !== gltf.ShaderStage.Vertex && shaders[0].type !== gltf.ShaderStage.Fragment) {
             console.warn(shaders[0].name + "着色器类型错误");
             return false;
         }
 
-        if (shaders[1].type !== gltf.ShaderStage.VERTEX_SHADER && shaders[1].type !== gltf.ShaderStage.FRAGMENT_SHADER) {
+        if (shaders[1].type !== gltf.ShaderStage.Vertex && shaders[1].type !== gltf.ShaderStage.Fragment) {
             console.warn(shaders[1].name + "着色器类型错误");
             return false;
         }

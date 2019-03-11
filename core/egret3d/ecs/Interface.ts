@@ -157,7 +157,7 @@ namespace paper {
         /**
          * 
          */
-        readonly asset: number;
+        readonly asset: int;
     }
     /**
      * 
@@ -316,7 +316,7 @@ namespace paper {
      */
     export interface ISystemClass<TSystem extends ISystem<TEntity>, TEntity extends IEntity> {
         /**
-         * 
+         * 该系统允许运行的模式。
          */
         readonly executeMode: PlayerMode;
         /**
@@ -551,22 +551,22 @@ namespace paper {
          * 生成一个新的逻辑帧时调用
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
-        onTick?(deltaTime?: number): void;
+        onTick?(deltaTime?: float): void;
         /**
          * 在新的逻辑帧的清理阶段调用
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
-        onTickCleanup?(deltaTime?: number): void;
+        onTickCleanup?(deltaTime?: float): void;
         /**
          * 生成一个新的渲染帧时调用
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
-        onFrame?(deltaTime?: number): void;
+        onFrame?(deltaTime?: float): void;
         /**
          * 在新的渲染帧的清理阶段调用
          * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
          */
-        onFrameCleanup?(deltaTime?: number): void;
+        onFrameCleanup?(deltaTime?: float): void;
         /**
          * 该系统被禁用时调用。
          * @see paper.BaseSystem#enabled
@@ -698,14 +698,17 @@ namespace paper {
      * 
      */
     export interface RunOptions {
+        /**
+         * 
+         */
         playerMode?: PlayerMode;
         /**
          * 逻辑帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
          */
-        tickInterval?: number;
+        tickInterval?: float;
         /**
          * 渲染帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
          */
-        frameInterval?: number;
+        frameInterval?: float;
     }
 }

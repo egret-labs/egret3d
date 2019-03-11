@@ -1,10 +1,9 @@
 #! /usr/bin/env node
 import * as fs from "fs";
 import * as path from "path";
-import * as gltf from "./GLTF";
 import * as ShaderUtils from './ShaderUtils';
 
-type ShaderLib = { fileName: string, context: string, type: gltf.ShaderStage.VERTEX_SHADER | gltf.ShaderStage.FRAGMENT_SHADER };
+type ShaderLib = { fileName: string, context: string, type: gltf.ShaderStage.Vertex | gltf.ShaderStage.Fragment };
 
 export interface IShaderCommand {
     execute(shaderContext: ShaderGenerateContext): void;
@@ -114,7 +113,7 @@ export class ParseShaderCommand implements IShaderCommand {
             const fileName = path.basename(file);
             const dirName = path.dirname(file);
             const shaderName = fileName.substring(0, fileName.lastIndexOf("_"));
-            const type = fileName.indexOf("frag") >= 0 ? gltf.ShaderStage.FRAGMENT_SHADER : gltf.ShaderStage.VERTEX_SHADER;
+            const type = fileName.indexOf("frag") >= 0 ? gltf.ShaderStage.Fragment : gltf.ShaderStage.Vertex;
             const context = ShaderUtils.transformGLSLCode(fs.readFileSync(file, "utf-8"));
 
             shaderContext.shaderLibs[fileName] = { fileName, context, type };
@@ -122,7 +121,7 @@ export class ParseShaderCommand implements IShaderCommand {
                 shaderContext.shaders[shaderName] = { vert: "", frag: "", dir: dirName };
             }
 
-            if (type === gltf.ShaderStage.VERTEX_SHADER) {
+            if (type === gltf.ShaderStage.Vertex) {
                 shaderContext.shaders[shaderName].vert = fileName;
             }
             else {
@@ -282,7 +281,7 @@ export class GenerateGLTFCommand implements IShaderCommand {
             if (fs.existsSync(outPath)) {
                 //如果存在的话
                 const oldFile = fs.readFileSync(outPath, "utf-8");
-                const oldAsset = JSON.parse(oldFile) as gltf.GLTFEgret;
+                const oldAsset = JSON.parse(oldFile) as egret3d.GLTF;
                 for (let i = 0, l = oldAsset.extensions.KHR_techniques_webgl!.techniques.length; i < l; i++) {
                     if (i >= asset.extensions!.KHR_techniques_webgl!.techniques.length) {
                         continue;
@@ -321,7 +320,7 @@ export class ShaderGenerateContext {
     public shaderLibs: { [key: string]: ShaderLib } = {};
     public shaders: { [key: string]: { vert: string, frag: string, dir: string } } = {};
     //要输出的shader数据
-    public shaderAssets: { [key: string]: gltf.GLTFEgret } = {};
+    public shaderAssets: { [key: string]: egret3d.GLTF } = {};
 
     public execute(root: string, isEngine: boolean = false) {
         this.root = root;
