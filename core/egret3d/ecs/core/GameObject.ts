@@ -116,7 +116,9 @@ namespace paper {
 
             super._addComponent(component, config);
         }
-
+        /**
+         * @internal
+         */
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null) {
             super._removeComponent(component, groupComponent);
 

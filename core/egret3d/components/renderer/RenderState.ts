@@ -91,6 +91,10 @@ namespace egret3d {
                 extensions += "#extension GL_EXT_frag_depth : enable \n";
             }
 
+            if (this.textureFloatEnabled) {
+                extensions += "#extension GL_EXT_frag_depth : enable \n";
+            }
+
             this.fragmentExtensions = extensions;
         }
 
@@ -99,6 +103,9 @@ namespace egret3d {
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
             this.commonDefines = defines;
+
+            defines = ""; // vertexDefines
+            this.vertexDefines = defines;
 
             defines = ""; // fragmentDefines
             defines += ShaderChunk.encodings_pars_fragment + " \n";
@@ -191,14 +198,27 @@ namespace egret3d {
                 caches.useLightMap = useLightMap;
             }
 
-            if (caches.boneCount !== boneCount) { // TODO 浮点纹理。
-                if (boneCount) {
+            if (caches.boneCount !== boneCount) {
+
+                if (boneCount > 0) {
                     defines.addDefine(ShaderDefine.USE_SKINNING);
-                    defines.addDefine(ShaderDefine.MAX_BONES, boneCount);
+
+                    if (this.textureFloatEnabled) {
+                        defines.addDefine(ShaderDefine.BONE_TEXTURE);
+                    }
+                    else {
+                        defines.addDefine(ShaderDefine.MAX_BONES, boneCount);
+                    }
                 }
                 else {
                     defines.removeDefine(ShaderDefine.USE_SKINNING);
-                    defines.removeDefine(ShaderDefine.MAX_BONES);
+
+                    if (this.textureFloatEnabled) {
+                        defines.addDefine(ShaderDefine.BONE_TEXTURE);
+                    }
+                    else {
+                        defines.removeDefine(ShaderDefine.MAX_BONES);
+                    }
                 }
 
                 caches.boneCount = boneCount;

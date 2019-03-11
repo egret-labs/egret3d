@@ -306,6 +306,26 @@ namespace egret3d.webgl {
                         webgl.uniformMatrix4fv(location, false, skinnedMeshRenderer.boneMatrices!);
                         break;
 
+                    case gltf.UniformSemantics._BONETEXTURE:
+                        if (uniform.textureUnits && uniform.textureUnits.length === 1) {
+                            const skinnedMeshRenderer = (renderer as SkinnedMeshRenderer).source || (renderer as SkinnedMeshRenderer);
+                            const texture = skinnedMeshRenderer.boneTexture!; //TODO可能有空
+                            const unit = uniform.textureUnits[0];
+                            webgl.uniform1i(location, unit);
+                            texture.bindTexture(unit);
+                        }
+                        else {
+                            console.error("Error texture unit.");
+                        }
+                        break;
+
+                    case gltf.UniformSemantics._BONETEXTURESIZE:
+                        {
+                            const skinnedMeshRenderer = (renderer as SkinnedMeshRenderer).source || (renderer as SkinnedMeshRenderer);
+                            webgl.uniform1i(location, skinnedMeshRenderer.boneTexture!.width);
+                            break;
+                        }
+
                     case gltf.UniformSemantics._CLOCK:
                         webgl.uniform4fv(location, renderState.caches.clockBuffer);
                         break;

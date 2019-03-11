@@ -19,7 +19,7 @@ namespace egret3d.webgl {
             const sampler = this._sampler;
             const extension = this._gltfTexture!.extensions.paper!;
             const format = extension.format || gltf.TextureFormat.RGBA;
-            const dataType = extension.type || gltf.TextureDataType.UNSIGNED_BYTE;
+            const dataType = extension.type || gltf.ComponentType.UnsignedByte;
             // const isMutilyLayers = extension.layers !== undefined && extension.layers > 1; // TODO
 
             if (extension.depth !== undefined && extension.depth > 1) {

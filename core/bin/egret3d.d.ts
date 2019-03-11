@@ -1557,9 +1557,9 @@ declare namespace egret3d {
         format?: gltf.TextureFormat;
         /**
          * 纹理数据类型。
-         * @defaults gltf.TextureDataType.UNSIGNED_BYTE
+         * @defaults gltf.ComponentType.UnsignedByte
          */
-        type?: gltf.TextureDataType;
+        type?: gltf.ComponentType;
         /**
          * 纹理对齐方式。
          * @defaults gltf.TextureAlignment.Four
@@ -1582,6 +1582,10 @@ declare namespace egret3d {
          */
         faces?: uint;
         /**
+         * 使用 mipmap 的方式。
+         * - 0: 自动生成。
+         * - 1：不使用 mipmap 。
+         * - N: 提供 mipmap 。
          * @defaults 1
          */
         levels?: uint;
@@ -1824,15 +1828,6 @@ declare namespace gltf {
     /**
      *
      */
-    const enum TextureDataType {
-        UNSIGNED_BYTE = 5121,
-        UNSIGNED_SHORT_5_6_5 = 33635,
-        UNSIGNED_SHORT_4_4_4_4 = 32819,
-        UNSIGNED_SHORT_5_5_5_1 = 32820,
-    }
-    /**
-     *
-     */
     const enum TextureFilter {
         Nearest = 9728,
         Linear = 9729,
@@ -1890,6 +1885,7 @@ declare namespace gltf {
      * Component type.
      */
     const enum ComponentType {
+        STRUCT = -1,
         Byte = 5120,
         UnsignedByte = 5121,
         Short = 5122,
@@ -1897,6 +1893,24 @@ declare namespace gltf {
         Int = 5124,
         UnsignedInt = 5125,
         Float = 5126,
+        UnsignedShort4444 = 32819,
+        UnsignedShort5551 = 32820,
+        UnsignedShort565 = 33635,
+        FloatVec2 = 35664,
+        FloatVec3 = 35665,
+        FloatVec4 = 35666,
+        IntVec2 = 35667,
+        IntVec3 = 35668,
+        IntVec4 = 35669,
+        BOOL = 35670,
+        BoolVec2 = 35671,
+        BoolVec3 = 35672,
+        BoolVec4 = 35673,
+        FloatMat2 = 35674,
+        FloatMat3 = 35675,
+        FloatMat4 = 35676,
+        Sampler2D = 35678,
+        SamplerCube = 35680,
     }
     /**
      * The uniform type.  All valid values correspond to WebGL enums.
@@ -2007,6 +2021,8 @@ declare namespace gltf {
         MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE",
         VIEWPORT = "VIEWPORT",
         JOINTMATRIX = "JOINTMATRIX",
+        _BONETEXTURE = "_BONETEXTURE",
+        _BONETEXTURESIZE = "_BONETEXTURESIZE",
         _RESOLUTION = "_RESOLUTION",
         _CLOCK = "_CLOCK",
         _VIEWPROJECTION = "_VIEWPROJECTION",
@@ -3529,7 +3545,6 @@ declare namespace paper {
         protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
         protected _setEnabled(value: boolean): void;
         protected _addComponent(component: IComponent, config?: any): void;
-        protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
         private _getComponent(componentClass);
         private _isRequireComponent(componentClass);
         initialize(): void;
@@ -3717,7 +3732,7 @@ declare namespace egret3d {
          *
          * @param source
          */
-        uploadTexture(source?: gltf.ImageSource): this;
+        uploadTexture(source?: ArrayBuffer | gltf.ImageSource): this;
     }
 }
 declare namespace paper {
@@ -5323,7 +5338,6 @@ declare namespace paper {
         protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
         protected _setEnabled(value: boolean): void;
         protected _addComponent(component: IComponent, config?: any): void;
-        protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
         uninitialize(): void;
         /**
          * 获取一个自己或父级中指定的组件实例。
@@ -5381,7 +5395,7 @@ declare namespace paper {
          */
         parent: this | null;
         /**
-         *
+         * @deprecated
          * @see paper.Scene#find()
          */
         static find(name: string, scene?: Scene | null): GameObject | null;
@@ -6366,6 +6380,7 @@ declare namespace egret3d {
         ENVMAP_BLENDING_ADD = "ENVMAP_BLENDING_ADD",
         FLAT_SHADED = "FLAT_SHADED",
         MAX_BONES = "MAX_BONES",
+        BONE_TEXTURE = "BONE_TEXTURE",
         NUM_DIR_LIGHTS = "NUM_DIR_LIGHTS",
         NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
         NUM_RECT_AREA_LIGHTS = "NUM_RECT_AREA_LIGHTS",
@@ -8673,6 +8688,10 @@ declare namespace egret3d {
         /**
          *
          */
+        boneTexture: Texture | null;
+        /**
+         *
+         */
         source: SkinnedMeshRenderer | null;
         private _skinnedDirty;
         private readonly _bones;
@@ -10875,12 +10894,6 @@ declare namespace egret3d.ShaderLib {
                         "morphTargetInfluences[0]": {
                             "type": number;
                         };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
-                            "type": number;
-                        };
                         "opacity": {
                             "type": number;
                             "value": number;
@@ -10933,12 +10946,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "map": {
@@ -11110,12 +11117,6 @@ declare namespace egret3d.ShaderLib {
                         "morphTargetInfluences[0]": {
                             "type": number;
                         };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
-                            "type": number;
-                        };
                         "diffuse": {
                             "type": number;
                             "value": number[];
@@ -11194,12 +11195,6 @@ declare namespace egret3d.ShaderLib {
                             "value": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "diffuse": {
@@ -11297,12 +11292,6 @@ declare namespace egret3d.ShaderLib {
                             "value": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "diffuse": {
@@ -11421,12 +11410,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "diffuse": {
@@ -11555,12 +11538,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "opacity": {
