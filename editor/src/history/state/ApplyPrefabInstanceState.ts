@@ -17,7 +17,7 @@ namespace paper.editor {
 
         public static create(applyData: editor.ApplyData, applyPrefabRootId: string, prefab: paper.Prefab): ApplyPrefabInstanceState | null {
             const state = new ApplyPrefabInstanceState();
-            const cachePrefabSerializedData: paper.ISerializedData = Editor.activeEditorModel.deepClone((prefab as any)._raw);
+            const cachePrefabSerializedData: paper.ISerializedData = Editor.activeEditorModel.deepClone((prefab as any).config);
 
             let data: ApplyPrefabInstanceStateData = {
                 applyPrefabRootId,
@@ -113,9 +113,8 @@ namespace paper.editor {
                 }
 
                 //reset prefab serrializedata,save prefab
-                // (this.stateData.prefab as any)._raw = this.stateData.cachePrefabSerializedData;
                 const prefabJson = this.stateData.cachePrefabSerializedData;
-                (this.stateData.prefab as any)._raw = prefabJson;
+                (this.stateData.prefab as any).config = prefabJson;
                 this.dispatchEditorModelEvent(EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
 
                 tempPrefabObject!.destroy();
@@ -443,7 +442,7 @@ namespace paper.editor {
                 this.clearGameObjectExtrasInfo(tempPrefabObject!);
                 // (this.stateData.prefab as any)._raw = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
                 const prefabJson = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject!));
-                (this.stateData.prefab as any)._raw = prefabJson;
+                (this.stateData.prefab as any).config = prefabJson;
                 this.dispatchEditorModelEvent(EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
 
                 tempPrefabObject!.destroy();

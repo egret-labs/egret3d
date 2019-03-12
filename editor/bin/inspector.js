@@ -8086,7 +8086,7 @@ var paper;
             };
             ApplyPrefabInstanceState.create = function (applyData, applyPrefabRootId, prefab) {
                 var state = new ApplyPrefabInstanceState();
-                var cachePrefabSerializedData = editor.Editor.activeEditorModel.deepClone(prefab._raw);
+                var cachePrefabSerializedData = editor.Editor.activeEditorModel.deepClone(prefab.config);
                 var data = {
                     applyPrefabRootId: applyPrefabRootId,
                     prefab: prefab,
@@ -8175,9 +8175,8 @@ var paper;
                         }
                     }
                     //reset prefab serrializedata,save prefab
-                    // (this.stateData.prefab as any)._raw = this.stateData.cachePrefabSerializedData;
                     var prefabJson = this.stateData.cachePrefabSerializedData;
-                    this.stateData.prefab._raw = prefabJson;
+                    this.stateData.prefab.config = prefabJson;
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
                     tempPrefabObject.destroy();
                     tempPrefabObject = null;
@@ -8468,7 +8467,7 @@ var paper;
                     this.clearGameObjectExtrasInfo(tempPrefabObject);
                     // (this.stateData.prefab as any)._raw = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
                     var prefabJson = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
-                    this.stateData.prefab._raw = prefabJson;
+                    this.stateData.prefab.config = prefabJson;
                     this.dispatchEditorModelEvent(editor.EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
                     tempPrefabObject.destroy();
                     this.firstRedo = false;
