@@ -312,7 +312,7 @@ namespace egret3d {
         }
     }
     /**
-     * @deprecated
+     * @@interanl
      */
     export const helpMatrix3A = Matrix3.create();
 }

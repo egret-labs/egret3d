@@ -6,7 +6,7 @@ namespace egret3d {
         /**
          * z 轴分量。
          */
-        z: number;
+        z: float;
     }
     /**
      * 欧拉旋转顺序。
@@ -76,7 +76,7 @@ namespace egret3d {
          * @param y Y 轴分量。
          * @param z Z 轴分量。
          */
-        public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0): Vector3 {
+        public static create(x: float = 0.0, y: float = 0.0, z: float = 0.0): Vector3 {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(x, y, z);
                 instance._released = false;
@@ -86,16 +86,16 @@ namespace egret3d {
             return new Vector3().set(x, y, z);
         }
 
-        public x: number;
-        public y: number;
-        public z: number;
+        public x: float;
+        public y: float;
+        public z: float;
         /**
          * 请使用 `egret3d.Vector3.create()` 创建实例。
          * @see egret3d.Vector3.create()
          * @deprecated
          * @private
          */
-        public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0) {
+        public constructor(x: float = 0.0, y: float = 0.0, z: float = 0.0) {
             super();
 
             this.x = x;
@@ -107,7 +107,7 @@ namespace egret3d {
             return [this.x, this.y, this.z];
         }
 
-        public deserialize(value: Readonly<[number, number, number]>) {
+        public deserialize(value: Readonly<[float, float, float]>) {
             return this.fromArray(value);
         }
 
@@ -119,7 +119,7 @@ namespace egret3d {
             return Vector3.create(this.x, this.y, this.z);
         }
 
-        public set(x: number, y: number, z: number) {
+        public set(x: float, y: float, z: float) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -127,7 +127,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(array: ArrayLike<number>, offset: number = 0) {
+        public fromArray(array: ArrayLike<float>, offset: uint = 0) {
             this.x = array[offset];
             this.y = array[offset + 1];
             this.z = array[offset + 2];
@@ -160,7 +160,7 @@ namespace egret3d {
          * @param value 一个向量。
          * @param threshold 阈值。
          */
-        public equal(value: Readonly<IVector3>, threshold: number = Const.EPSILON) {
+        public equal(value: Readonly<IVector3>, threshold: float = Const.EPSILON) {
             if (
                 Math.abs(this.x - value.x) <= threshold &&
                 Math.abs(this.y - value.y) <= threshold &&
@@ -180,11 +180,11 @@ namespace egret3d {
          * 将输入向量的归一化结果写入该向量。
          * - v = input / input.length
          * @param input 输入向量。
-         * @param defaultVector 当向量不能合法归一化时将指向何方向。
          */
-        public normalize(input: Readonly<IVector3>, defaultVector?: Readonly<IVector3>): this;
-        public normalize(input?: Readonly<IVector3>, defaultVector: Readonly<IVector3> = Vector3.FORWARD) {
-            if (!input) {
+        public normalize(input: Readonly<IVector3>): this;
+        public normalize(input: Readonly<IVector3>, defaultVector: Readonly<IVector3>): this;
+        public normalize(input: Readonly<IVector3> | null = null, defaultVector: Readonly<IVector3> = Vector3.FORWARD) {
+            if (input === null) {
                 input = this;
             }
 
@@ -204,6 +204,38 @@ namespace egret3d {
             return this;
         }
         /**
+         * 归一化该向量，并使该向量垂直于自身。
+         * - 向量长度不能为 `0` 。
+         */
+        public orthoNormal(): this;
+        /**
+         * 归一化该向量，并使该向量垂直于输入向量。
+         * @param input 输入向量。
+         * - 向量长度不能为 `0` 。
+         */
+        public orthoNormal(input: Readonly<IVector3>): this;
+        public orthoNormal(input: Readonly<IVector3> | null = null) {
+            if (input === null) {
+                input = this;
+            }
+            const { x, y, z } = input;
+
+            if (z > 0.0 ? z > Const.SQRT1_2 : z < Const.SQRT1_2) { // Y - Z plane.
+                const k = 1.0 / Math.sqrt(y * y + z * z);
+                this.x = 0.0;
+                this.y = -z * k;
+                this.z = y * k;
+            }
+            else { // X - Y plane.
+                const k = 1.0 / Math.sqrt(x * x + y * y);
+                this.x = -y * k;
+                this.y = x * k;
+                this.z = 0.0;
+            }
+
+            return this;
+        }
+        /**
          * 反转该向量。
          */
         public negate(): this;
@@ -212,8 +244,8 @@ namespace egret3d {
          * @param input 输入向量。
          */
         public negate(input: Readonly<IVector3>): this;
-        public negate(input?: Readonly<IVector3>) {
-            if (!input) {
+        public negate(input: Readonly<IVector3> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -225,7 +257,8 @@ namespace egret3d {
         }
         /**
          * 通过一个球面坐标设置该向量。
-         * @param vector3 一个球面坐标。（球面半径、极角、赤道角）
+         * @param vector3 一个球面坐标。
+         * - x：球面半径，y：极角，z：赤道角
          */
         public fromSphericalCoords(vector3: Readonly<IVector3>): this;
         /**
@@ -233,18 +266,18 @@ namespace egret3d {
          * @param phi 相对于 Y 轴的极角。
          * @param theta 围绕 Y 轴的赤道角。
          */
-        public fromSphericalCoords(radius: number, phi: number, theta: number): this;
-        public fromSphericalCoords(p1: Readonly<IVector3> | number, p2?: number, p3?: number) {
+        public fromSphericalCoords(radius: float, phi: float, theta: float): this;
+        public fromSphericalCoords(p1: Readonly<IVector3> | float, p2?: float, p3?: float) {
             if (p1.hasOwnProperty("x")) {
                 p3 = (p1 as Readonly<IVector3>).z;
                 p2 = (p1 as Readonly<IVector3>).y;
                 p1 = (p1 as Readonly<IVector3>).x;
             }
 
-            const sinPhiRadius = Math.sin(<number>p2) * (p1 as number);
-            this.x = sinPhiRadius * Math.sin(<number>p3);
-            this.y = Math.cos(<number>p2) * (p1 as number);
-            this.z = sinPhiRadius * Math.cos(<number>p3);
+            const sinPhiRadius = Math.sin(<float>p2) * (<float>p1);
+            this.x = sinPhiRadius * Math.sin(<float>p3);
+            this.y = Math.cos(<float>p2) * (<float>p1);
+            this.z = sinPhiRadius * Math.cos(<float>p3);
 
             return this;
         }
@@ -261,8 +294,8 @@ namespace egret3d {
          * @param input 输入向量。
          */
         public applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>, input: Readonly<IVector3>): this;
-        public applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>, input?: Readonly<IVector3>) {
-            if (!input) {
+        public applyMatrix3(matrix: Readonly<Matrix3 | Matrix4>, input: Readonly<IVector3> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -295,8 +328,8 @@ namespace egret3d {
          * @param input 输入向量。
          */
         public applyMatrix(matrix: Readonly<Matrix4>, input: Readonly<IVector3>): this;
-        public applyMatrix(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>) {
-            if (!input) {
+        public applyMatrix(matrix: Readonly<Matrix4>, input: Readonly<IVector3> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -314,7 +347,7 @@ namespace egret3d {
                 if (DEBUG) {
                     console.warn("Dividing by zero.");
                 }
-                
+
                 this.x = 0.0;
                 this.y = 0.0;
                 this.z = 0.0;
@@ -339,8 +372,8 @@ namespace egret3d {
          * @param input 输入向量。
          */
         public applyDirection(matrix: Readonly<Matrix4>, input: Readonly<IVector3>): this;
-        public applyDirection(matrix: Readonly<Matrix4>, input?: Readonly<IVector3>) {
-            if (!input) {
+        public applyDirection(matrix: Readonly<Matrix4>, input: Readonly<IVector3> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -366,8 +399,8 @@ namespace egret3d {
          * @param input 输入向量。
          */
         public applyQuaternion(quaternion: Readonly<IVector4>, input: Readonly<IVector3>): this;
-        public applyQuaternion(quaternion: Readonly<IVector4>, input?: Readonly<IVector3>) {
-            if (!input) {
+        public applyQuaternion(quaternion: Readonly<IVector4>, input: Readonly<IVector3> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -390,16 +423,16 @@ namespace egret3d {
          * - v += scalar
          * @param scalar 标量。
          */
-        public addScalar(scalar: number): this;
+        public addScalar(scalar: float): this;
         /**
          * 将输入向量与标量相加的结果写入该向量。
          * - v = input + scalar
          * @param scalar 一个标量。
          * @param input 输入向量。
          */
-        public addScalar(scalar: number, input: Readonly<IVector3>): this;
-        public addScalar(scalar: number, input?: Readonly<IVector3>) {
-            if (!input) {
+        public addScalar(scalar: float, input: Readonly<IVector3>): this;
+        public addScalar(scalar: float, input: Readonly<IVector3> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -414,16 +447,16 @@ namespace egret3d {
          * - v *= scalar
          * @param scalar 标量。
          */
-        public multiplyScalar(scalar: number): this;
+        public multiplyScalar(scalar: float): this;
         /**
          * 将输入向量与标量相乘的结果写入该向量。
          * - v = input * scalar
          * @param scalar 一个标量。
          * @param input 输入向量。
          */
-        public multiplyScalar(scalar: number, input: Readonly<IVector3>): this;
-        public multiplyScalar(scalar: number, input?: Readonly<IVector3>) {
-            if (!input) {
+        public multiplyScalar(scalar: float, input: Readonly<IVector3>): this;
+        public multiplyScalar(scalar: float, input: Readonly<IVector3> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -446,8 +479,8 @@ namespace egret3d {
          * @param vectorB 另一个向量。
          */
         public add(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
-        public add(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
-            if (!vectorB) {
+        public add(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3> | null = null) {
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -471,8 +504,8 @@ namespace egret3d {
          * @param vectorB 另一个向量。
          */
         public subtract(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
-        public subtract(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
-            if (!vectorB) {
+        public subtract(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3> | null = null) {
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -496,8 +529,8 @@ namespace egret3d {
          * @param vectorB 另一个向量。
          */
         public multiply(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
-        public multiply(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
-            if (!vectorB) {
+        public multiply(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3> | null = null) {
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -523,8 +556,8 @@ namespace egret3d {
          * @param vectorB 另一个向量。
          */
         public divide(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
-        public divide(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
-            if (!vectorB) {
+        public divide(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3> | null = null) {
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -544,7 +577,7 @@ namespace egret3d {
          * - v · vector
          * @param vector 一个向量。
          */
-        public dot(vector: Readonly<IVector3>): number {
+        public dot(vector: Readonly<IVector3>): float {
             return this.x * vector.x + this.y * vector.y + this.z * vector.z;
         }
         /**
@@ -560,8 +593,8 @@ namespace egret3d {
          * @param vectorB 另一个向量。
          */
         public cross(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
-        public cross(vectorA: Readonly<IVector3>, vectorB?: Readonly<IVector3>) {
-            if (!vectorB) {
+        public cross(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3> | null = null) {
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -586,7 +619,7 @@ namespace egret3d {
          * @param to 目标向量。
          * @param t 插值因子。
          */
-        public lerp(to: Readonly<IVector3>, t: number): this;
+        public lerp(to: Readonly<IVector3>, t: float): this;
         /**
          * 将两个向量插值的结果写入该向量。
          * - v = from * (1 - t) + to * t
@@ -595,16 +628,16 @@ namespace egret3d {
          * @param to 目标向量。
          * @param t 插值因子。
          */
-        public lerp(from: Readonly<IVector3>, to: Readonly<IVector3>, t: number): this;
+        public lerp(from: Readonly<IVector3>, to: Readonly<IVector3>, t: float): this;
         /**
          * @deprecated
          */
-        public lerp(t: number, to: Readonly<IVector3>): this;
+        public lerp(t: float, to: Readonly<IVector3>): this;
         /**
          * @deprecated
          */
-        public lerp(t: number, from: Readonly<IVector3>, to: Readonly<IVector3>): this;
-        public lerp(p1: Readonly<IVector3> | number, p2: Readonly<IVector3> | number, p3?: number | Readonly<IVector3>) {
+        public lerp(t: float, from: Readonly<IVector3>, to: Readonly<IVector3>): this;
+        public lerp(p1: Readonly<IVector3> | float, p2: Readonly<IVector3> | float, p3?: float | Readonly<IVector3>) {
             if (typeof p1 === "number") {
                 if (!p3) {
                     p3 = p1;
@@ -623,9 +656,49 @@ namespace egret3d {
                 p1 = this;
             }
 
-            this.x = (p1 as Readonly<IVector3>).x + ((p2 as Readonly<IVector3>).x - (p1 as Readonly<IVector3>).x) * (p3 as number);
-            this.y = (p1 as Readonly<IVector3>).y + ((p2 as Readonly<IVector3>).y - (p1 as Readonly<IVector3>).y) * (p3 as number);
-            this.z = (p1 as Readonly<IVector3>).z + ((p2 as Readonly<IVector3>).z - (p1 as Readonly<IVector3>).z) * (p3 as number);
+            this.x = (p1 as Readonly<IVector3>).x + ((p2 as Readonly<IVector3>).x - (p1 as Readonly<IVector3>).x) * (p3 as float);
+            this.y = (p1 as Readonly<IVector3>).y + ((p2 as Readonly<IVector3>).y - (p1 as Readonly<IVector3>).y) * (p3 as float);
+            this.z = (p1 as Readonly<IVector3>).z + ((p2 as Readonly<IVector3>).z - (p1 as Readonly<IVector3>).z) * (p3 as float);
+
+            return this;
+        }
+        /**
+         * 
+         */
+        public slerp(to: Readonly<Vector3>, t: float): this;
+        public slerp(from: Readonly<Vector3>, to: Readonly<Vector3>, t: float): this;
+        public slerp(from: Readonly<Vector3>, to: float | Readonly<Vector3>, t: float = 0.0) {
+            if (typeof to === "number") {
+                t = to as float;
+                to = from;
+                from = this;
+            }
+
+            const fromLength = from.length;
+            const toLength = to.length;
+
+            if (fromLength < Const.EPSILON || toLength < Const.EPSILON) {
+                return this.lerp(from, to, t);
+            }
+
+            const dot = from.dot(to) / (fromLength * toLength);
+
+            if (dot > 1.0 - Const.EPSILON) {
+                return this.lerp(from, to, t);
+            }
+
+            const lerpedLength = math.lerp(fromLength, toLength, t);
+
+            if (dot < -1.0 + Const.EPSILON) {
+                const axis = this.orthoNormal(from);
+                helpMatrix3A.fromMatrix4(helpMatrixA.fromAxis(axis, Const.PI * t));
+                this.multiplyScalar(1.0 / fromLength, from).applyMatrix3(helpMatrix3A).multiplyScalar(lerpedLength);
+            }
+            else {
+                const axis = this.cross(from, to).normalize();
+                helpMatrix3A.fromMatrix4(helpMatrixA.fromAxis(axis, Math.acos(dot) * t));
+                this.multiplyScalar(1.0 / fromLength, from).applyMatrix3(helpMatrix3A).multiplyScalar(lerpedLength);
+            }
 
             return this;
         }
@@ -640,8 +713,8 @@ namespace egret3d {
          * @param valueB 另一个向量。
          */
         public min(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>): this;
-        public min(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (!valueB) {
+        public min(valueA: Readonly<IVector3>, valueB: Readonly<IVector3> | null = null) {
+            if (valueB === null) {
                 valueB = valueA;
                 valueA = this;
             }
@@ -663,8 +736,8 @@ namespace egret3d {
          * @param valueB 另一个向量。
          */
         public max(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>): this;
-        public max(valueA: Readonly<IVector3>, valueB?: Readonly<IVector3>) {
-            if (!valueB) {
+        public max(valueA: Readonly<IVector3>, valueB: Readonly<IVector3> | null = null) {
+            if (valueB === null) {
                 valueB = valueA;
                 valueA = this;
             }
@@ -688,8 +761,8 @@ namespace egret3d {
          * @param input 输入向量。
          */
         public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, input: Readonly<IVector3>): this;
-        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, input?: Readonly<IVector3>) {
-            if (!input) {
+        public clamp(min: Readonly<IVector3>, max: Readonly<IVector3>, input: Readonly<IVector3> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -715,23 +788,28 @@ namespace egret3d {
          * @param normal 一个法线向量。
          * @param input 输入向量。
          */
-        public reflect(normal: Readonly<IVector3>, input: Readonly<IVector3>): this;
-        public reflect(normal: Readonly<IVector3>, input?: Readonly<IVector3>) {
-            if (!input) {
+        public reflect(normal: Readonly<IVector3>, input: Readonly<Vector3>): this;
+        public reflect(normal: Readonly<IVector3>, input: Readonly<Vector3> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
-            return this.subtract(input, _helpVector3.multiplyScalar(2.0 * (input as Vector3).dot(normal), normal));
+            return this.subtract(input, _helpVector3.multiplyScalar(2.0 * input.dot(normal), normal));
         }
         /**
-         * 获取该向量和一个向量的夹角。（弧度制）
-         * - 假设向量长度均不为零。
+         * 获取一个向量和该向量的夹角。
+         * - 弧度制。
+         * @param vector 一个向量。
          */
-        public getAngle(vector: Readonly<IVector3>): number {
-            const v = this.squaredLength * (vector as Vector3).squaredLength;
+        public getAngle(vector: Readonly<Vector3>): float {
+            const v = this.squaredLength * vector.squaredLength;
 
-            if (DEBUG && v === 0.0) {
-                console.warn("Dividing by zero.");
+            if (v < Const.EPSILON) {
+                if (DEBUG) {
+                    console.warn("Dividing by zero.");
+                }
+
+                return 0.0;
             }
 
             const theta = this.dot(vector) / Math.sqrt(v);
@@ -740,17 +818,17 @@ namespace egret3d {
             return Math.acos(Math.max(-1.0, Math.min(1.0, theta)));
         }
         /**
-         * 获取两点的最近距离的平方。
+         * 获取一点到该点的欧氏距离（直线距离）的平方。
          * @param point 一个点。
          */
-        public getSquaredDistance(point: Readonly<IVector3>): number {
+        public getSquaredDistance(point: Readonly<IVector3>): float {
             return _helpVector3.subtract(point, this).squaredLength;
         }
         /**
-         * 获取两点的最近距离。
+         * 获取一点到该点的欧氏距离（直线距离）。
          * @param point 一个点。
          */
-        public getDistance(point: Readonly<IVector3>): number {
+        public getDistance(point: Readonly<IVector3>): float {
             return _helpVector3.subtract(point, this).length;
         }
         /**
@@ -758,8 +836,8 @@ namespace egret3d {
          * @param array 数组。
          * @param offset 数组偏移。
          */
-        public toArray(array?: number[] | Float32Array, offset: number = 0) {
-            if (!array) {
+        public toArray(array: float[] | Float32Array | null = null, offset: uint = 0): float[] | Float32Array {
+            if (array === null) {
                 array = [];
             }
 
@@ -773,14 +851,14 @@ namespace egret3d {
          * 该向量的长度。
          * - 该值是实时计算的。
          */
-        public get length(): number {
+        public get length(): float {
             return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
         }
         /**
          * 该向量的长度的平方。
          * - 该值是实时计算的。
          */
-        public get squaredLength(): number {
+        public get squaredLength(): float {
             return this.x * this.x + this.y * this.y + this.z * this.z;
         }
 

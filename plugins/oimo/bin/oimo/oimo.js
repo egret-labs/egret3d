@@ -42377,11 +42377,15 @@ var egret3d;
             };
             PhysicsSystem.prototype.onEntityRemoved = function (entity, group) {
                 var rigidbody = entity.getRemovedComponent(oimo.Rigidbody) || entity.getComponent(oimo.Rigidbody);
-                for (var _i = 0, _a = entity.getComponents(oimo.BaseJoint, true); _i < _a.length; _i++) {
-                    var joint = _a[_i];
-                    this._oimoWorld.removeJoint(joint.oimoJoint);
+                var oimoRigidbody = rigidbody.oimoRigidbody;
+                var joint = oimoRigidbody.getJointLinkList();
+                while (joint !== null) {
+                    if (joint.getContact().getRigidBody1() === oimoRigidbody) {
+                        this._oimoWorld.removeJoint(joint.getContact());
+                    }
+                    joint = joint.getNext();
                 }
-                this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+                this._oimoWorld.removeRigidBody(oimoRigidbody);
             };
             PhysicsSystem.prototype.onEntityAdded = function (entity, group) {
                 var rigidbody = entity.getComponent(oimo.Rigidbody);
@@ -42488,6 +42492,7 @@ var egret3d;
                     }
                     raycastInfo.collider = rayCastClosest.shape.userData;
                     raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData; // TODO
+                    raycastInfo.transform = raycastInfo.rigidbody.gameObject.transform;
                     return true;
                 }
                 return false;

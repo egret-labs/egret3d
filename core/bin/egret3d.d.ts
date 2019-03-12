@@ -269,7 +269,7 @@ declare namespace paper {
         /**
          *
          */
-        readonly asset: number;
+        readonly asset: int;
     }
     /**
      *
@@ -412,7 +412,7 @@ declare namespace paper {
      */
     interface ISystemClass<TSystem extends ISystem<TEntity>, TEntity extends IEntity> {
         /**
-         *
+         * 该系统允许运行的模式。
          */
         readonly executeMode: PlayerMode;
         /**
@@ -635,22 +635,22 @@ declare namespace paper {
          * 生成一个新的逻辑帧时调用
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
-        onTick?(deltaTime?: number): void;
+        onTick?(deltaTime?: float): void;
         /**
          * 在新的逻辑帧的清理阶段调用
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
-        onTickCleanup?(deltaTime?: number): void;
+        onTickCleanup?(deltaTime?: float): void;
         /**
          * 生成一个新的渲染帧时调用
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
-        onFrame?(deltaTime?: number): void;
+        onFrame?(deltaTime?: float): void;
         /**
          * 在新的渲染帧的清理阶段调用
          * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
          */
-        onFrameCleanup?(deltaTime?: number): void;
+        onFrameCleanup?(deltaTime?: float): void;
         /**
          * 该系统被禁用时调用。
          * @see paper.BaseSystem#enabled
@@ -782,15 +782,18 @@ declare namespace paper {
      *
      */
     interface RunOptions {
+        /**
+         *
+         */
         playerMode?: PlayerMode;
         /**
          * 逻辑帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
          */
-        tickInterval?: number;
+        tickInterval?: float;
         /**
          * 渲染帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
          */
-        frameInterval?: number;
+        frameInterval?: float;
     }
 }
 declare namespace paper {
@@ -838,8 +841,8 @@ declare namespace paper {
      */
     function requireComponent(requireComponentClass: IComponentClass<IComponent>): (componentClass: IComponentClass<IComponent>) => void;
     /**
-     *
-     * @param executeMode
+     * 通过装饰器标记系统在哪些模式可以被执行。
+     * @param executeMode 系统可以被运行的模式。
      */
     function executeMode(executeMode: PlayerMode): (systemClass: ISystemClass<ISystem<IEntity>, IEntity>) => void;
     /**
@@ -3062,7 +3065,7 @@ declare namespace egret3d {
         /**
          * z 轴分量。
          */
-        z: number;
+        z: float;
     }
     /**
      * 欧拉旋转顺序。
@@ -3131,23 +3134,23 @@ declare namespace egret3d {
          * @param y Y 轴分量。
          * @param z Z 轴分量。
          */
-        static create(x?: number, y?: number, z?: number): Vector3;
-        x: number;
-        y: number;
-        z: number;
+        static create(x?: float, y?: float, z?: float): Vector3;
+        x: float;
+        y: float;
+        z: float;
         /**
          * 请使用 `egret3d.Vector3.create()` 创建实例。
          * @see egret3d.Vector3.create()
          * @deprecated
          * @private
          */
-        constructor(x?: number, y?: number, z?: number);
+        constructor(x?: float, y?: float, z?: float);
         serialize(): number[];
-        deserialize(value: Readonly<[number, number, number]>): this;
+        deserialize(value: Readonly<[float, float, float]>): this;
         copy(value: Readonly<IVector3>): this;
         clone(): Vector3;
-        set(x: number, y: number, z: number): this;
-        fromArray(array: ArrayLike<number>, offset?: number): this;
+        set(x: float, y: float, z: float): this;
+        fromArray(array: ArrayLike<float>, offset?: uint): this;
         fromMatrixPosition(matrix: Readonly<Matrix4>): this;
         fromMatrixColumn(matrix: Readonly<Matrix4>, index: 0 | 1 | 2): this;
         clear(): this;
@@ -3156,7 +3159,7 @@ declare namespace egret3d {
          * @param value 一个向量。
          * @param threshold 阈值。
          */
-        equal(value: Readonly<IVector3>, threshold?: number): boolean;
+        equal(value: Readonly<IVector3>, threshold?: float): boolean;
         /**
          * 归一化该向量。
          * - v /= v.length
@@ -3166,9 +3169,20 @@ declare namespace egret3d {
          * 将输入向量的归一化结果写入该向量。
          * - v = input / input.length
          * @param input 输入向量。
-         * @param defaultVector 当向量不能合法归一化时将指向何方向。
          */
-        normalize(input: Readonly<IVector3>, defaultVector?: Readonly<IVector3>): this;
+        normalize(input: Readonly<IVector3>): this;
+        normalize(input: Readonly<IVector3>, defaultVector: Readonly<IVector3>): this;
+        /**
+         * 归一化该向量，并使该向量垂直于自身。
+         * - 向量长度不能为 `0` 。
+         */
+        orthoNormal(): this;
+        /**
+         * 归一化该向量，并使该向量垂直于输入向量。
+         * @param input 输入向量。
+         * - 向量长度不能为 `0` 。
+         */
+        orthoNormal(input: Readonly<IVector3>): this;
         /**
          * 反转该向量。
          */
@@ -3180,7 +3194,8 @@ declare namespace egret3d {
         negate(input: Readonly<IVector3>): this;
         /**
          * 通过一个球面坐标设置该向量。
-         * @param vector3 一个球面坐标。（球面半径、极角、赤道角）
+         * @param vector3 一个球面坐标。
+         * - x：球面半径，y：极角，z：赤道角
          */
         fromSphericalCoords(vector3: Readonly<IVector3>): this;
         /**
@@ -3188,7 +3203,7 @@ declare namespace egret3d {
          * @param phi 相对于 Y 轴的极角。
          * @param theta 围绕 Y 轴的赤道角。
          */
-        fromSphericalCoords(radius: number, phi: number, theta: number): this;
+        fromSphericalCoords(radius: float, phi: float, theta: float): this;
         /**
          * 将该向量乘以一个 3x3 矩阵。
          * - v *= matrix
@@ -3250,27 +3265,27 @@ declare namespace egret3d {
          * - v += scalar
          * @param scalar 标量。
          */
-        addScalar(scalar: number): this;
+        addScalar(scalar: float): this;
         /**
          * 将输入向量与标量相加的结果写入该向量。
          * - v = input + scalar
          * @param scalar 一个标量。
          * @param input 输入向量。
          */
-        addScalar(scalar: number, input: Readonly<IVector3>): this;
+        addScalar(scalar: float, input: Readonly<IVector3>): this;
         /**
          * 将该向量乘以一个标量。
          * - v *= scalar
          * @param scalar 标量。
          */
-        multiplyScalar(scalar: number): this;
+        multiplyScalar(scalar: float): this;
         /**
          * 将输入向量与标量相乘的结果写入该向量。
          * - v = input * scalar
          * @param scalar 一个标量。
          * @param input 输入向量。
          */
-        multiplyScalar(scalar: number, input: Readonly<IVector3>): this;
+        multiplyScalar(scalar: float, input: Readonly<IVector3>): this;
         /**
          * 将该向量加上一个向量。
          * - v += vector
@@ -3330,7 +3345,7 @@ declare namespace egret3d {
          * - v · vector
          * @param vector 一个向量。
          */
-        dot(vector: Readonly<IVector3>): number;
+        dot(vector: Readonly<IVector3>): float;
         /**
          * 将该向量叉乘以一个向量。
          * - v ×= vector
@@ -3351,7 +3366,7 @@ declare namespace egret3d {
          * @param to 目标向量。
          * @param t 插值因子。
          */
-        lerp(to: Readonly<IVector3>, t: number): this;
+        lerp(to: Readonly<IVector3>, t: float): this;
         /**
          * 将两个向量插值的结果写入该向量。
          * - v = from * (1 - t) + to * t
@@ -3360,15 +3375,20 @@ declare namespace egret3d {
          * @param to 目标向量。
          * @param t 插值因子。
          */
-        lerp(from: Readonly<IVector3>, to: Readonly<IVector3>, t: number): this;
+        lerp(from: Readonly<IVector3>, to: Readonly<IVector3>, t: float): this;
         /**
          * @deprecated
          */
-        lerp(t: number, to: Readonly<IVector3>): this;
+        lerp(t: float, to: Readonly<IVector3>): this;
         /**
          * @deprecated
          */
-        lerp(t: number, from: Readonly<IVector3>, to: Readonly<IVector3>): this;
+        lerp(t: float, from: Readonly<IVector3>, to: Readonly<IVector3>): this;
+        /**
+         *
+         */
+        slerp(to: Readonly<Vector3>, t: float): this;
+        slerp(from: Readonly<Vector3>, to: Readonly<Vector3>, t: float): this;
         /**
          * 将该向量与一个向量的分量取最小值。
          * @param value 一个向量。
@@ -3415,38 +3435,39 @@ declare namespace egret3d {
          * @param normal 一个法线向量。
          * @param input 输入向量。
          */
-        reflect(normal: Readonly<IVector3>, input: Readonly<IVector3>): this;
+        reflect(normal: Readonly<IVector3>, input: Readonly<Vector3>): this;
         /**
-         * 获取该向量和一个向量的夹角。（弧度制）
-         * - 假设向量长度均不为零。
+         * 获取一个向量和该向量的夹角。
+         * - 弧度制。
+         * @param vector 一个向量。
          */
-        getAngle(vector: Readonly<IVector3>): number;
+        getAngle(vector: Readonly<Vector3>): float;
         /**
-         * 获取两点的最近距离的平方。
+         * 获取一点到该点的欧氏距离（直线距离）的平方。
          * @param point 一个点。
          */
-        getSquaredDistance(point: Readonly<IVector3>): number;
+        getSquaredDistance(point: Readonly<IVector3>): float;
         /**
-         * 获取两点的最近距离。
+         * 获取一点到该点的欧氏距离（直线距离）。
          * @param point 一个点。
          */
-        getDistance(point: Readonly<IVector3>): number;
+        getDistance(point: Readonly<IVector3>): float;
         /**
          * 将该向量转换为数组。
          * @param array 数组。
          * @param offset 数组偏移。
          */
-        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        toArray(array?: float[] | Float32Array | null, offset?: uint): float[] | Float32Array;
         /**
          * 该向量的长度。
          * - 该值是实时计算的。
          */
-        readonly length: number;
+        readonly length: float;
         /**
          * 该向量的长度的平方。
          * - 该值是实时计算的。
          */
-        readonly squaredLength: number;
+        readonly squaredLength: float;
         /**
          * @deprecated
          */
@@ -3924,7 +3945,7 @@ declare namespace egret3d {
      * 全局渲染状态组件。
      */
     class RenderState extends paper.BaseComponent {
-        version: number;
+        version: string;
         standardDerivativesEnabled: boolean;
         textureFloatEnabled: boolean;
         fragDepthEnabled: boolean;
@@ -4028,7 +4049,7 @@ declare namespace egret3d {
         /**
          *
          */
-        gammaFactor: number;
+        gammaFactor: float;
         /**
          *
          */
@@ -4036,11 +4057,11 @@ declare namespace egret3d {
         /**
          *
          */
-        toneMappingExposure: number;
+        toneMappingExposure: float;
         /**
          *
          */
-        toneMappingWhitePoint: number;
+        toneMappingWhitePoint: float;
     }
     /**
      * 全局渲染状态组件实例。
@@ -4920,10 +4941,26 @@ declare namespace paper {
     /**
      * 基础系统。
      * - 全部系统的基类。
+     * - 生命周期的顺序如下：
+     * - onAwake();
+     * - onEnable();
+     * - onStart();
+     * - onComponentRemoved();
+     * - onEntityRemoved();
+     * - onEntityAdded();
+     * - onComponentAdded();
+     * - onTick();
+     * - onFrame();
+     * - onFrameCleanup();
+     * - onTickCleanup();
+     * - onDisable();
+     * - onDestroy();
      */
     abstract class BaseSystem<TEntity extends IEntity> implements ISystem<TEntity> {
         /**
-         *
+         * 该系统允许运行的模式。
+         * - 默认可以在所有模式运行。
+         * - 通过系统装饰器 `@paper.executeMode()` 来修改该值。
          */
         static readonly executeMode: PlayerMode;
         enabled: boolean;
@@ -4956,10 +4993,10 @@ declare namespace paper {
         onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
         onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
         onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
-        onTick?(deltaTime?: number): void;
-        onTickCleanup?(deltaTime?: number): void;
-        onFrame?(deltaTime?: number): void;
-        onFrameCleanup?(deltaTime?: number): void;
+        onTick?(deltaTime?: float): void;
+        onFrame?(deltaTime?: float): void;
+        onFrameCleanup?(deltaTime?: float): void;
+        onTickCleanup?(deltaTime?: float): void;
         onDisable?(): void;
         onDestroy?(): void;
         /**
@@ -5055,7 +5092,7 @@ declare namespace egret3d {
         readonly determinant: number;
     }
     /**
-     * @deprecated
+     * @@interanl
      */
     const helpMatrix3A: Matrix3;
 }
@@ -5104,6 +5141,14 @@ declare namespace egret3d {
          * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
          */
         EPSILON = 2.220446049250313e-16,
+        /**
+         * The square root of 2.
+         */
+        SQRT_2 = 1.4142135623731,
+        /**
+         * The square root of 0.5, or, equivalently, one divided by the square root of 2.
+         */
+        SQRT1_2 = 0.70710678118655,
     }
     function sign(value: number): number;
     function triangleIntersectsAABB(triangle: Readonly<Triangle>, box: Readonly<Box>): boolean;
@@ -6200,7 +6245,7 @@ declare namespace paper {
      */
     class FixedUpdateSystem extends BaseSystem<GameObject> {
         protected getMatchers(): INoneOfMatcher<GameObject>[];
-        onTick(delta?: number): void;
+        onTick(delta?: float): void;
     }
 }
 declare namespace paper {
@@ -6212,7 +6257,7 @@ declare namespace paper {
     class LateUpdateSystem extends BaseSystem<GameObject> {
         private readonly _laterCalls;
         protected getMatchers(): INoneOfMatcher<GameObject>[];
-        onFrame(deltaTime: number): void;
+        onFrame(deltaTime: float): void;
         /**
          * @deprecated
          */
@@ -8410,7 +8455,7 @@ declare namespace egret3d {
         /**
          * 此次绘制的子网格索引。
          */
-        subMeshIndex: number;
+        subMeshIndex: int;
         /**
          * 此次绘制的网格资源。
          */
@@ -8422,7 +8467,7 @@ declare namespace egret3d {
         /**
          *
          */
-        zdist: number;
+        zdist: float;
         private constructor();
         onClear(): void;
     }
@@ -8443,17 +8488,17 @@ declare namespace egret3d {
         /**
          * 雾的强度。
          */
-        density: number;
+        density: float;
         /**
          * 雾的近平面。
          * - 最小值 0.01。
          */
-        near: number;
+        near: float;
         /**
          * 雾的远平面。
          * - 最小值 0.02。
          */
-        far: number;
+        far: float;
         /**
          * 雾的颜色。
          */
@@ -8462,7 +8507,7 @@ declare namespace egret3d {
         private readonly _scene;
         private constructor();
         serialize(): number[];
-        deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): this;
+        deserialize(data: Readonly<[float, float, float, float, float, float, float, float]>): this;
         /**
          * 雾的模式。
          */

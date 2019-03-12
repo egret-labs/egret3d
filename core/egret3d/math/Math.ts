@@ -86,6 +86,14 @@ namespace egret3d {
          * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
          */
         EPSILON = 2.2204460492503130808472633361816E-16,
+        /**
+         * The square root of 2.
+         */
+        SQRT_2 = 1.4142135623731,
+        /**
+         * The square root of 0.5, or, equivalently, one divided by the square root of 2.
+         */
+        SQRT1_2 = SQRT_2 * 0.5,
     }
 
     export function sign(value: number): number {

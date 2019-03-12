@@ -7,6 +7,7 @@ namespace examples.oimo {
             await RES.loadConfig("default.res.json", "resource/");
             //
             paper.Application.systemManager.register(StarterSystem, paper.Application.gameObjectContext);
+            paper.Application.systemManager.register(TouchJointSystem, paper.Application.gameObjectContext);
         }
     }
 
@@ -20,7 +21,8 @@ namespace examples.oimo {
 
         public onEnable() {
             //
-            egret3d.Camera.main.entity.addComponent(behaviors.RotateAround);
+            egret3d.Camera.main;
+            //.entity.addComponent(behaviors.RotateAround);
             //
             createGridRoom(10.0);
 
@@ -36,7 +38,7 @@ namespace examples.oimo {
 
                 const rigidbody = entity.addComponent(egret3d.oimo.Rigidbody);
                 const boxCollider = entity.addComponent(egret3d.oimo.BoxCollider);
-                rigidbody.type = egret3d.oimo.RigidbodyType.STATIC;
+                rigidbody.type = egret3d.oimo.RigidbodyType.KINEMATIC;
                 boxCollider.box.size = groundSize;
             }
 

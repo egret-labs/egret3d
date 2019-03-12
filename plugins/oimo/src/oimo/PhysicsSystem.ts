@@ -92,12 +92,19 @@ namespace egret3d.oimo {
 
         public onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const rigidbody = entity.getRemovedComponent(Rigidbody) || entity.getComponent(Rigidbody)!;
+            const oimoRigidbody = rigidbody.oimoRigidbody;
 
-            for (const joint of entity.getComponents(BaseJoint as any, true) as BaseJoint<any>[]) {
-                this._oimoWorld.removeJoint(joint.oimoJoint);
+            let joint = oimoRigidbody.getJointLinkList();
+
+            while (joint !== null) {
+                if (joint.getContact().getRigidBody1() === oimoRigidbody) {
+                    this._oimoWorld.removeJoint(joint.getContact());
+                }
+
+                joint = joint.getNext();
             }
 
-            this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+            this._oimoWorld.removeRigidBody(oimoRigidbody);
         }
 
         public onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {

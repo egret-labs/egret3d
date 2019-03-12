@@ -680,8 +680,8 @@ var paper;
     }
     paper.requireComponent = requireComponent;
     /**
-     *
-     * @param executeMode
+     * 通过装饰器标记系统在哪些模式可以被执行。
+     * @param executeMode 系统可以被运行的模式。
      */
     function executeMode(executeMode) {
         return function (systemClass) {
@@ -2241,8 +2241,9 @@ var egret3d;
             return false;
         };
         Vector3.prototype.normalize = function (input, defaultVector) {
+            if (input === void 0) { input = null; }
             if (defaultVector === void 0) { defaultVector = Vector3.FORWARD; }
-            if (!input) {
+            if (input === null) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2258,8 +2259,29 @@ var egret3d;
             }
             return this;
         };
+        Vector3.prototype.orthoNormal = function (input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
+                input = this;
+            }
+            var x = input.x, y = input.y, z = input.z;
+            if (z > 0.0 ? z > 0.70710678118655 /* SQRT1_2 */ : z < 0.70710678118655 /* SQRT1_2 */) {
+                var k = 1.0 / Math.sqrt(y * y + z * z);
+                this.x = 0.0;
+                this.y = -z * k;
+                this.z = y * k;
+            }
+            else {
+                var k = 1.0 / Math.sqrt(x * x + y * y);
+                this.x = -y * k;
+                this.y = x * k;
+                this.z = 0.0;
+            }
+            return this;
+        };
         Vector3.prototype.negate = function (input) {
-            if (!input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
                 input = this;
             }
             this.x = -input.x;
@@ -2280,7 +2302,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.applyMatrix3 = function (matrix, input) {
-            if (!input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2298,7 +2321,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.applyMatrix = function (matrix, input) {
-            if (!input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2321,7 +2345,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.applyDirection = function (matrix, input) {
-            if (!input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2332,7 +2357,8 @@ var egret3d;
             return this.normalize();
         };
         Vector3.prototype.applyQuaternion = function (quaternion, input) {
-            if (!input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2349,7 +2375,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.addScalar = function (scalar, input) {
-            if (!input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
                 input = this;
             }
             this.x = input.x + scalar;
@@ -2358,7 +2385,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.multiplyScalar = function (scalar, input) {
-            if (!input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
                 input = this;
             }
             this.x = scalar * input.x;
@@ -2367,7 +2395,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.add = function (vectorA, vectorB) {
-            if (!vectorB) {
+            if (vectorB === void 0) { vectorB = null; }
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2377,7 +2406,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.subtract = function (vectorA, vectorB) {
-            if (!vectorB) {
+            if (vectorB === void 0) { vectorB = null; }
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2387,7 +2417,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.multiply = function (vectorA, vectorB) {
-            if (!vectorB) {
+            if (vectorB === void 0) { vectorB = null; }
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2397,7 +2428,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.divide = function (vectorA, vectorB) {
-            if (!vectorB) {
+            if (vectorB === void 0) { vectorB = null; }
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2418,7 +2450,8 @@ var egret3d;
             return this.x * vector.x + this.y * vector.y + this.z * vector.z;
         };
         Vector3.prototype.cross = function (vectorA, vectorB) {
-            if (!vectorB) {
+            if (vectorB === void 0) { vectorB = null; }
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2456,8 +2489,38 @@ var egret3d;
             this.z = p1.z + (p2.z - p1.z) * p3;
             return this;
         };
+        Vector3.prototype.slerp = function (from, to, t) {
+            if (t === void 0) { t = 0.0; }
+            if (typeof to === "number") {
+                t = to;
+                to = from;
+                from = this;
+            }
+            var fromLength = from.length;
+            var toLength = to.length;
+            if (fromLength < 2.220446049250313e-16 /* EPSILON */ || toLength < 2.220446049250313e-16 /* EPSILON */) {
+                return this.lerp(from, to, t);
+            }
+            var dot = from.dot(to) / (fromLength * toLength);
+            if (dot > 1.0 - 2.220446049250313e-16 /* EPSILON */) {
+                return this.lerp(from, to, t);
+            }
+            var lerpedLength = egret3d.math.lerp(fromLength, toLength, t);
+            if (dot < -1.0 + 2.220446049250313e-16 /* EPSILON */) {
+                var axis = this.orthoNormal(from);
+                egret3d.helpMatrix3A.fromMatrix4(egret3d.helpMatrixA.fromAxis(axis, 3.141592653589793 /* PI */ * t));
+                this.multiplyScalar(1.0 / fromLength, from).applyMatrix3(egret3d.helpMatrix3A).multiplyScalar(lerpedLength);
+            }
+            else {
+                var axis = this.cross(from, to).normalize();
+                egret3d.helpMatrix3A.fromMatrix4(egret3d.helpMatrixA.fromAxis(axis, Math.acos(dot) * t));
+                this.multiplyScalar(1.0 / fromLength, from).applyMatrix3(egret3d.helpMatrix3A).multiplyScalar(lerpedLength);
+            }
+            return this;
+        };
         Vector3.prototype.min = function (valueA, valueB) {
-            if (!valueB) {
+            if (valueB === void 0) { valueB = null; }
+            if (valueB === null) {
                 valueB = valueA;
                 valueA = this;
             }
@@ -2467,7 +2530,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.max = function (valueA, valueB) {
-            if (!valueB) {
+            if (valueB === void 0) { valueB = null; }
+            if (valueB === null) {
                 valueB = valueA;
                 valueA = this;
             }
@@ -2477,7 +2541,8 @@ var egret3d;
             return this;
         };
         Vector3.prototype.clamp = function (min, max, input) {
-            if (!input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
                 input = this;
             }
             if (true && (min.x > max.x || min.y > max.y || min.z > max.z)) {
@@ -2490,33 +2555,38 @@ var egret3d;
             return this;
         };
         Vector3.prototype.reflect = function (normal, input) {
-            if (!input) {
+            if (input === void 0) { input = null; }
+            if (input === null) {
                 input = this;
             }
             return this.subtract(input, _helpVector3.multiplyScalar(2.0 * input.dot(normal), normal));
         };
         /**
-         * 获取该向量和一个向量的夹角。（弧度制）
-         * - 假设向量长度均不为零。
+         * 获取一个向量和该向量的夹角。
+         * - 弧度制。
+         * @param vector 一个向量。
          */
         Vector3.prototype.getAngle = function (vector) {
             var v = this.squaredLength * vector.squaredLength;
-            if (true && v === 0.0) {
-                console.warn("Dividing by zero.");
+            if (v < 2.220446049250313e-16 /* EPSILON */) {
+                if (true) {
+                    console.warn("Dividing by zero.");
+                }
+                return 0.0;
             }
             var theta = this.dot(vector) / Math.sqrt(v);
             // clamp, to handle numerical problems
             return Math.acos(Math.max(-1.0, Math.min(1.0, theta)));
         };
         /**
-         * 获取两点的最近距离的平方。
+         * 获取一点到该点的欧氏距离（直线距离）的平方。
          * @param point 一个点。
          */
         Vector3.prototype.getSquaredDistance = function (point) {
             return _helpVector3.subtract(point, this).squaredLength;
         };
         /**
-         * 获取两点的最近距离。
+         * 获取一点到该点的欧氏距离（直线距离）。
          * @param point 一个点。
          */
         Vector3.prototype.getDistance = function (point) {
@@ -2528,8 +2598,9 @@ var egret3d;
          * @param offset 数组偏移。
          */
         Vector3.prototype.toArray = function (array, offset) {
+            if (array === void 0) { array = null; }
             if (offset === void 0) { offset = 0; }
-            if (!array) {
+            if (array === null) {
                 array = [];
             }
             array[0 + offset] = this.x;
@@ -7847,6 +7918,20 @@ var paper;
     /**
      * 基础系统。
      * - 全部系统的基类。
+     * - 生命周期的顺序如下：
+     * - onAwake();
+     * - onEnable();
+     * - onStart();
+     * - onComponentRemoved();
+     * - onEntityRemoved();
+     * - onEntityAdded();
+     * - onComponentAdded();
+     * - onTick();
+     * - onFrame();
+     * - onFrameCleanup();
+     * - onTickCleanup();
+     * - onDisable();
+     * - onDestroy();
      */
     var BaseSystem = (function () {
         /**
@@ -7996,7 +8081,9 @@ var paper;
             configurable: true
         });
         /**
-         *
+         * 该系统允许运行的模式。
+         * - 默认可以在所有模式运行。
+         * - 通过系统装饰器 `@paper.executeMode()` 来修改该值。
          */
         BaseSystem.executeMode = 1 /* Player */ | 2 /* DebugPlayer */ | 4 /* Editor */;
         return BaseSystem;
@@ -8262,7 +8349,7 @@ var egret3d;
     egret3d.Matrix3 = Matrix3;
     __reflect(Matrix3.prototype, "egret3d.Matrix3", ["paper.ICCS", "paper.ISerializable"]);
     /**
-     * @deprecated
+     * @@interanl
      */
     egret3d.helpMatrix3A = Matrix3.create();
 })(egret3d || (egret3d = {}));
@@ -8361,6 +8448,14 @@ var egret3d;
          * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
          */
         Const[Const["EPSILON"] = 2.220446049250313e-16] = "EPSILON";
+        /**
+         * The square root of 2.
+         */
+        Const[Const["SQRT_2"] = 1.4142135623731] = "SQRT_2";
+        /**
+         * The square root of 0.5, or, equivalently, one divided by the square root of 2.
+         */
+        Const[Const["SQRT1_2"] = 0.70710678118655] = "SQRT1_2";
     })(Const = egret3d.Const || (egret3d.Const = {}));
     function sign(value) {
         if (value === 0 || value !== value) {
@@ -10567,7 +10662,7 @@ var egret3d;
                     return;
                 }
                 var webglVersions = /^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION));
-                this.version = webglVersions ? parseFloat(webglVersions[1]) : 1.0;
+                this.version = webglVersions ? parseFloat(webglVersions[1]).toString() : "1";
                 // use dfdx and dfdy must enable OES_standard_derivatives
                 this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
                 this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
@@ -18506,7 +18601,7 @@ var egret3d;
             /**
              *
              */
-            _this.zdist = -1;
+            _this.zdist = -1.0;
             return _this;
         }
         /**
@@ -18529,7 +18624,7 @@ var egret3d;
             this.subMeshIndex = -1;
             this.mesh = null;
             this.material = null;
-            this.zdist = -1;
+            this.zdist = -1.0;
         };
         DrawCall._instances = [];
         return DrawCall;
