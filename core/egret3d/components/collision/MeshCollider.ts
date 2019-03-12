@@ -1,14 +1,10 @@
 namespace egret3d {
     /**
-     * 网格碰撞组件接口。
-     */
-    export interface IMeshCollider extends ICollider {
-    }
-    /**
      * 网格碰撞组件。
      */
     @paper.allowMultiple
     export class MeshCollider extends paper.BaseComponent implements IMeshCollider, IRaycast {
+
         public readonly colliderType: ColliderType = ColliderType.Mesh;
 
         protected readonly _localBoundingBox: Box = Box.create();
@@ -25,30 +21,12 @@ namespace egret3d {
 
             this._mesh = null;
         }
-        
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo): boolean {
+
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const mesh = this._mesh;
+
             if (mesh) {
-                const transform = this.gameObject.transform;
-                const worldToLocalMatrix = transform.worldToLocalMatrix;
-                const localRay = helpRay.applyMatrix(worldToLocalMatrix, ray);
-                const localBoundingBox = this._localBoundingBox;
-
-                if (localBoundingBox.raycast(localRay) && mesh.raycast(localRay, raycastInfo)) {
-                    if (raycastInfo) { // Update local raycast info to world.
-                        const localToWorldMatrix = transform.localToWorldMatrix;
-                        raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
-                        raycastInfo.transform = transform;
-
-                        const normal = raycastInfo.normal;
-                        if (normal) {
-                            // normal.applyDirection(localToWorldMatrix);
-                            normal.applyMatrix3(helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
-                        }
-                    }
-
-                    return true;
-                }
+                return _colliderRaycast(this, mesh, this._localBoundingBox, ray, raycastInfo, true);
             }
 
             return false;

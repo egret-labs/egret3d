@@ -346,7 +346,6 @@ namespace egret3d {
         "rotation": gltf.UniformSemantics._ROTATION,
         "scale2D": gltf.UniformSemantics._SCALE2D,
     };
-
     /**
      * 
      */
@@ -372,4 +371,42 @@ namespace egret3d {
          */
         draw(drawCall: DrawCall, material: Material | null): void;
     }
+    /**
+     * 
+     */
+    export type RunOptions = {
+        /**
+         * 
+         */
+        playerMode?: paper.PlayerMode;
+        /**
+         * 
+         */
+        defaultScene?: string;
+        /**
+         * 舞台宽。
+         */
+        contentWidth?: number;
+        /**
+         * 舞台高。
+         */
+        contentHeight?: number;
+        /**
+         * 是否开启抗锯齿，默认开启。
+         */
+        antialias?: boolean;
+        /**
+         * 是否与画布背景色混合，默认不混合。
+         */
+        alpha?: boolean;
+        /**
+         * 
+         */
+        gammaInput?: boolean;
+
+        antialiasSamples?: number;
+
+        canvas?: HTMLCanvasElement;
+        webgl?: WebGLRenderingContext;
+    };
 }

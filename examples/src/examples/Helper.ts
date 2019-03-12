@@ -1,6 +1,6 @@
 namespace examples {
 
-    export function createGridRoom() {
+    export function createGridRoom(offsetY: number = 20.0) {
         { // Create light.
             paper.Scene.activeScene.fog.mode = egret3d.FogMode.Fog;
             paper.Scene.activeScene.fog.color.fromHex(0xFFFFFF);
@@ -20,7 +20,7 @@ namespace examples {
 
         const mesh = egret3d.MeshBuilder.createCube(
             40.0, 40.0, 40.0,
-            0.0, 20.0, 0.0,
+            0.0, offsetY, 0.0,
             40, 40, 40,
         );
         mesh.name = "custom/gridroom.mesh.bin";
@@ -58,16 +58,11 @@ namespace examples {
     }
 
     export function selectGameObjectAndComponents(gameObject: paper.GameObject, ...args: paper.IComponentClass<paper.BaseComponent>[]) {
-        const globalGameObject = paper.GameObject.globalGameObject;
-        const modelComponent = globalGameObject.getComponent(paper.editor.ModelComponent);
-        const guiComponent = globalGameObject.getComponent(paper.editor.GUIComponent);
+        const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
 
         if (modelComponent) {
             modelComponent.select(gameObject);
-
-            if (guiComponent) {
-                guiComponent.openComponents.apply(guiComponent, args);
-            }
+            modelComponent.openComponents.apply(modelComponent, args);
         }
     }
 }

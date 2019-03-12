@@ -4,43 +4,23 @@ namespace egret3d {
      * - 为蒙皮网格渲染组件生成绘制信息。
      * - 更新蒙皮网格的骨骼矩阵信息。
      */
-    export class SkinnedMeshRendererSystem extends paper.BaseSystem {
-        public readonly interests = [
-            {
-                componentClass: SkinnedMeshRenderer,
-                listeners: [
-                    {
-                        type: SkinnedMeshRenderer.onMeshChanged, listener: (component: paper.BaseComponent) => {
-                            this._updateDrawCalls(component.gameObject, true);
+    export class SkinnedMeshRendererSystem extends paper.BaseSystem<paper.GameObject> {
 
-                            if (component.gameObject.renderer) {
-                                component.gameObject.renderer._localBoundingBoxDirty = true;
-                            }
-                        }
-                    },
-                    {
-                        type: SkinnedMeshRenderer.onMaterialsChanged, listener: (component: paper.BaseComponent) => {
-                            this._updateDrawCalls(component.gameObject, true);
-                        }
-                    },
-                ]
-            }
-        ];
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
         private readonly _materialFilter: boolean[] = [];
 
-        private _updateDrawCalls(gameObject: paper.GameObject, checkState: boolean) {
-            if (checkState && !this.enabled || !this.groups[0].hasGameObject(gameObject)) {
+        private _updateDrawCalls(entity: paper.GameObject, checkState: boolean) {
+            if (checkState && !this.enabled || !this.groups[0].containsEntity(entity)) {
                 return;
             }
 
             const drawCallCollecter = this._drawCallCollecter;
-            const renderer = gameObject.renderer as SkinnedMeshRenderer;
+            const renderer = entity.getComponent(SkinnedMeshRenderer)!;
             const mesh = renderer.mesh;
             const materials = renderer.materials;
             const materialCount = materials.length;
-            drawCallCollecter.removeDrawCalls(renderer); // Clear drawCalls.
-
+            // Clear drawCalls.
+            drawCallCollecter.removeDrawCalls(entity);
             if (!mesh || materialCount === 0) {
                 return;
             }
@@ -70,6 +50,7 @@ namespace egret3d {
 
                 if (material) {
                     const drawCall = DrawCall.create();
+                    drawCall.entity = entity;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = i;
@@ -88,6 +69,7 @@ namespace egret3d {
 
                 for (let j = 0; j < subMeshCount; ++j) {
                     const drawCall = DrawCall.create();
+                    drawCall.entity = entity;
                     drawCall.renderer = renderer;
                     drawCall.matrix = matrix;
                     drawCall.subMeshIndex = j;
@@ -100,34 +82,50 @@ namespace egret3d {
             materialFilter.length = 0;
         }
 
-        public onEnable() {
-            for (const gameObject of this.groups[0].gameObjects) {
-                this._updateDrawCalls(gameObject, false);
-            }
+        protected getMatchers() {
+            return [
+                paper.Matcher.create<paper.GameObject>(Transform, SkinnedMeshRenderer),
+            ];
         }
 
-        public onDisable() {
-            for (const gameObject of this.groups[0].gameObjects) {
-                this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
-            }
+        protected getListeners() {
+            return [
+                {
+                    type: SkinnedMeshRenderer.onMeshChanged, listener: (component: paper.IComponent) => {
+                        this._updateDrawCalls(component.entity as paper.GameObject, true);
+
+                        const renderer = component.entity.getComponent(SkinnedMeshRenderer);
+
+                        if (renderer) {
+                            renderer._localBoundingBoxDirty = true;
+                        }
+                    }
+                },
+                {
+                    type: SkinnedMeshRenderer.onMaterialsChanged, listener: (component: paper.IComponent) => {
+                        this._updateDrawCalls(component.entity as paper.GameObject, true);
+                    }
+                },
+            ];
         }
 
-        public onAddGameObject(gameObject: paper.GameObject) {
-            const renderer = gameObject.renderer as SkinnedMeshRenderer;
+        public onEntityAdded(entity: paper.GameObject) {
+            const renderer = entity.getComponent(SkinnedMeshRenderer)!;
+
             if (renderer.mesh && !renderer.source && !renderer.boneMatrices) { // TODO
                 renderer.initialize(true);
             }
 
-            this._updateDrawCalls(gameObject, false);
+            this._updateDrawCalls(entity, false);
         }
 
-        public onRemoveGameObject(gameObject: paper.GameObject) {
-            this._drawCallCollecter.removeDrawCalls(gameObject.renderer!);
+        public onEntityRemoved(entity: paper.GameObject) {
+            this._drawCallCollecter.removeDrawCalls(entity);
         }
 
-        public onUpdate() {
-            for (const gameObject of this.groups[0].gameObjects) {
-                (gameObject.renderer as SkinnedMeshRenderer)._update();
+        public onFrame() {
+            for (const entity of this.groups[0].entities) {
+                entity.getComponent(SkinnedMeshRenderer)!._update();
             }
         }
     }

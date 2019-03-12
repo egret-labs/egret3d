@@ -53,7 +53,6 @@ namespace examples.shaders {
                 const line = paper.GameObject.create("SkinnedMeshRendererRaycast");
                 line.transform.setLocalPosition(0.0, 0.0, -2.0);
                 const rendererRaycast = line.addComponent(behaviors.RendererRaycast);
-                rendererRaycast.raycastMesh = true;
                 rendererRaycast.target = renderer.gameObject;
 
                 //

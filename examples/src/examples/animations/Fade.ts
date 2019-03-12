@@ -69,13 +69,7 @@ namespace examples.animations {
             //
             createGridRoom();
             //
-            const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
-            if (modelComponent) {
-                setTimeout(() => {
-                    modelComponent.select(gameObjectX);
-                    paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(behaviors.AnimationHelper);
-                }, 1000.0);
-            }
+            selectGameObjectAndComponents(gameObjectX, behaviors.AnimationHelper);
         }
     }
 }

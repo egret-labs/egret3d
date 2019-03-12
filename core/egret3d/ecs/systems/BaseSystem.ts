@@ -1,79 +1,172 @@
 namespace paper {
-    let _createEnabled = false;
     /**
      * 基础系统。
      * - 全部系统的基类。
      */
-    export abstract class BaseSystem {
-        /**
-         * 创建一个指定系统。
-         * @internal
-         */
-        public static create<T extends BaseSystem>(systemClass: { new(order?: SystemOrder): T }, order: SystemOrder) {
-            _createEnabled = true;
-            return new systemClass(order);
-        }
-        /**
-         * 该系统是否被激活。
-         */
-        public enabled: boolean = true;
-        /**
-         * 该系统的执行顺序。
-         */
-        public readonly order: SystemOrder = -1;
-        /**
-         * 该系统在调试模式时每帧消耗的时间，仅用于性能统计。（以毫秒为单位）
-         */
-        public readonly deltaTime: uint = 0;
-        /**
-         * 全局时钟信息组件实例。
-         */
-        public readonly clock: Clock = GameObject.globalGameObject.getOrAddComponent(Clock);
+    export abstract class BaseSystem<TEntity extends IEntity> implements ISystem<TEntity> {
         /**
          * 
          */
-        public readonly interests: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>> = [];
+        public static readonly executeMode: PlayerMode = PlayerMode.Player | PlayerMode.DebugPlayer | PlayerMode.Editor;
         /**
-         * 该系统关心的实体组。
+         * @internal
          */
-        public readonly groups: ReadonlyArray<GameObjectGroup> = [];
+        public static create<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(systemClass: ISystemClass<TSystem, TEntity>, context: Context<TEntity>, order: SystemOrder): TSystem {
+            return new systemClass(context, order);
+        }
+
+        public enabled: boolean = true;
+        public readonly order: SystemOrder = -1;
+        public readonly deltaTime: uint = 0;
+        public readonly groups: ReadonlyArray<Group<TEntity>> = [];
+        public readonly collectors: ReadonlyArray<Collector<TEntity>> = [];
         /**
-         * @private
+         * @internal
          */
-        public _started: boolean = false;
-        private _enabled: boolean = false;
+        public _lastEnabled: boolean = false;
+        /**
+         * @internal
+         */
+        public _executeEnabled: boolean = false;
+
+        private _context: Context<TEntity> | null = null; // 兼容 interests 2.0 移除。
         /**
          * 禁止实例化系统。
          * @protected
          */
-        public constructor(order: SystemOrder = -1) {
-            if (!_createEnabled) {
-                throw new Error("Create an instance of a system is not allowed.");
-            }
-            _createEnabled = false;
-
+        public constructor(context: Context<TEntity>, order: SystemOrder = -1) {
             this.order = order;
+            this._context = context;
+
+            const matchers = this.getMatchers();
+            const listeners = this.getListeners();
+
+            if (matchers) {
+                for (const matcher of matchers) {
+                    this._addGroupAndCollector(matcher);
+                }
+            }
+
+            if (listeners) {
+                for (const config of listeners) {
+                    config.type.add(config.listener, this);
+                }
+            }
+
+            if (!(this as ISystem<TEntity>).onEntityAdded && this.onAddGameObject) {
+                (this as ISystem<TEntity>).onEntityAdded = this.onAddGameObject;
+            }
+
+            if (!(this as ISystem<TEntity>).onEntityRemoved && this.onRemoveGameObject) {
+                (this as ISystem<TEntity>).onEntityRemoved = this.onRemoveGameObject;
+            }
+        }
+
+        private _addGroupAndCollector(matcher: ICompoundMatcher<TEntity>) {
+            const group = this._context!.getGroup(matcher);
+            (this.groups as Group<TEntity>[]).push(group);
+            (this.collectors as Collector<TEntity>[]).push(Collector.create(group));
         }
         /**
-         * 系统内部初始化。
-         * @private
+         * @internal
          */
-        public initialize(config?: any) {
-            (this.interests as any) = this.interests || (this as any)["_interests"]; // TODO
-            if (this.interests.length > 0) {
+        public initialize(config?: any): void {
+            (this as ISystem<TEntity>).onAwake && (this as ISystem<TEntity>).onAwake!(config);
+        }
+        /**
+         * @internal
+         */
+        public uninitialize(): void {
+        }
+        /**
+         * 获取该系统需要响应的组件匹配器。
+         */
+        protected getMatchers(): ICompoundMatcher<TEntity>[] | null {
+            return null;
+        }
+        /**
+         * 
+         */
+        protected getListeners(): { type: signals.Signal, listener: (component: any) => void }[] | null {
+            return null;
+        }
+
+        public onAwake?(config?: any): void;
+        public onEnable?(): void;
+        public onStart?(): void;
+        public onComponentRemoved?(component: IComponent, group: Group<TEntity>): void;
+        public onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
+        public onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
+        public onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
+        public onTick?(deltaTime?: number): void;
+        public onTickCleanup?(deltaTime?: number): void;
+        public onFrame?(deltaTime?: number): void;
+        public onFrameCleanup?(deltaTime?: number): void;
+        public onDisable?(): void;
+        public onDestroy?(): void;
+
+        /**
+         * @deprecated
+         */
+        public readonly clock: Clock = clock;
+        /**
+         * @deprecated
+         */
+        public onAddGameObject?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * @deprecated
+         */
+        public onRemoveGameObject?(entity: TEntity, group: Group<TEntity>): void;
+        /**
+         * @deprecated
+         */
+        public get interests(): ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>> {
+            return [];
+        }
+        public set interests(value: ReadonlyArray<InterestConfig | ReadonlyArray<InterestConfig>>) {
+            if (value.length > 0) {
                 let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
 
-                if (Array.isArray(this.interests[0])) {
-                    interests = this.interests as ReadonlyArray<ReadonlyArray<InterestConfig>>;
+                if (Array.isArray(value[0])) {
+                    interests = value as ReadonlyArray<ReadonlyArray<InterestConfig>>;
                 }
                 else {
-                    interests = [this.interests as ReadonlyArray<InterestConfig>];
+                    interests = [value as ReadonlyArray<InterestConfig>];
                 }
 
-                const groups = this.groups as GameObjectGroup[];
-
                 for (const interest of interests) {
+                    const allOf = [];
+                    const anyOf = [];
+                    const noneOf = [];
+                    const extraOf = [];
+
                     for (const config of interest) {
+                        const isNoneOf = (config.type !== undefined) && (config.type & InterestType.Exculde) !== 0;
+                        const isExtraOf = (config.type !== undefined) && (config.type & InterestType.Unessential) !== 0;
+
+                        if (Array.isArray(config.componentClass)) {
+                            for (const componentClass of config.componentClass) {
+                                if (isNoneOf) {
+                                    noneOf.push(componentClass);
+                                }
+                                else if (isExtraOf) {
+                                    extraOf.push(componentClass);
+                                }
+                                else {
+                                    anyOf.push(componentClass);
+                                }
+                            }
+                        }
+                        else if (isNoneOf) {
+                            noneOf.push(config.componentClass);
+                        }
+                        else if (isExtraOf) {
+                            extraOf.push(config.componentClass);
+                        }
+                        else {
+                            allOf.push(config.componentClass);
+                        }
+
                         if (config.listeners) {
                             for (const listenerConfig of config.listeners) {
                                 listenerConfig.type.add(listenerConfig.listener, this);
@@ -81,185 +174,11 @@ namespace paper {
                         }
                     }
 
-                    groups.push(GameObjectGroup.create(interest));
-                }
-            }
-
-            this.onAwake && this.onAwake(config);
-        }
-        /**
-         * 系统内部卸载。
-         * @private
-         */
-        public uninitialize() {
-            this.onDestroy && this.onDestroy();
-
-            if (this.interests.length > 0) {
-                let interests: ReadonlyArray<ReadonlyArray<InterestConfig>>;
-
-                if (Array.isArray(this.interests[0])) {
-                    interests = this.interests as ReadonlyArray<ReadonlyArray<InterestConfig>>;
-                }
-                else {
-                    interests = [this.interests as ReadonlyArray<InterestConfig>];
-                }
-
-                for (const interest of interests) {
-                    for (const config of interest) {
-                        if (config.listeners) {
-                            for (const listenerConfig of config.listeners) {
-                                listenerConfig.type.remove(listenerConfig.listener);
-                            }
-                        }
-                    }
+                    const matcher = Matcher.create.apply(Matcher, allOf as any);
+                    matcher.anyOf.apply(matcher, anyOf).noneOf.apply(matcher, noneOf).extraOf.apply(matcher, extraOf);
+                    this._addGroupAndCollector(matcher);
                 }
             }
         }
-        /**
-         * 系统内部更新。
-         * @private
-         */
-        public update() {
-            const enabled = this.enabled;
-
-            if (this._enabled !== enabled) {
-                if (enabled) {
-                    this.onEnable && this.onEnable();
-                    if (DEBUG) {
-                        console.debug(egret.getQualifiedClassName(this), "enabled.");
-                    }
-                }
-            }
-
-            if (enabled && this._started) {
-                let startTime = 0;
-                const clock = this.clock;
-
-                if (DEBUG) {
-                    (this.deltaTime as uint) = 0;
-                    startTime = clock.now;
-                }
-
-                for (const group of this.groups) {
-                    if (this.onAddGameObject) {
-                        for (const gameObject of group._addedGameObjects) {
-                            if (gameObject) {
-                                this.onAddGameObject(gameObject, group);
-                            }
-                        }
-                    }
-
-                    if (this.onAddComponent) {
-                        for (const component of group._addedComponents) {
-                            if (component) {
-                                this.onAddComponent(component, group);
-                            }
-                        }
-                    }
-                }
-
-                this.onUpdate && this.onUpdate(clock.deltaTime);
-
-                if (DEBUG) {
-                    (this.deltaTime as uint) += clock.now - startTime;
-                }
-            }
-
-            if (this._enabled !== enabled) {
-                this._enabled = enabled;
-
-                if (!enabled) {
-                    this.onDisable && this.onDisable();
-                    if (DEBUG) {
-                        console.debug(egret.getQualifiedClassName(this), "disabled.");
-                    }
-                }
-            }
-        }
-        /**
-         * 系统内部更新。
-         * @private
-         */
-        public lateUpdate() {
-            if (this.enabled && this._started) {
-                let startTime = 0;
-                const clock = this.clock;
-
-                if (DEBUG) {
-                    startTime = clock.now;
-                }
-
-                this.onLateUpdate && this.onLateUpdate(clock.deltaTime);
-
-                if (DEBUG) {
-                    (this.deltaTime as uint) += clock.now - startTime;
-                }
-            }
-        }
-        /**
-         * 该系统初始化时调用。
-         * @param config 该系统被注册时可以传递的初始化数据。
-         */
-        public onAwake?(config?: any): void;
-        /**
-         * 该系统被激活时调用。
-         * @see paper.BaseSystem#enabled
-         */
-        public onEnable?(): void;
-        /**
-         * 该系统开始运行时调用。
-         */
-        public onStart?(): void;
-        /**
-         * 实体被添加到系统时调用。
-         * - 注意，该调用并不是立即的，而是等到添加到组的下一帧才被调用。
-         * @param gameObject 收集的实体。
-         * @param group 收集实体的实体组。
-         * @see paper.GameObject#addComponent()
-         */
-        public onAddGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
-        /**
-         * 充分非必要组件添加到实体时调用。
-         * - 注意，该调用并不是立即的，而是等到添加到实体的下一帧才被调用。
-         * @param component 收集的实体组件。
-         * @param group 收集实体组件的实体组。
-         * @see paper.GameObject#addComponent()
-         */
-        public onAddComponent?(component: BaseComponent, group: GameObjectGroup): void;
-        /**
-         * 充分非必要组件从实体移除时调用。
-         * @param component 移除的实体组件。
-         * @param group 移除实体组件的实体组。
-         * @see paper.GameObject#removeComponent()
-         */
-        public onRemoveComponent?(component: BaseComponent, group: GameObjectGroup): void;
-        /**
-         * 实体从系统移除时调用。
-         * @param gameObject 移除的实体。
-         * @param group 移除实体的实体组。
-         * @see paper.GameObject#removeComponent()
-         */
-        public onRemoveGameObject?(gameObject: GameObject, group: GameObjectGroup): void;
-        /**
-         * 该系统更新时调用。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        public onUpdate?(deltaTime?: number): void;
-        /**
-         * 该系统更新时调用。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        public onLateUpdate?(deltaTime?: number): void;
-        /**
-         * 该系统被禁用时调用。
-         * @see paper.BaseSystem#enabled
-         */
-        public onDisable?(): void;
-        /**
-         * 该系统被注销时调用。
-         * @see paper.SystemManager#unregister()
-         * @see paper.Application#systemManager
-         */
-        public onDestroy?(): void;
     }
 }

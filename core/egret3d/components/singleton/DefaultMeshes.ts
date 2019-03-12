@@ -33,7 +33,6 @@ namespace egret3d {
             // TODO 颜色，更多类型。
 
             const attributesA = [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.COLOR_0];
-            const attributesB = [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.NORMAL, gltf.AttributeSemantics.TEXCOORD_0];
 
             { // TRIANGLE.
                 const mesh = Mesh.create(3, 0, attributesA);
@@ -102,7 +101,7 @@ namespace egret3d {
             }
 
             { // PYRAMID.
-                const mesh = MeshBuilder.createCylinder(0.0, Math.sqrt(0.5), 1.0, 0.0, 0.0, 0.0, 4, 1, false, Math.PI * 0.25);
+                const mesh = MeshBuilder.createCylinder(0.0, Math.sqrt(0.5), 1.0, 0.0, 0.0, 0.0, 4, 1, false, Const.PI_QUARTER);
                 mesh.name = "builtin/pyramid.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.PYRAMID = mesh;

@@ -2,11 +2,8 @@ namespace egret3d {
     /**
      * 灯光组件。
      */
+    @paper.abstract
     export abstract class BaseLight extends paper.BaseComponent {
-        /**
-         * @internal
-         */
-        public static readonly __isAbstract: any = BaseLight;
         /**
          * TODO
          */

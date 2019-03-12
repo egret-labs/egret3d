@@ -44,42 +44,30 @@ namespace paper {
             keys.push(key);
         }
     }
-    // /** TODO
-    //  * 通过装饰器标记组件是否为抽象组件。
-    //  * @param componentClass 组件类。
-    //  */
-    // export function abstract(componentClass: IComponentClass<BaseComponent>) {
-    //     (componentClass.__isAbstract as any) = componentClass;
-    //     console.log(componentClass);
-    // }
     /**
-     * 通过装饰器标记组件允许在同一实体上添加多个实例。
+     * 通过装饰器标记组件是否为抽象组件。
      * @param componentClass 组件类。
      */
-    export function allowMultiple(componentClass: IComponentClass<BaseComponent>) {
-        if (!componentClass.__isSingleton) {
-            (componentClass.allowMultiple as boolean) = true;
-            (componentClass.notAllowMultiple as boolean) = false;
-        }
+    export function abstract(componentClass: any) {
+        ((componentClass as IComponentClass<IComponent>).isAbstract as IComponentClass<IComponent>) = componentClass;
     }
-    // /** TODO
-    //  * 通过装饰器标记组件（或子类）不允许在同一实体上添加多个实例。
-    //  * @param componentClass 组件类。
-    //  */
-    // export function notAllowMultiple(componentClass: IComponentClass<BaseComponent>) {
-    //     if (!componentClass.__isSingleton) {
-    //         (componentClass.allowMultiple as boolean) = false;
-    //         (componentClass.notAllowMultiple as boolean) = true;
-    //     }
-    // }
     /**
      * 通过装饰器标记组件是否为单例组件。
      * @param componentClass 组件类。
      */
-    export function singleton(componentClass: IComponentClass<BaseComponent>) {
-        (componentClass.__isSingleton as boolean) = true;
+    export function singleton(componentClass: IComponentClass<IComponent>) {
+        (componentClass.isSingleton as boolean) = true;
         (componentClass.allowMultiple as boolean) = false;
-        (componentClass.notAllowMultiple as boolean) = false;
+    }
+    /**
+     * 通过装饰器标记组件允许在同一实体上添加多个实例。
+     * - 实体上允许添加相同的组件对实体组件系统并不友好，所以通常不要这么做。
+     * @param componentClass 组件类。
+     */
+    export function allowMultiple(componentClass: IComponentClass<IComponent>) {
+        if (!componentClass.isSingleton) {
+            (componentClass.allowMultiple as boolean) = true;
+        }
     }
     // executionOrder: number; TODO
     // /**
@@ -102,12 +90,22 @@ namespace paper {
      * 通过装饰器标记组件依赖的其他组件。
      * @param requireComponentClass 依赖的组件类。
      */
-    export function requireComponent(requireComponentClass: IComponentClass<BaseComponent>) {
-        return function (componentClass: IComponentClass<BaseComponent>) {
+    export function requireComponent(requireComponentClass: IComponentClass<IComponent>) {
+        return function (componentClass: IComponentClass<IComponent>) {
             const requireComponents = componentClass.requireComponents!;
+
             if (requireComponents.indexOf(requireComponentClass) < 0) {
                 requireComponents.push(requireComponentClass);
             }
+        };
+    }
+    /**
+     * 
+     * @param executeMode 
+     */
+    export function executeMode(executeMode: PlayerMode) {
+        return function (systemClass: ISystemClass<ISystem<IEntity>, IEntity>) {
+            (systemClass.executeMode as PlayerMode) = executeMode;
         };
     }
     /**

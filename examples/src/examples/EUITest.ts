@@ -5,17 +5,36 @@ namespace examples {
             await RES.getResAsync("logo.png");
 
             // Create camera.
-            egret3d.Camera.main;
+            const mainCamera = egret3d.Camera.main;
+            mainCamera.cullingMask = paper.Layer.Default;
+            mainCamera.bufferMask = gltf.BufferMask.DepthAndColor;
+            mainCamera.order = 0;
+
+            const uiCameraObj = paper.GameObject.create("uiCamera");
+            const uiCamera = uiCameraObj.addComponent(egret3d.Camera);
+            uiCamera.cullingMask = paper.Layer.UI;
+            uiCamera.bufferMask = gltf.BufferMask.Depth;
+            uiCamera.order = 10;
+
+            const topCameraObj = paper.GameObject.create("topCamera");
+            const topCamera = topCameraObj.addComponent(egret3d.Camera);
+            topCamera.cullingMask = paper.Layer.UserLayer10;
+            topCamera.bufferMask = gltf.BufferMask.Depth;
+            topCamera.order = 20;
+            topCamera.transform.setLocalPosition(0.0, 10.0, -10.0);
+            topCamera.transform.lookAt(egret3d.Vector3.ZERO);
+
 
             { // Create cube.
-                const cube = paper.GameObject.create("Cube");
-                cube.transform.setLocalEulerAngles(45, 45, 0);
-                cube.addComponent(RotateScript);
+                const cube = paper.GameObject.create("BottomCube");
+                // cube.addComponent(RotateScript);
+                cube.layer = paper.Layer.Default;
 
                 const meshFilter = cube.addComponent(egret3d.MeshFilter);
                 meshFilter.mesh = egret3d.DefaultMeshes.CUBE;
 
                 const meshRenderer = cube.addComponent(egret3d.MeshRenderer);
+                meshRenderer.frustumCulled = false;
                 const texture = RES.getRes("logo.png") as egret3d.Texture;
                 const material = egret3d.Material.create().setTexture(texture);
                 meshRenderer.material = material;
@@ -25,6 +44,23 @@ namespace examples {
                 const gameObject = paper.GameObject.create("GameUI");
                 gameObject.addComponent(egret3d.Egret2DRenderer);
                 gameObject.addComponent(GameUIScript);
+                gameObject.layer = paper.Layer.UI;
+            }
+
+            { // Create cube.
+                const cube = paper.GameObject.create("TopCube");
+                // cube.addComponent(RotateScript);
+                cube.layer = paper.Layer.UserLayer10;
+                cube.transform.translate(1, 0, 0);
+
+                const meshFilter = cube.addComponent(egret3d.MeshFilter);
+                meshFilter.mesh = egret3d.DefaultMeshes.CUBE;
+
+                const meshRenderer = cube.addComponent(egret3d.MeshRenderer);
+                meshRenderer.frustumCulled = false;
+                const texture = RES.getRes("logo.png") as egret3d.Texture;
+                const material = egret3d.Material.create().setTexture(texture);
+                meshRenderer.material = material;
             }
         }
     }

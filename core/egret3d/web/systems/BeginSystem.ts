@@ -2,11 +2,12 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
-    export class BeginSystem extends paper.BaseSystem {
-        private _canvas: HTMLCanvasElement = null!;
+    export class BeginSystem extends paper.BaseSystem<paper.GameObject> {
+        private _canvasSizeDirty: boolean = true;
+        private _canvas: HTMLCanvasElement | null = null;
 
-        private _updateCanvas(stage: Stage) {
-            const canvas = this._canvas;
+        private _updateCanvas() {
+            const canvas = this._canvas!;
             const screenSize = stage.screenSize;
             const viewport = stage.viewport;
 
@@ -38,47 +39,49 @@ namespace egret3d.webgl {
             }
         }
 
-        public onAwake(config: RunEgretOptions) {
-            const globalGameObject = paper.GameObject.globalGameObject;
-            // Add stage, set stage, update canvas.
+        public onAwake(config: RunOptions) {
+            const globalEntity = paper.Application.sceneManager.globalEntity;
+            const parentElement = config.canvas!.parentElement;
+            const screenWidth = parentElement ? parentElement.clientWidth : window.innerWidth;
+            const screenHeight = parentElement ? parentElement.clientHeight : window.innerHeight;
             this._canvas = config.canvas!;
-            const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || this._canvas.parentElement === undefined;
-            const screenWidth = isWX ? window.innerWidth : this._canvas.parentElement!.clientWidth;
-            const screenHeight = isWX ? window.innerHeight : this._canvas.parentElement!.clientHeight;
 
-            globalGameObject.addComponent(Stage, {
+            globalEntity.addComponent(RenderState, config);
+            globalEntity.addComponent(Stage, {
                 size: { w: config.contentWidth!, h: config.contentHeight! },
                 screenSize: { w: screenWidth, h: screenHeight },
             });
-
-            globalGameObject.addComponent(RenderState, config);
-            globalGameObject.addComponent(DefaultMeshes);
-            globalGameObject.addComponent(DefaultShaders);
-            globalGameObject.addComponent(DefaultTextures);
-            globalGameObject.addComponent(DefaultMaterials);
-            globalGameObject.addComponent(InputCollecter);
+            globalEntity.addComponent(DefaultMeshes);
+            globalEntity.addComponent(DefaultShaders);
+            globalEntity.addComponent(DefaultTextures);
+            globalEntity.addComponent(DefaultMaterials);
+            globalEntity.addComponent(DrawCallCollecter);
+            globalEntity.addComponent(CameraAndLightCollecter);
+            globalEntity.addComponent(ContactCollecter);
+            globalEntity.addComponent(InputCollecter);
 
             // Update canvas when screen resized.
-            this._updateCanvas(stage); // First update.
             stage.onScreenResize.add(() => {
-                this._updateCanvas(stage);
+                this._canvasSizeDirty = true;
             }, this);
             stage.onResize.add(() => {
-                this._updateCanvas(stage);
+                this._canvasSizeDirty = true;
             }, this);
         }
 
-        public onUpdate() {
-            // TODO 查询是否有性能问题。
+        public onFrame() {
             const screenSize = stage.screenSize;
-            // 
-            const parentElement = this._canvas.parentElement;
-            const isWX = egret.Capabilities.runtimeType === egret.RuntimeType.WXGAME || parentElement === undefined;
-            const screenWidth = isWX ? window.innerWidth : parentElement!.clientWidth;
-            const screenHeight = isWX ? window.innerHeight : parentElement!.clientHeight;
+            const parentElement = this._canvas!.parentElement;
+            const screenWidth = parentElement ? parentElement.clientWidth : window.innerWidth;
+            const screenHeight = parentElement ? parentElement.clientHeight : window.innerHeight;
 
             if (screenSize.w !== screenWidth || screenSize.h !== screenHeight) {
                 stage.screenSize = { w: screenWidth, h: screenHeight };
+            }
+
+            if (this._canvasSizeDirty) {
+                this._updateCanvas();
+                this._canvasSizeDirty = false;
             }
         }
     }

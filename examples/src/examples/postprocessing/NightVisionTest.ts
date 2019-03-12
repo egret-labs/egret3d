@@ -23,21 +23,15 @@ namespace examples.postprocessing {
             // Create camera.
             const camera = egret3d.Camera.main;
             paper.GameObject.create("DirectionalLight").addComponent(egret3d.DirectionalLight);
-
             this.createPrefab(egret3d.Vector3.ZERO, "Walking");
             this.createPrefab(egret3d.Vector3.create(-2, 0, -1), "Running");
             this.createPrefab(egret3d.Vector3.create(2, 0, 1), "Looking_Around");
 
-            // GUI.
             camera.gameObject.addComponent(Starter);
-
-            const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
-            if (modelComponent) {
-                modelComponent.select(egret3d.Camera.main.gameObject);
-                paper.GameObject.globalGameObject.
-                    getComponent(paper.editor.GUIComponent)!.
-                    openComponents(Starter, components.NightVisionPostProcess, components.ThermalVisionPostProcess, components.ThermalVisionPostProcess2);
-            }
+            //
+            selectGameObjectAndComponents(egret3d.Camera.main.gameObject,
+                Starter, components.NightVisionPostProcess, components.ThermalVisionPostProcess, components.ThermalVisionPostProcess2
+            );
         }
 
         createPrefab(pos: egret3d.Vector3, animationName: string) {

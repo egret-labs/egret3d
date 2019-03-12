@@ -46,7 +46,7 @@ namespace egret3d {
             if (raycastMesh) {
                 if (
                     gameObject.renderer && gameObject.renderer.enabled &&
-                    gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)
+                    gameObject.renderer.raycast(ray, raycastInfo)
                 ) {
                     raycastInfo.transform = gameObject.transform;
                 }
@@ -83,6 +83,35 @@ namespace egret3d {
         // TODO renderQueue.
         return a.distance - b.distance;
     }
+
+    export function _colliderRaycast(collider: ICollider, raycaster: IRaycast, preRaycaster: IRaycast | null, ray: Readonly<Ray>, raycastInfo: RaycastInfo | null, modifyNormal: boolean = false) {
+        const transform = collider.gameObject.transform;
+        const worldToLocalMatrix = transform.worldToLocalMatrix;
+        const localRay = helpRay.applyMatrix(worldToLocalMatrix, ray);
+
+        if ((!preRaycaster || preRaycaster.raycast(localRay, null)) && raycaster.raycast(localRay, raycastInfo)) {
+            if (raycastInfo) {
+                const localToWorldMatrix = transform.localToWorldMatrix;
+                raycastInfo.distance = ray.origin.getDistance(raycastInfo.position.applyMatrix(localToWorldMatrix));
+                raycastInfo.transform = transform;
+                raycastInfo.collider = collider;
+
+                const normal = raycastInfo.normal;
+                if (normal) {
+                    if (modifyNormal && raycastInfo.modifyNormal) {
+                        normal.applyMatrix3(helpMatrix3A.fromMatrix4(worldToLocalMatrix).transpose()).normalize();
+                    }
+                    else {
+                        normal.applyDirection(localToWorldMatrix);
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        return false;
+    }
     /**
      * 用世界空间坐标系的射线检测指定的实体。（不包含其子级）
      * @param ray 世界空间坐标系的射线。
@@ -92,12 +121,12 @@ namespace egret3d {
      */
     export function raycast(
         ray: Readonly<Ray>, gameObject: Readonly<paper.GameObject>,
-        raycastMesh: boolean = false, raycastInfo?: RaycastInfo
+        raycastMesh: boolean = false, raycastInfo: RaycastInfo | null = null
     ) {
         if (raycastMesh) {
             if (
                 gameObject.renderer && gameObject.renderer.enabled &&
-                gameObject.renderer.raycast(ray, raycastInfo, raycastMesh)
+                gameObject.renderer.raycast(ray, raycastInfo)
             ) {
                 if (raycastInfo) {
                     raycastInfo.transform = gameObject.transform;
@@ -114,6 +143,7 @@ namespace egret3d {
             const boxColliders = gameObject.getComponents(BoxCollider);
             const sphereColliders = gameObject.getComponents(SphereCollider);
             const cylinderColliders = gameObject.getComponents(CylinderCollider);
+            const capsuleColliders = gameObject.getComponents(CapsuleCollider);
             const meshColliders = gameObject.getComponents(MeshCollider);
 
             if (boxColliders.length > 0) {
@@ -152,6 +182,23 @@ namespace egret3d {
 
             if (cylinderColliders.length > 0) {
                 for (const collider of cylinderColliders) {
+                    if (!collider.enabled) {
+                        continue;
+                    }
+
+                    if (raycastInfo) {
+                        if (_raycastCollider(ray, collider, raycastInfo, hit)) {
+                            hit = true;
+                        }
+                    }
+                    else if (collider.raycast(ray)) {
+                        return true;
+                    }
+                }
+            }
+
+            if (capsuleColliders.length > 0) {
+                for (const collider of capsuleColliders) {
                     if (!collider.enabled) {
                         continue;
                     }
@@ -208,7 +255,7 @@ namespace egret3d {
         for (const gameObjectOrComponent of gameObjectsOrComponents) {
             _raycastAll(
                 ray,
-                gameObjectOrComponent.constructor === paper.GameObject ? gameObjectOrComponent as paper.GameObject : (gameObjectOrComponent as paper.BaseComponent).gameObject,
+                gameObjectOrComponent instanceof paper.Entity ? gameObjectOrComponent as paper.GameObject : (gameObjectOrComponent as paper.BaseComponent).gameObject,
                 maxDistance, cullingMask, raycastMesh, backfaceCulling, raycastInfos
             );
         }

@@ -2,15 +2,12 @@ namespace paper {
     /**
      * 基础渲染组件。
      */
+    @abstract
     export abstract class BaseRenderer extends BaseComponent implements egret3d.IRaycast, egret3d.ITransformObserver {
-        /**
-         * @internal
-         */
-        public static readonly __isAbstract: any = BaseRenderer;
         /**
          * 当渲染组件的材质列表改变时派发事件。
          */
-        public static readonly onMaterialsChanged: signals.Signal = new signals.Signal();
+        public static readonly onMaterialsChanged: signals.Signal<BaseRenderer> = new signals.Signal();
         /**
          * 该组件是否开启视锥剔除。
          */
@@ -38,18 +35,14 @@ namespace paper {
             this._boundingSphere.center.applyMatrix(localToWorldMatrix);
             this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         }
-        /**
-         * @internal
-         */
-        public initialize() {
+
+        public initialize(): void {
             super.initialize();
 
             this.getBoundingTransform().registerObserver(this);
         }
-        /**
-         * @internal
-         */
-        public uninitialize() {
+
+        public uninitialize(): void {
             super.uninitialize();
 
             for (const material of this._materials) {
@@ -71,8 +64,7 @@ namespace paper {
          */
         public abstract recalculateLocalBox(): void;
 
-        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastMesh?: boolean): boolean;
-        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo?: egret3d.RaycastInfo, raycastMesh?: boolean): boolean;
+        public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo: egret3d.RaycastInfo | null): boolean;
         /**
          * 
          */

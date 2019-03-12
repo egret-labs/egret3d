@@ -3,52 +3,17 @@ namespace paper.editor {
         <div class="egret-hierarchy" style="margin: auto;height: 100%;background: #000000;"></div>
         <div class="egret-inspector" style="margin: auto;height: 100%;background: #000000;"></div>
     `;
-
-    type QuaryValues = {
-        FPS?: 0 | 1,
-        GUI?: 0 | 1,
-        DEBUG?: 0 | 1,
-    };
-
-    const enum ShowState {
-        None = 0b000,
-
-        FPS = 0b001,
-        Hierarchy = 0b010,
-        Inspector = 0b100,
-
-        HierarchyAndInspector = Hierarchy | Inspector,
-        All = FPS | Hierarchy | Inspector,
-    }
     /**
      * @internal
      */
-    export class EditorSystem extends BaseSystem {
+    export class EditorSystem extends BaseSystem<GameObject> {
         private _isMobile: boolean = false;
-        private _showStates: ShowState = ShowState.None;
-        private _fpsIndex: uint = 0;
-        private readonly _guiComponent: GUIComponent | null = Application.playerMode === PlayerMode.Editor ? null : GameObject.globalGameObject.getOrAddComponent(GUIComponent);
-        private readonly _fpsShowQueue: boolean[] = [true, false, false, true];
-
-        private _updateFPSShowState() {
-            if (this._guiComponent) {
-                const statsDOM = this._guiComponent.stats.dom;
-
-                if (this._showStates & ShowState.FPS) {
-                    statsDOM.style.display = "block";
-                }
-                else {
-                    statsDOM.style.display = "none";
-                }
-            }
-        }
+        private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.addComponent(GUIComponent);
 
         public onAwake() {
-            GameObject.globalGameObject.getOrAddComponent(EditorDefaultTexture); // TODO
+            Application.sceneManager.globalEntity.getOrAddComponent(EditorDefaultAsset); // TODO
             //
             if (Application.playerMode === PlayerMode.Editor) {
-                this._showStates = ShowState.None;
-                Application.systemManager.register(SceneSystem, SystemOrder.LateUpdate);
             }
             else {
                 const guiComponent = this._guiComponent!;
@@ -63,10 +28,10 @@ namespace paper.editor {
                 container.innerHTML = containerHTML;
                 document.body.insertBefore(container, document.body.firstElementChild);
 
-                const hierarchy = document.getElementsByClassName("egret-hierarchy");
-                const inspector = document.getElementsByClassName("egret-inspector");
+                const hierarchyContainer = document.getElementsByClassName("egret-hierarchy")[0];
+                const inspectorContainer = document.getElementsByClassName("egret-inspector")[0];
 
-                container.insertBefore(document.getElementsByClassName("egret-player")[0], inspector[0]);
+                container.insertBefore(document.getElementsByClassName("egret-player")[0], inspectorContainer);
 
                 const empty = document.createElement("div");
                 empty.style.width = "100%";
@@ -79,7 +44,7 @@ namespace paper.editor {
                         oldContainer.insertBefore(guiComponent.hierarchy.domElement, oldContainer.firstElementChild);
                     }
                     else {
-                        hierarchy[0].appendChild(guiComponent.hierarchy.domElement);
+                        hierarchyContainer.appendChild(guiComponent.hierarchy.domElement);
                     }
                 };
 
@@ -88,91 +53,64 @@ namespace paper.editor {
                         oldContainer.appendChild(guiComponent.inspector.domElement);
                     }
                     else {
-                        inspector[0].appendChild(guiComponent.inspector.domElement);
+                        inspectorContainer.appendChild(guiComponent.inspector.domElement);
                     }
                 };
 
-                const quaryValues = getQueryValues(location.search) as QuaryValues;
                 this._isMobile = paper.Application.isMobile;
-                this._showStates = ShowState.None;
+                guiComponent.showStates = ShowState.None;
+                guiComponent.quaryValues = getQueryValues(location.search) as QuaryValues;
 
-                if (quaryValues.FPS === 1 || (quaryValues.FPS !== 0 && !this._isMobile)) {
-                    this._showStates |= ShowState.FPS;
-                    this._fpsIndex = 0;
-                }
-                else {
-                    this._fpsIndex = 1;
-                    this._updateFPSShowState();
-                }
-
-                if (quaryValues.GUI === 1 || (quaryValues.GUI !== 0 && !this._isMobile)) {
-                    this._showStates |= ShowState.HierarchyAndInspector;
-                    hierarchy[0].appendChild(guiComponent.hierarchy.domElement);
-                    inspector[0].appendChild(guiComponent.inspector.domElement);
+                if (guiComponent.quaryValues.GUI === 1 || (guiComponent.quaryValues.GUI !== 0 && !this._isMobile)) {
+                    guiComponent.showStates |= ShowState.HierarchyAndInspector;
+                    hierarchyContainer.appendChild(guiComponent.hierarchy.domElement);
+                    inspectorContainer.appendChild(guiComponent.inspector.domElement);
                 }
                 else {
                     dat.GUI.toggleHide();
                     guiComponent.hierarchy.close();
                     guiComponent.inspector.close();
                 }
-
-                Application.systemManager.register(GUISystem, SystemOrder.LateUpdate + 1); // Make sure the GUISystem update after the SceneSystem.
             }
+
+            Application.systemManager.register(HierarchySystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(InspectorSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(SceneSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(StatsSystem, Application.gameObjectContext, SystemOrder.End);
         }
 
         public onStart() {
-            console.info(`小提示：通过 H 键切换 Inspector 的显示与隐藏。`);
-        }
-
-        public onUpdate() {
             if (Application.playerMode === PlayerMode.Editor) {
                 return;
             }
 
-            const guiComponent = this._guiComponent!;
-            guiComponent.stats.update();
-            guiComponent.renderPanel.update(
-                paper.Application.systemManager.getSystem((egret3d as any)["webgl"]["WebGLRenderSystem"])!.deltaTime,
-                200
-            );
-            guiComponent.drawCallPanel.update(
-                egret3d.drawCallCollecter.drawCallCount,
-                500
-            );
+            console.info(`小提示：通过 H 键切换 Inspector 的显示与隐藏。`);
+        }
 
-            if (egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyH).isDown(false)) {
-                this._fpsIndex++;
-
-                if (this._fpsIndex >= this._fpsShowQueue.length) {
-                    this._fpsIndex = 0;
-                }
-
-                if (this._fpsShowQueue[this._fpsIndex]) {
-                    this._showStates |= ShowState.FPS;
-                }
-                else {
-                    this._showStates &= ~ShowState.FPS;
-                }
-
-                this._updateFPSShowState();
+        public onFrame() {
+            if (Application.playerMode === PlayerMode.Editor) {
+                return;
             }
 
-            // TODO dc tc vc
-
+            const { hierarchy, inspector } = this._guiComponent!;
             const isMobile = paper.Application.isMobile;
+
             if (this._isMobile !== isMobile) {
                 if (isMobile) {
-                    if (!guiComponent.hierarchy.closed) {
-                        guiComponent.hierarchy.close();
-                        if (guiComponent.hierarchy.onClick) {
-                            guiComponent.hierarchy.onClick(guiComponent.hierarchy);
+                    if (!hierarchy.closed) {
+                        hierarchy.close();
+
+                        if (hierarchy.onClick) {
+                            hierarchy.onClick(hierarchy);
                         }
                     }
 
-                    if (!guiComponent.inspector.closed) {
-                        guiComponent.inspector.close();
-                        if (guiComponent.inspector.onClick) {
-                            guiComponent.inspector.onClick(guiComponent.inspector);
+                    if (!inspector.closed) {
+                        inspector.close();
+
+                        if (inspector.onClick) {
+                            inspector.onClick(inspector);
                         }
                     }
 
@@ -181,17 +119,19 @@ namespace paper.editor {
                     }
                 }
                 else {
-                    if (guiComponent.hierarchy.closed) {
-                        guiComponent.hierarchy.open();
-                        if (guiComponent.hierarchy.onClick) {
-                            guiComponent.hierarchy.onClick(guiComponent.hierarchy);
+                    if (hierarchy.closed) {
+                        hierarchy.open();
+
+                        if (hierarchy.onClick) {
+                            hierarchy.onClick(hierarchy);
                         }
                     }
 
-                    if (guiComponent.inspector.closed) {
-                        guiComponent.inspector.open();
-                        if (guiComponent.inspector.onClick) {
-                            guiComponent.inspector.onClick(guiComponent.inspector);
+                    if (inspector.closed) {
+                        inspector.open();
+
+                        if (inspector.onClick) {
+                            inspector.onClick(inspector);
                         }
                     }
 
@@ -205,5 +145,5 @@ namespace paper.editor {
         }
     }
     //
-    Application.systemManager.preRegister(EditorSystem, SystemOrder.Begin - 10000);
+    Application.systemManager.preRegister(EditorSystem, Application.gameObjectContext, SystemOrder.End + 10000);
 }

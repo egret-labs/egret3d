@@ -2,12 +2,8 @@ namespace egret3d {
     /**
      * 动画系统。
      */
-    export class AnimationSystem extends paper.BaseSystem {
-        public readonly interests = [
-            { componentClass: Animation }
-        ];
+    export class AnimationSystem extends paper.BaseSystem<paper.GameObject> {
 
-        private readonly _events: any[] = [];
         private _animation: Animation | null = null;
 
         private _updateAnimationFadeState(animationFadeState: AnimationFadeState, deltaTime: number) {
@@ -264,16 +260,25 @@ namespace egret3d {
             }
         }
 
-        public onAddComponent(component: Animation) {
-            if (component.autoPlay && (!component.lastAnimationState || !component.lastAnimationState.isPlaying)) {
-                component.play();
+        protected getMatchers() {
+            return [
+                paper.Matcher.create<paper.GameObject>(Transform, Animation),
+            ];
+        }
+
+        public onEntityAdded(entity: paper.GameObject) {
+            const animation = entity.getComponent(Animation)!;
+
+            if (animation.autoPlay && (!animation.lastAnimationState || !animation.lastAnimationState.isPlaying)) {
+                animation.play();
             }
         }
 
-        public onUpdate(deltaTime: number) {
-            for (const gameObject of this.groups[0].gameObjects) {
-                const animation = this._animation = gameObject.getComponent(Animation)!;
+        public onFrame(deltaTime: number) {
+            for (const entity of this.groups[0].entities) {
+                const animation = this._animation = entity.getComponent(Animation)!;
                 const animationController = animation.animationController!;
+
                 if (!animationController) {
                     continue;
                 }
@@ -328,6 +333,7 @@ namespace egret3d {
 
                 for (const layer of animationLayers) {
                     const mask = layer.mask as AnimationMask | null;
+                    
                     if (mask && mask._dirty) {
                         mask._dirty = false;
                     }

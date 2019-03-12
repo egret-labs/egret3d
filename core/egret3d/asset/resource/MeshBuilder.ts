@@ -7,21 +7,22 @@ namespace egret3d {
          * 创建圆形网格。
          */
         public static createCircle(radius: number = 0.5, arc: number = 1.0, axis: 1 | 2 | 3 = 3): Mesh {
+            const PI = Const.PI;
             // buffers
             const vertices = [] as number[];
             //
             for (let i = 0; i <= 64 * arc; ++i) {
                 switch (axis) {
                     case 1:
-                        vertices.push(0.0, Math.cos(i / 32 * Math.PI) * radius, -Math.sin(i / 32 * Math.PI) * radius);
+                        vertices.push(0.0, Math.cos(i / 32 * PI) * radius, -Math.sin(i / 32 * PI) * radius);
                         break;
 
                     case 2:
-                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, 0.0, -Math.sin(i / 32 * Math.PI) * radius);
+                        vertices.push(Math.cos(i / 32 * PI) * radius, 0.0, -Math.sin(i / 32 * PI) * radius);
                         break;
 
                     case 3:
-                        vertices.push(Math.cos(i / 32 * Math.PI) * radius, Math.sin(i / 32 * Math.PI) * radius, -0.0);
+                        vertices.push(Math.cos(i / 32 * PI) * radius, Math.sin(i / 32 * PI) * radius, -0.0);
                         break;
                 }
 
@@ -119,7 +120,7 @@ namespace egret3d {
         ): Mesh {
             // helper variables
             let meshVertexCount = 0;
-            const vector3 = Vector3.create().release();
+            const vertex = Vector3.create().release();
             // buffers
             const indices = [] as uint[];
             const vertices = [] as number[];
@@ -141,15 +142,15 @@ namespace egret3d {
                     for (let ix = 0; ix < gridX1; ix++) {
                         const x = ix * segmentWidth - widthHalf;
                         // set values to correct vector component
-                        vector3[u] = x * udir;
-                        vector3[v] = y * vdir;
-                        vector3[w] = depthHalf;
-                        vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
+                        vertex[u] = x * udir;
+                        vertex[v] = y * vdir;
+                        vertex[w] = depthHalf;
+                        vertices.push(vertex.x + centerOffsetX, vertex.y + centerOffsetY, vertex.z + centerOffsetZ);
                         // set values to correct vector component
-                        vector3[u] = 0.0;
-                        vector3[v] = 0.0;
-                        vector3[w] = depth > 0.0 ? 1.0 : - 1.0;
-                        normals.push(vector3.x, vector3.y, vector3.z);
+                        vertex[u] = 0.0;
+                        vertex[v] = 0.0;
+                        vertex[w] = depth > 0.0 ? 1.0 : - 1.0;
+                        normals.push(vertex.x, vertex.y, vertex.z);
                         // uvs
                         uvs.push(
                             ix / gridX,
@@ -233,14 +234,14 @@ namespace egret3d {
             radiusTop: number = 0.5, radiusBottom: number = 0.5, height: number = 1.0,
             centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
             radialSegments: uint = 10, heightSegments: uint = 1,
-            openEnded: boolean = false, thetaStart: number = 0.0, thetaLength: number = Math.PI * 2.0,
+            openEnded: boolean = false, thetaStart: number = 0.0, thetaLength: number = Const.PI_DOUBLE,
             differentFace: boolean = false
         ): Mesh {
             // helper variables
             let index = 0;
             let groupStart = 0;
             const halfHeight = height / 2;
-            const vector3 = Vector3.create().release();
+            const vertex = Vector3.create().release();
             const indexArray = [] as uint[][];
             const subIndices = [] as number[];
             // buffers
@@ -269,16 +270,16 @@ namespace egret3d {
                         const cosTheta = Math.cos(theta);
 
                         // vertex
-                        vector3.x = radius * sinTheta;
-                        vector3.y = -v * height + halfHeight;
+                        vertex.x = radius * sinTheta;
+                        vertex.y = -v * height + halfHeight;
                         // vertex.z = radius * cosTheta; // Right-hand coordinates system.
-                        vector3.z = -radius * cosTheta; // Left-hand coordinates system.
-                        vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
+                        vertex.z = -radius * cosTheta; // Left-hand coordinates system.
+                        vertices.push(vertex.x + centerOffsetX, vertex.y + centerOffsetY, vertex.z + centerOffsetZ);
 
                         // normal
-                        vector3.set(sinTheta, slope, cosTheta).normalize();
-                        // normals.push(vector3.x, vector3.y, vector3.z); // Right-hand coordinates system.
-                        normals.push(vector3.x, vector3.y, -vector3.z); // Left-hand coordinates system.
+                        vertex.set(sinTheta, slope, cosTheta).normalize();
+                        // normals.push(vertex.x, vertex.y, vertex.z); // Right-hand coordinates system.
+                        normals.push(vertex.x, vertex.y, -vertex.z); // Left-hand coordinates system.
 
                         // uv
                         uvs.push(u, v);
@@ -354,11 +355,11 @@ namespace egret3d {
                     const sinTheta = Math.sin(theta);
 
                     // vertex
-                    vector3.x = radius * sinTheta;
-                    vector3.y = halfHeight * sign;
-                    // vector3.z = radius * cosTheta; // Right-hand coordinates system.
-                    vector3.z = -radius * cosTheta; // Left-hand coordinates system.
-                    vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, vector3.z + centerOffsetZ);
+                    vertex.x = radius * sinTheta;
+                    vertex.y = halfHeight * sign;
+                    // vertex.z = radius * cosTheta; // Right-hand coordinates system.
+                    vertex.z = -radius * cosTheta; // Left-hand coordinates system.
+                    vertices.push(vertex.x + centerOffsetX, vertex.y + centerOffsetY, vertex.z + centerOffsetZ);
 
                     // normal
                     normals.push(0.0, sign, 0.0);
@@ -446,8 +447,8 @@ namespace egret3d {
             // generate vertices, normals and uvs
             for (let j = 0; j <= radialSegments; j++) {
                 for (let i = 0; i <= tubularSegments; i++) {
-                    const u = i / tubularSegments * Math.PI * 2 * arc;
-                    const v = j / radialSegments * Math.PI * 2;
+                    const u = i / tubularSegments * Const.PI_DOUBLE * arc;
+                    const v = j / radialSegments * Const.PI_DOUBLE;
                     // vertex
                     switch (axis) {
                         case 1:
@@ -521,15 +522,15 @@ namespace egret3d {
             radius: number = 0.5,
             centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
             widthSegments: uint = 10, heightSegments: uint = 10,
-            phiStart: number = 0.0, phiLength: number = Math.PI * 2.0,
-            thetaStart: number = 0.0, thetaLength: number = Math.PI,
+            phiStart: number = 0.0, phiLength: number = Const.PI_DOUBLE,
+            thetaStart: number = 0.0, thetaLength: number = Const.PI,
         ): Mesh {
             widthSegments = Math.max(3, widthSegments);
             heightSegments = Math.max(2, heightSegments);
             // generate vertices, normals and uvs
             let index = 0;
             const thetaEnd = thetaStart + thetaLength;
-            const vector3 = Vector3.create().release();
+            const vertex = Vector3.create().release();
             const grid = [] as uint[][];
             // buffers
             const indices = [] as uint[];
@@ -543,17 +544,17 @@ namespace egret3d {
 
                 for (let iX = 0; iX <= widthSegments; iX++) {
                     const u = iX / widthSegments;
+                    const t = radius * Math.sin(thetaStart + v * thetaLength);
                     // vertex
-                    vector3.x = - radius * Math.cos(phiStart + u * phiLength) * Math.sin(thetaStart + v * thetaLength);
-                    vector3.y = radius * Math.cos(thetaStart + v * thetaLength);
-                    vector3.z = radius * Math.sin(phiStart + u * phiLength) * Math.sin(thetaStart + v * thetaLength);
-                    vertices.push(vector3.x + centerOffsetX, vector3.y + centerOffsetY, -vector3.z + centerOffsetZ);
+                    vertex.x = -t * Math.cos(phiStart + u * phiLength);
+                    vertex.y = radius * Math.cos(thetaStart + v * thetaLength);
+                    vertex.z = t * Math.sin(phiStart + u * phiLength);
+                    vertices.push(vertex.x + centerOffsetX, vertex.y + centerOffsetY, -vertex.z + centerOffsetZ);
                     // normal
-                    vector3.normalize();
-                    normals.push(vector3.x, vector3.y, -vector3.z);
+                    vertex.normalize();
+                    normals.push(vertex.x, vertex.y, -vertex.z);
                     // uv
                     uvs.push(u, v);
-
                     verticesRow.push(index++);
                 }
 
@@ -568,7 +569,7 @@ namespace egret3d {
                     const d = grid[iy + 1][ix + 1];
 
                     if (iy !== 0 || thetaStart > 0) indices.push(a, b, d);
-                    if (iy !== heightSegments - 1 || thetaEnd < Math.PI) indices.push(b, c, d);
+                    if (iy !== heightSegments - 1 || thetaEnd < Const.PI) indices.push(b, c, d);
                 }
             }
             // build geometry
@@ -580,7 +581,15 @@ namespace egret3d {
 
             return mesh;
         }
-
+        /**
+         * 
+         * @param radius 
+         * @param tube 
+         * @param tubularSegments 
+         * @param radialSegments 
+         * @param p 
+         * @param q 
+         */
         public static createTorusKnot(
             radius: number = 0.5, tube: number = 0.2,
             tubularSegments: uint = 64, radialSegments: uint = 8,
@@ -613,7 +622,7 @@ namespace egret3d {
             // generate vertices, normals and uvs
             for (let i = 0; i <= tubularSegments; ++i) {
                 // the radian "u" is used to calculate the position on the torus curve of the current tubular segement
-                const u = i / tubularSegments * p * Math.PI * 2;
+                const u = i / tubularSegments * p * Const.PI_DOUBLE;
                 // now we calculate two points. P1 is our current position on the curve, P2 is a little farther ahead.
                 // these points are used to create a special "coordinate space", which is necessary to calculate the correct vertex positions
                 calculatePositionOnCurve(u, p, q, radius, P1);
@@ -630,7 +639,7 @@ namespace egret3d {
                 for (let j = 0; j <= radialSegments; ++j) {
                     // now calculate the vertices. they are nothing more than an extrusion of the torus curve.
                     // because we extrude a shape in the xy-plane, there is no need to calculate a z-value.
-                    const v = j / radialSegments * Math.PI * 2;
+                    const v = j / radialSegments * Const.PI_DOUBLE;
                     const cx = -tube * Math.cos(v);
                     const cy = tube * Math.sin(v);
                     // now calculate the final vertex position.
@@ -662,6 +671,97 @@ namespace egret3d {
                         a, b, d,
                         b, c, d
                     );
+                }
+            }
+            // build geometry
+            const mesh = Mesh.create(vertices.length / 3, indices.length, [gltf.AttributeSemantics.POSITION, gltf.AttributeSemantics.NORMAL, gltf.AttributeSemantics.TEXCOORD_0]);
+            mesh.setAttributes(gltf.AttributeSemantics.POSITION, vertices);
+            mesh.setAttributes(gltf.AttributeSemantics.NORMAL, normals);
+            mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, uvs);
+            mesh.setIndices(indices);
+
+            return mesh;
+        }
+        /**
+         * 创建胶囊体网格。
+         * @param radius 半径。
+         * @param height 圆柱体高度。
+         * @param centerOffsetX 中心点偏移 X。
+         * @param centerOffsetY 中心点偏移 Y。
+         * @param centerOffsetZ 中心点偏移 Z。
+         * @param widthSegments 球体宽度分段。
+         * @param heightSegments 球体高度分段。
+         * @param middleSegments 圆柱体高度分段。
+         * @param phiStart 水平起始弧度。
+         * @param phiLength 水平覆盖弧度。
+         * @param thetaStart 垂直起始弧度。
+         * @param thetaLength 垂直覆盖弧度。
+         */
+        public static createCapsule(
+            radius: number = 0.25, height: number = 0.5,
+            centerOffsetX: number = 0.0, centerOffsetY: number = 0.0, centerOffsetZ: number = 0.0,
+            widthSegments: uint = 10, heightSegments: uint = 10, middleSegments: uint = 1,
+            phiStart: number = 0.0, phiLength: number = Const.PI_DOUBLE,
+            thetaStart: number = 0.0, thetaLength: number = Const.PI,
+        ): Mesh {
+            if (heightSegments % 2) {
+                heightSegments++;
+            }
+
+            widthSegments = Math.max(3, widthSegments);
+            heightSegments = Math.max(2, heightSegments);
+            // generate vertices, normals and uvs
+            let index = 0;
+            const allHeightSegments = heightSegments + (middleSegments ? 1 : 0); // TODO middleSegments
+            const middleHeight = (heightSegments + 1) * 0.5;
+            const thetaEnd = thetaStart + thetaLength;
+            const vertex = Vector3.create().release();
+            const grid = [] as uint[][];
+            // buffers
+            const indices = [] as uint[];
+            const vertices = [] as number[];
+            const normals = [] as number[];
+            const uvs = [] as number[];
+            //
+            for (let iY = 0; iY <= allHeightSegments; iY++) {
+                const v = iY / allHeightSegments;
+                const vS = iY < middleHeight ? (iY / heightSegments) : ((iY - 1) / heightSegments); // TODO middleSegments
+                const verticesRow = [] as uint[];
+                grid.push(verticesRow);
+
+                for (let iX = 0; iX <= widthSegments; iX++) {
+                    const u = iX / widthSegments;
+                    const t = radius * Math.sin(thetaStart + v * thetaLength);
+
+                    vertex.x = -t * Math.cos(phiStart + u * phiLength);
+                    vertex.z = t * Math.sin(phiStart + u * phiLength);
+                    vertex.y = radius * Math.cos(thetaStart + vS * thetaLength);
+
+                    if (iY < middleHeight) {
+                        vertices.push(vertex.x + centerOffsetX, vertex.y + height * 0.5 + centerOffsetY, -vertex.z + centerOffsetZ);
+                    }
+                    else {
+                        vertices.push(vertex.x + centerOffsetX, vertex.y - height * 0.5 + centerOffsetY, -vertex.z + centerOffsetZ);
+                    }
+
+                    vertex.normalize();
+                    normals.push(vertex.x, vertex.y, -vertex.z);
+
+                    uvs.push(u, v);
+
+                    verticesRow.push(index++);
+                }
+            }
+            // indices
+            for (let iY = 0; iY < allHeightSegments; iY++) {
+                for (let iX = 0; iX < widthSegments; iX++) {
+                    const a = grid[iY][iX + 1];
+                    const b = grid[iY][iX];
+                    const c = grid[iY + 1][iX];
+                    const d = grid[iY + 1][iX + 1];
+
+                    if (iY !== 0 || thetaStart > 0.0) indices.push(a, b, d);
+                    if (iY !== allHeightSegments - 1 || thetaEnd < Const.PI) indices.push(b, c, d);
                 }
             }
             // build geometry

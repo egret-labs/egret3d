@@ -28,11 +28,11 @@ namespace egret3d {
          * - 如果没有则创建一个。
          */
         public static get main(): Camera {
-            const scene = paper.Application.sceneManager.activeScene;
+            const activeScene = paper.Application.sceneManager.activeScene;
+            let gameObject = activeScene.findWithTag<paper.GameObject>(paper.DefaultTags.MainCamera);
 
-            let gameObject = scene.findWithTag(paper.DefaultTags.MainCamera);
             if (!gameObject) { // TODO 兼容数据错误，在 2.0 移除
-                gameObject = scene.findWithTag("Main Camera");
+                gameObject = activeScene.findWithTag<paper.GameObject>("Main Camera");
                 if (gameObject) {
                     gameObject.tag = paper.DefaultTags.MainCamera;
                 }
@@ -51,7 +51,8 @@ namespace egret3d {
          * - 如果没有则创建一个。
          */
         public static get editor(): Camera {
-            let gameObject = paper.Application.sceneManager.editorScene.find(paper.DefaultNames.EditorCamera);
+            let gameObject = paper.Application.sceneManager.editorScene.find<paper.GameObject>(paper.DefaultNames.EditorCamera);
+
             if (!gameObject) {
                 gameObject = paper.GameObject.create(paper.DefaultNames.EditorCamera, paper.DefaultTags.EditorOnly, paper.Application.sceneManager.editorScene);
                 gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
@@ -113,7 +114,7 @@ namespace egret3d {
         private _nativeTransform: boolean = false;
         private _dirtyMask: DirtyMask = DirtyMask.All;
         private _opvalue: number = 1.0;
-        private _fov: number = Math.PI * 0.25;
+        private _fov: number = Const.PI_QUARTER;
         private _near: number = 0.3;
         private _far: number = 1000.0;
         private _size: number = 1.0;
@@ -438,7 +439,7 @@ namespace egret3d {
          * 透视投影的视野。
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Math.PI - 0.01, step: 0.01 })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Const.PI - 0.01, step: 0.01 })
         public get fov(): number {
             return this._fov;
         }
@@ -446,8 +447,8 @@ namespace egret3d {
             if (value !== value || value < 0.01) {
                 value = 0.01;
             }
-            else if (value > Math.PI - 0.01) {
-                value = Math.PI - 0.01;
+            else if (value > Const.PI - 0.01) {
+                value = Const.PI - 0.01;
             }
 
             if (this._fov === value) {
@@ -791,7 +792,7 @@ namespace egret3d {
             const { w, h } = this.renderTargetSize;
             const worldToClipMatrix = this.worldToClipMatrix;
             const ndcPos = helpVector3A;
-            worldToClipMatrix.transformVector3(worldPos, ndcPos);
+            ndcPos.applyMatrix(worldToClipMatrix, worldPos);
             outScreenPos.x = (ndcPos.x + 1.0) * w * 0.5;
             outScreenPos.y = (1.0 - ndcPos.y) * h * 0.5;
         }

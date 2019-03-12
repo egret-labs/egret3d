@@ -1,7 +1,7 @@
 {
   "name": "@egret/egret3d-oimo",
   "version": "1.0.1",
-  "compilerVersion": "5.3.1",
+  "compilerVersion": "5.3.2",
   "description": "egret 3d oimo",
   "main": "bin/oimo/oimo.js",
   "scripts": {

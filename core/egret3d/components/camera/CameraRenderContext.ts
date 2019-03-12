@@ -93,9 +93,9 @@ namespace egret3d {
          */
         public readonly shadowCalls: DrawCall[] = [];
 
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(CameraAndLightCollecter)!;
         private readonly _camera: Camera = null!;
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getComponent(DrawCallCollecter)!;
-        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getComponent(CameraAndLightCollecter)!;
         /**
          * 禁止实例化。
          */
@@ -195,7 +195,7 @@ namespace egret3d {
                         opaqueCalls[opaqueIndex++] = drawCall!;
                     }
 
-                    drawCall!.zdist = renderer.gameObject.transform.position.getSquaredDistance(cameraPosition);
+                    drawCall!.zdist = Vector3.create().fromMatrixPosition(drawCall!.matrix).getSquaredDistance(cameraPosition);
                 }
             }
 

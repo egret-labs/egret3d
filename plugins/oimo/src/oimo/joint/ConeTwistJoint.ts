@@ -1,19 +1,6 @@
 namespace egret3d.oimo {
     const enum ValueType {
-        // Swing SpringDamper
-        SWFrequency,
-        SWDampingRatio,
-        SWUseSymplecticEuler,
-        // Twist SpringDamper
-        TWFrequency,
-        TWDampingRatio,
-        TWUseSymplecticEuler,
-        // RotationalLimitMotor
-        LowerLimit,
-        UpperLimit,
-        MotorSpeed,
-        MotorTorque,
-        //
+        _0, _1,
         MaxSwingAngleX,
         MaxSwingAngleZ,
     }
@@ -22,7 +9,7 @@ namespace egret3d.oimo {
      */
     @paper.requireComponent(Rigidbody)
     @paper.allowMultiple
-    export class ConeTwistJoint extends Joint<OIMO.RagdollJoint> {
+    export class ConeTwistJoint extends BaseJoint<OIMO.RagdollJoint> {
         private static readonly _config: OIMO.RagdollJointConfig = new OIMO.RagdollJointConfig();
         private static readonly _swingSpringDamper: OIMO.SpringDamper = new OIMO.SpringDamper();
         private static readonly _twistSpringDamper: OIMO.SpringDamper = new OIMO.SpringDamper();
@@ -30,15 +17,25 @@ namespace egret3d.oimo {
 
         public readonly jointType: JointType = JointType.ConeTwist;
 
+        @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.serializedField
+        public readonly swingSpringDamper: SpringDamper = SpringDamper.create();
+
+        @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.serializedField
+        public readonly twistSpringDamper: SpringDamper = SpringDamper.create();
+
+        @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.serializedField
+        public readonly twistLimitMotor: RotationalLimitMotor = RotationalLimitMotor.create();
+
         @paper.serializedField
         private readonly _twistAxis: Vector3 = Vector3.UP.clone();
         @paper.serializedField
         private readonly _swingAxis: Vector3 = Vector3.RIGHT.clone();
-        @paper.serializedField
-        private readonly _valuesB: Float32Array = new Float32Array([
-            0.0, 0.0, 0,
-            0.0, 0.0, 0,
-            -180.0, 180.0, 0.0, 0.0,
+
+        protected readonly _values: Float32Array = new Float32Array([
+            0, 0,
             180.0, 180.0,
         ]);
 
@@ -48,50 +45,49 @@ namespace egret3d.oimo {
                 throw new Error();
             }
 
-            this._rigidbody = this.gameObject.getComponent(Rigidbody) as Rigidbody;
+            this._rigidbody = this.gameObject.getComponent(Rigidbody)!;
 
             const config = ConeTwistJoint._config;
             config.allowCollision = this.collisionEnabled;
 
-            if (this.useGlobalAnchor) {
+            if (this.useWorldAnchor) {
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._twistAxis as any, this._swingAxis as any
                 );
             }
             else {
-                const matrix = this.gameObject.transform.getWorldMatrix();
-                const anchor = Vector3.create().applyMatrix(matrix, this._anchor);
-                const twistAxis = Vector3.create().applyMatrix(matrix, this._twistAxis);
-                const swingAxis = Vector3.create().applyMatrix(matrix, this._swingAxis);
+                const matrix = this.gameObject.transform.localToWorldMatrix;
+                const anchor = Vector3.create().applyMatrix(matrix, this._anchor).release();
+                const twistAxis = Vector3.create().applyMatrix(matrix, this._twistAxis).release();
+                const swingAxis = Vector3.create().applyMatrix(matrix, this._swingAxis).release();
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any, twistAxis as any, swingAxis as any
                 );
-                anchor.release();
-                twistAxis.release();
-                swingAxis.release();
             }
 
             config.twistSpringDamper = ConeTwistJoint._twistSpringDamper;
             config.swingSpringDamper = ConeTwistJoint._swingSpringDamper;
             config.twistLimitMotor = ConeTwistJoint._twistLimitMotor;
 
-            config.twistSpringDamper.frequency = this.twistFrequency;
-            config.twistSpringDamper.dampingRatio = this.twistDampingRatio;
-            config.twistSpringDamper.useSymplecticEuler = this.twistUseSymplecticEuler;
-            config.swingSpringDamper.frequency = this.swingFrequency;
-            config.swingSpringDamper.dampingRatio = this.swingDampingRatio;
-            config.swingSpringDamper.useSymplecticEuler = this.swingUseSymplecticEuler;
-            config.twistLimitMotor.lowerLimit = this.lowerLimit * DEG_RAD;
-            config.twistLimitMotor.upperLimit = this.upperLimit * DEG_RAD;
-            config.twistLimitMotor.motorSpeed = this.motorSpeed * DEG_RAD;
-            config.twistLimitMotor.motorTorque = this.motorTorque;
-
-            config.maxSwingAngle1 = this.maxSwingAngleZ * DEG_RAD;
-            config.maxSwingAngle2 = this.maxSwingAngleX * DEG_RAD;
+            config.maxSwingAngle1 = this.maxSwingAngleZ;
+            config.maxSwingAngle2 = this.maxSwingAngleX;
+            config.twistSpringDamper.frequency = this.twistSpringDamper.frequency;
+            config.twistSpringDamper.dampingRatio = this.twistSpringDamper.dampingRatio;
+            config.twistSpringDamper.useSymplecticEuler = this.twistSpringDamper.useSymplecticEuler;
+            config.twistSpringDamper.frequency = this.swingSpringDamper.frequency;
+            config.twistSpringDamper.dampingRatio = this.swingSpringDamper.dampingRatio;
+            config.twistSpringDamper.useSymplecticEuler = this.swingSpringDamper.useSymplecticEuler;
+            config.twistLimitMotor.lowerLimit = this.twistLimitMotor.lowerLimit;
+            config.twistLimitMotor.upperLimit = this.twistLimitMotor.upperLimit;
+            config.twistLimitMotor.motorSpeed = this.twistLimitMotor.motorSpeed;
+            config.twistLimitMotor.motorTorque = this.twistLimitMotor.motorTorque;
 
             const joint = new OIMO.RagdollJoint(config);
+            this.twistSpringDamper._oimoSpringDamper = joint.getTwistSpringDamper();
+            this.swingSpringDamper._oimoSpringDamper = joint.getSwingSpringDamper();
+            this.twistLimitMotor._oimoRotationalLimitMotor = joint.getTwistLimitMotor();
             joint.userData = this;
 
             return joint;
@@ -99,205 +95,61 @@ namespace egret3d.oimo {
         /**
          * 
          */
-        public get twistFrequency() {
-            return this._valuesB[ValueType.TWFrequency];
-        }
-        public set twistFrequency(value: number) {
-            this._valuesB[ValueType.TWFrequency] = value;
-
-            if (this._oimoJoint) {
-                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getTwistSpringDamper();
-                springDamper.frequency = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get twistDampingRatio() {
-            return this._valuesB[ValueType.TWDampingRatio];
-        }
-        public set twistDampingRatio(value: number) {
-            this._valuesB[ValueType.TWDampingRatio] = value;
-
-            if (this._oimoJoint) {
-                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getTwistSpringDamper();
-                springDamper.dampingRatio = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get twistUseSymplecticEuler() {
-            return this._valuesB[ValueType.TWUseSymplecticEuler] > 0;
-        }
-        public set twistUseSymplecticEuler(value: boolean) {
-            this._valuesB[ValueType.TWUseSymplecticEuler] = value ? 1 : 0;
-
-            if (this._oimoJoint) {
-                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getTwistSpringDamper();
-                springDamper.useSymplecticEuler = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get swingFrequency() {
-            return this._valuesB[ValueType.SWFrequency];
-        }
-        public set swingFrequency(value: number) {
-            this._valuesB[ValueType.SWFrequency] = value;
-
-            if (this._oimoJoint) {
-                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getSwingSpringDamper();
-                springDamper.frequency = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get swingDampingRatio() {
-            return this._valuesB[ValueType.SWDampingRatio];
-        }
-        public set swingDampingRatio(value: number) {
-            this._valuesB[ValueType.SWDampingRatio] = value;
-
-            if (this._oimoJoint) {
-                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getSwingSpringDamper();
-                springDamper.dampingRatio = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get swingUseSymplecticEuler() {
-            return this._valuesB[ValueType.SWUseSymplecticEuler] > 0;
-        }
-        public set swingUseSymplecticEuler(value: boolean) {
-            this._valuesB[ValueType.SWUseSymplecticEuler] = value ? 1 : 0;
-
-            if (this._oimoJoint) {
-                const springDamper = (this._oimoJoint as OIMO.RagdollJoint).getSwingSpringDamper();
-                springDamper.useSymplecticEuler = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get lowerLimit() {
-            return this._valuesB[ValueType.LowerLimit];
-        }
-        public set lowerLimit(value: number) {
-            this._valuesB[ValueType.LowerLimit] = value;
-
-            if (this._oimoJoint) {
-                const limitMotor = (this._oimoJoint as OIMO.RagdollJoint).getTwistLimitMotor();
-                limitMotor.lowerLimit = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get upperLimit() {
-            return this._valuesB[ValueType.UpperLimit];
-        }
-        public set upperLimit(value: number) {
-            this._valuesB[ValueType.UpperLimit] = value;
-
-            if (this._oimoJoint) {
-                const limitMotor = (this._oimoJoint as OIMO.RagdollJoint).getTwistLimitMotor();
-                limitMotor.upperLimit = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get motorSpeed() {
-            return this._valuesB[ValueType.MotorSpeed];
-        }
-        public set motorSpeed(value: number) {
-            this._valuesB[ValueType.MotorSpeed] = value;
-
-            if (this._oimoJoint) {
-                const limitMotor = (this._oimoJoint as OIMO.RagdollJoint).getTwistLimitMotor();
-                limitMotor.motorSpeed = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get motorTorque() {
-            return this._valuesB[ValueType.MotorTorque];
-        }
-        public set motorTorque(value: number) {
-            this._valuesB[ValueType.MotorTorque] = value;
-
-            if (this._oimoJoint) {
-                const limitMotor = (this._oimoJoint as OIMO.RagdollJoint).getTwistLimitMotor();
-                limitMotor.motorTorque = value;
-            }
-        }
-        /**
-         * 
-         */
-        public get maxSwingAngleX() {
-            return this._valuesB[ValueType.MaxSwingAngleX];
+        @paper.editor.property(paper.editor.EditType.FLOAT)
+        public get maxSwingAngleX(): number {
+            return this._values[ValueType.MaxSwingAngleX];
         }
         public set maxSwingAngleX(value: number) {
-            if (value < 1.0) {
-                value = 1.0;
+            if (!this._oimoJoint) {
+                this._values[ValueType.MaxSwingAngleX] = value;
             }
-
-            if (this._oimoJoint) {
+            else if (DEBUG) {
                 console.warn("Cannot change the maxSwingAngleX after the joint has been created.");
             }
-            else {
-                this._valuesB[ValueType.MaxSwingAngleX] = value;
-            }
         }
         /**
          * 
          */
-        public get maxSwingAngleZ() {
-            return this._valuesB[ValueType.MaxSwingAngleZ];
+        @paper.editor.property(paper.editor.EditType.FLOAT)
+        public get maxSwingAngleZ(): number {
+            return this._values[ValueType.MaxSwingAngleZ];
         }
         public set maxSwingAngleZ(value: number) {
-            if (value < 1.0) {
-                value = 1.0;
+            if (!this._oimoJoint) {
+                this._values[ValueType.MaxSwingAngleZ] = value;
             }
-
-            if (this._oimoJoint) {
+            else if (DEBUG) {
                 console.warn("Cannot change the maxSwingAngleZ after the joint has been created.");
             }
-            else {
-                this._valuesB[ValueType.MaxSwingAngleZ] = value;
-            }
         }
         /**
          * 
          */
-        public get twistAxis() {
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        public get twistAxis(): Readonly<Vector3> {
             return this._twistAxis;
         }
-        public set twistAxis(value: Readonly<IVector3>) {
-            if (this._oimoJoint) {
-                console.warn("Cannot change the axis x after the joint has been created.");
-            }
-            else {
+        public set twistAxis(value: Readonly<Vector3>) {
+            if (!this._oimoJoint) {
                 this._twistAxis.normalize(value);
+            }
+            else if (DEBUG) {
+                console.warn("Cannot change the axis x after the joint has been created.");
             }
         }
         /**
          * 
          */
-        public get swingAxis() {
+        @paper.editor.property(paper.editor.EditType.VECTOR3)
+        public get swingAxis(): Readonly<Vector3> {
             return this._swingAxis;
         }
-        public set swingAxis(value: Readonly<IVector3>) {
-            if (this._oimoJoint) {
-                console.warn("Cannot change the axis x after the joint has been created.");
-            }
-            else {
+        public set swingAxis(value: Readonly<Vector3>) {
+            if (!this._oimoJoint) {
                 this._swingAxis.normalize(value);
+            }
+            else if (DEBUG) {
+                console.warn("Cannot change the axis x after the joint has been created.");
             }
         }
     }

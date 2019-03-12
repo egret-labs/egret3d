@@ -58,16 +58,10 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
-    export class WebGLRenderSystem extends paper.BaseSystem implements IRenderSystem {
-        public readonly interests = [
-            [
-                { componentClass: Egret2DRenderer }
-            ]
-        ];
-
-        private readonly _drawCallCollecter: DrawCallCollecter = paper.GameObject.globalGameObject.getOrAddComponent(DrawCallCollecter);
-        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.GameObject.globalGameObject.getOrAddComponent(CameraAndLightCollecter);
-        private readonly _renderState: WebGLRenderState = paper.GameObject.globalGameObject.getOrAddComponent(RenderState) as WebGLRenderState;
+    export class WebGLRenderSystem extends paper.BaseSystem<paper.GameObject> implements IRenderSystem {
+        private readonly _drawCallCollecter: DrawCallCollecter = paper.Application.sceneManager.globalEntity.getComponent(DrawCallCollecter)!;
+        private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(CameraAndLightCollecter)!;
+        private readonly _renderState: WebGLRenderState = paper.Application.sceneManager.globalEntity.getComponent(RenderState) as WebGLRenderState;
         //
         private readonly _modelViewMatrix: Matrix4 = Matrix4.create();
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
@@ -128,7 +122,7 @@ namespace egret3d.webgl {
             this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
             // Global.
             if (forceUpdate) {
-                const activeScene = paper.Scene.activeScene;
+                const activeScene = paper.Application.sceneManager.activeScene;
                 const fog = activeScene.fog;
                 i = globalUniforms.length;
 
@@ -315,7 +309,6 @@ namespace egret3d.webgl {
                     case gltf.UniformSemantics._CLOCK:
                         webgl.uniform4fv(location, renderState.caches.clockBuffer);
                         break;
-
                     case gltf.UniformSemantics._ROTATION:
                         webgl.uniform1f(location, renderer!.transform.euler.z);
                         break;
@@ -323,28 +316,6 @@ namespace egret3d.webgl {
                     case gltf.UniformSemantics._SCALE2D:
                         const scale = renderer!.transform.scale;
                         webgl.uniform2f(location, scale.x, scale.y);
-                        break;
-
-                    case gltf.UniformSemantics._LIGHTMAPTEX:
-                        const lightmapIndex = (renderer as MeshRenderer).lightmapIndex;
-                        if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {
-                            if (uniform.textureUnits && uniform.textureUnits.length === 1) {
-                                const texture = currentScene!.lightmaps[lightmapIndex] || DefaultTextures.WHITE;//TODO可能有空
-                                const unit = uniform.textureUnits[0];
-                                webgl.uniform1i(location, unit);
-                                texture.bindTexture(unit);
-                            }
-                            else {
-                                console.error("Error texture unit.");
-                            }
-
-                            this._cacheLightmapIndex = lightmapIndex;
-                        }
-                        break;
-
-                    case gltf.UniformSemantics._LIGHTMAP_SCALE_OFFSET:
-                        const lightmapScaleOffset = (renderer as MeshRenderer).lightmapScaleOffset;
-                        webgl.uniform4f(location, lightmapScaleOffset.x, lightmapScaleOffset.y, lightmapScaleOffset.z, lightmapScaleOffset.w);
                         break;
 
                     case gltf.UniformSemantics._DIRECTIONSHADOWMAT:
@@ -399,6 +370,28 @@ namespace egret3d.webgl {
                                 const texture = spotShadowMaps as WebGLTexture;
                                 texture.bindTexture(unit);
                             }
+                        }
+                        break;
+
+                    case gltf.UniformSemantics._LIGHTMAP_SCALE_OFFSET:
+                        const lightmapScaleOffset = (renderer as MeshRenderer).lightmapScaleOffset;
+                        webgl.uniform4f(location, lightmapScaleOffset.x, lightmapScaleOffset.y, lightmapScaleOffset.z, lightmapScaleOffset.w);
+                        break;
+
+                    case gltf.UniformSemantics._LIGHTMAPTEX:
+                        const lightmapIndex = (renderer as MeshRenderer).lightmapIndex;
+                        if (lightmapIndex >= 0 && lightmapIndex !== this._cacheLightmapIndex) {
+                            if (uniform.textureUnits && uniform.textureUnits.length === 1) {
+                                const texture = currentScene!.lightmaps[lightmapIndex] || DefaultTextures.WHITE;//TODO可能有空
+                                const unit = uniform.textureUnits[0];
+                                webgl.uniform1i(location, unit);
+                                texture.bindTexture(unit);
+                            }
+                            else {
+                                console.error("Error texture unit.");
+                            }
+
+                            this._cacheLightmapIndex = lightmapIndex;
                         }
                         break;
                 }
@@ -519,7 +512,9 @@ namespace egret3d.webgl {
 
         private _updateAttributes(program: WebGLProgramBinder, mesh: Mesh, subMeshIndex: number) {
             const webgl = WebGLRenderState.webgl!;
+            const renderState = this._renderState;
             const attributes = mesh.glTFMesh.primitives[subMeshIndex].attributes;
+            let attributeCount = 0;
             //
             if ((mesh as WebGLMesh).vbo) {
                 webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, (mesh as WebGLMesh).vbo);
@@ -546,6 +541,16 @@ namespace egret3d.webgl {
                 else {
                     webgl.disableVertexAttribArray(location);
                 }
+
+                attributeCount++;
+            }
+            //
+            if (attributeCount !== renderState.caches.attributeCount) {
+                for (let i = attributeCount, l = renderState.caches.attributeCount; i < l; ++i) {
+                    webgl.disableVertexAttribArray(i);
+                }
+
+                renderState.caches.attributeCount = attributeCount;
             }
             // ibo.
             const ibo = (mesh as WebGLMesh).ibos[subMeshIndex];
@@ -560,7 +565,7 @@ namespace egret3d.webgl {
             renderState.updateViewport(camera.viewport, renderTarget);
             renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
             // Skybox.
-            const skyBox = camera.gameObject.getComponent(SkyBox);
+            const skyBox = camera.entity.getComponent(SkyBox);
             if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                 const skyBoxDrawCall = this._drawCallCollecter.skyBox;
                 const material = skyBox.material;
@@ -601,8 +606,9 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); // TODO 解决字体模糊。
 
-            for (const gameObject of this.groups[0].gameObjects) {
-                const egret2DRenderer = gameObject.getComponent(Egret2DRenderer) as Egret2DRenderer;
+            for (const entity of this.groups[0].entities) {
+                const egret2DRenderer = entity.getComponent(Egret2DRenderer)!;
+
                 if (camera.cullingMask & egret2DRenderer.gameObject.layer) {
                     if (egret2DRenderer._order < 0) {
                         egret2DRenderer._order = renderState.caches.egret2DOrderCount++;
@@ -610,6 +616,7 @@ namespace egret3d.webgl {
 
                     egret2DRenderer._draw();
                     renderState.clearState();
+                    this._cacheProgram = null;//防止2d的program污染3d的
                 }
             }
         }
@@ -652,6 +659,72 @@ namespace egret3d.webgl {
             collecter.currentShadowLight = null;
         }
 
+        protected getMatchers() {
+            return [
+                paper.Matcher.create<paper.GameObject>(Egret2DRenderer),
+            ];
+        }
+
+        public onAwake() {
+            const renderState = this._renderState;
+            renderState.render = this.render.bind(this);
+            renderState.draw = this.draw.bind(this);
+        }
+
+        public onFrame() {
+            if (!WebGLRenderState.webgl) {
+                return;
+            }
+
+            const { cameras } = this._cameraAndLightCollecter;
+
+            if (cameras.length > 0) { // Render cameras.
+                const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
+                const clock = paper.clock;
+                const renderState = this._renderState;
+                const editorScene = paper.Application.sceneManager.editorScene;
+
+                renderState.caches.egret2DOrderCount = 0;
+                renderState.caches.cullingMask = paper.Layer.Nothing;
+                renderState.caches.clockBuffer[0] = clock.time; // TODO more clock info.
+                // this._cacheProgram = null;
+
+                // Render lights shadows. TODO 
+                // if (camera.cullingMask !== renderState.caches.cullingMask) {
+                const { lights } = this._cameraAndLightCollecter;
+
+                if (lights.length > 0) {
+                    for (const light of lights) {
+                        if (light.castShadows && light.shadow._onUpdate) {
+                            this._renderShadow(light);
+                        }
+                    }
+                }
+
+                //     renderState.caches.cullingMask = camera.cullingMask;
+                // }
+
+                for (const camera of cameras) {
+                    const scene = camera.entity.scene;
+
+                    if (
+                        camera.renderTarget
+                        || camera._previewRenderTarget
+                        || (isPlayerMode ? scene !== editorScene : scene === editorScene)
+                    ) {
+                        this.render(camera);
+                    }
+                }
+            }
+            else { // Clear stage background to black.
+                this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.BLACK);
+            }
+        }
+
+        public onFrameCleanup() {
+            this._drawCallCollecter.drawCallCount = 0;
+        }
+
         public render(camera: Camera, material: Material | null = null) {
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
             const renderTarget = camera.renderTarget || camera._previewRenderTarget;
@@ -660,14 +733,18 @@ namespace egret3d.webgl {
                 camera._update();
 
                 //TODO
-                if (camera.gameObject._beforeRenderBehaviors.length > 0) {
+                if (camera.gameObject._beforeRenderBehaviorCount > 0) {
                     let flag = false;
+                    const isEditor = paper.Application.playerMode === paper.PlayerMode.Editor;
 
-                    for (const behaviour of camera.gameObject._beforeRenderBehaviors) {
-                        if (!behaviour.isActiveAndEnabled) {
-                            continue;
+                    for (const component of camera.entity.components) {
+                        if (
+                            (component.constructor as paper.IComponentClass<paper.IComponent>).isBehaviour &&
+                            (!isEditor || (component.constructor as paper.IComponentClass<paper.Behaviour>).executeInEditMode) &&
+                            (component as paper.Behaviour).onBeforeRender
+                        ) {
+                            flag = !(component as paper.Behaviour).onBeforeRender!() || flag;
                         }
-                        flag = !behaviour.onBeforeRender!() || flag;
                     }
 
                     if (flag) {
@@ -676,7 +753,7 @@ namespace egret3d.webgl {
                 }
                 //
                 let isPostprocessing = false;
-                const postprocessings = camera.gameObject.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
+                const postprocessings = camera.entity.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
 
                 if (postprocessings.length > 0) {
                     for (const postprocessing of postprocessings) {
@@ -716,11 +793,18 @@ namespace egret3d.webgl {
             const renderer = drawCall.renderer;
             material = material || drawCall.material;
 
-            if (renderer && renderer.gameObject._beforeRenderBehaviors.length > 0) {
+            if (renderer && renderer.gameObject._beforeRenderBehaviorCount > 0) {
                 let flag = false;
+                const isEditor = paper.Application.playerMode === paper.PlayerMode.Editor;
 
-                for (const behaviour of renderer.gameObject._beforeRenderBehaviors) {
-                    flag = !behaviour.onBeforeRender!() || flag;
+                for (const component of renderer.entity.components) {
+                    if (
+                        (component.constructor as paper.IComponentClass<paper.IComponent>).isBehaviour &&
+                        (!isEditor || (component.constructor as paper.IComponentClass<paper.Behaviour>).executeInEditMode) &&
+                        (component as paper.Behaviour).onBeforeRender
+                    ) {
+                        flag = !(component as paper.Behaviour).onBeforeRender!() || flag;
+                    }
                 }
 
                 if (flag) {
@@ -731,7 +815,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
             const camera = cameraAndLightCollecter.currentCamera!;
-            const activeScene = paper.Scene.activeScene;
+            const activeScene = paper.Application.sceneManager.activeScene;
             const currentScene = renderer ? renderer.gameObject.scene : null; // 后期渲染 renderer 为空。
             const mesh = drawCall.mesh;
             const shader = material.shader as WebGLShader;
@@ -864,69 +948,11 @@ namespace egret3d.webgl {
                     webgl.drawArrays(drawMode, 0, vertexAccessor.count);
                 }
 
+                this._drawCallCollecter.drawCallCount++;
+
                 if (drawCall.drawCount >= 0) {
                     drawCall.drawCount++;
                 }
-
-                drawCallCollecter.drawCallCount++;
-            }
-        }
-
-        public onAwake() {
-            const renderState = this._renderState;
-            renderState.render = this.render.bind(this);
-            renderState.draw = this.draw.bind(this);
-        }
-
-        public onUpdate() {
-            if (!WebGLRenderState.webgl) {
-                return;
-            }
-
-            drawCallCollecter.drawCallCount = 0;
-
-            const { cameras } = this._cameraAndLightCollecter;
-
-            if (cameras.length > 0) { // Render cameras.
-                const isPlayerMode = paper.Application.playerMode === paper.PlayerMode.Player;
-                const clock = this.clock;
-                const renderState = this._renderState;
-                const editorScene = paper.Scene.editorScene;
-
-                renderState.caches.egret2DOrderCount = 0;
-                renderState.caches.cullingMask = paper.Layer.Nothing;
-                renderState.caches.clockBuffer[0] = clock.time; // TODO more clock info.
-                this._cacheProgram = null;
-
-                // Render lights shadows. TODO 
-                // if (camera.cullingMask !== renderState.caches.cullingMask) {
-                const { lights } = this._cameraAndLightCollecter;
-
-                if (lights.length > 0) {
-                    for (const light of lights) {
-                        if (light.castShadows && light.shadow._onUpdate) {
-                            this._renderShadow(light);
-                        }
-                    }
-                }
-
-                //     renderState.caches.cullingMask = camera.cullingMask;
-                // }
-
-                for (const camera of cameras) {
-                    const scene = camera.gameObject.scene;
-
-                    if (
-                        camera.renderTarget
-                        || camera._previewRenderTarget
-                        || (isPlayerMode ? scene !== editorScene : scene === editorScene)
-                    ) {
-                        this.render(camera);
-                    }
-                }
-            }
-            else { // Clear stage background to black.
-                this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.BLACK);
             }
         }
     }

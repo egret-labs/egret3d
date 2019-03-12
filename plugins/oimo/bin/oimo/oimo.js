@@ -40004,13 +40004,14 @@ oimo_dynamics_rigidbody_RigidBody.prototype = {
 		shape._next = null;
 		shape._prev = null;
 		this._numShapes--;
+		var rigidBody = shape._rigidBody;
 		shape._rigidBody = null;
 		if(this._world != null) {
 			var _this = this._world;
 			_this._broadPhase.destroyProxy(shape._proxy);
 			shape._proxy = null;
 			shape._id = -1;
-			var cl = shape._rigidBody._contactLinkList;
+			var cl = rigidBody._contactLinkList;
 			while(cl != null) {
 				var n = cl._next;
 				var c = cl._contact;
@@ -41541,24 +41542,6 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
-        /**
-         * 刚体类型。
-         */
-        var RigidbodyType;
-        (function (RigidbodyType) {
-            /**
-             * 动态。
-             */
-            RigidbodyType[RigidbodyType["DYNAMIC"] = 0] = "DYNAMIC";
-            /**
-             * 静态。
-             */
-            RigidbodyType[RigidbodyType["STATIC"] = 1] = "STATIC";
-            /**
-             * 动力学。
-             */
-            RigidbodyType[RigidbodyType["KINEMATIC"] = 2] = "KINEMATIC";
-        })(RigidbodyType = oimo.RigidbodyType || (oimo.RigidbodyType = {}));
         var ValueType;
         (function (ValueType) {
             ValueType[ValueType["Type"] = 0] = "Type";
@@ -41568,7 +41551,7 @@ var egret3d;
             ValueType[ValueType["AngularDamping"] = 4] = "AngularDamping";
         })(ValueType || (ValueType = {}));
         /**
-         * 刚体。
+         * 刚体组件。
          */
         var Rigidbody = (function (_super) {
             __extends(Rigidbody, _super);
@@ -41592,17 +41575,11 @@ var egret3d;
                 config.angularDamping = this.angularDamping;
                 config.linearVelocity = this._linearVelocity; // 
                 config.angularVelocity = this._angularVelocity; // 
-                var rigidbody = new OIMO.RigidBody(config);
-                var position = this.gameObject.transform.getPosition();
-                var quaternion = this.gameObject.transform.getRotation();
-                var oimoTransform = oimo.PhysicsSystem._helpTransform;
-                oimoTransform.setPosition(position);
-                oimoTransform.setOrientation(quaternion);
-                rigidbody.setTransform(oimoTransform);
-                rigidbody.userData = this;
+                var oimoRigidbody = new OIMO.RigidBody(config);
+                oimoRigidbody.userData = this;
                 // this._updateMass(rigidbody); // TODO update mesh and type.
-                rigidbody.setGravityScale(this.gravityScale);
-                return rigidbody;
+                oimoRigidbody.setGravityScale(this.gravityScale);
+                return oimoRigidbody;
             };
             /**
              * @internal
@@ -41613,85 +41590,131 @@ var egret3d;
                 massData.mass = this._values[1 /* Mass */]; // Update mass.
                 rigidbody.setMassData(massData); // Set mass data to rigibody.
             };
-            Rigidbody.prototype._addShapes = function () {
-                for (var _i = 0, _a = this.gameObject.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
-                    var shape = _a[_i];
-                    this.oimoRigidbody.addShape(shape.oimoShape);
-                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
+            Rigidbody.prototype._checkRigidbody = function (message) {
+                if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
+                    for (var _i = 0, _a = this.gameObject.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
+                        var shape = _a[_i];
+                        this.oimoRigidbody.addShape(shape.oimoShape);
+                        // rigidbody._updateMass(rigidbody.oimoRigidbody);
+                    }
                 }
-                // 子物体的transform？ TODO
+                if (this._oimoRigidbody.getNumShapes() === 0) {
+                    if (true) {
+                        console.warn(message || "Cannot affect a rigidbody's velocity or force without adding a shape.");
+                    }
+                    return false;
+                }
+                return true;
             };
             /**
-             *
+             * 将该刚体唤醒。
              */
             Rigidbody.prototype.wakeUp = function () {
                 if (this._oimoRigidbody) {
                     this._oimoRigidbody.wakeUp();
                 }
+                return this;
             };
             /**
-             *
+             * 将该刚体休眠。
              */
             Rigidbody.prototype.sleep = function () {
                 if (this._oimoRigidbody) {
                     this._oimoRigidbody.sleep();
                 }
+                return this;
             };
             /**
-             *
+             * 增加该刚体的线性速度。
              */
-            Rigidbody.prototype.applyForce = function (force, positionInWorld) {
-                if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                    this._addShapes();
+            Rigidbody.prototype.addLinearVelocity = function (veloctity) {
+                if (this._checkRigidbody()) {
+                    this._oimoRigidbody.addLinearVelocity(veloctity);
                 }
-                if (this._oimoRigidbody.getNumShapes() === 0) {
-                    console.warn("Can not add force to an empty rigidbody.");
-                    return;
-                }
-                this.oimoRigidbody.applyForce(force, positionInWorld);
+                return this;
             };
             /**
-             *
+             * 增加该刚体的角速度。
+             */
+            Rigidbody.prototype.addAngularVelocity = function (veloctity) {
+                if (this._checkRigidbody()) {
+                    this._oimoRigidbody.addAngularVelocity(veloctity);
+                }
+                return this;
+            };
+            /**
+             * 对该刚体施加力。
+             */
+            Rigidbody.prototype.applyForce = function (force, worldPosition) {
+                if (this._checkRigidbody()) {
+                    this._oimoRigidbody.applyForce(force, worldPosition);
+                }
+                return this;
+            };
+            /**
+             * 对该刚体的中心点施加力。
              */
             Rigidbody.prototype.applyForceToCenter = function (force) {
-                if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                    this._addShapes();
+                if (this._checkRigidbody()) {
+                    this._oimoRigidbody.applyForceToCenter(force);
                 }
-                if (this._oimoRigidbody.getNumShapes() === 0) {
-                    console.warn("Can not add force to an empty rigidbody.");
-                    return;
-                }
-                this.oimoRigidbody.applyForceToCenter(force);
+                return this;
             };
             /**
-             *
-             */
-            Rigidbody.prototype.applyImpulse = function (impulse, position) {
-                if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                    this._addShapes();
-                }
-                if (this._oimoRigidbody.getNumShapes() === 0) {
-                    console.warn("Can not add impulse to an empty rigidbody.");
-                    return;
-                }
-                this.oimoRigidbody.applyImpulse(impulse, position);
-            };
-            /**
-             *
+             * 对该刚体施加扭转力。
              */
             Rigidbody.prototype.applyTorque = function (torque) {
-                if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
-                    this._addShapes();
+                if (this._checkRigidbody()) {
+                    this._oimoRigidbody.applyTorque(torque);
                 }
-                if (this._oimoRigidbody.getNumShapes() === 0) {
-                    console.warn("Can not add torque to an empty rigidbody.");
-                    return;
+                return this;
+            };
+            /**
+             * 对该刚体施加冲量。
+             */
+            Rigidbody.prototype.applyImpulse = function (impulse, worldPosition) {
+                if (this._checkRigidbody()) {
+                    this._oimoRigidbody.applyImpulse(impulse, worldPosition);
                 }
-                this.oimoRigidbody.applyTorque(torque);
+                return this;
+            };
+            /**
+             * 对该刚体施加线性冲量。
+             */
+            Rigidbody.prototype.applyLinearImpulse = function (impulse) {
+                if (this._checkRigidbody()) {
+                    this._oimoRigidbody.applyLinearImpulse(impulse);
+                }
+                return this;
+            };
+            /**
+             * 对该刚体施加角冲量。
+             */
+            Rigidbody.prototype.applyAngularImpulse = function (impulse) {
+                if (this._checkRigidbody()) {
+                    this._oimoRigidbody.applyAngularImpulse(impulse);
+                }
+                return this;
+            };
+            /**
+             *
+             */
+            Rigidbody.prototype.syncTransform = function (transform) {
+                var oimoRigidbody = this._oimoRigidbody;
+                if (oimoRigidbody) {
+                    var oimoTransform = oimo.PhysicsSystem._helpTransform;
+                    if (!transform) {
+                        transform = this.gameObject.transform;
+                    }
+                    oimoTransform.setPosition(transform.position);
+                    oimoTransform.setOrientation(transform.rotation);
+                    oimoRigidbody.setTransform(oimoTransform);
+                }
+                return this;
             };
             Object.defineProperty(Rigidbody.prototype, "isSleeping", {
                 /**
-                 *
+                 * 该刚体是否正在休眠。
                  */
                 get: function () {
                     if (this._oimoRigidbody) {
@@ -41702,9 +41725,22 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
+            Object.defineProperty(Rigidbody.prototype, "sleepTime", {
+                /**
+                 * 该刚体此次休眠的累计时间。
+                 */
+                get: function () {
+                    if (this._oimoRigidbody) {
+                        return this._oimoRigidbody.getSleepTime();
+                    }
+                    return 0;
+                },
+                enumerable: true,
+                configurable: true
+            });
             Object.defineProperty(Rigidbody.prototype, "type", {
                 /**
-                 * 刚体类型。
+                 * 该刚体的类型。
                  */
                 get: function () {
                     return this._values[0 /* Type */];
@@ -41723,7 +41759,7 @@ var egret3d;
             });
             Object.defineProperty(Rigidbody.prototype, "mass", {
                 /**
-                 *
+                 * 该刚体的质量。
                  */
                 get: function () {
                     return this._values[1 /* Mass */];
@@ -41745,7 +41781,7 @@ var egret3d;
             });
             Object.defineProperty(Rigidbody.prototype, "gravityScale", {
                 /**
-                 *
+                 * 该刚体的重力缩放系数。
                  */
                 get: function () {
                     return this._values[2 /* GravityScale */];
@@ -41764,7 +41800,7 @@ var egret3d;
             });
             Object.defineProperty(Rigidbody.prototype, "linearDamping", {
                 /**
-                 *
+                 * 该刚体的线性阻尼。
                  */
                 get: function () {
                     return this._values[3 /* LinearDamping */];
@@ -41783,7 +41819,7 @@ var egret3d;
             });
             Object.defineProperty(Rigidbody.prototype, "angularDamping", {
                 /**
-                 *
+                 * 该刚体的旋转阻尼。
                  */
                 get: function () {
                     return this._values[4 /* AngularDamping */];
@@ -41802,7 +41838,7 @@ var egret3d;
             });
             Object.defineProperty(Rigidbody.prototype, "linearVelocity", {
                 /**
-                 *
+                 * 该刚体的线性速度。
                  */
                 get: function () {
                     if (this._oimoRigidbody) {
@@ -41821,7 +41857,7 @@ var egret3d;
             });
             Object.defineProperty(Rigidbody.prototype, "angularVelocity", {
                 /**
-                 *
+                 * 该刚体的角速度。
                  */
                 get: function () {
                     if (this._oimoRigidbody) {
@@ -41840,11 +41876,12 @@ var egret3d;
             });
             Object.defineProperty(Rigidbody.prototype, "oimoRigidbody", {
                 /**
-                 *
+                 * 该刚体的 OIMO 刚体。
                  */
                 get: function () {
                     if (!this._oimoRigidbody) {
                         this._oimoRigidbody = this._createRigidbody();
+                        this.syncTransform();
                     }
                     return this._oimoRigidbody;
                 },
@@ -41856,10 +41893,22 @@ var egret3d;
             __decorate([
                 paper.serializedField
             ], Rigidbody.prototype, "_values", void 0);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], Rigidbody.prototype, "mass", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], Rigidbody.prototype, "gravityScale", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], Rigidbody.prototype, "linearDamping", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], Rigidbody.prototype, "angularDamping", null);
             return Rigidbody;
         }(paper.BaseComponent));
         oimo.Rigidbody = Rigidbody;
-        __reflect(Rigidbody.prototype, "egret3d.oimo.Rigidbody");
+        __reflect(Rigidbody.prototype, "egret3d.oimo.Rigidbody", ["egret3d.IRigidbody"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -41868,14 +41917,14 @@ var egret3d;
     (function (oimo) {
         var ValueType;
         (function (ValueType) {
-            ValueType[ValueType["CollisionGroup"] = 0] = "CollisionGroup";
-            ValueType[ValueType["CollisionMask"] = 1] = "CollisionMask";
-            ValueType[ValueType["Friction"] = 2] = "Friction";
-            ValueType[ValueType["Restitution"] = 3] = "Restitution";
-            ValueType[ValueType["Density"] = 4] = "Density";
+            ValueType[ValueType["CollisionMask"] = 0] = "CollisionMask";
+            ValueType[ValueType["Friction"] = 1] = "Friction";
+            ValueType[ValueType["Restitution"] = 2] = "Restitution";
+            ValueType[ValueType["Density"] = 3] = "Density";
         })(ValueType || (ValueType = {}));
         /**
-         * 碰撞体基类。
+         * 基础碰撞组件。
+         * - 全部碰撞组件的基类。
          */
         var BaseCollider = (function (_super) {
             __extends(BaseCollider, _super);
@@ -41883,54 +41932,36 @@ var egret3d;
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = -1;
                 /**
-                 * [CollisionGroup, CollisionMask, Friction, Restitution, Density];
+                 * [CollisionMask, Friction, Restitution, Density];
                  */
                 _this._values = new Float32Array([
-                    1 /* Default */, 1 /* Default */, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
+                    1 /* Default */, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
                 ]);
                 _this._oimoShape = null;
                 return _this;
             }
+            BaseCollider_1 = BaseCollider;
             BaseCollider.prototype._updateConfig = function () {
-                var config = BaseCollider._config;
-                config.collisionGroup = this.collisionGroup;
+                var config = BaseCollider_1._config;
+                config.collisionGroup = this.gameObject.layer; // TODO 动态改变
                 config.collisionMask = this.collisionMask;
                 config.friction = this.friction;
                 config.restitution = this.restitution;
                 config.density = this.density;
                 return config;
             };
-            Object.defineProperty(BaseCollider.prototype, "collisionGroup", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._values[0 /* CollisionGroup */];
-                },
-                set: function (value) {
-                    if (this._values[0 /* CollisionGroup */] === value) {
-                        return;
-                    }
-                    this._values[0 /* CollisionGroup */] = value;
-                    if (this._oimoShape) {
-                        this._oimoShape.setCollisionGroup(value);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             Object.defineProperty(BaseCollider.prototype, "collisionMask", {
                 /**
-                 *
+                 * 该碰撞体的碰撞掩码。
                  */
                 get: function () {
-                    return this._values[1 /* CollisionMask */];
+                    return this._values[0 /* CollisionMask */];
                 },
                 set: function (value) {
-                    if (this._values[1 /* CollisionMask */] === value) {
+                    if (this._values[0 /* CollisionMask */] === value) {
                         return;
                     }
-                    this._values[1 /* CollisionMask */] = value;
+                    this._values[0 /* CollisionMask */] = value;
                     if (this._oimoShape) {
                         this._oimoShape.setCollisionMask(value);
                     }
@@ -41940,16 +41971,16 @@ var egret3d;
             });
             Object.defineProperty(BaseCollider.prototype, "friction", {
                 /**
-                 *
+                 * 该碰撞体的摩擦力。
                  */
                 get: function () {
-                    return this._values[2 /* Friction */];
+                    return this._values[1 /* Friction */];
                 },
                 set: function (value) {
-                    if (this._values[2 /* Friction */] === value) {
+                    if (this._values[1 /* Friction */] === value) {
                         return;
                     }
-                    this._values[2 /* Friction */] = value;
+                    this._values[1 /* Friction */] = value;
                     if (this._oimoShape) {
                         this._oimoShape.setFriction(value);
                     }
@@ -41959,16 +41990,16 @@ var egret3d;
             });
             Object.defineProperty(BaseCollider.prototype, "restitution", {
                 /**
-                 *
+                 * 该碰撞体的恢复系数。
                  */
                 get: function () {
-                    return this._values[3 /* Restitution */];
+                    return this._values[2 /* Restitution */];
                 },
                 set: function (value) {
-                    if (this._values[3 /* Restitution */] === value) {
+                    if (this._values[2 /* Restitution */] === value) {
                         return;
                     }
-                    this._values[3 /* Restitution */] = value;
+                    this._values[2 /* Restitution */] = value;
                     if (this._oimoShape) {
                         this._oimoShape.setRestitution(value);
                     }
@@ -41978,16 +42009,17 @@ var egret3d;
             });
             Object.defineProperty(BaseCollider.prototype, "density", {
                 /**
-                 *
+                 * 该碰撞体的密度。
+                 * - 单位为`千克/立方米`。
                  */
                 get: function () {
-                    return this._values[4 /* Density */];
+                    return this._values[3 /* Density */];
                 },
                 set: function (value) {
-                    if (this._values[4 /* Density */] === value) {
+                    if (this._values[3 /* Density */] === value) {
                         return;
                     }
-                    this._values[4 /* Density */] = value;
+                    this._values[3 /* Density */] = value;
                     if (this._oimoShape) {
                         this._oimoShape.setDensity(value);
                     }
@@ -41997,7 +42029,7 @@ var egret3d;
             });
             Object.defineProperty(BaseCollider.prototype, "oimoShape", {
                 /**
-                 *
+                 * 该碰撞体的 OIMO 碰撞体。
                  */
                 get: function () {
                     if (!this._oimoShape) {
@@ -42012,7 +42044,23 @@ var egret3d;
             __decorate([
                 paper.serializedField
             ], BaseCollider.prototype, "_values", void 0);
+            __decorate([
+                paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) }) // TODO
+            ], BaseCollider.prototype, "collisionMask", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            ], BaseCollider.prototype, "friction", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 1.0 })
+            ], BaseCollider.prototype, "restitution", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            ], BaseCollider.prototype, "density", null);
+            BaseCollider = BaseCollider_1 = __decorate([
+                paper.abstract
+            ], BaseCollider);
             return BaseCollider;
+            var BaseCollider_1;
         }(paper.BaseComponent));
         oimo.BaseCollider = BaseCollider;
         __reflect(BaseCollider.prototype, "egret3d.oimo.BaseCollider", ["egret3d.ICollider"]);
@@ -42022,65 +42070,53 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
-        /**
-         * 关节类型。
-         */
-        var JointType;
-        (function (JointType) {
-            JointType[JointType["Spherical"] = OIMO.JointType.SPHERICAL] = "Spherical";
-            JointType[JointType["Prismatic"] = OIMO.JointType.PRISMATIC] = "Prismatic";
-            JointType[JointType["Hinge"] = OIMO.JointType.REVOLUTE] = "Hinge";
-            JointType[JointType["Cylindrical"] = OIMO.JointType.CYLINDRICAL] = "Cylindrical";
-            JointType[JointType["ConeTwist"] = OIMO.JointType.RAGDOLL] = "ConeTwist";
-            JointType[JointType["Universal"] = OIMO.JointType.UNIVERSAL] = "Universal";
-        })(JointType = oimo.JointType || (oimo.JointType = {}));
         var ValueType;
         (function (ValueType) {
             ValueType[ValueType["CollisionEnabled"] = 0] = "CollisionEnabled";
             ValueType[ValueType["UseGlobalAnchor"] = 1] = "UseGlobalAnchor";
         })(ValueType || (ValueType = {}));
         /**
-         * 关节基类。
+         * 基础关节组件。
+         * - 全部关节组件的基类。
          */
-        var Joint = (function (_super) {
-            __extends(Joint, _super);
-            function Joint() {
+        var BaseJoint = (function (_super) {
+            __extends(BaseJoint, _super);
+            function BaseJoint() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 /**
                  * 关节类型。
                  */
                 _this.jointType = -1;
                 _this._anchor = egret3d.Vector3.create();
-                /**
-                 *
-                 */
-                _this._values = new Float32Array([
-                    0, 0,
-                ]);
-                _this._connectedBody = null;
-                _this._rigidbody = null;
                 _this._oimoJoint = null;
+                _this._rigidbody = null;
+                _this._connectedBody = null;
                 return _this;
             }
+            BaseJoint_1 = BaseJoint;
             /**
-             *
+             * 获取该关节承受的力。
              */
-            Joint.prototype.getAppliedForce = function (out) {
-                out = out || egret3d.Vector3.create();
+            BaseJoint.prototype.getAppliedForce = function (out) {
+                if (!out) {
+                    out = egret3d.Vector3.create();
+                }
                 this._oimoJoint.getAppliedForceTo(out); // TODO
                 return out;
             };
             /**
-             *
+             * 获取该关节承受的扭矩。
              */
-            Joint.prototype.getAppliedTorque = function (out) {
-                out = out || egret3d.Vector3.create();
+            BaseJoint.prototype.getAppliedTorque = function (out) {
+                if (!out) {
+                    out = egret3d.Vector3.create();
+                }
                 this._oimoJoint.getAppliedTorqueTo(out); // TODO
                 return out;
             };
-            Object.defineProperty(Joint.prototype, "collisionEnabled", {
+            Object.defineProperty(BaseJoint.prototype, "collisionEnabled", {
                 /**
-                 *
+                 * 该关节所连接的两个刚体之前是否允许碰撞。
                  */
                 get: function () {
                     return this._values[0 /* CollisionEnabled */] > 0;
@@ -42097,45 +42133,55 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(Joint.prototype, "useGlobalAnchor", {
+            Object.defineProperty(BaseJoint.prototype, "useWorldAnchor", {
                 /**
-                 *
+                 * 该关节的锚点是否为世界坐标系。
                  */
                 get: function () {
                     return this._values[1 /* UseGlobalAnchor */] > 0;
                 },
                 set: function (value) {
-                    if (this._oimoJoint) {
-                        console.warn("Cannot change the isGlobalAnchor after the joint has been created.");
-                    }
-                    else {
+                    if (!this._oimoJoint) {
                         this._values[1 /* UseGlobalAnchor */] = value ? 1 : 0;
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the useWorldAnchor after the joint has been created.");
                     }
                 },
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(Joint.prototype, "anchor", {
+            Object.defineProperty(BaseJoint.prototype, "anchor", {
                 /**
-                 *
+                 * 该关节的锚点。
                  */
                 get: function () {
                     return this._anchor;
                 },
                 set: function (value) {
-                    if (this._oimoJoint) {
-                        console.warn("Cannot change the anchor after the joint has been created.");
-                    }
-                    else {
+                    if (!this._oimoJoint) {
                         this._anchor.copy(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the anchor after the joint has been created.");
                     }
                 },
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(Joint.prototype, "connectedRigidbody", {
+            Object.defineProperty(BaseJoint.prototype, "rigidbody", {
                 /**
-                 *
+                 * 该关节依附的刚体。
+                 */
+                get: function () {
+                    return this._rigidbody;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(BaseJoint.prototype, "connectedRigidbody", {
+                /**
+                 * 该关节连接的刚体。
                  */
                 get: function () {
                     return this._connectedBody;
@@ -42144,29 +42190,19 @@ var egret3d;
                     if (this._connectedBody === value) {
                         return;
                     }
-                    if (this._oimoJoint) {
-                        console.warn("Cannot change the connected rigidbody after the joint has been created.");
-                    }
-                    else {
+                    if (!this._oimoJoint) {
                         this._connectedBody = value;
                     }
+                    else if (true) {
+                        console.warn("Cannot change the connected rigidbody after the joint has been created.");
+                    }
                 },
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(Joint.prototype, "rigidbody", {
+            Object.defineProperty(BaseJoint.prototype, "oimoJoint", {
                 /**
-                 *
-                 */
-                get: function () {
-                    return this._rigidbody;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(Joint.prototype, "oimoJoint", {
-                /**
-                 *
+                 * 该关节的 OIMO 关节。
                  */
                 get: function () {
                     if (!this._oimoJoint) {
@@ -42177,19 +42213,48 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
+            /**
+             * @internal
+             */
+            BaseJoint.isAbstract = BaseJoint_1;
             __decorate([
                 paper.serializedField
-            ], Joint.prototype, "_anchor", void 0);
+            ], BaseJoint.prototype, "_anchor", void 0);
             __decorate([
                 paper.serializedField
-            ], Joint.prototype, "_values", void 0);
+            ], BaseJoint.prototype, "_values", void 0);
             __decorate([
                 paper.serializedField
-            ], Joint.prototype, "_connectedBody", void 0);
-            return Joint;
+            ], BaseJoint.prototype, "_oimoJoint", void 0);
+            __decorate([
+                paper.serializedField
+            ], BaseJoint.prototype, "_rigidbody", void 0);
+            __decorate([
+                paper.serializedField
+            ], BaseJoint.prototype, "_connectedBody", void 0);
+            __decorate([
+                paper.editor.property("CHECKBOX" /* CHECKBOX */)
+            ], BaseJoint.prototype, "collisionEnabled", null);
+            __decorate([
+                paper.editor.property("CHECKBOX" /* CHECKBOX */)
+            ], BaseJoint.prototype, "useWorldAnchor", null);
+            __decorate([
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], BaseJoint.prototype, "anchor", null);
+            __decorate([
+                paper.editor.property("COMPONENT" /* COMPONENT */)
+            ], BaseJoint.prototype, "rigidbody", null);
+            __decorate([
+                paper.editor.property("COMPONENT" /* COMPONENT */)
+            ], BaseJoint.prototype, "connectedRigidbody", null);
+            BaseJoint = BaseJoint_1 = __decorate([
+                paper.abstract
+            ], BaseJoint);
+            return BaseJoint;
+            var BaseJoint_1;
         }(paper.BaseComponent));
-        oimo.Joint = Joint;
-        __reflect(Joint.prototype, "egret3d.oimo.Joint");
+        oimo.BaseJoint = BaseJoint;
+        __reflect(BaseJoint.prototype, "egret3d.oimo.BaseJoint");
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -42197,337 +42262,41 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
-         *
+         * 圆柱体碰撞组件。
+         * - 与 Y 轴对齐。
          */
-        var ConeCollider = (function (_super) {
-            __extends(ConeCollider, _super);
-            function ConeCollider() {
+        var CylinderCollider = (function (_super) {
+            __extends(CylinderCollider, _super);
+            function CylinderCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = egret3d.ColliderType.Cone;
-                _this._radius = 1.0;
-                _this._height = 1.0;
+                _this.colliderType = egret3d.ColliderType.Cylinder;
+                _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
                 return _this;
             }
-            ConeCollider.prototype._createShape = function () {
+            CylinderCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.ConeGeometry(this._radius, this._height * 0.5);
+                config.geometry = new OIMO.CylinderGeometry(this.cylinder.bottomRadius, this.cylinder.height * 0.5);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
             };
-            Object.defineProperty(ConeCollider.prototype, "radius", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._radius;
-                },
-                set: function (value) {
-                    if (this._radius === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the radius after the collider has been created.");
-                    }
-                    else {
-                        this._radius = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeCollider.prototype, "height", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._height;
-                },
-                set: function (value) {
-                    if (this._height === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the height after the collider has been created.");
-                    }
-                    else {
-                        this._height = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], ConeCollider.prototype, "_radius", void 0);
-            __decorate([
-                paper.serializedField
-            ], ConeCollider.prototype, "_height", void 0);
-            ConeCollider = __decorate([
+            ], CylinderCollider.prototype, "cylinder", void 0);
+            CylinderCollider = __decorate([
                 paper.requireComponent(oimo.Rigidbody)
-            ], ConeCollider);
-            return ConeCollider;
+            ], CylinderCollider);
+            return CylinderCollider;
         }(oimo.BaseCollider));
-        oimo.ConeCollider = ConeCollider;
-        __reflect(ConeCollider.prototype, "egret3d.oimo.ConeCollider");
+        oimo.CylinderCollider = CylinderCollider;
+        __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider", ["egret3d.ICylinderCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
-        var _attributes = [
-            "POSITION" /* POSITION */,
-            "COLOR_0" /* COLOR_0 */,
-        ];
-        var _material = null;
-        /**
-         *
-         */
-        var RayTester = (function (_super) {
-            __extends(RayTester, _super);
-            function RayTester() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.distance = 10.0;
-                _this.collisionMask = 4294967295 /* Everything */;
-                _this._hitted = false;
-                _this._mesh = null;
-                return _this;
-            }
-            RayTester.prototype.onStart = function () {
-                var meshFilter = this.gameObject.getOrAddComponent(egret3d.MeshFilter);
-                var meshRender = this.gameObject.getOrAddComponent(egret3d.MeshRenderer);
-                this._mesh = egret3d.Mesh.create(4, 0, _attributes);
-                var vertices = this._mesh.getVertices();
-                var colors = this._mesh.getColors();
-                vertices[0] = 0.0;
-                vertices[1] = 0.0;
-                vertices[2] = 0.0;
-                vertices[3] = 0.0;
-                vertices[4] = 0.0;
-                vertices[5] = this.distance;
-                vertices[6] = 0.0;
-                vertices[7] = 0.0;
-                vertices[8] = this.distance;
-                vertices[9] = 0.0;
-                vertices[10] = 0.0;
-                vertices[11] = this.distance;
-                for (var i = 0, l = colors.length; i < l; i += 4) {
-                    colors[i + 0] = 0.0;
-                    colors[i + 1] = 1.0;
-                    colors[i + 2] = 0.0;
-                    colors[i + 3] = 0.7;
-                }
-                this._mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
-                if (!_material) {
-                    _material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
-                }
-                meshRender.materials = [_material];
-                meshFilter.mesh = this._mesh;
-            };
-            RayTester.prototype.onUpdate = function () {
-                var transform = this.gameObject.transform;
-                var matrix = transform.getWorldMatrix();
-                var from = transform.getPosition();
-                var to = matrix.transformVector3(egret3d.Vector3.create(this.distance, 0.0, 0.0).release());
-                var raycastInfo = oimo.PhysicsSystem.getInstance().raycast(from, to, this.collisionMask);
-                if (raycastInfo) {
-                    this._hitted = true;
-                    var inverseMatrix = matrix.clone().inverse();
-                    var v = raycastInfo.normal.applyMatrix(inverseMatrix).multiplyScalar(1.0);
-                    var vertices = this._mesh.getVertices();
-                    var colors = this._mesh.getColors();
-                    inverseMatrix.release();
-                    vertices[3] = raycastInfo.distance;
-                    vertices[4] = 0.0;
-                    vertices[5] = 0.0;
-                    vertices[6] = raycastInfo.distance;
-                    vertices[7] = 0.0;
-                    vertices[8] = 0.0;
-                    vertices[9] = v.x + raycastInfo.distance;
-                    vertices[10] = v.y;
-                    vertices[11] = v.z;
-                    for (var i = 2 * 4, l = colors.length; i < l; i += 4) {
-                        colors[i + 0] = 1.0;
-                        colors[i + 1] = 0.0;
-                        colors[i + 2] = 0.0;
-                        colors[i + 3] = 0.7;
-                    }
-                    this._mesh.uploadVertexBuffer();
-                    raycastInfo.release();
-                }
-                else if (this._hitted) {
-                    this._hitted = false;
-                    var vertices = this._mesh.getVertices();
-                    var colors = this._mesh.getColors();
-                    vertices[3] = 0.0;
-                    vertices[4] = 0.0;
-                    vertices[5] = this.distance;
-                    vertices[6] = 0.0;
-                    vertices[7] = 0.0;
-                    vertices[8] = this.distance;
-                    vertices[9] = 0.0;
-                    vertices[10] = 0.0;
-                    vertices[11] = this.distance;
-                    for (var i = 2 * 4, l = colors.length; i < l; i += 4) {
-                        colors[i + 0] = 0.0;
-                        colors[i + 1] = 1.0;
-                        colors[i + 2] = 0.0;
-                        colors[i + 3] = 0.7;
-                    }
-                    this._mesh.uploadVertexBuffer();
-                }
-            };
-            __decorate([
-                paper.serializedField
-            ], RayTester.prototype, "distance", void 0);
-            __decorate([
-                paper.serializedField
-            ], RayTester.prototype, "collisionMask", void 0);
-            return RayTester;
-        }(paper.Behaviour));
-        oimo.RayTester = RayTester;
-        __reflect(RayTester.prototype, "egret3d.oimo.RayTester");
-    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var oimo;
-    (function (oimo) {
-        /**
-         *
-         */
-        var BoxCollider = (function (_super) {
-            __extends(BoxCollider, _super);
-            function BoxCollider() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = egret3d.ColliderType.Box;
-                _this._size = egret3d.Vector3.ONE.clone();
-                return _this;
-            }
-            BoxCollider.prototype._createShape = function () {
-                var config = this._updateConfig();
-                config.geometry = new OIMO.BoxGeometry(egret3d.Vector3.create().multiplyScalar(0.5, this._size).release());
-                var shape = new OIMO.Shape(config);
-                shape.userData = this;
-                return shape;
-            };
-            Object.defineProperty(BoxCollider.prototype, "size", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._size;
-                },
-                set: function (value) {
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the size after the collider has been created.");
-                    }
-                    else {
-                        this._size.copy(value);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], BoxCollider.prototype, "_size", void 0);
-            BoxCollider = __decorate([
-                paper.requireComponent(oimo.Rigidbody)
-            ], BoxCollider);
-            return BoxCollider;
-        }(oimo.BaseCollider));
-        oimo.BoxCollider = BoxCollider;
-        __reflect(BoxCollider.prototype, "egret3d.oimo.BoxCollider");
-    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var oimo;
-    (function (oimo) {
-        /**
-         *
-         */
-        var CapsuleCollider = (function (_super) {
-            __extends(CapsuleCollider, _super);
-            function CapsuleCollider() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = egret3d.ColliderType.Capsule;
-                _this._radius = 1.0;
-                _this._height = 1.0;
-                return _this;
-            }
-            CapsuleCollider.prototype._createShape = function () {
-                var config = this._updateConfig();
-                config.geometry = new OIMO.CapsuleGeometry(this._radius, this._height * 0.5);
-                var shape = new OIMO.Shape(config);
-                shape.userData = this;
-                return shape;
-            };
-            Object.defineProperty(CapsuleCollider.prototype, "radius", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._radius;
-                },
-                set: function (value) {
-                    if (this._radius === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the radius after the collider has been created.");
-                    }
-                    else {
-                        this._radius = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(CapsuleCollider.prototype, "height", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._height;
-                },
-                set: function (value) {
-                    if (this._height === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the height after the collider has been created.");
-                    }
-                    else {
-                        this._height = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            __decorate([
-                paper.serializedField
-            ], CapsuleCollider.prototype, "_radius", void 0);
-            __decorate([
-                paper.serializedField
-            ], CapsuleCollider.prototype, "_height", void 0);
-            CapsuleCollider = __decorate([
-                paper.requireComponent(oimo.Rigidbody)
-            ], CapsuleCollider);
-            return CapsuleCollider;
-        }(oimo.BaseCollider));
-        oimo.CapsuleCollider = CapsuleCollider;
-        __reflect(CapsuleCollider.prototype, "egret3d.oimo.CapsuleCollider");
-    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var oimo;
-    (function (oimo) {
-        var _helpVector3 = egret3d.Vector3.create();
-        var _helpVector4 = egret3d.Vector4.create();
         /**
          *
          */
@@ -42535,56 +42304,21 @@ var egret3d;
             __extends(PhysicsSystem, _super);
             function PhysicsSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.interests = [
-                    [
-                        { componentClass: oimo.Rigidbody },
-                        {
-                            componentClass: [oimo.BoxCollider, oimo.SphereCollider],
-                            type: 4 /* Unessential */
-                        },
-                        {
-                            componentClass: [oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint],
-                            type: 4 /* Unessential */
-                        }
-                    ]
-                ];
                 _this._gravity = egret3d.Vector3.create(0.0, -9.80665, 0.0);
                 _this._rayCastClosest = new OIMO.RayCastClosest();
                 _this._contactCallback = new OIMO.ContactCallback();
-                _this._contactColliders = paper.GameObject.globalGameObject.getOrAddComponent(egret3d.ContactCollecter);
+                _this._contactColliders = paper.Application.sceneManager.globalEntity.getOrAddComponent(egret3d.ContactCollecter);
                 _this._oimoWorld = null;
                 return _this;
             }
-            /**
-             *
-             */
-            PhysicsSystem.getInstance = function () {
-                return this._instance;
-            };
-            PhysicsSystem.prototype.raycast = function (rayOrFrom, distanceOrTo, mask, raycastInfo) {
-                var rayCastClosest = this._rayCastClosest;
-                rayCastClosest.clear(); // TODO mask.
-                if (rayOrFrom instanceof egret3d.Ray) {
-                    distanceOrTo = _helpVector3.multiplyScalar(distanceOrTo || 100.0, rayOrFrom.direction).add(rayOrFrom.origin);
-                    rayOrFrom = rayOrFrom.origin;
-                }
-                this._oimoWorld.rayCast(rayOrFrom, distanceOrTo, rayCastClosest);
-                if (rayCastClosest.hit) {
-                    raycastInfo = raycastInfo || egret3d.RaycastInfo.create();
-                    raycastInfo.distance = egret3d.Vector3.getDistance(rayOrFrom, distanceOrTo) * rayCastClosest.fraction;
-                    raycastInfo.position.copy(rayCastClosest.position);
-                    if (raycastInfo.normal) {
-                        raycastInfo.normal.copy(rayCastClosest.normal);
-                    }
-                    raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData;
-                    raycastInfo.collider = rayCastClosest.shape.userData;
-                    return raycastInfo;
-                }
-                return null;
+            PhysicsSystem_1 = PhysicsSystem;
+            PhysicsSystem.prototype.getMatchers = function () {
+                return [
+                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.CylinderCollider, oimo.ConeCollider, oimo.CapsuleCollider, oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint, oimo.UniversalJoint),
+                ];
             };
             PhysicsSystem.prototype.onAwake = function () {
                 var _this = this;
-                PhysicsSystem._instance = this;
                 this._oimoWorld = new OIMO.World();
                 this._oimoWorld.setGravity(this._gravity);
                 this._contactCallback.beginContact = function (contact) {
@@ -42596,11 +42330,11 @@ var egret3d;
                     _this._contactColliders.stay.push(contact);
                     var colliderA = contact.getShape1().userData;
                     var colliderB = contact.getShape2().userData;
-                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                    for (var _i = 0, _a = colliderA.entity.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
                         var behaviour = _a[_i];
                         behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderB);
                     }
-                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                    for (var _b = 0, _c = colliderB.entity.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
                         var behaviour = _c[_b];
                         behaviour.onCollisionEnter && behaviour.onCollisionEnter(colliderA);
                     }
@@ -42619,26 +42353,46 @@ var egret3d;
                     }
                     var colliderA = contact.getShape1().userData;
                     var colliderB = contact.getShape2().userData;
-                    for (var _i = 0, _a = colliderA.gameObject.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
+                    for (var _i = 0, _a = colliderA.entity.getComponents(paper.Behaviour, true); _i < _a.length; _i++) {
                         var behaviour = _a[_i];
                         behaviour.onCollisionExit && behaviour.onCollisionExit(colliderB);
                     }
-                    for (var _b = 0, _c = colliderB.gameObject.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
+                    for (var _b = 0, _c = colliderB.entity.getComponents(paper.Behaviour, true); _b < _c.length; _b++) {
                         var behaviour = _c[_b];
                         behaviour.onCollisionExit && behaviour.onCollisionExit(colliderA);
                     }
                 };
             };
-            PhysicsSystem.prototype.onAddGameObject = function (gameObject, group) {
-                var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                for (var _i = 0, _a = gameObject.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
+            PhysicsSystem.prototype.onComponentRemoved = function (component, group) {
+                if (component instanceof oimo.BaseCollider) {
+                    var rigidbody = component.entity.getComponent(oimo.Rigidbody);
+                    if (component.oimoShape._rigidBody) {
+                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
+                    }
+                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
+                }
+                else if (component instanceof oimo.BaseJoint) {
+                    this._oimoWorld.removeJoint(component.oimoJoint);
+                }
+            };
+            PhysicsSystem.prototype.onEntityRemoved = function (entity, group) {
+                var rigidbody = entity.getRemovedComponent(oimo.Rigidbody) || entity.getComponent(oimo.Rigidbody);
+                for (var _i = 0, _a = entity.getComponents(oimo.BaseJoint, true); _i < _a.length; _i++) {
+                    var joint = _a[_i];
+                    this._oimoWorld.removeJoint(joint.oimoJoint);
+                }
+                this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+            };
+            PhysicsSystem.prototype.onEntityAdded = function (entity, group) {
+                var rigidbody = entity.getComponent(oimo.Rigidbody);
+                for (var _i = 0, _a = entity.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
                     var shape = _a[_i];
                     if (!shape.oimoShape._rigidBody) {
                         rigidbody.oimoRigidbody.addShape(shape.oimoShape);
                         // rigidbody._updateMass(rigidbody.oimoRigidbody);
                     }
                 }
-                for (var _b = 0, _c = gameObject.getComponents(oimo.Joint, true); _b < _c.length; _b++) {
+                for (var _b = 0, _c = entity.getComponents(oimo.BaseJoint, true); _b < _c.length; _b++) {
                     var joint = _c[_b];
                     if (!joint.oimoJoint._world) {
                         this._oimoWorld.addJoint(joint.oimoJoint);
@@ -42646,13 +42400,10 @@ var egret3d;
                 }
                 this._oimoWorld.addRigidBody(rigidbody.oimoRigidbody);
             };
-            PhysicsSystem.prototype.onAddComponent = function (component, group) {
-                if (group !== this.groups[0]) {
-                    return;
-                }
+            PhysicsSystem.prototype.onComponentAdded = function (component, group) {
                 if (component instanceof oimo.BaseCollider) {
                     if (!component.oimoShape._rigidBody) {
-                        var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
+                        var rigidbody = component.entity.getComponent(oimo.Rigidbody);
                         rigidbody.oimoRigidbody.addShape(component.oimoShape);
                         // rigidbody._updateMass(rigidbody.oimoRigidbody);
                     }
@@ -42660,101 +42411,86 @@ var egret3d;
                         component.oimoShape.setContactCallback(this._contactCallback);
                     }
                 }
-                else if (component instanceof oimo.Joint && !component.oimoJoint._world) {
+                else if (component instanceof oimo.BaseJoint && !component.oimoJoint._world) {
                     this._oimoWorld.addJoint(component.oimoJoint);
                 }
             };
-            PhysicsSystem.prototype.onRemoveComponent = function (component, group) {
-                if (group !== this.groups[0]) {
-                    return;
-                }
-                if (component instanceof oimo.BaseCollider) {
-                    var rigidbody = component.gameObject.getComponent(oimo.Rigidbody);
-                    if (component.oimoShape._rigidBody) {
-                        rigidbody.oimoRigidbody.removeShape(component.oimoShape);
-                    }
-                    // rigidbody._updateMass(rigidbody.oimoRigidbody);
-                }
-                else if (component instanceof oimo.Joint) {
-                    this._oimoWorld.removeJoint(component.oimoJoint);
-                }
-            };
-            PhysicsSystem.prototype.onRemoveGameObject = function (gameObject, group) {
-                var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                for (var _i = 0, _a = gameObject.getComponents(oimo.Joint, true); _i < _a.length; _i++) {
-                    var joint = _a[_i];
-                    this._oimoWorld.removeJoint(joint.oimoJoint);
-                }
-                this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
-            };
-            PhysicsSystem.prototype.onUpdate = function () {
-                var currentTimes = 0;
-                var fixedTime = this.clock.fixedTime;
-                var gameObjects = this.groups[0].gameObjects;
-                var oimoTransform = PhysicsSystem._helpTransform;
-                while (fixedTime >= this.clock.fixedDeltaTime && currentTimes++ < this.clock.maxFixedSubSteps) {
-                    for (var _i = 0, gameObjects_1 = gameObjects; _i < gameObjects_1.length; _i++) {
-                        var gameObject = gameObjects_1[_i];
-                        var transform = gameObject.transform;
-                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                        var oimoRigidbody = rigidbody.oimoRigidbody;
-                        switch (rigidbody.type) {
-                            case 2 /* KINEMATIC */:
-                            case 1 /* STATIC */:
-                                if (oimoRigidbody.isSleeping()) {
-                                }
-                                else {
-                                    var position = transform.getPosition();
-                                    var quaternion = transform.getRotation();
-                                    oimoTransform.setPosition(position);
-                                    oimoTransform.setOrientation(quaternion);
-                                    oimoRigidbody.setTransform(oimoTransform);
-                                }
-                                break;
-                        }
-                    }
-                    this._oimoWorld.step(this.clock.fixedDeltaTime);
-                    for (var _a = 0, gameObjects_2 = gameObjects; _a < gameObjects_2.length; _a++) {
-                        var gameObject = gameObjects_2[_a];
-                        var transform = gameObject.transform;
-                        var rigidbody = gameObject.getComponent(oimo.Rigidbody);
-                        var oimoRigidbody = rigidbody.oimoRigidbody;
-                        switch (rigidbody.type) {
-                            case 0 /* DYNAMIC */:
-                                if (oimoRigidbody.isSleeping()) {
-                                }
-                                else {
-                                    oimoRigidbody.getTransformTo(oimoTransform);
-                                    oimoTransform.getPositionTo(_helpVector3);
-                                    oimoTransform.getOrientationTo(_helpVector4);
-                                    transform.setPosition(_helpVector3);
-                                    transform.setRotation(_helpVector4);
-                                }
-                                break;
-                        }
-                    }
-                    //
-                    var stay = this._contactColliders.stay;
-                    if (stay.length > 0) {
-                        for (var _b = 0, stay_1 = stay; _b < stay_1.length; _b++) {
-                            var contact = stay_1[_b];
-                            var colliderA = contact.getShape1().userData;
-                            var colliderB = contact.getShape2().userData;
-                            for (var _c = 0, _d = colliderA.gameObject.getComponents(paper.Behaviour, true); _c < _d.length; _c++) {
-                                var behaviour = _d[_c];
-                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
+            PhysicsSystem.prototype.onTick = function (deltaTime) {
+                var entities = this.groups[0].entities;
+                var helpVector3 = egret3d.Vector3.create().release();
+                var helpVector4 = egret3d.Vector4.create().release();
+                var oimoTransform = PhysicsSystem_1._helpTransform;
+                for (var _i = 0, entities_1 = entities; _i < entities_1.length; _i++) {
+                    var entity = entities_1[_i];
+                    var rigidbody = entity.getComponent(oimo.Rigidbody);
+                    switch (rigidbody.type) {
+                        case 2 /* KINEMATIC */:
+                            if (rigidbody.isSleeping) {
                             }
-                            for (var _e = 0, _f = colliderB.gameObject.getComponents(paper.Behaviour, true); _e < _f.length; _e++) {
-                                var behaviour = _f[_e];
-                                behaviour.onCollisionStay && behaviour.onCollisionStay(colliderA);
+                            else {
+                                rigidbody.syncTransform();
                             }
+                            break;
+                    }
+                }
+                this._oimoWorld.step(deltaTime);
+                for (var _a = 0, entities_2 = entities; _a < entities_2.length; _a++) {
+                    var gameObject = entities_2[_a];
+                    var transform = gameObject.transform;
+                    var rigidbody = gameObject.getComponent(oimo.Rigidbody);
+                    var oimoRigidbody = rigidbody.oimoRigidbody;
+                    switch (rigidbody.type) {
+                        case 0 /* DYNAMIC */:
+                            if (oimoRigidbody.isSleeping()) {
+                            }
+                            else {
+                                oimoRigidbody.getTransformTo(oimoTransform);
+                                oimoTransform.getPositionTo(helpVector3);
+                                oimoTransform.getOrientationTo(helpVector4);
+                                transform.setPosition(helpVector3);
+                                transform.setRotation(helpVector4);
+                            }
+                            break;
+                    }
+                }
+                //
+                var stay = this._contactColliders.stay;
+                if (stay.length > 0) {
+                    for (var _b = 0, stay_1 = stay; _b < stay_1.length; _b++) {
+                        var contact = stay_1[_b];
+                        var colliderA = contact.getShape1().userData;
+                        var colliderB = contact.getShape2().userData;
+                        // TODO 优化行为组件查询
+                        for (var _c = 0, _d = colliderA.entity.getComponents(paper.Behaviour, true); _c < _d.length; _c++) {
+                            var behaviour = _d[_c];
+                            behaviour.onCollisionStay && behaviour.onCollisionStay(colliderB);
+                        }
+                        for (var _e = 0, _f = colliderB.entity.getComponents(paper.Behaviour, true); _e < _f.length; _e++) {
+                            var behaviour = _f[_e];
+                            behaviour.onCollisionStay && behaviour.onCollisionStay(colliderA);
                         }
                     }
-                    fixedTime -= this.clock.fixedDeltaTime;
                 }
             };
-            PhysicsSystem.prototype.onDestroy = function () {
-                // TODO
+            PhysicsSystem.prototype.raycast = function (ray, cullingMask, maxDistance, raycastInfo) {
+                if (cullingMask === void 0) { cullingMask = 1 /* Default */; }
+                if (maxDistance === void 0) { maxDistance = 0.0; }
+                if (raycastInfo === void 0) { raycastInfo = null; }
+                var rayCastClosest = this._rayCastClosest;
+                rayCastClosest.clear(); // TODO culling Mask.
+                var end = egret3d.Vector3.create().multiplyScalar(maxDistance > 0.0 ? maxDistance : 100000.0, ray.direction).add(ray.origin).release(); // TODO 精度问题。
+                this._oimoWorld.rayCast(ray.origin, end, rayCastClosest);
+                if (rayCastClosest.hit && raycastInfo) {
+                    raycastInfo.distance = egret3d.Vector3.getDistance(ray.origin, end) * rayCastClosest.fraction;
+                    raycastInfo.position.copy(rayCastClosest.position);
+                    if (raycastInfo.normal) {
+                        raycastInfo.normal.copy(rayCastClosest.normal);
+                    }
+                    raycastInfo.collider = rayCastClosest.shape.userData;
+                    raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData; // TODO
+                    return true;
+                }
+                return false;
             };
             Object.defineProperty(PhysicsSystem.prototype, "gravity", {
                 /**
@@ -42771,23 +42507,29 @@ var egret3d;
                 configurable: true
             });
             Object.defineProperty(PhysicsSystem.prototype, "oimoWorld", {
+                /**
+                 *
+                 */
                 get: function () {
                     return this._oimoWorld;
                 },
                 enumerable: true,
                 configurable: true
             });
-            PhysicsSystem._instance = null;
             /**
              * @internal
              */
             PhysicsSystem._helpTransform = new OIMO.Transform();
+            PhysicsSystem = PhysicsSystem_1 = __decorate([
+                paper.executeMode(1 /* Player */ | 2 /* DebugPlayer */)
+            ], PhysicsSystem);
             return PhysicsSystem;
+            var PhysicsSystem_1;
         }(paper.BaseSystem));
         oimo.PhysicsSystem = PhysicsSystem;
         __reflect(PhysicsSystem.prototype, "egret3d.oimo.PhysicsSystem");
         //
-        paper.Application.systemManager.preRegister(PhysicsSystem, 3000 /* FixedUpdate */);
+        paper.Application.systemManager.preRegister(PhysicsSystem, paper.Application.gameObjectContext, 3000 /* FixedUpdate */ - 1);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -42795,79 +42537,35 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
-         *
+         * 立方体碰撞组件。
          */
-        var CylinderCollider = (function (_super) {
-            __extends(CylinderCollider, _super);
-            function CylinderCollider() {
+        var BoxCollider = (function (_super) {
+            __extends(BoxCollider, _super);
+            function BoxCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = egret3d.ColliderType.Cylinder;
-                _this._radius = 1.0;
-                _this._height = 1.0;
+                _this.colliderType = egret3d.ColliderType.Box;
+                _this.box = egret3d.Box.ONE.clone();
                 return _this;
             }
-            CylinderCollider.prototype._createShape = function () {
+            BoxCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.CylinderGeometry(this._radius, this._height * 0.5);
+                config.position = this.box.center;
+                config.geometry = new OIMO.BoxGeometry(egret3d.Vector3.create().copy(this.box.size).multiplyScalar(0.5).release());
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
             };
-            Object.defineProperty(CylinderCollider.prototype, "radius", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._radius;
-                },
-                set: function (value) {
-                    if (this._radius === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the radius after the collider has been created.");
-                    }
-                    else {
-                        this._radius = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(CylinderCollider.prototype, "height", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._height;
-                },
-                set: function (value) {
-                    if (this._height === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the height after the collider has been created.");
-                    }
-                    else {
-                        this._height = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], CylinderCollider.prototype, "_radius", void 0);
-            __decorate([
-                paper.serializedField
-            ], CylinderCollider.prototype, "_height", void 0);
-            CylinderCollider = __decorate([
+            ], BoxCollider.prototype, "box", void 0);
+            BoxCollider = __decorate([
                 paper.requireComponent(oimo.Rigidbody)
-            ], CylinderCollider);
-            return CylinderCollider;
+            ], BoxCollider);
+            return BoxCollider;
         }(oimo.BaseCollider));
-        oimo.CylinderCollider = CylinderCollider;
-        __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider");
+        oimo.BoxCollider = BoxCollider;
+        __reflect(BoxCollider.prototype, "egret3d.oimo.BoxCollider", ["egret3d.IBoxCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -42875,78 +42573,257 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
-         *
+         * 胶囊体碰撞组件。
+         * - 与 Y 轴对齐。
+         */
+        var CapsuleCollider = (function (_super) {
+            __extends(CapsuleCollider, _super);
+            function CapsuleCollider() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.colliderType = egret3d.ColliderType.Capsule;
+                _this.capsule = egret3d.Capsule.create(egret3d.Vector3.ZERO, 0.25, 0.5);
+                return _this;
+            }
+            CapsuleCollider.prototype._createShape = function () {
+                var config = this._updateConfig();
+                config.geometry = new OIMO.CapsuleGeometry(this.capsule.radius, this.capsule.height * 0.5);
+                var shape = new OIMO.Shape(config);
+                shape.userData = this;
+                return shape;
+            };
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], CapsuleCollider.prototype, "capsule", void 0);
+            CapsuleCollider = __decorate([
+                paper.requireComponent(oimo.Rigidbody)
+            ], CapsuleCollider);
+            return CapsuleCollider;
+        }(oimo.BaseCollider));
+        oimo.CapsuleCollider = CapsuleCollider;
+        __reflect(CapsuleCollider.prototype, "egret3d.oimo.CapsuleCollider", ["egret3d.ICapsuleCollider"]);
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        /**
+         * 圆锥体碰撞组件。
+         * - 与 Y 轴对齐。
+         */
+        var ConeCollider = (function (_super) {
+            __extends(ConeCollider, _super);
+            function ConeCollider() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.colliderType = egret3d.ColliderType.Cone;
+                _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.0, 0.5, 1.0);
+                return _this;
+            }
+            ConeCollider.prototype._createShape = function () {
+                var config = this._updateConfig();
+                config.geometry = new OIMO.ConeGeometry(this.cylinder.bottomRadius, this.cylinder.height * 0.5);
+                var shape = new OIMO.Shape(config);
+                shape.userData = this;
+                return shape;
+            };
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], ConeCollider.prototype, "cylinder", void 0);
+            ConeCollider = __decorate([
+                paper.requireComponent(oimo.Rigidbody)
+            ], ConeCollider);
+            return ConeCollider;
+        }(oimo.BaseCollider));
+        oimo.ConeCollider = ConeCollider;
+        __reflect(ConeCollider.prototype, "egret3d.oimo.ConeCollider", ["egret3d.ICylinderCollider"]);
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        /**
+         * 刚体类型。
+         */
+        var RigidbodyType;
+        (function (RigidbodyType) {
+            /**
+             * 动态。
+             */
+            RigidbodyType[RigidbodyType["DYNAMIC"] = 0] = "DYNAMIC";
+            /**
+             * 静态。
+             */
+            RigidbodyType[RigidbodyType["STATIC"] = 1] = "STATIC";
+            /**
+             * 动力学。
+             */
+            RigidbodyType[RigidbodyType["KINEMATIC"] = 2] = "KINEMATIC";
+        })(RigidbodyType = oimo.RigidbodyType || (oimo.RigidbodyType = {}));
+        /**
+         * 关节类型。
+         */
+        var JointType;
+        (function (JointType) {
+            JointType[JointType["Spherical"] = OIMO.JointType.SPHERICAL] = "Spherical";
+            JointType[JointType["Prismatic"] = OIMO.JointType.PRISMATIC] = "Prismatic";
+            JointType[JointType["Hinge"] = OIMO.JointType.REVOLUTE] = "Hinge";
+            JointType[JointType["Cylindrical"] = OIMO.JointType.CYLINDRICAL] = "Cylindrical";
+            JointType[JointType["ConeTwist"] = OIMO.JointType.RAGDOLL] = "ConeTwist";
+            JointType[JointType["Universal"] = OIMO.JointType.UNIVERSAL] = "Universal";
+        })(JointType = oimo.JointType || (oimo.JointType = {}));
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        /**
+         * 球体碰撞组件。
          */
         var SphereCollider = (function (_super) {
             __extends(SphereCollider, _super);
             function SphereCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Sphere;
-                _this._radius = 1.0;
+                _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
                 return _this;
             }
             SphereCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.SphereGeometry(this._radius);
+                config.position = this.sphere.center;
+                config.geometry = new OIMO.SphereGeometry(this.sphere.radius);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
             };
-            Object.defineProperty(SphereCollider.prototype, "radius", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._radius;
-                },
-                set: function (value) {
-                    if (this._radius === value) {
-                        return;
-                    }
-                    if (this._oimoShape) {
-                        console.warn("Cannot change the radius after the collider has been created.");
-                    }
-                    else {
-                        this._radius = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], SphereCollider.prototype, "_radius", void 0);
+            ], SphereCollider.prototype, "sphere", void 0);
             SphereCollider = __decorate([
                 paper.requireComponent(oimo.Rigidbody)
             ], SphereCollider);
             return SphereCollider;
         }(oimo.BaseCollider));
         oimo.SphereCollider = SphereCollider;
-        __reflect(SphereCollider.prototype, "egret3d.oimo.SphereCollider");
+        __reflect(SphereCollider.prototype, "egret3d.oimo.SphereCollider", ["egret3d.ISphereCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
+// namespace egret3d.oimo {
+//     let _material: Material = null!;
+//     /**
+//      * 
+//      */
+//     export class RayTester extends paper.Behaviour {
+//         @paper.serializedField
+//         public distance: number = 10.0;
+//         @paper.serializedField
+//         public collisionMask: paper.Layer = paper.Layer.Everything;
+//         private _hitted: boolean = false;
+//         private _mesh: Mesh = null!;
+//         public onStart() {
+//             const meshFilter = this.gameObject.getOrAddComponent(MeshFilter);
+//             const meshRender = this.gameObject.getOrAddComponent(MeshRenderer);
+//             this._mesh = Mesh.create(4, 0, [
+//                 gltf.AttributeSemantics.POSITION,
+//                 gltf.AttributeSemantics.COLOR_0,
+//             ]);
+//             const vertices = this._mesh.getVertices()!;
+//             const colors = this._mesh.getColors()!;
+//             vertices[0] = 0.0;
+//             vertices[1] = 0.0;
+//             vertices[2] = 0.0;
+//             vertices[3] = 0.0;
+//             vertices[4] = 0.0;
+//             vertices[5] = this.distance;
+//             vertices[6] = 0.0;
+//             vertices[7] = 0.0;
+//             vertices[8] = this.distance;
+//             vertices[9] = 0.0;
+//             vertices[10] = 0.0;
+//             vertices[11] = this.distance;
+//             for (let i = 0, l = colors.length; i < l; i += 4) {
+//                 colors[i + 0] = 0.0;
+//                 colors[i + 1] = 1.0;
+//                 colors[i + 2] = 0.0;
+//                 colors[i + 3] = 0.7;
+//             }
+//             this._mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+//             if (!_material) {
+//                 _material = Material.create(DefaultShaders.LINEDASHED);
+//             }
+//             meshRender.materials = [_material];
+//             meshFilter.mesh = this._mesh;
+//         }
+//         public onUpdate() {
+//             const physicsSystem = paper.Application.systemManager.getSystem(PhysicsSystem)!;
+//             const transform = this.gameObject.transform;
+//             const matrix = transform.getWorldMatrix();
+//             const from = transform.getPosition();
+//             const to = matrix.transformVector3(Vector3.create(this.distance, 0.0, 0.0).release());
+//             const raycastInfo = physicsSystem.raycast(from, to, this.collisionMask);
+//             if (raycastInfo) {
+//                 this._hitted = true;
+//                 const inverseMatrix = matrix.clone().inverse();
+//                 const v = raycastInfo.normal!.applyMatrix(inverseMatrix).multiplyScalar(1.0);
+//                 const vertices = this._mesh.getVertices()!;
+//                 const colors = this._mesh.getColors()!;
+//                 inverseMatrix.release();
+//                 vertices[3] = raycastInfo.distance;
+//                 vertices[4] = 0.0;
+//                 vertices[5] = 0.0;
+//                 vertices[6] = raycastInfo.distance;
+//                 vertices[7] = 0.0;
+//                 vertices[8] = 0.0;
+//                 vertices[9] = v.x + raycastInfo.distance;
+//                 vertices[10] = v.y;
+//                 vertices[11] = v.z;
+//                 for (let i = 2 * 4, l = colors.length; i < l; i += 4) {
+//                     colors[i + 0] = 1.0;
+//                     colors[i + 1] = 0.0;
+//                     colors[i + 2] = 0.0;
+//                     colors[i + 3] = 0.7;
+//                 }
+//                 this._mesh.uploadVertexBuffer();
+//                 raycastInfo.release();
+//             }
+//             else if (this._hitted) {
+//                 this._hitted = false;
+//                 const vertices = this._mesh.getVertices()!;
+//                 const colors = this._mesh.getColors()!;
+//                 vertices[3] = 0.0;
+//                 vertices[4] = 0.0;
+//                 vertices[5] = this.distance;
+//                 vertices[6] = 0.0;
+//                 vertices[7] = 0.0;
+//                 vertices[8] = this.distance;
+//                 vertices[9] = 0.0;
+//                 vertices[10] = 0.0;
+//                 vertices[11] = this.distance;
+//                 for (let i = 2 * 4, l = colors.length; i < l; i += 4) {
+//                     colors[i + 0] = 0.0;
+//                     colors[i + 1] = 1.0;
+//                     colors[i + 2] = 0.0;
+//                     colors[i + 3] = 0.7;
+//                 }
+//                 this._mesh.uploadVertexBuffer();
+//             }
+//         }
+//     }
+// } 
 var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
         var ValueType;
         (function (ValueType) {
-            // Swing SpringDamper
-            ValueType[ValueType["SWFrequency"] = 0] = "SWFrequency";
-            ValueType[ValueType["SWDampingRatio"] = 1] = "SWDampingRatio";
-            ValueType[ValueType["SWUseSymplecticEuler"] = 2] = "SWUseSymplecticEuler";
-            // Twist SpringDamper
-            ValueType[ValueType["TWFrequency"] = 3] = "TWFrequency";
-            ValueType[ValueType["TWDampingRatio"] = 4] = "TWDampingRatio";
-            ValueType[ValueType["TWUseSymplecticEuler"] = 5] = "TWUseSymplecticEuler";
-            // RotationalLimitMotor
-            ValueType[ValueType["LowerLimit"] = 6] = "LowerLimit";
-            ValueType[ValueType["UpperLimit"] = 7] = "UpperLimit";
-            ValueType[ValueType["MotorSpeed"] = 8] = "MotorSpeed";
-            ValueType[ValueType["MotorTorque"] = 9] = "MotorTorque";
-            //
-            ValueType[ValueType["MaxSwingAngleX"] = 10] = "MaxSwingAngleX";
-            ValueType[ValueType["MaxSwingAngleZ"] = 11] = "MaxSwingAngleZ";
+            ValueType[ValueType["_0"] = 0] = "_0";
+            ValueType[ValueType["_1"] = 1] = "_1";
+            ValueType[ValueType["MaxSwingAngleX"] = 2] = "MaxSwingAngleX";
+            ValueType[ValueType["MaxSwingAngleZ"] = 3] = "MaxSwingAngleZ";
         })(ValueType || (ValueType = {}));
         /**
          *
@@ -42956,12 +42833,13 @@ var egret3d;
             function ConeTwistJoint() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.jointType = oimo.JointType.ConeTwist;
+                _this.swingSpringDamper = oimo.SpringDamper.create();
+                _this.twistSpringDamper = oimo.SpringDamper.create();
+                _this.twistLimitMotor = oimo.RotationalLimitMotor.create();
                 _this._twistAxis = egret3d.Vector3.UP.clone();
                 _this._swingAxis = egret3d.Vector3.RIGHT.clone();
-                _this._valuesB = new Float32Array([
-                    0.0, 0.0, 0,
-                    0.0, 0.0, 0,
-                    -180.0, 180.0, 0.0, 0.0,
+                _this._values = new Float32Array([
+                    0, 0,
                     180.0, 180.0,
                 ]);
                 return _this;
@@ -42975,224 +42853,51 @@ var egret3d;
                 this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = ConeTwistJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
-                if (this.useGlobalAnchor) {
+                if (this.useWorldAnchor) {
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor, this._twistAxis, this._swingAxis);
                 }
                 else {
-                    var matrix = this.gameObject.transform.getWorldMatrix();
-                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor);
-                    var twistAxis = egret3d.Vector3.create().applyMatrix(matrix, this._twistAxis);
-                    var swingAxis = egret3d.Vector3.create().applyMatrix(matrix, this._swingAxis);
+                    var matrix = this.gameObject.transform.localToWorldMatrix;
+                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
+                    var twistAxis = egret3d.Vector3.create().applyMatrix(matrix, this._twistAxis).release();
+                    var swingAxis = egret3d.Vector3.create().applyMatrix(matrix, this._swingAxis).release();
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor, twistAxis, swingAxis);
-                    anchor.release();
-                    twistAxis.release();
-                    swingAxis.release();
                 }
                 config.twistSpringDamper = ConeTwistJoint_1._twistSpringDamper;
                 config.swingSpringDamper = ConeTwistJoint_1._swingSpringDamper;
                 config.twistLimitMotor = ConeTwistJoint_1._twistLimitMotor;
-                config.twistSpringDamper.frequency = this.twistFrequency;
-                config.twistSpringDamper.dampingRatio = this.twistDampingRatio;
-                config.twistSpringDamper.useSymplecticEuler = this.twistUseSymplecticEuler;
-                config.swingSpringDamper.frequency = this.swingFrequency;
-                config.swingSpringDamper.dampingRatio = this.swingDampingRatio;
-                config.swingSpringDamper.useSymplecticEuler = this.swingUseSymplecticEuler;
-                config.twistLimitMotor.lowerLimit = this.lowerLimit * egret3d.DEG_RAD;
-                config.twistLimitMotor.upperLimit = this.upperLimit * egret3d.DEG_RAD;
-                config.twistLimitMotor.motorSpeed = this.motorSpeed * egret3d.DEG_RAD;
-                config.twistLimitMotor.motorTorque = this.motorTorque;
-                config.maxSwingAngle1 = this.maxSwingAngleZ * egret3d.DEG_RAD;
-                config.maxSwingAngle2 = this.maxSwingAngleX * egret3d.DEG_RAD;
+                config.maxSwingAngle1 = this.maxSwingAngleZ;
+                config.maxSwingAngle2 = this.maxSwingAngleX;
+                config.twistSpringDamper.frequency = this.twistSpringDamper.frequency;
+                config.twistSpringDamper.dampingRatio = this.twistSpringDamper.dampingRatio;
+                config.twistSpringDamper.useSymplecticEuler = this.twistSpringDamper.useSymplecticEuler;
+                config.twistSpringDamper.frequency = this.swingSpringDamper.frequency;
+                config.twistSpringDamper.dampingRatio = this.swingSpringDamper.dampingRatio;
+                config.twistSpringDamper.useSymplecticEuler = this.swingSpringDamper.useSymplecticEuler;
+                config.twistLimitMotor.lowerLimit = this.twistLimitMotor.lowerLimit;
+                config.twistLimitMotor.upperLimit = this.twistLimitMotor.upperLimit;
+                config.twistLimitMotor.motorSpeed = this.twistLimitMotor.motorSpeed;
+                config.twistLimitMotor.motorTorque = this.twistLimitMotor.motorTorque;
                 var joint = new OIMO.RagdollJoint(config);
+                this.twistSpringDamper._oimoSpringDamper = joint.getTwistSpringDamper();
+                this.swingSpringDamper._oimoSpringDamper = joint.getSwingSpringDamper();
+                this.twistLimitMotor._oimoRotationalLimitMotor = joint.getTwistLimitMotor();
                 joint.userData = this;
                 return joint;
             };
-            Object.defineProperty(ConeTwistJoint.prototype, "twistFrequency", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[3 /* TWFrequency */];
-                },
-                set: function (value) {
-                    this._valuesB[3 /* TWFrequency */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getTwistSpringDamper();
-                        springDamper.frequency = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeTwistJoint.prototype, "twistDampingRatio", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[4 /* TWDampingRatio */];
-                },
-                set: function (value) {
-                    this._valuesB[4 /* TWDampingRatio */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getTwistSpringDamper();
-                        springDamper.dampingRatio = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeTwistJoint.prototype, "twistUseSymplecticEuler", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[5 /* TWUseSymplecticEuler */] > 0;
-                },
-                set: function (value) {
-                    this._valuesB[5 /* TWUseSymplecticEuler */] = value ? 1 : 0;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getTwistSpringDamper();
-                        springDamper.useSymplecticEuler = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeTwistJoint.prototype, "swingFrequency", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[0 /* SWFrequency */];
-                },
-                set: function (value) {
-                    this._valuesB[0 /* SWFrequency */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSwingSpringDamper();
-                        springDamper.frequency = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeTwistJoint.prototype, "swingDampingRatio", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[1 /* SWDampingRatio */];
-                },
-                set: function (value) {
-                    this._valuesB[1 /* SWDampingRatio */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSwingSpringDamper();
-                        springDamper.dampingRatio = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeTwistJoint.prototype, "swingUseSymplecticEuler", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[2 /* SWUseSymplecticEuler */] > 0;
-                },
-                set: function (value) {
-                    this._valuesB[2 /* SWUseSymplecticEuler */] = value ? 1 : 0;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSwingSpringDamper();
-                        springDamper.useSymplecticEuler = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeTwistJoint.prototype, "lowerLimit", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[6 /* LowerLimit */];
-                },
-                set: function (value) {
-                    this._valuesB[6 /* LowerLimit */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getTwistLimitMotor();
-                        limitMotor.lowerLimit = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeTwistJoint.prototype, "upperLimit", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[7 /* UpperLimit */];
-                },
-                set: function (value) {
-                    this._valuesB[7 /* UpperLimit */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getTwistLimitMotor();
-                        limitMotor.upperLimit = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeTwistJoint.prototype, "motorSpeed", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[8 /* MotorSpeed */];
-                },
-                set: function (value) {
-                    this._valuesB[8 /* MotorSpeed */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getTwistLimitMotor();
-                        limitMotor.motorSpeed = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(ConeTwistJoint.prototype, "motorTorque", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[9 /* MotorTorque */];
-                },
-                set: function (value) {
-                    this._valuesB[9 /* MotorTorque */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getTwistLimitMotor();
-                        limitMotor.motorTorque = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             Object.defineProperty(ConeTwistJoint.prototype, "maxSwingAngleX", {
                 /**
                  *
                  */
                 get: function () {
-                    return this._valuesB[10 /* MaxSwingAngleX */];
+                    return this._values[2 /* MaxSwingAngleX */];
                 },
                 set: function (value) {
-                    if (value < 1.0) {
-                        value = 1.0;
+                    if (!this._oimoJoint) {
+                        this._values[2 /* MaxSwingAngleX */] = value;
                     }
-                    if (this._oimoJoint) {
+                    else if (true) {
                         console.warn("Cannot change the maxSwingAngleX after the joint has been created.");
-                    }
-                    else {
-                        this._valuesB[10 /* MaxSwingAngleX */] = value;
                     }
                 },
                 enumerable: true,
@@ -43203,17 +42908,14 @@ var egret3d;
                  *
                  */
                 get: function () {
-                    return this._valuesB[11 /* MaxSwingAngleZ */];
+                    return this._values[3 /* MaxSwingAngleZ */];
                 },
                 set: function (value) {
-                    if (value < 1.0) {
-                        value = 1.0;
+                    if (!this._oimoJoint) {
+                        this._values[3 /* MaxSwingAngleZ */] = value;
                     }
-                    if (this._oimoJoint) {
+                    else if (true) {
                         console.warn("Cannot change the maxSwingAngleZ after the joint has been created.");
-                    }
-                    else {
-                        this._valuesB[11 /* MaxSwingAngleZ */] = value;
                     }
                 },
                 enumerable: true,
@@ -43227,11 +42929,11 @@ var egret3d;
                     return this._twistAxis;
                 },
                 set: function (value) {
-                    if (this._oimoJoint) {
-                        console.warn("Cannot change the axis x after the joint has been created.");
-                    }
-                    else {
+                    if (!this._oimoJoint) {
                         this._twistAxis.normalize(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the axis x after the joint has been created.");
                     }
                 },
                 enumerable: true,
@@ -43245,11 +42947,11 @@ var egret3d;
                     return this._swingAxis;
                 },
                 set: function (value) {
-                    if (this._oimoJoint) {
-                        console.warn("Cannot change the axis x after the joint has been created.");
-                    }
-                    else {
+                    if (!this._oimoJoint) {
                         this._swingAxis.normalize(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the axis x after the joint has been created.");
                     }
                 },
                 enumerable: true,
@@ -43260,21 +42962,42 @@ var egret3d;
             ConeTwistJoint._twistSpringDamper = new OIMO.SpringDamper();
             ConeTwistJoint._twistLimitMotor = new OIMO.RotationalLimitMotor();
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], ConeTwistJoint.prototype, "swingSpringDamper", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], ConeTwistJoint.prototype, "twistSpringDamper", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], ConeTwistJoint.prototype, "twistLimitMotor", void 0);
+            __decorate([
                 paper.serializedField
             ], ConeTwistJoint.prototype, "_twistAxis", void 0);
             __decorate([
                 paper.serializedField
             ], ConeTwistJoint.prototype, "_swingAxis", void 0);
             __decorate([
-                paper.serializedField
-            ], ConeTwistJoint.prototype, "_valuesB", void 0);
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], ConeTwistJoint.prototype, "maxSwingAngleX", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], ConeTwistJoint.prototype, "maxSwingAngleZ", null);
+            __decorate([
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], ConeTwistJoint.prototype, "twistAxis", null);
+            __decorate([
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], ConeTwistJoint.prototype, "swingAxis", null);
             ConeTwistJoint = ConeTwistJoint_1 = __decorate([
                 paper.requireComponent(oimo.Rigidbody),
                 paper.allowMultiple
             ], ConeTwistJoint);
             return ConeTwistJoint;
             var ConeTwistJoint_1;
-        }(oimo.Joint));
+        }(oimo.BaseJoint));
         oimo.ConeTwistJoint = ConeTwistJoint;
         __reflect(ConeTwistJoint.prototype, "egret3d.oimo.ConeTwistJoint");
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
@@ -43283,18 +43006,6 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
-        var ValueType;
-        (function (ValueType) {
-            // SpringDamper
-            ValueType[ValueType["Frequency"] = 0] = "Frequency";
-            ValueType[ValueType["DampingRatio"] = 1] = "DampingRatio";
-            ValueType[ValueType["UseSymplecticEuler"] = 2] = "UseSymplecticEuler";
-            // LimitMotor
-            ValueType[ValueType["LowerLimit"] = 3] = "LowerLimit";
-            ValueType[ValueType["UpperLimit"] = 4] = "UpperLimit";
-            ValueType[ValueType["MotorSpeed"] = 5] = "MotorSpeed";
-            ValueType[ValueType["MotorTorque"] = 6] = "MotorTorque";
-        })(ValueType || (ValueType = {}));
         /**
          *
          */
@@ -43303,10 +43014,11 @@ var egret3d;
             function HingeJoint() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.jointType = oimo.JointType.Hinge;
+                _this.springDamper = oimo.SpringDamper.create();
+                _this.limitMotor = oimo.RotationalLimitMotor.create();
                 _this._axis = egret3d.Vector3.UP.clone();
-                _this._valuesB = new Float32Array([
-                    0.0, 0.0, 0,
-                    -180.0, 180.0, 0.0, 0.0,
+                _this._values = new Float32Array([
+                    0, 0,
                 ]);
                 return _this;
             }
@@ -43319,149 +43031,30 @@ var egret3d;
                 this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = HingeJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
-                if (this.useGlobalAnchor) {
+                if (this.useWorldAnchor) {
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor, this._axis);
                 }
                 else {
-                    var matrix = this.gameObject.transform.getWorldMatrix();
-                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor);
-                    var axis = egret3d.Vector3.create().applyMatrix(matrix, this._axis);
+                    var matrix = this.gameObject.transform.localToWorldMatrix;
+                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
+                    var axis = egret3d.Vector3.create().applyMatrix(matrix, this._axis).release();
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor, axis);
-                    anchor.release();
-                    axis.release();
                 }
                 config.springDamper = HingeJoint_1._springDamper;
-                config.limitMotor = HingeJoint_1._limitMotor;
-                config.springDamper.frequency = this.frequency;
-                config.springDamper.dampingRatio = this.dampingRatio;
-                config.springDamper.useSymplecticEuler = this.useSymplecticEuler;
-                config.limitMotor.lowerLimit = this.lowerLimit * egret3d.DEG_RAD;
-                config.limitMotor.upperLimit = this.upperLimit * egret3d.DEG_RAD;
-                config.limitMotor.motorSpeed = this.motorSpeed * egret3d.DEG_RAD;
-                config.limitMotor.motorTorque = this.motorTorque;
+                config.limitMotor = HingeJoint_1._rotationalLimitMotor;
+                config.springDamper.frequency = this.springDamper.frequency;
+                config.springDamper.dampingRatio = this.springDamper.dampingRatio;
+                config.springDamper.useSymplecticEuler = this.springDamper.useSymplecticEuler;
+                config.limitMotor.lowerLimit = this.limitMotor.lowerLimit;
+                config.limitMotor.upperLimit = this.limitMotor.upperLimit;
+                config.limitMotor.motorSpeed = this.limitMotor.motorSpeed;
+                config.limitMotor.motorTorque = this.limitMotor.motorTorque;
                 var joint = new OIMO.RevoluteJoint(config);
+                this.springDamper._oimoSpringDamper = joint.getSpringDamper();
+                this.limitMotor._oimoRotationalLimitMotor = joint.getLimitMotor();
                 joint.userData = this;
                 return joint;
             };
-            Object.defineProperty(HingeJoint.prototype, "frequency", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[0 /* Frequency */];
-                },
-                set: function (value) {
-                    this._valuesB[0 /* Frequency */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper();
-                        springDamper.frequency = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(HingeJoint.prototype, "dampingRatio", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[1 /* DampingRatio */];
-                },
-                set: function (value) {
-                    this._valuesB[1 /* DampingRatio */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper();
-                        springDamper.dampingRatio = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(HingeJoint.prototype, "useSymplecticEuler", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[2 /* UseSymplecticEuler */] > 0;
-                },
-                set: function (value) {
-                    this._valuesB[2 /* UseSymplecticEuler */] = value ? 1 : 0;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper();
-                        springDamper.useSymplecticEuler = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(HingeJoint.prototype, "lowerLimit", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[3 /* LowerLimit */];
-                },
-                set: function (value) {
-                    this._valuesB[3 /* LowerLimit */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor();
-                        limitMotor.lowerLimit = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(HingeJoint.prototype, "upperLimit", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[4 /* UpperLimit */];
-                },
-                set: function (value) {
-                    this._valuesB[4 /* UpperLimit */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor();
-                        limitMotor.upperLimit = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(HingeJoint.prototype, "motorSpeed", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[5 /* MotorSpeed */];
-                },
-                set: function (value) {
-                    this._valuesB[5 /* MotorSpeed */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor();
-                        limitMotor.motorSpeed = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(HingeJoint.prototype, "motorTorque", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[6 /* MotorTorque */];
-                },
-                set: function (value) {
-                    this._valuesB[6 /* MotorTorque */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor();
-                        limitMotor.motorTorque = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             Object.defineProperty(HingeJoint.prototype, "axis", {
                 /**
                  *
@@ -43470,11 +43063,11 @@ var egret3d;
                     return this._axis;
                 },
                 set: function (value) {
-                    if (this._oimoJoint) {
-                        console.warn("Cannot change the axis after the joint has been created.");
-                    }
-                    else {
+                    if (!this._oimoJoint) {
                         this._axis.normalize(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the axis after the joint has been created.");
                     }
                 },
                 enumerable: true,
@@ -43482,20 +43075,29 @@ var egret3d;
             });
             HingeJoint._config = new OIMO.RevoluteJointConfig();
             HingeJoint._springDamper = new OIMO.SpringDamper();
-            HingeJoint._limitMotor = new OIMO.RotationalLimitMotor();
+            HingeJoint._rotationalLimitMotor = new OIMO.RotationalLimitMotor();
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], HingeJoint.prototype, "springDamper", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], HingeJoint.prototype, "limitMotor", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
             ], HingeJoint.prototype, "_axis", void 0);
             __decorate([
-                paper.serializedField
-            ], HingeJoint.prototype, "_valuesB", void 0);
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], HingeJoint.prototype, "axis", null);
             HingeJoint = HingeJoint_1 = __decorate([
                 paper.requireComponent(oimo.Rigidbody),
                 paper.allowMultiple
             ], HingeJoint);
             return HingeJoint;
             var HingeJoint_1;
-        }(oimo.Joint));
+        }(oimo.BaseJoint));
         oimo.HingeJoint = HingeJoint;
         __reflect(HingeJoint.prototype, "egret3d.oimo.HingeJoint");
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
@@ -43506,11 +43108,126 @@ var egret3d;
     (function (oimo) {
         var ValueType;
         (function (ValueType) {
-            // SpringDamper
-            ValueType[ValueType["Frequency"] = 0] = "Frequency";
-            ValueType[ValueType["DampingRatio"] = 1] = "DampingRatio";
-            ValueType[ValueType["UseSymplecticEuler"] = 2] = "UseSymplecticEuler";
+            ValueType[ValueType["LowerLimit"] = 0] = "LowerLimit";
+            ValueType[ValueType["UpperLimit"] = 1] = "UpperLimit";
+            ValueType[ValueType["MotorSpeed"] = 2] = "MotorSpeed";
+            ValueType[ValueType["MotorTorque"] = 3] = "MotorTorque";
         })(ValueType || (ValueType = {}));
+        /**
+         * 关节的旋转限位马达设置。
+         */
+        var RotationalLimitMotor = (function () {
+            function RotationalLimitMotor() {
+                this._values = new Float32Array([
+                    1, 0, 0, 0
+                ]);
+                /**
+                 * @internal
+                 */
+                this._oimoRotationalLimitMotor = null;
+            }
+            /**
+             * @internal
+             */
+            RotationalLimitMotor.create = function () {
+                return new RotationalLimitMotor();
+            };
+            RotationalLimitMotor.prototype.serialize = function () {
+                return this._values;
+            };
+            RotationalLimitMotor.prototype.deserialize = function (value) {
+                this._values[0] = value[0];
+                this._values[1] = value[1];
+                this._values[2] = value[2];
+                this._values[3] = value[3];
+                return this;
+            };
+            Object.defineProperty(RotationalLimitMotor.prototype, "lowerLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._values[0 /* LowerLimit */];
+                },
+                set: function (value) {
+                    this._values[0 /* LowerLimit */] = value;
+                    if (this._oimoRotationalLimitMotor) {
+                        this._oimoRotationalLimitMotor.lowerLimit = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(RotationalLimitMotor.prototype, "upperLimit", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._values[1 /* UpperLimit */];
+                },
+                set: function (value) {
+                    this._values[1 /* UpperLimit */] = value;
+                    if (this._oimoRotationalLimitMotor) {
+                        this._oimoRotationalLimitMotor.upperLimit = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(RotationalLimitMotor.prototype, "motorSpeed", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._values[2 /* MotorSpeed */];
+                },
+                set: function (value) {
+                    this._values[2 /* MotorSpeed */] = value;
+                    if (this._oimoRotationalLimitMotor) {
+                        this._oimoRotationalLimitMotor.motorSpeed = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(RotationalLimitMotor.prototype, "motorTorque", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._values[3 /* MotorTorque */];
+                },
+                set: function (value) {
+                    this._values[3 /* MotorTorque */] = value;
+                    if (this._oimoRotationalLimitMotor) {
+                        this._oimoRotationalLimitMotor.motorTorque = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], RotationalLimitMotor.prototype, "lowerLimit", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], RotationalLimitMotor.prototype, "upperLimit", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], RotationalLimitMotor.prototype, "motorSpeed", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], RotationalLimitMotor.prototype, "motorTorque", null);
+            return RotationalLimitMotor;
+        }());
+        oimo.RotationalLimitMotor = RotationalLimitMotor;
+        __reflect(RotationalLimitMotor.prototype, "egret3d.oimo.RotationalLimitMotor", ["paper.ISerializable"]);
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
         /**
          *
          */
@@ -43519,8 +43236,9 @@ var egret3d;
             function SphericalJoint() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.jointType = oimo.JointType.Spherical;
-                _this._valuesB = new Float32Array([
-                    0.0, 0.0, 0,
+                _this.springDamper = oimo.SpringDamper.create();
+                _this._values = new Float32Array([
+                    0, 0,
                 ]);
                 return _this;
             }
@@ -43533,86 +43251,36 @@ var egret3d;
                 this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = SphericalJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
-                if (this.useGlobalAnchor) {
+                if (this.useWorldAnchor) {
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor);
                 }
                 else {
-                    var matrix = this.gameObject.transform.getWorldMatrix();
-                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor);
+                    var matrix = this.gameObject.transform.localToWorldMatrix;
+                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor);
-                    anchor.release();
                 }
                 config.springDamper = SphericalJoint_1._springDamper;
-                config.springDamper.frequency = this.frequency;
-                config.springDamper.dampingRatio = this.dampingRatio;
-                config.springDamper.useSymplecticEuler = this.useSymplecticEuler;
+                config.springDamper.frequency = this.springDamper.frequency;
+                config.springDamper.dampingRatio = this.springDamper.dampingRatio;
+                config.springDamper.useSymplecticEuler = this.springDamper.useSymplecticEuler;
                 var joint = new OIMO.SphericalJoint(config);
+                this.springDamper._oimoSpringDamper = joint.getSpringDamper();
                 joint.userData = this;
                 return joint;
             };
-            Object.defineProperty(SphericalJoint.prototype, "frequency", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[0 /* Frequency */];
-                },
-                set: function (value) {
-                    this._valuesB[0 /* Frequency */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper();
-                        springDamper.frequency = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(SphericalJoint.prototype, "dampingRatio", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[1 /* DampingRatio */];
-                },
-                set: function (value) {
-                    this._valuesB[1 /* DampingRatio */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper();
-                        springDamper.dampingRatio = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(SphericalJoint.prototype, "useSymplecticEuler", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[2 /* UseSymplecticEuler */] > 0;
-                },
-                set: function (value) {
-                    this._valuesB[2 /* UseSymplecticEuler */] = value ? 1 : 0;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper();
-                        springDamper.useSymplecticEuler = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             SphericalJoint._config = new OIMO.SphericalJointConfig();
             SphericalJoint._springDamper = new OIMO.SpringDamper();
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], SphericalJoint.prototype, "_valuesB", void 0);
+            ], SphericalJoint.prototype, "springDamper", void 0);
             SphericalJoint = SphericalJoint_1 = __decorate([
                 paper.requireComponent(oimo.Rigidbody),
                 paper.allowMultiple
             ], SphericalJoint);
             return SphericalJoint;
             var SphericalJoint_1;
-        }(oimo.Joint));
+        }(oimo.BaseJoint));
         oimo.SphericalJoint = SphericalJoint;
         __reflect(SphericalJoint.prototype, "egret3d.oimo.SphericalJoint");
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
@@ -43623,25 +43291,105 @@ var egret3d;
     (function (oimo) {
         var ValueType;
         (function (ValueType) {
-            // AxisY SpringDamper
-            ValueType[ValueType["FrequencyY"] = 0] = "FrequencyY";
-            ValueType[ValueType["DampingRatioY"] = 1] = "DampingRatioY";
-            ValueType[ValueType["UseSymplecticEulerY"] = 2] = "UseSymplecticEulerY";
-            // AxisZ SpringDamper
-            ValueType[ValueType["FrequencyZ"] = 3] = "FrequencyZ";
-            ValueType[ValueType["DampingRatioZ"] = 4] = "DampingRatioZ";
-            ValueType[ValueType["UseSymplecticEulerZ"] = 5] = "UseSymplecticEulerZ";
-            // AxisY RotationalLimitMotor
-            ValueType[ValueType["LowerLimitY"] = 6] = "LowerLimitY";
-            ValueType[ValueType["UpperLimitY"] = 7] = "UpperLimitY";
-            ValueType[ValueType["MotorSpeedY"] = 8] = "MotorSpeedY";
-            ValueType[ValueType["MotorTorqueY"] = 9] = "MotorTorqueY";
-            // AxisZ RotationalLimitMotor
-            ValueType[ValueType["LowerLimitZ"] = 10] = "LowerLimitZ";
-            ValueType[ValueType["UpperLimitZ"] = 11] = "UpperLimitZ";
-            ValueType[ValueType["MotorSpeedZ"] = 12] = "MotorSpeedZ";
-            ValueType[ValueType["MotorTorqueZ"] = 13] = "MotorTorqueZ";
+            ValueType[ValueType["Frequency"] = 0] = "Frequency";
+            ValueType[ValueType["DampingRatio"] = 1] = "DampingRatio";
+            ValueType[ValueType["UseSymplecticEuler"] = 2] = "UseSymplecticEuler";
         })(ValueType || (ValueType = {}));
+        /**
+         * 关节的弹簧和阻尼器设置。
+         */
+        var SpringDamper = (function () {
+            function SpringDamper() {
+                this._values = new Float32Array([
+                    0, 0, 0
+                ]);
+                /**
+                 * @internal
+                 */
+                this._oimoSpringDamper = null;
+            }
+            /**
+             * @internal
+             */
+            SpringDamper.create = function () {
+                return new SpringDamper();
+            };
+            SpringDamper.prototype.serialize = function () {
+                return this._values;
+            };
+            SpringDamper.prototype.deserialize = function (value) {
+                this._values[0] = value[0];
+                this._values[1] = value[1];
+                this._values[2] = value[2];
+                return this;
+            };
+            Object.defineProperty(SpringDamper.prototype, "frequency", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._values[0 /* Frequency */];
+                },
+                set: function (value) {
+                    this._values[0 /* Frequency */] = value;
+                    if (this._oimoSpringDamper) {
+                        this._oimoSpringDamper.frequency = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SpringDamper.prototype, "dampingRatio", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._values[1 /* DampingRatio */];
+                },
+                set: function (value) {
+                    this._values[1 /* DampingRatio */] = value;
+                    if (this._oimoSpringDamper) {
+                        this._oimoSpringDamper.dampingRatio = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(SpringDamper.prototype, "useSymplecticEuler", {
+                /**
+                 *
+                 */
+                get: function () {
+                    return this._values[2 /* UseSymplecticEuler */] > 0;
+                },
+                set: function (value) {
+                    this._values[2 /* UseSymplecticEuler */] = value ? 1 : 0;
+                    if (this._oimoSpringDamper) {
+                        this._oimoSpringDamper.useSymplecticEuler = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], SpringDamper.prototype, "frequency", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], SpringDamper.prototype, "dampingRatio", null);
+            __decorate([
+                paper.editor.property("CHECKBOX" /* CHECKBOX */)
+            ], SpringDamper.prototype, "useSymplecticEuler", null);
+            return SpringDamper;
+        }());
+        oimo.SpringDamper = SpringDamper;
+        __reflect(SpringDamper.prototype, "egret3d.oimo.SpringDamper", ["paper.ISerializable"]);
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
         /**
          *
          */
@@ -43650,13 +43398,14 @@ var egret3d;
             function UniversalJoint() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.jointType = oimo.JointType.Universal;
+                _this.springDamperY = oimo.SpringDamper.create();
+                _this.springDamperZ = oimo.SpringDamper.create();
+                _this.limitMotorY = oimo.RotationalLimitMotor.create();
+                _this.limitMotorZ = oimo.RotationalLimitMotor.create();
                 _this._axisY = egret3d.Vector3.FORWARD.clone();
                 _this._axisZ = egret3d.Vector3.FORWARD.clone();
-                _this._valuesB = new Float32Array([
-                    0.0, 0.0, 0,
-                    0.0, 0.0, 0,
-                    -180.0, 180.0, 0.0, 0.0,
-                    -180.0, 180.0, 0.0, 0.0,
+                _this._values = new Float32Array([
+                    0, 0,
                 ]);
                 return _this;
             }
@@ -43669,279 +43418,42 @@ var egret3d;
                 this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = UniversalJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
-                if (this.useGlobalAnchor) {
+                if (this.useWorldAnchor) {
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor, this._axisY, this._axisZ);
                 }
                 else {
-                    var matrix = this.gameObject.transform.getWorldMatrix();
-                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor);
-                    var axisY = egret3d.Vector3.create().applyMatrix(matrix, this._axisY);
-                    var axisZ = egret3d.Vector3.create().applyMatrix(matrix, this._axisZ);
+                    var matrix = this.gameObject.transform.localToWorldMatrix;
+                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
+                    var axisY = egret3d.Vector3.create().applyMatrix(matrix, this._axisY).release();
+                    var axisZ = egret3d.Vector3.create().applyMatrix(matrix, this._axisZ).release();
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor, axisY, axisZ);
-                    anchor.release();
-                    axisY.release();
-                    axisZ.release();
                 }
                 config.springDamper1 = UniversalJoint_1._springDamperY;
                 config.springDamper2 = UniversalJoint_1._springDamperZ;
                 config.limitMotor1 = UniversalJoint_1._limitMotorY;
                 config.limitMotor2 = UniversalJoint_1._limitMotorZ;
-                config.springDamper1.frequency = this.frequencyY;
-                config.springDamper1.dampingRatio = this.dampingRatioY;
-                config.springDamper1.useSymplecticEuler = this.useSymplecticEulerY;
-                config.springDamper2.frequency = this.frequencyZ;
-                config.springDamper2.dampingRatio = this.dampingRatioZ;
-                config.springDamper2.useSymplecticEuler = this.useSymplecticEulerZ;
-                config.limitMotor1.lowerLimit = this.lowerLimitY * egret3d.DEG_RAD;
-                config.limitMotor1.upperLimit = this.upperLimitY * egret3d.DEG_RAD;
-                config.limitMotor1.motorSpeed = this.motorSpeedY * egret3d.DEG_RAD;
-                config.limitMotor1.motorTorque = this.motorTorqueY;
-                config.limitMotor2.lowerLimit = this.lowerLimitZ * egret3d.DEG_RAD;
-                config.limitMotor2.upperLimit = this.upperLimitZ * egret3d.DEG_RAD;
-                config.limitMotor2.motorSpeed = this.motorSpeedZ * egret3d.DEG_RAD;
-                config.limitMotor2.motorTorque = this.motorTorqueZ;
+                config.springDamper1.frequency = this.springDamperY.frequency;
+                config.springDamper1.dampingRatio = this.springDamperY.dampingRatio;
+                config.springDamper1.useSymplecticEuler = this.springDamperY.useSymplecticEuler;
+                config.springDamper2.frequency = this.springDamperZ.frequency;
+                config.springDamper2.dampingRatio = this.springDamperZ.dampingRatio;
+                config.springDamper2.useSymplecticEuler = this.springDamperZ.useSymplecticEuler;
+                config.limitMotor1.lowerLimit = this.limitMotorY.lowerLimit;
+                config.limitMotor1.upperLimit = this.limitMotorY.upperLimit;
+                config.limitMotor1.motorSpeed = this.limitMotorY.motorSpeed;
+                config.limitMotor1.motorTorque = this.limitMotorY.motorTorque;
+                config.limitMotor2.lowerLimit = this.limitMotorZ.lowerLimit;
+                config.limitMotor2.upperLimit = this.limitMotorZ.upperLimit;
+                config.limitMotor2.motorSpeed = this.limitMotorZ.motorSpeed;
+                config.limitMotor2.motorTorque = this.limitMotorZ.motorTorque;
                 var joint = new OIMO.UniversalJoint(config);
+                this.springDamperY._oimoSpringDamper = joint.getSpringDamper1();
+                this.springDamperZ._oimoSpringDamper = joint.getSpringDamper2();
+                this.limitMotorY._oimoRotationalLimitMotor = joint.getLimitMotor1();
+                this.limitMotorZ._oimoRotationalLimitMotor = joint.getLimitMotor2();
                 joint.userData = this;
                 return joint;
             };
-            Object.defineProperty(UniversalJoint.prototype, "frequencyY", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[0 /* FrequencyY */];
-                },
-                set: function (value) {
-                    this._valuesB[0 /* FrequencyY */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper1();
-                        springDamper.frequency = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "dampingRatioY", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[1 /* DampingRatioY */];
-                },
-                set: function (value) {
-                    this._valuesB[1 /* DampingRatioY */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper1();
-                        springDamper.dampingRatio = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "useSymplecticEulerY", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[2 /* UseSymplecticEulerY */] > 0;
-                },
-                set: function (value) {
-                    this._valuesB[2 /* UseSymplecticEulerY */] = value ? 1 : 0;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper1();
-                        springDamper.useSymplecticEuler = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "frequencyZ", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[3 /* FrequencyZ */];
-                },
-                set: function (value) {
-                    this._valuesB[3 /* FrequencyZ */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper2();
-                        springDamper.frequency = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "dampingRatioZ", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[4 /* DampingRatioZ */];
-                },
-                set: function (value) {
-                    this._valuesB[4 /* DampingRatioZ */] = value;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper2();
-                        springDamper.dampingRatio = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "useSymplecticEulerZ", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[5 /* UseSymplecticEulerZ */] > 0;
-                },
-                set: function (value) {
-                    this._valuesB[5 /* UseSymplecticEulerZ */] = value ? 1 : 0;
-                    if (this._oimoJoint) {
-                        var springDamper = this._oimoJoint.getSpringDamper2();
-                        springDamper.useSymplecticEuler = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "lowerLimitY", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[6 /* LowerLimitY */];
-                },
-                set: function (value) {
-                    this._valuesB[6 /* LowerLimitY */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor1();
-                        limitMotor.lowerLimit = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "upperLimitY", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[7 /* UpperLimitY */];
-                },
-                set: function (value) {
-                    this._valuesB[7 /* UpperLimitY */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor1();
-                        limitMotor.upperLimit = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "motorSpeedY", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[8 /* MotorSpeedY */];
-                },
-                set: function (value) {
-                    this._valuesB[8 /* MotorSpeedY */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor1();
-                        limitMotor.motorSpeed = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "motorTorqueY", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[9 /* MotorTorqueY */];
-                },
-                set: function (value) {
-                    this._valuesB[9 /* MotorTorqueY */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor1();
-                        limitMotor.motorTorque = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "lowerLimitZ", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[10 /* LowerLimitZ */];
-                },
-                set: function (value) {
-                    this._valuesB[10 /* LowerLimitZ */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor2();
-                        limitMotor.lowerLimit = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "upperLimitZ", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[11 /* UpperLimitZ */];
-                },
-                set: function (value) {
-                    this._valuesB[11 /* UpperLimitZ */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor2();
-                        limitMotor.upperLimit = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "motorSpeedZ", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[12 /* MotorSpeedZ */];
-                },
-                set: function (value) {
-                    this._valuesB[12 /* MotorSpeedZ */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor2();
-                        limitMotor.motorSpeed = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(UniversalJoint.prototype, "motorTorqueZ", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._valuesB[13 /* MotorTorqueZ */];
-                },
-                set: function (value) {
-                    this._valuesB[13 /* MotorTorqueZ */] = value;
-                    if (this._oimoJoint) {
-                        var limitMotor = this._oimoJoint.getLimitMotor2();
-                        limitMotor.motorTorque = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
             Object.defineProperty(UniversalJoint.prototype, "axisY", {
                 /**
                  *
@@ -43950,11 +43462,11 @@ var egret3d;
                     return this._axisY;
                 },
                 set: function (value) {
-                    if (this._oimoJoint) {
-                        console.warn("Cannot change the axisY after the joint has been created.");
-                    }
-                    else {
+                    if (!this._oimoJoint) {
                         this._axisY.normalize(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the axisY after the joint has been created.");
                     }
                 },
                 enumerable: true,
@@ -43968,11 +43480,11 @@ var egret3d;
                     return this._axisZ;
                 },
                 set: function (value) {
-                    if (this._oimoJoint) {
-                        console.warn("Cannot change the axisZ after the joint has been created.");
-                    }
-                    else {
+                    if (!this._oimoJoint) {
                         this._axisZ.normalize(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the axisZ after the joint has been created.");
                     }
                 },
                 enumerable: true,
@@ -43984,21 +43496,40 @@ var egret3d;
             UniversalJoint._limitMotorY = new OIMO.RotationalLimitMotor();
             UniversalJoint._limitMotorZ = new OIMO.RotationalLimitMotor();
             __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], UniversalJoint.prototype, "springDamperY", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], UniversalJoint.prototype, "springDamperZ", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], UniversalJoint.prototype, "limitMotorY", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], UniversalJoint.prototype, "limitMotorZ", void 0);
+            __decorate([
                 paper.serializedField
             ], UniversalJoint.prototype, "_axisY", void 0);
             __decorate([
                 paper.serializedField
             ], UniversalJoint.prototype, "_axisZ", void 0);
             __decorate([
-                paper.serializedField
-            ], UniversalJoint.prototype, "_valuesB", void 0);
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], UniversalJoint.prototype, "axisY", null);
+            __decorate([
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], UniversalJoint.prototype, "axisZ", null);
             UniversalJoint = UniversalJoint_1 = __decorate([
                 paper.requireComponent(oimo.Rigidbody),
                 paper.allowMultiple
             ], UniversalJoint);
             return UniversalJoint;
             var UniversalJoint_1;
-        }(oimo.Joint));
+        }(oimo.BaseJoint));
         oimo.UniversalJoint = UniversalJoint;
         __reflect(UniversalJoint.prototype, "egret3d.oimo.UniversalJoint");
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));

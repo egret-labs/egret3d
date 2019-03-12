@@ -16,9 +16,21 @@ namespace egret3d {
 
             return new RaycastInfo();
         }
-
+        /**
+         * 
+         */
         public backfaceCulling: boolean = true;
+        /**
+         * 
+         */
+        public modifyNormal: boolean = false;
+        /**
+         * 
+         */
         public subMeshIndex: int = -1;
+        /**
+         * 
+         */
         public triangleIndex: int = -1;
         /**
          * 交点到射线起始点的距离。
@@ -30,7 +42,7 @@ namespace egret3d {
          */
         public readonly position: Vector3 = Vector3.create();
         /**
-         * 相交的 UV 坐标。
+         * 三角形或几何面相交的 UV 坐标。
          */
         public readonly coord: Vector2 = Vector2.create();
         /**
@@ -38,7 +50,13 @@ namespace egret3d {
          * - 提供法线向量将计算法线。
          */
         public normal: Vector3 | null = null;
+        /**
+         * 
+         */
         public textureCoordA: Vector2 | null = null;
+        /**
+         * 
+         */
         public textureCoordB: Vector2 | null = null;
         /**
          * 相交的变换组件。（如果有的话）
@@ -51,7 +69,7 @@ namespace egret3d {
         /**
          * 相交的刚体组件。（如果有的话）
          */
-        public rigidbody: any | null = null;
+        public rigidbody: IRigidbody | null = null;
 
         private constructor() {
             super();
@@ -62,6 +80,7 @@ namespace egret3d {
         }
 
         public copy(value: Readonly<RaycastInfo>): this {
+            // Input ?
             this.subMeshIndex = value.subMeshIndex;
             this.triangleIndex = value.triangleIndex;
             this.distance = value.distance;
@@ -82,6 +101,8 @@ namespace egret3d {
         }
 
         public clear(): this {
+            this.backfaceCulling = true;
+            this.modifyNormal = false;
             this.subMeshIndex = -1;
             this.triangleIndex = -1;
             this.distance = -1.0;

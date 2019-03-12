@@ -57,7 +57,7 @@ namespace examples.shaders {
                 const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
                 if (modelComponent) {
                     modelComponent.select(gameObject);
-                    paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(FlashEditor);
+                    modelComponent.openComponents(FlashEditor);
                 }
             }
 

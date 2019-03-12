@@ -40004,13 +40004,14 @@ oimo_dynamics_rigidbody_RigidBody.prototype = {
 		shape._next = null;
 		shape._prev = null;
 		this._numShapes--;
+		var rigidBody = shape._rigidBody;
 		shape._rigidBody = null;
 		if(this._world != null) {
 			var _this = this._world;
 			_this._broadPhase.destroyProxy(shape._proxy);
 			shape._proxy = null;
 			shape._id = -1;
-			var cl = shape._rigidBody._contactLinkList;
+			var cl = rigidBody._contactLinkList;
 			while(cl != null) {
 				var n = cl._next;
 				var c = cl._contact;

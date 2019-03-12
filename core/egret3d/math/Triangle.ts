@@ -226,7 +226,7 @@ namespace egret3d {
             return out.add(a, vac.multiplyScalar(w).add(vab.multiplyScalar(v)));
         }
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             // from http://www.geometrictools.com/GTEngine/Include/Mathematics/GteIntrRay3Triangle3.h
             const edge1 = helpVector3A;
             const edge2 = helpVector3B;

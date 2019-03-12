@@ -11,7 +11,7 @@ namespace egret3d {
         /**
          * 当蒙皮网格渲染组件的网格资源改变时派发事件。
          */
-        public static readonly onMeshChanged: signals.Signal = new signals.Signal();
+        public static readonly onMeshChanged: signals.Signal<SkinnedMeshRenderer> = new signals.Signal();
         /**
          * 强制使用 cpu 蒙皮。
          * - 骨骼数超过硬件支持的最大骨骼数量，或顶点权重大于 4 个，需要使用 CPU 蒙皮。
@@ -132,11 +132,12 @@ namespace egret3d {
             this.boneMatrices = null;
 
             const mesh = this._mesh;
+            const parent = this.gameObject.transform.parent;
 
-            if (mesh) {
+            if (mesh && parent) {
                 const config = mesh.config;
                 const skin = config.skins![0];
-                const children = this.gameObject.transform.parent!.getAllChildren({}) as { [key: string]: Transform | (Transform[]) };
+                const children = parent.getChildren({}) as { [key: string]: Transform | (Transform[]) };
 
                 if (skin.skeleton !== undefined) {
                     const rootNode = config.nodes![skin.skeleton];
@@ -164,6 +165,8 @@ namespace egret3d {
                     this.forceCPUSkin = true;
                     console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
                 }
+
+                this._update();
             }
         }
         /**
@@ -229,42 +232,20 @@ namespace egret3d {
             return out;
         }
 
-        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const mesh = this._mesh;
             const boneMatrices = this.boneMatrices;
             if (!mesh || mesh.isDisposed || !boneMatrices) {
                 return false;
             }
 
-            let raycastMesh = false;
-            let raycastInfo: RaycastInfo | undefined = undefined;
             const transform = this.gameObject.transform;
             const boundingTransform = this.getBoundingTransform();
-            const localRay = helpRay.applyMatrix(boundingTransform.worldToLocalMatrix, p1);
+            const localRay = helpRay.applyMatrix(boundingTransform.worldToLocalMatrix, ray);
             const localBoundingBox = this.localBoundingBox;
 
-            if (p2) {
-                if (p2 === true) {
-                    raycastMesh = true;
-                }
-                else {
-                    raycastMesh = p3 || false;
-                    raycastInfo = p2;
-                }
-            }
-
-            if (raycastMesh) {
-                if (localBoundingBox.raycast(localRay) && mesh.raycast(p1, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0)!)) {
-                    if (raycastInfo) {
-                        raycastInfo.transform = transform;
-                    }
-
-                    return true;
-                }
-            }
-            else if (localBoundingBox.raycast(localRay, raycastInfo)) {
-                if (raycastInfo) { // Update local raycast info to world.
-                    raycastInfo.distance = p1.origin.getDistance(raycastInfo.position.applyMatrix(boundingTransform.localToWorldMatrix));
+            if (localBoundingBox.raycast(localRay) && mesh.raycast(ray, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0)!)) {
+                if (raycastInfo) {
                     raycastInfo.transform = transform;
                 }
 

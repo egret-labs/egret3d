@@ -16,7 +16,7 @@ namespace egret3d {
     @paper.singleton
     export class CameraAndLightCollecter extends paper.BaseComponent {
         /**
-         * 
+         * TODO
          */
         public lightCountDirty: LightCountDirty = LightCountDirty.None;
         /**
@@ -81,7 +81,7 @@ namespace egret3d {
             (cameraAndLightCollecter as CameraAndLightCollecter) = this;
 
             { //
-                const gameObject = paper.GameObject.create("Postprocessing Camera", paper.DefaultTags.Global, paper.Scene.globalScene);
+                const gameObject = paper.GameObject.create("Postprocessing Camera", paper.DefaultTags.Global, paper.Application.sceneManager.globalScene);
                 //
                 const camera = gameObject.getOrAddComponent(Camera);
                 camera.enabled = false;
@@ -95,7 +95,7 @@ namespace egret3d {
             }
 
             { //
-                const gameObject = paper.GameObject.create("Shadow Camera", paper.DefaultTags.Global, paper.Scene.globalScene);
+                const gameObject = paper.GameObject.create("Shadow Camera", paper.DefaultTags.Global, paper.Application.sceneManager.globalScene);
                 //
                 const camera = gameObject.getOrAddComponent(Camera);
                 camera.enabled = false;
@@ -106,24 +106,23 @@ namespace egret3d {
         /**
          * 更新相机。
          */
-        public updateCameras(gameObjects: ReadonlyArray<paper.GameObject>) {
+        public updateCameras(entities: ReadonlyArray<paper.IEntity>) {
             this.cameras.length = 0;
 
-            for (const gameObject of gameObjects) {
-                this.cameras.push(gameObject.getComponent(Camera)!);
+            for (const entity of entities) {
+                this.cameras.push(entity.getComponent(Camera)!);
             }
         }
         /**
          * 更新灯光。
          */
-        public updateLights(gameObjects: ReadonlyArray<paper.GameObject>) {
+        public updateLights(entities: ReadonlyArray<paper.IEntity>) {
             let directLightCount = 0, spotLightCount = 0, rectangleAreaLightCount = 0, pointLightCount = 0, hemisphereLightCount = 0;
-            // const lights = [];
             const { lights, directionalLights, spotLights, rectangleAreaLights, pointLights, hemisphereLights } = this;
             lights.length = 0;
 
-            for (const gameObject of gameObjects) {
-                const light = gameObject.getComponent(BaseLight as any, true) as BaseLight;
+            for (const entity of entities) {
+                const light = entity.getComponent(BaseLight as any, true) as BaseLight;
                 lights.push(light);
 
                 switch (light.constructor) {
@@ -151,7 +150,7 @@ namespace egret3d {
 
             const defines = renderState.defines;
 
-            if (directLightCount !== directionalLights.length) {
+            // if (directLightCount !== directionalLights.length) {
                 if (directLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_DIR_LIGHTS, directLightCount);
                     if (define) {
@@ -173,9 +172,9 @@ namespace egret3d {
 
                     directionalLights[index++] = light as any;
                 }
-            }
+            // }
 
-            if (spotLightCount !== spotLights.length) {
+            // if (spotLightCount !== spotLights.length) {
                 if (spotLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_SPOT_LIGHTS, spotLightCount);
                     if (define) {
@@ -189,7 +188,7 @@ namespace egret3d {
                 this.lightCountDirty |= LightCountDirty.SpotLight;
                 spotLights.length = spotLightCount;
 
-                let index = 0;
+                index = 0;
                 for (const light of lights) {
                     if (light.constructor !== SpotLight) {
                         continue;
@@ -197,9 +196,9 @@ namespace egret3d {
 
                     spotLights[index++] = light as any;
                 }
-            }
+            // }
 
-            if (rectangleAreaLightCount !== rectangleAreaLights.length) {
+            // if (rectangleAreaLightCount !== rectangleAreaLights.length) {
                 if (rectangleAreaLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_RECT_AREA_LIGHTS, rectangleAreaLightCount);
                     if (define) {
@@ -213,7 +212,7 @@ namespace egret3d {
                 this.lightCountDirty |= LightCountDirty.RectangleAreaLight;
                 rectangleAreaLights.length = rectangleAreaLightCount;
 
-                let index = 0;
+                index = 0;
                 for (const light of lights) {
                     if (light.constructor !== RectangleAreaLight) {
                         continue;
@@ -221,9 +220,9 @@ namespace egret3d {
 
                     rectangleAreaLights[index++] = light as any;
                 }
-            }
+            // }
 
-            if (pointLightCount !== pointLights.length) {
+            // if (pointLightCount !== pointLights.length) {
                 if (pointLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_POINT_LIGHTS, pointLightCount);
                     if (define) {
@@ -237,7 +236,7 @@ namespace egret3d {
                 this.lightCountDirty |= LightCountDirty.PointLight;
                 pointLights.length = pointLightCount;
 
-                let index = 0;
+                index = 0;
                 for (const light of lights) {
                     if (light.constructor !== PointLight) {
                         continue;
@@ -245,9 +244,9 @@ namespace egret3d {
 
                     pointLights[index++] = light as any;
                 }
-            }
+            // }
 
-            if (hemisphereLightCount !== hemisphereLights.length) {
+            // if (hemisphereLightCount !== hemisphereLights.length) {
                 if (hemisphereLightCount > 0) {
                     const define = defines.addDefine(ShaderDefine.NUM_HEMI_LIGHTS, hemisphereLightCount);
                     if (define) {
@@ -261,7 +260,7 @@ namespace egret3d {
                 this.lightCountDirty |= LightCountDirty.HemisphereLight;
                 hemisphereLights.length = hemisphereLightCount;
 
-                let index = 0;
+                index = 0;
                 for (const light of lights) {
                     if (light.constructor !== HemisphereLight) {
                         continue;
@@ -269,7 +268,7 @@ namespace egret3d {
 
                     hemisphereLights[index++] = light as any;
                 }
-            }
+            // }
         }
         /**
          * 排序相机。

@@ -44,6 +44,12 @@ namespace paper.editor {
         private readonly _eye: egret3d.Vector3 = egret3d.Vector3.create();
         private readonly _plane: egret3d.Plane = egret3d.Plane.create();
         private readonly _quad: GameObject = EditorMeshHelper.createGameObject("Plane", egret3d.DefaultMeshes.QUAD, egret3d.DefaultMaterials.MESH_BASIC_DOUBLESIDE.clone().setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent).setOpacity(0.5));
+        private readonly _selectedGroup: Group<GameObject> = Application.gameObjectContext.getGroup(
+            Matcher.create<GameObject>(egret3d.Transform, SelectedFlag)
+        );
+        private readonly _lastSelectedGroup: Group<GameObject> = Application.gameObjectContext.getGroup(
+            Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag)
+        );
         private readonly _prsStarts: {
             [key: string]: [ // PRSStart
                 egret3d.Vector3,
@@ -77,9 +83,11 @@ namespace paper.editor {
 
             let isWorldSpace = this.isWorldSpace;
             const hoveredName = this._hovered!.name;
-            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
-            const selectedGameObject = modelComponent.selectedGameObject!;
-            const currentSelectedPRS = this._prsStarts[selectedGameObject.uuid];
+
+            const lastSelectedEntity = this._lastSelectedGroup.singleEntity!;
+            const selectedEntities = this._selectedGroup.entities;
+
+            const currentSelectedPRS = this._prsStarts[lastSelectedEntity.uuid];
             this._offsetEnd.subtract(currentSelectedPRS[PRSStart.Position], raycastInfo.position);
 
             if (this._mode === this.scale) {
@@ -114,24 +122,24 @@ namespace paper.editor {
                     this._offsetEnd.z = this._offsetStart.z;
                 }
 
-                for (const gameObject of modelComponent.selectedGameObjects) {
-                    if (gameObject.parent && modelComponent.selectedGameObjects.indexOf(gameObject.parent) >= 0) {
+                for (const entity of this._selectedGroup.entities) {
+                    if (entity.parent && entity.parent.getComponent(SelectedFlag)) {
                         continue;
                     }
 
-                    const selectedPRS = this._prsStarts[gameObject.uuid];
+                    const selectedPRS = this._prsStarts[entity.uuid];
                     position.subtract(this._offsetStart, this._offsetEnd);
 
                     if (isWorldSpace) {
                         position.add(selectedPRS[PRSStart.Position]);
                         // TODO translationSnap
-                        gameObject.transform.position = position;
+                        entity.transform.position = position;
                     }
                     else {
                         position.applyQuaternion(selectedPRS[PRSStart.LocalRotation]); // TODO parent space.
                         position.add(selectedPRS[PRSStart.LocalPosition]);
                         // TODO translationSnap
-                        gameObject.transform.localPosition = position;
+                        entity.transform.localPosition = position;
                     }
                 }
             }
@@ -139,9 +147,9 @@ namespace paper.editor {
                 const camera = egret3d.Camera.editor;
                 const tempVector = egret3d.Vector3.create().release();
                 const rotationAxis = egret3d.Vector3.create().release();
-                const rotation = !isWorldSpace ? selectedGameObject.transform.rotation : egret3d.Quaternion.IDENTITY.clone().release();
+                const rotation = !isWorldSpace ? lastSelectedEntity.transform.rotation : egret3d.Quaternion.IDENTITY.clone().release();
                 const tempQuaternion = egret3d.Quaternion.create().release();
-                const speed = 20.0 / selectedGameObject.transform.position.getDistance(tempVector.applyMatrix(camera.gameObject.transform.localToWorldMatrix));
+                const speed = 20.0 / lastSelectedEntity.transform.position.getDistance(tempVector.applyMatrix(camera.gameObject.transform.localToWorldMatrix));
                 let rotationAngle = 0;
 
                 if (hoveredName.indexOf(AxisName.XYZE) >= 0) {
@@ -169,16 +177,16 @@ namespace paper.editor {
                     rotationAngle = tempVector2.dot(tempVector.cross(this._eye).normalize()) * speed;
                 }
 
-                for (const gameObject of modelComponent.selectedGameObjects) {
+                for (const entity of selectedEntities) {
+                    const selectedPRS = this._prsStarts[entity.uuid];
 
-                    const selectedPRS = this._prsStarts[gameObject.uuid];
                     if (isWorldSpace) {
                         tempQuaternion.fromAxis(rotationAxis, rotationAngle).multiply(selectedPRS[PRSStart.Rotation]).normalize();
-                        gameObject.transform.rotation = tempQuaternion;
+                        entity.transform.rotation = tempQuaternion;
                     }
                     else {
                         tempQuaternion.fromAxis(rotationAxis, rotationAngle).premultiply(selectedPRS[PRSStart.LocalRotation]).normalize();
-                        gameObject.transform.localRotation = tempQuaternion;
+                        entity.transform.localRotation = tempQuaternion;
                     }
                 }
             }
@@ -207,13 +215,13 @@ namespace paper.editor {
                 // TODO this._offsetEnd scale aabb size
                 const scale = egret3d.Vector3.create().release();
 
-                for (const gameObject of modelComponent.selectedGameObjects) {
-                    if (gameObject.parent && modelComponent.selectedGameObjects.indexOf(gameObject.parent) >= 0) {
+                for (const entity of selectedEntities) {
+                    if (entity.parent && entity.parent.getComponent(SelectedFlag)) {
                         continue;
                     }
 
-                    const selectedPRS = this._prsStarts[gameObject.uuid];
-                    gameObject.transform.localScale = scale.multiply(this._offsetEnd, selectedPRS[PRSStart.LocalScale]);
+                    const selectedPRS = this._prsStarts[entity.uuid];
+                    entity.transform.localScale = scale.multiply(this._offsetEnd, selectedPRS[PRSStart.LocalScale]);
                 }
             }
         }
@@ -221,19 +229,18 @@ namespace paper.editor {
         private _updateSelf() {
             const isWorldSpace = this._mode === this.scale ? false : this.isWorldSpace; // scale always oriented to local rotation
             const camera = egret3d.Camera.editor;
-            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
-            const selectedGameObject = modelComponent.selectedGameObject!;
+            const lastSelectedEntity = this._lastSelectedGroup.singleEntity!;
             const eye = this._eye.copy(camera.gameObject.transform.position);
-            const eyeDistance = eye.getDistance(selectedGameObject.transform.position);
+            const eyeDistance = eye.getDistance(lastSelectedEntity.transform.position);
 
             if (camera.opvalue > 0.0) {
-                eye.subtract(selectedGameObject.transform.position);
+                eye.subtract(lastSelectedEntity.transform.position);
             }
 
             eye.normalize();
 
-            const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : selectedGameObject.transform.rotation;
-            this.gameObject.transform.localPosition = selectedGameObject.transform.position;
+            const quaternion = isWorldSpace ? egret3d.Quaternion.IDENTITY : lastSelectedEntity.transform.rotation;
+            this.gameObject.transform.localPosition = lastSelectedEntity.transform.position;
             this.gameObject.transform.localRotation = quaternion;
             this.gameObject.transform.localScale = egret3d.Vector3.ONE.clone().multiplyScalar(eyeDistance / 10.0).release();
 
@@ -241,7 +248,7 @@ namespace paper.editor {
                 const tempQuaternion = quaternion.clone().release();
                 const tempQuaternion2 = quaternion.clone().release();
                 const alignVector = egret3d.Vector3.create().release();
-                alignVector.copy(this._eye).applyQuaternion(tempQuaternion.inverse());
+                alignVector.copy(eye).applyQuaternion(tempQuaternion.inverse());
 
                 {
                     tempQuaternion.fromAxis(egret3d.Vector3.RIGHT, Math.atan2(alignVector.y, -alignVector.z));
@@ -271,7 +278,7 @@ namespace paper.editor {
                 }
 
                 {
-                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                     const axisE = this.rotate.transform.find(AxisName.AxisE)!;
                     const pickE = this.rotate.transform.find(AxisName.E)!;
                     axisE.setRotation(tempQuaternion2);
@@ -279,7 +286,7 @@ namespace paper.editor {
                 }
 
                 {
-                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(this._eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
+                    tempQuaternion2.fromMatrix(egret3d.Matrix4.create().lookAt(eye, egret3d.Vector3.ZERO, egret3d.Vector3.UP).release());
                     const axisXYZE = this.rotate.transform.find(AxisName.AxisXYZE)!;
                     axisXYZE.setRotation(tempQuaternion2);
                 }
@@ -508,11 +515,10 @@ namespace paper.editor {
             let isWorldSpace = this.isWorldSpace;
             const hoveredName = this._hovered!.name;
             const raycastInfo = this._raycast(this._plane, mousePosition.x, mousePosition.y)!;
-            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
 
-            for (const gameObject of modelComponent.selectedGameObjects) {
-                const transform = gameObject.transform;
-                this._prsStarts[gameObject.uuid] = [
+            for (const entity of this._selectedGroup.entities) {
+                const transform = entity.transform;
+                this._prsStarts[entity.uuid] = [
                     egret3d.Vector3.create().copy(transform.localPosition),
                     egret3d.Quaternion.create().copy(transform.localRotation),
                     egret3d.Vector3.create().copy(transform.localScale),
@@ -523,7 +529,7 @@ namespace paper.editor {
                 ];
             }
 
-            const currentSelectedPRS = this._prsStarts[modelComponent.selectedGameObject!.uuid];
+            const currentSelectedPRS = this._prsStarts[this._lastSelectedGroup.singleEntity!.uuid];
             this._offsetStart.subtract(currentSelectedPRS[PRSStart.Position], raycastInfo.position);
             this._controlling = true;
 
@@ -546,20 +552,20 @@ namespace paper.editor {
         }
 
         public end() {
-            const modelComponent = this.gameObject.getComponent(ModelComponent)!;
+            const modelComponent = this.entity.getComponent(ModelComponent)!;
 
-            for (const gameObject of modelComponent.selectedGameObjects) {
-                const transform = gameObject.transform;
-                const currentPro = this._prsStarts[gameObject.uuid];
+            for (const entity of this._selectedGroup.entities) {
+                const transform = entity.transform;
+                const currentProperty = this._prsStarts[entity.uuid];
 
                 if (this.mode === this.translate) {
-                    modelComponent.changeProperty("localPosition", currentPro[PRSStart.LocalPosition], transform.localPosition, transform);
+                    modelComponent.changeProperty("localPosition", currentProperty[PRSStart.LocalPosition], transform.localPosition, transform);
                 }
                 else if (this.mode === this.rotate) {
-                    modelComponent.changeProperty("localEulerAngles", currentPro[PRSStart.LocalEulerAngles], transform.localEulerAngles, transform);
+                    modelComponent.changeProperty("localEulerAngles", currentProperty[PRSStart.LocalEulerAngles], transform.localEulerAngles, transform);
                 }
                 else if (this.mode === this.scale) {
-                    modelComponent.changeProperty("localScale", currentPro[PRSStart.LocalScale], transform.localScale, transform);
+                    modelComponent.changeProperty("localScale", currentProperty[PRSStart.LocalScale], transform.localScale, transform);
                 }
             }
 

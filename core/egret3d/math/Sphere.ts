@@ -136,11 +136,11 @@ namespace egret3d {
             return this.center.getDistance(value) - this.radius;
         }
 
-        public raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo) {
+        public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
+            const radius2 = this.radius * this.radius;
             const v1 = helpVector3A.subtract(this.center, ray.origin);
             const tca = v1.dot(ray.direction);
             const d2 = v1.dot(v1) - tca * tca;
-            const radius2 = this.radius * this.radius;
 
             if (d2 > radius2) return false;
 
@@ -152,18 +152,12 @@ namespace egret3d {
             // t1 = second intersect point - exit point on back of sphere
             const t1 = tca + thc;
 
-            // test to see if both t0 and t1 are behind the ray - if so, return null
-            if (t0 < 0.0 && t1 < 0.0) return false;
-
-            // test to see if t0 is behind the ray:
-            // if it is, the ray is inside the sphere, so return the second exit point scaled by t1,
-            // in order to always return an intersect point that is in front of the ray.
-
-            // else t0 is in front of the ray, so return the first collision point scaled by t0
+            if (t0 < 0.0 || t1 < 0.0) return false;
 
             if (raycastInfo) {
+                const position = ray.getPointAt(t0, raycastInfo.position);
                 const normal = raycastInfo.normal;
-                const position = ray.getPointAt(raycastInfo.distance = t0 < 0.0 ? t1 : t0, raycastInfo.position);
+                raycastInfo.distance = t0;
 
                 if (normal) {
                     normal.subtract(position, this.center).normalize();

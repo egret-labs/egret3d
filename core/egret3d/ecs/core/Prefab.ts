@@ -63,7 +63,7 @@ namespace paper {
          * @param name 资源的名称。
          * @param scene 指定的场景。
          */
-        public static create(name: string, scene: Scene): GameObject | null;
+        public static create(name: string, scene: IScene): GameObject | null;
         /**
          * @param name 资源的名称。
          * @param x X 坐标。
@@ -71,13 +71,15 @@ namespace paper {
          * @param z Z 坐标。
          * @param scene 指定的场景。
          */
-        public static create(name: string, x: number, y: number, z: number, scene: Scene): GameObject | null;
-        public static create(name: string, xOrScene?: number | Scene, y?: number, z?: number, scene?: Scene) {
+        public static create(name: string, x: number, y: number, z: number, scene: IScene): GameObject | null;
+        public static create(name: string, xOrScene?: number | IScene, y?: number, z?: number, scene?: IScene) {
             const prefab = Asset.find<Prefab>(name);
+
             if (prefab && prefab instanceof Prefab) {
                 if (xOrScene !== undefined && xOrScene !== null) {
                     if (xOrScene instanceof Scene) {
                         const gameObject = prefab.createInstance(xOrScene);
+
                         if (gameObject) {
                             gameObject.transform.setLocalPosition(0.0, 0.0, 0.0);
                         }
@@ -87,7 +89,7 @@ namespace paper {
                     else {
                         const gameObject = prefab.createInstance(scene || null);
                         if (gameObject) {
-                            gameObject.transform.setLocalPosition(xOrScene, y!, z!);
+                            gameObject.transform.setLocalPosition(xOrScene as number, y!, z!);
                         }
 
                         return gameObject;
@@ -108,11 +110,10 @@ namespace paper {
 
             return null;
         }
-
         /**
          * @deprecated
          */
-        public createInstance(scene?: Scene | null, keepUUID?: boolean) {
+        public createInstance(scene?: IScene | null, keepUUID?: boolean) {
             if (!this.config) {
                 return null;
             }

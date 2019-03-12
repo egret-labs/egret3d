@@ -7,31 +7,76 @@ namespace paper.editor {
      * @internal
      */
     @singleton
-    export class EditorDefaultTexture extends BaseComponent {
+    export class EditorDefaultAsset extends Component {
+        public static CIRCLE_LINE_HALF: egret3d.Mesh;
+
         public static CAMERA_ICON: egret3d.Texture;
         public static LIGHT_ICON: egret3d.Texture;
 
+        /**专门为编辑器写的API，解决再调用纹理时纹理尚未加载完毕的问题 */
+        public static async initializeForEditor(): Promise<void> {
+            return new Promise<void>((resolve) => {
+                let mapList = [
+                    { target: "CAMERA_ICON", img: _icons.camera },
+                    { target: "LIGHT_ICON", img: _icons.light },
+                ]
+                let index = 0;
+                let loadNext = () => {
+                    if (index < mapList.length) {
+                        const image = new Image();
+                        image.src = mapList[index].img;
+                        image.onload = () => {
+                            const texture = egret3d.Texture.create({
+                                source: image
+                            }).setLiner(true).setRepeat(false).setMipmap(false);
+                            (EditorDefaultAsset as any)[mapList[index].target] = texture;
+
+                            index++;
+                            loadNext()
+                        };
+                    }
+                    else {
+                        resolve();
+                    }
+                }
+                loadNext();
+            })
+        }
+
         public initialize() {
+            super.initialize();
+
             {
-                const image = new Image();
-                image.src = _icons.camera;
-                image.onload = () => {
-                    const texture = egret3d.Texture.create({
-                        source: image
-                    }).setLiner(true).setRepeat(false).setMipmap(false);
-                    EditorDefaultTexture.CAMERA_ICON = texture;
-                };
+                const mesh = egret3d.MeshBuilder.createCircle(0.5, 0.5);
+                mesh.name = "builtin/circle_line_half.mesh.bin";
+                paper.Asset.register(mesh);
+                EditorDefaultAsset.CIRCLE_LINE_HALF = mesh;
             }
 
             {
-                const image = new Image();
-                image.src = _icons.light;
-                image.onload = () => {
-                    const texture = egret3d.Texture.create({
-                        source: image
-                    }).setLiner(true).setRepeat(false).setMipmap(false);
-                    EditorDefaultTexture.LIGHT_ICON = texture;
-                };
+                if (!EditorDefaultAsset.CAMERA_ICON) {
+                    const image = new Image();
+                    image.src = _icons.camera;
+                    image.onload = () => {
+                        const texture = egret3d.Texture.create({
+                            source: image
+                        }).setLiner(true).setRepeat(false).setMipmap(false);
+                        EditorDefaultAsset.CAMERA_ICON = texture;
+                    };
+                }
+            }
+
+            {
+                if (!EditorDefaultAsset.LIGHT_ICON) {
+                    const image = new Image();
+                    image.src = _icons.light;
+                    image.onload = () => {
+                        const texture = egret3d.Texture.create({
+                            source: image
+                        }).setLiner(true).setRepeat(false).setMipmap(false);
+                        EditorDefaultAsset.LIGHT_ICON = texture;
+                    };
+                }
             }
         }
     }

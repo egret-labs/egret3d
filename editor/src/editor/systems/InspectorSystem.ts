@@ -1,34 +1,61 @@
 namespace paper.editor {
     type ResData = { name: string, type: string, url: string, root: string };
     /**
-     * TODO GUI NEW SAVE LOAD
      * @internal
      */
-    export class GUISystem extends BaseSystem {
-        private readonly _disposeCollecter: DisposeCollecter = GameObject.globalGameObject.getOrAddComponent(DisposeCollecter);
-        private readonly _modelComponent: ModelComponent = GameObject.globalGameObject.getOrAddComponent(ModelComponent);
-        private readonly _guiComponent: GUIComponent = GameObject.globalGameObject.getOrAddComponent(GUIComponent);
-        private readonly _bufferedGameObjects: (GameObject | null)[] = [];
-        private _selectFolder: dat.GUI | null = null;
+    @executeMode(PlayerMode.Player | PlayerMode.DebugPlayer)
+    export class InspectorSystem extends BaseSystem<GameObject> {
+        private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
+        private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
 
-        private _onSceneSelected = (_c: any, value: Scene) => {
-            this._selectSceneOrGameObject(value);
+        private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
+            const lastSelectedEntity = this.groups[0].singleEntity;
+
+            if (lastSelectedEntity === entity && (component.hideFlags & HideFlags.Hide) === 0) {
+                this._addComponent(component);
+            }
         }
 
-        private _onSceneUnselected = (_c: any, value: Scene) => {
-            this._selectSceneOrGameObject(null);
-        }
+        private _onComponentDestroy([entity, component]: [IEntity, IComponent]) {
+            const lastSelectedEntity = this.groups[0].singleEntity;
 
-        private _onGameObjectSelectedChange = (_c: any, value: GameObject) => {
-            this._selectSceneOrGameObject(this._modelComponent.selectedGameObject);
-        }
-
-        private _sceneOrGameObjectGUIClickHandler = (gui: dat.GUI) => {
-            this._modelComponent.select(gui.instance, true);
+            if (lastSelectedEntity === entity && (component.hideFlags & HideFlags.Hide) === 0) {
+                this._removeComponent(component);
+            }
         }
 
         private _componentOrPropertyGUIClickHandler = (gui: dat.GUI) => {
-            (window as any)["psc"] = gui.instance;
+            (window as any)["psc"] = (window as any)["epsc"] = gui.instance; // For quick debug.
+        }
+
+        private _addComponent(component: IComponent) {
+            const { inspector, inspectorItems } = this._guiComponent;
+
+            if (!(component.uuid in inspectorItems)) {
+                const item = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
+                item.instance = component;
+                item.open();
+
+                inspectorItems[component.uuid] = item;
+                this._addToInspector(item);
+            }
+        }
+
+        private _removeComponent(component: IComponent) {
+            const { inspectorItems } = this._guiComponent;
+
+            if (component.uuid in inspectorItems) {
+                const item = inspectorItems[component.uuid];
+                delete inspectorItems[component.uuid];
+
+                if (item.parent) {
+                    try {
+                        item.parent.removeFolder(item);
+                    }
+                    catch (e) {
+                    }
+                }
+            }
         }
 
         private _saveSceneOrGameObject = () => {
@@ -37,7 +64,8 @@ namespace paper.editor {
                 console.info(json);
             }
             else {
-                const json = JSON.stringify(serialize(this._modelComponent.selectedGameObject!));
+                const lastSelectedEntity = this.groups[0].singleEntity!;
+                const json = JSON.stringify(serialize(lastSelectedEntity));
                 console.info(json);
             }
         }
@@ -49,19 +77,10 @@ namespace paper.editor {
             }
         }
 
-        private _openFolder(folder: dat.GUI) {
-            if (!folder.parent || folder.parent === this._guiComponent.hierarchy) {
-                return;
-            }
-
-            folder.parent.open();
-            this._openFolder(folder.parent);
-        }
-
         private _getAssets(type: string) {
             const added = [] as string[];
             const result = [{ label: "None", value: null }] as { label: string, value: string | null }[];
-            const assets = (paper.Asset as any)._assets as { [key: string]: paper.Asset };
+            const assets = (Asset as any)._assets as { [key: string]: Asset };
 
             for (const k in assets) {
                 let flag = false;
@@ -116,17 +135,11 @@ namespace paper.editor {
         }
 
         private _selectSceneOrGameObject(sceneOrGameObject: Scene | GameObject | null) {
-            // Unselect prev folder.
-            if (this._selectFolder) {
-                this._selectFolder.selected = false;
-                this._selectFolder = null;
-            }
-
             const inspector = this._guiComponent.inspector;
             inspector.instance = sceneOrGameObject;
 
-            for (const k in this._guiComponent._inspectorFolders) {
-                delete this._guiComponent._inspectorFolders[k];
+            for (const k in this._guiComponent.inspectorItems) {
+                delete this._guiComponent.inspectorItems[k];
             }
 
             if (inspector.__controllers) {
@@ -167,65 +180,39 @@ namespace paper.editor {
 
                 await RES.getResAsync(v);
                 let gameObject: GameObject | null = null;
-                if (this._modelComponent.selectedGameObject) {
-                    const parent = this._modelComponent.selectedGameObject!;
-                    gameObject = Prefab.create(v, parent.scene);
-                    gameObject!.parent = parent;
-                }
-                else {
-                    gameObject = Prefab.create(v, this._modelComponent.selectedScene || Scene.activeScene);
-                }
+                // if (this._modelComponent.selectedGameObject) {
+                //     const parent = this._modelComponent.selectedGameObject!;
+                //     gameObject = Prefab.create(v, parent.scene!);
+                //     gameObject!.parent = parent;
+                // }
+                // else {
+                gameObject = Prefab.create(v, Scene.activeScene);
+                // }
 
                 this._modelComponent.select(gameObject);
             });
 
             if (sceneOrGameObject) {
-                inspector.add(this, "destroy|_destroySceneOrGameObject", "destroy");
-                inspector.add(this, "save|_saveSceneOrGameObject", "save");
+                inspector.add(this, "destroy|_destroySceneOrGameObject");
+                inspector.add(this, "save|_saveSceneOrGameObject");
                 this._addToInspector(inspector);
 
                 if (sceneOrGameObject instanceof Scene) { // Update scene.
                 }
-                else { // Update game object.
+                else { // Update entity.
                     for (const component of sceneOrGameObject.components) {
-                        const folder = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
-                        folder.instance = component;
-                        folder.open();
-                        this._guiComponent._inspectorFolders[component.uuid] = folder;
-                        this._addToInspector(folder);
+                        if (component.hideFlags & HideFlags.Hide) {
+                            continue;
+                        }
+
+                        const item = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
+                        item.instance = component;
+                        item.open();
+                        this._guiComponent.inspectorItems[component.uuid] = item;
+                        this._addToInspector(item);
                     }
                 }
             }
-        }
-
-        private _addToHierarchy(gameObject: GameObject) {
-            if (
-                gameObject.uuid in this._guiComponent._hierarchyFolders ||
-                (gameObject.hideFlags & HideFlags.Hide) ||
-                gameObject.scene === Scene.editorScene
-            ) {
-                return true;
-            }
-
-            let parentFolder = this._guiComponent._hierarchyFolders[gameObject.transform.parent ? gameObject.transform.parent.gameObject.uuid : gameObject.scene.uuid];
-            if (!parentFolder) {
-                if (gameObject.transform.parent) {
-                    // throw new Error(); // Never.
-                    return false;
-                }
-
-                parentFolder = this._guiComponent.hierarchy.addFolder(gameObject.scene.uuid, gameObject.scene.name + " <Scene>");
-                parentFolder.instance = gameObject.scene;
-                parentFolder.onClick = this._sceneOrGameObjectGUIClickHandler;
-                this._guiComponent._hierarchyFolders[gameObject.scene.uuid] = parentFolder;
-            }
-
-            const folder = parentFolder.addFolder(gameObject.uuid, gameObject.name);
-            folder.instance = gameObject;
-            folder.onClick = this._sceneOrGameObjectGUIClickHandler;
-            this._guiComponent._hierarchyFolders[gameObject.uuid] = folder;
-
-            return true;
         }
 
         private _propertyHasGetterSetter(target: any, propName: string) {
@@ -268,7 +255,7 @@ namespace paper.editor {
             }
         }
 
-        private _addItemToInspector(type: paper.editor.EditType, parent: dat.GUI, info: paper.editor.PropertyInfo) {
+        private _addItemToInspector(type: editor.EditType, parent: dat.GUI, info: editor.PropertyInfo) {
             if (parent !== this._guiComponent.inspector) {
                 parent.onClick = this._componentOrPropertyGUIClickHandler;
             }
@@ -279,7 +266,7 @@ namespace paper.editor {
             let guiControllerD: dat.GUIController;
 
             switch (type) {
-                case paper.editor.EditType.UINT:
+                case editor.EditType.UINT:
                     guiControllerA = parent.add(parent.instance, info!.name).min(0).step(1).listen();
 
                     if (info.option) {
@@ -297,7 +284,7 @@ namespace paper.editor {
                     }
                     break;
 
-                case paper.editor.EditType.INT:
+                case editor.EditType.INT:
                     guiControllerA = parent.add(parent.instance, info.name).step(1).listen();
 
                     if (info.option) {
@@ -315,7 +302,7 @@ namespace paper.editor {
                     }
                     break;
 
-                case paper.editor.EditType.FLOAT:
+                case editor.EditType.FLOAT:
                     guiControllerA = parent.add(parent.instance, info.name).step(0.1).listen();
 
                     if (info.option) {
@@ -333,16 +320,16 @@ namespace paper.editor {
                     }
                     break;
 
-                case paper.editor.EditType.CHECKBOX:
-                case paper.editor.EditType.TEXT:
+                case editor.EditType.CHECKBOX:
+                case editor.EditType.TEXT:
                     parent.add(parent.instance, info.name).listen();
                     break;
 
-                case paper.editor.EditType.LIST:
+                case editor.EditType.LIST:
                     let listItems = info.option!.listItems;
                     if (listItems) {
                         if (typeof listItems === "string") {
-                            listItems = parent.instance[listItems] as paper.editor.ListItem[];
+                            listItems = parent.instance[listItems] as editor.ListItem[];
                         }
                         else if (listItems instanceof Function) {
                             listItems = listItems(parent.instance);
@@ -352,7 +339,7 @@ namespace paper.editor {
                     }
                     break;
 
-                case paper.editor.EditType.VECTOR2: {
+                case editor.EditType.VECTOR2: {
                     guiControllerA = parent.add(parent.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
                     guiControllerB = parent.add(parent.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
 
@@ -383,7 +370,7 @@ namespace paper.editor {
                     break;
                 }
 
-                case paper.editor.EditType.SIZE: {
+                case editor.EditType.SIZE: {
                     guiControllerA = parent.add(parent.instance[info.name], `${info.name}: w|w`).step(0.1).listen();
                     guiControllerB = parent.add(parent.instance[info.name], `${info.name}: h|h`).step(0.1).listen();
 
@@ -414,7 +401,7 @@ namespace paper.editor {
                     break;
                 }
 
-                case paper.editor.EditType.VECTOR3: {
+                case editor.EditType.VECTOR3: {
                     guiControllerA = parent.add(parent.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
                     guiControllerB = parent.add(parent.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
                     guiControllerC = parent.add(parent.instance[info.name], `${info.name}: z|z`).step(0.1).listen();
@@ -450,11 +437,11 @@ namespace paper.editor {
                     break;
                 }
 
-                case paper.editor.EditType.VECTOR4:
-                case paper.editor.EditType.QUATERNION:
+                case editor.EditType.VECTOR4:
+                case editor.EditType.QUATERNION:
                     break;
 
-                case paper.editor.EditType.COLOR: {
+                case editor.EditType.COLOR: {
                     guiControllerA = parent.addColor(parent.instance, info.name).listen();
 
                     if (this._propertyHasGetterSetter(parent.instance, info.name)) {
@@ -466,7 +453,7 @@ namespace paper.editor {
                     break;
                 }
 
-                case paper.editor.EditType.RECT: {
+                case editor.EditType.RECT: {
                     guiControllerA = parent.add(parent.instance[info.name], `${info.name}: x|x`).step(0.1).listen();
                     guiControllerB = parent.add(parent.instance[info.name], `${info.name}: y|y`).step(0.1).listen();
                     guiControllerC = parent.add(parent.instance[info.name], `${info.name}: w|w`).step(0.1).listen();
@@ -507,32 +494,32 @@ namespace paper.editor {
                     break;
                 }
 
-                case paper.editor.EditType.MESH:
+                case editor.EditType.MESH:
                     parent.add(new AssetProxy(parent.instance, info.name), `${info.name}|uri`, this._getAssets("Mesh")).listen();
                     break;
 
-                case paper.editor.EditType.MATERIAL: {
+                case editor.EditType.MATERIAL: {
                     const folder = parent.addFolder(info.name);
                     folder.instance = parent.instance[info.name];
                     this._addToInspector(folder);
                     break;
                 }
 
-                case paper.editor.EditType.MATERIAL_ARRAY: {
+                case editor.EditType.MATERIAL_ARRAY: {
                     const folder = parent.addFolder(info.name);
                     folder.instance = parent.instance[info.name];
                     this._addToArray(folder, egret3d.Material);
                     break;
                 }
 
-                case paper.editor.EditType.GAMEOBJECT:
+                case editor.EditType.GAMEOBJECT:
                     break;
 
-                case paper.editor.EditType.BUTTON:
+                case editor.EditType.BUTTON:
                     parent.add(parent.instance, info.name);
                     break;
 
-                case paper.editor.EditType.NESTED: {
+                case editor.EditType.NESTED: {
                     const folder = parent.addFolder(info.name);
                     folder.instance = parent.instance[info.name];
                     this._addToInspector(folder);
@@ -578,7 +565,7 @@ namespace paper.editor {
                     const materials = gui.instance as egret3d.Material[];
                     let index = 0;
                     for (const material of materials) {
-                        const folder = gui.addFolder(`<${index++}>`);
+                        const folder = gui.addFolder(`<${index++}> ${material.name || material.shader.name}`);
                         folder.instance = material;
                         this._addToInspector(folder);
                     }
@@ -587,167 +574,91 @@ namespace paper.editor {
             }
         }
 
-        public onAwake() {
-            const sceneOptions = {
-                debug: false,
-                resources: () => {
-                    // if (this._modelComponent.selectedScene) {
-                    //     const sceneJSON = JSON.stringify(serialize(this._modelComponent.selectedScene));
-                    //     console.info(sceneJSON);
-                    // }
-                    // else if (this._modelComponent.selectedGameObjects.length > 0) {
-                    // }
-                },
-            };
-
-            this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
-                const sceneSystem = Application.systemManager.getOrRegisterSystem(editor.SceneSystem, SystemOrder.LateUpdate);
-
-                if (v) {
-                    Application.playerMode = PlayerMode.DebugPlayer;
-                    sceneSystem.enabled = true;
-                }
-                else {
-                    Application.playerMode = PlayerMode.Player;
-                    sceneSystem.enabled = false;
-                }
-            });
+        protected getMatchers() {
+            return [
+                Matcher.create<GameObject>(false, LastSelectedFlag),
+            ];
         }
 
         public onEnable() {
-            ModelComponent.onSceneSelected.add(this._onSceneSelected, this);
-            ModelComponent.onSceneUnselected.add(this._onSceneUnselected, this);
-            ModelComponent.onGameObjectSelectChanged.add(this._onGameObjectSelectedChange, this);
-
-            this._modelComponent.select(Scene.activeScene);
-            this._bufferedGameObjects.push(paper.GameObject.globalGameObject);
+            Component.onComponentCreated.add(this._onComponentCreated, this);
+            Component.onComponentDestroy.add(this._onComponentDestroy, this);
         }
 
         public onDisable() {
-            ModelComponent.onSceneSelected.remove(this._onSceneSelected, this);
-            ModelComponent.onSceneUnselected.remove(this._onSceneUnselected, this);
-            ModelComponent.onGameObjectSelectChanged.remove(this._onGameObjectSelectedChange, this);
+            Component.onComponentCreated.remove(this._onComponentCreated, this);
+            Component.onComponentDestroy.remove(this._onComponentDestroy, this);
 
-            for (const k in this._guiComponent._hierarchyFolders) {
-                const folder = this._guiComponent._hierarchyFolders[k];
-                delete this._guiComponent._hierarchyFolders[k];
+            const { inspectorItems } = this._guiComponent;
 
-                if (folder && folder.parent) {
+            for (const k in inspectorItems) {
+                const item = inspectorItems[k];
+                delete inspectorItems[k];
+
+                if (item && item.parent) {
                     try {
-                        folder.parent.removeFolder(folder);
+                        item.parent.removeFolder(item);
                     }
                     catch (e) {
                     }
                 }
             }
-
-            for (const k in this._guiComponent._inspectorFolders) {
-                delete this._guiComponent._inspectorFolders[k];
-            }
-
-            this._bufferedGameObjects.length = 0;
-            this._selectFolder = null;
         }
 
-        public onUpdate() {
-            const isHierarchyShowed = !this._guiComponent.hierarchy.closed && this._guiComponent.hierarchy.domElement.style.display !== "none";
-            const isInspectorShowed = !this._guiComponent.inspector.closed && this._guiComponent.inspector.domElement.style.display !== "none";
+        public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
+            const groups = this.groups;
+        }
 
-            { // Clear folders.
-                for (const scene of this._disposeCollecter.scenes) {
-                    const folder = this._guiComponent._hierarchyFolders[scene.uuid];
-                    delete this._guiComponent._hierarchyFolders[scene.uuid];
+        public onEntityRemoved(entity: GameObject, group: Group<GameObject>) {
+            const groups = this.groups;
 
-                    if (folder && folder.parent) {
-                        try {
-                            folder.parent.removeFolder(folder);
-                        }
-                        catch (e) {
-                        }
-                    }
-                }
-
-                for (const gameObject of this._disposeCollecter.gameObjects) {
-                    const folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
-                    delete this._guiComponent._hierarchyFolders[gameObject.uuid];
-
-                    if (folder && folder.parent) {
-                        try {
-                            folder.parent.removeFolder(folder);
-                        }
-                        catch (e) {
-                        }
-                    }
-                }
-
-                for (const component of this._disposeCollecter.components) {
-                    const folder = this._guiComponent._inspectorFolders[component.uuid];
-                    delete this._guiComponent._inspectorFolders[component.uuid];
-
-                    if (folder && folder.parent) {
-                        try {
-                            folder.parent.removeFolder(folder);
-                        }
-                        catch (e) {
-                        }
-                    }
-                }
-
-                for (const gameObject of this._disposeCollecter.parentChangedGameObjects) {
-                    const folder = this._guiComponent._hierarchyFolders[gameObject.uuid];
-
-                    if (folder) {
-                        delete this._guiComponent._hierarchyFolders[gameObject.uuid];
-
-                        if (folder && folder.parent) {
-                            try {
-                                folder.parent.removeFolder(folder);
-                            }
-                            catch (e) {
-                            }
-                        }
-                    }
-
-                    if (this._bufferedGameObjects.indexOf(gameObject) < 0) {
-                        this._bufferedGameObjects.push(gameObject);
-                    }
+            if (group === groups[0]) {
+                if (!this._modelComponent.selectedScene) {
+                    this._selectSceneOrGameObject(null);
                 }
             }
+        }
 
-            this._modelComponent.update();
+        public onFrame() {
+            const { inspector, inspectorItems } = this._guiComponent;
+            const isInspectorShowed = !inspector.closed && inspector.domElement.style.display !== "none";
 
-            if (isHierarchyShowed) { // Add folder.
-                let i = 0;
-                while (this._bufferedGameObjects.length > 0 && i++ < 5) {
-                    const gameObject = this._bufferedGameObjects.shift();
-                    if (gameObject && !gameObject.isDestroyed) {
-                        if (!this._addToHierarchy(gameObject)) {
-                            this._bufferedGameObjects.push(gameObject);
+            if (isInspectorShowed) {
+                const selectedScene = this._modelComponent.selectedScene;
+                const lastSelectedEntity = this.groups[0].singleEntity;
+
+                if (selectedScene) {
+                    if (selectedScene !== inspector.instance) {
+                        this._selectSceneOrGameObject(selectedScene);
+                    }
+                }
+                else if (lastSelectedEntity) {
+                    if (lastSelectedEntity !== inspector.instance) {
+                        this._selectSceneOrGameObject(lastSelectedEntity);
+                    }
+
+                    const { openedComponents } = this._modelComponent;
+
+                    if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
+                        for (const k in inspectorItems) {
+                            inspectorItems[k].close();
                         }
+
+                        for (const componentClass of openedComponents) {
+                            const component = lastSelectedEntity.getComponent(componentClass);
+
+                            if (component && component.uuid in inspectorItems) {
+                                inspectorItems[component.uuid].open();
+                            }
+                        }
+
+                        openedComponents.length = 0;
                     }
+
+                    lastSelectedEntity.transform.localEulerAngles; // TODO
                 }
-
-                if (!this._selectFolder) {  // Open and select folder.
-                    const sceneOrGameObject = this._modelComponent.selectedScene || this._modelComponent.selectedGameObject;
-                    if (sceneOrGameObject && sceneOrGameObject.uuid in this._guiComponent._hierarchyFolders) {
-                        this._selectFolder = this._guiComponent._hierarchyFolders[sceneOrGameObject.uuid];
-                        this._selectFolder.selected = true;
-                        this._openFolder(this._selectFolder);
-                    }
-                }
-            }
-
-            if (isInspectorShowed) { // Update folder.
-                // this._guiComponent.inspector.updateDisplay();
-                // const inspectorFolders = this._guiComponent.inspector.__folders;
-                // if (inspectorFolders) {
-                //     for (const k in inspectorFolders) {
-                //         inspectorFolders[k].updateDisplay();
-                //     }
-                // }
-
-                if (this._modelComponent.selectedGameObject) {
-                    this._modelComponent.selectedGameObject.transform.localEulerAngles; // TODO
+                else if (inspector.instance) {
+                    this._selectSceneOrGameObject(null);
                 }
             }
         }
@@ -774,7 +685,7 @@ namespace paper.editor {
         public get uri() {
             const value = this._get ? this._instance[this._get](this._key) : this._instance[this._key!];
             if (value) {
-                return value.name || paper.DefaultNames.NoName;
+                return value.name || DefaultNames.NoName;
             }
 
             return "";
@@ -786,7 +697,7 @@ namespace paper.editor {
                 this._setValue(null);
             }
             else {
-                const asset = paper.Asset.find(value);
+                const asset = Asset.find(value);
                 if (asset) {
                     this._setValue(asset);
                 }

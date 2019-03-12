@@ -1,13 +1,13 @@
 namespace egret3d {
     /**
-     * 网格筛选组件。
+     * 网格过滤组件。
      * - 为网格渲染组件提供网格资源。
      */
     export class MeshFilter extends paper.BaseComponent {
         /**
-         * 当网格筛选组件的网格资源改变时派发事件。
+         * 当网格过滤组件的网格资源改变时派发事件。
          */
-        public static readonly onMeshChanged: signals.Signal = new signals.Signal();
+        public static readonly onMeshChanged: signals.Signal<MeshFilter> = new signals.Signal();
 
         private _mesh: Mesh | null = null;
         /**

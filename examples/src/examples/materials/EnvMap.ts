@@ -12,11 +12,7 @@ namespace examples.materials {
             //
             egret3d.Camera.main.gameObject.addComponent(Starter);
             //
-            const modelComponent = paper.GameObject.globalGameObject.getComponent(paper.editor.ModelComponent);
-            if (modelComponent) {
-                modelComponent.select(egret3d.Camera.main.gameObject);
-                paper.GameObject.globalGameObject.getComponent(paper.editor.GUIComponent)!.openComponents(Starter);
-            }
+            selectGameObjectAndComponents(egret3d.Camera.main.gameObject, Starter);
         }
     }
 

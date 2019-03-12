@@ -2,7 +2,7 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
-    export class InputSystem extends paper.BaseSystem {
+    export class InputSystem extends paper.BaseSystem<paper.GameObject> {
         private _hasTouch: boolean = false;
         private _canvas: HTMLCanvasElement = null!;
 
@@ -445,7 +445,7 @@ namespace egret3d.webgl {
             }
         }
 
-        public onAwake(config: RunEgretOptions) {
+        public onAwake(config: RunOptions) {
             this._canvas = config.canvas!;
         }
 
@@ -518,9 +518,14 @@ namespace egret3d.webgl {
             inputCollecter._clear();
         }
 
-        public onUpdate(deltaTime: number) {
+        public onFrame(deltaTime: number) {
             if (inputCollecter.isActiveAndEnabled) {
                 inputCollecter._update(deltaTime);
+            }
+        }
+
+        public onFrameCleanup() {
+            if (inputCollecter.isActiveAndEnabled) {
                 inputCollecter._clear();
             }
         }

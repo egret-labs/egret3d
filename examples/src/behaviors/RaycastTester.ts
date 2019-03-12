@@ -43,7 +43,6 @@ namespace behaviors {
 
     export class RendererRaycast extends BaseRaycast {
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
-        public raycastMesh: boolean = false;
         public target: paper.GameObject | null = null;
 
         public onUpdate() {
@@ -56,7 +55,7 @@ namespace behaviors {
             if (this.target && this.target.renderer) {
                 this._updateRay();
 
-                if (this.target.renderer.raycast(this.ray, raycastInfo, this.raycastMesh)) {
+                if (this.target.renderer.raycast(this.ray, raycastInfo)) {
 
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                     this._normal.activeSelf = true;

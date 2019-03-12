@@ -2,7 +2,7 @@ namespace egret3d {
     /**
      * Egret 传统 2D 渲染系统。
      */
-    export class Egret2DRendererSystem extends paper.BaseSystem {
+    export class Egret2DRendererSystem extends paper.BaseSystem<paper.GameObject> {
         /**
          * @deprecated
          */
@@ -11,30 +11,26 @@ namespace egret3d {
          * @deprecated
          */
         public static webgl: WebGLRenderingContext | null = null;
-
-        public readonly interests = [
-            { componentClass: Egret2DRenderer }
-        ];
         /**
          * TODO
          * @internal
          */
         public readonly webInput = egret.Capabilities.runtimeType === egret.RuntimeType.WEB ? new (egret as any)["web"].HTMLInput() : null;
 
-        private _sortedDirty: boolean = false;
-        private readonly _sortedRenderers: Egret2DRenderer[] = [];
+        private _entitiesDirty: boolean = false;
+        private readonly _sortedEntities: paper.GameObject[] = [];
 
-        private _onSortRenderers(a: Egret2DRenderer, b: Egret2DRenderer) {
-            return b._order - a._order;
+        private _onSortEntities(a: paper.GameObject, b: paper.GameObject) {
+            return b.getComponent(Egret2DRenderer)!._order - a.getComponent(Egret2DRenderer)!._order;
         }
 
-        private _sortRenderers() {
-            if (this._sortedDirty) {
-                this._sortedRenderers.sort(this._onSortRenderers);
-                this._sortedDirty = false;
+        private _sortEntities() {
+            if (this._entitiesDirty) {
+                this._sortedEntities.sort(this._onSortEntities);
+                this._entitiesDirty = false;
             }
 
-            return this._sortedRenderers;
+            return this._sortedEntities;
         }
 
         private _onTouchStart(pointer: Pointer, signal: signals.Signal) {
@@ -42,8 +38,10 @@ namespace egret3d {
                 return;
             }
 
-            for (const renderer of this._sortRenderers()) {
-                const event = pointer.event!;
+            const event = pointer.event!;
+
+            for (const entity of this._sortEntities()) {
+                const renderer = entity.getComponent(Egret2DRenderer)!;
                 const scaler = renderer.scaler;
                 if (renderer.stage.$onTouchBegin(pointer.position.x / scaler, pointer.position.y / scaler, event.pointerId)) {
                     break;
@@ -56,8 +54,10 @@ namespace egret3d {
                 return;
             }
 
-            for (const renderer of this._sortRenderers()) {
-                const event = pointer.event!;
+            const event = pointer.event!;
+
+            for (const entity of this._sortEntities()) {
+                const renderer = entity.getComponent(Egret2DRenderer)!;
                 const scaler = renderer.scaler;
                 if (renderer.stage.$onTouchMove(pointer.position.x / scaler, pointer.position.y / scaler, event.pointerId)) {
                     break;
@@ -70,8 +70,10 @@ namespace egret3d {
                 return;
             }
 
-            for (const renderer of this._sortRenderers()) {
-                const event = pointer.event!;
+            const event = pointer.event!;
+
+            for (const entity of this._sortEntities()) {
+                const renderer = entity.getComponent(Egret2DRenderer)!;
                 const scaler = renderer.scaler;
                 if (renderer.stage.$onTouchEnd(pointer.position.x / scaler, pointer.position.y / scaler, event.pointerId)) {
                     break;
@@ -79,10 +81,17 @@ namespace egret3d {
             }
         }
 
-        public onAwake(config: RunEgretOptions) {
+        protected getMatchers() {
+            return [
+                paper.Matcher.create<paper.GameObject>(Egret2DRenderer),
+            ];
+        }
+
+        public onAwake(config: RunOptions) {
             Egret2DRendererSystem.canvas = config.canvas!;
             Egret2DRendererSystem.webgl = config.webgl!;
             const webgl = Egret2DRendererSystem.webgl;
+
             if (!webgl) {
                 return;
             }
@@ -110,22 +119,24 @@ namespace egret3d {
             inputCollecter.onPointerMove.remove(this._onTouchMove, this);
         }
 
-        public onAddGameObject(gameObject: paper.GameObject) {
-            this._sortedDirty = true;
-            this._sortedRenderers.push(gameObject.renderer as Egret2DRenderer);
+        public onEntityAdded(entity: paper.GameObject) {
+            this._entitiesDirty = true;
+            this._sortedEntities.push(entity);
         }
 
-        public onRemoveGameObject(gameObject: paper.GameObject) {
-            const index = this._sortedRenderers.indexOf(gameObject.renderer as Egret2DRenderer);
+        public onEntityRemoved(entity: paper.GameObject) {
+            const index = this._sortedEntities.indexOf(entity);
+
             if (index >= 0) {
-                this._sortedRenderers.splice(index, 1);
+                this._sortedEntities.splice(index, 1);
             }
         }
 
-        public onUpdate(deltaTime: number) {
+        public onFrame(deltaTime: number) { // TODO
             const { w, h } = stage.viewport;
-            for (const gameObject of this.groups[0].gameObjects) {
-                (gameObject.renderer as Egret2DRenderer).update(deltaTime, w, h);
+
+            for (const entity of this.groups[0].entities) {
+                entity.getComponent(Egret2DRenderer)!.update(deltaTime, w, h);
             }
         }
     }

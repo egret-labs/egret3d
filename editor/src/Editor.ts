@@ -22,7 +22,7 @@ namespace paper.editor {
                 if (proto.constructor.prototype.hasOwnProperty('__props__')) {
                     retrunList = retrunList.concat(proto.constructor.prototype['__props__']);
                 }
-                proto=proto.constructor.prototype.__proto__;
+                proto = proto.constructor.prototype.__proto__;
                 continue;
             }
             break;
@@ -64,6 +64,8 @@ namespace paper.editor {
             this.eventDispatcher = new EventDispatcher();
             //覆盖生成 uuid 的方式。
             paper.createUUID = generateUuid;
+            //处理一些不和谐内容
+            await this.preDo();
             //初始化编辑环境
             this.initEditEnvironment();
             //允许重新加载
@@ -105,7 +107,7 @@ namespace paper.editor {
          * 定位对象到场景中心
          * @param target 目标
          */
-        public static locateGambeObject(target:GameObject){
+        public static locateGambeObject(target: GameObject) {
             paper.Application.systemManager.getSystem(SceneSystem)!.lookAtSelected();
         }
         private static currentEditInfo: { url: string, type: string };
@@ -208,12 +210,17 @@ namespace paper.editor {
         public static dispatchEvent(event: BaseEvent): void {
             this.eventDispatcher.dispatchEvent(event);
         }
+        private static async preDo(){
+            await EditorDefaultAsset.initializeForEditor();
+        }
         private static initEditEnvironment() {
             egret3d.runEgret({
                 antialias: false,
                 alpha: false,
                 playerMode: PlayerMode.Editor,
             });
+            paper.clock.tickInterval = 1.0 / 30.0;
+            paper.clock.frameInterval = 1.0 / 30.0;
         }
     }
 }

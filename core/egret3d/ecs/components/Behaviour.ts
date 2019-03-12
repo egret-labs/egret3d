@@ -16,35 +16,54 @@ namespace paper {
      * - onDisable();
      * - onDestroy();
      */
+    @abstract
     export abstract class Behaviour extends BaseComponent {
         /**
          * @internal
          */
-        public static readonly __isBehaviour: boolean = true;
+        public static readonly isBehaviour: boolean = true;
         /**
-         * @private
+         * @internal
          */
-        public _isReseted: boolean = false;
-        /**
-         * @private
-         */
-        public _isAwaked: boolean = false;
-        /**
-         * @private
-         */
-        public _isStarted: boolean = false;
-        /**
-         * @private
-         */
-        public _dispatchEnabledEvent(value: boolean) {
-            super._dispatchEnabledEvent(value);
+        public _destroy() {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
+                if (this._lifeStates & ComponentLifeState.Awaked) {
+                    this.onDestroy && this.onDestroy();
+                }
+            }
 
-            if (value) {
-                Behaviour.onComponentEnabled.dispatch(this);
+            super._destroy();
+        }
+
+        public initialize(config?: any): void {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
+                (this.gameObject as GameObject) = this.entity as GameObject; //
+
+                if (this.isActiveAndEnabled) {
+                    this.onAwake && this.onAwake!(config);
+                    this._lifeStates |= ComponentLifeState.Awaked;
+                }
             }
-            else {
-                Behaviour.onComponentDisabled.dispatch(this);
+
+            super.initialize(config);
+        }
+
+        public dispatchEnabledEvent(enabled: boolean): void {
+            if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) {
+                if (enabled) {
+                    if ((this._lifeStates & ComponentLifeState.Awaked) === 0) {
+                        this.onAwake && this.onAwake();
+                        this._lifeStates |= ComponentLifeState.Awaked;
+                    }
+
+                    this.onEnable && this.onEnable();
+                }
+                else {
+                    this.onDisable && this.onDisable();
+                }
             }
+
+            super.dispatchEnabledEvent(enabled);
         }
         /**
          * 该组件被初始化时执行。
@@ -70,11 +89,10 @@ namespace paper {
         public onStart?(): void;
         /**
          * 程序运行时以固定间隔被执行。
-         * @param currentTimes 本帧被执行的计数。
-         * @param totalTimes 本帧被执行的总数。
+         * @param delta 本帧距离上一帧的时长。
          * @see paper.Clock
          */
-        public onFixedUpdate?(currentTimes: number, totalTimes: number): void;
+        public onFixedUpdate?(delta?: number): void;
         /**
          * 
          */

@@ -7,6 +7,11 @@ namespace egret3d {
      */
     @paper.singleton
     export class RenderState extends paper.BaseComponent {
+        /**
+         * @internal
+         */
+        public readonly onGammaInputChanged: signals.Signal = new signals.Signal();
+
         public version: number;
         public standardDerivativesEnabled: boolean;
         public textureFloatEnabled: boolean;
@@ -30,10 +35,6 @@ namespace egret3d {
         public commonDefines: string = "";
         public vertexDefines: string = "";
         public fragmentDefines: string = "";
-        /**
-         * @internal
-         */
-        public readonly onGammaInputChanged: signals.Signal = new signals.Signal();
         public readonly clearColor: Color = Color.create();
         public readonly viewport: Rectangle = Rectangle.create();
         public readonly defines: Defines = new Defines();
@@ -53,6 +54,7 @@ namespace egret3d {
             castShadows: false,
             receiveShadows: false,
             cullingMask: paper.Layer.Nothing,
+            attributeCount: 0,
             boneCount: 0,
             egret2DOrderCount: 0,
             clockBuffer: new Float32Array(4),
@@ -74,8 +76,8 @@ namespace egret3d {
         private _gammaOutput: boolean = true; //
         private _gammaFactor: number = 1.0;
         private _toneMapping: ToneMapping = ToneMapping.None;
-
-        protected readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest]; // TODO
+        // TODO move to caches
+        protected readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest];
         protected readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
 
         protected _getCommonExtensions() {
@@ -329,7 +331,7 @@ namespace egret3d {
             return prefixContext;
         }
 
-        public initialize(config: RunEgretOptions) {
+        public initialize(config: RunOptions) {
             super.initialize();
 
             (renderState as RenderState) = this;

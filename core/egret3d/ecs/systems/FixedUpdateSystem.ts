@@ -3,26 +3,23 @@ namespace paper {
      * 固定更新系统。
      * TODO
      */
-    export class FixedUpdateSystem extends BaseSystem {
-        public readonly interests = [
-            { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
-        ];
+    export class FixedUpdateSystem extends BaseSystem<GameObject> {
 
-        public onUpdate() {
-            const clock = this.clock;
-            let currentTimes = 0;
-            let fixedTime = clock.fixedTime;
-            const totalTimes = Math.min(Math.floor(fixedTime / clock.fixedDeltaTime), clock.maxFixedSubSteps);
-            const components = this.groups[0].components as ReadonlyArray<paper.Behaviour>;
+        protected getMatchers() {
+            return [
+                Matcher.create<GameObject>().extraOf(Behaviour as any)
+            ];
+        }
 
-            while (fixedTime >= clock.fixedDeltaTime && currentTimes++ < clock.maxFixedSubSteps) {
-                for (const component of components) {
-                    if (component && component._isStarted) {
-                        component.onFixedUpdate && component.onFixedUpdate(currentTimes, totalTimes);
-                    }
+        public onTick(delta?:number) {
+            const behaviours = this.groups[0].behaviours;
+
+            for (const behaviour of behaviours) {
+                if (!behaviour || (behaviour._lifeStates & ComponentLifeState.Started) === 0) {
+                    continue;
                 }
 
-                fixedTime -= clock.fixedDeltaTime;
+                behaviour.onFixedUpdate && behaviour.onFixedUpdate(delta);
             }
         }
     }

@@ -39,7 +39,7 @@ namespace egret3d {
             this.stage.addChild(this.root);
 
             if (!this._renderer) {
-                this._renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl! ||  Egret2DRendererSystem.webgl!);
+                this._renderer = egret.web.Renderer.getInstance(WebGLCapabilities.webgl! || Egret2DRendererSystem.webgl!);
             }
 
             let stage = this.stage;
@@ -65,7 +65,7 @@ namespace egret3d {
             this._localBoundingBox.size = Vector3.ZERO;
         }
 
-        public raycast(p1: Readonly<Ray>, p2?: boolean | RaycastInfo, p3?: boolean) {
+        public raycast(p1: Readonly<Ray>, p2: RaycastInfo | null = null) {
             // TODO
             return false;
         }

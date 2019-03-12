@@ -75,14 +75,55 @@
             var list = manifest.initial.concat(manifest.game);
             loadScript(list, function () {
                 egret3d.runEgret({
+                    /**
+                     * 启动时设置帧频
+                    tickInterval: 1.0 / 60.0, // 启动时设置逻辑帧频
+                    frameInterval: 1.0 / 30.0, // 启动时设置渲染帧频
+                     */
                     antialias: true,
                     alpha: false
                 });
+                /*
+                 * `paper.Application.pause(); // 如果是编辑器模式, egret3d.runEgret() 之后即可暂停主循环`
+                 */
                 main();
             });
         });
         xhr.send(null);
 
+        /**
+         * 运行时设置帧频和暂停/恢复
+         * 
+        ```js
+        var paused = true;
+        var tps = 10;
+        var fps = 15;
+        var firstResume = true;
+        window.ondblclick = () => {
+            paused = !paused;
+
+            if (!paused && !firstResume) {
+                // 运行时修改逻辑帧频
+                paper.clock.tickInterval = 1.0 / tps;
+                tps += 10;
+                if (tps > 70) { tps = 10; }
+
+                // 运行时修改渲染帧频
+                paper.clock.frameInterval = 1.0 / fps;
+                fps *= 2;
+                if (fps > 60) { fps = 15; }
+            }
+
+            // 运行时切换主动(主循环运行)和被动刷新(主循环暂停)
+            if (paused) {
+                paper.Application.pause();
+             } else {
+                paper.Application.resume();
+                firstResume = false;
+            }
+        }
+        ```
+         */
     </script>
 </body>
 

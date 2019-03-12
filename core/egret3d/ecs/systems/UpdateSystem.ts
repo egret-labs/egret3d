@@ -1,18 +1,22 @@
 namespace paper {
     /**
-     * 更新系统。
+     * @internal
      */
-    export class UpdateSystem extends BaseSystem {
-        public readonly interests = [
-            { componentClass: Behaviour as any, type: InterestType.Extends | InterestType.Unessential, isBehaviour: true }
-        ];
+    export class UpdateSystem extends BaseSystem<GameObject> {
 
-        public onUpdate(deltaTime: number) {
-            const components = this.groups[0].components as ReadonlyArray<Behaviour | null>;
-            for (const component of components) {
-                if (component && component._isStarted) {
-                    component.onUpdate && component.onUpdate(deltaTime);
+        protected getMatchers() {
+            return [
+                Matcher.create<GameObject>().extraOf(Behaviour as any)
+            ];
+        }
+
+        public onFrame(deltaTime: number) {
+            for (const behaviour of this.groups[0].behaviours) {
+                if (!behaviour || (behaviour._lifeStates & ComponentLifeState.Started) === 0) {
+                    continue;
                 }
+
+                behaviour.onUpdate && behaviour.onUpdate(deltaTime);
             }
         }
     }

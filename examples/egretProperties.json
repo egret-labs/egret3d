@@ -35,12 +35,12 @@
       "path": "../core"
     },
     {
-      "name": "inspector",
-      "path": "../editor"
-    },
-    {
       "name": "oimo",
       "path": "../plugins/oimo"
+    },
+    {
+      "name": "inspector",
+      "path": "../editor"
     }
   ]
 }

@@ -12,7 +12,7 @@ namespace paper {
             }
 
             const isEditor = Application.playerMode === PlayerMode.Editor;
-            const deserializer = new paper.Deserializer();
+            const deserializer = new Deserializer();
             const scene = deserializer.deserialize(this.config, keepUUID) as Scene | null;
 
             if (scene && isEditor) {

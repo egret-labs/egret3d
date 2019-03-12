@@ -39,15 +39,15 @@ namespace examples {
             console.info("onStart", this.gameObject.name);
         }
 
-        public onFixedUpdate(ct: number, tt: number) {
-            // console.info("onFixedUpdate", ct, tt);
+        public onFixedUpdate() {
+            // console.info("onFixedUpdate");
         }
 
-        public onUpdate(deltaTime: number): any {
+        public onUpdate() {
             // console.info("onUpdate");
         }
 
-        public onLateUpdate(deltaTime: number) {
+        public onLateUpdate() {
             // console.info("onLateUpdate");
         }
 
