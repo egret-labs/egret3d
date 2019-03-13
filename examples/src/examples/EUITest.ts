@@ -27,7 +27,7 @@ namespace examples {
 
             { // Create cube.
                 const cube = paper.GameObject.create("BottomCube");
-                // cube.addComponent(RotateScript);
+                cube.addComponent(RotateScript);
                 cube.layer = paper.Layer.Default;
 
                 const meshFilter = cube.addComponent(egret3d.MeshFilter);
@@ -49,7 +49,7 @@ namespace examples {
 
             { // Create cube.
                 const cube = paper.GameObject.create("TopCube");
-                // cube.addComponent(RotateScript);
+                cube.addComponent(RotateScript);
                 cube.layer = paper.Layer.UserLayer10;
                 cube.transform.translate(1, 0, 0);
 

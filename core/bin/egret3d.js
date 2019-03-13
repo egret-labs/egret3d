@@ -10458,7 +10458,7 @@ var egret3d;
          * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        Mesh.prototype.uploadSubIndexBuffer = function (subMeshIndex) { };
+        Mesh.prototype.uploadSubIndexBuffer = function (subMeshIndex, offset, count) { };
         return Mesh;
     }(egret3d.GLTFAsset));
     egret3d.Mesh = Mesh;
@@ -26812,6 +26812,7 @@ var egret3d;
             _this._shader = null;
             _this.needUpdate = function (dirty) {
                 _this._dirty |= dirty;
+                _this._version++;
             };
             return _this;
         }
@@ -30813,7 +30814,7 @@ var egret3d;
              * 更新该网格的索引缓存。
              * @param subMeshIndex
              */
-            WebGLMesh.prototype.uploadSubIndexBuffer = function (subMeshIndex) {
+            WebGLMesh.prototype.uploadSubIndexBuffer = function (subMeshIndex, offset, count) {
                 if (subMeshIndex === void 0) { subMeshIndex = 0; }
                 if (!this.vbo) {
                     return;
@@ -30822,7 +30823,7 @@ var egret3d;
                     var primitive = this._glTFMesh.primitives[subMeshIndex];
                     if (primitive.indices !== undefined) {
                         var accessor = this.getAccessor(primitive.indices);
-                        var subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
+                        var subIndexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
                         var ibo = this.ibos[subMeshIndex];
                         var webgl_13 = webgl_11.WebGLRenderState.webgl;
                         webgl_13.bindBuffer(34963 /* ElementArrayBuffer */, ibo);
@@ -31527,7 +31528,6 @@ var egret3d;
                     renderState_2.caches.egret2DOrderCount = 0;
                     renderState_2.caches.cullingMask = 0 /* Nothing */;
                     renderState_2.caches.clockBuffer[0] = clock.time; // TODO more clock info.
-                    // this._cacheProgram = null;
                     // Render lights shadows. TODO 
                     // if (camera.cullingMask !== renderState.caches.cullingMask) {
                     var lights = this._cameraAndLightCollecter.lights;
@@ -31550,6 +31550,7 @@ var egret3d;
                             this.render(camera);
                         }
                     }
+                    this._cacheProgram = null; //TODO
                 }
                 else {
                     this._renderState.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.BLACK);
@@ -31571,7 +31572,8 @@ var egret3d;
                         var isEditor = paper.Application.playerMode === 4 /* Editor */;
                         for (var _i = 0, _a = camera.entity.components; _i < _a.length; _i++) {
                             var component = _a[_i];
-                            if (component.constructor.isBehaviour &&
+                            if (component.isActiveAndEnabled &&
+                                component.constructor.isBehaviour &&
                                 (!isEditor || component.constructor.executeInEditMode) &&
                                 component.onBeforeRender) {
                                 flag = !component.onBeforeRender() || flag;
@@ -31716,6 +31718,7 @@ var egret3d;
                         this._cacheLight = null;
                         this._cacheMesh = null;
                         this._cacheMaterial = null;
+                        this._cacheMaterialVersion = -1;
                         this._cacheLightmapIndex = -1;
                         forceUpdate = true;
                     }

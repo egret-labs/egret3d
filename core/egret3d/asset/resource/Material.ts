@@ -361,6 +361,7 @@ namespace egret3d {
 
         public readonly needUpdate = (dirty: MaterialDirty) => {
             this._dirty |= dirty;
+            this._version++;
         }
 
         setBoolean(id: string, value: boolean) {

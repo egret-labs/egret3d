@@ -687,7 +687,6 @@ namespace egret3d.webgl {
                 renderState.caches.egret2DOrderCount = 0;
                 renderState.caches.cullingMask = paper.Layer.Nothing;
                 renderState.caches.clockBuffer[0] = clock.time; // TODO more clock info.
-                // this._cacheProgram = null;
 
                 // Render lights shadows. TODO 
                 // if (camera.cullingMask !== renderState.caches.cullingMask) {
@@ -715,6 +714,8 @@ namespace egret3d.webgl {
                         this.render(camera);
                     }
                 }
+
+                this._cacheProgram = null;//TODO
             }
             else { // Clear stage background to black.
                 this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.BLACK);
@@ -739,6 +740,7 @@ namespace egret3d.webgl {
 
                     for (const component of camera.entity.components) {
                         if (
+                            component.isActiveAndEnabled &&
                             (component.constructor as paper.IComponentClass<paper.IComponent>).isBehaviour &&
                             (!isEditor || (component.constructor as paper.IComponentClass<paper.Behaviour>).executeInEditMode) &&
                             (component as paper.Behaviour).onBeforeRender
@@ -907,6 +909,7 @@ namespace egret3d.webgl {
                     this._cacheLight = null;
                     this._cacheMesh = null;
                     this._cacheMaterial = null;
+                    this._cacheMaterialVersion = -1;
                     this._cacheLightmapIndex = -1;
                     forceUpdate = true;
                 }
