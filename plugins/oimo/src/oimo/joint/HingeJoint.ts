@@ -1,6 +1,7 @@
 namespace egret3d.oimo {
     /**
-     * 
+     * 铰链关节组件。
+     * - https://en.wikipedia.org/wiki/Hinge_joint
      */
     @paper.requireComponent(Rigidbody)
     @paper.allowMultiple
@@ -10,11 +11,15 @@ namespace egret3d.oimo {
         private static readonly _rotationalLimitMotor: OIMO.RotationalLimitMotor = new OIMO.RotationalLimitMotor();
 
         public readonly jointType: JointType = JointType.Hinge;
-
+        /**
+         * 该关节的弹簧和阻尼器设置。
+         */
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
         public readonly springDamper: SpringDamper = SpringDamper.create();
-
+        /**
+         * 该关节的旋转限位和马达设置。
+         */
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
         public readonly limitMotor: RotationalLimitMotor = RotationalLimitMotor.create();
@@ -73,7 +78,8 @@ namespace egret3d.oimo {
             return joint;
         }
         /**
-         * 
+         * 该关节的旋转轴。
+         * - `useWorldAnchor` 影响该值的坐标系描述。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get axis(): Readonly<Vector3> {

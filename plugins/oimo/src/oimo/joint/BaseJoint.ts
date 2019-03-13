@@ -2,7 +2,7 @@ namespace egret3d.oimo {
 
     const enum ValueType {
         CollisionEnabled,
-        UseGlobalAnchor,
+        UseWorldAnchor,
     }
     /**
      * 基础关节组件。
@@ -10,10 +10,6 @@ namespace egret3d.oimo {
      */
     @paper.abstract
     export abstract class BaseJoint<T extends OIMO.Joint> extends paper.BaseComponent {
-        /**
-         * @internal
-         */
-        public static readonly isAbstract: paper.IComponentClass<paper.IComponent> = BaseJoint as any;
         /**
          * 关节类型。
          */
@@ -28,43 +24,43 @@ namespace egret3d.oimo {
         @paper.serializedField
         protected readonly _values: Float32Array;
         @paper.serializedField
-        protected _oimoJoint: T = null!;
-        @paper.serializedField
         protected _rigidbody: Rigidbody = null!;
         @paper.serializedField
         protected _connectedBody: Rigidbody | null = null;
+        protected _oimoJoint: T = null!;
 
         protected abstract _createJoint(): T;
         /**
          * 获取该关节承受的力。
          */
-        public getAppliedForce(out?: Vector3): Vector3 {
-            if (!out) {
-                out = Vector3.create();
+        public getAppliedForce(output: Vector3 | null): Vector3 {
+            if (output === null) {
+                output = Vector3.create();
             }
 
-            this._oimoJoint.getAppliedForceTo(out as any); // TODO
+            this._oimoJoint.getAppliedForceTo(output as any); // TODO
 
-            return out;
+            return output;
         }
         /**
          * 获取该关节承受的扭矩。
          */
-        public getAppliedTorque(out?: Vector3): Vector3 {
-            if (!out) {
-                out = Vector3.create();
+        public getAppliedTorque(output?: Vector3): Vector3 {
+            if (!output) {
+                output = Vector3.create();
             }
 
-            this._oimoJoint.getAppliedTorqueTo(out as any); // TODO
+            this._oimoJoint.getAppliedTorqueTo(output as any); // TODO
 
-            return out;
+            return output;
         }
         /**
          * 该关节所连接的两个刚体之前是否允许碰撞。
+         * - 默认 `false` ，不允许碰撞。
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public get collisionEnabled(): boolean {
-            return this._values[ValueType.CollisionEnabled] > 0;
+            return this._values[ValueType.CollisionEnabled] === 1;
         }
         public set collisionEnabled(value: boolean) {
             if (this.collisionEnabled === value) {
@@ -79,14 +75,15 @@ namespace egret3d.oimo {
         }
         /**
          * 该关节的锚点是否为世界坐标系。
+         * - 默认 `false` ，使用本地坐标系。
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public get useWorldAnchor(): boolean {
-            return this._values[ValueType.UseGlobalAnchor] > 0;
+            return this._values[ValueType.UseWorldAnchor] > 0;
         }
         public set useWorldAnchor(value: boolean) {
             if (!this._oimoJoint) {
-                this._values[ValueType.UseGlobalAnchor] = value ? 1 : 0;
+                this._values[ValueType.UseWorldAnchor] = value ? 1 : 0;
             }
             else if (DEBUG) {
                 console.warn("Cannot change the useWorldAnchor after the joint has been created.");

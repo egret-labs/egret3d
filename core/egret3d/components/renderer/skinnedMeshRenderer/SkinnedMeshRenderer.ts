@@ -169,13 +169,20 @@ namespace egret3d {
                 }
 
                 if (renderState.textureFloatEnabled) {
-                    let size = Math.sqrt(bones.length * 4); // 4 pixels needed for 1 matrix
-                    size = Math.max(math.ceilPowerOfTwo(size), 4);
+                    // let size = Math.sqrt(bones.length * 4); // 4 pixels needed for 1 matrix
+                    // size = Math.max(math.ceilPowerOfTwo(size), 4);
 
-                    this.boneMatrices = new Float32Array(size * size * 4); // 4 floats per RGBA pixel
+                    // this.boneMatrices = new Float32Array(size * size * 4); // 4 floats per RGBA pixel
+                    // this.boneTexture = Texture.create({
+                    //     source: this.boneMatrices,
+                    //     width: size, height: size,
+                    //     type: gltf.ComponentType.Float
+                    // });
+
+                    this.boneMatrices = new Float32Array((bones.length + 1) * 16);
                     this.boneTexture = Texture.create({
                         source: this.boneMatrices,
-                        width: size, height: size,
+                        width: (bones.length + 1) * 4, height: 1,
                         type: gltf.ComponentType.Float
                     });
                     this.boneTexture.retain();

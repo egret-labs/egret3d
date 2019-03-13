@@ -128,9 +128,9 @@ namespace paper {
      * 应用程序运行模式。
      */
     export const enum PlayerMode {
-        Player = 0b001,
-        DebugPlayer = 0b010,
-        Editor = 0b100,
+        Player = 0b0001,
+        DebugPlayer = 0b0010,
+        Editor = 0b0100,
     }
     /**
      * 

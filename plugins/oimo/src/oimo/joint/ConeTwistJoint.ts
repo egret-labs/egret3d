@@ -5,7 +5,7 @@ namespace egret3d.oimo {
         MaxSwingAngleZ,
     }
     /**
-     * 
+     * 锥形扭转关节组件。
      */
     @paper.requireComponent(Rigidbody)
     @paper.allowMultiple
@@ -16,14 +16,18 @@ namespace egret3d.oimo {
         private static readonly _twistLimitMotor: OIMO.RotationalLimitMotor = new OIMO.RotationalLimitMotor();
 
         public readonly jointType: JointType = JointType.ConeTwist;
-
-        @paper.editor.property(paper.editor.EditType.NESTED)
-        @paper.serializedField
-        public readonly swingSpringDamper: SpringDamper = SpringDamper.create();
-
+        /**
+         * 沿着关节的扭动轴旋转的弹簧和阻尼器设置。
+         */
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
         public readonly twistSpringDamper: SpringDamper = SpringDamper.create();
+        /**
+         * 沿着关节的摆动轴旋转的弹簧和阻尼器设置。
+         */
+        @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.serializedField
+        public readonly swingSpringDamper: SpringDamper = SpringDamper.create();
 
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
@@ -76,9 +80,9 @@ namespace egret3d.oimo {
             config.twistSpringDamper.frequency = this.twistSpringDamper.frequency;
             config.twistSpringDamper.dampingRatio = this.twistSpringDamper.dampingRatio;
             config.twistSpringDamper.useSymplecticEuler = this.twistSpringDamper.useSymplecticEuler;
-            config.twistSpringDamper.frequency = this.swingSpringDamper.frequency;
-            config.twistSpringDamper.dampingRatio = this.swingSpringDamper.dampingRatio;
-            config.twistSpringDamper.useSymplecticEuler = this.swingSpringDamper.useSymplecticEuler;
+            config.swingSpringDamper.frequency = this.swingSpringDamper.frequency;
+            config.swingSpringDamper.dampingRatio = this.swingSpringDamper.dampingRatio;
+            config.swingSpringDamper.useSymplecticEuler = this.swingSpringDamper.useSymplecticEuler;
             config.twistLimitMotor.lowerLimit = this.twistLimitMotor.lowerLimit;
             config.twistLimitMotor.upperLimit = this.twistLimitMotor.upperLimit;
             config.twistLimitMotor.motorSpeed = this.twistLimitMotor.motorSpeed;
@@ -123,7 +127,8 @@ namespace egret3d.oimo {
             }
         }
         /**
-         * 
+         * 该关节的转动轴。
+         * - `useWorldAnchor` 影响该值的坐标系描述。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get twistAxis(): Readonly<Vector3> {
@@ -138,7 +143,8 @@ namespace egret3d.oimo {
             }
         }
         /**
-         * 
+         * 该关节的摆动轴。
+         * - `useWorldAnchor` 影响该值的坐标系描述。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get swingAxis(): Readonly<Vector3> {

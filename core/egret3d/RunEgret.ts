@@ -73,6 +73,7 @@ namespace egret3d {
             .preRegister(CameraAndLightSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
 
         paper.Application.initialize(options);
+        paper.Application.start();
 
         console.info("Egret start complete.");
     }

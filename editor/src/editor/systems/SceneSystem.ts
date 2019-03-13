@@ -201,7 +201,7 @@ namespace paper.editor {
             }
 
             if (this._keyDelete.isUp(false) && !this._keyDelete.event!.altKey && !this._keyDelete.event!.ctrlKey && !this._keyDelete.event!.shiftKey) {
-                if (Application.playerMode !== PlayerMode.Editor) {
+                if ((Application.playerMode & PlayerMode.Editor) === 0) {
                     this._modelComponent.delete();
                 }
             }

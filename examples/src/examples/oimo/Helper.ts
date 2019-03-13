@@ -49,7 +49,7 @@ namespace examples.oimo {
                         const joint = this._touchEntity.addComponent(egret3d.oimo.SphericalJoint);
                         joint.collisionEnabled = false;
                         joint.springDamper.frequency = 4.0;
-                        joint.springDamper.dampingRatio = 1.0;
+                        joint.springDamper.dampingRatio = 0.0;
                         joint.connectedRigidbody = this._raycastInfo.rigidbody as egret3d.oimo.Rigidbody;
                     }
                 }

@@ -36,7 +36,11 @@ namespace paper {
         /**
          * 当应用程序的播放模式改变时派发事件。
          */
-        public readonly onPlayerModeChange: signals.Signal<PlayerMode> = new signals.Signal();
+        public readonly onPlayerModeChanged: signals.Signal<PlayerMode> = new signals.Signal();
+        // /**
+        //  * 
+        //  */
+        // public delayStatrup: uint = 0;
         /**
          * 引擎版本。
          */
@@ -57,6 +61,7 @@ namespace paper {
         private _isFocused: boolean = false;
         private _isRunning: boolean = false;
         private _playerMode: PlayerMode = PlayerMode.Player;
+        // private _runOptions: RunOptions | null = null;
 
         /**
          * core updating loop
@@ -105,8 +110,6 @@ namespace paper {
             console.info("tick rate:", clock.tickInterval ? (1.0 / clock.tickInterval) : "auto");
             if (options.frameInterval !== (void 0)) { clock.frameInterval = options.frameInterval; }
             console.info("frame rate:", clock.frameInterval ? (1.0 / clock.frameInterval) : "auto");
-
-            this.resume();
         }
         /**
          * TODO
@@ -141,12 +144,15 @@ namespace paper {
                     this.pause();
                     this._update();
                     break;
+
                 case PlayerMode.Player:
                 // breakthrough
                 case PlayerMode.DebugPlayer:
                     this.resume();
                     break;
-                default: break;
+
+                default:
+                    break;
             }
         }
         /**
@@ -194,7 +200,7 @@ namespace paper {
             }
 
             this._playerMode = value;
-            this.onPlayerModeChange.dispatch(this.playerMode);
+            this.onPlayerModeChanged.dispatch(this.playerMode);
         }
     }
     /**

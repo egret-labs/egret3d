@@ -45,7 +45,7 @@ namespace paper.editor {
         public initialize() {
             super.initialize();
 
-            if (Application.playerMode !== PlayerMode.Editor) {
+            if ((Application.playerMode & PlayerMode.Editor) === 0) {
                 (this.hierarchy as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
                 (this.inspector as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
                 (this.stats as Stats) = new Stats();

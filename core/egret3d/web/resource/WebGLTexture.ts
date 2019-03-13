@@ -30,14 +30,18 @@ namespace egret3d.webgl {
                 textureType = gltf.TextureType.TextureCube;
                 uploadType = gltf.TextureType.TextureCubeStart;
             }
-            else if (extension.height! > 1) {
+            else {
                 textureType = gltf.TextureType.Texture2D;
                 uploadType = textureType;
             }
-            else {
-                textureType = gltf.TextureType.Texture1D;
-                uploadType = textureType;
-            }
+            // else if (extension.height! > 1) { // TODO
+            //     textureType = gltf.TextureType.Texture2D;
+            //     uploadType = textureType;
+            // }
+            // else {
+            //     textureType = gltf.TextureType.Texture1D;
+            //     uploadType = textureType;
+            // }
 
             this.type = textureType;
             if (!this.webGLTexture) {

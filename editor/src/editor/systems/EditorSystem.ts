@@ -13,9 +13,7 @@ namespace paper.editor {
         public onAwake() {
             Application.sceneManager.globalEntity.getOrAddComponent(EditorDefaultAsset); // TODO
             //
-            if (Application.playerMode === PlayerMode.Editor) {
-            }
-            else {
+            if ((Application.playerMode & PlayerMode.Editor) === 0) {
                 const guiComponent = this._guiComponent!;
                 const oldContainer = guiComponent!.hierarchy.domElement.parentElement!;
                 const container = document.createElement("div");
@@ -81,7 +79,7 @@ namespace paper.editor {
         }
 
         public onStart() {
-            if (Application.playerMode === PlayerMode.Editor) {
+            if ((Application.playerMode & PlayerMode.Editor) !== 0) {
                 return;
             }
 
@@ -89,7 +87,7 @@ namespace paper.editor {
         }
 
         public onFrame() {
-            if (Application.playerMode === PlayerMode.Editor) {
+            if ((Application.playerMode & PlayerMode.Editor) !== 0) {
                 return;
             }
 
@@ -145,5 +143,5 @@ namespace paper.editor {
         }
     }
     //
-    Application.systemManager.preRegister(EditorSystem, Application.gameObjectContext, SystemOrder.End + 10000);
+    Application.systemManager.preRegister(EditorSystem, Application.gameObjectContext, SystemOrder.End);
 }

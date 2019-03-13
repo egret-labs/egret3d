@@ -1,6 +1,7 @@
 namespace egret3d.oimo {
     /**
-     * 
+     * 球面关节组件。
+     * - https://en.wikipedia.org/wiki/Ball_joint
      */
     @paper.requireComponent(Rigidbody)
     @paper.allowMultiple
@@ -9,7 +10,9 @@ namespace egret3d.oimo {
         private static readonly _springDamper: OIMO.SpringDamper = new OIMO.SpringDamper();
 
         public readonly jointType: JointType = JointType.Spherical;
-
+        /**
+         * 该关节的弹簧和阻尼器设置。
+         */
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
         public readonly springDamper: SpringDamper = SpringDamper.create();
