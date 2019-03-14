@@ -3646,6 +3646,12 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    var FilterMode;
+    (function (FilterMode) {
+        FilterMode[FilterMode["Point"] = 0] = "Point";
+        FilterMode[FilterMode["Bilinear"] = 1] = "Bilinear";
+        FilterMode[FilterMode["Trilinear"] = 2] = "Trilinear";
+    })(FilterMode = egret3d.FilterMode || (egret3d.FilterMode = {}));
     /**
      * 基础纹理资源。
      * - 纹理资源的基类。
@@ -3780,11 +3786,20 @@ var egret3d;
             var sampler = this._sampler;
             var levels = this._gltfTexture.extensions.paper.levels;
             sampler.magFilter = value ? 9729 /* Linear */ : 9728 /* Nearest */;
+            var filterMode = typeof (value) === "boolean" ? (value ? 1 /* Bilinear */ : 0 /* Point */) : value;
             if (levels === undefined || levels === 1) {
                 sampler.minFilter = value ? 9729 /* Linear */ : 9728 /* Nearest */;
             }
             else {
-                sampler.minFilter = value ? 9987 /* LinearMipMapLinear */ : 9984 /* NearestMipmapNearest */;
+                if (filterMode === 0 /* Point */) {
+                    sampler.minFilter = 9984 /* NearestMipmapNearest */;
+                }
+                else if (filterMode === 1 /* Bilinear */) {
+                    sampler.minFilter = 9985 /* LinearMipmapNearest */;
+                }
+                else if (filterMode === 2 /* Trilinear */) {
+                    sampler.minFilter = 9987 /* LinearMipMapLinear */;
+                }
             }
             this._formatLevelsAndSampler();
             return this;
@@ -29584,9 +29599,13 @@ var egret3d;
                     else if (format === "Gray") {
                         textureFormat_1 = 6409 /* Luminance */;
                     }
-                    var linear_1 = true;
-                    if (filterMode.indexOf("linear") < 0) {
-                        linear_1 = false;
+                    //Trilinear   Bilinear
+                    var linear_1 = 0 /* Point */;
+                    if (filterMode.indexOf("Trilinear") >= 0) {
+                        linear_1 = 2 /* Trilinear */;
+                    }
+                    else if (filterMode.indexOf("Bilinear") >= 0) {
+                        linear_1 = 1 /* Bilinear */;
                     }
                     var repeat_1 = false;
                     if (wrap.indexOf("Repeat") >= 0) {

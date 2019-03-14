@@ -3644,6 +3644,11 @@ declare namespace egret3d {
          */
         source?: gltf.ImageSource | ArrayBufferView | null;
     }
+    const enum FilterMode {
+        Point = 0,
+        Bilinear = 1,
+        Trilinear = 2,
+    }
     /**
      * 基础纹理资源。
      * - 纹理资源的基类。
@@ -3660,7 +3665,7 @@ declare namespace egret3d {
         /**
          *
          */
-        setLiner(value: boolean): this;
+        setLiner(value: boolean | FilterMode): this;
         /**
          *
          */
