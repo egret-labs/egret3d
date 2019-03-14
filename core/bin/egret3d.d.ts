@@ -4423,74 +4423,6 @@ declare namespace egret3d {
 }
 declare namespace paper {
     /**
-     * 实体组。
-     * - 根据匹配器收集指定特征的实体。
-     */
-    class Group<TEntity extends IEntity> {
-        /**
-         * 当实体添加到组时派发事件。
-         */
-        static readonly onEntityAdded: signals.Signal<[Group<IEntity>, IEntity]>;
-        /**
-         * 当实体从组中移除时派发事件。
-         */
-        static readonly onEntityRemoved: signals.Signal<[Group<IEntity>, IEntity]>;
-        /**
-         * 当组中实体添加非必要组件时派发事件。
-         */
-        static readonly onComponentEnabled: signals.Signal<[Group<IEntity>, IComponent]>;
-        /**
-         * 当组中实体移除非必要组件时派发事件。
-         */
-        static readonly onComponentDisabled: signals.Signal<[Group<IEntity>, IComponent]>;
-        private _entitiesDirty;
-        private _behavioursDirty;
-        private _entityCount;
-        private readonly _matcher;
-        private readonly _entities;
-        private readonly _behaviours;
-        private _singleEntity;
-        private constructor();
-        /**
-         * 该组是否包含指定实体。
-         * @param entity
-         */
-        containsEntity(entity: TEntity): boolean;
-        /**
-         * @int
-         * @param entity
-         * @param component
-         * @param isAdd
-         */
-        handleEvent(entity: TEntity, component: IComponent, isAdd: boolean): void;
-        /**
-         * 该组匹配的实体总数。
-         */
-        readonly entityCount: uint;
-        /**
-         * 该组匹配的所有实体。
-         */
-        readonly entities: ReadonlyArray<TEntity>;
-        /**
-         * 该组的匹配器。
-         */
-        readonly matcher: Readonly<ICompoundMatcher<TEntity>>;
-        /**
-         * 该组匹配的单例实体。
-         */
-        readonly singleEntity: TEntity | null;
-        /**
-         * @deprecated
-         */
-        hasGameObject(entity: TEntity): boolean;
-        /**
-         * @deprecated
-         */
-        readonly gameObjects: ReadonlyArray<TEntity>;
-    }
-}
-declare namespace paper {
-    /**
      *
      */
     class Context<TEntity extends IEntity> {
@@ -4512,6 +4444,112 @@ declare namespace paper {
         getGroup(matcher: ICompoundMatcher<TEntity>): Group<TEntity>;
         readonly entityCount: uint;
         readonly entities: ReadonlyArray<TEntity>;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 颜色接口。
+     */
+    interface IColor {
+        /**
+         * 红色通道。（0.0 ~ 1.0）
+         */
+        r: number;
+        /**
+         * 绿色通道。（0.0 ~ 1.0）
+         */
+        g: number;
+        /**
+         * 蓝色通道。（0.0 ~ 1.0）
+         */
+        b: number;
+        /**
+         * 透明通道。（0.0 ~ 1.0）
+         */
+        a: number;
+    }
+    /**
+     * 颜色。
+     */
+    class Color extends paper.BaseRelease<Color> implements IColor, paper.ICCS<Color>, paper.ISerializable {
+        /**
+         * 所有颜色通道均为零的颜色。
+         * - 请注意不要修改该值。
+         */
+        static readonly ZERO: Readonly<Color>;
+        /**
+         * 黑色。
+         * - 请注意不要修改该值。
+         */
+        static readonly BLACK: Readonly<Color>;
+        /**
+         * 灰色。
+         * - 请注意不要修改该值。
+         */
+        static readonly GRAY: Readonly<Color>;
+        /**
+         * 白色。
+         * - 请注意不要修改该值。
+         */
+        static readonly WHITE: Readonly<Color>;
+        /**
+         * 红色。
+         * - 请注意不要修改该值。
+         */
+        static readonly RED: Readonly<Color>;
+        /**
+         * 绿色。
+         * - 请注意不要修改该值。
+         */
+        static readonly GREEN: Readonly<Color>;
+        /**
+         * 蓝色。
+         * - 请注意不要修改该值。
+         */
+        static readonly BLUE: Readonly<Color>;
+        /**
+         * 黄色。
+         * - 请注意不要修改该值。
+         */
+        static readonly YELLOW: Readonly<Color>;
+        /**
+         * 靛蓝色。
+         * - 请注意不要修改该值。
+         */
+        static readonly INDIGO: Readonly<Color>;
+        /**
+         * 紫色。
+         * - 请注意不要修改该值。
+         */
+        static readonly PURPLE: Readonly<Color>;
+        private static readonly _instances;
+        /**
+         * 创建一个新的颜色对象实例
+         * @param r 红色通道
+         * @param g 绿色通道
+         * @param b 蓝色通道
+         * @param a 透明通道
+         */
+        static create(r?: number, g?: number, b?: number, a?: number): Color;
+        r: number;
+        g: number;
+        b: number;
+        a: number;
+        /**
+         * 请使用 `egret3d.Color.create()` 创建实例。
+         * @see egret3d.Color.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number]>): this;
+        clone(): Color;
+        copy(value: Readonly<IColor>): this;
+        set(r: number, g: number, b: number, a?: number): this;
+        fromArray(value: ArrayLike<number>, offset?: number): this;
+        fromHex(hex: uint): this;
+        multiply(valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this;
+        scale(value: number, source?: Readonly<IColor>): this;
+        lerp(t: number, valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this;
     }
 }
 declare namespace paper {
@@ -5107,6 +5145,15 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
+     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     */
+    abstract class CameraPostprocessing extends paper.BaseComponent {
+        abstract onRender(camera: Camera): void;
+        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
+    }
+}
+declare namespace egret3d {
+    /**
      * 灯光组件。
      */
     abstract class BaseLight extends paper.BaseComponent {
@@ -5444,110 +5491,72 @@ declare namespace egret3d {
         addUniform(name: string, type: gltf.UniformType, value: any): this;
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     * 颜色接口。
+     * 实体组。
+     * - 根据匹配器收集指定特征的实体。
      */
-    interface IColor {
+    class Group<TEntity extends IEntity> {
         /**
-         * 红色通道。（0.0 ~ 1.0）
+         * 当实体添加到组时派发事件。
          */
-        r: number;
+        static readonly onEntityAdded: signals.Signal<[Group<IEntity>, IEntity]>;
         /**
-         * 绿色通道。（0.0 ~ 1.0）
+         * 当实体从组中移除时派发事件。
          */
-        g: number;
+        static readonly onEntityRemoved: signals.Signal<[Group<IEntity>, IEntity]>;
         /**
-         * 蓝色通道。（0.0 ~ 1.0）
+         * 当组中实体添加非必要组件时派发事件。
          */
-        b: number;
+        static readonly onComponentEnabled: signals.Signal<[Group<IEntity>, IComponent]>;
         /**
-         * 透明通道。（0.0 ~ 1.0）
+         * 当组中实体移除非必要组件时派发事件。
          */
-        a: number;
-    }
-    /**
-     * 颜色。
-     */
-    class Color extends paper.BaseRelease<Color> implements IColor, paper.ICCS<Color>, paper.ISerializable {
-        /**
-         * 所有颜色通道均为零的颜色。
-         * - 请注意不要修改该值。
-         */
-        static readonly ZERO: Readonly<Color>;
-        /**
-         * 黑色。
-         * - 请注意不要修改该值。
-         */
-        static readonly BLACK: Readonly<Color>;
-        /**
-         * 灰色。
-         * - 请注意不要修改该值。
-         */
-        static readonly GRAY: Readonly<Color>;
-        /**
-         * 白色。
-         * - 请注意不要修改该值。
-         */
-        static readonly WHITE: Readonly<Color>;
-        /**
-         * 红色。
-         * - 请注意不要修改该值。
-         */
-        static readonly RED: Readonly<Color>;
-        /**
-         * 绿色。
-         * - 请注意不要修改该值。
-         */
-        static readonly GREEN: Readonly<Color>;
-        /**
-         * 蓝色。
-         * - 请注意不要修改该值。
-         */
-        static readonly BLUE: Readonly<Color>;
-        /**
-         * 黄色。
-         * - 请注意不要修改该值。
-         */
-        static readonly YELLOW: Readonly<Color>;
-        /**
-         * 靛蓝色。
-         * - 请注意不要修改该值。
-         */
-        static readonly INDIGO: Readonly<Color>;
-        /**
-         * 紫色。
-         * - 请注意不要修改该值。
-         */
-        static readonly PURPLE: Readonly<Color>;
-        private static readonly _instances;
-        /**
-         * 创建一个新的颜色对象实例
-         * @param r 红色通道
-         * @param g 绿色通道
-         * @param b 蓝色通道
-         * @param a 透明通道
-         */
-        static create(r?: number, g?: number, b?: number, a?: number): Color;
-        r: number;
-        g: number;
-        b: number;
-        a: number;
-        /**
-         * 请使用 `egret3d.Color.create()` 创建实例。
-         * @see egret3d.Color.create()
-         */
+        static readonly onComponentDisabled: signals.Signal<[Group<IEntity>, IComponent]>;
+        private _entitiesDirty;
+        private _behavioursDirty;
+        private _entityCount;
+        private readonly _matcher;
+        private readonly _entities;
+        private readonly _behaviours;
+        private _singleEntity;
         private constructor();
-        serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number]>): this;
-        clone(): Color;
-        copy(value: Readonly<IColor>): this;
-        set(r: number, g: number, b: number, a?: number): this;
-        fromArray(value: ArrayLike<number>, offset?: number): this;
-        fromHex(hex: uint): this;
-        multiply(valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this;
-        scale(value: number, source?: Readonly<IColor>): this;
-        lerp(t: number, valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this;
+        /**
+         * 该组是否包含指定实体。
+         * @param entity
+         */
+        containsEntity(entity: TEntity): boolean;
+        /**
+         * @int
+         * @param entity
+         * @param component
+         * @param isAdd
+         */
+        handleEvent(entity: TEntity, component: IComponent, isAdd: boolean): void;
+        /**
+         * 该组匹配的实体总数。
+         */
+        readonly entityCount: uint;
+        /**
+         * 该组匹配的所有实体。
+         */
+        readonly entities: ReadonlyArray<TEntity>;
+        /**
+         * 该组的匹配器。
+         */
+        readonly matcher: Readonly<ICompoundMatcher<TEntity>>;
+        /**
+         * 该组匹配的单例实体。
+         */
+        readonly singleEntity: TEntity | null;
+        /**
+         * @deprecated
+         */
+        hasGameObject(entity: TEntity): boolean;
+        /**
+         * @deprecated
+         */
+        readonly gameObjects: ReadonlyArray<TEntity>;
     }
 }
 declare namespace egret3d {
@@ -5749,21 +5758,6 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d.webgl {
-}
-declare namespace paper {
-    /**
-     * 已丢失或不支持的组件数据备份。
-     */
-    class MissingComponent extends Component {
-        /**
-         * 丢失的组件类名
-         */
-        readonly missingClass: string;
-        /**
-         * 已丢失或不支持的组件数据。
-         */
-        missingObject: any | null;
-    }
 }
 declare namespace paper.utility {
     /**
@@ -7092,6 +7086,7 @@ declare namespace egret3d {
         static DISTANCE_RGBA: Shader;
         static SHADOW: Shader;
         static COPY: Shader;
+        static FXAA: Shader;
         /**
          * @deprecated
          */
@@ -7862,6 +7857,17 @@ declare namespace egret3d {
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }
+declare namespace egret3d {
+    /**
+     * 圆柱（锥）体碰撞组件。
+     * - 与 Y 轴对齐。
+     */
+    class CylinderCollider extends paper.BaseComponent implements ICylinderCollider, IRaycast {
+        readonly colliderType: ColliderType;
+        readonly cylinder: Cylinder;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
+    }
+}
 declare namespace paper {
     /**
      * 实体组件匹配器。
@@ -7901,17 +7907,6 @@ declare namespace paper {
         readonly anyOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         readonly noneOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
         readonly extraOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 胶囊体碰撞组件。
-     * - 与 Y 轴对齐。
-     */
-    class CapsuleCollider extends paper.BaseComponent implements ICapsuleCollider, IRaycast {
-        readonly colliderType: ColliderType;
-        readonly capsule: Capsule;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }
 declare namespace egret3d {
@@ -8173,13 +8168,23 @@ declare namespace egret3d {
         clearOption_Depth: boolean;
     }
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     *
      */
-    abstract class CameraPostprocessing extends paper.BaseComponent {
-        abstract onRender(camera: Camera): void;
-        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
+    class Collector<TEntity extends IEntity> {
+        readonly addedEntities: (TEntity | null)[];
+        readonly removedEntities: (TEntity | null)[];
+        readonly addedComponentes: (IComponent | null)[];
+        readonly removedComponentes: (IComponent | null)[];
+        private _group;
+        private constructor();
+        private _onEntityAdded([group, entity]);
+        private _onEntityRemoved([group, entity]);
+        private _onComponentEnabled([group, component]);
+        private _onComponentDisabled([group, component]);
+        clear(): void;
+        readonly group: Group<TEntity>;
     }
 }
 declare namespace egret3d {
@@ -8242,6 +8247,11 @@ declare namespace egret3d {
         material: Material | null;
     }
 }
+declare namespace egret3d.postprocess {
+    class FXAAPostProcess extends egret3d.CameraPostprocessing {
+        onRender(camera: egret3d.Camera): void;
+    }
+}
 declare namespace egret3d {
     /**
      *
@@ -8287,23 +8297,51 @@ declare namespace egret3d {
         mapSize: uint;
     }
 }
-declare namespace paper {
+declare namespace egret3d {
     /**
-     *
+     * 几何圆柱（椎）体。
+     * - 与 Y 轴对齐。
      */
-    class Collector<TEntity extends IEntity> {
-        readonly addedEntities: (TEntity | null)[];
-        readonly removedEntities: (TEntity | null)[];
-        readonly addedComponentes: (IComponent | null)[];
-        readonly removedComponentes: (IComponent | null)[];
-        private _group;
+    class Cylinder extends paper.BaseRelease<Cylinder> implements paper.ICCS<Cylinder>, paper.ISerializable, IRaycast {
+        private static readonly _instances;
+        /**
+         * 创建一个几何圆柱（椎）体。
+         * @param center 中心点。
+         * @param radius 半径。
+         */
+        static create(center?: Readonly<IVector3>, topRadius?: number, bottomRadius?: number, height?: number): Cylinder;
+        /**
+         * 该圆柱（锥）体的顶部半径。
+         */
+        topRadius: number;
+        /**
+         * 该圆柱（锥）体的底部半径。
+         */
+        bottomRadius: number;
+        /**
+         * 该圆柱（锥）体的高度。
+         */
+        height: number;
+        /**
+         * 该圆柱（锥）体的中心点。
+         */
+        readonly center: Vector3;
+        /**
+         * 请使用 `egret3d.Cylinder.create()` 创建实例。
+         * @see egret3d.Cylinder.create()
+         */
         private constructor();
-        private _onEntityAdded([group, entity]);
-        private _onEntityRemoved([group, entity]);
-        private _onComponentEnabled([group, component]);
-        private _onComponentDisabled([group, component]);
-        clear(): void;
-        readonly group: Group<TEntity>;
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number, number, number]>): this;
+        clone(): Cylinder;
+        copy(value: Readonly<Cylinder>): this;
+        set(center: Readonly<IVector3>, topRadius: number, bottomRadius: number, height: number): this;
+        /**
+         * 该几何体是否包含指定的点。
+         * @param point 一个点。
+         */
+        contains(point: Readonly<IVector3>): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }
 declare namespace egret3d {
@@ -8481,70 +8519,6 @@ declare namespace egret3d {
         mode: FogMode;
     }
 }
-declare namespace egret3d {
-    /**
-     * 几何圆柱（椎）体。
-     * - 与 Y 轴对齐。
-     */
-    class Cylinder extends paper.BaseRelease<Cylinder> implements paper.ICCS<Cylinder>, paper.ISerializable, IRaycast {
-        private static readonly _instances;
-        /**
-         * 创建一个几何圆柱（椎）体。
-         * @param center 中心点。
-         * @param radius 半径。
-         */
-        static create(center?: Readonly<IVector3>, topRadius?: number, bottomRadius?: number, height?: number): Cylinder;
-        /**
-         * 该圆柱（锥）体的顶部半径。
-         */
-        topRadius: number;
-        /**
-         * 该圆柱（锥）体的底部半径。
-         */
-        bottomRadius: number;
-        /**
-         * 该圆柱（锥）体的高度。
-         */
-        height: number;
-        /**
-         * 该圆柱（锥）体的中心点。
-         */
-        readonly center: Vector3;
-        /**
-         * 请使用 `egret3d.Cylinder.create()` 创建实例。
-         * @see egret3d.Cylinder.create()
-         */
-        private constructor();
-        serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number, number, number]>): this;
-        clone(): Cylinder;
-        copy(value: Readonly<Cylinder>): this;
-        set(center: Readonly<IVector3>, topRadius: number, bottomRadius: number, height: number): this;
-        /**
-         * 该几何体是否包含指定的点。
-         * @param point 一个点。
-         */
-        contains(point: Readonly<IVector3>): boolean;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
-    }
-}
-declare namespace egret3d {
-    /**
-     * 网格过滤组件。
-     * - 为网格渲染组件提供网格资源。
-     */
-    class MeshFilter extends paper.BaseComponent {
-        /**
-         * 当网格过滤组件的网格资源改变时派发事件。
-         */
-        static readonly onMeshChanged: signals.Signal<MeshFilter>;
-        private _mesh;
-        /**
-         * 该组件的网格资源。
-         */
-        mesh: Mesh | null;
-    }
-}
 declare namespace paper {
     /**
      * 场景。
@@ -8655,6 +8629,66 @@ declare namespace paper {
          * @deprecated
          */
         readonly gameObjects: ReadonlyArray<GameObject>;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 网格过滤组件。
+     * - 为网格渲染组件提供网格资源。
+     */
+    class MeshFilter extends paper.BaseComponent {
+        /**
+         * 当网格过滤组件的网格资源改变时派发事件。
+         */
+        static readonly onMeshChanged: signals.Signal<MeshFilter>;
+        private _mesh;
+        /**
+         * 该组件的网格资源。
+         */
+        mesh: Mesh | null;
+    }
+}
+declare namespace egret3d {
+    /**
+     * 几何胶囊体。
+     * - 与 Y 轴对齐。
+     */
+    class Capsule extends paper.BaseRelease<Capsule> implements paper.ICCS<Capsule>, paper.ISerializable, IRaycast {
+        private static readonly _instances;
+        /**
+         * 创建一个几何胶囊体。
+         * @param center 中心点。
+         * @param radius 半径。
+         */
+        static create(center?: Readonly<IVector3>, radius?: number, height?: number): Capsule;
+        /**
+         * 该胶囊体的半径。
+         */
+        radius: number;
+        /**
+         * 该胶囊体圆柱部分的高度。
+         */
+        height: number;
+        /**
+         * 该胶囊体的中心点。
+         */
+        readonly center: Vector3;
+        /**
+         * 请使用 `egret3d.Capsule.create()` 创建实例。
+         * @see egret3d.Capsule.create()
+         */
+        private constructor();
+        serialize(): number[];
+        deserialize(value: Readonly<[number, number, number, number, number]>): this;
+        clone(): Capsule;
+        copy(value: Readonly<Capsule>): this;
+        set(center: Readonly<IVector3>, radius: number, height: number): this;
+        /**
+         * 该几何体是否包含指定的点。
+         * @param point 一个点。
+         */
+        contains(point: Readonly<IVector3>): boolean;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }
 declare namespace egret3d {
@@ -10059,49 +10093,6 @@ declare namespace egret3d.creater {
 }
 declare namespace egret3d {
     /**
-     * 几何胶囊体。
-     * - 与 Y 轴对齐。
-     */
-    class Capsule extends paper.BaseRelease<Capsule> implements paper.ICCS<Capsule>, paper.ISerializable, IRaycast {
-        private static readonly _instances;
-        /**
-         * 创建一个几何胶囊体。
-         * @param center 中心点。
-         * @param radius 半径。
-         */
-        static create(center?: Readonly<IVector3>, radius?: number, height?: number): Capsule;
-        /**
-         * 该胶囊体的半径。
-         */
-        radius: number;
-        /**
-         * 该胶囊体圆柱部分的高度。
-         */
-        height: number;
-        /**
-         * 该胶囊体的中心点。
-         */
-        readonly center: Vector3;
-        /**
-         * 请使用 `egret3d.Capsule.create()` 创建实例。
-         * @see egret3d.Capsule.create()
-         */
-        private constructor();
-        serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number, number]>): this;
-        clone(): Capsule;
-        copy(value: Readonly<Capsule>): this;
-        set(center: Readonly<IVector3>, radius: number, height: number): this;
-        /**
-         * 该几何体是否包含指定的点。
-         * @param point 一个点。
-         */
-        contains(point: Readonly<IVector3>): boolean;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
-    }
-}
-declare namespace egret3d {
-    /**
      *
      * 贝塞尔曲线，目前定义了三种：线性贝塞尔曲线(两个点形成),二次方贝塞尔曲线（三个点形成），三次方贝塞尔曲线（四个点形成）
      */
@@ -10219,6 +10210,94 @@ declare namespace egret3d {
          */
         getDistanceToPlane(plane: Readonly<Plane>): number;
     }
+}
+declare namespace paper {
+    /**
+     * 应用程序。
+     *
+     * ### 自动刷新和被动刷新
+     *
+     * 默认情况下
+     *
+     * - 自动刷新: 会以无限循环方式刷新, `PlayerMode.Player` 模式默认为自动刷新
+     * - 被动刷新: 不会启动循环, 需要刷新时需调用 `update()` 方法, `PlayerMode.Editor` 模式为被动刷新
+     *
+     * 在运行过程中可随时调用 `resume()` 切换到自动刷新, 或者调用 `pause()` 切换为被动刷新
+     *
+     * ### 限制帧频
+     *
+     * - 通过设置 `clock.frameInterval` 来设置渲染帧间隔(秒)
+     * - 通过设置 `clock.tickInterval` 来设置逻辑帧间隔(秒)
+     * - 在帧补偿的时候, 为了尽快达到同步, `clock.update()` 会在同步之前忽略此间隔, 也就是说在这种情况下, 帧率会增加, 只有逻辑帧会补偿
+     */
+    class ECS {
+        private static _instance;
+        /**
+         * 应用程序单例。
+         */
+        static getInstance(): ECS;
+        private constructor();
+        /**
+         * 当应用程序的播放模式改变时派发事件。
+         */
+        readonly onPlayerModeChange: signals.Signal<PlayerMode>;
+        /**
+         * 引擎版本。
+         */
+        readonly version: string;
+        /**
+         * 系统管理器。
+         */
+        readonly systemManager: SystemManager;
+        /**
+         * 场景管理器。
+         */
+        readonly sceneManager: SceneManager;
+        /**
+         *
+         */
+        readonly gameObjectContext: Context<GameObject>;
+        private _isFocused;
+        private _isRunning;
+        private _playerMode;
+        /**
+         * core updating loop
+         */
+        private _loop(timestamp?);
+        /**
+         * including calculating, status updating, rerendering and logical updating
+         */
+        private _update({tickCount, frameCount}?);
+        /**
+         *
+         */
+        initialize(options: RunOptions): void;
+        /**
+         * engine start
+         *
+         * TODO:
+         */
+        start(): void;
+        /**
+         * 显式更新
+         *
+         * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
+         * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
+         */
+        update(): void;
+        /**
+         *
+         */
+        readonly isMobile: boolean;
+        /**
+         * 运行模式。
+         */
+        playerMode: PlayerMode;
+    }
+    /**
+     * 应用程序单例。
+     */
+    const Application: ECS;
 }
 declare namespace egret3d {
     /**
@@ -10482,94 +10561,6 @@ declare namespace egret3d {
         setShader(value: Shader): this | undefined;
     }
 }
-declare namespace paper {
-    /**
-     * 应用程序。
-     *
-     * ### 自动刷新和被动刷新
-     *
-     * 默认情况下
-     *
-     * - 自动刷新: 会以无限循环方式刷新, `PlayerMode.Player` 模式默认为自动刷新
-     * - 被动刷新: 不会启动循环, 需要刷新时需调用 `update()` 方法, `PlayerMode.Editor` 模式为被动刷新
-     *
-     * 在运行过程中可随时调用 `resume()` 切换到自动刷新, 或者调用 `pause()` 切换为被动刷新
-     *
-     * ### 限制帧频
-     *
-     * - 通过设置 `clock.frameInterval` 来设置渲染帧间隔(秒)
-     * - 通过设置 `clock.tickInterval` 来设置逻辑帧间隔(秒)
-     * - 在帧补偿的时候, 为了尽快达到同步, `clock.update()` 会在同步之前忽略此间隔, 也就是说在这种情况下, 帧率会增加, 只有逻辑帧会补偿
-     */
-    class ECS {
-        private static _instance;
-        /**
-         * 应用程序单例。
-         */
-        static getInstance(): ECS;
-        private constructor();
-        /**
-         * 当应用程序的播放模式改变时派发事件。
-         */
-        readonly onPlayerModeChange: signals.Signal<PlayerMode>;
-        /**
-         * 引擎版本。
-         */
-        readonly version: string;
-        /**
-         * 系统管理器。
-         */
-        readonly systemManager: SystemManager;
-        /**
-         * 场景管理器。
-         */
-        readonly sceneManager: SceneManager;
-        /**
-         *
-         */
-        readonly gameObjectContext: Context<GameObject>;
-        private _isFocused;
-        private _isRunning;
-        private _playerMode;
-        /**
-         * core updating loop
-         */
-        private _loop(timestamp?);
-        /**
-         * including calculating, status updating, rerendering and logical updating
-         */
-        private _update({tickCount, frameCount}?);
-        /**
-         *
-         */
-        initialize(options: RunOptions): void;
-        /**
-         * engine start
-         *
-         * TODO:
-         */
-        start(): void;
-        /**
-         * 显式更新
-         *
-         * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
-         * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
-         */
-        update(): void;
-        /**
-         *
-         */
-        readonly isMobile: boolean;
-        /**
-         * 运行模式。
-         */
-        playerMode: PlayerMode;
-    }
-    /**
-     * 应用程序单例。
-     */
-    const Application: ECS;
-}
 declare namespace egret3d {
     /**
      *
@@ -10647,6 +10638,8 @@ declare namespace egret3d {
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
     }
+}
+declare namespace paper {
 }
 declare namespace egret3d {
     /**
@@ -11007,6 +11000,60 @@ declare namespace egret3d.ShaderLib {
                     "attributes": {};
                     "uniforms": {
                         "tEquirect": {
+                            "type": number;
+                        };
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+    };
+    const fxaa1: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {};
+                    "uniforms": {
+                        "map": {
+                            "type": number;
+                        };
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+    };
+    const fxaa: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {};
+                    "uniforms": {
+                        "map": {
                             "type": number;
                         };
                     };
@@ -12153,6 +12200,19 @@ declare namespace egret3d.webgl {
 declare namespace egret3d.webgl {
 }
 declare namespace paper {
+    /**
+     * 已丢失或不支持的组件数据备份。
+     */
+    class MissingComponent extends Component {
+        /**
+         * 丢失的组件类名
+         */
+        readonly missingClass: string;
+        /**
+         * 已丢失或不支持的组件数据。
+         */
+        missingObject: any | null;
+    }
 }
 declare namespace egret3d {
     /**
@@ -12169,12 +12229,12 @@ interface Window {
 }
 declare namespace egret3d {
     /**
-     * 圆柱（锥）体碰撞组件。
+     * 胶囊体碰撞组件。
      * - 与 Y 轴对齐。
      */
-    class CylinderCollider extends paper.BaseComponent implements ICylinderCollider, IRaycast {
+    class CapsuleCollider extends paper.BaseComponent implements ICapsuleCollider, IRaycast {
         readonly colliderType: ColliderType;
-        readonly cylinder: Cylinder;
+        readonly capsule: Capsule;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
     }
 }

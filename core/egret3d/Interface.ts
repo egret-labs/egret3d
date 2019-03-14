@@ -230,6 +230,7 @@ namespace egret3d {
         "envMap": ShaderDefine.USE_ENVMAP,
         "emissiveMap": ShaderDefine.USE_EMISSIVEMAP,
     };
+    
     /**
      * 内置提供的全局 Attribute。
      * @private
@@ -289,6 +290,7 @@ namespace egret3d {
         "fogFar": gltf.UniformSemantics._FOG_FAR,
         "toneMappingExposure": gltf.UniformSemantics._TONE_MAPPING_EXPOSURE,
         "toneMappingWhitePoint": gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT,
+        "resolution": gltf.UniformSemantics._RESOLUTION,
     };
     /**
      * 内置提供的场景 Uniform。

@@ -159,6 +159,10 @@ namespace egret3d.webgl {
                             const fogColor = fog.color;
                             webgl.uniform3f(location, fogColor.r, fogColor.g, fogColor.b);
                             break;
+
+                        case gltf.UniformSemantics._RESOLUTION:
+                            webgl.uniform2f(location, 1.0 / stage.viewport.w, 1.0 / stage.viewport.h);
+                            break;
                     }
                 }
             }

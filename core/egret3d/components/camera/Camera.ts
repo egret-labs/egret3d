@@ -755,11 +755,11 @@ namespace egret3d {
          */
         public get postprocessingRenderTarget(): RenderTexture {
             if (!this._readRenderTarget) {
-                this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setRepeat(false).retain();
+                this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setLiner(true).setRepeat(false).retain();
             }
 
             if (!this._writeRenderTarget) {
-                this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setRepeat(false).retain();
+                this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setLiner(true).setRepeat(false).retain();
             }
 
             return this._readRenderTarget;
