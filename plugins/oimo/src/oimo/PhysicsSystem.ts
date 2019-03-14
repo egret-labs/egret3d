@@ -20,7 +20,7 @@ namespace egret3d.oimo {
             return [
                 paper.Matcher.create<paper.GameObject>(egret3d.Transform, Rigidbody).extraOf(
                     BoxCollider, SphereCollider, CylinderCollider, ConeCollider, CapsuleCollider,
-                    SphericalJoint, HingeJoint, ConeTwistJoint, UniversalJoint,
+                    PrismaticJoint, RevoluteJoint, CylindricalJoint, SphericalJoint, UniversalJoint, ConeTwistJoint,
                 ),
             ];
         }

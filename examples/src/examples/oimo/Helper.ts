@@ -41,8 +41,6 @@ namespace examples.oimo {
                         this._touchEntity.transform
                             .setLocalPosition(this._raycastInfo.position)
                             .lookRotation(this._ray.direction);
-                        //
-                        this._touchEntity.addComponent(ColliderRaycaster);
                         // Set rigidbogy type.
                         this._touchEntity.addComponent(egret3d.oimo.Rigidbody).type = egret3d.oimo.RigidbodyType.KINEMATIC;
                         // Add joint.

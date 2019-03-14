@@ -3,17 +3,17 @@ namespace egret3d.oimo {
         LowerLimit,
         UpperLimit,
         MotorSpeed,
-        MotorTorque,
+        MotorForce,
     }
     /**
-     * 关节的旋转限位和马达设置。
+     * 关节的移动马达设置。
      */
-    export class RotationalLimitMotor implements paper.ISerializable {
+    export class TranslationalLimitMotor implements paper.ISerializable {
         /**
          * @internal
          */
-        public static create(): RotationalLimitMotor {
-            return new RotationalLimitMotor();
+        public static create(): TranslationalLimitMotor {
+            return new TranslationalLimitMotor();
         }
 
         private readonly _values: Float32Array = new Float32Array([
@@ -22,7 +22,7 @@ namespace egret3d.oimo {
         /**
          * @internal
          */
-        public _oimoRotationalLimitMotor: OIMO.RotationalLimitMotor | null = null;
+        public _oimoLimitMotor: OIMO.TranslationalLimitMotor | null = null;
 
         private constructor() {
         }
@@ -40,8 +40,8 @@ namespace egret3d.oimo {
             return this;
         }
         /**
-         * 最低旋转角限制。
-         * - 弧度制。
+         * 该马达的最低位移限制。
+         * - 单位为`米`。
          * - 当 `lowerLimit > upperLimit` 时关闭限位。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
@@ -51,13 +51,13 @@ namespace egret3d.oimo {
         public set lowerLimit(value: float) {
             this._values[ValueType.LowerLimit] = value;
 
-            if (this._oimoRotationalLimitMotor !== null) {
-                this._oimoRotationalLimitMotor.lowerLimit = value;
+            if (this._oimoLimitMotor !== null) {
+                this._oimoLimitMotor.lowerLimit = value;
             }
         }
         /**
-         * 最高旋转角限制。
-         * - 弧度制。
+         * 该马达的最高位移限制。
+         * - 单位为`米`。
          * - 当 `upperLimit < lowerLimit` 时关闭限位。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
@@ -67,50 +67,46 @@ namespace egret3d.oimo {
         public set upperLimit(value: float) {
             this._values[ValueType.UpperLimit] = value;
 
-            if (this._oimoRotationalLimitMotor !== null) {
-                this._oimoRotationalLimitMotor.upperLimit = value;
+            if (this._oimoLimitMotor !== null) {
+                this._oimoLimitMotor.upperLimit = value;
             }
         }
         /**
-         * 该马达的速度。
-         * - [`0.0` ~ N]
-         * - 设置为 `0.0` 停用马达。
+         * 该马达的最大线速度。
+         * - 单位为`米 / 秒`。
          * - 默认为 `0.0`。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        @paper.editor.property(paper.editor.EditType.FLOAT)
         public get motorSpeed(): float {
             return this._values[ValueType.MotorSpeed];
         }
         public set motorSpeed(value: float) {
-            if (value < 0.0) {
-                value = 0.0;
-            }
-
             this._values[ValueType.MotorSpeed] = value;
 
-            if (this._oimoRotationalLimitMotor !== null) {
-                this._oimoRotationalLimitMotor.motorSpeed = value;
+            if (this._oimoLimitMotor !== null) {
+                this._oimoLimitMotor.motorSpeed = value;
             }
         }
         /**
-         * 该马达的扭矩。
+         * 该马达的最大输出力。
+         * - 单位为`牛顿`。
          * - [`0.0` ~ N]
          * - 设置为 `0.0` 停用马达。
          * - 默认为 `0.0`。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public get motorTorque(): float {
-            return this._values[ValueType.MotorTorque];
+        public get motorForce(): float {
+            return this._values[ValueType.MotorForce];
         }
-        public set motorTorque(value: float) {
+        public set motorForce(value: float) {
             if (value < 0.0) {
                 value = 0.0;
             }
 
-            this._values[ValueType.MotorTorque] = value;
+            this._values[ValueType.MotorForce] = value;
 
-            if (this._oimoRotationalLimitMotor !== null) {
-                this._oimoRotationalLimitMotor.motorTorque = value;
+            if (this._oimoLimitMotor !== null) {
+                this._oimoLimitMotor.motorForce = value;
             }
         }
     }

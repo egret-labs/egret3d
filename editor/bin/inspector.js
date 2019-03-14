@@ -5572,15 +5572,21 @@ var paper;
                 return _this;
             }
             ConsoleSystem.prototype.onAwake = function () {
-                if (VConsole && paper.Application.isMobile) {
-                    //     const head = document.getElementsByTagName("head")[0];
-                    //     const script = document.createElement("script");
-                    //     script.type = 'text/javascript';
-                    //     script.src = "https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js";
-                    //     script.onload = (): void => {
-                    this._vConsole = new VConsole();
-                    //     };
-                    //     head.appendChild(script);
+                var _this = this;
+                if (paper.Application.isMobile) {
+                    if (VConsole) {
+                        this._vConsole = new VConsole();
+                    }
+                    else {
+                        var head = document.getElementsByTagName("head")[0];
+                        var script = document.createElement("script");
+                        script.type = 'text/javascript';
+                        script.src = "https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js";
+                        script.onload = function () {
+                            _this._vConsole = new VConsole();
+                        };
+                        head.appendChild(script);
+                    }
                 }
             };
             ConsoleSystem = __decorate([
@@ -5743,15 +5749,19 @@ var paper;
             GroupIndex[GroupIndex["AllLights"] = 8] = "AllLights";
             GroupIndex[GroupIndex["LastSelectedCamera"] = 9] = "LastSelectedCamera";
             GroupIndex[GroupIndex["LastSelectedSkeleton"] = 10] = "LastSelectedSkeleton";
-            GroupIndex[GroupIndex["SelectedBoxColliders"] = 11] = "SelectedBoxColliders";
-            GroupIndex[GroupIndex["SelectedSphereColliders"] = 12] = "SelectedSphereColliders";
-            GroupIndex[GroupIndex["SelectedCylinderColliders"] = 13] = "SelectedCylinderColliders";
-            GroupIndex[GroupIndex["SelectedCapsuleColliders"] = 14] = "SelectedCapsuleColliders";
-            GroupIndex[GroupIndex["OimoSelectedBoxColliders"] = 15] = "OimoSelectedBoxColliders";
-            GroupIndex[GroupIndex["OimoSelectedSphereColliders"] = 16] = "OimoSelectedSphereColliders";
-            GroupIndex[GroupIndex["OimoSelectedCylinderColliders"] = 17] = "OimoSelectedCylinderColliders";
-            GroupIndex[GroupIndex["OimoSelectedConeColliders"] = 18] = "OimoSelectedConeColliders";
-            GroupIndex[GroupIndex["OimoSelectedCapsuleColliders"] = 19] = "OimoSelectedCapsuleColliders";
+            GroupIndex[GroupIndex["BoxColliders"] = 11] = "BoxColliders";
+            GroupIndex[GroupIndex["SphereColliders"] = 12] = "SphereColliders";
+            GroupIndex[GroupIndex["CylinderColliders"] = 13] = "CylinderColliders";
+            GroupIndex[GroupIndex["CapsuleColliders"] = 14] = "CapsuleColliders";
+            GroupIndex[GroupIndex["OimoBoxColliders"] = 15] = "OimoBoxColliders";
+            GroupIndex[GroupIndex["OimoSphereColliders"] = 16] = "OimoSphereColliders";
+            GroupIndex[GroupIndex["OimoCylinderColliders"] = 17] = "OimoCylinderColliders";
+            GroupIndex[GroupIndex["OimoConeColliders"] = 18] = "OimoConeColliders";
+            GroupIndex[GroupIndex["OimoCapsuleColliders"] = 19] = "OimoCapsuleColliders";
+            GroupIndex[GroupIndex["OimoPrismaticJoints"] = 20] = "OimoPrismaticJoints";
+            GroupIndex[GroupIndex["OimoCylindricalJoints"] = 21] = "OimoCylindricalJoints";
+            GroupIndex[GroupIndex["OimoRevoluteJoints"] = 22] = "OimoRevoluteJoints";
+            GroupIndex[GroupIndex["OimoSphericalJoints"] = 23] = "OimoSphericalJoints";
         })(GroupIndex || (GroupIndex = {}));
         var _girdStep = 5;
         /**
@@ -5761,6 +5771,16 @@ var paper;
             __extends(GizmosSystem, _super);
             function GizmosSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._jointMesh = egret3d.Mesh.create(4, 2, ["POSITION" /* POSITION */]);
+                _this._jointLineMaterial = egret3d.Material.create("editor/joint_line.mat.json", egret3d.DefaultShaders.LINEDASHED)
+                    .setBlend(2 /* Normal */, 4000 /* Overlay */, 0.4)
+                    .setDepth(false, false)
+                    .setColor(egret3d.Color.PURPLE);
+                _this._jointPointMaterial = egret3d.Material.create("editor/joint_point.mat.json", egret3d.DefaultShaders.POINTS)
+                    .setBlend(2 /* Normal */, 4000 /* Overlay */, 0.4)
+                    .setDepth(false, false)
+                    .setColor(egret3d.Color.PURPLE)
+                    .setFloat("size" /* Size */, 4.0);
                 _this._selectedBoxDrawer = [];
                 _this._cameraDrawer = [];
                 _this._lightDrawer = [];
@@ -5768,6 +5788,10 @@ var paper;
                 _this._sphereColliderDrawer = [];
                 _this._cylinderColliderDrawer = [];
                 _this._capsuleColliderDrawer = [];
+                _this._prismaticJointDrawer = [];
+                _this._cylindricalJointDrawer = [];
+                _this._revoluteJointDrawer = [];
+                _this._sphericalJointDrawer = [];
                 _this._gridA = null;
                 _this._gridB = null;
                 _this._hoverBox = null;
@@ -6168,12 +6192,12 @@ var paper;
                     drawer.transform.setLocalScale(1.0);
                 }
             };
-            GizmosSystem.prototype._updateCollider = function () {
+            GizmosSystem.prototype._updateColliders = function () {
                 var groups = this.groups;
                 // const editorCamera = egret3d.Camera.editor;
                 var boxColliderDrawer = this._boxColliderDrawer;
                 var drawerIndex = 0;
-                for (var _i = 0, _a = groups[11 /* SelectedBoxColliders */].entities; _i < _a.length; _i++) {
+                for (var _i = 0, _a = groups[11 /* BoxColliders */].entities; _i < _a.length; _i++) {
                     var entity = _a[_i];
                     for (var _b = 0, _c = entity.getComponents(egret3d.BoxCollider); _b < _c.length; _b++) {
                         var component = _c[_b];
@@ -6184,7 +6208,7 @@ var paper;
                     }
                 }
                 if (egret3d.oimo) {
-                    for (var _d = 0, _e = groups[15 /* OimoSelectedBoxColliders */].entities; _d < _e.length; _d++) {
+                    for (var _d = 0, _e = groups[15 /* OimoBoxColliders */].entities; _d < _e.length; _d++) {
                         var entity = _e[_d];
                         for (var _f = 0, _g = entity.getComponents(egret3d.oimo.BoxCollider); _f < _g.length; _f++) {
                             var component = _g[_f];
@@ -6200,7 +6224,7 @@ var paper;
                 }
                 var sphereColliderDrawer = this._sphereColliderDrawer;
                 drawerIndex = 0;
-                for (var _h = 0, _j = groups[12 /* SelectedSphereColliders */].entities; _h < _j.length; _h++) {
+                for (var _h = 0, _j = groups[12 /* SphereColliders */].entities; _h < _j.length; _h++) {
                     var entity = _j[_h];
                     for (var _k = 0, _l = entity.getComponents(egret3d.SphereCollider); _k < _l.length; _k++) {
                         var component = _l[_k];
@@ -6211,7 +6235,7 @@ var paper;
                     }
                 }
                 if (egret3d.oimo) {
-                    for (var _m = 0, _o = groups[16 /* OimoSelectedSphereColliders */].entities; _m < _o.length; _m++) {
+                    for (var _m = 0, _o = groups[16 /* OimoSphereColliders */].entities; _m < _o.length; _m++) {
                         var entity = _o[_m];
                         for (var _p = 0, _q = entity.getComponents(egret3d.oimo.SphereCollider); _p < _q.length; _p++) {
                             var component = _q[_p];
@@ -6227,7 +6251,7 @@ var paper;
                 }
                 var cylinderColliderDrawer = this._cylinderColliderDrawer;
                 drawerIndex = 0;
-                for (var _r = 0, _s = groups[13 /* SelectedCylinderColliders */].entities; _r < _s.length; _r++) {
+                for (var _r = 0, _s = groups[13 /* CylinderColliders */].entities; _r < _s.length; _r++) {
                     var entity = _s[_r];
                     for (var _t = 0, _u = entity.getComponents(egret3d.CylinderCollider); _t < _u.length; _t++) {
                         var component = _u[_t];
@@ -6238,7 +6262,7 @@ var paper;
                     }
                 }
                 if (egret3d.oimo) {
-                    for (var _v = 0, _w = groups[17 /* OimoSelectedCylinderColliders */].entities; _v < _w.length; _v++) {
+                    for (var _v = 0, _w = groups[17 /* OimoCylinderColliders */].entities; _v < _w.length; _v++) {
                         var entity = _w[_v];
                         for (var _x = 0, _y = entity.getComponents(egret3d.oimo.CylinderCollider); _x < _y.length; _x++) {
                             var component = _y[_x];
@@ -6248,7 +6272,7 @@ var paper;
                             this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
                         }
                     }
-                    for (var _z = 0, _0 = groups[18 /* OimoSelectedConeColliders */].entities; _z < _0.length; _z++) {
+                    for (var _z = 0, _0 = groups[18 /* OimoConeColliders */].entities; _z < _0.length; _z++) {
                         var entity = _0[_z];
                         for (var _1 = 0, _2 = entity.getComponents(egret3d.oimo.ConeCollider); _1 < _2.length; _1++) {
                             var component = _2[_1];
@@ -6264,7 +6288,7 @@ var paper;
                 }
                 var capsuleColliderDrawer = this._capsuleColliderDrawer;
                 drawerIndex = 0;
-                for (var _3 = 0, _4 = groups[14 /* SelectedCapsuleColliders */].entities; _3 < _4.length; _3++) {
+                for (var _3 = 0, _4 = groups[14 /* CapsuleColliders */].entities; _3 < _4.length; _3++) {
                     var entity = _4[_3];
                     for (var _5 = 0, _6 = entity.getComponents(egret3d.CapsuleCollider); _5 < _6.length; _5++) {
                         var component = _6[_5];
@@ -6275,7 +6299,7 @@ var paper;
                     }
                 }
                 if (egret3d.oimo) {
-                    for (var _7 = 0, _8 = groups[19 /* OimoSelectedCapsuleColliders */].entities; _7 < _8.length; _7++) {
+                    for (var _7 = 0, _8 = groups[19 /* OimoCapsuleColliders */].entities; _7 < _8.length; _7++) {
                         var entity = _8[_7];
                         for (var _9 = 0, _10 = entity.getComponents(egret3d.oimo.CapsuleCollider); _9 < _10.length; _9++) {
                             var component = _10[_9];
@@ -6288,6 +6312,124 @@ var paper;
                 }
                 for (var i = drawerIndex, l = capsuleColliderDrawer.length; i < l; ++i) {
                     capsuleColliderDrawer[i].enabled = false;
+                }
+            };
+            GizmosSystem.prototype._updateJoints = function () {
+                var groups = this.groups;
+                var prismaticJointDrawer = this._prismaticJointDrawer;
+                var drawerIndex = 0;
+                if (egret3d.oimo) {
+                    for (var _i = 0, _a = groups[20 /* OimoPrismaticJoints */].entities; _i < _a.length; _i++) {
+                        var entity = _a[_i];
+                        for (var _b = 0, _c = entity.getComponents(egret3d.oimo.PrismaticJoint); _b < _c.length; _b++) {
+                            var component = _c[_b];
+                            if (!component.enabled) {
+                                continue;
+                            }
+                            this._updatePrismaticJointDrawer(entity, component, drawerIndex++);
+                        }
+                    }
+                }
+                for (var i = drawerIndex, l = prismaticJointDrawer.length; i < l; ++i) {
+                    prismaticJointDrawer[i].enabled = false;
+                }
+                var cylindricalJointDrawer = this._cylindricalJointDrawer;
+                drawerIndex = 0;
+                if (egret3d.oimo) {
+                    for (var _d = 0, _e = groups[21 /* OimoCylindricalJoints */].entities; _d < _e.length; _d++) {
+                        var entity = _e[_d];
+                        for (var _f = 0, _g = entity.getComponents(egret3d.oimo.CylindricalJoint); _f < _g.length; _f++) {
+                            var component = _g[_f];
+                            if (!component.enabled) {
+                                continue;
+                            }
+                            this._updateCylindricalJointDrawer(entity, component, drawerIndex++);
+                        }
+                    }
+                }
+                for (var i = drawerIndex, l = cylindricalJointDrawer.length; i < l; ++i) {
+                    cylindricalJointDrawer[i].enabled = false;
+                }
+            };
+            /**
+             * @internal
+             */
+            GizmosSystem.prototype._updatePrismaticJointDrawer = function (entity, component, index) {
+                if (index >= this._prismaticJointDrawer.length) {
+                    var entity_5 = egret3d.creater.createGameObject("Prismatic Joint " + index, {
+                        tag: "EditorOnly" /* EditorOnly */,
+                        scene: paper.Application.sceneManager.editorScene,
+                        mesh: this._jointMesh,
+                        materials: [this._jointLineMaterial, this._jointPointMaterial],
+                    });
+                    entity_5.layer = 64 /* Editor */;
+                    entity_5.parent = this.groups[0 /* GizmosContainer */].singleEntity;
+                    this._prismaticJointDrawer.push(entity_5);
+                }
+                var drawer = this._prismaticJointDrawer[index];
+                if (component.limitMotor.lowerLimit <= component.limitMotor.upperLimit) {
+                    var axis = component.axis.clone().release();
+                    if (!component.useWorldSpace) {
+                        axis.applyDirection(component.rigidbody.gameObject.transform.localToWorldMatrix);
+                    }
+                    drawer.enabled = true;
+                    if (component.useWorldSpace) {
+                        drawer.transform.localPosition = component.anchor;
+                    }
+                    else {
+                        drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+                    }
+                    drawer.transform
+                        .lookRotation(axis)
+                        .translate(axis.multiplyScalar(component.limitMotor.lowerLimit))
+                        .setLocalScale(1.0, 1.0, component.limitMotor.upperLimit - component.limitMotor.lowerLimit);
+                }
+                else {
+                    drawer.enabled = false;
+                }
+            };
+            /**
+             * @internal
+             */
+            GizmosSystem.prototype._updateCylindricalJointDrawer = function (entity, component, index) {
+                if (index >= this._prismaticJointDrawer.length) {
+                    var entity_6 = paper.GameObject.create("Prismatic Joint " + index, "EditorOnly" /* EditorOnly */, paper.Application.sceneManager.editorScene);
+                    entity_6.layer = 64 /* Editor */;
+                    entity_6.parent = this.groups[0 /* GizmosContainer */].singleEntity;
+                    egret3d.creater.createGameObject("TLM", {
+                        tag: "EditorOnly" /* EditorOnly */,
+                        scene: paper.Application.sceneManager.editorScene,
+                        mesh: this._jointMesh,
+                        materials: [this._jointLineMaterial, this._jointPointMaterial],
+                    }).transform.setParent(entity_6.transform);
+                    // egret3d.creater.createGameObject("Joint", {
+                    //     tag: DefaultTags.EditorOnly,
+                    //     scene: Application.sceneManager.editorScene,
+                    //     mesh: this._jointMesh,
+                    //     materials: [this._jointLineMaterial, this._jointPointMaterial],
+                    // }).transform.setParent(entity.transform);
+                    this._prismaticJointDrawer.push(entity_6);
+                }
+                var drawer = this._prismaticJointDrawer[index];
+                if (component.translationalLimitMotor.lowerLimit <= component.translationalLimitMotor.upperLimit) {
+                    var axis = component.axis.clone().release();
+                    if (!component.useWorldSpace) {
+                        axis.applyDirection(component.rigidbody.gameObject.transform.localToWorldMatrix);
+                    }
+                    drawer.enabled = true;
+                    if (component.useWorldSpace) {
+                        drawer.transform.localPosition = component.anchor;
+                    }
+                    else {
+                        drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+                    }
+                    drawer.transform
+                        .lookRotation(axis)
+                        .translate(axis.multiplyScalar(component.translationalLimitMotor.lowerLimit))
+                        .setLocalScale(1.0, 1.0, component.translationalLimitMotor.upperLimit - component.translationalLimitMotor.lowerLimit);
+                }
+                else {
+                    drawer.enabled = false;
                 }
             };
             GizmosSystem.prototype.getMatchers = function () {
@@ -6312,9 +6454,22 @@ var paper;
                     paper.Matcher.create(egret3d.Transform, egret3d.CapsuleCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
                 ];
                 if (egret3d.oimo) {
-                    matchers.push(paper.Matcher.create(egret3d.Transform, egret3d.oimo.BoxCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.SphereCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CylinderCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.ConeCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CapsuleCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag));
+                    matchers.push(paper.Matcher.create(egret3d.Transform, egret3d.oimo.BoxCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.SphereCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CylinderCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.ConeCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CapsuleCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.PrismaticJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CylindricalJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.RevoluteJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.SphericalJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag));
                 }
                 return matchers;
+            };
+            GizmosSystem.prototype.onAwake = function () {
+                var jointMesh = this._jointMesh;
+                jointMesh.name = "editor/joint.mesh.bin";
+                jointMesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
+                jointMesh.setAttributes("POSITION" /* POSITION */, [
+                    0.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0,
+                    0.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0,
+                ]);
+                jointMesh.setIndices([0, 1], 0);
+                jointMesh.setIndices([2, 3], jointMesh.addSubMesh(2, 1, 0 /* Points */));
             };
             GizmosSystem.prototype.onEnable = function () {
                 this._gridA = this._createGrid("Grid A");
@@ -6384,7 +6539,8 @@ var paper;
                 this._updateCameraAndLights();
                 this._updateCamera();
                 this._updateSkeleton();
-                this._updateCollider();
+                this._updateColliders();
+                this._updateJoints();
                 this._updateGrid();
             };
             GizmosSystem = __decorate([

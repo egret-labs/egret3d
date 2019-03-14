@@ -48,6 +48,20 @@ namespace egret3d {
          */
         private constructor() {
             super();
+
+            this._center.onUpdateTarget = this;
+            this._center.onUpdate = this._updateValue;
+            this._size.onUpdateTarget = this;
+            this._size.onUpdate = this._updateValue;
+        }
+
+        private _updateValue(value: Vector3) {
+            if (value === this._center) {
+                this.center = this._center;
+            }
+            else if (value === this._size) {
+                this.size = this._size;
+            }
         }
 
         public serialize() {

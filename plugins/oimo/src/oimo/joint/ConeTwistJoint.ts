@@ -5,7 +5,7 @@ namespace egret3d.oimo {
         MaxSwingAngleZ,
     }
     /**
-     * 锥形扭转关节组件。
+     * 锥形旋转关节组件。
      */
     @paper.requireComponent(Rigidbody)
     @paper.allowMultiple
@@ -17,21 +17,23 @@ namespace egret3d.oimo {
 
         public readonly jointType: JointType = JointType.ConeTwist;
         /**
-         * 沿着关节的扭动轴旋转的弹簧和阻尼器设置。
+         * 沿着关节的旋转弹簧缓冲器设置。
          */
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
         public readonly twistSpringDamper: SpringDamper = SpringDamper.create();
         /**
-         * 沿着关节的摆动轴旋转的弹簧和阻尼器设置。
+         * 沿着关节的旋转马达设置。
+         */
+        @paper.editor.property(paper.editor.EditType.NESTED)
+        @paper.serializedField
+        public readonly twistLimitMotor: RotationalLimitMotor = RotationalLimitMotor.create();
+        /**
+         * 沿着关节的摇摆弹簧缓冲器设置。
          */
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
         public readonly swingSpringDamper: SpringDamper = SpringDamper.create();
-
-        @paper.editor.property(paper.editor.EditType.NESTED)
-        @paper.serializedField
-        public readonly twistLimitMotor: RotationalLimitMotor = RotationalLimitMotor.create();
 
         @paper.serializedField
         private readonly _twistAxis: Vector3 = Vector3.UP.clone();
@@ -54,7 +56,7 @@ namespace egret3d.oimo {
             const config = ConeTwistJoint._config;
             config.allowCollision = this.collisionEnabled;
 
-            if (this.useWorldAnchor) {
+            if (this.useWorldSpace) {
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._twistAxis as any, this._swingAxis as any
@@ -63,8 +65,8 @@ namespace egret3d.oimo {
             else {
                 const matrix = this.gameObject.transform.localToWorldMatrix;
                 const anchor = Vector3.create().applyMatrix(matrix, this._anchor).release();
-                const twistAxis = Vector3.create().applyMatrix(matrix, this._twistAxis).release();
-                const swingAxis = Vector3.create().applyMatrix(matrix, this._swingAxis).release();
+                const twistAxis = Vector3.create().applyDirection(matrix, this._twistAxis).release();
+                const swingAxis = Vector3.create().applyDirection(matrix, this._swingAxis).release();
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any, twistAxis as any, swingAxis as any
@@ -72,26 +74,26 @@ namespace egret3d.oimo {
             }
 
             config.twistSpringDamper = ConeTwistJoint._twistSpringDamper;
-            config.swingSpringDamper = ConeTwistJoint._swingSpringDamper;
             config.twistLimitMotor = ConeTwistJoint._twistLimitMotor;
+            config.swingSpringDamper = ConeTwistJoint._swingSpringDamper;
 
             config.maxSwingAngle1 = this.maxSwingAngleZ;
             config.maxSwingAngle2 = this.maxSwingAngleX;
             config.twistSpringDamper.frequency = this.twistSpringDamper.frequency;
             config.twistSpringDamper.dampingRatio = this.twistSpringDamper.dampingRatio;
             config.twistSpringDamper.useSymplecticEuler = this.twistSpringDamper.useSymplecticEuler;
-            config.swingSpringDamper.frequency = this.swingSpringDamper.frequency;
-            config.swingSpringDamper.dampingRatio = this.swingSpringDamper.dampingRatio;
-            config.swingSpringDamper.useSymplecticEuler = this.swingSpringDamper.useSymplecticEuler;
             config.twistLimitMotor.lowerLimit = this.twistLimitMotor.lowerLimit;
             config.twistLimitMotor.upperLimit = this.twistLimitMotor.upperLimit;
             config.twistLimitMotor.motorSpeed = this.twistLimitMotor.motorSpeed;
             config.twistLimitMotor.motorTorque = this.twistLimitMotor.motorTorque;
+            config.swingSpringDamper.frequency = this.swingSpringDamper.frequency;
+            config.swingSpringDamper.dampingRatio = this.swingSpringDamper.dampingRatio;
+            config.swingSpringDamper.useSymplecticEuler = this.swingSpringDamper.useSymplecticEuler;
 
             const joint = new OIMO.RagdollJoint(config);
             this.twistSpringDamper._oimoSpringDamper = joint.getTwistSpringDamper();
+            this.twistLimitMotor._oimoLimitMotor = joint.getTwistLimitMotor();
             this.swingSpringDamper._oimoSpringDamper = joint.getSwingSpringDamper();
-            this.twistLimitMotor._oimoRotationalLimitMotor = joint.getTwistLimitMotor();
             joint.userData = this;
 
             return joint;
@@ -127,8 +129,7 @@ namespace egret3d.oimo {
             }
         }
         /**
-         * 该关节的转动轴。
-         * - `useWorldAnchor` 影响该值的坐标系描述。
+         * 该关节的旋转轴。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get twistAxis(): Readonly<Vector3> {
@@ -143,8 +144,7 @@ namespace egret3d.oimo {
             }
         }
         /**
-         * 该关节的摆动轴。
-         * - `useWorldAnchor` 影响该值的坐标系描述。
+         * 该关节的摇摆轴。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get swingAxis(): Readonly<Vector3> {

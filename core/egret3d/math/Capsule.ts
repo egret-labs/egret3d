@@ -117,7 +117,6 @@ namespace egret3d {
             return center.getSquaredDistance(point) <= radius2;
         }
 
-
         public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const { radius, center } = this;
             const halfHeight = this.height * 0.5;

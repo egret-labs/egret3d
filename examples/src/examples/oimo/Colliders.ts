@@ -21,8 +21,7 @@ namespace examples.oimo {
 
         public onEnable() {
             //
-            egret3d.Camera.main;
-            //.entity.addComponent(behaviors.RotateAround);
+            egret3d.Camera.main.entity.addComponent(behaviors.RotateAround);
             //
             createGridRoom(10.0);
 

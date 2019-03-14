@@ -1,24 +1,24 @@
 namespace egret3d.oimo {
     /**
-     * 铰链关节组件。
-     * - https://en.wikipedia.org/wiki/Hinge_joint
+     * 转动关节组件。
+     * - https://en.wikipedia.org/wiki/Revolute_joint
      */
     @paper.requireComponent(Rigidbody)
     @paper.allowMultiple
-    export class HingeJoint extends BaseJoint<OIMO.RevoluteJoint> {
+    export class RevoluteJoint extends BaseJoint<OIMO.RevoluteJoint> {
         private static readonly _config: OIMO.RevoluteJointConfig = new OIMO.RevoluteJointConfig();
         private static readonly _springDamper: OIMO.SpringDamper = new OIMO.SpringDamper();
         private static readonly _rotationalLimitMotor: OIMO.RotationalLimitMotor = new OIMO.RotationalLimitMotor();
 
-        public readonly jointType: JointType = JointType.Hinge;
+        public readonly jointType: JointType = JointType.Revolute;
         /**
-         * 该关节的弹簧和阻尼器设置。
+         * 该关节的弹簧缓冲器设置。
          */
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
         public readonly springDamper: SpringDamper = SpringDamper.create();
         /**
-         * 该关节的旋转限位和马达设置。
+         * 该关节的旋转马达设置。
          */
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
@@ -26,7 +26,7 @@ namespace egret3d.oimo {
 
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
-        private readonly _axis: Vector3 = Vector3.UP.clone();
+        private readonly _axis: Vector3 = Vector3.DOWN.clone();
 
         protected readonly _values: Float32Array = new Float32Array([
             0, 0,
@@ -40,10 +40,10 @@ namespace egret3d.oimo {
 
             this._rigidbody = this.gameObject.getComponent(Rigidbody)!;
 
-            const config = HingeJoint._config;
+            const config = RevoluteJoint._config;
             config.allowCollision = this.collisionEnabled;
 
-            if (this.useWorldAnchor) {
+            if (this.useWorldSpace) {
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._axis as any
@@ -52,15 +52,15 @@ namespace egret3d.oimo {
             else {
                 const matrix = this.gameObject.transform.localToWorldMatrix;
                 const anchor = Vector3.create().applyMatrix(matrix, this._anchor).release();
-                const axis = Vector3.create().applyMatrix(matrix, this._axis).release();
+                const axis = Vector3.create().applyDirection(matrix, this._axis).release();
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any, axis as any
                 );
             }
 
-            config.springDamper = HingeJoint._springDamper;
-            config.limitMotor = HingeJoint._rotationalLimitMotor;
+            config.springDamper = RevoluteJoint._springDamper;
+            config.limitMotor = RevoluteJoint._rotationalLimitMotor;
             config.springDamper.frequency = this.springDamper.frequency;
             config.springDamper.dampingRatio = this.springDamper.dampingRatio;
             config.springDamper.useSymplecticEuler = this.springDamper.useSymplecticEuler;
@@ -71,7 +71,7 @@ namespace egret3d.oimo {
 
             const joint = new OIMO.RevoluteJoint(config);
             this.springDamper._oimoSpringDamper = joint.getSpringDamper();
-            this.limitMotor._oimoRotationalLimitMotor = joint.getLimitMotor();
+            this.limitMotor._oimoLimitMotor = joint.getLimitMotor();
 
             joint.userData = this;
 
@@ -79,7 +79,6 @@ namespace egret3d.oimo {
         }
         /**
          * 该关节的旋转轴。
-         * - `useWorldAnchor` 影响该值的坐标系描述。
          */
         @paper.editor.property(paper.editor.EditType.VECTOR3)
         public get axis(): Readonly<Vector3> {

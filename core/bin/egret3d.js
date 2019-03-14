@@ -7504,6 +7504,10 @@ var egret3d;
             _this._maximum = egret3d.Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
             _this._center = egret3d.Vector3.create();
             _this._size = egret3d.Vector3.create();
+            _this._center.onUpdateTarget = _this;
+            _this._center.onUpdate = _this._updateValue;
+            _this._size.onUpdateTarget = _this;
+            _this._size.onUpdate = _this._updateValue;
             return _this;
         }
         /**
@@ -7520,6 +7524,14 @@ var egret3d;
                 return instance;
             }
             return new Box().set(minimum, maximum);
+        };
+        Box.prototype._updateValue = function (value) {
+            if (value === this._center) {
+                this.center = this._center;
+            }
+            else if (value === this._size) {
+                this.size = this._size;
+            }
         };
         Box.prototype.serialize = function () {
             return [this._minimum.x, this._minimum.y, this._minimum.z, this._maximum.x, this._maximum.y, this._maximum.z];
@@ -27853,7 +27865,11 @@ var paper;
             /**
              * 当应用程序的播放模式改变时派发事件。
              */
-            this.onPlayerModeChange = new signals.Signal();
+            this.onPlayerModeChanged = new signals.Signal();
+            // /**
+            //  * 
+            //  */
+            // public delayStatrup: uint = 0;
             /**
              * 引擎版本。
              */
@@ -27884,6 +27900,7 @@ var paper;
             }
             return this._instance;
         };
+        // private _runOptions: RunOptions | null = null;
         /**
          * core updating loop
          */
@@ -27934,7 +27951,6 @@ var paper;
                 paper.clock.frameInterval = options.frameInterval;
             }
             console.info("frame rate:", paper.clock.frameInterval ? (1.0 / paper.clock.frameInterval) : "auto");
-            this.resume();
         };
         /**
          * TODO
@@ -27972,7 +27988,8 @@ var paper;
                 case 2 /* DebugPlayer */:
                     this.resume();
                     break;
-                default: break;
+                default:
+                    break;
             }
         };
         /**
@@ -28033,7 +28050,7 @@ var paper;
                     return;
                 }
                 this._playerMode = value;
-                this.onPlayerModeChange.dispatch(this.playerMode);
+                this.onPlayerModeChanged.dispatch(this.playerMode);
             },
             enumerable: true,
             configurable: true
@@ -32510,6 +32527,7 @@ var egret3d;
             .preRegister(egret3d.Egret2DRendererSystem, gameObjectContext, 7000 /* BeforeRenderer */, options)
             .preRegister(egret3d.CameraAndLightSystem, gameObjectContext, 7000 /* BeforeRenderer */);
         paper.Application.initialize(options);
+        paper.Application.start();
         console.info("Egret start complete.");
     }
     egret3d.runEgret = runEgret;

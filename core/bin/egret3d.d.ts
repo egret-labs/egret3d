@@ -4837,6 +4837,7 @@ declare namespace egret3d {
          * @see egret3d.AABB.create()
          */
         private constructor();
+        private _updateValue(value);
         serialize(): number[];
         deserialize(value: Readonly<[number, number, number, number, number, number]>): this;
         clone(): Box;
@@ -10543,7 +10544,7 @@ declare namespace paper {
         /**
          * 当应用程序的播放模式改变时派发事件。
          */
-        readonly onPlayerModeChange: signals.Signal<PlayerMode>;
+        readonly onPlayerModeChanged: signals.Signal<PlayerMode>;
         /**
          * 引擎版本。
          */

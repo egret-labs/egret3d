@@ -42073,7 +42073,7 @@ var egret3d;
         var ValueType;
         (function (ValueType) {
             ValueType[ValueType["CollisionEnabled"] = 0] = "CollisionEnabled";
-            ValueType[ValueType["UseGlobalAnchor"] = 1] = "UseGlobalAnchor";
+            ValueType[ValueType["UseWorldAnchor"] = 1] = "UseWorldAnchor";
         })(ValueType || (ValueType = {}));
         /**
          * 基础关节组件。
@@ -42088,38 +42088,42 @@ var egret3d;
                  */
                 _this.jointType = -1;
                 _this._anchor = egret3d.Vector3.create();
-                _this._oimoJoint = null;
                 _this._rigidbody = null;
                 _this._connectedBody = null;
+                _this._oimoJoint = null;
                 return _this;
             }
-            BaseJoint_1 = BaseJoint;
             /**
              * 获取该关节承受的力。
              */
-            BaseJoint.prototype.getAppliedForce = function (out) {
-                if (!out) {
-                    out = egret3d.Vector3.create();
+            BaseJoint.prototype.getAppliedForce = function (output) {
+                if (output === null) {
+                    output = egret3d.Vector3.create();
                 }
-                this._oimoJoint.getAppliedForceTo(out); // TODO
-                return out;
+                if (this._oimoJoint !== null) {
+                    this._oimoJoint.getAppliedForceTo(output);
+                }
+                return output;
             };
             /**
              * 获取该关节承受的扭矩。
              */
-            BaseJoint.prototype.getAppliedTorque = function (out) {
-                if (!out) {
-                    out = egret3d.Vector3.create();
+            BaseJoint.prototype.getAppliedTorque = function (output) {
+                if (!output) {
+                    output = egret3d.Vector3.create();
                 }
-                this._oimoJoint.getAppliedTorqueTo(out); // TODO
-                return out;
+                if (this._oimoJoint !== null) {
+                    this._oimoJoint.getAppliedTorqueTo(output);
+                }
+                return output;
             };
             Object.defineProperty(BaseJoint.prototype, "collisionEnabled", {
                 /**
-                 * 该关节所连接的两个刚体之前是否允许碰撞。
+                 * 该关节所连接的两个刚体之间是否允许碰撞。
+                 * - 默认 `false` ，不允许碰撞。
                  */
                 get: function () {
-                    return this._values[0 /* CollisionEnabled */] > 0;
+                    return this._values[0 /* CollisionEnabled */] === 1;
                 },
                 set: function (value) {
                     if (this.collisionEnabled === value) {
@@ -42133,16 +42137,17 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(BaseJoint.prototype, "useWorldAnchor", {
+            Object.defineProperty(BaseJoint.prototype, "useWorldSpace", {
                 /**
-                 * 该关节的锚点是否为世界坐标系。
+                 * 该关节的锚点和轴是否为世界坐标系。
+                 * - 默认 `false` ，使用本地坐标系。
                  */
                 get: function () {
-                    return this._values[1 /* UseGlobalAnchor */] > 0;
+                    return this._values[1 /* UseWorldAnchor */] > 0;
                 },
                 set: function (value) {
                     if (!this._oimoJoint) {
-                        this._values[1 /* UseGlobalAnchor */] = value ? 1 : 0;
+                        this._values[1 /* UseWorldAnchor */] = value ? 1 : 0;
                     }
                     else if (true) {
                         console.warn("Cannot change the useWorldAnchor after the joint has been created.");
@@ -42213,19 +42218,12 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
-            /**
-             * @internal
-             */
-            BaseJoint.isAbstract = BaseJoint_1;
             __decorate([
                 paper.serializedField
             ], BaseJoint.prototype, "_anchor", void 0);
             __decorate([
                 paper.serializedField
             ], BaseJoint.prototype, "_values", void 0);
-            __decorate([
-                paper.serializedField
-            ], BaseJoint.prototype, "_oimoJoint", void 0);
             __decorate([
                 paper.serializedField
             ], BaseJoint.prototype, "_rigidbody", void 0);
@@ -42237,7 +42235,7 @@ var egret3d;
             ], BaseJoint.prototype, "collisionEnabled", null);
             __decorate([
                 paper.editor.property("CHECKBOX" /* CHECKBOX */)
-            ], BaseJoint.prototype, "useWorldAnchor", null);
+            ], BaseJoint.prototype, "useWorldSpace", null);
             __decorate([
                 paper.editor.property("VECTOR3" /* VECTOR3 */)
             ], BaseJoint.prototype, "anchor", null);
@@ -42247,11 +42245,10 @@ var egret3d;
             __decorate([
                 paper.editor.property("COMPONENT" /* COMPONENT */)
             ], BaseJoint.prototype, "connectedRigidbody", null);
-            BaseJoint = BaseJoint_1 = __decorate([
+            BaseJoint = __decorate([
                 paper.abstract
             ], BaseJoint);
             return BaseJoint;
-            var BaseJoint_1;
         }(paper.BaseComponent));
         oimo.BaseJoint = BaseJoint;
         __reflect(BaseJoint.prototype, "egret3d.oimo.BaseJoint");
@@ -42262,20 +42259,20 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
-         * 圆柱体碰撞组件。
-         * - 与 Y 轴对齐。
+         * 球体碰撞组件。
          */
-        var CylinderCollider = (function (_super) {
-            __extends(CylinderCollider, _super);
-            function CylinderCollider() {
+        var SphereCollider = (function (_super) {
+            __extends(SphereCollider, _super);
+            function SphereCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = egret3d.ColliderType.Cylinder;
-                _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
+                _this.colliderType = egret3d.ColliderType.Sphere;
+                _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
                 return _this;
             }
-            CylinderCollider.prototype._createShape = function () {
+            SphereCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
-                config.geometry = new OIMO.CylinderGeometry(this.cylinder.bottomRadius, this.cylinder.height * 0.5);
+                config.position = this.sphere.center;
+                config.geometry = new OIMO.SphereGeometry(this.sphere.radius);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
@@ -42283,14 +42280,14 @@ var egret3d;
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], CylinderCollider.prototype, "cylinder", void 0);
-            CylinderCollider = __decorate([
+            ], SphereCollider.prototype, "sphere", void 0);
+            SphereCollider = __decorate([
                 paper.requireComponent(oimo.Rigidbody)
-            ], CylinderCollider);
-            return CylinderCollider;
+            ], SphereCollider);
+            return SphereCollider;
         }(oimo.BaseCollider));
-        oimo.CylinderCollider = CylinderCollider;
-        __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider", ["egret3d.ICylinderCollider"]);
+        oimo.SphereCollider = SphereCollider;
+        __reflect(SphereCollider.prototype, "egret3d.oimo.SphereCollider", ["egret3d.ISphereCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -42314,7 +42311,7 @@ var egret3d;
             PhysicsSystem_1 = PhysicsSystem;
             PhysicsSystem.prototype.getMatchers = function () {
                 return [
-                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.CylinderCollider, oimo.ConeCollider, oimo.CapsuleCollider, oimo.SphericalJoint, oimo.HingeJoint, oimo.ConeTwistJoint, oimo.UniversalJoint),
+                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.CylinderCollider, oimo.ConeCollider, oimo.CapsuleCollider, oimo.PrismaticJoint, oimo.CylindricalJoint, oimo.RevoluteJoint, oimo.SphericalJoint, oimo.UniversalJoint, oimo.ConeTwistJoint),
                 ];
             };
             PhysicsSystem.prototype.onAwake = function () {
@@ -42650,6 +42647,42 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
+         * 圆柱体碰撞组件。
+         * - 与 Y 轴对齐。
+         */
+        var CylinderCollider = (function (_super) {
+            __extends(CylinderCollider, _super);
+            function CylinderCollider() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.colliderType = egret3d.ColliderType.Cylinder;
+                _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
+                return _this;
+            }
+            CylinderCollider.prototype._createShape = function () {
+                var config = this._updateConfig();
+                config.geometry = new OIMO.CylinderGeometry(this.cylinder.bottomRadius, this.cylinder.height * 0.5);
+                var shape = new OIMO.Shape(config);
+                shape.userData = this;
+                return shape;
+            };
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], CylinderCollider.prototype, "cylinder", void 0);
+            CylinderCollider = __decorate([
+                paper.requireComponent(oimo.Rigidbody)
+            ], CylinderCollider);
+            return CylinderCollider;
+        }(oimo.BaseCollider));
+        oimo.CylinderCollider = CylinderCollider;
+        __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider", ["egret3d.ICylinderCollider"]);
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        /**
          * 刚体类型。
          */
         var RigidbodyType;
@@ -42657,13 +42690,25 @@ var egret3d;
             /**
              * 动态。
              */
-            RigidbodyType[RigidbodyType["DYNAMIC"] = 0] = "DYNAMIC";
+            RigidbodyType[RigidbodyType["Dynamic"] = 0] = "Dynamic";
             /**
              * 静态。
              */
-            RigidbodyType[RigidbodyType["STATIC"] = 1] = "STATIC";
+            RigidbodyType[RigidbodyType["Static"] = 1] = "Static";
             /**
              * 动力学。
+             */
+            RigidbodyType[RigidbodyType["Kinematic"] = 2] = "Kinematic";
+            /**
+             * @deprecated
+             */
+            RigidbodyType[RigidbodyType["DYNAMIC"] = 0] = "DYNAMIC";
+            /**
+             * @deprecated
+             */
+            RigidbodyType[RigidbodyType["STATIC"] = 1] = "STATIC";
+            /**
+             * @deprecated
              */
             RigidbodyType[RigidbodyType["KINEMATIC"] = 2] = "KINEMATIC";
         })(RigidbodyType = oimo.RigidbodyType || (oimo.RigidbodyType = {}));
@@ -42672,49 +42717,31 @@ var egret3d;
          */
         var JointType;
         (function (JointType) {
-            JointType[JointType["Spherical"] = OIMO.JointType.SPHERICAL] = "Spherical";
+            /**
+             * 移动关节。
+             */
             JointType[JointType["Prismatic"] = OIMO.JointType.PRISMATIC] = "Prismatic";
-            JointType[JointType["Hinge"] = OIMO.JointType.REVOLUTE] = "Hinge";
+            /**
+             * 柱面关节。
+             */
             JointType[JointType["Cylindrical"] = OIMO.JointType.CYLINDRICAL] = "Cylindrical";
-            JointType[JointType["ConeTwist"] = OIMO.JointType.RAGDOLL] = "ConeTwist";
+            /**
+             * 转动关节。
+             */
+            JointType[JointType["Revolute"] = OIMO.JointType.REVOLUTE] = "Revolute";
+            /**
+             * 球面关节。
+             */
+            JointType[JointType["Spherical"] = OIMO.JointType.SPHERICAL] = "Spherical";
+            /**
+             * 万向关节。
+             */
             JointType[JointType["Universal"] = OIMO.JointType.UNIVERSAL] = "Universal";
+            /**
+             * 锥形旋转关节。
+             */
+            JointType[JointType["ConeTwist"] = OIMO.JointType.RAGDOLL] = "ConeTwist";
         })(JointType = oimo.JointType || (oimo.JointType = {}));
-    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var oimo;
-    (function (oimo) {
-        /**
-         * 球体碰撞组件。
-         */
-        var SphereCollider = (function (_super) {
-            __extends(SphereCollider, _super);
-            function SphereCollider() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = egret3d.ColliderType.Sphere;
-                _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
-                return _this;
-            }
-            SphereCollider.prototype._createShape = function () {
-                var config = this._updateConfig();
-                config.position = this.sphere.center;
-                config.geometry = new OIMO.SphereGeometry(this.sphere.radius);
-                var shape = new OIMO.Shape(config);
-                shape.userData = this;
-                return shape;
-            };
-            __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
-                paper.serializedField
-            ], SphereCollider.prototype, "sphere", void 0);
-            SphereCollider = __decorate([
-                paper.requireComponent(oimo.Rigidbody)
-            ], SphereCollider);
-            return SphereCollider;
-        }(oimo.BaseCollider));
-        oimo.SphereCollider = SphereCollider;
-        __reflect(SphereCollider.prototype, "egret3d.oimo.SphereCollider", ["egret3d.ISphereCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 // namespace egret3d.oimo {
@@ -42831,16 +42858,25 @@ var egret3d;
             ValueType[ValueType["MaxSwingAngleZ"] = 3] = "MaxSwingAngleZ";
         })(ValueType || (ValueType = {}));
         /**
-         *
+         * 锥形旋转关节组件。
          */
         var ConeTwistJoint = (function (_super) {
             __extends(ConeTwistJoint, _super);
             function ConeTwistJoint() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.jointType = oimo.JointType.ConeTwist;
-                _this.swingSpringDamper = oimo.SpringDamper.create();
+                /**
+                 * 沿着关节的旋转弹簧缓冲器设置。
+                 */
                 _this.twistSpringDamper = oimo.SpringDamper.create();
+                /**
+                 * 沿着关节的旋转马达设置。
+                 */
                 _this.twistLimitMotor = oimo.RotationalLimitMotor.create();
+                /**
+                 * 沿着关节的摇摆弹簧缓冲器设置。
+                 */
+                _this.swingSpringDamper = oimo.SpringDamper.create();
                 _this._twistAxis = egret3d.Vector3.UP.clone();
                 _this._swingAxis = egret3d.Vector3.RIGHT.clone();
                 _this._values = new Float32Array([
@@ -42858,35 +42894,35 @@ var egret3d;
                 this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = ConeTwistJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
-                if (this.useWorldAnchor) {
+                if (this.useWorldSpace) {
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor, this._twistAxis, this._swingAxis);
                 }
                 else {
                     var matrix = this.gameObject.transform.localToWorldMatrix;
                     var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
-                    var twistAxis = egret3d.Vector3.create().applyMatrix(matrix, this._twistAxis).release();
-                    var swingAxis = egret3d.Vector3.create().applyMatrix(matrix, this._swingAxis).release();
+                    var twistAxis = egret3d.Vector3.create().applyDirection(matrix, this._twistAxis).release();
+                    var swingAxis = egret3d.Vector3.create().applyDirection(matrix, this._swingAxis).release();
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor, twistAxis, swingAxis);
                 }
                 config.twistSpringDamper = ConeTwistJoint_1._twistSpringDamper;
-                config.swingSpringDamper = ConeTwistJoint_1._swingSpringDamper;
                 config.twistLimitMotor = ConeTwistJoint_1._twistLimitMotor;
+                config.swingSpringDamper = ConeTwistJoint_1._swingSpringDamper;
                 config.maxSwingAngle1 = this.maxSwingAngleZ;
                 config.maxSwingAngle2 = this.maxSwingAngleX;
                 config.twistSpringDamper.frequency = this.twistSpringDamper.frequency;
                 config.twistSpringDamper.dampingRatio = this.twistSpringDamper.dampingRatio;
                 config.twistSpringDamper.useSymplecticEuler = this.twistSpringDamper.useSymplecticEuler;
-                config.twistSpringDamper.frequency = this.swingSpringDamper.frequency;
-                config.twistSpringDamper.dampingRatio = this.swingSpringDamper.dampingRatio;
-                config.twistSpringDamper.useSymplecticEuler = this.swingSpringDamper.useSymplecticEuler;
                 config.twistLimitMotor.lowerLimit = this.twistLimitMotor.lowerLimit;
                 config.twistLimitMotor.upperLimit = this.twistLimitMotor.upperLimit;
                 config.twistLimitMotor.motorSpeed = this.twistLimitMotor.motorSpeed;
                 config.twistLimitMotor.motorTorque = this.twistLimitMotor.motorTorque;
+                config.swingSpringDamper.frequency = this.swingSpringDamper.frequency;
+                config.swingSpringDamper.dampingRatio = this.swingSpringDamper.dampingRatio;
+                config.swingSpringDamper.useSymplecticEuler = this.swingSpringDamper.useSymplecticEuler;
                 var joint = new OIMO.RagdollJoint(config);
                 this.twistSpringDamper._oimoSpringDamper = joint.getTwistSpringDamper();
+                this.twistLimitMotor._oimoLimitMotor = joint.getTwistLimitMotor();
                 this.swingSpringDamper._oimoSpringDamper = joint.getSwingSpringDamper();
-                this.twistLimitMotor._oimoRotationalLimitMotor = joint.getTwistLimitMotor();
                 joint.userData = this;
                 return joint;
             };
@@ -42928,7 +42964,7 @@ var egret3d;
             });
             Object.defineProperty(ConeTwistJoint.prototype, "twistAxis", {
                 /**
-                 *
+                 * 该关节的旋转轴。
                  */
                 get: function () {
                     return this._twistAxis;
@@ -42946,7 +42982,7 @@ var egret3d;
             });
             Object.defineProperty(ConeTwistJoint.prototype, "swingAxis", {
                 /**
-                 *
+                 * 该关节的摇摆轴。
                  */
                 get: function () {
                     return this._swingAxis;
@@ -42969,15 +43005,15 @@ var egret3d;
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], ConeTwistJoint.prototype, "swingSpringDamper", void 0);
-            __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
-                paper.serializedField
             ], ConeTwistJoint.prototype, "twistSpringDamper", void 0);
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
             ], ConeTwistJoint.prototype, "twistLimitMotor", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], ConeTwistJoint.prototype, "swingSpringDamper", void 0);
             __decorate([
                 paper.serializedField
             ], ConeTwistJoint.prototype, "_twistAxis", void 0);
@@ -43012,57 +43048,83 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
-         *
+         * 柱面关节组件。
+         * - https://en.wikipedia.org/wiki/Cylindrical_joint
          */
-        var HingeJoint = (function (_super) {
-            __extends(HingeJoint, _super);
-            function HingeJoint() {
+        var CylindricalJoint = (function (_super) {
+            __extends(CylindricalJoint, _super);
+            function CylindricalJoint() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.jointType = oimo.JointType.Hinge;
-                _this.springDamper = oimo.SpringDamper.create();
-                _this.limitMotor = oimo.RotationalLimitMotor.create();
+                _this.jointType = oimo.JointType.Cylindrical;
+                /**
+                 * 该关节的移动弹簧缓冲器设置。
+                 */
+                _this.translationalSpringDamper = oimo.SpringDamper.create();
+                /**
+                 * 该关节的移动马达设置。
+                 */
+                _this.translationalLimitMotor = oimo.TranslationalLimitMotor.create();
+                /**
+                 * 该关节的旋转弹簧缓冲器设置。
+                 */
+                _this.rotationalSpringDamper = oimo.SpringDamper.create();
+                /**
+                 * 该关节的旋转马达设置。
+                 */
+                _this.rotationalLimitMotor = oimo.RotationalLimitMotor.create();
                 _this._axis = egret3d.Vector3.UP.clone();
                 _this._values = new Float32Array([
                     0, 0,
                 ]);
                 return _this;
             }
-            HingeJoint_1 = HingeJoint;
-            HingeJoint.prototype._createJoint = function () {
+            CylindricalJoint_1 = CylindricalJoint;
+            CylindricalJoint.prototype._createJoint = function () {
                 if (!this._connectedBody) {
                     // TODO
                     throw new Error();
                 }
                 this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
-                var config = HingeJoint_1._config;
+                var config = CylindricalJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
-                if (this.useWorldAnchor) {
+                if (this.useWorldSpace) {
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor, this._axis);
                 }
                 else {
                     var matrix = this.gameObject.transform.localToWorldMatrix;
                     var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
-                    var axis = egret3d.Vector3.create().applyMatrix(matrix, this._axis).release();
+                    var axis = egret3d.Vector3.create().applyDirection(matrix, this._axis).release();
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor, axis);
                 }
-                config.springDamper = HingeJoint_1._springDamper;
-                config.limitMotor = HingeJoint_1._rotationalLimitMotor;
-                config.springDamper.frequency = this.springDamper.frequency;
-                config.springDamper.dampingRatio = this.springDamper.dampingRatio;
-                config.springDamper.useSymplecticEuler = this.springDamper.useSymplecticEuler;
-                config.limitMotor.lowerLimit = this.limitMotor.lowerLimit;
-                config.limitMotor.upperLimit = this.limitMotor.upperLimit;
-                config.limitMotor.motorSpeed = this.limitMotor.motorSpeed;
-                config.limitMotor.motorTorque = this.limitMotor.motorTorque;
-                var joint = new OIMO.RevoluteJoint(config);
-                this.springDamper._oimoSpringDamper = joint.getSpringDamper();
-                this.limitMotor._oimoRotationalLimitMotor = joint.getLimitMotor();
+                config.translationalSpringDamper = CylindricalJoint_1._translationalSpringDamper;
+                config.translationalLimitMotor = CylindricalJoint_1._translationalLimitMotor;
+                config.rotationalSpringDamper = CylindricalJoint_1._rotationalSpringDamper;
+                config.rotationalLimitMotor = CylindricalJoint_1._rotationalLimitMotor;
+                config.translationalSpringDamper.frequency = this.translationalSpringDamper.frequency;
+                config.translationalSpringDamper.dampingRatio = this.translationalSpringDamper.dampingRatio;
+                config.translationalSpringDamper.useSymplecticEuler = this.translationalSpringDamper.useSymplecticEuler;
+                config.translationalLimitMotor.lowerLimit = this.translationalLimitMotor.lowerLimit;
+                config.translationalLimitMotor.upperLimit = this.translationalLimitMotor.upperLimit;
+                config.translationalLimitMotor.motorSpeed = this.translationalLimitMotor.motorSpeed;
+                config.translationalLimitMotor.motorForce = this.translationalLimitMotor.motorForce;
+                config.rotationalSpringDamper.frequency = this.rotationalSpringDamper.frequency;
+                config.rotationalSpringDamper.dampingRatio = this.rotationalSpringDamper.dampingRatio;
+                config.rotationalSpringDamper.useSymplecticEuler = this.rotationalSpringDamper.useSymplecticEuler;
+                config.rotationalLimitMotor.lowerLimit = this.rotationalLimitMotor.lowerLimit;
+                config.rotationalLimitMotor.upperLimit = this.rotationalLimitMotor.upperLimit;
+                config.rotationalLimitMotor.motorSpeed = this.rotationalLimitMotor.motorSpeed;
+                config.rotationalLimitMotor.motorTorque = this.rotationalLimitMotor.motorTorque;
+                var joint = new OIMO.CylindricalJoint(config);
+                this.translationalSpringDamper._oimoSpringDamper = joint.getTranslationalSpringDamper();
+                this.translationalLimitMotor._oimoLimitMotor = joint.getTranslationalLimitMotor();
+                this.rotationalSpringDamper._oimoSpringDamper = joint.getRotationalSpringDamper();
+                this.rotationalLimitMotor._oimoLimitMotor = joint.getRotationalLimitMotor();
                 joint.userData = this;
                 return joint;
             };
-            Object.defineProperty(HingeJoint.prototype, "axis", {
+            Object.defineProperty(CylindricalJoint.prototype, "axis", {
                 /**
-                 *
+                 * 该关节的旋转轴。
                  */
                 get: function () {
                     return this._axis;
@@ -43078,155 +43140,150 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
-            HingeJoint._config = new OIMO.RevoluteJointConfig();
-            HingeJoint._springDamper = new OIMO.SpringDamper();
-            HingeJoint._rotationalLimitMotor = new OIMO.RotationalLimitMotor();
+            CylindricalJoint._config = new OIMO.CylindricalJointConfig();
+            CylindricalJoint._translationalSpringDamper = new OIMO.SpringDamper();
+            CylindricalJoint._translationalLimitMotor = new OIMO.TranslationalLimitMotor();
+            CylindricalJoint._rotationalSpringDamper = new OIMO.SpringDamper();
+            CylindricalJoint._rotationalLimitMotor = new OIMO.RotationalLimitMotor();
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], HingeJoint.prototype, "springDamper", void 0);
+            ], CylindricalJoint.prototype, "translationalSpringDamper", void 0);
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], HingeJoint.prototype, "limitMotor", void 0);
+            ], CylindricalJoint.prototype, "translationalLimitMotor", void 0);
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], HingeJoint.prototype, "_axis", void 0);
+            ], CylindricalJoint.prototype, "rotationalSpringDamper", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], CylindricalJoint.prototype, "rotationalLimitMotor", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], CylindricalJoint.prototype, "_axis", void 0);
             __decorate([
                 paper.editor.property("VECTOR3" /* VECTOR3 */)
-            ], HingeJoint.prototype, "axis", null);
-            HingeJoint = HingeJoint_1 = __decorate([
+            ], CylindricalJoint.prototype, "axis", null);
+            CylindricalJoint = CylindricalJoint_1 = __decorate([
                 paper.requireComponent(oimo.Rigidbody),
                 paper.allowMultiple
-            ], HingeJoint);
-            return HingeJoint;
-            var HingeJoint_1;
+            ], CylindricalJoint);
+            return CylindricalJoint;
+            var CylindricalJoint_1;
         }(oimo.BaseJoint));
-        oimo.HingeJoint = HingeJoint;
-        __reflect(HingeJoint.prototype, "egret3d.oimo.HingeJoint");
+        oimo.CylindricalJoint = CylindricalJoint;
+        __reflect(CylindricalJoint.prototype, "egret3d.oimo.CylindricalJoint");
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
-        var ValueType;
-        (function (ValueType) {
-            ValueType[ValueType["LowerLimit"] = 0] = "LowerLimit";
-            ValueType[ValueType["UpperLimit"] = 1] = "UpperLimit";
-            ValueType[ValueType["MotorSpeed"] = 2] = "MotorSpeed";
-            ValueType[ValueType["MotorTorque"] = 3] = "MotorTorque";
-        })(ValueType || (ValueType = {}));
         /**
-         * 关节的旋转限位马达设置。
+         * 移动关节组件。
+         * - https://en.wikipedia.org/wiki/Prismatic_joint
          */
-        var RotationalLimitMotor = (function () {
-            function RotationalLimitMotor() {
-                this._values = new Float32Array([
-                    1, 0, 0, 0
+        var PrismaticJoint = (function (_super) {
+            __extends(PrismaticJoint, _super);
+            function PrismaticJoint() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.jointType = oimo.JointType.Prismatic;
+                /**
+                 * 该关节的移动弹簧缓冲器设置。
+                 */
+                _this.springDamper = oimo.SpringDamper.create();
+                /**
+                 * 该关节的移动马达设置。
+                 */
+                _this.limitMotor = oimo.TranslationalLimitMotor.create();
+                _this._axis = egret3d.Vector3.DOWN.clone();
+                _this._values = new Float32Array([
+                    0, 0,
                 ]);
-                /**
-                 * @internal
-                 */
-                this._oimoRotationalLimitMotor = null;
+                return _this;
             }
-            /**
-             * @internal
-             */
-            RotationalLimitMotor.create = function () {
-                return new RotationalLimitMotor();
+            PrismaticJoint_1 = PrismaticJoint;
+            PrismaticJoint.prototype._createJoint = function () {
+                if (!this._connectedBody) {
+                    // TODO
+                    throw new Error();
+                }
+                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
+                var config = PrismaticJoint_1._config;
+                config.allowCollision = this.collisionEnabled;
+                if (this.useWorldSpace) {
+                    config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor, this._axis);
+                }
+                else {
+                    var matrix = this.gameObject.transform.localToWorldMatrix;
+                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
+                    var axis = egret3d.Vector3.create().applyDirection(matrix, this._axis).release();
+                    config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor, axis);
+                }
+                config.springDamper = PrismaticJoint_1._springDamper;
+                config.limitMotor = PrismaticJoint_1._translationalLimitMotor;
+                config.springDamper.frequency = this.springDamper.frequency;
+                config.springDamper.dampingRatio = this.springDamper.dampingRatio;
+                config.springDamper.useSymplecticEuler = this.springDamper.useSymplecticEuler;
+                config.limitMotor.lowerLimit = this.limitMotor.lowerLimit;
+                config.limitMotor.upperLimit = this.limitMotor.upperLimit;
+                config.limitMotor.motorSpeed = this.limitMotor.motorSpeed;
+                config.limitMotor.motorForce = this.limitMotor.motorForce;
+                var joint = new OIMO.PrismaticJoint(config);
+                this.springDamper._oimoSpringDamper = joint.getSpringDamper();
+                this.limitMotor._oimoLimitMotor = joint.getLimitMotor();
+                joint.userData = this;
+                return joint;
             };
-            RotationalLimitMotor.prototype.serialize = function () {
-                return this._values;
-            };
-            RotationalLimitMotor.prototype.deserialize = function (value) {
-                this._values[0] = value[0];
-                this._values[1] = value[1];
-                this._values[2] = value[2];
-                this._values[3] = value[3];
-                return this;
-            };
-            Object.defineProperty(RotationalLimitMotor.prototype, "lowerLimit", {
+            Object.defineProperty(PrismaticJoint.prototype, "axis", {
                 /**
-                 *
+                 * 该关节的移动轴。
                  */
                 get: function () {
-                    return this._values[0 /* LowerLimit */];
+                    return this._axis;
                 },
                 set: function (value) {
-                    this._values[0 /* LowerLimit */] = value;
-                    if (this._oimoRotationalLimitMotor) {
-                        this._oimoRotationalLimitMotor.lowerLimit = value;
+                    if (!this._oimoJoint) {
+                        this._axis.normalize(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the axis after the joint has been created.");
                     }
                 },
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(RotationalLimitMotor.prototype, "upperLimit", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._values[1 /* UpperLimit */];
-                },
-                set: function (value) {
-                    this._values[1 /* UpperLimit */] = value;
-                    if (this._oimoRotationalLimitMotor) {
-                        this._oimoRotationalLimitMotor.upperLimit = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(RotationalLimitMotor.prototype, "motorSpeed", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._values[2 /* MotorSpeed */];
-                },
-                set: function (value) {
-                    this._values[2 /* MotorSpeed */] = value;
-                    if (this._oimoRotationalLimitMotor) {
-                        this._oimoRotationalLimitMotor.motorSpeed = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(RotationalLimitMotor.prototype, "motorTorque", {
-                /**
-                 *
-                 */
-                get: function () {
-                    return this._values[3 /* MotorTorque */];
-                },
-                set: function (value) {
-                    this._values[3 /* MotorTorque */] = value;
-                    if (this._oimoRotationalLimitMotor) {
-                        this._oimoRotationalLimitMotor.motorTorque = value;
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
+            PrismaticJoint._config = new OIMO.PrismaticJointConfig();
+            PrismaticJoint._springDamper = new OIMO.SpringDamper();
+            PrismaticJoint._translationalLimitMotor = new OIMO.TranslationalLimitMotor();
             __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */)
-            ], RotationalLimitMotor.prototype, "lowerLimit", null);
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], PrismaticJoint.prototype, "springDamper", void 0);
             __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */)
-            ], RotationalLimitMotor.prototype, "upperLimit", null);
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], PrismaticJoint.prototype, "limitMotor", void 0);
             __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */)
-            ], RotationalLimitMotor.prototype, "motorSpeed", null);
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], PrismaticJoint.prototype, "_axis", void 0);
             __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */)
-            ], RotationalLimitMotor.prototype, "motorTorque", null);
-            return RotationalLimitMotor;
-        }());
-        oimo.RotationalLimitMotor = RotationalLimitMotor;
-        __reflect(RotationalLimitMotor.prototype, "egret3d.oimo.RotationalLimitMotor", ["paper.ISerializable"]);
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], PrismaticJoint.prototype, "axis", null);
+            PrismaticJoint = PrismaticJoint_1 = __decorate([
+                paper.requireComponent(oimo.Rigidbody),
+                paper.allowMultiple
+            ], PrismaticJoint);
+            return PrismaticJoint;
+            var PrismaticJoint_1;
+        }(oimo.BaseJoint));
+        oimo.PrismaticJoint = PrismaticJoint;
+        __reflect(PrismaticJoint.prototype, "egret3d.oimo.PrismaticJoint");
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -43234,13 +43291,124 @@ var egret3d;
     var oimo;
     (function (oimo) {
         /**
-         *
+         * 转动关节组件。
+         * - https://en.wikipedia.org/wiki/Revolute_joint
+         */
+        var RevoluteJoint = (function (_super) {
+            __extends(RevoluteJoint, _super);
+            function RevoluteJoint() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.jointType = oimo.JointType.Revolute;
+                /**
+                 * 该关节的弹簧缓冲器设置。
+                 */
+                _this.springDamper = oimo.SpringDamper.create();
+                /**
+                 * 该关节的旋转马达设置。
+                 */
+                _this.limitMotor = oimo.RotationalLimitMotor.create();
+                _this._axis = egret3d.Vector3.UP.clone();
+                _this._values = new Float32Array([
+                    0, 0,
+                ]);
+                return _this;
+            }
+            RevoluteJoint_1 = RevoluteJoint;
+            RevoluteJoint.prototype._createJoint = function () {
+                if (!this._connectedBody) {
+                    // TODO
+                    throw new Error();
+                }
+                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
+                var config = RevoluteJoint_1._config;
+                config.allowCollision = this.collisionEnabled;
+                if (this.useWorldSpace) {
+                    config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor, this._axis);
+                }
+                else {
+                    var matrix = this.gameObject.transform.localToWorldMatrix;
+                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
+                    var axis = egret3d.Vector3.create().applyDirection(matrix, this._axis).release();
+                    config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor, axis);
+                }
+                config.springDamper = RevoluteJoint_1._springDamper;
+                config.limitMotor = RevoluteJoint_1._rotationalLimitMotor;
+                config.springDamper.frequency = this.springDamper.frequency;
+                config.springDamper.dampingRatio = this.springDamper.dampingRatio;
+                config.springDamper.useSymplecticEuler = this.springDamper.useSymplecticEuler;
+                config.limitMotor.lowerLimit = this.limitMotor.lowerLimit;
+                config.limitMotor.upperLimit = this.limitMotor.upperLimit;
+                config.limitMotor.motorSpeed = this.limitMotor.motorSpeed;
+                config.limitMotor.motorTorque = this.limitMotor.motorTorque;
+                var joint = new OIMO.RevoluteJoint(config);
+                this.springDamper._oimoSpringDamper = joint.getSpringDamper();
+                this.limitMotor._oimoLimitMotor = joint.getLimitMotor();
+                joint.userData = this;
+                return joint;
+            };
+            Object.defineProperty(RevoluteJoint.prototype, "axis", {
+                /**
+                 * 该关节的旋转轴。
+                 */
+                get: function () {
+                    return this._axis;
+                },
+                set: function (value) {
+                    if (!this._oimoJoint) {
+                        this._axis.normalize(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the axis after the joint has been created.");
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            RevoluteJoint._config = new OIMO.RevoluteJointConfig();
+            RevoluteJoint._springDamper = new OIMO.SpringDamper();
+            RevoluteJoint._rotationalLimitMotor = new OIMO.RotationalLimitMotor();
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], RevoluteJoint.prototype, "springDamper", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], RevoluteJoint.prototype, "limitMotor", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], RevoluteJoint.prototype, "_axis", void 0);
+            __decorate([
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], RevoluteJoint.prototype, "axis", null);
+            RevoluteJoint = RevoluteJoint_1 = __decorate([
+                paper.requireComponent(oimo.Rigidbody),
+                paper.allowMultiple
+            ], RevoluteJoint);
+            return RevoluteJoint;
+            var RevoluteJoint_1;
+        }(oimo.BaseJoint));
+        oimo.RevoluteJoint = RevoluteJoint;
+        __reflect(RevoluteJoint.prototype, "egret3d.oimo.RevoluteJoint");
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        /**
+         * 球面关节组件。
+         * - https://en.wikipedia.org/wiki/Ball_joint
          */
         var SphericalJoint = (function (_super) {
             __extends(SphericalJoint, _super);
             function SphericalJoint() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.jointType = oimo.JointType.Spherical;
+                /**
+                 * 该关节的旋转弹簧缓冲器设置。
+                 */
                 _this.springDamper = oimo.SpringDamper.create();
                 _this._values = new Float32Array([
                     0, 0,
@@ -43256,7 +43424,7 @@ var egret3d;
                 this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = SphericalJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
-                if (this.useWorldAnchor) {
+                if (this.useWorldSpace) {
                     config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor);
                 }
                 else {
@@ -43294,6 +43462,301 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        /**
+         * 万向关节组件。
+         * - https://en.wikipedia.org/wiki/Universal_joint
+         */
+        var UniversalJoint = (function (_super) {
+            __extends(UniversalJoint, _super);
+            function UniversalJoint() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.jointType = oimo.JointType.Universal;
+                /**
+                 * 该关节的 X 轴旋转弹簧缓冲器设置。
+                 */
+                _this.springDamperX = oimo.SpringDamper.create();
+                /**
+                 * 该关节的 X 轴旋转马达设置。
+                 */
+                _this.limitMotorX = oimo.RotationalLimitMotor.create();
+                /**
+                 * 该关节的 Y 轴旋转弹簧缓冲器设置。
+                 */
+                _this.springDamperY = oimo.SpringDamper.create();
+                /**
+                 * 该关节的 Y 轴旋转马达设置。
+                 */
+                _this.limitMotorY = oimo.RotationalLimitMotor.create();
+                _this._axisX = egret3d.Vector3.RIGHT.clone();
+                _this._axisY = egret3d.Vector3.UP.clone();
+                _this._values = new Float32Array([
+                    0, 0,
+                ]);
+                return _this;
+            }
+            UniversalJoint_1 = UniversalJoint;
+            UniversalJoint.prototype._createJoint = function () {
+                if (!this._connectedBody) {
+                    // TODO
+                    throw new Error();
+                }
+                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
+                var config = UniversalJoint_1._config;
+                config.allowCollision = this.collisionEnabled;
+                if (this.useWorldSpace) {
+                    config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor, this._axisX, this._axisY);
+                }
+                else {
+                    var matrix = this.gameObject.transform.localToWorldMatrix;
+                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
+                    var axisX = egret3d.Vector3.create().applyDirection(matrix, this._axisX).release();
+                    var axisY = egret3d.Vector3.create().applyDirection(matrix, this._axisY).release();
+                    config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor, axisX, axisY);
+                }
+                config.springDamper1 = UniversalJoint_1._springDamperX;
+                config.springDamper2 = UniversalJoint_1._springDamperY;
+                config.limitMotor1 = UniversalJoint_1._limitMotorX;
+                config.limitMotor2 = UniversalJoint_1._limitMotorY;
+                config.springDamper1.frequency = this.springDamperX.frequency;
+                config.springDamper1.dampingRatio = this.springDamperX.dampingRatio;
+                config.springDamper1.useSymplecticEuler = this.springDamperX.useSymplecticEuler;
+                config.limitMotor1.lowerLimit = this.limitMotorX.lowerLimit;
+                config.limitMotor1.upperLimit = this.limitMotorX.upperLimit;
+                config.limitMotor1.motorSpeed = this.limitMotorX.motorSpeed;
+                config.limitMotor1.motorTorque = this.limitMotorX.motorTorque;
+                config.springDamper2.frequency = this.springDamperY.frequency;
+                config.springDamper2.dampingRatio = this.springDamperY.dampingRatio;
+                config.springDamper2.useSymplecticEuler = this.springDamperY.useSymplecticEuler;
+                config.limitMotor2.lowerLimit = this.limitMotorY.lowerLimit;
+                config.limitMotor2.upperLimit = this.limitMotorY.upperLimit;
+                config.limitMotor2.motorSpeed = this.limitMotorY.motorSpeed;
+                config.limitMotor2.motorTorque = this.limitMotorY.motorTorque;
+                var joint = new OIMO.UniversalJoint(config);
+                this.springDamperX._oimoSpringDamper = joint.getSpringDamper1();
+                this.springDamperY._oimoSpringDamper = joint.getSpringDamper2();
+                this.limitMotorX._oimoLimitMotor = joint.getLimitMotor1();
+                this.limitMotorY._oimoLimitMotor = joint.getLimitMotor2();
+                joint.userData = this;
+                return joint;
+            };
+            Object.defineProperty(UniversalJoint.prototype, "axisX", {
+                /**
+                 * 该关节的 X 旋转轴。
+                 */
+                get: function () {
+                    return this._axisX;
+                },
+                set: function (value) {
+                    if (!this._oimoJoint) {
+                        this._axisX.normalize(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the axisX after the joint has been created.");
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(UniversalJoint.prototype, "axisY", {
+                /**
+                 * 该关节的 Y 旋转轴。
+                 */
+                get: function () {
+                    return this._axisY;
+                },
+                set: function (value) {
+                    if (!this._oimoJoint) {
+                        this._axisY.normalize(value);
+                    }
+                    else if (true) {
+                        console.warn("Cannot change the axisY after the joint has been created.");
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            UniversalJoint._config = new OIMO.UniversalJointConfig();
+            UniversalJoint._springDamperX = new OIMO.SpringDamper();
+            UniversalJoint._springDamperY = new OIMO.SpringDamper();
+            UniversalJoint._limitMotorX = new OIMO.RotationalLimitMotor();
+            UniversalJoint._limitMotorY = new OIMO.RotationalLimitMotor();
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], UniversalJoint.prototype, "springDamperX", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], UniversalJoint.prototype, "limitMotorX", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], UniversalJoint.prototype, "springDamperY", void 0);
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], UniversalJoint.prototype, "limitMotorY", void 0);
+            __decorate([
+                paper.serializedField
+            ], UniversalJoint.prototype, "_axisX", void 0);
+            __decorate([
+                paper.serializedField
+            ], UniversalJoint.prototype, "_axisY", void 0);
+            __decorate([
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], UniversalJoint.prototype, "axisX", null);
+            __decorate([
+                paper.editor.property("VECTOR3" /* VECTOR3 */)
+            ], UniversalJoint.prototype, "axisY", null);
+            UniversalJoint = UniversalJoint_1 = __decorate([
+                paper.requireComponent(oimo.Rigidbody),
+                paper.allowMultiple
+            ], UniversalJoint);
+            return UniversalJoint;
+            var UniversalJoint_1;
+        }(oimo.BaseJoint));
+        oimo.UniversalJoint = UniversalJoint;
+        __reflect(UniversalJoint.prototype, "egret3d.oimo.UniversalJoint");
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        var ValueType;
+        (function (ValueType) {
+            ValueType[ValueType["LowerLimit"] = 0] = "LowerLimit";
+            ValueType[ValueType["UpperLimit"] = 1] = "UpperLimit";
+            ValueType[ValueType["MotorSpeed"] = 2] = "MotorSpeed";
+            ValueType[ValueType["MotorTorque"] = 3] = "MotorTorque";
+        })(ValueType || (ValueType = {}));
+        /**
+         * 关节的旋转马达设置。
+         */
+        var RotationalLimitMotor = (function () {
+            function RotationalLimitMotor() {
+                this._values = new Float32Array([
+                    1.0, 0.0, 0.0, 0.0
+                ]);
+                /**
+                 * @internal
+                 */
+                this._oimoLimitMotor = null;
+            }
+            /**
+             * @internal
+             */
+            RotationalLimitMotor.create = function () {
+                return new RotationalLimitMotor();
+            };
+            RotationalLimitMotor.prototype.serialize = function () {
+                return this._values;
+            };
+            RotationalLimitMotor.prototype.deserialize = function (value) {
+                this._values[0] = value[0];
+                this._values[1] = value[1];
+                this._values[2] = value[2];
+                this._values[3] = value[3];
+                return this;
+            };
+            Object.defineProperty(RotationalLimitMotor.prototype, "lowerLimit", {
+                /**
+                 * 该马达的最低旋转角限制。
+                 * - 弧度制。
+                 * - 当 `lowerLimit > upperLimit` 时关闭限位。
+                 */
+                get: function () {
+                    return this._values[0 /* LowerLimit */];
+                },
+                set: function (value) {
+                    this._values[0 /* LowerLimit */] = value;
+                    if (this._oimoLimitMotor !== null) {
+                        this._oimoLimitMotor.lowerLimit = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(RotationalLimitMotor.prototype, "upperLimit", {
+                /**
+                 * 该马达的最高旋转角限制。
+                 * - 弧度制。
+                 * - 当 `upperLimit < lowerLimit` 时关闭限位。
+                 */
+                get: function () {
+                    return this._values[1 /* UpperLimit */];
+                },
+                set: function (value) {
+                    this._values[1 /* UpperLimit */] = value;
+                    if (this._oimoLimitMotor !== null) {
+                        this._oimoLimitMotor.upperLimit = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(RotationalLimitMotor.prototype, "motorSpeed", {
+                /**
+                 * 该马达的最大转速。
+                 * - 单位为`弧度/秒`。
+                 */
+                get: function () {
+                    return this._values[2 /* MotorSpeed */];
+                },
+                set: function (value) {
+                    this._values[2 /* MotorSpeed */] = value;
+                    if (this._oimoLimitMotor !== null) {
+                        this._oimoLimitMotor.motorSpeed = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(RotationalLimitMotor.prototype, "motorTorque", {
+                /**
+                 * 该马达的最大扭矩。
+                 * - 单位为`牛顿/米`。
+                 * - [`0.0` ~ N]
+                 * - 设置为 `0.0` 停用马达。
+                 * - 默认为 `0.0`。
+                 */
+                get: function () {
+                    return this._values[3 /* MotorTorque */];
+                },
+                set: function (value) {
+                    if (value < 0.0) {
+                        value = 0.0;
+                    }
+                    this._values[3 /* MotorTorque */] = value;
+                    if (this._oimoLimitMotor !== null) {
+                        this._oimoLimitMotor.motorTorque = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], RotationalLimitMotor.prototype, "lowerLimit", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], RotationalLimitMotor.prototype, "upperLimit", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], RotationalLimitMotor.prototype, "motorSpeed", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            ], RotationalLimitMotor.prototype, "motorTorque", null);
+            return RotationalLimitMotor;
+        }());
+        oimo.RotationalLimitMotor = RotationalLimitMotor;
+        __reflect(RotationalLimitMotor.prototype, "egret3d.oimo.RotationalLimitMotor", ["paper.ISerializable"]);
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
         var ValueType;
         (function (ValueType) {
             ValueType[ValueType["Frequency"] = 0] = "Frequency";
@@ -43301,12 +43764,12 @@ var egret3d;
             ValueType[ValueType["UseSymplecticEuler"] = 2] = "UseSymplecticEuler";
         })(ValueType || (ValueType = {}));
         /**
-         * 关节的弹簧和阻尼器设置。
+         * 关节的弹簧缓冲器设置。
          */
         var SpringDamper = (function () {
             function SpringDamper() {
                 this._values = new Float32Array([
-                    0, 0, 0
+                    0.0, OIMO.Setting.minSpringDamperDampingRatio, 0,
                 ]);
                 /**
                  * @internal
@@ -43330,14 +43793,20 @@ var egret3d;
             };
             Object.defineProperty(SpringDamper.prototype, "frequency", {
                 /**
-                 *
+                 * 该弹簧的频率。
+                 * - 单位为`赫兹`。
+                 * - [`0.0` ~ N]
+                 * - 默认为 `0.0` ，禁用弹性，使约束完全刚性。
                  */
                 get: function () {
                     return this._values[0 /* Frequency */];
                 },
                 set: function (value) {
+                    if (value < 0.0) {
+                        value = 0.0;
+                    }
                     this._values[0 /* Frequency */] = value;
-                    if (this._oimoSpringDamper) {
+                    if (this._oimoSpringDamper !== null) {
                         this._oimoSpringDamper.frequency = value;
                     }
                 },
@@ -43346,14 +43815,19 @@ var egret3d;
             });
             Object.defineProperty(SpringDamper.prototype, "dampingRatio", {
                 /**
-                 *
+                 * 该缓冲器的阻尼系数。
+                 * - [`OIMO.Setting.minSpringDamperDampingRatio` ~ N]
+                 * - 默认为 `OIMO.Setting.minSpringDamperDampingRatio` 。
                  */
                 get: function () {
                     return this._values[1 /* DampingRatio */];
                 },
                 set: function (value) {
+                    if (value < OIMO.Setting.minSpringDamperDampingRatio) {
+                        value = OIMO.Setting.minSpringDamperDampingRatio;
+                    }
                     this._values[1 /* DampingRatio */] = value;
-                    if (this._oimoSpringDamper) {
+                    if (this._oimoSpringDamper !== null) {
                         this._oimoSpringDamper.dampingRatio = value;
                     }
                 },
@@ -43362,14 +43836,15 @@ var egret3d;
             });
             Object.defineProperty(SpringDamper.prototype, "useSymplecticEuler", {
                 /**
-                 *
+                 * 是否使用辛欧拉法代替隐式欧拉法，辛欧拉法比隐式欧拉法有更好的性能，但约束在高频下不稳定。
+                 * - 默认为 `false`，使用隐式欧拉法。
                  */
                 get: function () {
                     return this._values[2 /* UseSymplecticEuler */] > 0;
                 },
                 set: function (value) {
                     this._values[2 /* UseSymplecticEuler */] = value ? 1 : 0;
-                    if (this._oimoSpringDamper) {
+                    if (this._oimoSpringDamper !== null) {
                         this._oimoSpringDamper.useSymplecticEuler = value;
                     }
                 },
@@ -43377,10 +43852,10 @@ var egret3d;
                 configurable: true
             });
             __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */)
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
             ], SpringDamper.prototype, "frequency", null);
             __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */)
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: OIMO.Setting.minSpringDamperDampingRatio })
             ], SpringDamper.prototype, "dampingRatio", null);
             __decorate([
                 paper.editor.property("CHECKBOX" /* CHECKBOX */)
@@ -43395,147 +43870,134 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        var ValueType;
+        (function (ValueType) {
+            ValueType[ValueType["LowerLimit"] = 0] = "LowerLimit";
+            ValueType[ValueType["UpperLimit"] = 1] = "UpperLimit";
+            ValueType[ValueType["MotorSpeed"] = 2] = "MotorSpeed";
+            ValueType[ValueType["MotorForce"] = 3] = "MotorForce";
+        })(ValueType || (ValueType = {}));
         /**
-         *
+         * 关节的移动马达设置。
          */
-        var UniversalJoint = (function (_super) {
-            __extends(UniversalJoint, _super);
-            function UniversalJoint() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.jointType = oimo.JointType.Universal;
-                _this.springDamperY = oimo.SpringDamper.create();
-                _this.springDamperZ = oimo.SpringDamper.create();
-                _this.limitMotorY = oimo.RotationalLimitMotor.create();
-                _this.limitMotorZ = oimo.RotationalLimitMotor.create();
-                _this._axisY = egret3d.Vector3.FORWARD.clone();
-                _this._axisZ = egret3d.Vector3.FORWARD.clone();
-                _this._values = new Float32Array([
-                    0, 0,
+        var TranslationalLimitMotor = (function () {
+            function TranslationalLimitMotor() {
+                this._values = new Float32Array([
+                    1.0, 0.0, 0.0, 0.0
                 ]);
-                return _this;
+                /**
+                 * @internal
+                 */
+                this._oimoLimitMotor = null;
             }
-            UniversalJoint_1 = UniversalJoint;
-            UniversalJoint.prototype._createJoint = function () {
-                if (!this._connectedBody) {
-                    // TODO
-                    throw new Error();
-                }
-                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
-                var config = UniversalJoint_1._config;
-                config.allowCollision = this.collisionEnabled;
-                if (this.useWorldAnchor) {
-                    config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, this._anchor, this._axisY, this._axisZ);
-                }
-                else {
-                    var matrix = this.gameObject.transform.localToWorldMatrix;
-                    var anchor = egret3d.Vector3.create().applyMatrix(matrix, this._anchor).release();
-                    var axisY = egret3d.Vector3.create().applyMatrix(matrix, this._axisY).release();
-                    var axisZ = egret3d.Vector3.create().applyMatrix(matrix, this._axisZ).release();
-                    config.init(this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody, anchor, axisY, axisZ);
-                }
-                config.springDamper1 = UniversalJoint_1._springDamperY;
-                config.springDamper2 = UniversalJoint_1._springDamperZ;
-                config.limitMotor1 = UniversalJoint_1._limitMotorY;
-                config.limitMotor2 = UniversalJoint_1._limitMotorZ;
-                config.springDamper1.frequency = this.springDamperY.frequency;
-                config.springDamper1.dampingRatio = this.springDamperY.dampingRatio;
-                config.springDamper1.useSymplecticEuler = this.springDamperY.useSymplecticEuler;
-                config.springDamper2.frequency = this.springDamperZ.frequency;
-                config.springDamper2.dampingRatio = this.springDamperZ.dampingRatio;
-                config.springDamper2.useSymplecticEuler = this.springDamperZ.useSymplecticEuler;
-                config.limitMotor1.lowerLimit = this.limitMotorY.lowerLimit;
-                config.limitMotor1.upperLimit = this.limitMotorY.upperLimit;
-                config.limitMotor1.motorSpeed = this.limitMotorY.motorSpeed;
-                config.limitMotor1.motorTorque = this.limitMotorY.motorTorque;
-                config.limitMotor2.lowerLimit = this.limitMotorZ.lowerLimit;
-                config.limitMotor2.upperLimit = this.limitMotorZ.upperLimit;
-                config.limitMotor2.motorSpeed = this.limitMotorZ.motorSpeed;
-                config.limitMotor2.motorTorque = this.limitMotorZ.motorTorque;
-                var joint = new OIMO.UniversalJoint(config);
-                this.springDamperY._oimoSpringDamper = joint.getSpringDamper1();
-                this.springDamperZ._oimoSpringDamper = joint.getSpringDamper2();
-                this.limitMotorY._oimoRotationalLimitMotor = joint.getLimitMotor1();
-                this.limitMotorZ._oimoRotationalLimitMotor = joint.getLimitMotor2();
-                joint.userData = this;
-                return joint;
+            /**
+             * @internal
+             */
+            TranslationalLimitMotor.create = function () {
+                return new TranslationalLimitMotor();
             };
-            Object.defineProperty(UniversalJoint.prototype, "axisY", {
+            TranslationalLimitMotor.prototype.serialize = function () {
+                return this._values;
+            };
+            TranslationalLimitMotor.prototype.deserialize = function (value) {
+                this._values[0] = value[0];
+                this._values[1] = value[1];
+                this._values[2] = value[2];
+                this._values[3] = value[3];
+                return this;
+            };
+            Object.defineProperty(TranslationalLimitMotor.prototype, "lowerLimit", {
                 /**
-                 *
+                 * 该马达的最低位移限制。
+                 * - 单位为`米`。
+                 * - 当 `lowerLimit > upperLimit` 时关闭限位。
                  */
                 get: function () {
-                    return this._axisY;
+                    return this._values[0 /* LowerLimit */];
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
-                        this._axisY.normalize(value);
-                    }
-                    else if (true) {
-                        console.warn("Cannot change the axisY after the joint has been created.");
+                    this._values[0 /* LowerLimit */] = value;
+                    if (this._oimoLimitMotor !== null) {
+                        this._oimoLimitMotor.lowerLimit = value;
                     }
                 },
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(UniversalJoint.prototype, "axisZ", {
+            Object.defineProperty(TranslationalLimitMotor.prototype, "upperLimit", {
                 /**
-                 *
+                 * 该马达的最高位移限制。
+                 * - 单位为`米`。
+                 * - 当 `upperLimit < lowerLimit` 时关闭限位。
                  */
                 get: function () {
-                    return this._axisZ;
+                    return this._values[1 /* UpperLimit */];
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
-                        this._axisZ.normalize(value);
-                    }
-                    else if (true) {
-                        console.warn("Cannot change the axisZ after the joint has been created.");
+                    this._values[1 /* UpperLimit */] = value;
+                    if (this._oimoLimitMotor !== null) {
+                        this._oimoLimitMotor.upperLimit = value;
                     }
                 },
                 enumerable: true,
                 configurable: true
             });
-            UniversalJoint._config = new OIMO.UniversalJointConfig();
-            UniversalJoint._springDamperY = new OIMO.SpringDamper();
-            UniversalJoint._springDamperZ = new OIMO.SpringDamper();
-            UniversalJoint._limitMotorY = new OIMO.RotationalLimitMotor();
-            UniversalJoint._limitMotorZ = new OIMO.RotationalLimitMotor();
+            Object.defineProperty(TranslationalLimitMotor.prototype, "motorSpeed", {
+                /**
+                 * 该马达的最大线速度。
+                 * - 单位为`米 / 秒`。
+                 * - 默认为 `0.0`。
+                 */
+                get: function () {
+                    return this._values[2 /* MotorSpeed */];
+                },
+                set: function (value) {
+                    this._values[2 /* MotorSpeed */] = value;
+                    if (this._oimoLimitMotor !== null) {
+                        this._oimoLimitMotor.motorSpeed = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(TranslationalLimitMotor.prototype, "motorForce", {
+                /**
+                 * 该马达的最大输出力。
+                 * - 单位为`牛顿`。
+                 * - [`0.0` ~ N]
+                 * - 设置为 `0.0` 停用马达。
+                 * - 默认为 `0.0`。
+                 */
+                get: function () {
+                    return this._values[3 /* MotorForce */];
+                },
+                set: function (value) {
+                    if (value < 0.0) {
+                        value = 0.0;
+                    }
+                    this._values[3 /* MotorForce */] = value;
+                    if (this._oimoLimitMotor !== null) {
+                        this._oimoLimitMotor.motorForce = value;
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
             __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
-                paper.serializedField
-            ], UniversalJoint.prototype, "springDamperY", void 0);
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], TranslationalLimitMotor.prototype, "lowerLimit", null);
             __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
-                paper.serializedField
-            ], UniversalJoint.prototype, "springDamperZ", void 0);
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], TranslationalLimitMotor.prototype, "upperLimit", null);
             __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
-                paper.serializedField
-            ], UniversalJoint.prototype, "limitMotorY", void 0);
+                paper.editor.property("FLOAT" /* FLOAT */)
+            ], TranslationalLimitMotor.prototype, "motorSpeed", null);
             __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
-                paper.serializedField
-            ], UniversalJoint.prototype, "limitMotorZ", void 0);
-            __decorate([
-                paper.serializedField
-            ], UniversalJoint.prototype, "_axisY", void 0);
-            __decorate([
-                paper.serializedField
-            ], UniversalJoint.prototype, "_axisZ", void 0);
-            __decorate([
-                paper.editor.property("VECTOR3" /* VECTOR3 */)
-            ], UniversalJoint.prototype, "axisY", null);
-            __decorate([
-                paper.editor.property("VECTOR3" /* VECTOR3 */)
-            ], UniversalJoint.prototype, "axisZ", null);
-            UniversalJoint = UniversalJoint_1 = __decorate([
-                paper.requireComponent(oimo.Rigidbody),
-                paper.allowMultiple
-            ], UniversalJoint);
-            return UniversalJoint;
-            var UniversalJoint_1;
-        }(oimo.BaseJoint));
-        oimo.UniversalJoint = UniversalJoint;
-        __reflect(UniversalJoint.prototype, "egret3d.oimo.UniversalJoint");
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            ], TranslationalLimitMotor.prototype, "motorForce", null);
+            return TranslationalLimitMotor;
+        }());
+        oimo.TranslationalLimitMotor = TranslationalLimitMotor;
+        __reflect(TranslationalLimitMotor.prototype, "egret3d.oimo.TranslationalLimitMotor", ["paper.ISerializable"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));

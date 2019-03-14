@@ -5,7 +5,7 @@ namespace egret3d.oimo {
         UseSymplecticEuler,
     }
     /**
-     * 关节的弹簧和阻尼器设置。
+     * 关节的弹簧缓冲器设置。
      */
     export class SpringDamper implements paper.ISerializable {
         /**
@@ -21,7 +21,7 @@ namespace egret3d.oimo {
         /**
          * @internal
          */
-        public _oimoSpringDamper: OIMO.SpringDamper = null!;
+        public _oimoSpringDamper: OIMO.SpringDamper | null = null;
 
         private constructor() {
         }
@@ -39,7 +39,7 @@ namespace egret3d.oimo {
         }
         /**
          * 该弹簧的频率。
-         * - 以赫兹为单位。
+         * - 单位为`赫兹`。
          * - [`0.0` ~ N]
          * - 默认为 `0.0` ，禁用弹性，使约束完全刚性。
          */
@@ -54,12 +54,12 @@ namespace egret3d.oimo {
 
             this._values[ValueType.Frequency] = value;
 
-            if (this._oimoSpringDamper) {
+            if (this._oimoSpringDamper !== null) {
                 this._oimoSpringDamper.frequency = value;
             }
         }
         /**
-         * 该弹簧的阻尼系数。
+         * 该缓冲器的阻尼系数。
          * - [`OIMO.Setting.minSpringDamperDampingRatio` ~ N]
          * - 默认为 `OIMO.Setting.minSpringDamperDampingRatio` 。
          */
@@ -74,7 +74,7 @@ namespace egret3d.oimo {
 
             this._values[ValueType.DampingRatio] = value;
 
-            if (this._oimoSpringDamper) {
+            if (this._oimoSpringDamper !== null) {
                 this._oimoSpringDamper.dampingRatio = value;
             }
         }
@@ -89,7 +89,7 @@ namespace egret3d.oimo {
         public set useSymplecticEuler(value: boolean) {
             this._values[ValueType.UseSymplecticEuler] = value ? 1 : 0;
 
-            if (this._oimoSpringDamper) {
+            if (this._oimoSpringDamper !== null) {
                 this._oimoSpringDamper.useSymplecticEuler = value;
             }
         }

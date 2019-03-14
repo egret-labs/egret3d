@@ -24,10 +24,10 @@ namespace egret3d.oimo {
         @paper.serializedField
         protected readonly _values: Float32Array;
         @paper.serializedField
-        protected _rigidbody: Rigidbody = null!;
+        protected _rigidbody: Rigidbody | null = null;
         @paper.serializedField
         protected _connectedBody: Rigidbody | null = null;
-        protected _oimoJoint: T = null!;
+        protected _oimoJoint: T | null = null;
 
         protected abstract _createJoint(): T;
         /**
@@ -38,7 +38,9 @@ namespace egret3d.oimo {
                 output = Vector3.create();
             }
 
-            this._oimoJoint.getAppliedForceTo(output as any); // TODO
+            if (this._oimoJoint !== null) {
+                this._oimoJoint.getAppliedForceTo(output as any);
+            }
 
             return output;
         }
@@ -50,12 +52,14 @@ namespace egret3d.oimo {
                 output = Vector3.create();
             }
 
-            this._oimoJoint.getAppliedTorqueTo(output as any); // TODO
+            if (this._oimoJoint !== null) {
+                this._oimoJoint.getAppliedTorqueTo(output as any);
+            }
 
             return output;
         }
         /**
-         * 该关节所连接的两个刚体之前是否允许碰撞。
+         * 该关节所连接的两个刚体之间是否允许碰撞。
          * - 默认 `false` ，不允许碰撞。
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
@@ -74,14 +78,14 @@ namespace egret3d.oimo {
             }
         }
         /**
-         * 该关节的锚点是否为世界坐标系。
+         * 该关节的锚点和轴是否为世界坐标系。
          * - 默认 `false` ，使用本地坐标系。
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
-        public get useWorldAnchor(): boolean {
+        public get useWorldSpace(): boolean {
             return this._values[ValueType.UseWorldAnchor] > 0;
         }
-        public set useWorldAnchor(value: boolean) {
+        public set useWorldSpace(value: boolean) {
             if (!this._oimoJoint) {
                 this._values[ValueType.UseWorldAnchor] = value ? 1 : 0;
             }
@@ -109,7 +113,7 @@ namespace egret3d.oimo {
          */
         @paper.editor.property(paper.editor.EditType.COMPONENT)
         public get rigidbody(): Rigidbody {
-            return this._rigidbody;
+            return this._rigidbody!;
         }
         /**
          * 该关节连接的刚体。

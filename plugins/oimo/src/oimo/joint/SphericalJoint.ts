@@ -11,7 +11,7 @@ namespace egret3d.oimo {
 
         public readonly jointType: JointType = JointType.Spherical;
         /**
-         * 该关节的弹簧和阻尼器设置。
+         * 该关节的旋转弹簧缓冲器设置。
          */
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
@@ -32,7 +32,7 @@ namespace egret3d.oimo {
             const config = SphericalJoint._config;
             config.allowCollision = this.collisionEnabled;
 
-            if (this.useWorldAnchor) {
+            if (this.useWorldSpace) {
                 config.init(
                     this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any,
