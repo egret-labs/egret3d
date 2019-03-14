@@ -2,7 +2,7 @@ namespace paper.editor {
     type ApplyPrefabInstanceStateData = {
         applyPrefabRootId: string,
         applyData: editor.ApplyData,
-        prefab: paper.Prefab,
+        prefabAssetName: string,
         cachePrefabSerializedData: paper.ISerializedData,
         cacheGameObjetsIds?: string[],
         cacheComponentsIds?: { [gameobjId: string]: string[] }
@@ -15,13 +15,18 @@ namespace paper.editor {
             return "[class common.ApplyPrefabInstanceState]";
         }
 
-        public static create(applyData: editor.ApplyData, applyPrefabRootId: string, prefab: paper.Prefab): ApplyPrefabInstanceState | null {
+        public static create(applyData: editor.ApplyData, applyPrefabRootId: string, prefabName: string): ApplyPrefabInstanceState | null {
             const state = new ApplyPrefabInstanceState();
-            const cachePrefabSerializedData: paper.ISerializedData = Editor.activeEditorModel.deepClone((prefab as any).config);
+            const prefab:Prefab | null = paper.Asset.find(prefabName);
+            if (!prefab) {
+                console.log(`apply prefab can not find asset ${prefabName}`);
+                return null;
+            }
+            const cachePrefabSerializedData: paper.ISerializedData = Editor.activeEditorModel.deepClone(prefab!.config);
 
             let data: ApplyPrefabInstanceStateData = {
                 applyPrefabRootId,
-                prefab,
+                prefabAssetName:prefab.name,
                 applyData,
                 cachePrefabSerializedData
             };
@@ -37,6 +42,10 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
+                const prefab:Prefab | null = this.getPrefabAsset();
+                if (!prefab) {
+                    return false;
+                }
                 let applyGameObject = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
                 let objects = this.editorModel.scene.gameObjects;
                 for (let index = objects.length - 1; index >= 0; index--) {
@@ -66,7 +75,7 @@ namespace paper.editor {
                     }
                 }
 
-                let tempPrefabObject = this.stateData.prefab.createInstance(Application.sceneManager.globalScene, true);
+                let tempPrefabObject = prefab.createInstance(Application.sceneManager.globalScene, true);
                 for (const linkedId in this.stateData.applyData) {
 
                     let applyData: any = this.stateData.applyData[linkedId];
@@ -112,10 +121,8 @@ namespace paper.editor {
                     }
                 }
 
-                //reset prefab serrializedata,save prefab
                 const prefabJson = this.stateData.cachePrefabSerializedData;
-                (this.stateData.prefab as any).config = prefabJson;
-                this.dispatchEditorModelEvent(EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
+                this.dispatchEditorModelEvent(EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefabAssetName, raw: prefabJson });
 
                 tempPrefabObject!.destroy();
                 tempPrefabObject = null as any;
@@ -127,50 +134,46 @@ namespace paper.editor {
         }
 
         public getAllUUidFromGameObject(gameObj: paper.GameObject, uuids: string[] | null = null) {
-            if (gameObj) {
-                uuids = uuids || [];
-                uuids.push(gameObj.uuid);
+            uuids = uuids || [];
+            uuids.push(gameObj.uuid);
 
-                for (const com of gameObj.components) {
-                    uuids.push(com.uuid);
-                }
+            for (const com of gameObj.components) {
+                uuids.push(com.uuid);
+            }
 
-                for (let index = 0; index < gameObj.transform.children.length; index++) {
-                    const element = gameObj.transform.children[index];
-                    const obj: paper.GameObject = element.gameObject;
-                    this.getAllUUidFromGameObject(obj, uuids);
-                }
+            for (let index = 0; index < gameObj.transform.children.length; index++) {
+                const element = gameObj.transform.children[index];
+                const obj: paper.GameObject = element.gameObject;
+                this.getAllUUidFromGameObject(obj, uuids);
             }
 
             return uuids;
         }
 
         public setLinkedId(gameObj: GameObject, ids: string[]) {
-            if (gameObj) {
-                let linkedId: string | undefined = ids.shift();
+            let linkedId: string | undefined = ids.shift();
 
+            if (linkedId === undefined) {
+                throw new Error("setLinkedId error");
+            }
+            gameObj.extras!.linkedID = linkedId;
+
+            for (const com of gameObj.components) {
+                linkedId = ids.shift();
                 if (linkedId === undefined) {
-                    console.error("linkedId error");
+                    throw new Error("setLinkedId error");
                 }
-                gameObj.extras!.linkedID = linkedId;
+                com.extras!.linkedID = linkedId;
+            }
 
-                for (const com of gameObj.components) {
-                    linkedId = ids.shift();
-                    if (linkedId === undefined) {
-                        console.error("linkedId error");
-                    }
-                    com.extras!.linkedID = linkedId;
+            for (let index = 0; index < gameObj.transform.children.length; index++) {
+                const element = gameObj.transform.children[index];
+                const obj: paper.GameObject = element.gameObject;
+                if (obj.hideFlags & paper.HideFlags.DontSave) {
+                    continue;
                 }
 
-                for (let index = 0; index < gameObj.transform.children.length; index++) {
-                    const element = gameObj.transform.children[index];
-                    const obj: paper.GameObject = element.gameObject;
-                    if (obj.hideFlags & paper.HideFlags.DontSave) {
-                        continue;
-                    }
-
-                    this.setLinkedId(obj, ids);
-                }
+                this.setLinkedId(obj, ids);
             }
         }
 
@@ -312,67 +315,95 @@ namespace paper.editor {
             return result;
         }
 
+        private getPrefabAsset(){
+            const prefab:Prefab | null = paper.Asset.find(this.stateData.prefabAssetName);
+
+            if (!prefab) {
+                console.log(`apply prefab can not find asset ${this.stateData.prefabAssetName}`);
+            }
+            
+            return prefab;
+        }
+
         public redo(): boolean {
             if (super.redo()) {
-                let tempPrefabObject = this.stateData.prefab.createInstance(Application.sceneManager.globalScene, true);
-                let tempGameObjects = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject!);
-                let applyGameObject = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
+                const prefab:Prefab | null = this.getPrefabAsset();
+
+                if (!prefab) {
+                    return false;
+                }
+
+                const applyGameObject:GameObject | null = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
+                if (!applyGameObject) {
+                    return false;
+                }
+
+                const tempPrefabObject:GameObject | null = prefab.createInstance(Application.sceneManager.globalScene, true);
+                if (!tempPrefabObject) {
+                    return false;
+                }
+                tempPrefabObject.enabled = false;
+
+                const tempGameObjects:GameObject[] = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
 
                 for (const gameObj of tempGameObjects!) {
-                    if (!(this.stateData.applyData[gameObj!.extras!.linkedID!])) {
+                    const applyData: editor.ApplyDataDetail = this.stateData.applyData[gameObj!.extras!.linkedID!];
+
+                    if (!applyData) {
                         continue;
                     }
 
-                    let applyData: any = this.stateData.applyData[gameObj!.extras!.linkedID!];
-
                     if (applyData.addGameObjects && applyData.addGameObjects.length > 0) {
                         for (let index = 0; index < applyData.addGameObjects.length; index++) {
-                            let obj = applyData.addGameObjects[index];
-                            let ids: string[] | null = [];
+                            const addGameObjDetail = applyData.addGameObjects[index];
+                            let ids: string[] = [];
 
                             let newObj: paper.GameObject | null;
                             if (this.firstRedo) {
-                                newObj = new Deserializer().deserialize(obj.serializeData, false, false, Application.sceneManager.globalScene) as GameObject;
+                                newObj = new Deserializer().deserialize(addGameObjDetail.serializeData, false, false, Application.sceneManager.globalScene);
+                                if (!newObj) {
+                                    throw Error("apply prefab error")
+                                }
                                 newObj.parent = gameObj;
                                 ids = this.getAllUUidFromGameObject(newObj);
-                                obj.cacheSerializeData = Object.create(null);
-                                obj.cacheSerializeData[gameObj.uuid] = [];
-                                obj.cacheSerializeData[gameObj.uuid][index] = paper.serialize(newObj);
+                                addGameObjDetail.cacheSerializeData![gameObj.uuid] = [];
+                                addGameObjDetail.cacheSerializeData![gameObj.uuid][index] = paper.serialize(newObj);
                             } else {
-                                let cacheData = obj.cacheSerializeData[gameObj.uuid][index];
+                                const cacheData = addGameObjDetail.cacheSerializeData![gameObj.uuid][index];
                                 newObj = new Deserializer().deserialize(cacheData, true, false, Application.sceneManager.globalScene) as GameObject;
                                 newObj.parent = gameObj;
                                 ids = this.getAllUUidFromGameObject(newObj);
                             }
 
-                            let linkedId = gameObj!.extras!.linkedID!;
-                            let instanceGameObjects: GameObject[] = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
+                            const linkedId = gameObj!.extras!.linkedID!;
+                            const instanceGameObjects: GameObject[] = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
                             for (const instanceGameObject of instanceGameObjects) {
                                 let addObj: paper.GameObject | null;
 
                                 if (this.firstRedo) {
-                                    addObj = new Deserializer().deserialize(obj.serializeData, false, false, this.editorModel.scene) as GameObject;
+                                    addObj = new Deserializer().deserialize(addGameObjDetail.serializeData, false, false, this.editorModel.scene);
+                                    if (!addObj) {
+                                        throw Error("apply prefab error");
+                                    }
                                     addObj.parent = instanceGameObject;
-                                    let rootId: string = instanceGameObject.extras!.prefab ? instanceGameObject.uuid : instanceGameObject.extras!.rootID!;
+                                    const rootId: string = instanceGameObject.extras!.prefab ? instanceGameObject.uuid : instanceGameObject.extras!.rootID!;
                                     this.setGameObjectPrefabRootId(addObj, rootId);
-                                    this.setLinkedId(addObj, ids!.concat());
-                                    obj.cacheSerializeData[instanceGameObject.uuid] = [];
-                                    obj.cacheSerializeData[instanceGameObject.uuid][index] = this.clearExtrasFromSerilizeData(paper.serialize(addObj));
+                                    this.setLinkedId(addObj, ids.concat());
+                                    addGameObjDetail.cacheSerializeData![instanceGameObject.uuid] = [];
+                                    addGameObjDetail.cacheSerializeData![instanceGameObject.uuid][index] = this.clearExtrasFromSerilizeData(paper.serialize(addObj));
                                 } else {
-                                    let cacheData = obj.cacheSerializeData[instanceGameObject.uuid][index];
+                                    let cacheData = addGameObjDetail.cacheSerializeData![instanceGameObject.uuid][index];
                                     addObj = new Deserializer().deserialize(cacheData, true, false, this.editorModel.scene) as GameObject;
                                     addObj.parent = instanceGameObject;
-                                    let rootId: string = instanceGameObject.extras!.prefab ? instanceGameObject.uuid : instanceGameObject.extras!.rootID!;
+                                    const rootId: string = instanceGameObject.extras!.prefab ? instanceGameObject.uuid : instanceGameObject.extras!.rootID!;
                                     this.setGameObjectPrefabRootId(addObj, rootId);
                                     this.setLinkedId(addObj, ids!.concat());
                                 }
 
-                                if (addObj) {
-                                    this.stateData.cacheGameObjetsIds!.push(addObj.uuid);
-                                }
+                                this.stateData.cacheGameObjetsIds!.push(addObj.uuid);
                             }
 
-                            let originalGameObj = this.getGameObjectByUUid(applyGameObject!, obj.id);
+                            let originalGameObj = this.getGameObjectByUUid(applyGameObject!, addGameObjDetail.id);
                             if (originalGameObj) {
                                 this.setGameObjectPrefabRootId(originalGameObj, this.stateData.applyPrefabRootId);
                                 this.setLinkedId(originalGameObj, ids!.concat());
@@ -383,42 +414,55 @@ namespace paper.editor {
                     }
 
                     if (applyData.addComponents && applyData.addComponents.length > 0) {
-                        for (const obj of applyData.addComponents) {
-                            let newComponent: BaseComponent;
+                        for (const addComponentDetail of applyData.addComponents) {
+                            let newComponent: BaseComponent | null;
+                            addComponentDetail.cacheSerializeData = Object.create(null);
+
                             if (this.firstRedo) {
-                                newComponent = new Deserializer().deserialize(obj.serializeData, false, false, gameObj) as BaseComponent;
-                                obj.cacheSerializeData = Object.create(null);
-                                obj.cacheSerializeData[gameObj.uuid] = paper.serialize(newComponent);
+                                newComponent = new Deserializer().deserialize(addComponentDetail.serializeData, false, false, gameObj);
+                                if (!newComponent) {
+                                    throw Error("apply prefab error");
+                                }
+                                addComponentDetail.cacheSerializeData![gameObj.uuid] = paper.serialize(newComponent);
                             } else {
-                                let cacheData = obj.cacheSerializeData[gameObj.uuid];
-                                newComponent = new Deserializer().deserialize(cacheData, true, false, gameObj) as BaseComponent;
+                                const cacheData = addComponentDetail.cacheSerializeData![gameObj.uuid];
+                                newComponent = new Deserializer().deserialize(cacheData, true, false, gameObj);
+                                if (!newComponent) {
+                                    throw Error("apply prefab error");
+                                }
                             }
 
-                            let linkedId = gameObj!.extras!.linkedID!;
-                            let instanceGameObjects: GameObject[] = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
+                            const linkedId = gameObj!.extras!.linkedID!;
+                            const instanceGameObjects: GameObject[] = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
                             for (const instanceGameObject of instanceGameObjects) {
-                                let addComponent: BaseComponent;
+                                let addComponent: BaseComponent | null;
 
                                 if (this.firstRedo) {
-                                    addComponent = new Deserializer().deserialize(obj.serializeData, false, false, instanceGameObject) as BaseComponent;
+                                    addComponent = new Deserializer().deserialize(addComponentDetail.serializeData, false, false, instanceGameObject);
+                                    if (!addComponent) {
+                                        throw Error("apply prefab error");
+                                    }
                                     addComponent.extras!.linkedID = newComponent.uuid;
-                                    obj.cacheSerializeData[instanceGameObject.uuid] = this.clearExtrasFromSerilizeData(paper.serialize(addComponent));
+                                    addComponentDetail.cacheSerializeData![instanceGameObject.uuid] = this.clearExtrasFromSerilizeData(paper.serialize(addComponent));
                                 } else {
-                                    let cacheData = obj.cacheSerializeData[instanceGameObject.uuid];
-                                    addComponent = new Deserializer().deserialize(cacheData, true, false, instanceGameObject) as BaseComponent;
+                                    const cacheData = addComponentDetail.cacheSerializeData![instanceGameObject.uuid];
+                                    addComponent = new Deserializer().deserialize(cacheData, true, false, instanceGameObject);
+                                    if (!addComponent) {
+                                        throw Error("apply prefab error");
+                                    }
                                     addComponent.extras!.linkedID = newComponent.uuid;
                                 }
 
                                 this.stateData.cacheComponentsIds![instanceGameObject.uuid] = this.stateData.cacheComponentsIds![instanceGameObject.uuid] || [];
-
-                                if (addComponent) {
-                                    this.stateData.cacheComponentsIds![instanceGameObject.uuid].push(addComponent.uuid);
-                                }
+                                this.stateData.cacheComponentsIds![instanceGameObject.uuid].push(addComponent.uuid);
                             }
 
-                            let originalGameObj = this.getGameObjectByUUid(applyGameObject!, obj.gameObjId);
+                            const originalGameObj = this.getGameObjectByUUid(applyGameObject!, addComponentDetail.gameObjId);
                             if (originalGameObj) {
-                                let originalComponent: BaseComponent = Editor.activeEditorModel.getComponentById(originalGameObj, obj.id) as BaseComponent;
+                                let originalComponent: IComponent | null = Editor.activeEditorModel.getComponentById(originalGameObj, addComponentDetail.id);
+                                if (!originalComponent) {
+                                    throw Error("apply prefab error");
+                                }
                                 originalComponent.extras!.linkedID = newComponent.uuid;
                             }
                         }
@@ -440,10 +484,8 @@ namespace paper.editor {
                 }
 
                 this.clearGameObjectExtrasInfo(tempPrefabObject!);
-                // (this.stateData.prefab as any)._raw = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject));
                 const prefabJson = this.clearExtrasFromSerilizeData(paper.serialize(tempPrefabObject!));
-                (this.stateData.prefab as any).config = prefabJson;
-                this.dispatchEditorModelEvent(EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefab.name, raw: prefabJson });
+                this.dispatchEditorModelEvent(EditorModelEvent.SAVE_ASSET, { name: this.stateData.prefabAssetName, raw: prefabJson });
 
                 tempPrefabObject!.destroy();
                 this.firstRedo = false;
@@ -454,17 +496,15 @@ namespace paper.editor {
         }
 
         private clearGameObjectExtrasInfo(gameObj: paper.GameObject) {
-            if (gameObj) {
-                delete gameObj.extras;
-                for (const comp of gameObj.components) {
-                    delete comp.extras;
-                }
+            delete gameObj.extras;
+            for (const comp of gameObj.components) {
+                delete comp.extras;
+            }
 
-                for (let index = 0; index < gameObj.transform.children.length; index++) {
-                    const element = gameObj.transform.children[index];
-                    const obj: paper.GameObject = element.gameObject;
-                    this.clearGameObjectExtrasInfo(obj);
-                }
+            for (let index = 0; index < gameObj.transform.children.length; index++) {
+                const element = gameObj.transform.children[index];
+                const obj: paper.GameObject = element.gameObject;
+                this.clearGameObjectExtrasInfo(obj);
             }
         }
 
