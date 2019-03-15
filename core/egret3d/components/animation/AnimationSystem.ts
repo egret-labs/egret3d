@@ -269,7 +269,11 @@ namespace egret3d {
         public onEntityAdded(entity: paper.GameObject) {
             const animation = entity.getComponent(Animation)!;
 
-            if (animation.autoPlay && (!animation.lastAnimationState || !animation.lastAnimationState.isPlaying)) {
+            if (
+                (paper.Application.playerMode & paper.PlayerMode.Editor) === 0 &&
+                animation.autoPlay &&
+                (!animation.lastAnimationState || !animation.lastAnimationState.isPlaying)
+            ) {
                 animation.play();
             }
         }
@@ -333,7 +337,7 @@ namespace egret3d {
 
                 for (const layer of animationLayers) {
                     const mask = layer.mask as AnimationMask | null;
-                    
+
                     if (mask && mask._dirty) {
                         mask._dirty = false;
                     }
