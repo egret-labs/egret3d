@@ -173,13 +173,16 @@ namespace egret3d {
          * @internal
          */
         public uninitialize() {
-            super.uninitialize();
-
             if (this._mesh) {
                 this._mesh.release();
             }
-
-            this.getBoundingTransform().unregisterObserver(this);
+            //transform可能已经被删除
+            const boundingTransform = this.getBoundingTransform();
+            if(boundingTransform){
+                boundingTransform.unregisterObserver(this);
+            }
+            
+            super.uninitialize();
 
             this.boneMatrices = null;
 

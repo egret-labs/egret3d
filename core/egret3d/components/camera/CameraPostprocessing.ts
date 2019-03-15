@@ -6,7 +6,7 @@ namespace egret3d {
     export abstract class CameraPostprocessing extends paper.BaseComponent {
         public abstract onRender(camera: Camera): void;
 
-        public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null) {
+        public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null, bufferMask: gltf.BufferMask | null = null) {
             if (!material) {
                 material = DefaultMaterials.COPY;
                 material.setTexture(src);
@@ -17,7 +17,7 @@ namespace egret3d {
             const camera = cameraAndLightCollecter.postprocessingCamera;
             renderState.updateRenderTarget(dest);
             renderState.updateViewport(camera.viewport, dest);
-            renderState.clearBuffer(saveCamera.bufferMask, saveCamera.backgroundColor);
+            renderState.clearBuffer(bufferMask || saveCamera.bufferMask, saveCamera.backgroundColor);
             //
             camerasAndLights.currentCamera = camera; // TODO
             renderState.draw(drawCallCollecter.postprocessing, material);

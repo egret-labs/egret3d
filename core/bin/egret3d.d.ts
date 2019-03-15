@@ -5149,7 +5149,7 @@ declare namespace egret3d {
      */
     abstract class CameraPostprocessing extends paper.BaseComponent {
         abstract onRender(camera: Camera): void;
-        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null): void;
+        blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null, bufferMask?: gltf.BufferMask | null): void;
     }
 }
 declare namespace egret3d {

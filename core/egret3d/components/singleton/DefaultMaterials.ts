@@ -57,7 +57,7 @@ namespace egret3d {
          */
         public static COPY: Material;
         /**
-         * @internal
+         *@internal
          */
         public static FXAA: Material;
 

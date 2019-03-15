@@ -8470,9 +8470,10 @@ var egret3d;
         function CameraPostprocessing() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        CameraPostprocessing.prototype.blit = function (src, material, dest) {
+        CameraPostprocessing.prototype.blit = function (src, material, dest, bufferMask) {
             if (material === void 0) { material = null; }
             if (dest === void 0) { dest = null; }
+            if (bufferMask === void 0) { bufferMask = null; }
             if (!material) {
                 material = egret3d.DefaultMaterials.COPY;
                 material.setTexture(src);
@@ -8483,7 +8484,7 @@ var egret3d;
             var camera = egret3d.cameraAndLightCollecter.postprocessingCamera;
             egret3d.renderState.updateRenderTarget(dest);
             egret3d.renderState.updateViewport(camera.viewport, dest);
-            egret3d.renderState.clearBuffer(saveCamera.bufferMask, saveCamera.backgroundColor);
+            egret3d.renderState.clearBuffer(bufferMask || saveCamera.bufferMask, saveCamera.backgroundColor);
             //
             camerasAndLights.currentCamera = camera; // TODO
             egret3d.renderState.draw(egret3d.drawCallCollecter.postprocessing, material);
@@ -17271,10 +17272,10 @@ var egret3d;
              */
             get: function () {
                 if (!this._readRenderTarget) {
-                    this._readRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h }).setMipmap(false).setLiner(true).setRepeat(false).retain();
+                    this._readRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h }).setLiner(1 /* Bilinear */).setRepeat(false).retain();
                 }
                 if (!this._writeRenderTarget) {
-                    this._writeRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h }).setMipmap(false).setLiner(true).setRepeat(false).retain();
+                    this._writeRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h }).setLiner(1 /* Bilinear */).setRepeat(false).retain();
                 }
                 return this._readRenderTarget;
             },
@@ -19785,11 +19786,15 @@ var egret3d;
          * @internal
          */
         SkinnedMeshRenderer.prototype.uninitialize = function () {
-            _super.prototype.uninitialize.call(this);
             if (this._mesh) {
                 this._mesh.release();
             }
-            this.getBoundingTransform().unregisterObserver(this);
+            //transform可能已经被删除
+            var boundingTransform = this.getBoundingTransform();
+            if (boundingTransform) {
+                boundingTransform.unregisterObserver(this);
+            }
+            _super.prototype.uninitialize.call(this);
             this.boneMatrices = null;
             this._bones.length = 0;
             this._rootBone = null;
