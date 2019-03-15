@@ -16,15 +16,24 @@ namespace egret3d.oimo {
             return new RotationalLimitMotor();
         }
 
-        private readonly _values: Float32Array = new Float32Array([
-            1.0, 0.0, 0.0, 0.0
-        ]);
+        private readonly _values: Float32Array = new Float32Array(4);
         /**
          * @internal
          */
-        public _oimoLimitMotor: OIMO.RotationalLimitMotor | null = null;
+        public _oimoLimitMotor: OIMO.RotationalLimitMotor | null;
 
         private constructor() {
+            this._clear();
+        }
+        /**
+         * @internal
+         */
+        public _clear() {
+            this._values[ValueType.LowerLimit] = 1.0;
+            this._values[ValueType.UpperLimit] = 0.0;
+            this._values[ValueType.MotorSpeed] = 0.0;
+            this._values[ValueType.MotorTorque] = 0.0;
+            this._oimoLimitMotor = null;
         }
 
         public serialize() {

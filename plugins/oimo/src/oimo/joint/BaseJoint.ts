@@ -3,6 +3,8 @@ namespace egret3d.oimo {
     const enum ValueType {
         CollisionEnabled,
         UseWorldAnchor,
+        BreakForce,
+        BreakTorque,
     }
     /**
      * 基础关节组件。
@@ -23,17 +25,53 @@ namespace egret3d.oimo {
          */
         @paper.serializedField
         protected readonly _values: Float32Array;
-        @paper.serializedField
         protected _rigidbody: Rigidbody | null = null;
-        @paper.serializedField
         protected _connectedBody: Rigidbody | null = null;
         protected _oimoJoint: T | null = null;
 
         protected abstract _createJoint(): T;
+
+        public initialize() {
+            super.initialize();
+
+            this._values[ValueType.CollisionEnabled] = 0;
+            this._values[ValueType.UseWorldAnchor] = 0;
+            this._values[ValueType.BreakForce] = 0.0;
+            this._values[ValueType.BreakTorque] = 0.0;
+            this._rigidbody = this.entity.getComponent(Rigidbody)!;
+        }
+
+        public uninitialize() {
+            super.uninitialize();
+
+            this._anchor.clear();
+            this._rigidbody = null;
+            this._connectedBody = null;
+            this._oimoJoint = null;
+        }
+        /**
+         * 获取该关节的在连接刚体上的锚点。
+         */
+        public getConnectedAnchor(output: Vector3 | null = null, isWorldSpace: boolean = false): Vector3 {
+            if (output === null) {
+                output = Vector3.create();
+            }
+
+            if (this._oimoJoint !== null) {
+                if (isWorldSpace) {
+                    this._oimoJoint.getAnchor2To(output as any);
+                }
+                else {
+                    this._oimoJoint.getLocalAnchor2To(output as any);
+                }
+            }
+
+            return output;
+        }
         /**
          * 获取该关节承受的力。
          */
-        public getAppliedForce(output: Vector3 | null): Vector3 {
+        public getAppliedForce(output: Vector3 | null = null): Vector3 {
             if (output === null) {
                 output = Vector3.create();
             }
@@ -47,8 +85,8 @@ namespace egret3d.oimo {
         /**
          * 获取该关节承受的扭矩。
          */
-        public getAppliedTorque(output?: Vector3): Vector3 {
-            if (!output) {
+        public getAppliedTorque(output: Vector3 | null = null): Vector3 {
+            if (output === null) {
                 output = Vector3.create();
             }
 
@@ -73,7 +111,7 @@ namespace egret3d.oimo {
 
             this._values[ValueType.CollisionEnabled] = value ? 1 : 0;
 
-            if (this._oimoJoint) {
+            if (this._oimoJoint !== null) {
                 this._oimoJoint.setAllowCollision(value);
             }
         }
@@ -86,7 +124,7 @@ namespace egret3d.oimo {
             return this._values[ValueType.UseWorldAnchor] > 0;
         }
         public set useWorldSpace(value: boolean) {
-            if (!this._oimoJoint) {
+            if (this._oimoJoint === null) {
                 this._values[ValueType.UseWorldAnchor] = value ? 1 : 0;
             }
             else if (DEBUG) {
@@ -101,7 +139,7 @@ namespace egret3d.oimo {
             return this._anchor;
         }
         public set anchor(value: Readonly<Vector3>) {
-            if (!this._oimoJoint) {
+            if (this._oimoJoint === null) {
                 this._anchor.copy(value);
             }
             else if (DEBUG) {
@@ -111,14 +149,14 @@ namespace egret3d.oimo {
         /**
          * 该关节依附的刚体。
          */
-        @paper.editor.property(paper.editor.EditType.COMPONENT)
         public get rigidbody(): Rigidbody {
             return this._rigidbody!;
         }
         /**
          * 该关节连接的刚体。
          */
-        @paper.editor.property(paper.editor.EditType.COMPONENT)
+        @paper.editor.property(paper.editor.EditType.COMPONENT, { componentClass: Rigidbody })
+        @paper.serializedField
         public get connectedRigidbody(): Rigidbody | null {
             return this._connectedBody;
         }
@@ -127,7 +165,7 @@ namespace egret3d.oimo {
                 return;
             }
 
-            if (!this._oimoJoint) {
+            if (this._oimoJoint === null) {
                 this._connectedBody = value;
             }
             else if (DEBUG) {
@@ -138,7 +176,7 @@ namespace egret3d.oimo {
          * 该关节的 OIMO 关节。
          */
         public get oimoJoint(): T {
-            if (!this._oimoJoint) {
+            if (this._oimoJoint === null) {
                 this._oimoJoint = this._createJoint();
             }
 

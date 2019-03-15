@@ -948,6 +948,10 @@ declare namespace paper.editor {
          */
         set?: string;
         /**
+         *
+         */
+        componentClass?: IComponentClass<IComponent>;
+        /**
          * 下拉项。
          */
         listItems?: ListItem[] | string | ((value: any) => ListItem[]);

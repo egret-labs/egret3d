@@ -7471,7 +7471,7 @@ declare namespace egret3d.oimo {
         /**
          * 该刚体此次休眠的累计时间。
          */
-        readonly sleepTime: number;
+        readonly sleepTime: float;
         /**
          * 该刚体的类型。
          */
@@ -7479,19 +7479,19 @@ declare namespace egret3d.oimo {
         /**
          * 该刚体的质量。
          */
-        mass: number;
+        mass: float;
         /**
          * 该刚体的重力缩放系数。
          */
-        gravityScale: number;
+        gravityScale: float;
         /**
          * 该刚体的线性阻尼。
          */
-        linearDamping: number;
+        linearDamping: float;
         /**
          * 该刚体的旋转阻尼。
          */
-        angularDamping: number;
+        angularDamping: float;
         /**
          * 该刚体的线性速度。
          */
@@ -7518,9 +7518,11 @@ declare namespace egret3d.oimo {
          * [CollisionMask, Friction, Restitution, Density];
          */
         protected readonly _values: Float32Array;
-        protected _oimoShape: OIMO.Shape;
+        protected _oimoShape: OIMO.Shape | null;
         protected abstract _createShape(): OIMO.Shape;
         protected _updateConfig(): OIMO.ShapeConfig;
+        initialize(): void;
+        uninitialize(): void;
         /**
          * 该碰撞体的碰撞掩码。
          */
@@ -7528,16 +7530,16 @@ declare namespace egret3d.oimo {
         /**
          * 该碰撞体的摩擦力。
          */
-        friction: number;
+        friction: float;
         /**
          * 该碰撞体的恢复系数。
          */
-        restitution: number;
+        restitution: float;
         /**
          * 该碰撞体的密度。
          * - 单位为`千克/立方米`。
          */
-        density: number;
+        density: float;
         /**
          * 该碰撞体的 OIMO 碰撞体。
          */
@@ -7564,14 +7566,20 @@ declare namespace egret3d.oimo {
         protected _connectedBody: Rigidbody | null;
         protected _oimoJoint: T | null;
         protected abstract _createJoint(): T;
+        initialize(): void;
+        uninitialize(): void;
+        /**
+         * 获取该关节的在连接刚体上的锚点。
+         */
+        getConnectedAnchor(output?: Vector3 | null, isWorldSpace?: boolean): Vector3;
         /**
          * 获取该关节承受的力。
          */
-        getAppliedForce(output: Vector3 | null): Vector3;
+        getAppliedForce(output?: Vector3 | null): Vector3;
         /**
          * 获取该关节承受的扭矩。
          */
-        getAppliedTorque(output?: Vector3): Vector3;
+        getAppliedTorque(output?: Vector3 | null): Vector3;
         /**
          * 该关节所连接的两个刚体之间是否允许碰撞。
          * - 默认 `false` ，不允许碰撞。
@@ -7608,6 +7616,7 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly sphere: Sphere;
         protected _createShape(): OIMO.Shape;
+        initialize(): void;
     }
 }
 declare namespace paper {
@@ -7675,6 +7684,7 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly box: Box;
         protected _createShape(): OIMO.Shape;
+        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7686,6 +7696,7 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly capsule: Capsule;
         protected _createShape(): OIMO.Shape;
+        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7697,6 +7708,7 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly cylinder: Cylinder;
         protected _createShape(): OIMO.Shape;
+        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7708,6 +7720,7 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly cylinder: Cylinder;
         protected _createShape(): OIMO.Shape;
+        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7749,13 +7762,13 @@ declare namespace egret3d.oimo {
          */
         Prismatic,
         /**
-         * 柱面关节。
-         */
-        Cylindrical,
-        /**
          * 转动关节。
          */
         Revolute,
+        /**
+         * 柱面关节。
+         */
+        Cylindrical,
         /**
          * 球面关节。
          */
@@ -7796,14 +7809,16 @@ declare namespace egret3d.oimo {
         private readonly _swingAxis;
         protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.RagdollJoint;
+        initialize(): void;
+        uninitialize(): void;
         /**
          *
          */
-        maxSwingAngleX: number;
+        maxSwingAngleX: float;
         /**
          *
          */
-        maxSwingAngleZ: number;
+        maxSwingAngleZ: float;
         /**
          * 该关节的旋转轴。
          */
@@ -7845,6 +7860,8 @@ declare namespace egret3d.oimo {
         private readonly _axis;
         protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.CylindricalJoint;
+        initialize(): void;
+        uninitialize(): void;
         /**
          * 该关节的旋转轴。
          */
@@ -7872,6 +7889,8 @@ declare namespace egret3d.oimo {
         private readonly _axis;
         protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.PrismaticJoint;
+        initialize(): void;
+        uninitialize(): void;
         /**
          * 该关节的移动轴。
          */
@@ -7899,6 +7918,8 @@ declare namespace egret3d.oimo {
         private readonly _axis;
         protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.RevoluteJoint;
+        initialize(): void;
+        uninitialize(): void;
         /**
          * 该关节的旋转轴。
          */
@@ -7920,6 +7941,7 @@ declare namespace egret3d.oimo {
         readonly springDamper: SpringDamper;
         protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.SphericalJoint;
+        uninitialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7954,6 +7976,8 @@ declare namespace egret3d.oimo {
         private readonly _axisY;
         protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.UniversalJoint;
+        initialize(): void;
+        uninitialize(): void;
         /**
          * 该关节的 X 旋转轴。
          */
@@ -8018,8 +8042,8 @@ declare namespace egret3d.oimo {
         frequency: float;
         /**
          * 该缓冲器的阻尼系数。
-         * - [`OIMO.Setting.minSpringDamperDampingRatio` ~ N]
-         * - 默认为 `OIMO.Setting.minSpringDamperDampingRatio` 。
+         * - [`0.0` ~ N]
+         * - 默认为 `0.0` 。
          */
         dampingRatio: float;
         /**

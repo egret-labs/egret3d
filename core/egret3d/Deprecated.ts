@@ -8,6 +8,7 @@ namespace paper {
      */
     export const RenderQueue = (egret3d as any).RenderQueue as any;
 }
+
 namespace gltf {
     /**
      * @deprecated

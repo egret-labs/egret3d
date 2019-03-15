@@ -41591,7 +41591,7 @@ var egret3d;
                 rigidbody.setMassData(massData); // Set mass data to rigibody.
             };
             Rigidbody.prototype._checkRigidbody = function (message) {
-                if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
+                if (this._oimoRigidbody === null && this.oimoRigidbody.getNumShapes() === 0) {
                     for (var _i = 0, _a = this.gameObject.getComponents(oimo.BaseCollider, true); _i < _a.length; _i++) {
                         var shape = _a[_i];
                         this.oimoRigidbody.addShape(shape.oimoShape);
@@ -41610,7 +41610,7 @@ var egret3d;
              * 将该刚体唤醒。
              */
             Rigidbody.prototype.wakeUp = function () {
-                if (this._oimoRigidbody) {
+                if (this._oimoRigidbody !== null) {
                     this._oimoRigidbody.wakeUp();
                 }
                 return this;
@@ -41619,7 +41619,7 @@ var egret3d;
              * 将该刚体休眠。
              */
             Rigidbody.prototype.sleep = function () {
-                if (this._oimoRigidbody) {
+                if (this._oimoRigidbody !== null) {
                     this._oimoRigidbody.sleep();
                 }
                 return this;
@@ -41701,7 +41701,7 @@ var egret3d;
              */
             Rigidbody.prototype.syncTransform = function (transform) {
                 var oimoRigidbody = this._oimoRigidbody;
-                if (oimoRigidbody) {
+                if (oimoRigidbody !== null) {
                     var oimoTransform = oimo.PhysicsSystem._helpTransform;
                     if (!transform) {
                         transform = this.gameObject.transform;
@@ -41717,7 +41717,7 @@ var egret3d;
                  * 该刚体是否正在休眠。
                  */
                 get: function () {
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         return this._oimoRigidbody.isSleeping();
                     }
                     return false;
@@ -41730,10 +41730,10 @@ var egret3d;
                  * 该刚体此次休眠的累计时间。
                  */
                 get: function () {
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         return this._oimoRigidbody.getSleepTime();
                     }
-                    return 0;
+                    return 0.0;
                 },
                 enumerable: true,
                 configurable: true
@@ -41750,7 +41750,7 @@ var egret3d;
                         return;
                     }
                     this._values[0 /* Type */] = value;
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         this._oimoRigidbody.setType(value);
                     }
                 },
@@ -41772,7 +41772,7 @@ var egret3d;
                         return;
                     }
                     this._values[1 /* Mass */] = value;
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         this._updateMass(this._oimoRigidbody);
                     }
                 },
@@ -41791,7 +41791,7 @@ var egret3d;
                         return;
                     }
                     this._values[2 /* GravityScale */] = value;
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         this._oimoRigidbody.setGravityScale(value);
                     }
                 },
@@ -41810,7 +41810,7 @@ var egret3d;
                         return;
                     }
                     this._values[3 /* LinearDamping */] = value;
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         this._oimoRigidbody.setLinearDamping(value);
                     }
                 },
@@ -41829,7 +41829,7 @@ var egret3d;
                         return;
                     }
                     this._values[4 /* AngularDamping */] = value;
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         this._oimoRigidbody.setAngularDamping(value);
                     }
                 },
@@ -41841,14 +41841,14 @@ var egret3d;
                  * 该刚体的线性速度。
                  */
                 get: function () {
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         this._oimoRigidbody.getLinearVelocityTo(this._linearVelocity); //
                     }
                     return this._linearVelocity;
                 },
                 set: function (value) {
                     this._linearVelocity.copy(value);
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         this._oimoRigidbody.setLinearVelocity(this._linearVelocity); //
                     }
                 },
@@ -41860,14 +41860,14 @@ var egret3d;
                  * 该刚体的角速度。
                  */
                 get: function () {
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         this._oimoRigidbody.getAngularVelocityTo(this._angularVelocity); //
                     }
                     return this._angularVelocity;
                 },
                 set: function (value) {
                     this._angularVelocity.copy(value);
-                    if (this._oimoRigidbody) {
+                    if (this._oimoRigidbody !== null) {
                         this._oimoRigidbody.setAngularVelocity(this._angularVelocity); //
                     }
                 },
@@ -41879,7 +41879,7 @@ var egret3d;
                  * 该刚体的 OIMO 刚体。
                  */
                 get: function () {
-                    if (!this._oimoRigidbody) {
+                    if (this._oimoRigidbody === null) {
                         this._oimoRigidbody = this._createRigidbody();
                         this.syncTransform();
                     }
@@ -41934,9 +41934,7 @@ var egret3d;
                 /**
                  * [CollisionMask, Friction, Restitution, Density];
                  */
-                _this._values = new Float32Array([
-                    1 /* Default */, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
-                ]);
+                _this._values = new Float32Array(4);
                 _this._oimoShape = null;
                 return _this;
             }
@@ -41950,6 +41948,17 @@ var egret3d;
                 config.density = this.density;
                 return config;
             };
+            BaseCollider.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._values[0 /* CollisionMask */] = 1 /* Default */;
+                this._values[1 /* Friction */] = OIMO.Setting.defaultFriction;
+                this._values[2 /* Restitution */] = OIMO.Setting.defaultRestitution;
+                this._values[3 /* Density */] = OIMO.Setting.defaultDensity;
+            };
+            BaseCollider.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this._oimoShape = null;
+            };
             Object.defineProperty(BaseCollider.prototype, "collisionMask", {
                 /**
                  * 该碰撞体的碰撞掩码。
@@ -41962,7 +41971,7 @@ var egret3d;
                         return;
                     }
                     this._values[0 /* CollisionMask */] = value;
-                    if (this._oimoShape) {
+                    if (this._oimoShape !== null) {
                         this._oimoShape.setCollisionMask(value);
                     }
                 },
@@ -41981,7 +41990,7 @@ var egret3d;
                         return;
                     }
                     this._values[1 /* Friction */] = value;
-                    if (this._oimoShape) {
+                    if (this._oimoShape !== null) {
                         this._oimoShape.setFriction(value);
                     }
                 },
@@ -42000,7 +42009,7 @@ var egret3d;
                         return;
                     }
                     this._values[2 /* Restitution */] = value;
-                    if (this._oimoShape) {
+                    if (this._oimoShape !== null) {
                         this._oimoShape.setRestitution(value);
                     }
                 },
@@ -42020,7 +42029,7 @@ var egret3d;
                         return;
                     }
                     this._values[3 /* Density */] = value;
-                    if (this._oimoShape) {
+                    if (this._oimoShape !== null) {
                         this._oimoShape.setDensity(value);
                     }
                 },
@@ -42032,7 +42041,7 @@ var egret3d;
                  * 该碰撞体的 OIMO 碰撞体。
                  */
                 get: function () {
-                    if (!this._oimoShape) {
+                    if (this._oimoShape === null) {
                         this._oimoShape = this._createShape();
                     }
                     return this._oimoShape;
@@ -42074,6 +42083,8 @@ var egret3d;
         (function (ValueType) {
             ValueType[ValueType["CollisionEnabled"] = 0] = "CollisionEnabled";
             ValueType[ValueType["UseWorldAnchor"] = 1] = "UseWorldAnchor";
+            ValueType[ValueType["BreakForce"] = 2] = "BreakForce";
+            ValueType[ValueType["BreakTorque"] = 3] = "BreakTorque";
         })(ValueType || (ValueType = {}));
         /**
          * 基础关节组件。
@@ -42093,10 +42104,45 @@ var egret3d;
                 _this._oimoJoint = null;
                 return _this;
             }
+            BaseJoint.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._values[0 /* CollisionEnabled */] = 0;
+                this._values[1 /* UseWorldAnchor */] = 0;
+                this._values[2 /* BreakForce */] = 0.0;
+                this._values[3 /* BreakTorque */] = 0.0;
+                this._rigidbody = this.entity.getComponent(oimo.Rigidbody);
+            };
+            BaseJoint.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this._anchor.clear();
+                this._rigidbody = null;
+                this._connectedBody = null;
+                this._oimoJoint = null;
+            };
+            /**
+             * 获取该关节的在连接刚体上的锚点。
+             */
+            BaseJoint.prototype.getConnectedAnchor = function (output, isWorldSpace) {
+                if (output === void 0) { output = null; }
+                if (isWorldSpace === void 0) { isWorldSpace = false; }
+                if (output === null) {
+                    output = egret3d.Vector3.create();
+                }
+                if (this._oimoJoint !== null) {
+                    if (isWorldSpace) {
+                        this._oimoJoint.getAnchor2To(output);
+                    }
+                    else {
+                        this._oimoJoint.getLocalAnchor2To(output);
+                    }
+                }
+                return output;
+            };
             /**
              * 获取该关节承受的力。
              */
             BaseJoint.prototype.getAppliedForce = function (output) {
+                if (output === void 0) { output = null; }
                 if (output === null) {
                     output = egret3d.Vector3.create();
                 }
@@ -42109,7 +42155,8 @@ var egret3d;
              * 获取该关节承受的扭矩。
              */
             BaseJoint.prototype.getAppliedTorque = function (output) {
-                if (!output) {
+                if (output === void 0) { output = null; }
+                if (output === null) {
                     output = egret3d.Vector3.create();
                 }
                 if (this._oimoJoint !== null) {
@@ -42130,7 +42177,7 @@ var egret3d;
                         return;
                     }
                     this._values[0 /* CollisionEnabled */] = value ? 1 : 0;
-                    if (this._oimoJoint) {
+                    if (this._oimoJoint !== null) {
                         this._oimoJoint.setAllowCollision(value);
                     }
                 },
@@ -42146,7 +42193,7 @@ var egret3d;
                     return this._values[1 /* UseWorldAnchor */] > 0;
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._values[1 /* UseWorldAnchor */] = value ? 1 : 0;
                     }
                     else if (true) {
@@ -42164,7 +42211,7 @@ var egret3d;
                     return this._anchor;
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._anchor.copy(value);
                     }
                     else if (true) {
@@ -42195,7 +42242,7 @@ var egret3d;
                     if (this._connectedBody === value) {
                         return;
                     }
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._connectedBody = value;
                     }
                     else if (true) {
@@ -42210,7 +42257,7 @@ var egret3d;
                  * 该关节的 OIMO 关节。
                  */
                 get: function () {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._oimoJoint = this._createJoint();
                     }
                     return this._oimoJoint;
@@ -42225,12 +42272,6 @@ var egret3d;
                 paper.serializedField
             ], BaseJoint.prototype, "_values", void 0);
             __decorate([
-                paper.serializedField
-            ], BaseJoint.prototype, "_rigidbody", void 0);
-            __decorate([
-                paper.serializedField
-            ], BaseJoint.prototype, "_connectedBody", void 0);
-            __decorate([
                 paper.editor.property("CHECKBOX" /* CHECKBOX */)
             ], BaseJoint.prototype, "collisionEnabled", null);
             __decorate([
@@ -42240,10 +42281,8 @@ var egret3d;
                 paper.editor.property("VECTOR3" /* VECTOR3 */)
             ], BaseJoint.prototype, "anchor", null);
             __decorate([
-                paper.editor.property("COMPONENT" /* COMPONENT */)
-            ], BaseJoint.prototype, "rigidbody", null);
-            __decorate([
-                paper.editor.property("COMPONENT" /* COMPONENT */)
+                paper.editor.property("COMPONENT" /* COMPONENT */, { componentClass: oimo.Rigidbody }),
+                paper.serializedField
             ], BaseJoint.prototype, "connectedRigidbody", null);
             BaseJoint = __decorate([
                 paper.abstract
@@ -42266,7 +42305,7 @@ var egret3d;
             function SphereCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Sphere;
-                _this.sphere = egret3d.Sphere.create(egret3d.Vector3.ZERO, 0.5);
+                _this.sphere = egret3d.Sphere.create();
                 return _this;
             }
             SphereCollider.prototype._createShape = function () {
@@ -42276,6 +42315,10 @@ var egret3d;
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
+            };
+            SphereCollider.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this.sphere.set(egret3d.Vector3.ZERO, 0.5);
             };
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
@@ -42311,7 +42354,7 @@ var egret3d;
             PhysicsSystem_1 = PhysicsSystem;
             PhysicsSystem.prototype.getMatchers = function () {
                 return [
-                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.CylinderCollider, oimo.ConeCollider, oimo.CapsuleCollider, oimo.PrismaticJoint, oimo.CylindricalJoint, oimo.RevoluteJoint, oimo.SphericalJoint, oimo.UniversalJoint, oimo.ConeTwistJoint),
+                    paper.Matcher.create(egret3d.Transform, oimo.Rigidbody).extraOf(oimo.BoxCollider, oimo.SphereCollider, oimo.CylinderCollider, oimo.ConeCollider, oimo.CapsuleCollider, oimo.PrismaticJoint, oimo.RevoluteJoint, oimo.CylindricalJoint, oimo.SphericalJoint, oimo.UniversalJoint, oimo.ConeTwistJoint),
                 ];
             };
             PhysicsSystem.prototype.onAwake = function () {
@@ -42546,7 +42589,7 @@ var egret3d;
             function BoxCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Box;
-                _this.box = egret3d.Box.ONE.clone();
+                _this.box = egret3d.Box.create();
                 return _this;
             }
             BoxCollider.prototype._createShape = function () {
@@ -42556,6 +42599,10 @@ var egret3d;
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
+            };
+            BoxCollider.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this.box.copy(egret3d.Box.ONE);
             };
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
@@ -42583,7 +42630,7 @@ var egret3d;
             function CapsuleCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Capsule;
-                _this.capsule = egret3d.Capsule.create(egret3d.Vector3.ZERO, 0.25, 0.5);
+                _this.capsule = egret3d.Capsule.create();
                 return _this;
             }
             CapsuleCollider.prototype._createShape = function () {
@@ -42592,6 +42639,10 @@ var egret3d;
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
+            };
+            CapsuleCollider.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this.capsule.set(egret3d.Vector3.ZERO, 0.25, 0.5);
             };
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
@@ -42619,7 +42670,7 @@ var egret3d;
             function ConeCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Cone;
-                _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.0, 0.5, 1.0);
+                _this.cylinder = egret3d.Cylinder.create();
                 return _this;
             }
             ConeCollider.prototype._createShape = function () {
@@ -42628,6 +42679,10 @@ var egret3d;
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
+            };
+            ConeCollider.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this.cylinder.set(egret3d.Vector3.ZERO, 0.0, 0.5, 1.0);
             };
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
@@ -42655,7 +42710,7 @@ var egret3d;
             function CylinderCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Cylinder;
-                _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
+                _this.cylinder = egret3d.Cylinder.create();
                 return _this;
             }
             CylinderCollider.prototype._createShape = function () {
@@ -42664,6 +42719,10 @@ var egret3d;
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
+            };
+            CylinderCollider.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this.cylinder.set(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
             };
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
@@ -42722,13 +42781,13 @@ var egret3d;
              */
             JointType[JointType["Prismatic"] = OIMO.JointType.PRISMATIC] = "Prismatic";
             /**
-             * 柱面关节。
-             */
-            JointType[JointType["Cylindrical"] = OIMO.JointType.CYLINDRICAL] = "Cylindrical";
-            /**
              * 转动关节。
              */
             JointType[JointType["Revolute"] = OIMO.JointType.REVOLUTE] = "Revolute";
+            /**
+             * 柱面关节。
+             */
+            JointType[JointType["Cylindrical"] = OIMO.JointType.CYLINDRICAL] = "Cylindrical";
             /**
              * 球面关节。
              */
@@ -42854,8 +42913,10 @@ var egret3d;
         (function (ValueType) {
             ValueType[ValueType["_0"] = 0] = "_0";
             ValueType[ValueType["_1"] = 1] = "_1";
-            ValueType[ValueType["MaxSwingAngleX"] = 2] = "MaxSwingAngleX";
-            ValueType[ValueType["MaxSwingAngleZ"] = 3] = "MaxSwingAngleZ";
+            ValueType[ValueType["_2"] = 2] = "_2";
+            ValueType[ValueType["_3"] = 3] = "_3";
+            ValueType[ValueType["MaxSwingAngleX"] = 4] = "MaxSwingAngleX";
+            ValueType[ValueType["MaxSwingAngleZ"] = 5] = "MaxSwingAngleZ";
         })(ValueType || (ValueType = {}));
         /**
          * 锥形旋转关节组件。
@@ -42877,12 +42938,9 @@ var egret3d;
                  * 沿着关节的摇摆弹簧缓冲器设置。
                  */
                 _this.swingSpringDamper = oimo.SpringDamper.create();
-                _this._twistAxis = egret3d.Vector3.UP.clone();
-                _this._swingAxis = egret3d.Vector3.RIGHT.clone();
-                _this._values = new Float32Array([
-                    0, 0,
-                    180.0, 180.0,
-                ]);
+                _this._twistAxis = egret3d.Vector3.create();
+                _this._swingAxis = egret3d.Vector3.create();
+                _this._values = new Float32Array(6);
                 return _this;
             }
             ConeTwistJoint_1 = ConeTwistJoint;
@@ -42891,7 +42949,6 @@ var egret3d;
                     // TODO
                     throw new Error();
                 }
-                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = ConeTwistJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
                 if (this.useWorldSpace) {
@@ -42926,16 +42983,29 @@ var egret3d;
                 joint.userData = this;
                 return joint;
             };
+            ConeTwistJoint.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._twistAxis.copy(egret3d.Vector3.UP);
+                this._swingAxis.copy(egret3d.Vector3.RIGHT);
+                this._values[4 /* MaxSwingAngleX */] = Math.PI;
+                this._values[5 /* MaxSwingAngleZ */] = Math.PI;
+            };
+            ConeTwistJoint.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this.twistSpringDamper._clear();
+                this.twistLimitMotor._clear();
+                this.swingSpringDamper._clear();
+            };
             Object.defineProperty(ConeTwistJoint.prototype, "maxSwingAngleX", {
                 /**
                  *
                  */
                 get: function () {
-                    return this._values[2 /* MaxSwingAngleX */];
+                    return this._values[4 /* MaxSwingAngleX */];
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
-                        this._values[2 /* MaxSwingAngleX */] = value;
+                    if (this._oimoJoint === null) {
+                        this._values[4 /* MaxSwingAngleX */] = value;
                     }
                     else if (true) {
                         console.warn("Cannot change the maxSwingAngleX after the joint has been created.");
@@ -42949,11 +43019,11 @@ var egret3d;
                  *
                  */
                 get: function () {
-                    return this._values[3 /* MaxSwingAngleZ */];
+                    return this._values[5 /* MaxSwingAngleZ */];
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
-                        this._values[3 /* MaxSwingAngleZ */] = value;
+                    if (this._oimoJoint === null) {
+                        this._values[5 /* MaxSwingAngleZ */] = value;
                     }
                     else if (true) {
                         console.warn("Cannot change the maxSwingAngleZ after the joint has been created.");
@@ -42970,7 +43040,7 @@ var egret3d;
                     return this._twistAxis;
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._twistAxis.normalize(value);
                     }
                     else if (true) {
@@ -42988,7 +43058,7 @@ var egret3d;
                     return this._swingAxis;
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._swingAxis.normalize(value);
                     }
                     else if (true) {
@@ -43072,10 +43142,8 @@ var egret3d;
                  * 该关节的旋转马达设置。
                  */
                 _this.rotationalLimitMotor = oimo.RotationalLimitMotor.create();
-                _this._axis = egret3d.Vector3.UP.clone();
-                _this._values = new Float32Array([
-                    0, 0,
-                ]);
+                _this._axis = egret3d.Vector3.create();
+                _this._values = new Float32Array(4);
                 return _this;
             }
             CylindricalJoint_1 = CylindricalJoint;
@@ -43084,7 +43152,6 @@ var egret3d;
                     // TODO
                     throw new Error();
                 }
-                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = CylindricalJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
                 if (this.useWorldSpace) {
@@ -43122,6 +43189,17 @@ var egret3d;
                 joint.userData = this;
                 return joint;
             };
+            CylindricalJoint.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._axis.copy(egret3d.Vector3.UP);
+            };
+            CylindricalJoint.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this.translationalSpringDamper._clear();
+                this.translationalLimitMotor._clear();
+                this.rotationalSpringDamper._clear();
+                this.rotationalLimitMotor._clear();
+            };
             Object.defineProperty(CylindricalJoint.prototype, "axis", {
                 /**
                  * 该关节的旋转轴。
@@ -43130,7 +43208,7 @@ var egret3d;
                     return this._axis;
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._axis.normalize(value);
                     }
                     else if (true) {
@@ -43162,7 +43240,6 @@ var egret3d;
                 paper.serializedField
             ], CylindricalJoint.prototype, "rotationalLimitMotor", void 0);
             __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
             ], CylindricalJoint.prototype, "_axis", void 0);
             __decorate([
@@ -43200,10 +43277,8 @@ var egret3d;
                  * 该关节的移动马达设置。
                  */
                 _this.limitMotor = oimo.TranslationalLimitMotor.create();
-                _this._axis = egret3d.Vector3.DOWN.clone();
-                _this._values = new Float32Array([
-                    0, 0,
-                ]);
+                _this._axis = egret3d.Vector3.create();
+                _this._values = new Float32Array(4);
                 return _this;
             }
             PrismaticJoint_1 = PrismaticJoint;
@@ -43212,7 +43287,6 @@ var egret3d;
                     // TODO
                     throw new Error();
                 }
-                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = PrismaticJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
                 if (this.useWorldSpace) {
@@ -43239,6 +43313,15 @@ var egret3d;
                 joint.userData = this;
                 return joint;
             };
+            PrismaticJoint.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._axis.copy(egret3d.Vector3.UP);
+            };
+            PrismaticJoint.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this.springDamper._clear();
+                this.limitMotor._clear();
+            };
             Object.defineProperty(PrismaticJoint.prototype, "axis", {
                 /**
                  * 该关节的移动轴。
@@ -43247,7 +43330,7 @@ var egret3d;
                     return this._axis;
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._axis.normalize(value);
                     }
                     else if (true) {
@@ -43269,7 +43352,6 @@ var egret3d;
                 paper.serializedField
             ], PrismaticJoint.prototype, "limitMotor", void 0);
             __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
             ], PrismaticJoint.prototype, "_axis", void 0);
             __decorate([
@@ -43307,10 +43389,8 @@ var egret3d;
                  * 该关节的旋转马达设置。
                  */
                 _this.limitMotor = oimo.RotationalLimitMotor.create();
-                _this._axis = egret3d.Vector3.UP.clone();
-                _this._values = new Float32Array([
-                    0, 0,
-                ]);
+                _this._axis = egret3d.Vector3.create();
+                _this._values = new Float32Array(4);
                 return _this;
             }
             RevoluteJoint_1 = RevoluteJoint;
@@ -43319,7 +43399,6 @@ var egret3d;
                     // TODO
                     throw new Error();
                 }
-                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = RevoluteJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
                 if (this.useWorldSpace) {
@@ -43346,6 +43425,15 @@ var egret3d;
                 joint.userData = this;
                 return joint;
             };
+            RevoluteJoint.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._axis.copy(egret3d.Vector3.UP);
+            };
+            RevoluteJoint.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this.springDamper._clear();
+                this.limitMotor._clear();
+            };
             Object.defineProperty(RevoluteJoint.prototype, "axis", {
                 /**
                  * 该关节的旋转轴。
@@ -43354,7 +43442,7 @@ var egret3d;
                     return this._axis;
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._axis.normalize(value);
                     }
                     else if (true) {
@@ -43376,7 +43464,6 @@ var egret3d;
                 paper.serializedField
             ], RevoluteJoint.prototype, "limitMotor", void 0);
             __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
             ], RevoluteJoint.prototype, "_axis", void 0);
             __decorate([
@@ -43410,9 +43497,7 @@ var egret3d;
                  * 该关节的旋转弹簧缓冲器设置。
                  */
                 _this.springDamper = oimo.SpringDamper.create();
-                _this._values = new Float32Array([
-                    0, 0,
-                ]);
+                _this._values = new Float32Array(4);
                 return _this;
             }
             SphericalJoint_1 = SphericalJoint;
@@ -43421,7 +43506,6 @@ var egret3d;
                     // TODO
                     throw new Error();
                 }
-                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = SphericalJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
                 if (this.useWorldSpace) {
@@ -43440,6 +43524,10 @@ var egret3d;
                 this.springDamper._oimoSpringDamper = joint.getSpringDamper();
                 joint.userData = this;
                 return joint;
+            };
+            SphericalJoint.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this.springDamper._clear();
             };
             SphericalJoint._config = new OIMO.SphericalJointConfig();
             SphericalJoint._springDamper = new OIMO.SpringDamper();
@@ -43487,11 +43575,9 @@ var egret3d;
                  * 该关节的 Y 轴旋转马达设置。
                  */
                 _this.limitMotorY = oimo.RotationalLimitMotor.create();
-                _this._axisX = egret3d.Vector3.RIGHT.clone();
-                _this._axisY = egret3d.Vector3.UP.clone();
-                _this._values = new Float32Array([
-                    0, 0,
-                ]);
+                _this._axisX = egret3d.Vector3.create();
+                _this._axisY = egret3d.Vector3.create();
+                _this._values = new Float32Array(4);
                 return _this;
             }
             UniversalJoint_1 = UniversalJoint;
@@ -43500,7 +43586,6 @@ var egret3d;
                     // TODO
                     throw new Error();
                 }
-                this._rigidbody = this.gameObject.getComponent(oimo.Rigidbody);
                 var config = UniversalJoint_1._config;
                 config.allowCollision = this.collisionEnabled;
                 if (this.useWorldSpace) {
@@ -43539,6 +43624,18 @@ var egret3d;
                 joint.userData = this;
                 return joint;
             };
+            UniversalJoint.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._axisX.copy(egret3d.Vector3.RIGHT);
+                this._axisY.copy(egret3d.Vector3.UP);
+            };
+            UniversalJoint.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this.springDamperX._clear();
+                this.limitMotorX._clear();
+                this.springDamperY._clear();
+                this.limitMotorY._clear();
+            };
             Object.defineProperty(UniversalJoint.prototype, "axisX", {
                 /**
                  * 该关节的 X 旋转轴。
@@ -43547,7 +43644,7 @@ var egret3d;
                     return this._axisX;
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._axisX.normalize(value);
                     }
                     else if (true) {
@@ -43565,7 +43662,7 @@ var egret3d;
                     return this._axisY;
                 },
                 set: function (value) {
-                    if (!this._oimoJoint) {
+                    if (this._oimoJoint === null) {
                         this._axisY.normalize(value);
                     }
                     else if (true) {
@@ -43635,19 +43732,24 @@ var egret3d;
          */
         var RotationalLimitMotor = (function () {
             function RotationalLimitMotor() {
-                this._values = new Float32Array([
-                    1.0, 0.0, 0.0, 0.0
-                ]);
-                /**
-                 * @internal
-                 */
-                this._oimoLimitMotor = null;
+                this._values = new Float32Array(4);
+                this._clear();
             }
             /**
              * @internal
              */
             RotationalLimitMotor.create = function () {
                 return new RotationalLimitMotor();
+            };
+            /**
+             * @internal
+             */
+            RotationalLimitMotor.prototype._clear = function () {
+                this._values[0 /* LowerLimit */] = 1.0;
+                this._values[1 /* UpperLimit */] = 0.0;
+                this._values[2 /* MotorSpeed */] = 0.0;
+                this._values[3 /* MotorTorque */] = 0.0;
+                this._oimoLimitMotor = null;
             };
             RotationalLimitMotor.prototype.serialize = function () {
                 return this._values;
@@ -43768,19 +43870,23 @@ var egret3d;
          */
         var SpringDamper = (function () {
             function SpringDamper() {
-                this._values = new Float32Array([
-                    0.0, OIMO.Setting.minSpringDamperDampingRatio, 0,
-                ]);
-                /**
-                 * @internal
-                 */
-                this._oimoSpringDamper = null;
+                this._values = new Float32Array(3);
+                this._clear();
             }
             /**
              * @internal
              */
             SpringDamper.create = function () {
                 return new SpringDamper();
+            };
+            /**
+             * @internal
+             */
+            SpringDamper.prototype._clear = function () {
+                this._values[0 /* Frequency */] = 0.0;
+                this._values[1 /* DampingRatio */] = 0.0;
+                this._values[2 /* UseSymplecticEuler */] = 0;
+                this._oimoSpringDamper = null;
             };
             SpringDamper.prototype.serialize = function () {
                 return this._values;
@@ -43816,15 +43922,15 @@ var egret3d;
             Object.defineProperty(SpringDamper.prototype, "dampingRatio", {
                 /**
                  * 该缓冲器的阻尼系数。
-                 * - [`OIMO.Setting.minSpringDamperDampingRatio` ~ N]
-                 * - 默认为 `OIMO.Setting.minSpringDamperDampingRatio` 。
+                 * - [`0.0` ~ N]
+                 * - 默认为 `0.0` 。
                  */
                 get: function () {
                     return this._values[1 /* DampingRatio */];
                 },
                 set: function (value) {
-                    if (value < OIMO.Setting.minSpringDamperDampingRatio) {
-                        value = OIMO.Setting.minSpringDamperDampingRatio;
+                    if (value < 0.0) {
+                        value = 0.0;
                     }
                     this._values[1 /* DampingRatio */] = value;
                     if (this._oimoSpringDamper !== null) {
@@ -43855,7 +43961,7 @@ var egret3d;
                 paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
             ], SpringDamper.prototype, "frequency", null);
             __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */, { minimum: OIMO.Setting.minSpringDamperDampingRatio })
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
             ], SpringDamper.prototype, "dampingRatio", null);
             __decorate([
                 paper.editor.property("CHECKBOX" /* CHECKBOX */)
@@ -43882,19 +43988,24 @@ var egret3d;
          */
         var TranslationalLimitMotor = (function () {
             function TranslationalLimitMotor() {
-                this._values = new Float32Array([
-                    1.0, 0.0, 0.0, 0.0
-                ]);
-                /**
-                 * @internal
-                 */
-                this._oimoLimitMotor = null;
+                this._values = new Float32Array(4);
+                this._clear();
             }
             /**
              * @internal
              */
             TranslationalLimitMotor.create = function () {
                 return new TranslationalLimitMotor();
+            };
+            /**
+             * @internal
+             */
+            TranslationalLimitMotor.prototype._clear = function () {
+                this._values[0 /* LowerLimit */] = 1.0;
+                this._values[1 /* UpperLimit */] = 0.0;
+                this._values[2 /* MotorSpeed */] = 0.0;
+                this._values[3 /* MotorForce */] = 0.0;
+                this._oimoLimitMotor = null;
             };
             TranslationalLimitMotor.prototype.serialize = function () {
                 return this._values;

@@ -648,11 +648,220 @@ namespace paper.editor {
                 capsuleColliderDrawer[i].enabled = false;
             }
         }
+        /**
+         * @internal
+         */
+        private _updatePrismaticJointDrawer(entity: GameObject, component: egret3d.oimo.PrismaticJoint, index: uint) {
+            if (index >= this._prismaticJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Prismatic Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("TLM", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                EditorMeshHelper.createGameObject("Joint", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                this._prismaticJointDrawer.push(entity);
+            }
+
+            const drawer = this._prismaticJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const tlm = drawer.transform.find("TLM")!;
+            const joint = drawer.transform.find("Joint")!;
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.limitMotor.lowerLimit <= component.limitMotor.upperLimit) {
+                const axis = component.axis.clone().release();
+
+                if (!component.useWorldSpace) {
+                    axis.applyDirection(component.rigidbody.gameObject.transform.localToWorldMatrix);
+                }
+
+                tlm.entity.enabled = true;
+                tlm
+                    .lookRotation(axis)
+                    .setLocalPosition(axis.multiplyScalar(component.limitMotor.lowerLimit))
+                    .setLocalScale(1.0, 1.0, component.limitMotor.upperLimit - component.limitMotor.lowerLimit);
+            }
+            else {
+                tlm.entity.enabled = false;
+            }
+
+            if (component.connectedRigidbody) {
+                joint.entity.enabled = true;
+                jointC.entity.enabled = true;
+
+                const connectedAnchor = component.getConnectedAnchor(null, true).release();
+                joint
+                    .lookAt(connectedAnchor)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(connectedAnchor));
+                jointC
+                    .setPosition(component.connectedRigidbody.transform.position)
+                    .lookAt(connectedAnchor)
+                    .setLocalScale(1.0, 1.0, component.connectedRigidbody.transform.position.getDistance(connectedAnchor));
+            }
+            else {
+                joint.entity.enabled = false;
+                jointC.entity.enabled = false;
+            }
+        }
+        /**
+         * @internal
+         */
+        private _updateRevoluteJointDrawer(entity: GameObject, component: egret3d.oimo.RevoluteJoint, index: uint) {
+            if (index >= this._revoluteJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Revolute Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                this._revoluteJointDrawer.push(entity);
+            }
+
+            const drawer = this._revoluteJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.connectedRigidbody) {
+                jointC.entity.enabled = true;
+
+                jointC.lookAt(component.connectedRigidbody.transform.position)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(component.connectedRigidbody.transform.position));
+            }
+            else {
+                jointC.entity.enabled = false;
+            }
+        }
+        /**
+         * @internal
+         */
+        private _updateCylindricalJointDrawer(entity: GameObject, component: egret3d.oimo.CylindricalJoint, index: uint) {
+            if (index >= this._cylindricalJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Cylindrical Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("TLM", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                EditorMeshHelper.createGameObject("Joint", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                this._cylindricalJointDrawer.push(entity);
+            }
+
+            const drawer = this._cylindricalJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const tlm = drawer.transform.find("TLM")!;
+            const joint = drawer.transform.find("Joint")!;
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.translationalLimitMotor.lowerLimit <= component.translationalLimitMotor.upperLimit) {
+                const axis = component.axis.clone().release();
+
+                if (!component.useWorldSpace) {
+                    axis.applyDirection(component.rigidbody.gameObject.transform.localToWorldMatrix);
+                }
+
+                tlm.entity.enabled = true;
+                tlm
+                    .lookRotation(axis)
+                    .setLocalPosition(axis.multiplyScalar(component.translationalLimitMotor.lowerLimit))
+                    .setLocalScale(1.0, 1.0, component.translationalLimitMotor.upperLimit - component.translationalLimitMotor.lowerLimit);
+            }
+            else {
+                tlm.entity.enabled = false;
+            }
+
+            if (component.connectedRigidbody) {
+                joint.entity.enabled = true;
+                jointC.entity.enabled = true;
+
+                const connectedAnchor = component.getConnectedAnchor(null, true).release();
+                joint
+                    .lookAt(connectedAnchor)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(connectedAnchor));
+                jointC
+                    .setPosition(component.connectedRigidbody.transform.position)
+                    .lookAt(connectedAnchor)
+                    .setLocalScale(1.0, 1.0, component.connectedRigidbody.transform.position.getDistance(connectedAnchor));
+            }
+            else {
+                joint.entity.enabled = false;
+                jointC.entity.enabled = false;
+            }
+        }
+        /**
+         * @internal
+         */
+        private _updateSphericalJointDrawer(entity: GameObject, component: egret3d.oimo.SphericalJoint, index: uint) {
+            if (index >= this._sphericalJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Revolute Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                this._sphericalJointDrawer.push(entity);
+            }
+
+            const drawer = this._sphericalJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.connectedRigidbody) {
+                jointC.entity.enabled = true;
+
+                jointC.lookAt(component.connectedRigidbody.transform.position)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(component.connectedRigidbody.transform.position));
+            }
+            else {
+                jointC.entity.enabled = false;
+            }
+        }
 
         private _updateJoints() {
             const groups = this.groups;
 
-            const prismaticJointDrawer = this._prismaticJointDrawer;
             let drawerIndex = 0;
 
             if (egret3d.oimo) {
@@ -667,11 +876,28 @@ namespace paper.editor {
                 }
             }
 
-            for (let i = drawerIndex, l = prismaticJointDrawer.length; i < l; ++i) {
-                prismaticJointDrawer[i].enabled = false;
+            for (let i = drawerIndex, l = this._prismaticJointDrawer.length; i < l; ++i) {
+                this._prismaticJointDrawer[i].enabled = false;
             }
 
-            const cylindricalJointDrawer = this._cylindricalJointDrawer;
+            drawerIndex = 0;
+
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoRevoluteJoints].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.RevoluteJoint)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
+
+                        this._updateRevoluteJointDrawer(entity, component, drawerIndex++);
+                    }
+                }
+            }
+
+            for (let i = drawerIndex, l = this._revoluteJointDrawer.length; i < l; ++i) {
+                this._revoluteJointDrawer[i].enabled = false;
+            }
+
             drawerIndex = 0;
 
             if (egret3d.oimo) {
@@ -686,105 +912,26 @@ namespace paper.editor {
                 }
             }
 
-            for (let i = drawerIndex, l = cylindricalJointDrawer.length; i < l; ++i) {
-                cylindricalJointDrawer[i].enabled = false;
-            }
-        }
-        /**
-         * @internal
-         */
-        private _updatePrismaticJointDrawer(entity: GameObject, component: egret3d.oimo.PrismaticJoint, index: uint) {
-            if (index >= this._prismaticJointDrawer.length) {
-                const entity = egret3d.creater.createGameObject(`Prismatic Joint ${index}`, {
-                    tag: DefaultTags.EditorOnly,
-                    scene: Application.sceneManager.editorScene,
-                    mesh: this._jointMesh,
-                    materials: [this._jointLineMaterial, this._jointPointMaterial],
-                });
-                entity.layer = Layer.Editor;
-                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
-
-                this._prismaticJointDrawer.push(entity);
+            for (let i = drawerIndex, l = this._cylindricalJointDrawer.length; i < l; ++i) {
+                this._cylindricalJointDrawer[i].enabled = false;
             }
 
-            const drawer = this._prismaticJointDrawer[index];
+            drawerIndex = 0;
 
-            if (component.limitMotor.lowerLimit <= component.limitMotor.upperLimit) {
-                const axis = component.axis.clone().release();
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoSphericalJoints].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.SphericalJoint)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
 
-                if (!component.useWorldSpace) {
-                    axis.applyDirection(component.rigidbody.gameObject.transform.localToWorldMatrix);
+                        this._updateSphericalJointDrawer(entity, component, drawerIndex++);
+                    }
                 }
-
-                drawer.enabled = true;
-
-                if (component.useWorldSpace) {
-                    drawer.transform.localPosition = component.anchor;
-                }
-                else {
-                    drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
-                }
-
-                drawer.transform
-                    .lookRotation(axis)
-                    .translate(axis.multiplyScalar(component.limitMotor.lowerLimit))
-                    .setLocalScale(1.0, 1.0, component.limitMotor.upperLimit - component.limitMotor.lowerLimit);
-            }
-            else {
-                drawer.enabled = false;
-            }
-        }
-        /**
-         * @internal
-         */
-        private _updateCylindricalJointDrawer(entity: GameObject, component: egret3d.oimo.CylindricalJoint, index: uint) {
-            if (index >= this._prismaticJointDrawer.length) {
-                const entity = paper.GameObject.create(`Prismatic Joint ${index}`, DefaultTags.EditorOnly, Application.sceneManager.editorScene);
-                entity.layer = Layer.Editor;
-                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
-
-                egret3d.creater.createGameObject("TLM", {
-                    tag: DefaultTags.EditorOnly,
-                    scene: Application.sceneManager.editorScene,
-                    mesh: this._jointMesh,
-                    materials: [this._jointLineMaterial, this._jointPointMaterial],
-                }).transform.setParent(entity.transform);
-
-                // egret3d.creater.createGameObject("Joint", {
-                //     tag: DefaultTags.EditorOnly,
-                //     scene: Application.sceneManager.editorScene,
-                //     mesh: this._jointMesh,
-                //     materials: [this._jointLineMaterial, this._jointPointMaterial],
-                // }).transform.setParent(entity.transform);
-
-                this._prismaticJointDrawer.push(entity);
             }
 
-            const drawer = this._prismaticJointDrawer[index];
-
-            if (component.translationalLimitMotor.lowerLimit <= component.translationalLimitMotor.upperLimit) {
-                const axis = component.axis.clone().release();
-
-                if (!component.useWorldSpace) {
-                    axis.applyDirection(component.rigidbody.gameObject.transform.localToWorldMatrix);
-                }
-
-                drawer.enabled = true;
-
-                if (component.useWorldSpace) {
-                    drawer.transform.localPosition = component.anchor;
-                }
-                else {
-                    drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
-                }
-
-                drawer.transform
-                    .lookRotation(axis)
-                    .translate(axis.multiplyScalar(component.translationalLimitMotor.lowerLimit))
-                    .setLocalScale(1.0, 1.0, component.translationalLimitMotor.upperLimit - component.translationalLimitMotor.lowerLimit);
-            }
-            else {
-                drawer.enabled = false;
+            for (let i = drawerIndex, l = this._sphericalJointDrawer.length; i < l; ++i) {
+                this._sphericalJointDrawer[i].enabled = false;
             }
         }
 

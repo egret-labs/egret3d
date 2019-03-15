@@ -15,15 +15,23 @@ namespace egret3d.oimo {
             return new SpringDamper();
         }
 
-        private readonly _values: Float32Array = new Float32Array([
-            0.0, OIMO.Setting.minSpringDamperDampingRatio, 0,
-        ]);
+        private readonly _values: Float32Array = new Float32Array(3);
         /**
          * @internal
          */
-        public _oimoSpringDamper: OIMO.SpringDamper | null = null;
+        public _oimoSpringDamper: OIMO.SpringDamper | null;
 
         private constructor() {
+            this._clear();
+        }
+        /**
+         * @internal
+         */
+        public _clear() {
+            this._values[ValueType.Frequency] = 0.0;
+            this._values[ValueType.DampingRatio] = 0.0;
+            this._values[ValueType.UseSymplecticEuler] = 0;
+            this._oimoSpringDamper = null;
         }
 
         public serialize() {
@@ -60,16 +68,16 @@ namespace egret3d.oimo {
         }
         /**
          * 该缓冲器的阻尼系数。
-         * - [`OIMO.Setting.minSpringDamperDampingRatio` ~ N]
-         * - 默认为 `OIMO.Setting.minSpringDamperDampingRatio` 。
+         * - [`0.0` ~ N]
+         * - 默认为 `0.0` 。
          */
-        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: OIMO.Setting.minSpringDamperDampingRatio })
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public get dampingRatio(): float {
             return this._values[ValueType.DampingRatio];
         }
         public set dampingRatio(value: float) {
-            if (value < OIMO.Setting.minSpringDamperDampingRatio) {
-                value = OIMO.Setting.minSpringDamperDampingRatio;
+            if (value < 0.0) {
+                value = 0.0;
             }
 
             this._values[ValueType.DampingRatio] = value;

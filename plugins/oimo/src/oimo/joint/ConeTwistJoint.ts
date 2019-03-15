@@ -1,6 +1,6 @@
 namespace egret3d.oimo {
     const enum ValueType {
-        _0, _1,
+        _0, _1, _2, _3,
         MaxSwingAngleX,
         MaxSwingAngleZ,
     }
@@ -36,14 +36,11 @@ namespace egret3d.oimo {
         public readonly swingSpringDamper: SpringDamper = SpringDamper.create();
 
         @paper.serializedField
-        private readonly _twistAxis: Vector3 = Vector3.UP.clone();
+        private readonly _twistAxis: Vector3 = Vector3.create();
         @paper.serializedField
-        private readonly _swingAxis: Vector3 = Vector3.RIGHT.clone();
+        private readonly _swingAxis: Vector3 = Vector3.create();
 
-        protected readonly _values: Float32Array = new Float32Array([
-            0, 0,
-            180.0, 180.0,
-        ]);
+        protected readonly _values: Float32Array = new Float32Array(6);
 
         protected _createJoint() {
             if (!this._connectedBody) {
@@ -51,14 +48,12 @@ namespace egret3d.oimo {
                 throw new Error();
             }
 
-            this._rigidbody = this.gameObject.getComponent(Rigidbody)!;
-
             const config = ConeTwistJoint._config;
             config.allowCollision = this.collisionEnabled;
 
             if (this.useWorldSpace) {
                 config.init(
-                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
+                    this._rigidbody!.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._twistAxis as any, this._swingAxis as any
                 );
             }
@@ -68,7 +63,7 @@ namespace egret3d.oimo {
                 const twistAxis = Vector3.create().applyDirection(matrix, this._twistAxis).release();
                 const swingAxis = Vector3.create().applyDirection(matrix, this._swingAxis).release();
                 config.init(
-                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
+                    this._rigidbody!.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any, twistAxis as any, swingAxis as any
                 );
             }
@@ -98,15 +93,32 @@ namespace egret3d.oimo {
 
             return joint;
         }
+
+        public initialize() {
+            super.initialize();
+
+            this._twistAxis.copy(Vector3.UP);
+            this._swingAxis.copy(Vector3.RIGHT);
+            this._values[ValueType.MaxSwingAngleX] = Math.PI;
+            this._values[ValueType.MaxSwingAngleZ] = Math.PI;
+        }
+
+        public uninitialize() {
+            super.uninitialize();
+
+            this.twistSpringDamper._clear();
+            this.twistLimitMotor._clear();
+            this.swingSpringDamper._clear();
+        }
         /**
          * 
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
-        public get maxSwingAngleX(): number {
+        public get maxSwingAngleX(): float {
             return this._values[ValueType.MaxSwingAngleX];
         }
-        public set maxSwingAngleX(value: number) {
-            if (!this._oimoJoint) {
+        public set maxSwingAngleX(value: float) {
+            if (this._oimoJoint === null) {
                 this._values[ValueType.MaxSwingAngleX] = value;
             }
             else if (DEBUG) {
@@ -117,11 +129,11 @@ namespace egret3d.oimo {
          * 
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
-        public get maxSwingAngleZ(): number {
+        public get maxSwingAngleZ(): float {
             return this._values[ValueType.MaxSwingAngleZ];
         }
-        public set maxSwingAngleZ(value: number) {
-            if (!this._oimoJoint) {
+        public set maxSwingAngleZ(value: float) {
+            if (this._oimoJoint === null) {
                 this._values[ValueType.MaxSwingAngleZ] = value;
             }
             else if (DEBUG) {
@@ -136,7 +148,7 @@ namespace egret3d.oimo {
             return this._twistAxis;
         }
         public set twistAxis(value: Readonly<Vector3>) {
-            if (!this._oimoJoint) {
+            if (this._oimoJoint === null) {
                 this._twistAxis.normalize(value);
             }
             else if (DEBUG) {
@@ -151,7 +163,7 @@ namespace egret3d.oimo {
             return this._swingAxis;
         }
         public set swingAxis(value: Readonly<Vector3>) {
-            if (!this._oimoJoint) {
+            if (this._oimoJoint === null) {
                 this._swingAxis.normalize(value);
             }
             else if (DEBUG) {

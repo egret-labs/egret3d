@@ -17,9 +17,7 @@ namespace egret3d.oimo {
         @paper.serializedField
         public readonly springDamper: SpringDamper = SpringDamper.create();
 
-        protected readonly _values: Float32Array = new Float32Array([
-            0, 0,
-        ]);
+        protected readonly _values: Float32Array = new Float32Array(4);
 
         protected _createJoint() {
             if (!this._connectedBody) {
@@ -27,14 +25,12 @@ namespace egret3d.oimo {
                 throw new Error();
             }
 
-            this._rigidbody = this.gameObject.getComponent(Rigidbody)!;
-
             const config = SphericalJoint._config;
             config.allowCollision = this.collisionEnabled;
 
             if (this.useWorldSpace) {
                 config.init(
-                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
+                    this._rigidbody!.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any,
                 );
             }
@@ -42,7 +38,7 @@ namespace egret3d.oimo {
                 const matrix = this.gameObject.transform.localToWorldMatrix;
                 const anchor = Vector3.create().applyMatrix(matrix, this._anchor).release();
                 config.init(
-                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
+                    this._rigidbody!.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any,
                 );
             }
@@ -57,6 +53,12 @@ namespace egret3d.oimo {
             joint.userData = this;
 
             return joint;
+        }
+
+        public uninitialize() {
+            super.uninitialize();
+
+            this.springDamper._clear();
         }
     }
 }

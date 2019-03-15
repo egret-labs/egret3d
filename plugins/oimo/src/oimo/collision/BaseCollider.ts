@@ -20,10 +20,8 @@ namespace egret3d.oimo {
          * [CollisionMask, Friction, Restitution, Density];
          */
         @paper.serializedField
-        protected readonly _values: Float32Array = new Float32Array([
-            paper.Layer.Default, OIMO.Setting.defaultFriction, OIMO.Setting.defaultRestitution, OIMO.Setting.defaultDensity,
-        ]);
-        protected _oimoShape: OIMO.Shape = null!;
+        protected readonly _values: Float32Array = new Float32Array(4);
+        protected _oimoShape: OIMO.Shape | null = null;
 
         protected abstract _createShape(): OIMO.Shape;
 
@@ -36,6 +34,21 @@ namespace egret3d.oimo {
             config.density = this.density;
 
             return config;
+        }
+
+        public initialize() {
+            super.initialize();
+
+            this._values[ValueType.CollisionMask] = paper.Layer.Default;
+            this._values[ValueType.Friction] = OIMO.Setting.defaultFriction;
+            this._values[ValueType.Restitution] = OIMO.Setting.defaultRestitution;
+            this._values[ValueType.Density] = OIMO.Setting.defaultDensity;
+        }
+
+        public uninitialize() {
+            super.uninitialize();
+
+            this._oimoShape = null;
         }
         /**
          * 该碰撞体的碰撞掩码。
@@ -51,7 +64,7 @@ namespace egret3d.oimo {
 
             this._values[ValueType.CollisionMask] = value;
 
-            if (this._oimoShape) {
+            if (this._oimoShape !== null) {
                 this._oimoShape.setCollisionMask(value);
             }
         }
@@ -59,17 +72,17 @@ namespace egret3d.oimo {
          * 该碰撞体的摩擦力。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public get friction() {
+        public get friction(): float {
             return this._values[ValueType.Friction];
         }
-        public set friction(value: number) {
+        public set friction(value: float) {
             if (this._values[ValueType.Friction] === value) {
                 return;
             }
 
             this._values[ValueType.Friction] = value;
 
-            if (this._oimoShape) {
+            if (this._oimoShape !== null) {
                 this._oimoShape.setFriction(value);
             }
         }
@@ -77,17 +90,17 @@ namespace egret3d.oimo {
          * 该碰撞体的恢复系数。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0 })
-        public get restitution() {
+        public get restitution(): float {
             return this._values[ValueType.Restitution];
         }
-        public set restitution(value: number) {
+        public set restitution(value: float) {
             if (this._values[ValueType.Restitution] === value) {
                 return;
             }
 
             this._values[ValueType.Restitution] = value;
 
-            if (this._oimoShape) {
+            if (this._oimoShape !== null) {
                 this._oimoShape.setRestitution(value);
             }
         }
@@ -96,17 +109,17 @@ namespace egret3d.oimo {
          * - 单位为`千克/立方米`。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public get density(): number {
+        public get density(): float {
             return this._values[ValueType.Density];
         }
-        public set density(value: number) {
+        public set density(value: float) {
             if (this._values[ValueType.Density] === value) {
                 return;
             }
 
             this._values[ValueType.Density] = value;
 
-            if (this._oimoShape) {
+            if (this._oimoShape !== null) {
                 this._oimoShape.setDensity(value);
             }
         }
@@ -114,7 +127,7 @@ namespace egret3d.oimo {
          * 该碰撞体的 OIMO 碰撞体。
          */
         public get oimoShape(): OIMO.Shape {
-            if (!this._oimoShape) {
+            if (this._oimoShape === null) {
                 this._oimoShape = this._createShape();
             }
 

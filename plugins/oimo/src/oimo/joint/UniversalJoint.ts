@@ -39,13 +39,11 @@ namespace egret3d.oimo {
         public readonly limitMotorY: RotationalLimitMotor = RotationalLimitMotor.create();
 
         @paper.serializedField
-        private readonly _axisX: Vector3 = Vector3.RIGHT.clone();
+        private readonly _axisX: Vector3 = Vector3.create();
         @paper.serializedField
-        private readonly _axisY: Vector3 = Vector3.UP.clone();
+        private readonly _axisY: Vector3 = Vector3.create();
 
-        protected readonly _values: Float32Array = new Float32Array([
-            0, 0,
-        ]);
+        protected readonly _values: Float32Array = new Float32Array(4);
 
         protected _createJoint() {
             if (!this._connectedBody) {
@@ -53,14 +51,12 @@ namespace egret3d.oimo {
                 throw new Error();
             }
 
-            this._rigidbody = this.gameObject.getComponent(Rigidbody)!;
-
             const config = UniversalJoint._config;
             config.allowCollision = this.collisionEnabled;
 
             if (this.useWorldSpace) {
                 config.init(
-                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
+                    this._rigidbody!.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._axisX as any, this._axisY as any
                 );
             }
@@ -70,7 +66,7 @@ namespace egret3d.oimo {
                 const axisX = Vector3.create().applyDirection(matrix, this._axisX).release();
                 const axisY = Vector3.create().applyDirection(matrix, this._axisY).release();
                 config.init(
-                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
+                    this._rigidbody!.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any, axisX as any, axisY as any
                 );
             }
@@ -104,6 +100,22 @@ namespace egret3d.oimo {
 
             return joint;
         }
+
+        public initialize() {
+            super.initialize();
+
+            this._axisX.copy(Vector3.RIGHT);
+            this._axisY.copy(Vector3.UP);
+        }
+
+        public uninitialize() {
+            super.uninitialize();
+
+            this.springDamperX._clear();
+            this.limitMotorX._clear();
+            this.springDamperY._clear();
+            this.limitMotorY._clear();
+        }
         /**
          * 该关节的 X 旋转轴。
          */
@@ -112,7 +124,7 @@ namespace egret3d.oimo {
             return this._axisX;
         }
         public set axisX(value: Readonly<Vector3>) {
-            if (!this._oimoJoint) {
+            if (this._oimoJoint === null) {
                 this._axisX.normalize(value);
             }
             else if (DEBUG) {
@@ -127,7 +139,7 @@ namespace egret3d.oimo {
             return this._axisY;
         }
         public set axisY(value: Readonly<Vector3>) {
-            if (!this._oimoJoint) {
+            if (this._oimoJoint === null) {
                 this._axisY.normalize(value);
             }
             else if (DEBUG) {

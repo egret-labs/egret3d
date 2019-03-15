@@ -23,7 +23,7 @@ namespace egret3d.oimo {
         private readonly _values: Float32Array = new Float32Array([
             RigidbodyType.DYNAMIC, 1.0, 1.0, 0.0, 0.0,
         ]);
-        private _oimoRigidbody: OIMO.RigidBody = null!;
+        private _oimoRigidbody: OIMO.RigidBody | null = null;
 
         protected _createRigidbody() {
             const config = Rigidbody._config;
@@ -51,14 +51,14 @@ namespace egret3d.oimo {
         }
 
         private _checkRigidbody(message?: string) {
-            if (!this._oimoRigidbody && this.oimoRigidbody.getNumShapes() === 0) {
+            if (this._oimoRigidbody === null && this.oimoRigidbody.getNumShapes() === 0) {
                 for (const shape of this.gameObject.getComponents(BaseCollider as any, true) as BaseCollider[]) {
                     this.oimoRigidbody.addShape(shape.oimoShape);
                     // rigidbody._updateMass(rigidbody.oimoRigidbody);
                 }
             }
 
-            if (this._oimoRigidbody.getNumShapes() === 0) {
+            if (this._oimoRigidbody!.getNumShapes() === 0) {
                 if (DEBUG) {
                     console.warn(message || "Cannot affect a rigidbody's velocity or force without adding a shape.");
                 }
@@ -72,7 +72,7 @@ namespace egret3d.oimo {
          * 将该刚体唤醒。
          */
         public wakeUp(): this {
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.wakeUp();
             }
 
@@ -82,7 +82,7 @@ namespace egret3d.oimo {
          * 将该刚体休眠。
          */
         public sleep(): this {
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.sleep();
             }
 
@@ -93,7 +93,7 @@ namespace egret3d.oimo {
          */
         public addLinearVelocity(veloctity: Readonly<IVector3>): this {
             if (this._checkRigidbody()) {
-                this._oimoRigidbody.addLinearVelocity(veloctity as any);
+                this._oimoRigidbody!.addLinearVelocity(veloctity as any);
             }
 
             return this;
@@ -103,7 +103,7 @@ namespace egret3d.oimo {
          */
         public addAngularVelocity(veloctity: Readonly<IVector3>): this {
             if (this._checkRigidbody()) {
-                this._oimoRigidbody.addAngularVelocity(veloctity as any);
+                this._oimoRigidbody!.addAngularVelocity(veloctity as any);
             }
 
             return this;
@@ -113,7 +113,7 @@ namespace egret3d.oimo {
          */
         public applyForce(force: Readonly<IVector3>, worldPosition: Readonly<IVector3>): this {
             if (this._checkRigidbody()) {
-                this._oimoRigidbody.applyForce(force as any, worldPosition as any);
+                this._oimoRigidbody!.applyForce(force as any, worldPosition as any);
             }
 
             return this;
@@ -123,7 +123,7 @@ namespace egret3d.oimo {
          */
         public applyForceToCenter(force: Readonly<IVector3>): this {
             if (this._checkRigidbody()) {
-                this._oimoRigidbody.applyForceToCenter(force as any);
+                this._oimoRigidbody!.applyForceToCenter(force as any);
             }
 
             return this;
@@ -133,7 +133,7 @@ namespace egret3d.oimo {
          */
         public applyTorque(torque: Readonly<IVector3>): this {
             if (this._checkRigidbody()) {
-                this._oimoRigidbody.applyTorque(torque as any);
+                this._oimoRigidbody!.applyTorque(torque as any);
             }
 
             return this;
@@ -143,7 +143,7 @@ namespace egret3d.oimo {
          */
         public applyImpulse(impulse: Readonly<IVector3>, worldPosition: Readonly<IVector3>): this {
             if (this._checkRigidbody()) {
-                this._oimoRigidbody.applyImpulse(impulse as any, worldPosition as any);
+                this._oimoRigidbody!.applyImpulse(impulse as any, worldPosition as any);
             }
 
             return this;
@@ -153,7 +153,7 @@ namespace egret3d.oimo {
          */
         public applyLinearImpulse(impulse: Readonly<IVector3>): this {
             if (this._checkRigidbody()) {
-                this._oimoRigidbody.applyLinearImpulse(impulse as any);
+                this._oimoRigidbody!.applyLinearImpulse(impulse as any);
             }
 
             return this;
@@ -163,7 +163,7 @@ namespace egret3d.oimo {
          */
         public applyAngularImpulse(impulse: Readonly<IVector3>): this {
             if (this._checkRigidbody()) {
-                this._oimoRigidbody.applyAngularImpulse(impulse as any);
+                this._oimoRigidbody!.applyAngularImpulse(impulse as any);
             }
 
             return this;
@@ -174,7 +174,7 @@ namespace egret3d.oimo {
         public syncTransform(transform?: Transform): this {
             const oimoRigidbody = this._oimoRigidbody;
 
-            if (oimoRigidbody) {
+            if (oimoRigidbody !== null) {
                 const oimoTransform = PhysicsSystem._helpTransform;
                 if (!transform) {
                     transform = this.gameObject.transform;
@@ -191,7 +191,7 @@ namespace egret3d.oimo {
          * 该刚体是否正在休眠。
          */
         public get isSleeping(): boolean {
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 return this._oimoRigidbody.isSleeping();
             }
 
@@ -200,12 +200,12 @@ namespace egret3d.oimo {
         /**
          * 该刚体此次休眠的累计时间。
          */
-        public get sleepTime(): number {
-            if (this._oimoRigidbody) {
+        public get sleepTime(): float {
+            if (this._oimoRigidbody !== null) {
                 return this._oimoRigidbody.getSleepTime();
             }
 
-            return 0;
+            return 0.0;
         }
         /**
          * 该刚体的类型。
@@ -220,7 +220,7 @@ namespace egret3d.oimo {
 
             this._values[ValueType.Type] = value;
 
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.setType(value);
             }
         }
@@ -228,10 +228,10 @@ namespace egret3d.oimo {
          * 该刚体的质量。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
-        public get mass(): number {
+        public get mass(): float {
             return this._values[ValueType.Mass];
         }
-        public set mass(value: number) {
+        public set mass(value: float) {
             if (value <= 0.0) {
                 value = 0.01;
             }
@@ -242,7 +242,7 @@ namespace egret3d.oimo {
 
             this._values[ValueType.Mass] = value;
 
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._updateMass(this._oimoRigidbody);
             }
         }
@@ -250,17 +250,17 @@ namespace egret3d.oimo {
          * 该刚体的重力缩放系数。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
-        public get gravityScale(): number {
+        public get gravityScale(): float {
             return this._values[ValueType.GravityScale];
         }
-        public set gravityScale(value: number) {
+        public set gravityScale(value: float) {
             if (this._values[ValueType.GravityScale] === value) {
                 return;
             }
 
             this._values[ValueType.GravityScale] = value;
 
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.setGravityScale(value);
             }
         }
@@ -268,17 +268,17 @@ namespace egret3d.oimo {
          * 该刚体的线性阻尼。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
-        public get linearDamping(): number {
+        public get linearDamping(): float {
             return this._values[ValueType.LinearDamping];
         }
-        public set linearDamping(value: number) {
+        public set linearDamping(value: float) {
             if (this._values[ValueType.LinearDamping] === value) {
                 return;
             }
 
             this._values[ValueType.LinearDamping] = value;
 
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.setLinearDamping(value);
             }
         }
@@ -286,17 +286,17 @@ namespace egret3d.oimo {
          * 该刚体的旋转阻尼。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT)
-        public get angularDamping(): number {
+        public get angularDamping(): float {
             return this._values[ValueType.AngularDamping];
         }
-        public set angularDamping(value: number) {
+        public set angularDamping(value: float) {
             if (this._values[ValueType.AngularDamping] === value) {
                 return;
             }
 
             this._values[ValueType.AngularDamping] = value;
 
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.setAngularDamping(value);
             }
         }
@@ -304,7 +304,7 @@ namespace egret3d.oimo {
          * 该刚体的线性速度。
          */
         public get linearVelocity(): Readonly<Vector3> {
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.getLinearVelocityTo(this._linearVelocity as any); //
             }
 
@@ -313,7 +313,7 @@ namespace egret3d.oimo {
         public set linearVelocity(value: Readonly<Vector3>) {
             this._linearVelocity.copy(value);
 
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.setLinearVelocity(this._linearVelocity as any); //
             }
         }
@@ -321,7 +321,7 @@ namespace egret3d.oimo {
          * 该刚体的角速度。
          */
         public get angularVelocity(): Readonly<Vector3> {
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.getAngularVelocityTo(this._angularVelocity as any); //
             }
 
@@ -330,7 +330,7 @@ namespace egret3d.oimo {
         public set angularVelocity(value: Readonly<Vector3>) {
             this._angularVelocity.copy(value);
 
-            if (this._oimoRigidbody) {
+            if (this._oimoRigidbody !== null) {
                 this._oimoRigidbody.setAngularVelocity(this._angularVelocity as any); //
             }
         }
@@ -338,7 +338,7 @@ namespace egret3d.oimo {
          * 该刚体的 OIMO 刚体。
          */
         public get oimoRigidbody(): OIMO.RigidBody {
-            if (!this._oimoRigidbody) {
+            if (this._oimoRigidbody === null) {
                 this._oimoRigidbody = this._createRigidbody();
                 this.syncTransform();
             }

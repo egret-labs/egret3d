@@ -38,13 +38,10 @@ namespace egret3d.oimo {
         @paper.serializedField
         public readonly rotationalLimitMotor: RotationalLimitMotor = RotationalLimitMotor.create();
 
-        @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
-        private readonly _axis: Vector3 = Vector3.DOWN.clone();
+        private readonly _axis: Vector3 = Vector3.create();
 
-        protected readonly _values: Float32Array = new Float32Array([
-            0, 0,
-        ]);
+        protected readonly _values: Float32Array = new Float32Array(4);
 
         protected _createJoint() {
             if (!this._connectedBody) {
@@ -52,14 +49,12 @@ namespace egret3d.oimo {
                 throw new Error();
             }
 
-            this._rigidbody = this.gameObject.getComponent(Rigidbody)!;
-
             const config = CylindricalJoint._config;
             config.allowCollision = this.collisionEnabled;
 
             if (this.useWorldSpace) {
                 config.init(
-                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
+                    this._rigidbody!.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     this._anchor as any, this._axis as any
                 );
             }
@@ -68,7 +63,7 @@ namespace egret3d.oimo {
                 const anchor = Vector3.create().applyMatrix(matrix, this._anchor).release();
                 const axis = Vector3.create().applyDirection(matrix, this._axis).release();
                 config.init(
-                    this._rigidbody.oimoRigidbody, this._connectedBody.oimoRigidbody,
+                    this._rigidbody!.oimoRigidbody, this._connectedBody.oimoRigidbody,
                     anchor as any, axis as any
                 );
             }
@@ -103,6 +98,21 @@ namespace egret3d.oimo {
 
             return joint;
         }
+
+        public initialize() {
+            super.initialize();
+
+            this._axis.copy(Vector3.UP);
+        }
+
+        public uninitialize() {
+            super.uninitialize();
+
+            this.translationalSpringDamper._clear();
+            this.translationalLimitMotor._clear();
+            this.rotationalSpringDamper._clear();
+            this.rotationalLimitMotor._clear();
+        }
         /**
          * 该关节的旋转轴。
          */
@@ -111,7 +121,7 @@ namespace egret3d.oimo {
             return this._axis;
         }
         public set axis(value: Readonly<Vector3>) {
-            if (!this._oimoJoint) {
+            if (this._oimoJoint === null) {
                 this._axis.normalize(value);
             }
             else if (DEBUG) {
