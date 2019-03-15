@@ -710,6 +710,6 @@ namespace egret3d {
          * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        public uploadSubIndexBuffer(subMeshIndex?: uint): void { }
+        public uploadSubIndexBuffer(subMeshIndex?: uint, offset?: uint, count?: uint): void { }
     }
 }

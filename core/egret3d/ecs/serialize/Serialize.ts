@@ -137,7 +137,8 @@ namespace paper {
             return true;
         }
 
-        if (source[KEY_SERIALIZE] !== null) {
+        // if (source[KEY_SERIALIZE] !== null) {
+        if (KEY_SERIALIZE in source) {
             return equal((source as ISerializable).serialize(), (target as ISerializable).serialize());
         }
 
@@ -347,7 +348,8 @@ namespace paper {
                     return target;
                 }
 
-                if (source[KEY_SERIALIZE] !== null) {
+                // if (source[KEY_SERIALIZE] !== null) {
+                if (KEY_SERIALIZE in source) {
                     return (source as paper.ISerializable).serialize();
                 }
 

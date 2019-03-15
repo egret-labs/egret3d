@@ -159,6 +159,10 @@ namespace egret3d.webgl {
                             const fogColor = fog.color;
                             webgl.uniform3f(location, fogColor.r, fogColor.g, fogColor.b);
                             break;
+
+                        case gltf.UniformSemantics._RESOLUTION:
+                            webgl.uniform2f(location, 1.0 / stage.viewport.w, 1.0 / stage.viewport.h);
+                            break;
                     }
                 }
             }
@@ -328,6 +332,14 @@ namespace egret3d.webgl {
 
                     case gltf.UniformSemantics._CLOCK:
                         webgl.uniform4fv(location, renderState.caches.clockBuffer);
+                        break;
+                    case gltf.UniformSemantics._ROTATION:
+                        webgl.uniform1f(location, renderer!.transform.euler.z);
+                        break;
+
+                    case gltf.UniformSemantics._SCALE2D:
+                        const scale = renderer!.transform.scale;
+                        webgl.uniform2f(location, scale.x, scale.y);
                         break;
 
                     case gltf.UniformSemantics._DIRECTIONSHADOWMAT:
@@ -628,6 +640,7 @@ namespace egret3d.webgl {
 
                     egret2DRenderer._draw();
                     renderState.clearState();
+                    this._cacheProgram = null;//防止2d的program污染3d的
                 }
             }
         }
@@ -698,7 +711,6 @@ namespace egret3d.webgl {
                 renderState.caches.egret2DOrderCount = 0;
                 renderState.caches.cullingMask = paper.Layer.Nothing;
                 renderState.caches.clockBuffer[0] = clock.time; // TODO more clock info.
-                this._cacheProgram = null;
 
                 // Render lights shadows. TODO 
                 // if (camera.cullingMask !== renderState.caches.cullingMask) {
@@ -726,6 +738,8 @@ namespace egret3d.webgl {
                         this.render(camera);
                     }
                 }
+
+                this._cacheProgram = null;//TODO
             }
             else { // Clear stage background to black.
                 this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.BLACK);
@@ -742,6 +756,27 @@ namespace egret3d.webgl {
             if (cameraAndLightCollecter.currentCamera !== camera) { //如果相等，没必要在更新摄像机
                 cameraAndLightCollecter.currentCamera = camera;
                 camera._update();
+
+                //TODO
+                if (camera.gameObject._beforeRenderBehaviorCount > 0) {
+                    let flag = false;
+                    const isEditor = paper.Application.playerMode === paper.PlayerMode.Editor;
+
+                    for (const component of camera.entity.components) {
+                        if (
+                            component.isActiveAndEnabled &&
+                            (component.constructor as paper.IComponentClass<paper.IComponent>).isBehaviour &&
+                            (!isEditor || (component.constructor as paper.IComponentClass<paper.Behaviour>).executeInEditMode) &&
+                            (component as paper.Behaviour).onBeforeRender
+                        ) {
+                            flag = !(component as paper.Behaviour).onBeforeRender!() || flag;
+                        }
+                    }
+
+                    if (flag) {
+                        return;
+                    }
+                }
                 //
                 let isPostprocessing = false;
                 const postprocessings = camera.entity.getComponents(CameraPostprocessing as any, true) as CameraPostprocessing[];
@@ -898,6 +933,7 @@ namespace egret3d.webgl {
                     this._cacheLight = null;
                     this._cacheMesh = null;
                     this._cacheMaterial = null;
+                    this._cacheMaterialVersion = -1;
                     this._cacheLightmapIndex = -1;
                     forceUpdate = true;
                 }
@@ -933,7 +969,7 @@ namespace egret3d.webgl {
                 // Draw.
                 if (primitive.indices !== undefined) {
                     const indexAccessor = mesh.getAccessor(primitive.indices);
-                    webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
+                    webgl.drawElements(drawMode, drawCall.count || indexAccessor.count, indexAccessor.componentType, 0);//TODO 暂时不支持交错
                 }
                 else {
                     webgl.drawArrays(drawMode, 0, vertexAccessor.count);

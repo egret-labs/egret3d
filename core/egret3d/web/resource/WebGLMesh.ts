@@ -134,7 +134,7 @@ namespace egret3d.webgl {
          * 更新该网格的索引缓存。
          * @param subMeshIndex 
          */
-        public uploadSubIndexBuffer(subMeshIndex: number = 0) {
+        public uploadSubIndexBuffer(subMeshIndex: number = 0, offset?: uint, count?: uint) {
             if (!this.vbo) {
                 return;
             }
@@ -144,7 +144,7 @@ namespace egret3d.webgl {
 
                 if (primitive.indices !== undefined) {
                     const accessor = this.getAccessor(primitive.indices);
-                    const subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
+                    const subIndexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
                     const ibo = this.ibos[subMeshIndex];
                     const webgl = WebGLRenderState.webgl!;
                     webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);

@@ -108,6 +108,10 @@ exports.UNIFORM_TEMPLATE["toneMappingWhitePoint"] = { semantic: "_TONE_MAPPING_W
 //
 exports.UNIFORM_TEMPLATE["logDepthBufFC"] = { semantic: "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */ };
 //
+exports.UNIFORM_TEMPLATE["rotation"] = { semantic: "_ROTATION" };
+exports.UNIFORM_TEMPLATE["scale2D"] = { semantic: "_SCALE2D" };
+
+//
 exports.UNIFORM_TEMPLATE["specular"] = { value: [0.066666, 0.066666, 0.066666] };
 exports.UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
 exports.UNIFORM_TEMPLATE["opacity"] = { value: 1.0 };
@@ -145,6 +149,9 @@ exports.UNIFORM_TEMPLATE["dashScale"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["dashSize"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["gapSize"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["totalSize"] = { value: 1 };
+
+
+exports.UNIFORM_TEMPLATE["center"] = { value: [0.5, 0.5] };
 //old
 // UNIFORM_TEMPLATE["lightMapOffset"] = { semantic: gltf.UniformSemanticType._LIGHTMAPOFFSET };
 // UNIFORM_TEMPLATE["lightMapUV"] = { semantic: gltf.UniformSemanticType._LIGHTMAPUV };

@@ -8,6 +8,11 @@ namespace egret3d {
          */
         source?: gltf.ImageSource | ArrayBufferView | null;
     }
+    export const enum FilterMode {
+        Point = 0,
+        Bilinear = 1,
+        Trilinear = 2
+    }
     /**
      * 基础纹理资源。
      * - 纹理资源的基类。
@@ -107,7 +112,7 @@ namespace egret3d {
                 sampler.magFilter = gltf.TextureFilter.Nearest;
             }
 
-            if (levels === undefined || levels === 1) {
+            if (levels === undefined || levels === 1) {//不生成mipmap
                 if (sampler.minFilter === gltf.TextureFilter.LinearMipMapLinear || sampler.minFilter === gltf.TextureFilter.NearestMipMapLinear) {
                     sampler.minFilter = gltf.TextureFilter.Linear;
                 }
@@ -159,17 +164,26 @@ namespace egret3d {
         /**
          * 
          */
-        public setLiner(value: boolean): this {
+        public setLiner(value: boolean | FilterMode): this {
             const sampler = this._sampler;
             const levels = this._gltfTexture.extensions.paper.levels;
 
             sampler.magFilter = value ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
+            const filterMode: FilterMode = typeof (value) === "boolean" ? (value ? FilterMode.Bilinear : FilterMode.Point) : value;
 
             if (levels === undefined || levels === 1) {
                 sampler.minFilter = value ? gltf.TextureFilter.Linear : gltf.TextureFilter.Nearest;
             }
             else {
-                sampler.minFilter = value ? gltf.TextureFilter.LinearMipMapLinear : gltf.TextureFilter.NearestMipmapNearest;
+                if (filterMode === FilterMode.Point) {
+                    sampler.minFilter = gltf.TextureFilter.NearestMipmapNearest;
+                }
+                else if (filterMode === FilterMode.Bilinear) {
+                    sampler.minFilter = gltf.TextureFilter.LinearMipmapNearest;
+                }
+                else if (filterMode === FilterMode.Trilinear) {
+                    sampler.minFilter = gltf.TextureFilter.LinearMipMapLinear;
+                }
             }
 
             this._formatLevelsAndSampler();

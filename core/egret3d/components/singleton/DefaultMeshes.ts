@@ -7,6 +7,8 @@ namespace egret3d {
         public static TRIANGLE: Mesh;
         public static QUAD: Mesh;
         public static QUAD_PARTICLE: Mesh;
+
+        public static SPRITE: Mesh;
         /**
          * 后期渲染使用的网格。
          * @internal
@@ -62,6 +64,13 @@ namespace egret3d {
                 mesh.name = "builtin/quad_particle.mesh.bin";
                 paper.Asset.register(mesh);
                 DefaultMeshes.QUAD_PARTICLE = mesh;
+            }
+
+            { // SPRITE.
+                const mesh = MeshBuilder.createPlane();
+                mesh.name = "builtin/sprite.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.SPRITE = mesh;
             }
 
             { // FULLSCREEN_QUAD.

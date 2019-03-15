@@ -680,8 +680,8 @@ var paper;
     }
     paper.requireComponent = requireComponent;
     /**
-     * 通过装饰器标记系统在哪些模式可以被执行。
-     * @param executeMode 系统可以被运行的模式。
+     *
+     * @param executeMode
      */
     function executeMode(executeMode) {
         return function (systemClass) {
@@ -1769,6 +1769,16 @@ var gltf;
     /**
      *
      */
+    var TextureDataType;
+    (function (TextureDataType) {
+        TextureDataType[TextureDataType["UNSIGNED_BYTE"] = 5121] = "UNSIGNED_BYTE";
+        TextureDataType[TextureDataType["UNSIGNED_SHORT_5_6_5"] = 33635] = "UNSIGNED_SHORT_5_6_5";
+        TextureDataType[TextureDataType["UNSIGNED_SHORT_4_4_4_4"] = 32819] = "UNSIGNED_SHORT_4_4_4_4";
+        TextureDataType[TextureDataType["UNSIGNED_SHORT_5_5_5_1"] = 32820] = "UNSIGNED_SHORT_5_5_5_1";
+    })(TextureDataType = gltf.TextureDataType || (gltf.TextureDataType = {}));
+    /**
+     *
+     */
     var TextureFilter;
     (function (TextureFilter) {
         TextureFilter[TextureFilter["Nearest"] = 9728] = "Nearest";
@@ -2241,9 +2251,8 @@ var egret3d;
             return false;
         };
         Vector3.prototype.normalize = function (input, defaultVector) {
-            if (input === void 0) { input = null; }
             if (defaultVector === void 0) { defaultVector = Vector3.FORWARD; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2259,29 +2268,8 @@ var egret3d;
             }
             return this;
         };
-        Vector3.prototype.orthoNormal = function (input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
-                input = this;
-            }
-            var x = input.x, y = input.y, z = input.z;
-            if (z > 0.0 ? z > 0.70710678118655 /* SQRT1_2 */ : z < 0.70710678118655 /* SQRT1_2 */) {
-                var k = 1.0 / Math.sqrt(y * y + z * z);
-                this.x = 0.0;
-                this.y = -z * k;
-                this.z = y * k;
-            }
-            else {
-                var k = 1.0 / Math.sqrt(x * x + y * y);
-                this.x = -y * k;
-                this.y = x * k;
-                this.z = 0.0;
-            }
-            return this;
-        };
         Vector3.prototype.negate = function (input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             this.x = -input.x;
@@ -2302,8 +2290,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.applyMatrix3 = function (matrix, input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2321,8 +2308,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.applyMatrix = function (matrix, input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2345,8 +2331,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.applyDirection = function (matrix, input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2357,8 +2342,7 @@ var egret3d;
             return this.normalize();
         };
         Vector3.prototype.applyQuaternion = function (quaternion, input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             var x = input.x, y = input.y, z = input.z;
@@ -2375,8 +2359,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.addScalar = function (scalar, input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             this.x = input.x + scalar;
@@ -2385,8 +2368,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.multiplyScalar = function (scalar, input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             this.x = scalar * input.x;
@@ -2395,8 +2377,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.add = function (vectorA, vectorB) {
-            if (vectorB === void 0) { vectorB = null; }
-            if (vectorB === null) {
+            if (!vectorB) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2406,8 +2387,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.subtract = function (vectorA, vectorB) {
-            if (vectorB === void 0) { vectorB = null; }
-            if (vectorB === null) {
+            if (!vectorB) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2417,8 +2397,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.multiply = function (vectorA, vectorB) {
-            if (vectorB === void 0) { vectorB = null; }
-            if (vectorB === null) {
+            if (!vectorB) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2428,8 +2407,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.divide = function (vectorA, vectorB) {
-            if (vectorB === void 0) { vectorB = null; }
-            if (vectorB === null) {
+            if (!vectorB) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2450,8 +2428,7 @@ var egret3d;
             return this.x * vector.x + this.y * vector.y + this.z * vector.z;
         };
         Vector3.prototype.cross = function (vectorA, vectorB) {
-            if (vectorB === void 0) { vectorB = null; }
-            if (vectorB === null) {
+            if (!vectorB) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -2489,38 +2466,8 @@ var egret3d;
             this.z = p1.z + (p2.z - p1.z) * p3;
             return this;
         };
-        Vector3.prototype.slerp = function (from, to, t) {
-            if (t === void 0) { t = 0.0; }
-            if (typeof to === "number") {
-                t = to;
-                to = from;
-                from = this;
-            }
-            var fromLength = from.length;
-            var toLength = to.length;
-            if (fromLength < 2.220446049250313e-16 /* EPSILON */ || toLength < 2.220446049250313e-16 /* EPSILON */) {
-                return this.lerp(from, to, t);
-            }
-            var dot = from.dot(to) / (fromLength * toLength);
-            if (dot > 1.0 - 2.220446049250313e-16 /* EPSILON */) {
-                return this.lerp(from, to, t);
-            }
-            var lerpedLength = egret3d.math.lerp(fromLength, toLength, t);
-            if (dot < -1.0 + 2.220446049250313e-16 /* EPSILON */) {
-                var axis = this.orthoNormal(from);
-                egret3d.helpMatrix3A.fromMatrix4(egret3d.helpMatrixA.fromAxis(axis, 3.141592653589793 /* PI */ * t));
-                this.multiplyScalar(1.0 / fromLength, from).applyMatrix3(egret3d.helpMatrix3A).multiplyScalar(lerpedLength);
-            }
-            else {
-                var axis = this.cross(from, to).normalize();
-                egret3d.helpMatrix3A.fromMatrix4(egret3d.helpMatrixA.fromAxis(axis, Math.acos(dot) * t));
-                this.multiplyScalar(1.0 / fromLength, from).applyMatrix3(egret3d.helpMatrix3A).multiplyScalar(lerpedLength);
-            }
-            return this;
-        };
         Vector3.prototype.min = function (valueA, valueB) {
-            if (valueB === void 0) { valueB = null; }
-            if (valueB === null) {
+            if (!valueB) {
                 valueB = valueA;
                 valueA = this;
             }
@@ -2530,8 +2477,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.max = function (valueA, valueB) {
-            if (valueB === void 0) { valueB = null; }
-            if (valueB === null) {
+            if (!valueB) {
                 valueB = valueA;
                 valueA = this;
             }
@@ -2541,8 +2487,7 @@ var egret3d;
             return this;
         };
         Vector3.prototype.clamp = function (min, max, input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             if (true && (min.x > max.x || min.y > max.y || min.z > max.z)) {
@@ -2555,38 +2500,33 @@ var egret3d;
             return this;
         };
         Vector3.prototype.reflect = function (normal, input) {
-            if (input === void 0) { input = null; }
-            if (input === null) {
+            if (!input) {
                 input = this;
             }
             return this.subtract(input, _helpVector3.multiplyScalar(2.0 * input.dot(normal), normal));
         };
         /**
-         * 获取一个向量和该向量的夹角。
-         * - 弧度制。
-         * @param vector 一个向量。
+         * 获取该向量和一个向量的夹角。（弧度制）
+         * - 假设向量长度均不为零。
          */
         Vector3.prototype.getAngle = function (vector) {
             var v = this.squaredLength * vector.squaredLength;
-            if (v < 2.220446049250313e-16 /* EPSILON */) {
-                if (true) {
-                    console.warn("Dividing by zero.");
-                }
-                return 0.0;
+            if (true && v === 0.0) {
+                console.warn("Dividing by zero.");
             }
             var theta = this.dot(vector) / Math.sqrt(v);
             // clamp, to handle numerical problems
             return Math.acos(Math.max(-1.0, Math.min(1.0, theta)));
         };
         /**
-         * 获取一点到该点的欧氏距离（直线距离）的平方。
+         * 获取两点的最近距离的平方。
          * @param point 一个点。
          */
         Vector3.prototype.getSquaredDistance = function (point) {
             return _helpVector3.subtract(point, this).squaredLength;
         };
         /**
-         * 获取一点到该点的欧氏距离（直线距离）。
+         * 获取两点的最近距离。
          * @param point 一个点。
          */
         Vector3.prototype.getDistance = function (point) {
@@ -2598,9 +2538,8 @@ var egret3d;
          * @param offset 数组偏移。
          */
         Vector3.prototype.toArray = function (array, offset) {
-            if (array === void 0) { array = null; }
             if (offset === void 0) { offset = 0; }
-            if (array === null) {
+            if (!array) {
                 array = [];
             }
             array[0 + offset] = this.x;
@@ -2907,9 +2846,6 @@ var paper;
                 component.dispatchEnabledEvent(true);
             }
         };
-        /**
-         * @internal
-         */
         Entity.prototype._removeComponent = function (component, groupComponent) {
             var componentClass = component.constructor;
             component.enabled = false;
@@ -3710,6 +3646,12 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    var FilterMode;
+    (function (FilterMode) {
+        FilterMode[FilterMode["Point"] = 0] = "Point";
+        FilterMode[FilterMode["Bilinear"] = 1] = "Bilinear";
+        FilterMode[FilterMode["Trilinear"] = 2] = "Trilinear";
+    })(FilterMode = egret3d.FilterMode || (egret3d.FilterMode = {}));
     /**
      * 基础纹理资源。
      * - 纹理资源的基类。
@@ -3844,11 +3786,20 @@ var egret3d;
             var sampler = this._sampler;
             var levels = this._gltfTexture.extensions.paper.levels;
             sampler.magFilter = value ? 9729 /* Linear */ : 9728 /* Nearest */;
+            var filterMode = typeof (value) === "boolean" ? (value ? 1 /* Bilinear */ : 0 /* Point */) : value;
             if (levels === undefined || levels === 1) {
                 sampler.minFilter = value ? 9729 /* Linear */ : 9728 /* Nearest */;
             }
             else {
-                sampler.minFilter = value ? 9987 /* LinearMipMapLinear */ : 9984 /* NearestMipmapNearest */;
+                if (filterMode === 0 /* Point */) {
+                    sampler.minFilter = 9984 /* NearestMipmapNearest */;
+                }
+                else if (filterMode === 1 /* Bilinear */) {
+                    sampler.minFilter = 9985 /* LinearMipmapNearest */;
+                }
+                else if (filterMode === 2 /* Trilinear */) {
+                    sampler.minFilter = 9987 /* LinearMipMapLinear */;
+                }
             }
             this._formatLevelsAndSampler();
             return this;
@@ -3984,7 +3935,7 @@ var egret3d;
         Texture.create = function (parametersOrName, config, buffers) {
             var name;
             var texture;
-            var source; // TODO ?!
+            var source;
             if (typeof parametersOrName === "string") {
                 name = parametersOrName;
             }
@@ -3999,7 +3950,7 @@ var egret3d;
             var gltfTexture = config.textures[0];
             var image = config.images[gltfTexture.source];
             var extension = gltfTexture.extensions.paper;
-            // const source = image.uri as gltf.ImageSource; // TODO ?!
+            // const source = image.uri as gltf.ImageSource;
             if (source) {
                 if (ArrayBuffer.isView(source)) {
                     config.buffers = [];
@@ -4063,29 +4014,7 @@ var egret3d;
          */
         Texture.prototype.uploadTexture = function (source) {
             this._sourceDirty = true;
-            var config = this.config;
-            var image = this._image;
-            var extension = config.textures[0].extensions.paper;
-            // const source = image.uri as gltf.ImageSource;
-            if (source) {
-                if (ArrayBuffer.isView(source)) {
-                    config.buffers = [];
-                    config.buffers[0] = { byteLength: source.byteLength };
-                    image.bufferView = 0;
-                }
-                else {
-                    image.uri = source; // 兼容
-                    extension.width = source.width;
-                    extension.height = source.height;
-                }
-            }
-            else {
-                image.uri = source;
-                if (source) {
-                    extension.width = source.width;
-                    extension.height = source.height;
-                }
-            }
+            this._image.uri = source;
             return this;
         };
         return Texture;
@@ -4632,9 +4561,6 @@ var egret3d;
             if (this.fragDepthEnabled) {
                 extensions += "#extension GL_EXT_frag_depth : enable \n";
             }
-            if (this.textureFloatEnabled) {
-                extensions += "#extension GL_EXT_frag_depth : enable \n";
-            }
             this.fragmentExtensions = extensions;
         };
         RenderState.prototype._getCommonDefines = function () {
@@ -4642,8 +4568,6 @@ var egret3d;
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
             this.commonDefines = defines;
-            defines = ""; // vertexDefines
-            this.vertexDefines = defines;
             defines = ""; // fragmentDefines
             defines += egret3d.ShaderChunk.encodings_pars_fragment + " \n";
             this.fragmentDefines = defines;
@@ -4721,23 +4645,13 @@ var egret3d;
                 caches.useLightMap = useLightMap;
             }
             if (caches.boneCount !== boneCount) {
-                if (boneCount > 0) {
+                if (boneCount) {
                     defines.addDefine("USE_SKINNING" /* USE_SKINNING */);
-                    if (this.textureFloatEnabled) {
-                        defines.addDefine("BONE_TEXTURE" /* BONE_TEXTURE */);
-                    }
-                    else {
-                        defines.addDefine("MAX_BONES" /* MAX_BONES */, boneCount);
-                    }
+                    defines.addDefine("MAX_BONES" /* MAX_BONES */, boneCount);
                 }
                 else {
                     defines.removeDefine("USE_SKINNING" /* USE_SKINNING */);
-                    if (this.textureFloatEnabled) {
-                        defines.addDefine("BONE_TEXTURE" /* BONE_TEXTURE */);
-                    }
-                    else {
-                        defines.removeDefine("MAX_BONES" /* MAX_BONES */);
-                    }
+                    defines.removeDefine("MAX_BONES" /* MAX_BONES */);
                 }
                 caches.boneCount = boneCount;
             }
@@ -6207,216 +6121,6 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     * 实体组。
-     * - 根据匹配器收集指定特征的实体。
-     */
-    var Group = (function () {
-        function Group(matcher) {
-            /**
-             * 标记改组是否为行为收集组，仅为兼容 Behaviour 生命周期。
-             * @internal
-             */
-            this.isBehaviour = false;
-            this._entitiesDirty = false;
-            this._behavioursDirty = false;
-            this._entityCount = 0;
-            this._matcher = null;
-            this._entities = [];
-            this._behaviours = [];
-            this._singleEntity = null;
-            if (matcher.extraOfComponents.length === 1 && matcher.extraOfComponents[0] === paper.Behaviour) {
-                this.isBehaviour = true;
-            }
-            this._matcher = matcher;
-            for (var _i = 0, _a = paper.Application.sceneManager.scenes; _i < _a.length; _i++) {
-                var scene = _a[_i];
-                for (var _b = 0, _c = scene.entities; _b < _c.length; _b++) {
-                    var entity = _c[_b];
-                    this.handleEvent(entity, null, true); // TODO context._entityClass
-                    // TODO extra component
-                }
-            }
-        }
-        /**
-         * @internal
-         */
-        Group.create = function (matcher) {
-            return new Group(matcher);
-        };
-        /**
-         * 该组是否包含指定实体。
-         * @param entity
-         */
-        Group.prototype.containsEntity = function (entity) {
-            return this._entities.indexOf(entity) >= 0;
-        };
-        /**
-         * @int
-         * @param entity
-         * @param component
-         * @param isAdd
-         */
-        Group.prototype.handleEvent = function (entity, component, isAdd) {
-            if (this.isBehaviour) {
-                var componentClass = component.constructor;
-                if (componentClass.isBehaviour) {
-                    var behaviours = this._behaviours;
-                    var index = behaviours.indexOf(component);
-                    if (isAdd) {
-                        if (index < 0) {
-                            behaviours[behaviours.length] = component;
-                            Group.onComponentEnabled.dispatch([this, component]);
-                        }
-                    }
-                    else if (index >= 0) {
-                        behaviours[index] = null;
-                        this._behavioursDirty = true;
-                        Group.onComponentDisabled.dispatch([this, component]);
-                    }
-                }
-            }
-            else {
-                var matcher = this._matcher;
-                var entities = this._entities;
-                var index = entities.indexOf(entity);
-                var componentClass = component ? component.constructor : null;
-                switch (matcher.matches(entity, componentClass, isAdd, index >= 0)) {
-                    case -2:
-                        Group.onComponentDisabled.dispatch([this, component]);
-                        break;
-                    case -1:
-                        entities[index] = null;
-                        this._entitiesDirty = true;
-                        this._entityCount--;
-                        this._singleEntity = null;
-                        Group.onEntityRemoved.dispatch([this, entity]);
-                        break;
-                    case 0:
-                        break;
-                    case 1:
-                        entities[entities.length] = entity;
-                        this._entityCount++;
-                        this._singleEntity = entity;
-                        Group.onEntityAdded.dispatch([this, entity]);
-                        break;
-                    case 2:
-                        Group.onComponentEnabled.dispatch([this, component]);
-                        break;
-                }
-            }
-        };
-        Object.defineProperty(Group.prototype, "entityCount", {
-            /**
-             * 该组匹配的实体总数。
-             */
-            get: function () {
-                return this._entities.length;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Group.prototype, "entities", {
-            /**
-             * 该组匹配的所有实体。
-             */
-            get: function () {
-                var entities = this._entities;
-                if (this._entitiesDirty) {
-                    paper.utility.filterArray(entities, null);
-                    this._entitiesDirty = false;
-                }
-                return entities;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Group.prototype, "behaviours", {
-            /**
-             * 该组匹配的所有行为组件。
-             * @internal
-             */
-            get: function () {
-                var behaviours = this._behaviours;
-                if (this._behavioursDirty) {
-                    paper.utility.filterArray(behaviours, null);
-                    this._behavioursDirty = false;
-                }
-                return this._behaviours;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Group.prototype, "matcher", {
-            /**
-             * 该组的匹配器。
-             */
-            get: function () {
-                return this._matcher;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Group.prototype, "singleEntity", {
-            /**
-             * 该组匹配的单例实体。
-             */
-            get: function () {
-                var entityCount = this._entityCount;
-                if (this._entitiesDirty) {
-                    paper.utility.filterArray(this._entities, null);
-                    this._entitiesDirty = false;
-                }
-                if (entityCount === 0) {
-                    return null;
-                }
-                else if (entityCount > 1) {
-                    throw new Error();
-                }
-                return this._singleEntity;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * @deprecated
-         */
-        Group.prototype.hasGameObject = function (entity) {
-            return this._entities.indexOf(entity) >= 0;
-        };
-        Object.defineProperty(Group.prototype, "gameObjects", {
-            /**
-             * @deprecated
-             */
-            get: function () {
-                return this.entities;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * 当实体添加到组时派发事件。
-         */
-        Group.onEntityAdded = new signals.Signal();
-        /**
-         * 当实体从组中移除时派发事件。
-         */
-        Group.onEntityRemoved = new signals.Signal();
-        /**
-         * 当组中实体添加非必要组件时派发事件。
-         */
-        Group.onComponentEnabled = new signals.Signal();
-        /**
-         * 当组中实体移除非必要组件时派发事件。
-         */
-        Group.onComponentDisabled = new signals.Signal();
-        return Group;
-    }());
-    paper.Group = Group;
-    __reflect(Group.prototype, "paper.Group");
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    /**
      *
      */
     var Context = (function () {
@@ -6550,6 +6254,183 @@ var paper;
     paper.Context = Context;
     __reflect(Context.prototype, "paper.Context");
 })(paper || (paper = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 颜色。
+     */
+    var Color = (function (_super) {
+        __extends(Color, _super);
+        /**
+         * 请使用 `egret3d.Color.create()` 创建实例。
+         * @see egret3d.Color.create()
+         */
+        function Color() {
+            var _this = _super.call(this) || this;
+            _this.r = 1.0;
+            _this.g = 1.0;
+            _this.b = 1.0;
+            _this.a = 1.0;
+            return _this;
+        }
+        /**
+         * 创建一个新的颜色对象实例
+         * @param r 红色通道
+         * @param g 绿色通道
+         * @param b 蓝色通道
+         * @param a 透明通道
+         */
+        Color.create = function (r, g, b, a) {
+            if (r === void 0) { r = 1.0; }
+            if (g === void 0) { g = 1.0; }
+            if (b === void 0) { b = 1.0; }
+            if (a === void 0) { a = 1.0; }
+            if (this._instances.length > 0) {
+                var instance = this._instances.pop().set(r, g, b, a);
+                instance._released = false;
+                return instance;
+            }
+            return new Color().set(r, g, b, a);
+        };
+        Color.prototype.serialize = function () {
+            return [this.r, this.g, this.b, this.a];
+        };
+        Color.prototype.deserialize = function (value) {
+            return this.fromArray(value);
+        };
+        Color.prototype.clone = function () {
+            return Color.create(this.r, this.g, this.b, this.a);
+        };
+        Color.prototype.copy = function (value) {
+            return this.set(value.r, value.g, value.b, value.a);
+        };
+        Color.prototype.set = function (r, g, b, a) {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            if (a !== undefined) {
+                this.a = a;
+            }
+            return this;
+        };
+        Color.prototype.fromArray = function (value, offset) {
+            if (offset === void 0) { offset = 0; }
+            this.r = value[0 + offset];
+            this.g = value[1 + offset];
+            this.b = value[2 + offset];
+            this.a = value[3 + offset];
+            return this;
+        };
+        Color.prototype.fromHex = function (hex) {
+            this.r = (hex >> 16 & 255) / 255;
+            this.g = (hex >> 8 & 255) / 255;
+            this.b = (hex & 255) / 255;
+            return this;
+        };
+        // public fromHSL(h: number, s: number, l: number): this {
+        //     // h,s,l ranges are in 0.0 - 1.0
+        //     h = _Math.euclideanModulo(h, 1);
+        //     s = floatClamp(s, 0, 1);
+        //     l = floatClamp(l, 0, 1);
+        //     if (s === 0) {
+        //         this.r = this.g = this.b = l;
+        //     } else {
+        //         var p = l <= 0.5 ? l * (1 + s) : l + s - (l * s);
+        //         var q = (2 * l) - p;
+        //         this.r = hue2rgb(q, p, h + 1 / 3);
+        //         this.g = hue2rgb(q, p, h);
+        //         this.b = hue2rgb(q, p, h - 1 / 3);
+        //     }
+        //     return this;
+        // }
+        Color.prototype.multiply = function (valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+            }
+            valueA = this;
+            this.r = valueA.r * valueB.r;
+            this.g = valueA.g * valueB.g;
+            this.b = valueA.b * valueB.b;
+            this.a = valueA.a * valueB.a;
+            return this;
+        };
+        Color.prototype.scale = function (value, source) {
+            if (!source) {
+                source = this;
+            }
+            this.r = source.r * value;
+            this.g = source.g * value;
+            this.b = source.b * value;
+            this.a = source.a * value;
+            return this;
+        };
+        Color.prototype.lerp = function (t, valueA, valueB) {
+            if (!valueB) {
+                valueB = valueA;
+                valueA = this;
+            }
+            this.r = t * (valueB.r - valueA.r) + valueA.r;
+            this.g = t * (valueB.g - valueA.g) + valueA.g;
+            this.b = t * (valueB.b - valueA.b) + valueA.b;
+            this.a = t * (valueB.a - valueA.a) + valueA.a;
+            return this;
+        };
+        /**
+         * 所有颜色通道均为零的颜色。
+         * - 请注意不要修改该值。
+         */
+        Color.ZERO = new Color().set(0.0, 0.0, 0.0, 0.0);
+        /**
+         * 黑色。
+         * - 请注意不要修改该值。
+         */
+        Color.BLACK = new Color().set(0.0, 0.0, 0.0, 1.0);
+        /**
+         * 灰色。
+         * - 请注意不要修改该值。
+         */
+        Color.GRAY = new Color().set(0.5, 0.5, 0.5, 1.0);
+        /**
+         * 白色。
+         * - 请注意不要修改该值。
+         */
+        Color.WHITE = new Color().set(1.0, 1.0, 1.0, 1.0);
+        /**
+         * 红色。
+         * - 请注意不要修改该值。
+         */
+        Color.RED = new Color().set(1.0, 0.0, 0.0, 1.0);
+        /**
+         * 绿色。
+         * - 请注意不要修改该值。
+         */
+        Color.GREEN = new Color().set(0.0, 1.0, 0.0, 1.0);
+        /**
+         * 蓝色。
+         * - 请注意不要修改该值。
+         */
+        Color.BLUE = new Color().set(0.0, 0.0, 1.0, 1.0);
+        /**
+         * 黄色。
+         * - 请注意不要修改该值。
+         */
+        Color.YELLOW = new Color().set(1.0, 1.0, 0.0, 1.0);
+        /**
+         * 靛蓝色。
+         * - 请注意不要修改该值。
+         */
+        Color.INDIGO = new Color().set(0.0, 1.0, 1.0, 1.0);
+        /**
+         * 紫色。
+         * - 请注意不要修改该值。
+         */
+        Color.PURPLE = new Color().set(1.0, 0.0, 1.0, 1.0);
+        Color._instances = [];
+        return Color;
+    }(paper.BaseRelease));
+    egret3d.Color = Color;
+    __reflect(Color.prototype, "egret3d.Color", ["egret3d.IColor", "paper.ICCS", "paper.ISerializable"]);
+})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     /**
@@ -7501,10 +7382,6 @@ var egret3d;
             _this._maximum = egret3d.Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
             _this._center = egret3d.Vector3.create();
             _this._size = egret3d.Vector3.create();
-            _this._center.onUpdateTarget = _this;
-            _this._center.onUpdate = _this._updateValue;
-            _this._size.onUpdateTarget = _this;
-            _this._size.onUpdate = _this._updateValue;
             return _this;
         }
         /**
@@ -7521,14 +7398,6 @@ var egret3d;
                 return instance;
             }
             return new Box().set(minimum, maximum);
-        };
-        Box.prototype._updateValue = function (value) {
-            if (value === this._center) {
-                this.center = this._center;
-            }
-            else if (value === this._size) {
-                this.size = this._size;
-            }
         };
         Box.prototype.serialize = function () {
             return [this._minimum.x, this._minimum.y, this._minimum.z, this._maximum.x, this._maximum.y, this._maximum.z];
@@ -7927,20 +7796,6 @@ var paper;
     /**
      * 基础系统。
      * - 全部系统的基类。
-     * - 生命周期的顺序如下：
-     * - onAwake();
-     * - onEnable();
-     * - onStart();
-     * - onComponentRemoved();
-     * - onEntityRemoved();
-     * - onEntityAdded();
-     * - onComponentAdded();
-     * - onTick();
-     * - onFrame();
-     * - onFrameCleanup();
-     * - onTickCleanup();
-     * - onDisable();
-     * - onDestroy();
      */
     var BaseSystem = (function () {
         /**
@@ -8090,9 +7945,7 @@ var paper;
             configurable: true
         });
         /**
-         * 该系统允许运行的模式。
-         * - 默认可以在所有模式运行。
-         * - 通过系统装饰器 `@paper.executeMode()` 来修改该值。
+         *
          */
         BaseSystem.executeMode = 1 /* Player */ | 2 /* DebugPlayer */ | 4 /* Editor */;
         return BaseSystem;
@@ -8358,7 +8211,7 @@ var egret3d;
     egret3d.Matrix3 = Matrix3;
     __reflect(Matrix3.prototype, "egret3d.Matrix3", ["paper.ICCS", "paper.ISerializable"]);
     /**
-     * @@interanl
+     * @deprecated
      */
     egret3d.helpMatrix3A = Matrix3.create();
 })(egret3d || (egret3d = {}));
@@ -8457,14 +8310,6 @@ var egret3d;
          * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
          */
         Const[Const["EPSILON"] = 2.220446049250313e-16] = "EPSILON";
-        /**
-         * The square root of 2.
-         */
-        Const[Const["SQRT_2"] = 1.4142135623731] = "SQRT_2";
-        /**
-         * The square root of 0.5, or, equivalently, one divided by the square root of 2.
-         */
-        Const[Const["SQRT1_2"] = 0.70710678118655] = "SQRT1_2";
     })(Const = egret3d.Const || (egret3d.Const = {}));
     function sign(value) {
         if (value === 0 || value !== value) {
@@ -8614,6 +8459,43 @@ var egret3d;
         return valueA.center.getSquaredDistance(valueB.center) <= (radiusSum * radiusSum);
     }
     egret3d.sphereIntersectsSphere = sphereIntersectsSphere;
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     */
+    var CameraPostprocessing = (function (_super) {
+        __extends(CameraPostprocessing, _super);
+        function CameraPostprocessing() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        CameraPostprocessing.prototype.blit = function (src, material, dest) {
+            if (material === void 0) { material = null; }
+            if (dest === void 0) { dest = null; }
+            if (!material) {
+                material = egret3d.DefaultMaterials.COPY;
+                material.setTexture(src);
+            }
+            var camerasAndLights = egret3d.cameraAndLightCollecter;
+            var saveCamera = camerasAndLights.currentCamera; // TODO
+            //
+            var camera = egret3d.cameraAndLightCollecter.postprocessingCamera;
+            egret3d.renderState.updateRenderTarget(dest);
+            egret3d.renderState.updateViewport(camera.viewport, dest);
+            egret3d.renderState.clearBuffer(saveCamera.bufferMask, saveCamera.backgroundColor);
+            //
+            camerasAndLights.currentCamera = camera; // TODO
+            egret3d.renderState.draw(egret3d.drawCallCollecter.postprocessing, material);
+            camerasAndLights.currentCamera = saveCamera; // TODO
+        };
+        CameraPostprocessing = __decorate([
+            paper.abstract
+        ], CameraPostprocessing);
+        return CameraPostprocessing;
+    }(paper.BaseComponent));
+    egret3d.CameraPostprocessing = CameraPostprocessing;
+    __reflect(CameraPostprocessing.prototype, "egret3d.CameraPostprocessing");
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -9289,9 +9171,6 @@ var paper;
             }
             _super.prototype._addComponent.call(this, component, config);
         };
-        /**
-         * @internal
-         */
         GameObject.prototype._removeComponent = function (component, groupComponent) {
             _super.prototype._removeComponent.call(this, component, groupComponent);
             if (component === this.transform) {
@@ -9706,183 +9585,216 @@ var egret3d;
     egret3d.Shader = Shader;
     __reflect(Shader.prototype, "egret3d.Shader");
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
+var paper;
+(function (paper) {
     /**
-     * 颜色。
+     * 实体组。
+     * - 根据匹配器收集指定特征的实体。
      */
-    var Color = (function (_super) {
-        __extends(Color, _super);
-        /**
-         * 请使用 `egret3d.Color.create()` 创建实例。
-         * @see egret3d.Color.create()
-         */
-        function Color() {
-            var _this = _super.call(this) || this;
-            _this.r = 1.0;
-            _this.g = 1.0;
-            _this.b = 1.0;
-            _this.a = 1.0;
-            return _this;
+    var Group = (function () {
+        function Group(matcher) {
+            /**
+             * 标记改组是否为行为收集组，仅为兼容 Behaviour 生命周期。
+             * @internal
+             */
+            this.isBehaviour = false;
+            this._entitiesDirty = false;
+            this._behavioursDirty = false;
+            this._entityCount = 0;
+            this._matcher = null;
+            this._entities = [];
+            this._behaviours = [];
+            this._singleEntity = null;
+            if (matcher.extraOfComponents.length === 1 && matcher.extraOfComponents[0] === paper.Behaviour) {
+                this.isBehaviour = true;
+            }
+            this._matcher = matcher;
+            for (var _i = 0, _a = paper.Application.sceneManager.scenes; _i < _a.length; _i++) {
+                var scene = _a[_i];
+                for (var _b = 0, _c = scene.entities; _b < _c.length; _b++) {
+                    var entity = _c[_b];
+                    this.handleEvent(entity, null, true); // TODO context._entityClass
+                    // TODO extra component
+                }
+            }
         }
         /**
-         * 创建一个新的颜色对象实例
-         * @param r 红色通道
-         * @param g 绿色通道
-         * @param b 蓝色通道
-         * @param a 透明通道
+         * @internal
          */
-        Color.create = function (r, g, b, a) {
-            if (r === void 0) { r = 1.0; }
-            if (g === void 0) { g = 1.0; }
-            if (b === void 0) { b = 1.0; }
-            if (a === void 0) { a = 1.0; }
-            if (this._instances.length > 0) {
-                var instance = this._instances.pop().set(r, g, b, a);
-                instance._released = false;
-                return instance;
+        Group.create = function (matcher) {
+            return new Group(matcher);
+        };
+        /**
+         * 该组是否包含指定实体。
+         * @param entity
+         */
+        Group.prototype.containsEntity = function (entity) {
+            return this._entities.indexOf(entity) >= 0;
+        };
+        /**
+         * @int
+         * @param entity
+         * @param component
+         * @param isAdd
+         */
+        Group.prototype.handleEvent = function (entity, component, isAdd) {
+            if (this.isBehaviour) {
+                var componentClass = component.constructor;
+                if (componentClass.isBehaviour) {
+                    var behaviours = this._behaviours;
+                    var index = behaviours.indexOf(component);
+                    if (isAdd) {
+                        if (index < 0) {
+                            behaviours[behaviours.length] = component;
+                            Group.onComponentEnabled.dispatch([this, component]);
+                        }
+                    }
+                    else if (index >= 0) {
+                        behaviours[index] = null;
+                        this._behavioursDirty = true;
+                        Group.onComponentDisabled.dispatch([this, component]);
+                    }
+                }
             }
-            return new Color().set(r, g, b, a);
-        };
-        Color.prototype.serialize = function () {
-            return [this.r, this.g, this.b, this.a];
-        };
-        Color.prototype.deserialize = function (value) {
-            return this.fromArray(value);
-        };
-        Color.prototype.clone = function () {
-            return Color.create(this.r, this.g, this.b, this.a);
-        };
-        Color.prototype.copy = function (value) {
-            return this.set(value.r, value.g, value.b, value.a);
-        };
-        Color.prototype.set = function (r, g, b, a) {
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            if (a !== undefined) {
-                this.a = a;
+            else {
+                var matcher = this._matcher;
+                var entities = this._entities;
+                var index = entities.indexOf(entity);
+                var componentClass = component ? component.constructor : null;
+                switch (matcher.matches(entity, componentClass, isAdd, index >= 0)) {
+                    case -2:
+                        Group.onComponentDisabled.dispatch([this, component]);
+                        break;
+                    case -1:
+                        entities[index] = null;
+                        this._entitiesDirty = true;
+                        this._entityCount--;
+                        this._singleEntity = null;
+                        Group.onEntityRemoved.dispatch([this, entity]);
+                        break;
+                    case 0:
+                        break;
+                    case 1:
+                        entities[entities.length] = entity;
+                        this._entityCount++;
+                        this._singleEntity = entity;
+                        Group.onEntityAdded.dispatch([this, entity]);
+                        break;
+                    case 2:
+                        Group.onComponentEnabled.dispatch([this, component]);
+                        break;
+                }
             }
-            return this;
         };
-        Color.prototype.fromArray = function (value, offset) {
-            if (offset === void 0) { offset = 0; }
-            this.r = value[0 + offset];
-            this.g = value[1 + offset];
-            this.b = value[2 + offset];
-            this.a = value[3 + offset];
-            return this;
+        Object.defineProperty(Group.prototype, "entityCount", {
+            /**
+             * 该组匹配的实体总数。
+             */
+            get: function () {
+                return this._entities.length;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Group.prototype, "entities", {
+            /**
+             * 该组匹配的所有实体。
+             */
+            get: function () {
+                var entities = this._entities;
+                if (this._entitiesDirty) {
+                    paper.utility.filterArray(entities, null);
+                    this._entitiesDirty = false;
+                }
+                return entities;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Group.prototype, "behaviours", {
+            /**
+             * 该组匹配的所有行为组件。
+             * @internal
+             */
+            get: function () {
+                var behaviours = this._behaviours;
+                if (this._behavioursDirty) {
+                    paper.utility.filterArray(behaviours, null);
+                    this._behavioursDirty = false;
+                }
+                return this._behaviours;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Group.prototype, "matcher", {
+            /**
+             * 该组的匹配器。
+             */
+            get: function () {
+                return this._matcher;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Group.prototype, "singleEntity", {
+            /**
+             * 该组匹配的单例实体。
+             */
+            get: function () {
+                var entityCount = this._entityCount;
+                if (this._entitiesDirty) {
+                    paper.utility.filterArray(this._entities, null);
+                    this._entitiesDirty = false;
+                }
+                if (entityCount === 0) {
+                    return null;
+                }
+                else if (entityCount > 1) {
+                    throw new Error();
+                }
+                return this._singleEntity;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * @deprecated
+         */
+        Group.prototype.hasGameObject = function (entity) {
+            return this._entities.indexOf(entity) >= 0;
         };
-        Color.prototype.fromHex = function (hex) {
-            this.r = (hex >> 16 & 255) / 255;
-            this.g = (hex >> 8 & 255) / 255;
-            this.b = (hex & 255) / 255;
-            return this;
-        };
-        // public fromHSL(h: number, s: number, l: number): this {
-        //     // h,s,l ranges are in 0.0 - 1.0
-        //     h = _Math.euclideanModulo(h, 1);
-        //     s = floatClamp(s, 0, 1);
-        //     l = floatClamp(l, 0, 1);
-        //     if (s === 0) {
-        //         this.r = this.g = this.b = l;
-        //     } else {
-        //         var p = l <= 0.5 ? l * (1 + s) : l + s - (l * s);
-        //         var q = (2 * l) - p;
-        //         this.r = hue2rgb(q, p, h + 1 / 3);
-        //         this.g = hue2rgb(q, p, h);
-        //         this.b = hue2rgb(q, p, h - 1 / 3);
-        //     }
-        //     return this;
-        // }
-        Color.prototype.multiply = function (valueA, valueB) {
-            if (!valueB) {
-                valueB = valueA;
-            }
-            valueA = this;
-            this.r = valueA.r * valueB.r;
-            this.g = valueA.g * valueB.g;
-            this.b = valueA.b * valueB.b;
-            this.a = valueA.a * valueB.a;
-            return this;
-        };
-        Color.prototype.scale = function (value, source) {
-            if (!source) {
-                source = this;
-            }
-            this.r = source.r * value;
-            this.g = source.g * value;
-            this.b = source.b * value;
-            this.a = source.a * value;
-            return this;
-        };
-        Color.prototype.lerp = function (t, valueA, valueB) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
-            }
-            this.r = t * (valueB.r - valueA.r) + valueA.r;
-            this.g = t * (valueB.g - valueA.g) + valueA.g;
-            this.b = t * (valueB.b - valueA.b) + valueA.b;
-            this.a = t * (valueB.a - valueA.a) + valueA.a;
-            return this;
-        };
+        Object.defineProperty(Group.prototype, "gameObjects", {
+            /**
+             * @deprecated
+             */
+            get: function () {
+                return this.entities;
+            },
+            enumerable: true,
+            configurable: true
+        });
         /**
-         * 所有颜色通道均为零的颜色。
-         * - 请注意不要修改该值。
+         * 当实体添加到组时派发事件。
          */
-        Color.ZERO = new Color().set(0.0, 0.0, 0.0, 0.0);
+        Group.onEntityAdded = new signals.Signal();
         /**
-         * 黑色。
-         * - 请注意不要修改该值。
+         * 当实体从组中移除时派发事件。
          */
-        Color.BLACK = new Color().set(0.0, 0.0, 0.0, 1.0);
+        Group.onEntityRemoved = new signals.Signal();
         /**
-         * 灰色。
-         * - 请注意不要修改该值。
+         * 当组中实体添加非必要组件时派发事件。
          */
-        Color.GRAY = new Color().set(0.5, 0.5, 0.5, 1.0);
+        Group.onComponentEnabled = new signals.Signal();
         /**
-         * 白色。
-         * - 请注意不要修改该值。
+         * 当组中实体移除非必要组件时派发事件。
          */
-        Color.WHITE = new Color().set(1.0, 1.0, 1.0, 1.0);
-        /**
-         * 红色。
-         * - 请注意不要修改该值。
-         */
-        Color.RED = new Color().set(1.0, 0.0, 0.0, 1.0);
-        /**
-         * 绿色。
-         * - 请注意不要修改该值。
-         */
-        Color.GREEN = new Color().set(0.0, 1.0, 0.0, 1.0);
-        /**
-         * 蓝色。
-         * - 请注意不要修改该值。
-         */
-        Color.BLUE = new Color().set(0.0, 0.0, 1.0, 1.0);
-        /**
-         * 黄色。
-         * - 请注意不要修改该值。
-         */
-        Color.YELLOW = new Color().set(1.0, 1.0, 0.0, 1.0);
-        /**
-         * 靛蓝色。
-         * - 请注意不要修改该值。
-         */
-        Color.INDIGO = new Color().set(0.0, 1.0, 1.0, 1.0);
-        /**
-         * 紫色。
-         * - 请注意不要修改该值。
-         */
-        Color.PURPLE = new Color().set(1.0, 0.0, 1.0, 1.0);
-        Color._instances = [];
-        return Color;
-    }(paper.BaseRelease));
-    egret3d.Color = Color;
-    __reflect(Color.prototype, "egret3d.Color", ["egret3d.IColor", "paper.ICCS", "paper.ISerializable"]);
-})(egret3d || (egret3d = {}));
+        Group.onComponentDisabled = new signals.Signal();
+        return Group;
+    }());
+    paper.Group = Group;
+    __reflect(Group.prototype, "paper.Group");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -10598,7 +10510,7 @@ var egret3d;
          * 当修改该网格的顶点索引后，调用此方法来更新顶点索引的缓冲区。
          * @param subMeshIndex 子网格索引。（默认第一个子网格）
          */
-        Mesh.prototype.uploadSubIndexBuffer = function (subMeshIndex) { };
+        Mesh.prototype.uploadSubIndexBuffer = function (subMeshIndex, offset, count) { };
         return Mesh;
     }(egret3d.GLTFAsset));
     egret3d.Mesh = Mesh;
@@ -10671,7 +10583,7 @@ var egret3d;
                     return;
                 }
                 var webglVersions = /^WebGL\ ([0-9])/.exec(webgl.getParameter(webgl.VERSION));
-                this.version = webglVersions ? parseFloat(webglVersions[1]).toString() : "1";
+                this.version = webglVersions ? parseFloat(webglVersions[1]) : 1.0;
                 // use dfdx and dfdy must enable OES_standard_derivatives
                 this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
                 this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
@@ -10686,7 +10598,7 @@ var egret3d;
                 this.maxCubemapSize = webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE);
                 this.maxRenderBufferize = webgl.getParameter(webgl.MAX_RENDERBUFFER_SIZE);
                 this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
-                this.maxBoneCount = this.textureFloatEnabled ? 1024 : Math.floor((this.maxVertexUniformVectors - 20) / 4);
+                this.maxBoneCount = Math.floor((this.maxVertexUniformVectors - 20) / 4); // TODO
                 this.maxAnisotropy = (this.textureFilterAnisotropic !== null) ? webgl.getParameter(this.textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
                 //
                 this._getCommonExtensions();
@@ -10797,45 +10709,6 @@ var egret3d;
         egret3d.RenderState = WebGLRenderState;
     })(webgl = egret3d.webgl || (egret3d.webgl = {}));
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    /**
-     * 已丢失或不支持的组件数据备份。
-     */
-    var MissingComponent = (function (_super) {
-        __extends(MissingComponent, _super);
-        function MissingComponent() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            /**
-             * 已丢失或不支持的组件数据。
-             */
-            _this.missingObject = null;
-            return _this;
-        }
-        Object.defineProperty(MissingComponent.prototype, "missingClass", {
-            /**
-             * 丢失的组件类名
-             */
-            get: function () {
-                if (this.missingObject) {
-                    return this.missingObject.class;
-                }
-                return "";
-            },
-            enumerable: true,
-            configurable: true
-        });
-        __decorate([
-            paper.editor.property("TEXT" /* TEXT */, { readonly: true })
-        ], MissingComponent.prototype, "missingClass", null);
-        __decorate([
-            paper.serializedField
-        ], MissingComponent.prototype, "missingObject", void 0);
-        return MissingComponent;
-    }(paper.Component));
-    paper.MissingComponent = MissingComponent;
-    __reflect(MissingComponent.prototype, "paper.MissingComponent");
-})(paper || (paper = {}));
 var paper;
 (function (paper) {
     var utility;
@@ -12294,7 +12167,8 @@ var paper;
             }
             return true;
         }
-        if (source[KEY_SERIALIZE] !== null) {
+        // if (source[KEY_SERIALIZE] !== null) {
+        if (KEY_SERIALIZE in source) {
             return equal(source.serialize(), target.serialize());
         }
         if (source instanceof paper.BaseObject) {
@@ -12462,7 +12336,8 @@ var paper;
                     }
                     return target;
                 }
-                if (source[KEY_SERIALIZE] !== null) {
+                // if (source[KEY_SERIALIZE] !== null) {
+                if (KEY_SERIALIZE in source) {
                     return source.serialize();
                 }
                 if (source instanceof paper.BaseObject) {
@@ -12664,7 +12539,6 @@ var egret3d;
         ShaderDefine["FLAT_SHADED"] = "FLAT_SHADED";
         //
         ShaderDefine["MAX_BONES"] = "MAX_BONES";
-        ShaderDefine["BONE_TEXTURE"] = "BONE_TEXTURE";
         //
         ShaderDefine["NUM_DIR_LIGHTS"] = "NUM_DIR_LIGHTS";
         ShaderDefine["NUM_POINT_LIGHTS"] = "NUM_POINT_LIGHTS";
@@ -12724,6 +12598,9 @@ var egret3d;
         ShaderUniformName["EmissiveIntensity"] = "emissiveIntensity";
         ShaderUniformName["FlipEnvMap"] = "flipEnvMap";
         ShaderUniformName["MaxMipLevel"] = "maxMipLevel";
+        ShaderUniformName["Rotation"] = "rotation";
+        ShaderUniformName["Scale2D"] = "scale2D";
+        ShaderUniformName["Center"] = "center";
     })(ShaderUniformName = egret3d.ShaderUniformName || (egret3d.ShaderUniformName = {}));
     /**
      * Shader宏定义排序。
@@ -12895,6 +12772,7 @@ var egret3d;
         "fogFar": "_FOG_FAR" /* _FOG_FAR */,
         "toneMappingExposure": "_TONE_MAPPING_EXPOSURE" /* _TONE_MAPPING_EXPOSURE */,
         "toneMappingWhitePoint": "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */,
+        "resolution": "_RESOLUTION" /* _RESOLUTION */,
     };
     /**
      * 内置提供的场景 Uniform。
@@ -12940,8 +12818,6 @@ var egret3d;
         "modelViewProjectionMatrix": "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */,
         "normalMatrix": "MODELVIEWINVERSE" /* MODELVIEWINVERSE */,
         "boneMatrices[0]": "JOINTMATRIX" /* JOINTMATRIX */,
-        "boneTexture": "_BONETEXTURE" /* _BONETEXTURE */,
-        "boneTextureSize": "_BONETEXTURESIZE" /* _BONETEXTURESIZE */,
         "clock": "_CLOCK" /* _CLOCK */,
         "lightMap": "_LIGHTMAPTEX" /* _LIGHTMAPTEX */,
         "lightMapScaleOffset": "_LIGHTMAP_SCALE_OFFSET" /* _LIGHTMAP_SCALE_OFFSET */,
@@ -12951,6 +12827,8 @@ var egret3d;
         "directionalShadowMap[0]": "_DIRECTIONSHADOWMAP" /* _DIRECTIONSHADOWMAP */,
         "pointShadowMap[0]": "_POINTSHADOWMAP" /* _POINTSHADOWMAP */,
         "spotShadowMap[0]": "_SPOTSHADOWMAP" /* _SPOTSHADOWMAP */,
+        "rotation": "_ROTATION" /* _ROTATION */,
+        "scale2D": "_SCALE2D" /* _SCALE2D */,
     };
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -14144,6 +14022,12 @@ var egret3d;
                 DefaultMeshes_1.QUAD_PARTICLE = mesh;
             }
             {
+                var mesh = egret3d.MeshBuilder.createPlane();
+                mesh.name = "builtin/sprite.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes_1.SPRITE = mesh;
+            }
+            {
                 var mesh = egret3d.MeshBuilder.createPlane(2.0, 2.0);
                 mesh.name = "builtin/fullscreen_quad.mesh.bin";
                 paper.Asset.register(mesh);
@@ -14436,6 +14320,8 @@ var egret3d;
             DefaultShaders_1.SHADOW = this._createShader("builtin/shadow.shader.json", egret3d.ShaderLib.shadow, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders_1.COPY = this._createShader("builtin/copy.shader.json", egret3d.ShaderLib.copy, 2000 /* Geometry */, helpStates);
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders_1.FXAA = this._createShader("builtin/fxaa.shader.json", egret3d.ShaderLib.fxaa, 2000 /* Geometry */, helpStates);
             // deprecated
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders_1.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates);
@@ -14532,6 +14418,7 @@ var egret3d;
                 .addDefine("FLIP_SIDED" /* FLIP_SIDED */).addDefine("USE_SHADOWMAP" /* USE_SHADOWMAP */)
                 .setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
             DefaultMaterials_1.COPY = this._createMaterial("builtin/copy.mat.json", egret3d.DefaultShaders.COPY);
+            DefaultMaterials_1.FXAA = this._createMaterial("builtin/fxaa.mat.json", egret3d.DefaultShaders.FXAA);
         };
         DefaultMaterials = DefaultMaterials_1 = __decorate([
             paper.singleton
@@ -15916,6 +15803,36 @@ var egret3d;
     egret3d.SphereCollider = SphereCollider;
     __reflect(SphereCollider.prototype, "egret3d.SphereCollider", ["egret3d.ISphereCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
 })(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 圆柱（锥）体碰撞组件。
+     * - 与 Y 轴对齐。
+     */
+    var CylinderCollider = (function (_super) {
+        __extends(CylinderCollider, _super);
+        function CylinderCollider() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.colliderType = egret3d.ColliderType.Cylinder;
+            _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
+            return _this;
+        }
+        CylinderCollider.prototype.raycast = function (ray, raycastInfo) {
+            if (raycastInfo === void 0) { raycastInfo = null; }
+            return egret3d._colliderRaycast(this, this.cylinder, null, ray, raycastInfo, true);
+        };
+        __decorate([
+            paper.editor.property("NESTED" /* NESTED */),
+            paper.serializedField
+        ], CylinderCollider.prototype, "cylinder", void 0);
+        CylinderCollider = __decorate([
+            paper.allowMultiple
+        ], CylinderCollider);
+        return CylinderCollider;
+    }(paper.BaseComponent));
+    egret3d.CylinderCollider = CylinderCollider;
+    __reflect(CylinderCollider.prototype, "egret3d.CylinderCollider", ["egret3d.ICylinderCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
+})(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
     var _indices = [];
@@ -16189,36 +16106,6 @@ var paper;
     paper.Matcher = Matcher;
     __reflect(Matcher.prototype, "paper.Matcher", ["paper.IAllOfMatcher", "paper.IAnyOfMatcher", "paper.INoneOfMatcher", "paper.ICompoundMatcher", "paper.IMatcher"]);
 })(paper || (paper = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 胶囊体碰撞组件。
-     * - 与 Y 轴对齐。
-     */
-    var CapsuleCollider = (function (_super) {
-        __extends(CapsuleCollider, _super);
-        function CapsuleCollider() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.colliderType = egret3d.ColliderType.Capsule;
-            _this.capsule = egret3d.Capsule.create(egret3d.Vector3.ZERO, 0.25, 0.5);
-            return _this;
-        }
-        CapsuleCollider.prototype.raycast = function (ray, raycastInfo) {
-            if (raycastInfo === void 0) { raycastInfo = null; }
-            return egret3d._colliderRaycast(this, this.capsule, null, ray, raycastInfo, true);
-        };
-        __decorate([
-            paper.editor.property("NESTED" /* NESTED */),
-            paper.serializedField
-        ], CapsuleCollider.prototype, "capsule", void 0);
-        CapsuleCollider = __decorate([
-            paper.allowMultiple
-        ], CapsuleCollider);
-        return CapsuleCollider;
-    }(paper.BaseComponent));
-    egret3d.CapsuleCollider = CapsuleCollider;
-    __reflect(CapsuleCollider.prototype, "egret3d.CapsuleCollider", ["egret3d.ICapsuleCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
-})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -17384,10 +17271,10 @@ var egret3d;
              */
             get: function () {
                 if (!this._readRenderTarget) {
-                    this._readRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h }).setRepeat(false).retain();
+                    this._readRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h }).setMipmap(false).setLiner(true).setRepeat(false).retain();
                 }
                 if (!this._writeRenderTarget) {
-                    this._writeRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h }).setRepeat(false).retain();
+                    this._writeRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h }).setMipmap(false).setLiner(true).setRepeat(false).retain();
                 }
                 return this._readRenderTarget;
             },
@@ -17521,43 +17408,100 @@ var egret3d;
     egret3d.Camera = Camera;
     __reflect(Camera.prototype, "egret3d.Camera", ["egret3d.ITransformObserver"]);
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
+var paper;
+(function (paper) {
     /**
-     * @beta 这是一个试验性质的 API，有可能会被删除或修改。
+     *
      */
-    var CameraPostprocessing = (function (_super) {
-        __extends(CameraPostprocessing, _super);
-        function CameraPostprocessing() {
-            return _super !== null && _super.apply(this, arguments) || this;
+    var Collector = (function () {
+        function Collector(group) {
+            this.addedEntities = [];
+            this.removedEntities = [];
+            this.addedComponentes = [];
+            this.removedComponentes = [];
+            this._group = group;
+            paper.Group.onEntityAdded.add(this._onEntityAdded, this);
+            paper.Group.onEntityRemoved.add(this._onEntityRemoved, this);
+            paper.Group.onComponentEnabled.add(this._onComponentEnabled, this);
+            paper.Group.onComponentDisabled.add(this._onComponentDisabled, this);
         }
-        CameraPostprocessing.prototype.blit = function (src, material, dest) {
-            if (material === void 0) { material = null; }
-            if (dest === void 0) { dest = null; }
-            if (!material) {
-                material = egret3d.DefaultMaterials.COPY;
-                material.setTexture(src);
-            }
-            var camerasAndLights = egret3d.cameraAndLightCollecter;
-            var saveCamera = camerasAndLights.currentCamera; // TODO
-            //
-            var camera = egret3d.cameraAndLightCollecter.postprocessingCamera;
-            egret3d.renderState.updateRenderTarget(dest);
-            egret3d.renderState.updateViewport(camera.viewport, dest);
-            egret3d.renderState.clearBuffer(saveCamera.bufferMask, saveCamera.backgroundColor);
-            //
-            camerasAndLights.currentCamera = camera; // TODO
-            egret3d.renderState.draw(egret3d.drawCallCollecter.postprocessing, material);
-            camerasAndLights.currentCamera = saveCamera; // TODO
+        /**
+         * @internal
+         */
+        Collector.create = function (group) {
+            var collector = new Collector(group);
+            return collector;
         };
-        CameraPostprocessing = __decorate([
-            paper.abstract
-        ], CameraPostprocessing);
-        return CameraPostprocessing;
-    }(paper.BaseComponent));
-    egret3d.CameraPostprocessing = CameraPostprocessing;
-    __reflect(CameraPostprocessing.prototype, "egret3d.CameraPostprocessing");
-})(egret3d || (egret3d = {}));
+        Collector.prototype._onEntityAdded = function (_a) {
+            var group = _a[0], entity = _a[1];
+            if (this._group !== group) {
+                return;
+            }
+            var index = this.removedEntities.indexOf(entity);
+            if (index >= 0) {
+                this.removedEntities[index] = null;
+            }
+            this.addedEntities.push(entity);
+        };
+        Collector.prototype._onEntityRemoved = function (_a) {
+            var group = _a[0], entity = _a[1];
+            if (this._group !== group) {
+                return;
+            }
+            var index = this.addedEntities.indexOf(entity);
+            if (index >= 0) {
+                this.addedEntities[index] = null;
+            }
+            this.removedEntities.push(entity);
+        };
+        Collector.prototype._onComponentEnabled = function (_a) {
+            var group = _a[0], component = _a[1];
+            if (this._group !== group) {
+                return;
+            }
+            var index = this.removedComponentes.indexOf(component);
+            if (index >= 0) {
+                this.removedComponentes[index] = null;
+            }
+            this.addedComponentes.push(component);
+        };
+        Collector.prototype._onComponentDisabled = function (_a) {
+            var group = _a[0], component = _a[1];
+            if (this._group !== group) {
+                return;
+            }
+            var index = this.addedComponentes.indexOf(component);
+            if (index >= 0) {
+                this.addedComponentes[index] = null;
+            }
+            this.removedComponentes.push(component);
+        };
+        Collector.prototype.clear = function () {
+            if (this.addedEntities.length > 0) {
+                this.addedEntities.length = 0;
+            }
+            if (this.removedEntities.length > 0) {
+                this.removedEntities.length = 0;
+            }
+            if (this.addedComponentes.length > 0) {
+                this.addedComponentes.length = 0;
+            }
+            if (this.removedComponentes.length > 0) {
+                this.removedComponentes.length = 0;
+            }
+        };
+        Object.defineProperty(Collector.prototype, "group", {
+            get: function () {
+                return this._group;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        return Collector;
+    }());
+    paper.Collector = Collector;
+    __reflect(Collector.prototype, "paper.Collector");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var LightSize;
@@ -17636,13 +17580,13 @@ var egret3d;
             /**
              * 此帧的非透明绘制信息列表。
              * - 已进行视锥剔除的。
-             * @internal
+             * TODO
              */
             this.opaqueCalls = [];
             /**
              * 此帧的透明绘制信息列表。
              * - 已进行视锥剔除的。
-             * @internal
+             * TODO
              */
             this.transparentCalls = [];
             /**
@@ -18119,6 +18063,25 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    var postprocess;
+    (function (postprocess) {
+        var FXAAPostProcess = (function (_super) {
+            __extends(FXAAPostProcess, _super);
+            function FXAAPostProcess() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            FXAAPostProcess.prototype.onRender = function (camera) {
+                egret3d.DefaultMaterials.FXAA.setTexture(camera.postprocessingRenderTarget);
+                this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA);
+            };
+            return FXAAPostProcess;
+        }(egret3d.CameraPostprocessing));
+        postprocess.FXAAPostProcess = FXAAPostProcess;
+        __reflect(FXAAPostProcess.prototype, "egret3d.postprocess.FXAAPostProcess");
+    })(postprocess = egret3d.postprocess || (egret3d.postprocess = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
     /**
      *
      */
@@ -18240,100 +18203,272 @@ var egret3d;
     egret3d.LightShadow = LightShadow;
     __reflect(LightShadow.prototype, "egret3d.LightShadow", ["paper.ISerializable"]);
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
+var egret3d;
+(function (egret3d) {
     /**
-     *
+     * 几何圆柱（椎）体。
+     * - 与 Y 轴对齐。
      */
-    var Collector = (function () {
-        function Collector(group) {
-            this.addedEntities = [];
-            this.removedEntities = [];
-            this.addedComponentes = [];
-            this.removedComponentes = [];
-            this._group = group;
-            paper.Group.onEntityAdded.add(this._onEntityAdded, this);
-            paper.Group.onEntityRemoved.add(this._onEntityRemoved, this);
-            paper.Group.onComponentEnabled.add(this._onComponentEnabled, this);
-            paper.Group.onComponentDisabled.add(this._onComponentDisabled, this);
+    var Cylinder = (function (_super) {
+        __extends(Cylinder, _super);
+        /**
+         * 请使用 `egret3d.Cylinder.create()` 创建实例。
+         * @see egret3d.Cylinder.create()
+         */
+        function Cylinder() {
+            var _this = _super.call(this) || this;
+            /**
+             * 该圆柱（锥）体的顶部半径。
+             */
+            _this.topRadius = 0.0;
+            /**
+             * 该圆柱（锥）体的底部半径。
+             */
+            _this.bottomRadius = 0.0;
+            /**
+             * 该圆柱（锥）体的高度。
+             */
+            _this.height = 0.0;
+            /**
+             * 该圆柱（锥）体的中心点。
+             */
+            _this.center = egret3d.Vector3.create();
+            return _this;
         }
         /**
-         * @internal
+         * 创建一个几何圆柱（椎）体。
+         * @param center 中心点。
+         * @param radius 半径。
          */
-        Collector.create = function (group) {
-            var collector = new Collector(group);
-            return collector;
+        Cylinder.create = function (center, topRadius, bottomRadius, height) {
+            if (center === void 0) { center = egret3d.Vector3.ZERO; }
+            if (topRadius === void 0) { topRadius = 0.0; }
+            if (bottomRadius === void 0) { bottomRadius = 0.0; }
+            if (height === void 0) { height = 0.0; }
+            if (this._instances.length > 0) {
+                var instance = this._instances.pop().set(center, topRadius, bottomRadius, height);
+                instance._released = false;
+                return instance;
+            }
+            return new Cylinder().set(center, topRadius, bottomRadius, height);
         };
-        Collector.prototype._onEntityAdded = function (_a) {
-            var group = _a[0], entity = _a[1];
-            if (this._group !== group) {
-                return;
-            }
-            var index = this.removedEntities.indexOf(entity);
-            if (index >= 0) {
-                this.removedEntities[index] = null;
-            }
-            this.addedEntities.push(entity);
+        Cylinder.prototype.serialize = function () {
+            return [this.center.x, this.center.y, this.center.z, this.topRadius, this.bottomRadius, this.height];
         };
-        Collector.prototype._onEntityRemoved = function (_a) {
-            var group = _a[0], entity = _a[1];
-            if (this._group !== group) {
-                return;
-            }
-            var index = this.addedEntities.indexOf(entity);
-            if (index >= 0) {
-                this.addedEntities[index] = null;
-            }
-            this.removedEntities.push(entity);
+        Cylinder.prototype.deserialize = function (value) {
+            this.topRadius = value[3];
+            this.bottomRadius = value[4];
+            this.height = value[5];
+            this.center.fromArray(value);
+            return this;
         };
-        Collector.prototype._onComponentEnabled = function (_a) {
-            var group = _a[0], component = _a[1];
-            if (this._group !== group) {
-                return;
-            }
-            var index = this.removedComponentes.indexOf(component);
-            if (index >= 0) {
-                this.removedComponentes[index] = null;
-            }
-            this.addedComponentes.push(component);
+        Cylinder.prototype.clone = function () {
+            return Cylinder.create(this.center, this.topRadius, this.bottomRadius, this.height);
         };
-        Collector.prototype._onComponentDisabled = function (_a) {
-            var group = _a[0], component = _a[1];
-            if (this._group !== group) {
-                return;
-            }
-            var index = this.addedComponentes.indexOf(component);
-            if (index >= 0) {
-                this.addedComponentes[index] = null;
-            }
-            this.removedComponentes.push(component);
+        Cylinder.prototype.copy = function (value) {
+            return this.set(value.center, value.topRadius, value.bottomRadius, value.height);
         };
-        Collector.prototype.clear = function () {
-            if (this.addedEntities.length > 0) {
-                this.addedEntities.length = 0;
-            }
-            if (this.removedEntities.length > 0) {
-                this.removedEntities.length = 0;
-            }
-            if (this.addedComponentes.length > 0) {
-                this.addedComponentes.length = 0;
-            }
-            if (this.removedComponentes.length > 0) {
-                this.removedComponentes.length = 0;
-            }
+        Cylinder.prototype.set = function (center, topRadius, bottomRadius, height) {
+            this.topRadius = topRadius;
+            this.bottomRadius = bottomRadius;
+            this.height = height;
+            this.center.copy(center);
+            return this;
         };
-        Object.defineProperty(Collector.prototype, "group", {
-            get: function () {
-                return this._group;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        return Collector;
-    }());
-    paper.Collector = Collector;
-    __reflect(Collector.prototype, "paper.Collector");
-})(paper || (paper = {}));
+        /**
+         * 该几何体是否包含指定的点。
+         * @param point 一个点。
+         */
+        Cylinder.prototype.contains = function (point) {
+            var x = point.x, y = point.y, z = point.z;
+            var _a = this, topRadius = _a.topRadius, bottomRadius = _a.bottomRadius, height = _a.height, center = _a.center;
+            var halfHeight = height * 0.5;
+            if (y < center.y - halfHeight || center.y + halfHeight < y) {
+                return false;
+            }
+            var maxRadius = topRadius < bottomRadius ? bottomRadius : topRadius;
+            if (x < center.x - maxRadius || center.x + maxRadius < x) {
+                return false;
+            }
+            if (z < center.z - maxRadius || center.z + maxRadius < z) {
+                return false;
+            }
+            var dX = x - center.x;
+            var dY = y - (center.y + halfHeight);
+            var dZ = z - center.z;
+            var dRadius = egret3d.math.lerp(topRadius, bottomRadius, dY / height);
+            return (dX * dX + dZ * dZ) <= dRadius * dRadius;
+        };
+        Cylinder.prototype.raycast = function (ray, raycastInfo) {
+            if (raycastInfo === void 0) { raycastInfo = null; }
+            var _a = this, topRadius = _a.topRadius, bottomRadius = _a.bottomRadius, height = _a.height, center = _a.center;
+            var begin = egret3d.helpVector3A.copy(ray.origin).subtract(center);
+            var end = egret3d.helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin); // TODO 精度问题。
+            var isCone = topRadius !== bottomRadius;
+            var p1x = begin.x;
+            var p1y = begin.y;
+            var p1z = begin.z;
+            var p2x = end.x;
+            var p2y = end.y;
+            var p2z = end.z;
+            var halfHeight = height * 0.5;
+            var dx = p2x - p1x;
+            var dy = p2y - p1y;
+            var dz = p2z - p1z;
+            // Y
+            var tminy = 0.0;
+            var tmaxy = 1.0;
+            if (-2.220446049250313e-16 /* EPSILON */ < dy && dy < 2.220446049250313e-16 /* EPSILON */) {
+                if (p1y <= -halfHeight || halfHeight <= p1y) {
+                    return false;
+                }
+            }
+            else {
+                var invDy = 1.0 / dy;
+                var t1 = (-halfHeight - p1y) * invDy;
+                var t2 = (halfHeight - p1y) * invDy;
+                if (t1 > t2) {
+                    var tmp = t1;
+                    t1 = t2;
+                    t2 = tmp;
+                }
+                if (t1 > 0.0)
+                    tminy = t1;
+                if (t2 < 1.0)
+                    tmaxy = t2;
+            }
+            if (tminy >= 1.0 || tmaxy <= 0.0)
+                return false;
+            // XZ
+            var tminxz = 0.0;
+            var tmaxxz = 1.0;
+            var sinTheta = 0.0;
+            var cosTheta = 0.0;
+            if (isCone) {
+                var dRadius = bottomRadius - topRadius;
+                var cc = Math.sqrt(dRadius * dRadius + height * height);
+                var offsetY = height / dRadius * bottomRadius - halfHeight;
+                p1y -= offsetY; // translate so that the new origin be (0, -offsetY, 0)
+                sinTheta = dRadius / cc;
+                cosTheta = height / cc;
+                var cos2 = cosTheta * cosTheta;
+                var a = cos2 * (dx * dx + dy * dy + dz * dz) - dy * dy;
+                var b = cos2 * (p1x * dx + p1y * dy + p1z * dz) - p1y * dy;
+                var c = cos2 * (p1x * p1x + p1y * p1y + p1z * p1z) - p1y * p1y;
+                var d = b * b - a * c;
+                if (a !== 0.0) {
+                    if (d < 0.0)
+                        return false;
+                    var sqrtD = Math.sqrt(d);
+                    var ia = 1.0 / a;
+                    if (a < 0.0) {
+                        if (dy > 0.0) {
+                            tminxz = 0.0;
+                            tmaxxz = (-b + sqrtD) * ia;
+                            if (tmaxxz <= 0.0)
+                                return false;
+                        }
+                        else {
+                            tminxz = (-b - sqrtD) * ia;
+                            tmaxxz = 1.0;
+                            if (tminxz >= 1.0)
+                                return false;
+                        }
+                    }
+                    else {
+                        tminxz = (-b - sqrtD) * ia;
+                        tmaxxz = (-b + sqrtD) * ia;
+                        if (tminxz >= 1.0 || tmaxxz <= 0.0)
+                            return false;
+                    }
+                }
+                else {
+                    var t = -c / (2.0 * b);
+                    if (b > 0.0) {
+                        tminxz = 0.0;
+                        tmaxxz = t;
+                        if (t <= 0.0)
+                            return false;
+                    }
+                    else {
+                        tminxz = t;
+                        tmaxxz = 1.0;
+                        if (t >= 1.0)
+                            return false;
+                    }
+                }
+                p1y += offsetY; // revert translation
+            }
+            else {
+                var a = dx * dx + dz * dz;
+                var b = p1x * dx + p1z * dz;
+                var c = (p1x * p1x + p1z * p1z) - bottomRadius * bottomRadius;
+                var d = b * b - a * c;
+                if (d < 0.0)
+                    return false;
+                if (a > 0.0) {
+                    var sqrtD = Math.sqrt(d);
+                    tminxz = (-b - sqrtD) / a;
+                    tmaxxz = (-b + sqrtD) / a;
+                    if (tminxz >= 1.0 || tmaxxz <= 0.0)
+                        return false;
+                }
+                else {
+                    if (c >= 0.0)
+                        return false;
+                    tminxz = 0.0;
+                    tmaxxz = 1.0;
+                }
+            }
+            var min;
+            if (tmaxxz <= tminy || tmaxy <= tminxz)
+                return false;
+            if (tminxz < tminy) {
+                min = tminy;
+                if (min === 0.0)
+                    return false; // the ray starts from inside
+                if (raycastInfo && raycastInfo.normal) {
+                    raycastInfo.normal.set(0.0, dy > 0.0 ? -1.0 : 1.0, 0.0);
+                }
+            }
+            else {
+                min = tminxz;
+                if (min === 0.0)
+                    return false; // the ray starts from inside
+                if (raycastInfo && raycastInfo.normal) {
+                    raycastInfo.normal.set(p1x + dx * min, 0.0, p1z + dz * min).normalize();
+                    if (isCone) {
+                        raycastInfo.normal.multiplyScalar(cosTheta);
+                        raycastInfo.normal.y += sinTheta;
+                    }
+                }
+            }
+            if (raycastInfo) {
+                raycastInfo.distance = min;
+                raycastInfo.position
+                    .set(p1x + min * dx, p1y + min * dy, p1z + min * dz)
+                    .add(center);
+            }
+            return true;
+        };
+        Cylinder._instances = [];
+        __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+        ], Cylinder.prototype, "topRadius", void 0);
+        __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+        ], Cylinder.prototype, "bottomRadius", void 0);
+        __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+        ], Cylinder.prototype, "height", void 0);
+        __decorate([
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
+        ], Cylinder.prototype, "center", void 0);
+        return Cylinder;
+    }(paper.BaseRelease));
+    egret3d.Cylinder = Cylinder;
+    __reflect(Cylinder.prototype, "egret3d.Cylinder", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -18610,7 +18745,11 @@ var egret3d;
             /**
              *
              */
-            _this.zdist = -1.0;
+            _this.zdist = -1;
+            /**
+             * TODO
+             */
+            _this.count = 0;
             return _this;
         }
         /**
@@ -18633,7 +18772,7 @@ var egret3d;
             this.subMeshIndex = -1;
             this.mesh = null;
             this.material = null;
-            this.zdist = -1.0;
+            this.zdist = -1;
         };
         DrawCall._instances = [];
         return DrawCall;
@@ -18746,331 +18885,6 @@ var egret3d;
     }());
     egret3d.Fog = Fog;
     __reflect(Fog.prototype, "egret3d.Fog", ["paper.ISerializable"]);
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 几何圆柱（椎）体。
-     * - 与 Y 轴对齐。
-     */
-    var Cylinder = (function (_super) {
-        __extends(Cylinder, _super);
-        /**
-         * 请使用 `egret3d.Cylinder.create()` 创建实例。
-         * @see egret3d.Cylinder.create()
-         */
-        function Cylinder() {
-            var _this = _super.call(this) || this;
-            /**
-             * 该圆柱（锥）体的顶部半径。
-             */
-            _this.topRadius = 0.0;
-            /**
-             * 该圆柱（锥）体的底部半径。
-             */
-            _this.bottomRadius = 0.0;
-            /**
-             * 该圆柱（锥）体的高度。
-             */
-            _this.height = 0.0;
-            /**
-             * 该圆柱（锥）体的中心点。
-             */
-            _this.center = egret3d.Vector3.create();
-            return _this;
-        }
-        /**
-         * 创建一个几何圆柱（椎）体。
-         * @param center 中心点。
-         * @param radius 半径。
-         */
-        Cylinder.create = function (center, topRadius, bottomRadius, height) {
-            if (center === void 0) { center = egret3d.Vector3.ZERO; }
-            if (topRadius === void 0) { topRadius = 0.0; }
-            if (bottomRadius === void 0) { bottomRadius = 0.0; }
-            if (height === void 0) { height = 0.0; }
-            if (this._instances.length > 0) {
-                var instance = this._instances.pop().set(center, topRadius, bottomRadius, height);
-                instance._released = false;
-                return instance;
-            }
-            return new Cylinder().set(center, topRadius, bottomRadius, height);
-        };
-        Cylinder.prototype.serialize = function () {
-            return [this.center.x, this.center.y, this.center.z, this.topRadius, this.bottomRadius, this.height];
-        };
-        Cylinder.prototype.deserialize = function (value) {
-            this.topRadius = value[3];
-            this.bottomRadius = value[4];
-            this.height = value[5];
-            this.center.fromArray(value);
-            return this;
-        };
-        Cylinder.prototype.clone = function () {
-            return Cylinder.create(this.center, this.topRadius, this.bottomRadius, this.height);
-        };
-        Cylinder.prototype.copy = function (value) {
-            return this.set(value.center, value.topRadius, value.bottomRadius, value.height);
-        };
-        Cylinder.prototype.set = function (center, topRadius, bottomRadius, height) {
-            this.topRadius = topRadius;
-            this.bottomRadius = bottomRadius;
-            this.height = height;
-            this.center.copy(center);
-            return this;
-        };
-        /**
-         * 该几何体是否包含指定的点。
-         * @param point 一个点。
-         */
-        Cylinder.prototype.contains = function (point) {
-            var x = point.x, y = point.y, z = point.z;
-            var _a = this, topRadius = _a.topRadius, bottomRadius = _a.bottomRadius, height = _a.height, center = _a.center;
-            var halfHeight = height * 0.5;
-            if (y < center.y - halfHeight || center.y + halfHeight < y) {
-                return false;
-            }
-            var maxRadius = topRadius < bottomRadius ? bottomRadius : topRadius;
-            if (x < center.x - maxRadius || center.x + maxRadius < x) {
-                return false;
-            }
-            if (z < center.z - maxRadius || center.z + maxRadius < z) {
-                return false;
-            }
-            var dX = x - center.x;
-            var dY = y - (center.y + halfHeight);
-            var dZ = z - center.z;
-            var dRadius = egret3d.math.lerp(topRadius, bottomRadius, dY / height);
-            return (dX * dX + dZ * dZ) <= dRadius * dRadius;
-        };
-        Cylinder.prototype.raycast = function (ray, raycastInfo) {
-            if (raycastInfo === void 0) { raycastInfo = null; }
-            var _a = this, topRadius = _a.topRadius, bottomRadius = _a.bottomRadius, height = _a.height, center = _a.center;
-            var begin = egret3d.helpVector3A.copy(ray.origin).subtract(center);
-            var end = egret3d.helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin); // TODO 精度问题。
-            var isCone = topRadius !== bottomRadius;
-            var p1x = begin.x;
-            var p1y = begin.y;
-            var p1z = begin.z;
-            var p2x = end.x;
-            var p2y = end.y;
-            var p2z = end.z;
-            var halfHeight = height * 0.5;
-            var dx = p2x - p1x;
-            var dy = p2y - p1y;
-            var dz = p2z - p1z;
-            // Y
-            var tminy = 0.0;
-            var tmaxy = 1.0;
-            if (-2.220446049250313e-16 /* EPSILON */ < dy && dy < 2.220446049250313e-16 /* EPSILON */) {
-                if (p1y <= -halfHeight || halfHeight <= p1y) {
-                    return false;
-                }
-            }
-            else {
-                var invDy = 1.0 / dy;
-                var t1 = (-halfHeight - p1y) * invDy;
-                var t2 = (halfHeight - p1y) * invDy;
-                if (t1 > t2) {
-                    var tmp = t1;
-                    t1 = t2;
-                    t2 = tmp;
-                }
-                if (t1 > 0.0)
-                    tminy = t1;
-                if (t2 < 1.0)
-                    tmaxy = t2;
-            }
-            if (tminy >= 1.0 || tmaxy <= 0.0)
-                return false;
-            // XZ
-            var tminxz = 0.0;
-            var tmaxxz = 1.0;
-            var sinTheta = 0.0;
-            var cosTheta = 0.0;
-            if (isCone) {
-                var dRadius = bottomRadius - topRadius;
-                var cc = Math.sqrt(dRadius * dRadius + height * height);
-                var offsetY = height / dRadius * bottomRadius - halfHeight;
-                p1y -= offsetY; // translate so that the new origin be (0, -offsetY, 0)
-                sinTheta = dRadius / cc;
-                cosTheta = height / cc;
-                var cos2 = cosTheta * cosTheta;
-                var a = cos2 * (dx * dx + dy * dy + dz * dz) - dy * dy;
-                var b = cos2 * (p1x * dx + p1y * dy + p1z * dz) - p1y * dy;
-                var c = cos2 * (p1x * p1x + p1y * p1y + p1z * p1z) - p1y * p1y;
-                var d = b * b - a * c;
-                if (a !== 0.0) {
-                    if (d < 0.0)
-                        return false;
-                    var sqrtD = Math.sqrt(d);
-                    var ia = 1.0 / a;
-                    if (a < 0.0) {
-                        if (dy > 0.0) {
-                            tminxz = 0.0;
-                            tmaxxz = (-b + sqrtD) * ia;
-                            if (tmaxxz <= 0.0)
-                                return false;
-                        }
-                        else {
-                            tminxz = (-b - sqrtD) * ia;
-                            tmaxxz = 1.0;
-                            if (tminxz >= 1.0)
-                                return false;
-                        }
-                    }
-                    else {
-                        tminxz = (-b - sqrtD) * ia;
-                        tmaxxz = (-b + sqrtD) * ia;
-                        if (tminxz >= 1.0 || tmaxxz <= 0.0)
-                            return false;
-                    }
-                }
-                else {
-                    var t = -c / (2.0 * b);
-                    if (b > 0.0) {
-                        tminxz = 0.0;
-                        tmaxxz = t;
-                        if (t <= 0.0)
-                            return false;
-                    }
-                    else {
-                        tminxz = t;
-                        tmaxxz = 1.0;
-                        if (t >= 1.0)
-                            return false;
-                    }
-                }
-                p1y += offsetY; // revert translation
-            }
-            else {
-                var a = dx * dx + dz * dz;
-                var b = p1x * dx + p1z * dz;
-                var c = (p1x * p1x + p1z * p1z) - bottomRadius * bottomRadius;
-                var d = b * b - a * c;
-                if (d < 0.0)
-                    return false;
-                if (a > 0.0) {
-                    var sqrtD = Math.sqrt(d);
-                    tminxz = (-b - sqrtD) / a;
-                    tmaxxz = (-b + sqrtD) / a;
-                    if (tminxz >= 1.0 || tmaxxz <= 0.0)
-                        return false;
-                }
-                else {
-                    if (c >= 0.0)
-                        return false;
-                    tminxz = 0.0;
-                    tmaxxz = 1.0;
-                }
-            }
-            var min;
-            if (tmaxxz <= tminy || tmaxy <= tminxz)
-                return false;
-            if (tminxz < tminy) {
-                min = tminy;
-                if (min === 0.0)
-                    return false; // the ray starts from inside
-                if (raycastInfo && raycastInfo.normal) {
-                    raycastInfo.normal.set(0.0, dy > 0.0 ? -1.0 : 1.0, 0.0);
-                }
-            }
-            else {
-                min = tminxz;
-                if (min === 0.0)
-                    return false; // the ray starts from inside
-                if (raycastInfo && raycastInfo.normal) {
-                    raycastInfo.normal.set(p1x + dx * min, 0.0, p1z + dz * min).normalize();
-                    if (isCone) {
-                        raycastInfo.normal.multiplyScalar(cosTheta);
-                        raycastInfo.normal.y += sinTheta;
-                    }
-                }
-            }
-            if (raycastInfo) {
-                raycastInfo.distance = min;
-                raycastInfo.position
-                    .set(p1x + min * dx, p1y + min * dy, p1z + min * dz)
-                    .add(center);
-            }
-            return true;
-        };
-        Cylinder._instances = [];
-        __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-        ], Cylinder.prototype, "topRadius", void 0);
-        __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-        ], Cylinder.prototype, "bottomRadius", void 0);
-        __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-        ], Cylinder.prototype, "height", void 0);
-        __decorate([
-            paper.editor.property("VECTOR3" /* VECTOR3 */)
-        ], Cylinder.prototype, "center", void 0);
-        return Cylinder;
-    }(paper.BaseRelease));
-    egret3d.Cylinder = Cylinder;
-    __reflect(Cylinder.prototype, "egret3d.Cylinder", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 网格过滤组件。
-     * - 为网格渲染组件提供网格资源。
-     */
-    var MeshFilter = (function (_super) {
-        __extends(MeshFilter, _super);
-        function MeshFilter() {
-            var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this._mesh = null;
-            return _this;
-        }
-        /**
-         * @internal
-         */
-        MeshFilter.prototype.uninitialize = function () {
-            _super.prototype.uninitialize.call(this);
-            if (this._mesh) {
-                this._mesh.release();
-            }
-            this._mesh = null;
-        };
-        Object.defineProperty(MeshFilter.prototype, "mesh", {
-            /**
-             * 该组件的网格资源。
-             */
-            get: function () {
-                return this._mesh;
-            },
-            set: function (value) {
-                if (this._mesh === value) {
-                    return;
-                }
-                if (this._mesh) {
-                    this._mesh.release();
-                }
-                if (value) {
-                    value.retain();
-                }
-                this._mesh = value;
-                MeshFilter.onMeshChanged.dispatch(this);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        /**
-         * 当网格过滤组件的网格资源改变时派发事件。
-         */
-        MeshFilter.onMeshChanged = new signals.Signal();
-        __decorate([
-            paper.editor.property("MESH" /* MESH */),
-            paper.serializedField("_mesh")
-        ], MeshFilter.prototype, "mesh", null);
-        return MeshFilter;
-    }(paper.BaseComponent));
-    egret3d.MeshFilter = MeshFilter;
-    __reflect(MeshFilter.prototype, "egret3d.MeshFilter");
 })(egret3d || (egret3d = {}));
 var paper;
 (function (paper) {
@@ -19456,6 +19270,260 @@ var paper;
 var egret3d;
 (function (egret3d) {
     /**
+     * 网格过滤组件。
+     * - 为网格渲染组件提供网格资源。
+     */
+    var MeshFilter = (function (_super) {
+        __extends(MeshFilter, _super);
+        function MeshFilter() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._mesh = null;
+            return _this;
+        }
+        /**
+         * @internal
+         */
+        MeshFilter.prototype.uninitialize = function () {
+            _super.prototype.uninitialize.call(this);
+            if (this._mesh) {
+                this._mesh.release();
+            }
+            this._mesh = null;
+        };
+        Object.defineProperty(MeshFilter.prototype, "mesh", {
+            /**
+             * 该组件的网格资源。
+             */
+            get: function () {
+                return this._mesh;
+            },
+            set: function (value) {
+                if (this._mesh === value) {
+                    return;
+                }
+                if (this._mesh) {
+                    this._mesh.release();
+                }
+                if (value) {
+                    value.retain();
+                }
+                this._mesh = value;
+                MeshFilter.onMeshChanged.dispatch(this);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        /**
+         * 当网格过滤组件的网格资源改变时派发事件。
+         */
+        MeshFilter.onMeshChanged = new signals.Signal();
+        __decorate([
+            paper.editor.property("MESH" /* MESH */),
+            paper.serializedField("_mesh")
+        ], MeshFilter.prototype, "mesh", null);
+        return MeshFilter;
+    }(paper.BaseComponent));
+    egret3d.MeshFilter = MeshFilter;
+    __reflect(MeshFilter.prototype, "egret3d.MeshFilter");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
+     * 几何胶囊体。
+     * - 与 Y 轴对齐。
+     */
+    var Capsule = (function (_super) {
+        __extends(Capsule, _super);
+        /**
+         * 请使用 `egret3d.Capsule.create()` 创建实例。
+         * @see egret3d.Capsule.create()
+         */
+        function Capsule() {
+            var _this = _super.call(this) || this;
+            /**
+             * 该胶囊体的半径。
+             */
+            _this.radius = 0.0;
+            /**
+             * 该胶囊体圆柱部分的高度。
+             */
+            _this.height = 0.0;
+            /**
+             * 该胶囊体的中心点。
+             */
+            _this.center = egret3d.Vector3.create();
+            return _this;
+        }
+        /**
+         * 创建一个几何胶囊体。
+         * @param center 中心点。
+         * @param radius 半径。
+         */
+        Capsule.create = function (center, radius, height) {
+            if (center === void 0) { center = egret3d.Vector3.ZERO; }
+            if (radius === void 0) { radius = 0.0; }
+            if (height === void 0) { height = 0.0; }
+            if (this._instances.length > 0) {
+                var instance = this._instances.pop().set(center, radius, height);
+                instance._released = false;
+                return instance;
+            }
+            return new Capsule().set(center, radius, height);
+        };
+        Capsule.prototype.serialize = function () {
+            return [this.center.x, this.center.y, this.center.z, this.radius, this.height];
+        };
+        Capsule.prototype.deserialize = function (value) {
+            this.radius = value[3];
+            this.height = value[4];
+            this.center.fromArray(value);
+            return this;
+        };
+        Capsule.prototype.clone = function () {
+            return Capsule.create(this.center, this.radius, this.height);
+        };
+        Capsule.prototype.copy = function (value) {
+            return this.set(value.center, value.radius, value.height);
+        };
+        Capsule.prototype.set = function (center, radius, height) {
+            this.radius = radius;
+            this.height = height;
+            this.center.copy(center);
+            return this;
+        };
+        /**
+         * 该几何体是否包含指定的点。
+         * @param point 一个点。
+         */
+        Capsule.prototype.contains = function (point) {
+            var x = point.x, y = point.y, z = point.z;
+            var _a = this, radius = _a.radius, center = _a.center;
+            var halfHeight = this.height * 0.5;
+            if (y < center.y - halfHeight - radius || center.y + halfHeight + radius < y) {
+                return false;
+            }
+            if (x < center.x - radius || center.x + radius < x) {
+                return false;
+            }
+            if (z < center.z - radius || center.z + radius < z) {
+                return false;
+            }
+            var dX = x - center.x;
+            var dY = y - center.y;
+            var dZ = z - center.z;
+            var radius2 = radius * radius;
+            if (halfHeight > 0.0) {
+                if (dY < -halfHeight) {
+                    var bottomCenter = egret3d.helpVector3A.copy(center);
+                    bottomCenter.y -= halfHeight;
+                    return bottomCenter.getSquaredDistance(point) <= radius2;
+                }
+                else if (halfHeight < dY) {
+                    var bottomCenter = egret3d.helpVector3A.copy(center);
+                    bottomCenter.y += halfHeight;
+                    return bottomCenter.getSquaredDistance(point) <= radius2;
+                }
+                return (dX * dX + dZ * dZ) <= radius2;
+            }
+            return center.getSquaredDistance(point) <= radius2;
+        };
+        Capsule.prototype.raycast = function (ray, raycastInfo) {
+            if (raycastInfo === void 0) { raycastInfo = null; }
+            var _a = this, radius = _a.radius, center = _a.center;
+            var halfHeight = this.height * 0.5;
+            var begin = egret3d.helpVector3A.copy(ray.origin).subtract(center);
+            var end = egret3d.helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin); // TODO 精度问题。
+            var p1x = begin.x;
+            var p1y = begin.y;
+            var p1z = begin.z;
+            var p2x = end.x;
+            var p2y = end.y;
+            var p2z = end.z;
+            var radius2 = radius * radius;
+            var dx = p2x - p1x;
+            var dy = p2y - p1y;
+            var dz = p2z - p1z;
+            // XZ
+            var tminxz = 0.0;
+            var tmaxxz = 1.0;
+            var a = dx * dx + dz * dz;
+            var b = p1x * dx + p1z * dz;
+            var c = (p1x * p1x + p1z * p1z) - radius2;
+            var d = b * b - a * c;
+            if (d < 0.0)
+                return false;
+            if (a > 0.0) {
+                var sqrtD = Math.sqrt(d);
+                var ia = 1.0 / a;
+                tminxz = (-b - sqrtD) * ia;
+                tmaxxz = (-b + sqrtD) * ia;
+                if (tminxz >= 1.0 || tmaxxz <= 0.0)
+                    return false;
+            }
+            else {
+                if (c >= 0.0)
+                    return false;
+                tminxz = 0.0;
+                tmaxxz = 1.0;
+            }
+            var min;
+            var crossY = p1y + dy * tminxz;
+            if (-halfHeight < crossY && crossY < halfHeight) {
+                if (tminxz > 0.0) {
+                    // hit: side
+                    min = tminxz;
+                    if (raycastInfo) {
+                        var px = p1x + min * dx;
+                        var py = p1z + min * dy;
+                        raycastInfo.distance = min;
+                        raycastInfo.position.set(px, crossY, py).add(center);
+                        if (raycastInfo.normal) {
+                            raycastInfo.normal.set(px, 0.0, py).normalize();
+                        }
+                    }
+                    return true;
+                }
+                return false;
+            }
+            // Sphere test.
+            var sphereCenter = egret3d.helpVector3C.set(center.x, center.y + (crossY < 0.0 ? -halfHeight : halfHeight), center.z);
+            var v1 = egret3d.helpVector3D.subtract(sphereCenter, ray.origin);
+            var tca = v1.dot(ray.direction);
+            var d2 = v1.dot(v1) - tca * tca;
+            if (d2 > radius2)
+                return false;
+            var thc = Math.sqrt(radius2 - d2);
+            var t0 = tca - thc;
+            var t1 = tca + thc;
+            if (t0 < 0.0 || t1 < 0.0)
+                return false;
+            if (raycastInfo) {
+                var position = ray.getPointAt(raycastInfo.distance = t0, raycastInfo.position);
+                var normal = raycastInfo.normal;
+                if (normal) {
+                    normal.subtract(position, sphereCenter).normalize();
+                }
+            }
+            return true;
+        };
+        Capsule._instances = [];
+        __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+        ], Capsule.prototype, "radius", void 0);
+        __decorate([
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+        ], Capsule.prototype, "height", void 0);
+        __decorate([
+            paper.editor.property("VECTOR3" /* VECTOR3 */)
+        ], Capsule.prototype, "center", void 0);
+        return Capsule;
+    }(paper.BaseRelease));
+    egret3d.Capsule = Capsule;
+    __reflect(Capsule.prototype, "egret3d.Capsule", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    /**
      * 网格渲染组件系统。
      * - 为网格渲染组件生成绘制信息。
      */
@@ -19592,10 +19660,6 @@ var egret3d;
             /**
              *
              */
-            _this.boneTexture = null;
-            /**
-             *
-             */
             _this.source = null;
             _this._skinnedDirty = true;
             _this._bones = [];
@@ -19666,9 +19730,6 @@ var egret3d;
                     var matrix = bone ? bone.localToWorldMatrix : egret3d.Matrix4.IDENTITY;
                     _helpMatrix.fromArray(inverseBindMatrices, offset).premultiply(matrix).toArray(boneMatrices, offset);
                 }
-                if (this.boneTexture) {
-                    this.boneTexture.uploadTexture(boneMatrices); // TODO
-                }
                 if (this.forceCPUSkin) {
                     // this._skinning(0, 0); TODO
                 }
@@ -19690,7 +19751,6 @@ var egret3d;
             this.boneMatrices = null;
             var mesh = this._mesh;
             var parent = this.gameObject.transform.parent;
-            var bones = this._bones;
             if (mesh && parent) {
                 var config = mesh.config;
                 var skin = config.skins[0];
@@ -19707,35 +19767,16 @@ var egret3d;
                     var node = config.nodes[joint];
                     if (node.name in children) {
                         var transforms = children[node.name];
-                        bones.push(Array.isArray(transforms) ? transforms[0] : transforms);
+                        this._bones.push(Array.isArray(transforms) ? transforms[0] : transforms);
                     }
                     else {
-                        bones.push(null);
+                        this._bones.push(null);
                     }
                 }
-                if (egret3d.renderState.textureFloatEnabled) {
-                    // let size = Math.sqrt(bones.length * 4); // 4 pixels needed for 1 matrix
-                    // size = Math.max(math.ceilPowerOfTwo(size), 4);
-                    // this.boneMatrices = new Float32Array(size * size * 4); // 4 floats per RGBA pixel
-                    // this.boneTexture = Texture.create({
-                    //     source: this.boneMatrices,
-                    //     width: size, height: size,
-                    //     type: gltf.ComponentType.Float
-                    // });
-                    this.boneMatrices = new Float32Array((bones.length + 1) * 16);
-                    this.boneTexture = egret3d.Texture.create({
-                        source: this.boneMatrices,
-                        width: (bones.length + 1) * 4, height: 1,
-                        type: 5126 /* Float */
-                    });
-                    this.boneTexture.retain();
-                }
-                else {
-                    this.boneMatrices = new Float32Array(bones.length * 16);
-                    if (bones.length > egret3d.renderState.maxBoneCount) {
-                        this.forceCPUSkin = true;
-                        console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
-                    }
+                this.boneMatrices = new Float32Array(this._bones.length * 16);
+                if (this._bones.length > egret3d.renderState.maxBoneCount) {
+                    this.forceCPUSkin = true;
+                    console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
                 }
                 this._update();
             }
@@ -19748,13 +19789,8 @@ var egret3d;
             if (this._mesh) {
                 this._mesh.release();
             }
-            if (this.boneTexture) {
-                this.boneTexture.release();
-                this.boneTexture.dispose();
-            }
             this.getBoundingTransform().unregisterObserver(this);
             this.boneMatrices = null;
-            this.boneTexture = null;
             this._bones.length = 0;
             this._rootBone = null;
             this._retargetBoneNames = null;
@@ -25925,25 +25961,52 @@ var egret3d;
     egret3d.MAX_VERTEX_COUNT_PER_BUFFER = 50000;
     //
     var helpVec3_1 = egret3d.Vector3.create();
-    var helpVec3_2 = egret3d.Vector3.create();
     var helpInverseMatrix = egret3d.Matrix4.create();
     //缓存已经校验过的对象，用于过滤
-    var cacheInstances = [];
+    var cacheUUIDs = [];
     var beforeCombineCount = 0;
+    var CombineInstance = (function () {
+        function CombineInstance() {
+            this.verticesCount = 0;
+            this.indicesCount = 0;
+            this.lightmapIndex = -1;
+            this.primitiveIndices = [];
+            this.meshAttribute = {};
+            this.materials = [];
+            this.instances = [];
+        }
+        return CombineInstance;
+    }());
+    __reflect(CombineInstance.prototype, "CombineInstance");
+    function _copyAccessorBuffer(mesh, accessor, target, offset) {
+        var buffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(accessor));
+        var count = buffer.length;
+        for (var i = 0; i < count; i++) {
+            target[offset + i] = buffer[i];
+        }
+    }
+    function _fillBuffer(target, offset, count, defaultValue) {
+        var defaultValueCount = defaultValue.length;
+        for (var i = 0; i < count; i++) {
+            for (var j = 0; j < defaultValueCount; j++) {
+                target[offset++] = defaultValue[j];
+            }
+        }
+    }
     /**
      * 尝试对场景内所有静态对象合并
      */
-    function autoCombine(scene) {
+    function combineScene(scene) {
         combine(scene.gameObjects);
     }
-    egret3d.autoCombine = autoCombine;
+    egret3d.combineScene = combineScene;
     /**
      * 尝试合并静态对象列表。
      * @param instances
      * @param root
      */
     function combine(instances) {
-        cacheInstances.length = 0;
+        cacheUUIDs.length = 0;
         beforeCombineCount = 0;
         var allCombines = {};
         //1.通过材质填充合并列表
@@ -25962,7 +26025,7 @@ var egret3d;
             }
         }
         console.log("combine", beforeCombineCount, "to", afterCombineCount, "save", beforeCombineCount - afterCombineCount);
-        cacheInstances.length = 0;
+        cacheUUIDs.length = 0;
     }
     egret3d.combine = combine;
     /**
@@ -25972,10 +26035,10 @@ var egret3d;
      */
     function _colletCombineInstance(target, out, root) {
         //过滤重复的对象
-        if (cacheInstances.indexOf(target.uuid) >= 0) {
+        if (cacheUUIDs.indexOf(target.uuid) >= 0) {
             return;
         }
-        cacheInstances.push(target.uuid);
+        cacheUUIDs.push(target.uuid);
         //
         for (var _i = 0, _a = target.transform.children; _i < _a.length; _i++) {
             var child = _a[_i];
@@ -26006,7 +26069,7 @@ var egret3d;
         var combines = out[key];
         //找相同材质合成列表的最后一个，如果最后一个顶点超过允许最大数了，就新建一个，下个批次处理
         var combine = combines[combines.length - 1];
-        if (combine.vertexCount + meshData.vertexCount > egret3d.MAX_VERTEX_COUNT_PER_BUFFER) {
+        if (combine.verticesCount + meshData.vertexCount > egret3d.MAX_VERTEX_COUNT_PER_BUFFER) {
             combine = new CombineInstance();
             out[key].push(combine);
         }
@@ -26014,6 +26077,10 @@ var egret3d;
         if (!combine.root) {
             combine.root = root ? root : target;
             combine.lightmapIndex = meshRenderer.lightmapIndex;
+            for (var _b = 0, materials_5 = materials; _b < materials_5.length; _b++) {
+                var mat = materials_5[_b];
+                combine.materials.push(mat);
+            }
         }
         //适配最大格式
         var primitives = meshData.glTFMesh.primitives;
@@ -26022,14 +26089,19 @@ var egret3d;
             for (var attStr in primitives[i].attributes) {
                 var attrType = attStr;
                 if (!combine.meshAttribute[attrType]) {
-                    combine.vertexBufferSize += meshData.getAccessor(primitive.attributes[attStr]).typeCount;
+                    combine.meshAttribute[attrType] = attrType;
                 }
-                combine.meshAttribute[attrType] = attrType;
             }
-            combine.indexBufferTotalSize += meshData.getBufferLength(meshData.getAccessor(primitive.indices)) / Uint16Array.BYTES_PER_ELEMENT;
+            //
+            // if (!combine.primitiveIndices[i]) {
+            //     combine.primitiveIndices[i] = 0;
+            // }
+            var indicesCount = meshData.getBufferLength(meshData.getAccessor(primitive.indices)) / Uint16Array.BYTES_PER_ELEMENT;
+            // combine.primitiveIndices[i] += indicesCount;
+            combine.indicesCount += indicesCount;
         }
         //
-        combine.vertexCount += meshData.vertexCount;
+        combine.verticesCount += meshData.vertexCount;
         combine.instances.push(target);
     }
     /**
@@ -26040,8 +26112,10 @@ var egret3d;
         var combineMesh = _combineMesh(combineInstance);
         var combineRoot = combineInstance.root;
         //把合成好的放入root中，重新绘制
-        var meshFilter = combineRoot.getComponent(egret3d.MeshFilter);
+        var meshFilter = combineRoot.getOrAddComponent(egret3d.MeshFilter);
         meshFilter.mesh = combineMesh;
+        var meshRenderer = combineRoot.getOrAddComponent(egret3d.MeshRenderer);
+        meshRenderer.materials = combineInstance.materials;
     }
     /**
      * 合并拥有共享材质的渲染对象
@@ -26050,17 +26124,29 @@ var egret3d;
      */
     function _combineMesh(combineInstance) {
         //
-        helpInverseMatrix.copy(combineInstance.root.transform.worldToLocalMatrix);
+        var root = combineInstance.root;
         var meshAttribute = combineInstance.meshAttribute;
-        var lightmapScaleOffset = combineInstance.root.renderer.lightmapScaleOffset;
-        var newAttribute = [];
-        var tempIndexBuffers = [];
-        var tempVertexBuffers = {};
+        var lightmapScaleOffset = root.renderer.lightmapScaleOffset;
+        var combineAttributes = [];
         for (var key in meshAttribute) {
-            tempVertexBuffers[key] = [];
-            newAttribute.push(key);
+            combineAttributes.push(key);
         }
         //
+        var combineMesh = egret3d.Mesh.create(combineInstance.verticesCount, combineInstance.primitiveIndices[0], combineAttributes);
+        combineMesh.drawMode = 35048 /* Dynamic */;
+        var combinePosition = combineMesh.getVertices();
+        var combineNormal = combineMesh.getNormals();
+        var combineUV0 = combineMesh.getUVs();
+        var combineUV1 = combineMesh.getAttributes("TEXCOORD_1" /* TEXCOORD_1 */);
+        var combineColor0 = combineMesh.getColors();
+        var combineJoint0 = combineMesh.getAttributes("JOINTS_0" /* JOINTS_0 */);
+        var combineWeight0 = combineMesh.getAttributes("WEIGHTS_0" /* WEIGHTS_0 */);
+        var combineIndices = combineMesh.getIndices();
+        //
+        helpInverseMatrix.copy(root.transform.worldToLocalMatrix);
+        var subIndexBuffersCount = [];
+        //
+        var positonIndex = 0, normalIndex = 0, color0Index = 0, color1Index = 0, uv0Index = 0, uv1Index = 0, jointIndex = 0, weightIndex = 0, indexIndex = 0;
         var startIndex = 0;
         var endIndex = 0;
         for (var _i = 0, _a = combineInstance.instances; _i < _a.length; _i++) {
@@ -26080,210 +26166,129 @@ var egret3d;
                     var orginVertexCount = mesh.vertexCount;
                     var orginAttributes = primitives[i].attributes;
                     var positionBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.POSITION));
-                    //vertexBuffers
-                    for (var j = 0; j < positionBuffer.length; j += 3) {
-                        helpVec3_1.x = positionBuffer[j + 0];
-                        helpVec3_1.y = positionBuffer[j + 1];
-                        helpVec3_1.z = positionBuffer[j + 2];
+                    for (var j = 0, l = positionBuffer.length; j < l; j += 3) {
                         //转换成世界坐标后在转换为合并节点的本地坐标
-                        helpVec3_2.applyMatrix(worldMatrix, helpVec3_1);
-                        helpVec3_1.applyMatrix(helpInverseMatrix, helpVec3_2);
-                        //
-                        tempVertexBuffers["POSITION" /* POSITION */].push(helpVec3_1.x, helpVec3_1.y, helpVec3_1.z);
+                        helpVec3_1.fromArray(positionBuffer, j).applyMatrix(worldMatrix).applyMatrix(helpInverseMatrix);
+                        combinePosition[positonIndex++] = helpVec3_1.x;
+                        combinePosition[positonIndex++] = helpVec3_1.y;
+                        combinePosition[positonIndex++] = helpVec3_1.z;
                     }
-                    //
                     if (meshAttribute["NORMAL" /* NORMAL */]) {
                         if (orginAttributes.NORMAL) {
                             var normalBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.NORMAL));
-                            var target = tempVertexBuffers["NORMAL" /* NORMAL */];
-                            var count = normalBuffer.length;
-                            var startIndex_1 = target.length;
-                            target.length += count;
-                            for (var j = 0; j < count; j += 3) {
-                                helpVec3_1.x = normalBuffer[j + 0];
-                                helpVec3_1.y = normalBuffer[j + 1];
-                                helpVec3_1.z = normalBuffer[j + 2];
-                                helpVec3_1.applyDirection(worldMatrix).applyDirection(helpInverseMatrix);
-                                target[startIndex_1 + j] = helpVec3_1.x;
-                                target[startIndex_1 + j + 1] = helpVec3_1.y;
-                                target[startIndex_1 + j + 2] = helpVec3_1.z;
+                            for (var j = 0, l = normalBuffer.length; j < l; j += 3) {
+                                helpVec3_1.fromArray(normalBuffer, j).applyDirection(worldMatrix).applyDirection(helpInverseMatrix);
+                                combineNormal[normalIndex++] = helpVec3_1.x;
+                                combineNormal[normalIndex++] = helpVec3_1.y;
+                                combineNormal[normalIndex++] = helpVec3_1.z;
                             }
-                            // _copyAccessorBufferArray(glTFAsset, orginAttributes.NORMAL, tempVertexBuffers[gltf.AttributeSemanticType.NORMAL]);
                         }
                         else {
-                            _fillDefaultArray(tempVertexBuffers["NORMAL" /* NORMAL */], orginVertexCount, [0, 0, 0]);
-                        }
-                    }
-                    // if (meshAttribute[gltf.AttributeSemanticType.TANGENT]) { TODO
-                    //     if (orginAttributes.TANGENT) {
-                    //         const tangentBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TANGENT)) as Float32Array;
-                    //         const target = tempVertexBuffers[gltf.AttributeSemanticType.TANGENT];
-                    //         const count = tangentBuffer.length;
-                    //         let startIndex = target.length;
-                    //         target.length += count;
-                    //         for (let j = 0; j < count; j += 4) {
-                    //             helpVec3_1.x = tangentBuffer[j + 0];
-                    //             helpVec3_1.y = tangentBuffer[j + 1];
-                    //             helpVec3_1.z = tangentBuffer[j + 2];
-                    //             worldMatrix.transformNormal(helpVec3_1);
-                    //             helpInverseMatrix.transformNormal(helpVec3_1);
-                    //             helpVec3_1.normalize();
-                    //             target[startIndex + j] = helpVec3_1.x;
-                    //             target[startIndex + j + 1] = helpVec3_1.y;
-                    //             target[startIndex + j + 2] = helpVec3_1.z;
-                    //             target[startIndex + j + 3] = tangentBuffer[j + 3];
-                    //         }
-                    //         // _copyAccessorBufferArray(glTFAsset, orginAttributes.TANGENT, tempVertexBuffers[gltf.AttributeSemanticType.TANGENT]);
-                    //     } else {
-                    //         _fillDefaultArray(tempVertexBuffers[gltf.AttributeSemanticType.TANGENT], orginVertexCount, [0, 0, 0, 1]);
-                    //     }
-                    // }
-                    if (meshAttribute["COLOR_0" /* COLOR_0 */]) {
-                        if (orginAttributes.COLOR_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_0, tempVertexBuffers["COLOR_0" /* COLOR_0 */]);
-                        }
-                        else {
-                            _fillDefaultArray(tempVertexBuffers["COLOR_0" /* COLOR_0 */], orginVertexCount, [1, 1, 1, 1]);
+                            _fillBuffer(combineNormal, normalIndex, orginVertexCount, [0, 0, 0]);
+                            normalIndex += orginVertexCount * 3;
                         }
                     }
                     if (meshAttribute["TEXCOORD_0" /* TEXCOORD_0 */]) {
                         if (orginAttributes.TEXCOORD_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0, tempVertexBuffers["TEXCOORD_0" /* TEXCOORD_0 */]);
+                            _copyAccessorBuffer(mesh, orginAttributes.TEXCOORD_0, combineUV0, uv0Index);
                         }
                         else {
-                            _fillDefaultArray(tempVertexBuffers["TEXCOORD_0" /* TEXCOORD_0 */], orginVertexCount, [0, 0]);
+                            _fillBuffer(combineUV0, uv0Index, orginVertexCount, [0, 0]);
                         }
+                        uv0Index += orginVertexCount * 2;
                     }
                     if (meshAttribute["TEXCOORD_1" /* TEXCOORD_1 */]) {
                         if (combineInstance.lightmapIndex >= 0) {
                             //如果有lightmap,那么将被合并的uv1的坐标转换为root下的坐标,有可能uv1没有，那用uv0来算
-                            var uvBuffer = orginAttributes.TEXCOORD_1 ?
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_1)) :
-                                mesh.createTypeArrayFromAccessor(mesh.getAccessor(orginAttributes.TEXCOORD_0));
+                            var uvAccessor = orginAttributes.TEXCOORD_1 ? mesh.getAccessor(orginAttributes.TEXCOORD_1) : mesh.getAccessor(orginAttributes.TEXCOORD_0);
+                            var uvBuffer = mesh.createTypeArrayFromAccessor(uvAccessor);
                             //
-                            for (var j = 0; j < uvBuffer.length; j += 2) {
+                            for (var j = 0, l = uvBuffer.length; j < l; j += 2) {
                                 var u = uvBuffer[j + 0];
                                 var v = uvBuffer[j + 1];
                                 u = ((u * orginLightmapScaleOffset.x + orginLightmapScaleOffset.z) - lightmapScaleOffset.z) / lightmapScaleOffset.x;
                                 v = ((v * orginLightmapScaleOffset.y - orginLightmapScaleOffset.y - orginLightmapScaleOffset.w) + lightmapScaleOffset.w + lightmapScaleOffset.x) / lightmapScaleOffset.x;
-                                tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */].push(u, v);
+                                combineUV1[uv1Index++] = u;
+                                combineUV1[uv1Index++] = v;
                             }
-                            // if (orginAttributes.TEXCOORD_1 !== undefined) {
-                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers[gltf.AttributeSemanticType.TEXCOORD_1]);
-                            // }
-                            // else {
-                            //     _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_0!, tempVertexBuffers[gltf.AttributeSemanticType.TEXCOORD_1]);
-                            // }
                         }
                         else {
                             if (orginAttributes.TEXCOORD_1 !== undefined) {
-                                _copyAccessorBufferArray(mesh, orginAttributes.TEXCOORD_1, tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */]);
+                                _copyAccessorBuffer(mesh, orginAttributes.TEXCOORD_1, combineUV1, uv1Index);
                             }
                             else {
-                                _fillDefaultArray(tempVertexBuffers["TEXCOORD_1" /* TEXCOORD_1 */], orginVertexCount, [0, 0]);
+                                _fillBuffer(combineUV1, uv1Index, orginVertexCount, [0, 0]);
                             }
+                            uv1Index += orginVertexCount * 2;
                         }
                     }
-                    if (meshAttribute["JOINTS_0" /* JOINTS_0 */]) {
-                        if (orginAttributes.JOINTS_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.JOINTS_0, tempVertexBuffers["JOINTS_0" /* JOINTS_0 */]);
+                    if (meshAttribute["COLOR_0" /* COLOR_0 */]) {
+                        if (orginAttributes.COLOR_0) {
+                            _copyAccessorBuffer(mesh, orginAttributes.COLOR_0, combineColor0, color0Index);
                         }
                         else {
-                            _fillDefaultArray(tempVertexBuffers["JOINTS_0" /* JOINTS_0 */], orginVertexCount, [0, 0, 0, 0]);
+                            _fillBuffer(combineColor0, color0Index, orginVertexCount, [1, 1, 1, 1]);
                         }
-                    }
-                    if (meshAttribute["WEIGHTS_0" /* WEIGHTS_0 */]) {
-                        if (orginAttributes.WEIGHTS_0) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.WEIGHTS_0, tempVertexBuffers["WEIGHTS_0" /* WEIGHTS_0 */]);
-                        }
-                        else {
-                            _fillDefaultArray(tempVertexBuffers["WEIGHTS_0" /* WEIGHTS_0 */], orginVertexCount, [1, 0, 0, 0]);
-                        }
+                        color0Index += orginVertexCount * 4;
                     }
                     if (meshAttribute["COLOR_1" /* COLOR_1 */]) {
                         if (orginAttributes.COLOR_1) {
-                            _copyAccessorBufferArray(mesh, orginAttributes.COLOR_1, tempVertexBuffers["COLOR_1" /* COLOR_1 */]);
+                            _copyAccessorBuffer(mesh, orginAttributes.COLOR_1, combineColor0, color1Index);
                         }
                         else {
-                            _fillDefaultArray(tempVertexBuffers["COLOR_1" /* COLOR_1 */], orginVertexCount, [1, 1, 1, 1]);
+                            _fillBuffer(combineColor0, color1Index, orginVertexCount, [1, 1, 1, 1]);
                         }
+                        color1Index += orginVertexCount * 4;
+                    }
+                    if (meshAttribute["JOINTS_0" /* JOINTS_0 */]) {
+                        if (orginAttributes.JOINTS_0) {
+                            _copyAccessorBuffer(mesh, orginAttributes.JOINTS_0, combineJoint0, jointIndex);
+                        }
+                        else {
+                            _fillBuffer(combineJoint0, jointIndex, orginVertexCount, [0, 0, 0, 0]);
+                        }
+                        jointIndex += orginVertexCount * 4;
+                    }
+                    if (meshAttribute["WEIGHTS_0" /* WEIGHTS_0 */]) {
+                        if (orginAttributes.WEIGHTS_0) {
+                            _copyAccessorBuffer(mesh, orginAttributes.WEIGHTS_0, combineWeight0, weightIndex);
+                        }
+                        else {
+                            _fillBuffer(combineWeight0, weightIndex, orginVertexCount, [1, 0, 0, 0]);
+                        }
+                        weightIndex += orginVertexCount * 4;
                     }
                 }
-                var subIndexBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices));
-                // //indexBuffers
-                if (!tempIndexBuffers[i]) {
-                    tempIndexBuffers[i] = [];
-                }
-                for (var j = 0; j < subIndexBuffer.length; j++) {
-                    var index = subIndexBuffer[j] + startIndex;
-                    tempIndexBuffers[i].push(index);
+                var indicesBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices));
+                for (var j = 0, l = indicesBuffer.length; j < l; j++) {
+                    var index = indicesBuffer[j] + startIndex;
+                    combineIndices[indexIndex++] = index;
                     endIndex = index > endIndex ? index : endIndex;
                 }
+                if (!subIndexBuffersCount[i]) {
+                    subIndexBuffersCount[i] = 0;
+                }
+                subIndexBuffersCount[i] += indicesBuffer.length;
             }
             startIndex = endIndex + 1;
             meshFilter.mesh = null;
         }
-        var combineMesh = egret3d.Mesh.create(combineInstance.vertexCount, combineInstance.indexBufferTotalSize, newAttribute);
-        combineMesh.drawMode = 35048 /* Dynamic */;
-        var newVertexBuffers = new Float32Array(combineMesh.buffers[0].buffer); // 这里依赖了 buffers 必须是两个分离的 buffer TODO
-        var newIndexBuffers = combineMesh.buffers[1];
-        var iv = 0;
-        for (var key in tempVertexBuffers) {
-            var arr = tempVertexBuffers[key];
-            for (var _b = 0, arr_1 = arr; _b < arr_1.length; _b++) {
-                var v = arr_1[_b];
-                newVertexBuffers[iv++] = v;
-            }
-        }
-        var ii = 0;
-        for (var key in tempIndexBuffers) {
-            var arr = tempIndexBuffers[key];
-            for (var _c = 0, arr_2 = arr; _c < arr_2.length; _c++) {
-                var v = arr_2[_c];
-                newIndexBuffers[ii++] = v;
-            }
-        }
-        var indicesCount = 0;
-        for (var i = 1; i < tempIndexBuffers.length; i++) {
-            var subLen = tempIndexBuffers[i].length;
+        //TODO submesh创建有问题
+        for (var i = 1, l = subIndexBuffersCount.length; i < l; i++) {
+            var subLen = subIndexBuffersCount[i];
             //第一个submesh在构造函数中已经添加，需要手动添加后续的
-            combineMesh.addSubMesh(indicesCount, subLen, i);
-            indicesCount += subLen;
+            combineMesh.addSubMesh(subLen, i);
         }
         return combineMesh;
     }
-    function _copyAccessorBufferArray(mesh, accessor, target) {
-        var buffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(accessor));
-        var count = buffer.length;
-        var startIndex = target.length;
-        target.length += count;
-        for (var i = 0; i < count; i++) {
-            target[startIndex + i] = buffer[i];
-        }
+    /**
+     * 尝试对场景内所有静态对象合并
+     * @deprecated
+     */
+    function autoCombine(scene) {
+        combine(scene.gameObjects);
     }
-    function _fillDefaultArray(target, count, defaultValue) {
-        var startIndex = target.length;
-        var defaultValueCount = defaultValue.length;
-        target.length += count * defaultValueCount;
-        for (var i = 0; i < count; i++) {
-            for (var j = 0; j < defaultValueCount; j++) {
-                target[startIndex++] = defaultValue[j];
-            }
-        }
-    }
-    var CombineInstance = (function () {
-        function CombineInstance() {
-            this.vertexCount = 0;
-            this.vertexBufferSize = 0;
-            this.indexBufferTotalSize = 0;
-            this.lightmapIndex = -1;
-            this.meshAttribute = {};
-            this.root = null;
-            this.instances = [];
-        }
-        return CombineInstance;
-    }());
-    __reflect(CombineInstance.prototype, "CombineInstance");
+    egret3d.autoCombine = autoCombine;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -26313,201 +26318,6 @@ var egret3d;
         }
         creater.createGameObject = createGameObject;
     })(creater = egret3d.creater || (egret3d.creater = {}));
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    /**
-     * 几何胶囊体。
-     * - 与 Y 轴对齐。
-     */
-    var Capsule = (function (_super) {
-        __extends(Capsule, _super);
-        /**
-         * 请使用 `egret3d.Capsule.create()` 创建实例。
-         * @see egret3d.Capsule.create()
-         */
-        function Capsule() {
-            var _this = _super.call(this) || this;
-            /**
-             * 该胶囊体的半径。
-             */
-            _this.radius = 0.0;
-            /**
-             * 该胶囊体圆柱部分的高度。
-             */
-            _this.height = 0.0;
-            /**
-             * 该胶囊体的中心点。
-             */
-            _this.center = egret3d.Vector3.create();
-            return _this;
-        }
-        /**
-         * 创建一个几何胶囊体。
-         * @param center 中心点。
-         * @param radius 半径。
-         */
-        Capsule.create = function (center, radius, height) {
-            if (center === void 0) { center = egret3d.Vector3.ZERO; }
-            if (radius === void 0) { radius = 0.0; }
-            if (height === void 0) { height = 0.0; }
-            if (this._instances.length > 0) {
-                var instance = this._instances.pop().set(center, radius, height);
-                instance._released = false;
-                return instance;
-            }
-            return new Capsule().set(center, radius, height);
-        };
-        Capsule.prototype.serialize = function () {
-            return [this.center.x, this.center.y, this.center.z, this.radius, this.height];
-        };
-        Capsule.prototype.deserialize = function (value) {
-            this.radius = value[3];
-            this.height = value[4];
-            this.center.fromArray(value);
-            return this;
-        };
-        Capsule.prototype.clone = function () {
-            return Capsule.create(this.center, this.radius, this.height);
-        };
-        Capsule.prototype.copy = function (value) {
-            return this.set(value.center, value.radius, value.height);
-        };
-        Capsule.prototype.set = function (center, radius, height) {
-            this.radius = radius;
-            this.height = height;
-            this.center.copy(center);
-            return this;
-        };
-        /**
-         * 该几何体是否包含指定的点。
-         * @param point 一个点。
-         */
-        Capsule.prototype.contains = function (point) {
-            var x = point.x, y = point.y, z = point.z;
-            var _a = this, radius = _a.radius, center = _a.center;
-            var halfHeight = this.height * 0.5;
-            if (y < center.y - halfHeight - radius || center.y + halfHeight + radius < y) {
-                return false;
-            }
-            if (x < center.x - radius || center.x + radius < x) {
-                return false;
-            }
-            if (z < center.z - radius || center.z + radius < z) {
-                return false;
-            }
-            var dX = x - center.x;
-            var dY = y - center.y;
-            var dZ = z - center.z;
-            var radius2 = radius * radius;
-            if (halfHeight > 0.0) {
-                if (dY < -halfHeight) {
-                    var bottomCenter = egret3d.helpVector3A.copy(center);
-                    bottomCenter.y -= halfHeight;
-                    return bottomCenter.getSquaredDistance(point) <= radius2;
-                }
-                else if (halfHeight < dY) {
-                    var bottomCenter = egret3d.helpVector3A.copy(center);
-                    bottomCenter.y += halfHeight;
-                    return bottomCenter.getSquaredDistance(point) <= radius2;
-                }
-                return (dX * dX + dZ * dZ) <= radius2;
-            }
-            return center.getSquaredDistance(point) <= radius2;
-        };
-        Capsule.prototype.raycast = function (ray, raycastInfo) {
-            if (raycastInfo === void 0) { raycastInfo = null; }
-            var _a = this, radius = _a.radius, center = _a.center;
-            var halfHeight = this.height * 0.5;
-            var begin = egret3d.helpVector3A.copy(ray.origin).subtract(center);
-            var end = egret3d.helpVector3B.multiplyScalar(100000.0, ray.direction).add(begin); // TODO 精度问题。
-            var p1x = begin.x;
-            var p1y = begin.y;
-            var p1z = begin.z;
-            var p2x = end.x;
-            var p2y = end.y;
-            var p2z = end.z;
-            var radius2 = radius * radius;
-            var dx = p2x - p1x;
-            var dy = p2y - p1y;
-            var dz = p2z - p1z;
-            // XZ
-            var tminxz = 0.0;
-            var tmaxxz = 1.0;
-            var a = dx * dx + dz * dz;
-            var b = p1x * dx + p1z * dz;
-            var c = (p1x * p1x + p1z * p1z) - radius2;
-            var d = b * b - a * c;
-            if (d < 0.0)
-                return false;
-            if (a > 0.0) {
-                var sqrtD = Math.sqrt(d);
-                var ia = 1.0 / a;
-                tminxz = (-b - sqrtD) * ia;
-                tmaxxz = (-b + sqrtD) * ia;
-                if (tminxz >= 1.0 || tmaxxz <= 0.0)
-                    return false;
-            }
-            else {
-                if (c >= 0.0)
-                    return false;
-                tminxz = 0.0;
-                tmaxxz = 1.0;
-            }
-            var min;
-            var crossY = p1y + dy * tminxz;
-            if (-halfHeight < crossY && crossY < halfHeight) {
-                if (tminxz > 0.0) {
-                    // hit: side
-                    min = tminxz;
-                    if (raycastInfo) {
-                        var px = p1x + min * dx;
-                        var py = p1z + min * dy;
-                        raycastInfo.distance = min;
-                        raycastInfo.position.set(px, crossY, py).add(center);
-                        if (raycastInfo.normal) {
-                            raycastInfo.normal.set(px, 0.0, py).normalize();
-                        }
-                    }
-                    return true;
-                }
-                return false;
-            }
-            // Sphere test.
-            var sphereCenter = egret3d.helpVector3C.set(center.x, center.y + (crossY < 0.0 ? -halfHeight : halfHeight), center.z);
-            var v1 = egret3d.helpVector3D.subtract(sphereCenter, ray.origin);
-            var tca = v1.dot(ray.direction);
-            var d2 = v1.dot(v1) - tca * tca;
-            if (d2 > radius2)
-                return false;
-            var thc = Math.sqrt(radius2 - d2);
-            var t0 = tca - thc;
-            var t1 = tca + thc;
-            if (t0 < 0.0 || t1 < 0.0)
-                return false;
-            if (raycastInfo) {
-                var position = ray.getPointAt(raycastInfo.distance = t0, raycastInfo.position);
-                var normal = raycastInfo.normal;
-                if (normal) {
-                    normal.subtract(position, sphereCenter).normalize();
-                }
-            }
-            return true;
-        };
-        Capsule._instances = [];
-        __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-        ], Capsule.prototype, "radius", void 0);
-        __decorate([
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-        ], Capsule.prototype, "height", void 0);
-        __decorate([
-            paper.editor.property("VECTOR3" /* VECTOR3 */)
-        ], Capsule.prototype, "center", void 0);
-        return Capsule;
-    }(paper.BaseRelease));
-    egret3d.Capsule = Capsule;
-    __reflect(Capsule.prototype, "egret3d.Capsule", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -26741,6 +26551,226 @@ var egret3d;
      */
     egret3d.helpRay = Ray.create();
 })(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * 应用程序。
+     *
+     * ### 自动刷新和被动刷新
+     *
+     * 默认情况下
+     *
+     * - 自动刷新: 会以无限循环方式刷新, `PlayerMode.Player` 模式默认为自动刷新
+     * - 被动刷新: 不会启动循环, 需要刷新时需调用 `update()` 方法, `PlayerMode.Editor` 模式为被动刷新
+     *
+     * 在运行过程中可随时调用 `resume()` 切换到自动刷新, 或者调用 `pause()` 切换为被动刷新
+     *
+     * ### 限制帧频
+     *
+     * - 通过设置 `clock.frameInterval` 来设置渲染帧间隔(秒)
+     * - 通过设置 `clock.tickInterval` 来设置逻辑帧间隔(秒)
+     * - 在帧补偿的时候, 为了尽快达到同步, `clock.update()` 会在同步之前忽略此间隔, 也就是说在这种情况下, 帧率会增加, 只有逻辑帧会补偿
+     */
+    var ECS = (function () {
+        function ECS() {
+            /**
+             * 当应用程序的播放模式改变时派发事件。
+             */
+            this.onPlayerModeChange = new signals.Signal();
+            /**
+             * 引擎版本。
+             */
+            this.version = "1.5.0.001";
+            /**
+             * 系统管理器。
+             */
+            this.systemManager = paper.SystemManager.getInstance();
+            /**
+             * 场景管理器。
+             */
+            this.sceneManager = paper.SceneManager.getInstance();
+            /**
+             *
+             */
+            this.gameObjectContext = paper.Context.create(paper.GameObject);
+            this._isFocused = false;
+            this._isRunning = false;
+            this._playerMode = 1 /* Player */;
+            this._loop = this._loop.bind(this);
+        }
+        /**
+         * 应用程序单例。
+         */
+        ECS.getInstance = function () {
+            if (!this._instance) {
+                this._instance = new ECS();
+            }
+            return this._instance;
+        };
+        /**
+         * core updating loop
+         */
+        ECS.prototype._loop = function (timestamp) {
+            if (!this._isRunning) {
+                return;
+            }
+            if (!timestamp) {
+                requestAnimationFrame(this._loop);
+                return;
+            }
+            timestamp = timestamp || performance.now();
+            var result = paper.clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
+            this._update(result);
+            requestAnimationFrame(this._loop);
+        };
+        /**
+         * including calculating, status updating, rerendering and logical updating
+         */
+        ECS.prototype._update = function (_a) {
+            var _b = _a === void 0 ? { tickCount: 1, frameCount: 1 } : _a, tickCount = _b.tickCount, frameCount = _b.frameCount;
+            var systemManager = this.systemManager;
+            if (tickCount) {
+                systemManager._startup();
+                systemManager._execute(tickCount, frameCount);
+                systemManager._cleanup(frameCount);
+                systemManager._teardown();
+            }
+        };
+        /**
+         *
+         */
+        ECS.prototype.initialize = function (options) {
+            this._playerMode = options.playerMode || 1 /* Player */;
+            var _a = this, systemManager = _a.systemManager, gameObjectContext = _a.gameObjectContext;
+            systemManager.register(paper.EnableSystem, gameObjectContext, 1000 /* Enable */);
+            systemManager.register(paper.StartSystem, gameObjectContext, 2000 /* Start */);
+            systemManager.register(paper.FixedUpdateSystem, gameObjectContext, 3000 /* FixedUpdate */);
+            systemManager.register(paper.UpdateSystem, gameObjectContext, 4000 /* Update */);
+            systemManager.register(paper.LateUpdateSystem, gameObjectContext, 6000 /* LateUpdate */);
+            systemManager.register(paper.DisableSystem, gameObjectContext, 9000 /* Disable */);
+            systemManager.preRegisterSystems();
+            if (options.tickInterval !== (void 0)) {
+                paper.clock.tickInterval = options.tickInterval;
+            }
+            console.info("tick rate:", paper.clock.tickInterval ? (1.0 / paper.clock.tickInterval) : "auto");
+            if (options.frameInterval !== (void 0)) {
+                paper.clock.frameInterval = options.frameInterval;
+            }
+            console.info("frame rate:", paper.clock.frameInterval ? (1.0 / paper.clock.frameInterval) : "auto");
+            this.resume();
+        };
+        /**
+         * TODO
+         * @internal
+         */
+        ECS.prototype.pause = function () {
+            this._isRunning = false;
+            paper.clock.reset();
+        };
+        /**
+         * TODO
+         * @internal
+         */
+        ECS.prototype.resume = function () {
+            if (this._isRunning) {
+                return;
+            }
+            this._isRunning = true;
+            paper.clock.reset();
+            this._loop();
+        };
+        /**
+         * engine start
+         *
+         * TODO:
+         */
+        ECS.prototype.start = function () {
+            switch (this._playerMode) {
+                case 4 /* Editor */:
+                    this.pause();
+                    this._update();
+                    break;
+                case 1 /* Player */:
+                // breakthrough
+                case 2 /* DebugPlayer */:
+                    this.resume();
+                    break;
+                default: break;
+            }
+        };
+        /**
+         * 显式更新
+         *
+         * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
+         * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
+         */
+        ECS.prototype.update = function () {
+            // if it is running, updating will occur in next frame
+            if (this._isRunning) {
+                return;
+            }
+            this._update();
+        };
+        Object.defineProperty(ECS.prototype, "isMobile", {
+            /**
+             *
+             */
+            get: function () {
+                var userAgent = (navigator && navigator.userAgent) ? navigator.userAgent.toLowerCase() : "";
+                return userAgent.indexOf("mobile") >= 0 || userAgent.indexOf("android") >= 0;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ECS.prototype, "isFocused", {
+            /**
+             * TODO
+             * @internal
+             */
+            get: function () {
+                return this._isFocused;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ECS.prototype, "isRunning", {
+            /**
+             * TODO
+             * @internal
+             */
+            get: function () {
+                return this._isRunning;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(ECS.prototype, "playerMode", {
+            /**
+             * 运行模式。
+             */
+            get: function () {
+                return this._playerMode;
+            },
+            set: function (value) {
+                if (this._playerMode === value) {
+                    return;
+                }
+                this._playerMode = value;
+                this.onPlayerModeChange.dispatch(this.playerMode);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        ECS._instance = null;
+        return ECS;
+    }());
+    paper.ECS = ECS;
+    __reflect(ECS.prototype, "paper.ECS");
+    /**
+     * 应用程序单例。
+     */
+    paper.Application = ECS.getInstance();
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var _index = 0;
@@ -27001,6 +27031,7 @@ var egret3d;
             _this._shader = null;
             _this.needUpdate = function (dirty) {
                 _this._dirty |= dirty;
+                _this._version++;
             };
             return _this;
         }
@@ -27837,231 +27868,6 @@ var egret3d;
     egret3d.Material = Material;
     __reflect(Material.prototype, "egret3d.Material");
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    /**
-     * 应用程序。
-     *
-     * ### 自动刷新和被动刷新
-     *
-     * 默认情况下
-     *
-     * - 自动刷新: 会以无限循环方式刷新, `PlayerMode.Player` 模式默认为自动刷新
-     * - 被动刷新: 不会启动循环, 需要刷新时需调用 `update()` 方法, `PlayerMode.Editor` 模式为被动刷新
-     *
-     * 在运行过程中可随时调用 `resume()` 切换到自动刷新, 或者调用 `pause()` 切换为被动刷新
-     *
-     * ### 限制帧频
-     *
-     * - 通过设置 `clock.frameInterval` 来设置渲染帧间隔(秒)
-     * - 通过设置 `clock.tickInterval` 来设置逻辑帧间隔(秒)
-     * - 在帧补偿的时候, 为了尽快达到同步, `clock.update()` 会在同步之前忽略此间隔, 也就是说在这种情况下, 帧率会增加, 只有逻辑帧会补偿
-     */
-    var ECS = (function () {
-        function ECS() {
-            /**
-             * 当应用程序的播放模式改变时派发事件。
-             */
-            this.onPlayerModeChanged = new signals.Signal();
-            // /**
-            //  * 
-            //  */
-            // public delayStatrup: uint = 0;
-            /**
-             * 引擎版本。
-             */
-            this.version = "1.5.0.001";
-            /**
-             * 系统管理器。
-             */
-            this.systemManager = paper.SystemManager.getInstance();
-            /**
-             * 场景管理器。
-             */
-            this.sceneManager = paper.SceneManager.getInstance();
-            /**
-             *
-             */
-            this.gameObjectContext = paper.Context.create(paper.GameObject);
-            this._isFocused = false;
-            this._isRunning = false;
-            this._playerMode = 1 /* Player */;
-            this._loop = this._loop.bind(this);
-        }
-        /**
-         * 应用程序单例。
-         */
-        ECS.getInstance = function () {
-            if (!this._instance) {
-                this._instance = new ECS();
-            }
-            return this._instance;
-        };
-        // private _runOptions: RunOptions | null = null;
-        /**
-         * core updating loop
-         */
-        ECS.prototype._loop = function (timestamp) {
-            if (!this._isRunning) {
-                return;
-            }
-            if (!timestamp) {
-                requestAnimationFrame(this._loop);
-                return;
-            }
-            timestamp = timestamp || performance.now();
-            var result = paper.clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
-            this._update(result);
-            requestAnimationFrame(this._loop);
-        };
-        /**
-         * including calculating, status updating, rerendering and logical updating
-         */
-        ECS.prototype._update = function (_a) {
-            var _b = _a === void 0 ? { tickCount: 1, frameCount: 1 } : _a, tickCount = _b.tickCount, frameCount = _b.frameCount;
-            var systemManager = this.systemManager;
-            if (tickCount) {
-                systemManager._startup();
-                systemManager._execute(tickCount, frameCount);
-                systemManager._cleanup(frameCount);
-                systemManager._teardown();
-            }
-        };
-        /**
-         *
-         */
-        ECS.prototype.initialize = function (options) {
-            this._playerMode = options.playerMode || 1 /* Player */;
-            var _a = this, systemManager = _a.systemManager, gameObjectContext = _a.gameObjectContext;
-            systemManager.register(paper.EnableSystem, gameObjectContext, 1000 /* Enable */);
-            systemManager.register(paper.StartSystem, gameObjectContext, 2000 /* Start */);
-            systemManager.register(paper.FixedUpdateSystem, gameObjectContext, 3000 /* FixedUpdate */);
-            systemManager.register(paper.UpdateSystem, gameObjectContext, 4000 /* Update */);
-            systemManager.register(paper.LateUpdateSystem, gameObjectContext, 6000 /* LateUpdate */);
-            systemManager.register(paper.DisableSystem, gameObjectContext, 9000 /* Disable */);
-            systemManager.preRegisterSystems();
-            if (options.tickInterval !== (void 0)) {
-                paper.clock.tickInterval = options.tickInterval;
-            }
-            console.info("tick rate:", paper.clock.tickInterval ? (1.0 / paper.clock.tickInterval) : "auto");
-            if (options.frameInterval !== (void 0)) {
-                paper.clock.frameInterval = options.frameInterval;
-            }
-            console.info("frame rate:", paper.clock.frameInterval ? (1.0 / paper.clock.frameInterval) : "auto");
-        };
-        /**
-         * TODO
-         * @internal
-         */
-        ECS.prototype.pause = function () {
-            this._isRunning = false;
-            paper.clock.reset();
-        };
-        /**
-         * TODO
-         * @internal
-         */
-        ECS.prototype.resume = function () {
-            if (this._isRunning) {
-                return;
-            }
-            this._isRunning = true;
-            paper.clock.reset();
-            this._loop();
-        };
-        /**
-         * engine start
-         *
-         * TODO:
-         */
-        ECS.prototype.start = function () {
-            switch (this._playerMode) {
-                case 4 /* Editor */:
-                    this.pause();
-                    this._update();
-                    break;
-                case 1 /* Player */:
-                // breakthrough
-                case 2 /* DebugPlayer */:
-                    this.resume();
-                    break;
-                default:
-                    break;
-            }
-        };
-        /**
-         * 显式更新
-         *
-         * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
-         * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
-         */
-        ECS.prototype.update = function () {
-            // if it is running, updating will occur in next frame
-            if (this._isRunning) {
-                return;
-            }
-            this._update();
-        };
-        Object.defineProperty(ECS.prototype, "isMobile", {
-            /**
-             *
-             */
-            get: function () {
-                var userAgent = (navigator && navigator.userAgent) ? navigator.userAgent.toLowerCase() : "";
-                return userAgent.indexOf("mobile") >= 0 || userAgent.indexOf("android") >= 0;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ECS.prototype, "isFocused", {
-            /**
-             * TODO
-             * @internal
-             */
-            get: function () {
-                return this._isFocused;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ECS.prototype, "isRunning", {
-            /**
-             * TODO
-             * @internal
-             */
-            get: function () {
-                return this._isRunning;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(ECS.prototype, "playerMode", {
-            /**
-             * 运行模式。
-             */
-            get: function () {
-                return this._playerMode;
-            },
-            set: function (value) {
-                if (this._playerMode === value) {
-                    return;
-                }
-                this._playerMode = value;
-                this.onPlayerModeChanged.dispatch(this.playerMode);
-            },
-            enumerable: true,
-            configurable: true
-        });
-        ECS._instance = null;
-        return ECS;
-    }());
-    paper.ECS = ECS;
-    __reflect(ECS.prototype, "paper.ECS");
-    /**
-     * 应用程序单例。
-     */
-    paper.Application = ECS.getInstance();
-})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var _helpVector3 = egret3d.Vector3.create();
@@ -28324,6 +28130,45 @@ var egret3d;
      */
     var helpPlane = Plane.create();
 })(egret3d || (egret3d = {}));
+var paper;
+(function (paper) {
+    /**
+     * @internal
+     */
+    var GroupComponent = (function (_super) {
+        __extends(GroupComponent, _super);
+        function GroupComponent() {
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this.componentIndex = -1;
+            _this.components = [];
+            return _this;
+        }
+        GroupComponent.prototype.initialize = function (componentIndex) {
+            _super.prototype.initialize.call(this);
+            this.componentIndex = componentIndex;
+        };
+        GroupComponent.prototype.uninitialize = function () {
+            this.componentIndex = -1;
+            this.components.length = 0;
+            this.entity = null;
+            this._lifeStates = 0 /* None */;
+        };
+        GroupComponent.prototype.addComponent = function (component) {
+            this.components.push(component);
+        };
+        GroupComponent.prototype.removeComponent = function (component) {
+            var index = this.components.indexOf(component);
+            if (index >= 0) {
+                this.components.splice(index, 1);
+                return true;
+            }
+            return false;
+        };
+        return GroupComponent;
+    }(paper.Component));
+    paper.GroupComponent = GroupComponent;
+    __reflect(GroupComponent.prototype, "paper.GroupComponent");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     /**
@@ -29507,20 +29352,22 @@ var egret3d;
     (function (ShaderLib) {
         ShaderLib.copy = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "copy_vert", "type": 35633, "uri": "varying vec2 vUv;\nvoid main() {\n\tvUv = uv;\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}" }, { "name": "copy_frag", "type": 35632, "uri": "uniform float opacity;\nuniform sampler2D map;\nvarying vec2 vUv;\nvoid main() {\n\tvec4 texel = texture2D( map, vUv );\n\tgl_FragColor = opacity * texel;\n}" }], "techniques": [{ "name": "copy", "attributes": {}, "uniforms": { "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\tgl_Position.z = gl_Position.w;\n}\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\nuniform float tFlip;\nuniform float opacity;\nvarying vec3 vWorldPosition;\nvoid main() {\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\n\tgl_FragColor.a *= opacity;\n}\n" }], "techniques": [{ "name": "cube", "attributes": {}, "uniforms": { "tCube": { "type": 35680 }, "tFlip": { "type": 5126, "value": 1 }, "opacity": { "type": 5126, "value": 1 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n}\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\n\tuniform float opacity;\n#endif\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#if DEPTH_PACKING == 3200\n\t\tdiffuseColor.a = opacity;\n\t#endif\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <logdepthbuf_fragment>\n\t#if DEPTH_PACKING == 3200\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\n\t#elif DEPTH_PACKING == 3201\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\n\t#endif\n}\n" }], "techniques": [{ "name": "depth", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.distanceRGBA = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\nvarying vec3 vWorldPosition;\n#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\t\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <worldpos_vertex>\n\t#include <clipping_planes_vertex>\n\tgl_Position.x *= -1.0;\n\t\n\tvWorldPosition = worldPosition.xyz;\n}\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\nuniform vec3 referencePosition;\nuniform float nearDistance;\nuniform float farDistance;\nvarying vec3 vWorldPosition;\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main () {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\tfloat dist = length( vWorldPosition - referencePosition );\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\n\tdist = saturate( dist );\n\tgl_FragColor = packDepthToRGBA( dist );\n}\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n}\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\n\tuniform float opacity;\n#endif\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#if DEPTH_PACKING == 3200\n\t\tdiffuseColor.a = opacity;\n\t#endif\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <logdepthbuf_fragment>\n\t#if DEPTH_PACKING == 3200\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\n\t#elif DEPTH_PACKING == 3201\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\n\t#endif\n}\n" }], "techniques": [{ "name": "depth", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.distanceRGBA = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\nvarying vec3 vWorldPosition;\n#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\t\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <worldpos_vertex>\n\t#include <clipping_planes_vertex>\n\tgl_Position.x *= -1.0;\n\t\n\tvWorldPosition = worldPosition.xyz;\n}\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\nuniform vec3 referencePosition;\nuniform float nearDistance;\nuniform float farDistance;\nvarying vec3 vWorldPosition;\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main () {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\tfloat dist = length( vWorldPosition - referencePosition );\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\n\tdist = saturate( dist );\n\tgl_FragColor = packDepthToRGBA( dist );\n}\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.equirect = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\tgl_Position.z = gl_Position.w;\n}\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\tsampleUV.y = 1.0 - sampleUV.y;\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\n}\n" }], "techniques": [{ "name": "equirect", "attributes": {}, "uniforms": { "tEquirect": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.fxaa1 = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "fxaa1_vert", "type": 35633, "uri": "varying vec2 vUv;\nvoid main(){\n    vUv=uv;\n    gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);\n}" }, { "name": "fxaa1_frag", "type": 35632, "uri": "precision highp float;\nuniform sampler2D map;\nuniform vec2 resolution;\nvarying vec2 vUv;\n#define FXAA_PC 1\n#define FXAA_GLSL_100 1\n#define FXAA_QUALITY_PRESET 12\n#define FXAA_GREEN_AS_LUMA 1\n#ifndef FXAA_PC_CONSOLE\n    #define FXAA_PC_CONSOLE 0\n#endif\n#ifndef FXAA_GLSL_120\n    #define FXAA_GLSL_120 0\n#endif\n#ifndef FXAA_GLSL_130\n    #define FXAA_GLSL_130 0\n#endif\n#ifndef FXAA_HLSL_3\n    #define FXAA_HLSL_3 0\n#endif\n#ifndef FXAA_HLSL_4\n    #define FXAA_HLSL_4 0\n#endif\n#ifndef FXAA_HLSL_5\n    #define FXAA_HLSL_5 0\n#endif\n#ifndef FXAA_GREEN_AS_LUMA\n    #define FXAA_GREEN_AS_LUMA 0\n#endif\n#ifndef FXAA_EARLY_EXIT\n    #define FXAA_EARLY_EXIT 1\n#endif\n#ifndef FXAA_DISCARD\n    #define FXAA_DISCARD 0\n#endif\n#ifndef FXAA_FAST_PIXEL_OFFSET\n    #ifdef GL_EXT_gpu_shader4\n        #define FXAA_FAST_PIXEL_OFFSET 1\n    #endif\n    #ifdef GL_NV_gpu_shader5\n        #define FXAA_FAST_PIXEL_OFFSET 1\n    #endif\n    #ifdef GL_ARB_gpu_shader5\n        #define FXAA_FAST_PIXEL_OFFSET 1\n    #endif\n    #ifndef FXAA_FAST_PIXEL_OFFSET\n        #define FXAA_FAST_PIXEL_OFFSET 0\n    #endif\n#endif\n#ifndef FXAA_GATHER4_ALPHA\n    #if (FXAA_HLSL_5 == 1)\n        #define FXAA_GATHER4_ALPHA 1\n    #endif\n    #ifdef GL_ARB_gpu_shader5\n        #define FXAA_GATHER4_ALPHA 1\n    #endif\n    #ifdef GL_NV_gpu_shader5\n        #define FXAA_GATHER4_ALPHA 1\n    #endif\n    #ifndef FXAA_GATHER4_ALPHA\n        #define FXAA_GATHER4_ALPHA 0\n    #endif\n#endif\n#ifndef FXAA_QUALITY_PRESET\n    #define FXAA_QUALITY_PRESET 12\n#endif\n#if (FXAA_QUALITY_PRESET == 10)\n    #define FXAA_QUALITY_PS 3\n    #define FXAA_QUALITY_P0 1.5\n    #define FXAA_QUALITY_P1 3.0\n    #define FXAA_QUALITY_P2 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 11)\n    #define FXAA_QUALITY_PS 4\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 3.0\n    #define FXAA_QUALITY_P3 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 12)\n    #define FXAA_QUALITY_PS 5\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 4.0\n    #define FXAA_QUALITY_P4 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 13)\n    #define FXAA_QUALITY_PS 6\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 4.0\n    #define FXAA_QUALITY_P5 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 14)\n    #define FXAA_QUALITY_PS 7\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 4.0\n    #define FXAA_QUALITY_P6 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 15)\n    #define FXAA_QUALITY_PS 8\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 4.0\n    #define FXAA_QUALITY_P7 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 20)\n    #define FXAA_QUALITY_PS 3\n    #define FXAA_QUALITY_P0 1.5\n    #define FXAA_QUALITY_P1 2.0\n    #define FXAA_QUALITY_P2 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 21)\n    #define FXAA_QUALITY_PS 4\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 22)\n    #define FXAA_QUALITY_PS 5\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 23)\n    #define FXAA_QUALITY_PS 6\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 24)\n    #define FXAA_QUALITY_PS 7\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 3.0\n    #define FXAA_QUALITY_P6 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 25)\n    #define FXAA_QUALITY_PS 8\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 4.0\n    #define FXAA_QUALITY_P7 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 26)\n    #define FXAA_QUALITY_PS 9\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 4.0\n    #define FXAA_QUALITY_P8 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 27)\n    #define FXAA_QUALITY_PS 10\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 2.0\n    #define FXAA_QUALITY_P8 4.0\n    #define FXAA_QUALITY_P9 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 28)\n    #define FXAA_QUALITY_PS 11\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 2.0\n    #define FXAA_QUALITY_P8 2.0\n    #define FXAA_QUALITY_P9 4.0\n    #define FXAA_QUALITY_P10 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 29)\n    #define FXAA_QUALITY_PS 12\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 2.0\n    #define FXAA_QUALITY_P8 2.0\n    #define FXAA_QUALITY_P9 2.0\n    #define FXAA_QUALITY_P10 4.0\n    #define FXAA_QUALITY_P11 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 39)\n    #define FXAA_QUALITY_PS 12\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.0\n    #define FXAA_QUALITY_P2 1.0\n    #define FXAA_QUALITY_P3 1.0\n    #define FXAA_QUALITY_P4 1.0\n    #define FXAA_QUALITY_P5 1.5\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 2.0\n    #define FXAA_QUALITY_P8 2.0\n    #define FXAA_QUALITY_P9 2.0\n    #define FXAA_QUALITY_P10 4.0\n    #define FXAA_QUALITY_P11 8.0\n#endif\n#if (FXAA_GLSL_100 == 1) || (FXAA_GLSL_120 == 1) || (FXAA_GLSL_130 == 1)\n    #define FxaaBool bool\n    #define FxaaDiscard discard\n    #define FxaaFloat float\n    #define FxaaFloat2 vec2\n    #define FxaaFloat3 vec3\n    #define FxaaFloat4 vec4\n    #define FxaaHalf float\n    #define FxaaHalf2 vec2\n    #define FxaaHalf3 vec3\n    #define FxaaHalf4 vec4\n    #define FxaaInt2 ivec2\n    #define FxaaSat(x) clamp(x, 0.0, 1.0)\n    #define FxaaTex sampler2D\n#else\n    #define FxaaBool bool\n    #define FxaaDiscard clip(-1)\n    #define FxaaFloat float\n    #define FxaaFloat2 float2\n    #define FxaaFloat3 float3\n    #define FxaaFloat4 float4\n    #define FxaaHalf half\n    #define FxaaHalf2 half2\n    #define FxaaHalf3 half3\n    #define FxaaHalf4 half4\n    #define FxaaSat(x) saturate(x)\n#endif\n#if (FXAA_GLSL_100 == 1)\n  #define FxaaTexTop(t, p) texture2D(t, p, 0.0)\n  #define FxaaTexOff(t, p, o, r) texture2D(t, p + (o * r), 0.0)\n#endif\n#if (FXAA_GLSL_120 == 1)\n    #define FxaaTexTop(t, p) texture2DLod(t, p, 0.0)\n    #if (FXAA_FAST_PIXEL_OFFSET == 1)\n        #define FxaaTexOff(t, p, o, r) texture2DLodOffset(t, p, 0.0, o)\n    #else\n        #define FxaaTexOff(t, p, o, r) texture2DLod(t, p + (o * r), 0.0)\n    #endif\n    #if (FXAA_GATHER4_ALPHA == 1)\n        #define FxaaTexAlpha4(t, p) textureGather(t, p, 3)\n        #define FxaaTexOffAlpha4(t, p, o) textureGatherOffset(t, p, o, 3)\n        #define FxaaTexGreen4(t, p) textureGather(t, p, 1)\n        #define FxaaTexOffGreen4(t, p, o) textureGatherOffset(t, p, o, 1)\n    #endif\n#endif\n#if (FXAA_GLSL_130 == 1)\n    #define FxaaTexTop(t, p) textureLod(t, p, 0.0)\n    #define FxaaTexOff(t, p, o, r) textureLodOffset(t, p, 0.0, o)\n    #if (FXAA_GATHER4_ALPHA == 1)\n        #define FxaaTexAlpha4(t, p) textureGather(t, p, 3)\n        #define FxaaTexOffAlpha4(t, p, o) textureGatherOffset(t, p, o, 3)\n        #define FxaaTexGreen4(t, p) textureGather(t, p, 1)\n        #define FxaaTexOffGreen4(t, p, o) textureGatherOffset(t, p, o, 1)\n    #endif\n#endif\n#if (FXAA_HLSL_3 == 1)\n    #define FxaaInt2 float2\n    #define FxaaTex sampler2D\n    #define FxaaTexTop(t, p) tex2Dlod(t, float4(p, 0.0, 0.0))\n    #define FxaaTexOff(t, p, o, r) tex2Dlod(t, float4(p + (o * r), 0, 0))\n#endif\n#if (FXAA_HLSL_4 == 1)\n    #define FxaaInt2 int2\n    struct FxaaTex { SamplerState smpl; Texture2D tex; };\n    #define FxaaTexTop(t, p) t.tex.SampleLevel(t.smpl, p, 0.0)\n    #define FxaaTexOff(t, p, o, r) t.tex.SampleLevel(t.smpl, p, 0.0, o)\n#endif\n#if (FXAA_HLSL_5 == 1)\n    #define FxaaInt2 int2\n    struct FxaaTex { SamplerState smpl; Texture2D tex; };\n    #define FxaaTexTop(t, p) t.tex.SampleLevel(t.smpl, p, 0.0)\n    #define FxaaTexOff(t, p, o, r) t.tex.SampleLevel(t.smpl, p, 0.0, o)\n    #define FxaaTexAlpha4(t, p) t.tex.GatherAlpha(t.smpl, p)\n    #define FxaaTexOffAlpha4(t, p, o) t.tex.GatherAlpha(t.smpl, p, o)\n    #define FxaaTexGreen4(t, p) t.tex.GatherGreen(t.smpl, p)\n    #define FxaaTexOffGreen4(t, p, o) t.tex.GatherGreen(t.smpl, p, o)\n#endif\n#if (FXAA_GREEN_AS_LUMA == 0)\n    FxaaFloat FxaaLuma(FxaaFloat4 rgba) { return rgba.w; }\n#else\n    FxaaFloat FxaaLuma(FxaaFloat4 rgba) { return rgba.y; }\n#endif\n#if (FXAA_PC == 1)\nFxaaFloat4 FxaaPixelShader(\n    FxaaFloat2 pos,\n    FxaaFloat4 fxaaConsolePosPos,\n    FxaaTex tex,\n    FxaaTex fxaaConsole360TexExpBiasNegOne,\n    FxaaTex fxaaConsole360TexExpBiasNegTwo,\n    FxaaFloat2 fxaaQualityRcpFrame,\n    FxaaFloat4 fxaaConsoleRcpFrameOpt,\n    FxaaFloat4 fxaaConsoleRcpFrameOpt2,\n    FxaaFloat4 fxaaConsole360RcpFrameOpt2,\n    FxaaFloat fxaaQualitySubpix,\n    FxaaFloat fxaaQualityEdgeThreshold,\n    FxaaFloat fxaaQualityEdgeThresholdMin,\n    FxaaFloat fxaaConsoleEdgeSharpness,\n    FxaaFloat fxaaConsoleEdgeThreshold,\n    FxaaFloat fxaaConsoleEdgeThresholdMin,\n    FxaaFloat4 fxaaConsole360ConstDir\n) {\n    FxaaFloat2 posM;\n    posM.x = pos.x;\n    posM.y = pos.y;\n    #if (FXAA_GATHER4_ALPHA == 1)\n        #if (FXAA_DISCARD == 0)\n            FxaaFloat4 rgbyM = FxaaTexTop(tex, posM);\n            #if (FXAA_GREEN_AS_LUMA == 0)\n                #define lumaM rgbyM.w\n            #else\n                #define lumaM rgbyM.y\n            #endif\n        #endif\n        #if (FXAA_GREEN_AS_LUMA == 0)\n            FxaaFloat4 luma4A = FxaaTexAlpha4(tex, posM);\n            FxaaFloat4 luma4B = FxaaTexOffAlpha4(tex, posM, FxaaInt2(-1, -1));\n        #else\n            FxaaFloat4 luma4A = FxaaTexGreen4(tex, posM);\n            FxaaFloat4 luma4B = FxaaTexOffGreen4(tex, posM, FxaaInt2(-1, -1));\n        #endif\n        #if (FXAA_DISCARD == 1)\n            #define lumaM luma4A.w\n        #endif\n        #define lumaE luma4A.z\n        #define lumaS luma4A.x\n        #define lumaSE luma4A.y\n        #define lumaNW luma4B.w\n        #define lumaN luma4B.z\n        #define lumaW luma4B.x\n    #else\n        FxaaFloat4 rgbyM = FxaaTexTop(tex, posM);\n        #if (FXAA_GREEN_AS_LUMA == 0)\n            #define lumaM rgbyM.w\n        #else\n            #define lumaM rgbyM.y\n        #endif\n        #if (FXAA_GLSL_100 == 1)\n          FxaaFloat lumaS = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 0.0, 1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaE = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 1.0, 0.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaN = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 0.0,-1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaW = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2(-1.0, 0.0), fxaaQualityRcpFrame.xy));\n        #else\n          FxaaFloat lumaS = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 0, 1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1, 0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaN = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 0,-1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 0), fxaaQualityRcpFrame.xy));\n        #endif\n    #endif\n    FxaaFloat maxSM = max(lumaS, lumaM);\n    FxaaFloat minSM = min(lumaS, lumaM);\n    FxaaFloat maxESM = max(lumaE, maxSM);\n    FxaaFloat minESM = min(lumaE, minSM);\n    FxaaFloat maxWN = max(lumaN, lumaW);\n    FxaaFloat minWN = min(lumaN, lumaW);\n    FxaaFloat rangeMax = max(maxWN, maxESM);\n    FxaaFloat rangeMin = min(minWN, minESM);\n    FxaaFloat rangeMaxScaled = rangeMax * fxaaQualityEdgeThreshold;\n    FxaaFloat range = rangeMax - rangeMin;\n    FxaaFloat rangeMaxClamped = max(fxaaQualityEdgeThresholdMin, rangeMaxScaled);\n    FxaaBool earlyExit = range < rangeMaxClamped;\n    if(earlyExit)\n        #if (FXAA_DISCARD == 1)\n            FxaaDiscard;\n        #else\n            return rgbyM;\n        #endif\n    #if (FXAA_GATHER4_ALPHA == 0)\n        #if (FXAA_GLSL_100 == 1)\n          FxaaFloat lumaNW = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2(-1.0,-1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaSE = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 1.0, 1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 1.0,-1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2(-1.0, 1.0), fxaaQualityRcpFrame.xy));\n        #else\n          FxaaFloat lumaNW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1,-1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaSE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1, 1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1,-1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 1), fxaaQualityRcpFrame.xy));\n        #endif\n    #else\n        FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(1, -1), fxaaQualityRcpFrame.xy));\n        FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 1), fxaaQualityRcpFrame.xy));\n    #endif\n    FxaaFloat lumaNS = lumaN + lumaS;\n    FxaaFloat lumaWE = lumaW + lumaE;\n    FxaaFloat subpixRcpRange = 1.0/range;\n    FxaaFloat subpixNSWE = lumaNS + lumaWE;\n    FxaaFloat edgeHorz1 = (-2.0 * lumaM) + lumaNS;\n    FxaaFloat edgeVert1 = (-2.0 * lumaM) + lumaWE;\n    FxaaFloat lumaNESE = lumaNE + lumaSE;\n    FxaaFloat lumaNWNE = lumaNW + lumaNE;\n    FxaaFloat edgeHorz2 = (-2.0 * lumaE) + lumaNESE;\n    FxaaFloat edgeVert2 = (-2.0 * lumaN) + lumaNWNE;\n    FxaaFloat lumaNWSW = lumaNW + lumaSW;\n    FxaaFloat lumaSWSE = lumaSW + lumaSE;\n    FxaaFloat edgeHorz4 = (abs(edgeHorz1) * 2.0) + abs(edgeHorz2);\n    FxaaFloat edgeVert4 = (abs(edgeVert1) * 2.0) + abs(edgeVert2);\n    FxaaFloat edgeHorz3 = (-2.0 * lumaW) + lumaNWSW;\n    FxaaFloat edgeVert3 = (-2.0 * lumaS) + lumaSWSE;\n    FxaaFloat edgeHorz = abs(edgeHorz3) + edgeHorz4;\n    FxaaFloat edgeVert = abs(edgeVert3) + edgeVert4;\n    FxaaFloat subpixNWSWNESE = lumaNWSW + lumaNESE;\n    FxaaFloat lengthSign = fxaaQualityRcpFrame.x;\n    FxaaBool horzSpan = edgeHorz >= edgeVert;\n    FxaaFloat subpixA = subpixNSWE * 2.0 + subpixNWSWNESE;\n    if(!horzSpan) lumaN = lumaW;\n    if(!horzSpan) lumaS = lumaE;\n    if(horzSpan) lengthSign = fxaaQualityRcpFrame.y;\n    FxaaFloat subpixB = (subpixA * (1.0/12.0)) - lumaM;\n    FxaaFloat gradientN = lumaN - lumaM;\n    FxaaFloat gradientS = lumaS - lumaM;\n    FxaaFloat lumaNN = lumaN + lumaM;\n    FxaaFloat lumaSS = lumaS + lumaM;\n    FxaaBool pairN = abs(gradientN) >= abs(gradientS);\n    FxaaFloat gradient = max(abs(gradientN), abs(gradientS));\n    if(pairN) lengthSign = -lengthSign;\n    FxaaFloat subpixC = FxaaSat(abs(subpixB) * subpixRcpRange);\n    FxaaFloat2 posB;\n    posB.x = posM.x;\n    posB.y = posM.y;\n    FxaaFloat2 offNP;\n    offNP.x = (!horzSpan) ? 0.0 : fxaaQualityRcpFrame.x;\n    offNP.y = ( horzSpan) ? 0.0 : fxaaQualityRcpFrame.y;\n    if(!horzSpan) posB.x += lengthSign * 0.5;\n    if( horzSpan) posB.y += lengthSign * 0.5;\n    FxaaFloat2 posN;\n    posN.x = posB.x - offNP.x * FXAA_QUALITY_P0;\n    posN.y = posB.y - offNP.y * FXAA_QUALITY_P0;\n    FxaaFloat2 posP;\n    posP.x = posB.x + offNP.x * FXAA_QUALITY_P0;\n    posP.y = posB.y + offNP.y * FXAA_QUALITY_P0;\n    FxaaFloat subpixD = ((-2.0)*subpixC) + 3.0;\n    FxaaFloat lumaEndN = FxaaLuma(FxaaTexTop(tex, posN));\n    FxaaFloat subpixE = subpixC * subpixC;\n    FxaaFloat lumaEndP = FxaaLuma(FxaaTexTop(tex, posP));\n    if(!pairN) lumaNN = lumaSS;\n    FxaaFloat gradientScaled = gradient * 1.0/4.0;\n    FxaaFloat lumaMM = lumaM - lumaNN * 0.5;\n    FxaaFloat subpixF = subpixD * subpixE;\n    FxaaBool lumaMLTZero = lumaMM < 0.0;\n    lumaEndN -= lumaNN * 0.5;\n    lumaEndP -= lumaNN * 0.5;\n    FxaaBool doneN = abs(lumaEndN) >= gradientScaled;\n    FxaaBool doneP = abs(lumaEndP) >= gradientScaled;\n    if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P1;\n    if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P1;\n    FxaaBool doneNP = (!doneN) || (!doneP);\n    if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P1;\n    if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P1;\n    if(doneNP) {\n        if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n        if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n        if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n        if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n        doneN = abs(lumaEndN) >= gradientScaled;\n        doneP = abs(lumaEndP) >= gradientScaled;\n        if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P2;\n        if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P2;\n        doneNP = (!doneN) || (!doneP);\n        if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P2;\n        if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P2;\n        #if (FXAA_QUALITY_PS > 3)\n        if(doneNP) {\n            if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n            if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n            if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n            if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n            doneN = abs(lumaEndN) >= gradientScaled;\n            doneP = abs(lumaEndP) >= gradientScaled;\n            if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P3;\n            if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P3;\n            doneNP = (!doneN) || (!doneP);\n            if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P3;\n            if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P3;\n            #if (FXAA_QUALITY_PS > 4)\n            if(doneNP) {\n                if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                doneN = abs(lumaEndN) >= gradientScaled;\n                doneP = abs(lumaEndP) >= gradientScaled;\n                if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P4;\n                if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P4;\n                doneNP = (!doneN) || (!doneP);\n                if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P4;\n                if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P4;\n                #if (FXAA_QUALITY_PS > 5)\n                if(doneNP) {\n                    if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                    if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                    if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                    if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                    doneN = abs(lumaEndN) >= gradientScaled;\n                    doneP = abs(lumaEndP) >= gradientScaled;\n                    if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P5;\n                    if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P5;\n                    doneNP = (!doneN) || (!doneP);\n                    if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P5;\n                    if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P5;\n                    #if (FXAA_QUALITY_PS > 6)\n                    if(doneNP) {\n                        if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                        if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                        if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                        if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                        doneN = abs(lumaEndN) >= gradientScaled;\n                        doneP = abs(lumaEndP) >= gradientScaled;\n                        if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P6;\n                        if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P6;\n                        doneNP = (!doneN) || (!doneP);\n                        if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P6;\n                        if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P6;\n                        #if (FXAA_QUALITY_PS > 7)\n                        if(doneNP) {\n                            if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                            if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                            if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                            if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                            doneN = abs(lumaEndN) >= gradientScaled;\n                            doneP = abs(lumaEndP) >= gradientScaled;\n                            if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P7;\n                            if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P7;\n                            doneNP = (!doneN) || (!doneP);\n                            if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P7;\n                            if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P7;\n    #if (FXAA_QUALITY_PS > 8)\n    if(doneNP) {\n        if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n        if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n        if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n        if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n        doneN = abs(lumaEndN) >= gradientScaled;\n        doneP = abs(lumaEndP) >= gradientScaled;\n        if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P8;\n        if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P8;\n        doneNP = (!doneN) || (!doneP);\n        if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P8;\n        if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P8;\n        #if (FXAA_QUALITY_PS > 9)\n        if(doneNP) {\n            if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n            if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n            if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n            if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n            doneN = abs(lumaEndN) >= gradientScaled;\n            doneP = abs(lumaEndP) >= gradientScaled;\n            if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P9;\n            if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P9;\n            doneNP = (!doneN) || (!doneP);\n            if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P9;\n            if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P9;\n            #if (FXAA_QUALITY_PS > 10)\n            if(doneNP) {\n                if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                doneN = abs(lumaEndN) >= gradientScaled;\n                doneP = abs(lumaEndP) >= gradientScaled;\n                if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P10;\n                if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P10;\n                doneNP = (!doneN) || (!doneP);\n                if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P10;\n                if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P10;\n                #if (FXAA_QUALITY_PS > 11)\n                if(doneNP) {\n                    if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                    if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                    if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                    if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                    doneN = abs(lumaEndN) >= gradientScaled;\n                    doneP = abs(lumaEndP) >= gradientScaled;\n                    if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P11;\n                    if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P11;\n                    doneNP = (!doneN) || (!doneP);\n                    if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P11;\n                    if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P11;\n                    #if (FXAA_QUALITY_PS > 12)\n                    if(doneNP) {\n                        if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                        if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                        if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                        if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                        doneN = abs(lumaEndN) >= gradientScaled;\n                        doneP = abs(lumaEndP) >= gradientScaled;\n                        if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P12;\n                        if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P12;\n                        doneNP = (!doneN) || (!doneP);\n                        if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P12;\n                        if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P12;\n                    }\n                    #endif\n                }\n                #endif\n            }\n            #endif\n        }\n        #endif\n    }\n    #endif\n                        }\n                        #endif\n                    }\n                    #endif\n                }\n                #endif\n            }\n            #endif\n        }\n        #endif\n    }\n    FxaaFloat dstN = posM.x - posN.x;\n    FxaaFloat dstP = posP.x - posM.x;\n    if(!horzSpan) dstN = posM.y - posN.y;\n    if(!horzSpan) dstP = posP.y - posM.y;\n    FxaaBool goodSpanN = (lumaEndN < 0.0) != lumaMLTZero;\n    FxaaFloat spanLength = (dstP + dstN);\n    FxaaBool goodSpanP = (lumaEndP < 0.0) != lumaMLTZero;\n    FxaaFloat spanLengthRcp = 1.0/spanLength;\n    FxaaBool directionN = dstN < dstP;\n    FxaaFloat dst = min(dstN, dstP);\n    FxaaBool goodSpan = directionN ? goodSpanN : goodSpanP;\n    FxaaFloat subpixG = subpixF * subpixF;\n    FxaaFloat pixelOffset = (dst * (-spanLengthRcp)) + 0.5;\n    FxaaFloat subpixH = subpixG * fxaaQualitySubpix;\n    FxaaFloat pixelOffsetGood = goodSpan ? pixelOffset : 0.0;\n    FxaaFloat pixelOffsetSubpix = max(pixelOffsetGood, subpixH);\n    if(!horzSpan) posM.x += pixelOffsetSubpix * lengthSign;\n    if( horzSpan) posM.y += pixelOffsetSubpix * lengthSign;\n    #if (FXAA_DISCARD == 1)\n        return FxaaTexTop(tex, posM);\n    #else\n        return FxaaFloat4(FxaaTexTop(tex, posM).xyz, lumaM);\n    #endif\n}\n#endif\nvoid main() {\n  gl_FragColor = FxaaPixelShader(\n    vUv,\n    vec4(0.0),\n    map,\n    map,\n    map,\n    resolution,\n    vec4(0.0),\n    vec4(0.0),\n    vec4(0.0),\n    0.75,\n    0.166,\n    0.0833,\n    0.0,\n    0.0,\n    0.0,\n    vec4(0.0)\n  );\n  gl_FragColor.a = texture2D(map, vUv).a;\n}" }], "techniques": [{ "name": "fxaa1", "attributes": {}, "uniforms": { "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.fxaa = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "fxaa_vert", "type": 35633, "uri": "\nuniform vec2 resolution;\nvarying vec2 vUV;\nvarying vec2 sampleCoordS;\nvarying vec2 sampleCoordE;\nvarying vec2 sampleCoordN;\nvarying vec2 sampleCoordW;\nvarying vec2 sampleCoordNW;\nvarying vec2 sampleCoordSE;\nvarying vec2 sampleCoordNE;\nvarying vec2 sampleCoordSW;\nvoid main(void) {\t\n\tvUV = uv;\n\tsampleCoordS = vUV + vec2( 0.0, 1.0) * resolution;\n\tsampleCoordE = vUV + vec2( 1.0, 0.0) * resolution;\n\tsampleCoordN = vUV + vec2( 0.0,-1.0) * resolution;\n\tsampleCoordW = vUV + vec2(-1.0, 0.0) * resolution;\n\tsampleCoordNW = vUV + vec2(-1.0,-1.0) * resolution;\n\tsampleCoordSE = vUV + vec2( 1.0, 1.0) * resolution;\n\tsampleCoordNE = vUV + vec2( 1.0,-1.0) * resolution;\n\tsampleCoordSW = vUV + vec2(-1.0, 1.0) * resolution;\n\tgl_Position = vec4(position.x, position.y, 0.0, 1.0);\n}" }, { "name": "fxaa_frag", "type": 35632, "uri": "uniform sampler2D map;\nuniform vec2 resolution;\nvarying vec2 vUV;\nvarying vec2 sampleCoordS;\nvarying vec2 sampleCoordE;\nvarying vec2 sampleCoordN;\nvarying vec2 sampleCoordW;\nvarying vec2 sampleCoordNW;\nvarying vec2 sampleCoordSE;\nvarying vec2 sampleCoordNE;\nvarying vec2 sampleCoordSW;\nconst float fxaaQualitySubpix = 1.0;\nconst float fxaaQualityEdgeThreshold = 0.166;\nconst float fxaaQualityEdgeThresholdMin = 0.0833;\nconst vec3 kLumaCoefficients = vec3(0.2126, 0.7152, 0.0722);\n#define FxaaLuma(rgba) dot(rgba.rgb, kLumaCoefficients)\nvoid main(){\n\tvec2 posM;\n\tposM.x = vUV.x;\n\tposM.y = vUV.y;\n\tvec4 rgbyM = texture2D(map, vUV, 0.0);\n\tfloat lumaM = FxaaLuma(rgbyM);\n\tfloat lumaS = FxaaLuma(texture2D(map, sampleCoordS, 0.0));\n\tfloat lumaE = FxaaLuma(texture2D(map, sampleCoordE, 0.0));\n\tfloat lumaN = FxaaLuma(texture2D(map, sampleCoordN, 0.0));\n\tfloat lumaW = FxaaLuma(texture2D(map, sampleCoordW, 0.0));\n\tfloat maxSM = max(lumaS, lumaM);\n\tfloat minSM = min(lumaS, lumaM);\n\tfloat maxESM = max(lumaE, maxSM);\n\tfloat minESM = min(lumaE, minSM);\n\tfloat maxWN = max(lumaN, lumaW);\n\tfloat minWN = min(lumaN, lumaW);\n\tfloat rangeMax = max(maxWN, maxESM);\n\tfloat rangeMin = min(minWN, minESM);\n\tfloat rangeMaxScaled = rangeMax * fxaaQualityEdgeThreshold;\n\tfloat range = rangeMax - rangeMin;\n\tfloat rangeMaxClamped = max(fxaaQualityEdgeThresholdMin, rangeMaxScaled);\n#ifndef MALI\n\tif(range < rangeMaxClamped) \n\t{\n\t\tgl_FragColor = rgbyM;\n\t\treturn;\n\t}\n#endif\n\tfloat lumaNW = FxaaLuma(texture2D(map, sampleCoordNW, 0.0));\n\tfloat lumaSE = FxaaLuma(texture2D(map, sampleCoordSE, 0.0));\n\tfloat lumaNE = FxaaLuma(texture2D(map, sampleCoordNE, 0.0));\n\tfloat lumaSW = FxaaLuma(texture2D(map, sampleCoordSW, 0.0));\n\tfloat lumaNS = lumaN + lumaS;\n\tfloat lumaWE = lumaW + lumaE;\n\tfloat subpixRcpRange = 1.0 / range;\n\tfloat subpixNSWE = lumaNS + lumaWE;\n\tfloat edgeHorz1 = (-2.0 * lumaM) + lumaNS;\n\tfloat edgeVert1 = (-2.0 * lumaM) + lumaWE;\n\tfloat lumaNESE = lumaNE + lumaSE;\n\tfloat lumaNWNE = lumaNW + lumaNE;\n\tfloat edgeHorz2 = (-2.0 * lumaE) + lumaNESE;\n\tfloat edgeVert2 = (-2.0 * lumaN) + lumaNWNE;\n\tfloat lumaNWSW = lumaNW + lumaSW;\n\tfloat lumaSWSE = lumaSW + lumaSE;\n\tfloat edgeHorz4 = (abs(edgeHorz1) * 2.0) + abs(edgeHorz2);\n\tfloat edgeVert4 = (abs(edgeVert1) * 2.0) + abs(edgeVert2);\n\tfloat edgeHorz3 = (-2.0 * lumaW) + lumaNWSW;\n\tfloat edgeVert3 = (-2.0 * lumaS) + lumaSWSE;\n\tfloat edgeHorz = abs(edgeHorz3) + edgeHorz4;\n\tfloat edgeVert = abs(edgeVert3) + edgeVert4;\n\tfloat subpixNWSWNESE = lumaNWSW + lumaNESE;\n\tfloat lengthSign = resolution.x;\n\tbool horzSpan = edgeHorz >= edgeVert;\n\tfloat subpixA = subpixNSWE * 2.0 + subpixNWSWNESE;\n\tif (!horzSpan)\n\t{\n\t\tlumaN = lumaW;\n\t}\n\tif (!horzSpan) \n\t{\n\t\tlumaS = lumaE;\n\t}\n\tif (horzSpan) \n\t{\n\t\tlengthSign = resolution.y;\n\t}\n\tfloat subpixB = (subpixA * (1.0 / 12.0)) - lumaM;\n\tfloat gradientN = lumaN - lumaM;\n\tfloat gradientS = lumaS - lumaM;\n\tfloat lumaNN = lumaN + lumaM;\n\tfloat lumaSS = lumaS + lumaM;\n\tbool pairN = abs(gradientN) >= abs(gradientS);\n\tfloat gradient = max(abs(gradientN), abs(gradientS));\n\tif (pairN)\n\t{\n\t\tlengthSign = -lengthSign;\n\t}\n\tfloat subpixC = clamp(abs(subpixB) * subpixRcpRange, 0.0, 1.0);\n\tvec2 posB;\n\tposB.x = posM.x;\n\tposB.y = posM.y;\n\tvec2 offNP;\n\toffNP.x = (!horzSpan) ? 0.0 : resolution.x;\n\toffNP.y = (horzSpan) ? 0.0 : resolution.y;\n\tif (!horzSpan) \n\t{\n\t\tposB.x += lengthSign * 0.5;\n\t}\n\tif (horzSpan)\n\t{\n\t\tposB.y += lengthSign * 0.5;\n\t}\n\tvec2 posN;\n\tposN.x = posB.x - offNP.x * 1.5;\n\tposN.y = posB.y - offNP.y * 1.5;\n\tvec2 posP;\n\tposP.x = posB.x + offNP.x * 1.5;\n\tposP.y = posB.y + offNP.y * 1.5;\n\tfloat subpixD = ((-2.0) * subpixC) + 3.0;\n\tfloat lumaEndN = FxaaLuma(texture2D(map, posN, 0.0));\n\tfloat subpixE = subpixC * subpixC;\n\tfloat lumaEndP = FxaaLuma(texture2D(map, posP, 0.0));\n\tif (!pairN) \n\t{\n\t\tlumaNN = lumaSS;\n\t}\n\tfloat gradientScaled = gradient * 1.0 / 4.0;\n\tfloat lumaMM = lumaM - lumaNN * 0.5;\n\tfloat subpixF = subpixD * subpixE;\n\tbool lumaMLTZero = lumaMM < 0.0;\n\tlumaEndN -= lumaNN * 0.5;\n\tlumaEndP -= lumaNN * 0.5;\n\tbool doneN = abs(lumaEndN) >= gradientScaled;\n\tbool doneP = abs(lumaEndP) >= gradientScaled;\n\tif (!doneN) \n\t{\n\t\tposN.x -= offNP.x * 3.0;\n\t}\n\tif (!doneN) \n\t{\n\t\tposN.y -= offNP.y * 3.0;\n\t}\n\tbool doneNP = (!doneN) || (!doneP);\n\tif (!doneP) \n\t{\n\t\tposP.x += offNP.x * 3.0;\n\t}\n\tif (!doneP)\n\t{\n\t\tposP.y += offNP.y * 3.0;\n\t}\n\tif (doneNP)\n\t{\n\t\tif (!doneN) lumaEndN = FxaaLuma(texture2D(map, posN.xy, 0.0));\n\t\tif (!doneP) lumaEndP = FxaaLuma(texture2D(map, posP.xy, 0.0));\n\t\tif (!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n\t\tif (!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n\t\n\t\tdoneN = abs(lumaEndN) >= gradientScaled;\n\t\tdoneP = abs(lumaEndP) >= gradientScaled;\n\t\n\t\tif (!doneN) posN.x -= offNP.x * 12.0;\n\t\tif (!doneN) posN.y -= offNP.y * 12.0;\n\t\n\t\tdoneNP = (!doneN) || (!doneP);\n\t\n\t\tif (!doneP) posP.x += offNP.x * 12.0;\n\t\tif (!doneP) posP.y += offNP.y * 12.0;\n\t}\n\tfloat dstN = posM.x - posN.x;\n\tfloat dstP = posP.x - posM.x;\n\tif (!horzSpan)\n\t{\n\t\tdstN = posM.y - posN.y;\n\t}\n\tif (!horzSpan) \n\t{\n\t\tdstP = posP.y - posM.y;\n\t}\n\tbool goodSpanN = (lumaEndN < 0.0) != lumaMLTZero;\n\tfloat spanLength = (dstP + dstN);\n\tbool goodSpanP = (lumaEndP < 0.0) != lumaMLTZero;\n\tfloat spanLengthRcp = 1.0 / spanLength;\n\tbool directionN = dstN < dstP;\n\tfloat dst = min(dstN, dstP);\n\tbool goodSpan = directionN ? goodSpanN : goodSpanP;\n\tfloat subpixG = subpixF * subpixF;\n\tfloat pixelOffset = (dst * (-spanLengthRcp)) + 0.5;\n\tfloat subpixH = subpixG * fxaaQualitySubpix;\n\tfloat pixelOffsetGood = goodSpan ? pixelOffset : 0.0;\n\tfloat pixelOffsetSubpix = max(pixelOffsetGood, subpixH);\n\tif (!horzSpan)\n\t{\n\t\tposM.x += pixelOffsetSubpix * lengthSign;\n\t}\n\tif (horzSpan)\n\t{\n\t\tposM.y += pixelOffsetSubpix * lengthSign;\n\t}\n#ifdef MALI\n\tif(range < rangeMaxClamped) \n\t{\n\t\tgl_FragColor = rgbyM;\n\t}\n\telse\n\t{\n\t\tgl_FragColor = texture2D(map, posM, 0.0);\n\t}\n#else\n\tgl_FragColor = texture2D(map, posM, 0.0);\n#endif\n}" }], "techniques": [{ "name": "fxaa", "attributes": {}, "uniforms": { "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.linebasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linebasic_vert", "type": 35633, "uri": "#include <common>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nuniform float linewidth;\nuniform vec2 resolution;\nattribute vec3 instanceStart;\nattribute vec3 instanceEnd;\nattribute vec3 instanceColorStart;\nattribute vec3 instanceColorEnd;\nvarying vec2 vUv;\n#ifdef USE_DASH\n\tuniform float dashScale;\n\tattribute float instanceDistanceStart;\n\tattribute float instanceDistanceEnd;\n\tvarying float vLineDistance;\n#endif\nvoid trimSegment( const in vec4 start, inout vec4 end ) {\n\tfloat a = projectionMatrix[ 2 ][ 2 ];\n\tfloat b = projectionMatrix[ 3 ][ 2 ];\n\tfloat nearEstimate = - 0.5 * b / a;\n\tfloat alpha = ( nearEstimate - start.z ) / ( end.z - start.z );\n\tend.xyz = mix( start.xyz, end.xyz, alpha );\n}\nvoid main() {\n\t#ifdef USE_COLOR\n\t\tvColor.xyz = ( position.y < 0.5 ) ? instanceColorStart : instanceColorEnd;\n\t#endif\n\t#ifdef USE_DASH\n\t\tvLineDistance = ( position.y < 0.5 ) ? dashScale * instanceDistanceStart : dashScale * instanceDistanceEnd;\n\t#endif\n\tfloat aspect = resolution.x / resolution.y;\n\tvUv = uv;\n\tvec4 start = modelViewMatrix * vec4( instanceStart, 1.0 );\n\tvec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );\n\tbool perspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\n\tif ( perspective ) {\n\t\tif ( start.z < 0.0 && end.z >= 0.0 ) {\n\t\t\ttrimSegment( start, end );\n\t\t} else if ( end.z < 0.0 && start.z >= 0.0 ) {\n\t\t\ttrimSegment( end, start );\n\t\t}\n\t}\n\tvec4 clipStart = projectionMatrix * start;\n\tvec4 clipEnd = projectionMatrix * end;\n\tvec2 ndcStart = clipStart.xy / clipStart.w;\n\tvec2 ndcEnd = clipEnd.xy / clipEnd.w;\n\tvec2 dir = ndcEnd - ndcStart;\n\tdir.x *= aspect;\n\tdir = normalize( dir );\n\tvec2 offset = vec2( dir.y, - dir.x );\n\tdir.x /= aspect;\n\toffset.x /= aspect;\n\tif ( position.x < 0.0 ) offset *= - 1.0;\n\tif ( position.y < 0.0 ) {\n\t\toffset += - dir;\n\t} else if ( position.y > 1.0 ) {\n\t\toffset += dir;\n\t}\n\toffset *= linewidth;\n\toffset /= resolution.y;\n\tvec4 clip = ( position.y < 0.5 ) ? clipStart : clipEnd;\n\toffset *= clip.w;\n\tclip.xy += offset;\n\tgl_Position = clip;\n\tvec4 mvPosition = ( position.y < 0.5 ) ? start : end;\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <fog_vertex>\n}" }, { "name": "linebasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform float opacity;\n#ifdef USE_DASH\n\tuniform float dashSize;\n\tuniform float gapSize;\n#endif\nvarying float vLineDistance;\n#include <common>\n#include <color_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvarying vec2 vUv;\nvoid main() {\n\t#include <clipping_planes_fragment>\n\t#ifdef USE_DASH\n\t\tif ( vUv.y < - 1.0 || vUv.y > 1.0 ) discard;\n\t\tif ( mod( vLineDistance, dashSize + gapSize ) > dashSize ) discard;\n\t#endif\n\tif ( abs( vUv.y ) > 1.0 ) {\n\t\tfloat a = vUv.x;\n\t\tfloat b = ( vUv.y > 0.0 ) ? vUv.y - 1.0 : vUv.y + 1.0;\n\t\tfloat len2 = a * a + b * b;\n\t\tif ( len2 > 1.0 ) discard;\n\t}\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <logdepthbuf_fragment>\n\t#include <color_fragment>\n\tgl_FragColor = vec4( diffuseColor.rgb, diffuseColor.a );\n\t#include <premultiplied_alpha_fragment>\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n}" }], "techniques": [{ "name": "linebasic", "attributes": {}, "uniforms": { "linewidth": { "type": 5126, "value": 1 }, "dashScale": { "type": 5126, "value": 1 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": 1 }, "gapSize": { "type": 5126, "value": 1 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.linedashed = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linedashed_vert", "type": 35633, "uri": "uniform float scale;\nattribute float lineDistance;\nvarying float vLineDistance;\n#include <common>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <color_vertex>\n\tvLineDistance = scale * lineDistance;\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\tgl_Position = projectionMatrix * mvPosition;\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <fog_vertex>\n}\n" }, { "name": "linedashed_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform float opacity;\nuniform float dashSize;\nuniform float totalSize;\nvarying float vLineDistance;\n#include <common>\n#include <color_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tif ( mod( vLineDistance, totalSize ) > dashSize ) {\n\t\tdiscard;\n\t}\n\tvec3 outgoingLight = vec3( 0.0 );\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <logdepthbuf_fragment>\n\t#include <color_fragment>\n\toutgoingLight = diffuseColor.rgb;\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <premultiplied_alpha_fragment>\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n}\n" }], "techniques": [{ "name": "linedashed", "attributes": {}, "uniforms": { "scale": { "type": 5126, "value": 1 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": 1 }, "totalSize": { "type": 5126, "value": 1 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.meshbasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshbasic_vert", "type": 35633, "uri": "#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <envmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\n#include <custom_vertex>\nvoid main() {\n\t#include <custom_begin_vertex>\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_ENVMAP\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <worldpos_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <envmap_vertex>\n\t#include <fog_vertex>\n\t#include <custom_end_vertex>\n}\n" }, { "name": "meshbasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform float opacity;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <envmap_pars_fragment>\n#include <fog_pars_fragment>\n#include <specularmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\n#include <custom_fragment>\nvoid main() {\n\t#include <custom_begin_fragment>\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <specularmap_fragment>\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\t#ifdef USE_LIGHTMAP\n\t\n\t\tvec4 lightmapTex = texture2D(lightMap, vUv2);\n\t\tfloat power = 5.0 * lightmapTex.a;\n\t\treflectedLight.indirectDiffuse += lightmapTex.rgb * power * lightMapIntensity;\n\t#else\n\t\treflectedLight.indirectDiffuse += vec3( 1.0 );\n\t#endif\n\t#include <aomap_fragment>\n\treflectedLight.indirectDiffuse *= diffuseColor.rgb;\n\tvec3 outgoingLight = reflectedLight.indirectDiffuse;\n\t#include <envmap_fragment>\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <premultiplied_alpha_fragment>\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <custom_end_fragment>\n}\n" }], "techniques": [{ "name": "meshbasic", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": 0.98 }, "morphTargetInfluences[0]": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "reflectivity": { "type": 5126, "value": 1 }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124 }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.meshlambert = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshlambert_vert", "type": 35633, "uri": "#define LAMBERT\nvarying vec3 vLightFront;\n#ifdef DOUBLE_SIDED\n\tvarying vec3 vLightBack;\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <envmap_pars_vertex>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <lights_pars_maps>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\n#include <custom_vertex>\nvoid main() {\n\t#include <custom_begin_vertex>\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <worldpos_vertex>\n\t#include <envmap_vertex>\n\t#include <lights_lambert_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n\t#include <custom_end_vertex>\n}\n" }, { "name": "meshlambert_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform vec3 emissive;\nuniform float opacity;\nvarying vec3 vLightFront;\n#ifdef DOUBLE_SIDED\n\tvarying vec3 vLightBack;\n#endif\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <envmap_pars_fragment>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <lights_pars_maps>\n#include <fog_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <shadowmask_pars_fragment>\n#include <specularmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\n#include <custom_fragment>\nvoid main() {\n\t#include <custom_begin_fragment>\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <specularmap_fragment>\n\t#include <emissivemap_fragment>\n\treflectedLight.indirectDiffuse = getAmbientLightIrradiance( ambientLightColor );\n\t#include <lightmap_fragment>\n\treflectedLight.indirectDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb );\n\t#ifdef DOUBLE_SIDED\n\t\treflectedLight.directDiffuse = ( gl_FrontFacing ) ? vLightFront : vLightBack;\n\t#else\n\t\treflectedLight.directDiffuse = vLightFront;\n\t#endif\n\treflectedLight.directDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb ) * getShadowMask();\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance;\n\t#include <envmap_fragment>\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n\t#include <custom_end_fragment>\n}\n" }], "techniques": [{ "name": "meshlambert", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": 0.98 }, "morphTargetInfluences[0]": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "emissiveMap": { "type": 35678 }, "reflectivity": { "type": 5126, "value": 1 }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124 }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.meshphong = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphong_vert", "type": 35633, "uri": "#define PHONG\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <envmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\n#include <custom_vertex>\nvoid main() {\n\t#include <custom_begin_vertex>\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n#ifndef FLAT_SHADED\n\tvNormal = normalize( transformedNormal );\n#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvViewPosition = - mvPosition.xyz;\n\t#include <worldpos_vertex>\n\t#include <envmap_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n\t#include <custom_end_vertex>\n}\n" }, { "name": "meshphong_frag", "type": 35632, "uri": "#define PHONG\nuniform vec3 diffuse;\nuniform vec3 emissive;\nuniform vec3 specular;\nuniform float shininess;\nuniform float opacity;\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <envmap_pars_fragment>\n#include <gradientmap_pars_fragment>\n#include <fog_pars_fragment>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <lights_phong_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <specularmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\n#include <custom_fragment>\nvoid main() {\n\t#include <custom_begin_fragment>\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <specularmap_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\t#include <emissivemap_fragment>\n\t#include <lights_phong_fragment>\n\t#include <lights_fragment_begin>\n\t#include <lights_fragment_maps>\n\t#include <lights_fragment_end>\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\n\t#include <envmap_fragment>\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n\t#include <custom_end_fragment>\n}\n" }], "techniques": [{ "name": "meshphong", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "refractionRatio": { "type": 5126, "value": 0.98 }, "morphTargetInfluences[0]": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "specular": { "type": 35665, "value": [0.066666, 0.066666, 0.066666] }, "shininess": { "type": 5126, "value": 30 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "emissiveMap": { "type": 35678 }, "reflectivity": { "type": 5126, "value": 1 }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124 }, "gradientMap": { "type": 35678 }, "bumpMap": { "type": 35678 }, "bumpScale": { "type": 5126, "value": 1 }, "normalMap": { "type": 35678 }, "normalScale": { "type": 35664, "value": [1, 1] }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.meshphysical = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphysical_vert", "type": 35633, "uri": "#define PHYSICAL\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\n#include <custom_vertex>\nvoid main() {\n\t#include <custom_begin_vertex>\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n#ifndef FLAT_SHADED\n\tvNormal = normalize( transformedNormal );\n#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvViewPosition = - mvPosition.xyz;\n\t#include <worldpos_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n\t#include <custom_end_vertex>\n}\n" }, { "name": "meshphysical_frag", "type": 35632, "uri": "#define PHYSICAL\nuniform vec3 diffuse;\nuniform vec3 emissive;\nuniform float roughness;\nuniform float metalness;\nuniform float opacity;\n#ifndef STANDARD\n\tuniform float clearCoat;\n\tuniform float clearCoatRoughness;\n#endif\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <bsdfs>\n#include <cube_uv_reflection_fragment>\n#include <envmap_pars_fragment>\n#include <envmap_physical_pars_fragment>\n#include <fog_pars_fragment>\n#include <lights_pars_begin>\n#include <lights_physical_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <roughnessmap_pars_fragment>\n#include <metalnessmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\n#include <custom_fragment>\nvoid main() {\n\t#include <custom_begin_fragment>\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <roughnessmap_fragment>\n\t#include <metalnessmap_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\t#include <emissivemap_fragment>\n\t#include <lights_physical_fragment>\n\t#include <lights_fragment_begin>\n\t#include <lights_fragment_maps>\n\t#include <lights_fragment_end>\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n\t#include <custom_end_fragment>\n}\n" }], "techniques": [{ "name": "meshphysical", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "roughness": { "type": 5126, "value": 0.5 }, "metalness": { "type": 5126, "value": 0.5 }, "opacity": { "type": 5126, "value": 1 }, "clearCoat": { "type": 5126 }, "clearCoatRoughness": { "type": 5126 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "emissiveMap": { "type": 35678 }, "reflectivity": { "type": 5126, "value": 1 }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124 }, "refractionRatio": { "type": 5126, "value": 0.98 }, "bumpMap": { "type": 35678 }, "bumpScale": { "type": 5126, "value": 1 }, "normalMap": { "type": 35678 }, "normalScale": { "type": 35664, "value": [1, 1] }, "roughnessMap": { "type": 35678 }, "metalnessMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.normal = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "normal_vert", "type": 35633, "uri": "#define NORMAL\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\n\tvarying vec3 vViewPosition;\n#endif\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n#ifndef FLAT_SHADED\n\tvNormal = normalize( transformedNormal );\n#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\n\tvViewPosition = - mvPosition.xyz;\n#endif\n}\n" }, { "name": "normal_frag", "type": 35632, "uri": "#define NORMAL\nuniform float opacity;\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\n\tvarying vec3 vViewPosition;\n#endif\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <packing>\n#include <uv_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\nvoid main() {\n\t#include <logdepthbuf_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\tgl_FragColor = vec4( packNormalToRGB( normal ), opacity );\n}\n" }], "techniques": [{ "name": "normal", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 }, "bumpMap": { "type": 35678 }, "bumpScale": { "type": 5126, "value": 1 }, "normalMap": { "type": 35678 }, "normalScale": { "type": 35664, "value": [1, 1] } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.meshbasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshbasic_vert", "type": 35633, "uri": "#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <envmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\n#include <custom_vertex>\nvoid main() {\n\t#include <custom_begin_vertex>\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_ENVMAP\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <worldpos_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <envmap_vertex>\n\t#include <fog_vertex>\n\t#include <custom_end_vertex>\n}\n" }, { "name": "meshbasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform float opacity;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <envmap_pars_fragment>\n#include <fog_pars_fragment>\n#include <specularmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\n#include <custom_fragment>\nvoid main() {\n\t#include <custom_begin_fragment>\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <specularmap_fragment>\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\t#ifdef USE_LIGHTMAP\n\t\n\t\tvec4 lightmapTex = texture2D(lightMap, vUv2);\n\t\tfloat power = 5.0 * lightmapTex.a;\n\t\treflectedLight.indirectDiffuse += lightmapTex.rgb * power * lightMapIntensity;\n\t#else\n\t\treflectedLight.indirectDiffuse += vec3( 1.0 );\n\t#endif\n\t#include <aomap_fragment>\n\treflectedLight.indirectDiffuse *= diffuseColor.rgb;\n\tvec3 outgoingLight = reflectedLight.indirectDiffuse;\n\t#include <envmap_fragment>\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <premultiplied_alpha_fragment>\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <custom_end_fragment>\n}\n" }], "techniques": [{ "name": "meshbasic", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": 0.98 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "reflectivity": { "type": 5126, "value": 1 }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124 }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.meshlambert = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshlambert_vert", "type": 35633, "uri": "#define LAMBERT\nvarying vec3 vLightFront;\n#ifdef DOUBLE_SIDED\n\tvarying vec3 vLightBack;\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <envmap_pars_vertex>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <lights_pars_maps>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\n#include <custom_vertex>\nvoid main() {\n\t#include <custom_begin_vertex>\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <worldpos_vertex>\n\t#include <envmap_vertex>\n\t#include <lights_lambert_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n\t#include <custom_end_vertex>\n}\n" }, { "name": "meshlambert_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform vec3 emissive;\nuniform float opacity;\nvarying vec3 vLightFront;\n#ifdef DOUBLE_SIDED\n\tvarying vec3 vLightBack;\n#endif\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <envmap_pars_fragment>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <lights_pars_maps>\n#include <fog_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <shadowmask_pars_fragment>\n#include <specularmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\n#include <custom_fragment>\nvoid main() {\n\t#include <custom_begin_fragment>\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <specularmap_fragment>\n\t#include <emissivemap_fragment>\n\treflectedLight.indirectDiffuse = getAmbientLightIrradiance( ambientLightColor );\n\t#include <lightmap_fragment>\n\treflectedLight.indirectDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb );\n\t#ifdef DOUBLE_SIDED\n\t\treflectedLight.directDiffuse = ( gl_FrontFacing ) ? vLightFront : vLightBack;\n\t#else\n\t\treflectedLight.directDiffuse = vLightFront;\n\t#endif\n\treflectedLight.directDiffuse *= BRDF_Diffuse_Lambert( diffuseColor.rgb ) * getShadowMask();\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + totalEmissiveRadiance;\n\t#include <envmap_fragment>\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n\t#include <custom_end_fragment>\n}\n" }], "techniques": [{ "name": "meshlambert", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "refractionRatio": { "type": 5126, "value": 0.98 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "emissiveMap": { "type": 35678 }, "reflectivity": { "type": 5126, "value": 1 }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124 }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.meshphong = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphong_vert", "type": 35633, "uri": "#define PHONG\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <envmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\n#include <custom_vertex>\nvoid main() {\n\t#include <custom_begin_vertex>\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n#ifndef FLAT_SHADED\n\tvNormal = normalize( transformedNormal );\n#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvViewPosition = - mvPosition.xyz;\n\t#include <worldpos_vertex>\n\t#include <envmap_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n\t#include <custom_end_vertex>\n}\n" }, { "name": "meshphong_frag", "type": 35632, "uri": "#define PHONG\nuniform vec3 diffuse;\nuniform vec3 emissive;\nuniform vec3 specular;\nuniform float shininess;\nuniform float opacity;\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <envmap_pars_fragment>\n#include <gradientmap_pars_fragment>\n#include <fog_pars_fragment>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <lights_phong_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <specularmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\n#include <custom_fragment>\nvoid main() {\n\t#include <custom_begin_fragment>\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <specularmap_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\t#include <emissivemap_fragment>\n\t#include <lights_phong_fragment>\n\t#include <lights_fragment_begin>\n\t#include <lights_fragment_maps>\n\t#include <lights_fragment_end>\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\n\t#include <envmap_fragment>\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n\t#include <custom_end_fragment>\n}\n" }], "techniques": [{ "name": "meshphong", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "refractionRatio": { "type": 5126, "value": 0.98 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "specular": { "type": 35665, "value": [0.066666, 0.066666, 0.066666] }, "shininess": { "type": 5126, "value": 30 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "emissiveMap": { "type": 35678 }, "reflectivity": { "type": 5126, "value": 1 }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124 }, "gradientMap": { "type": 35678 }, "bumpMap": { "type": 35678 }, "bumpScale": { "type": 5126, "value": 1 }, "normalMap": { "type": 35678 }, "normalScale": { "type": 35664, "value": [1, 1] }, "specularMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.meshphysical = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "meshphysical_vert", "type": 35633, "uri": "#define PHYSICAL\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <uv2_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <shadowmap_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\n#include <custom_vertex>\nvoid main() {\n\t#include <custom_begin_vertex>\n\t#include <uv_vertex>\n\t#include <uv2_vertex>\n\t#include <color_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n#ifndef FLAT_SHADED\n\tvNormal = normalize( transformedNormal );\n#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\tvViewPosition = - mvPosition.xyz;\n\t#include <worldpos_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n\t#include <custom_end_vertex>\n}\n" }, { "name": "meshphysical_frag", "type": 35632, "uri": "#define PHYSICAL\nuniform vec3 diffuse;\nuniform vec3 emissive;\nuniform float roughness;\nuniform float metalness;\nuniform float opacity;\n#ifndef STANDARD\n\tuniform float clearCoat;\n\tuniform float clearCoatRoughness;\n#endif\nvarying vec3 vViewPosition;\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <packing>\n#include <dithering_pars_fragment>\n#include <color_pars_fragment>\n#include <uv_pars_fragment>\n#include <uv2_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <aomap_pars_fragment>\n#include <lightmap_pars_fragment>\n#include <emissivemap_pars_fragment>\n#include <bsdfs>\n#include <cube_uv_reflection_fragment>\n#include <envmap_pars_fragment>\n#include <envmap_physical_pars_fragment>\n#include <fog_pars_fragment>\n#include <lights_pars_begin>\n#include <lights_physical_pars_fragment>\n#include <shadowmap_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <roughnessmap_pars_fragment>\n#include <metalnessmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\n#include <custom_fragment>\nvoid main() {\n\t#include <custom_begin_fragment>\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\tReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );\n\tvec3 totalEmissiveRadiance = emissive;\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <color_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <roughnessmap_fragment>\n\t#include <metalnessmap_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\t#include <emissivemap_fragment>\n\t#include <lights_physical_fragment>\n\t#include <lights_fragment_begin>\n\t#include <lights_fragment_maps>\n\t#include <lights_fragment_end>\n\t#include <aomap_fragment>\n\tvec3 outgoingLight = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse + reflectedLight.directSpecular + reflectedLight.indirectSpecular + totalEmissiveRadiance;\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n\t#include <premultiplied_alpha_fragment>\n\t#include <dithering_fragment>\n\t#include <custom_end_fragment>\n}\n" }], "techniques": [{ "name": "meshphysical", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "emissive": { "type": 35665, "value": [0, 0, 0] }, "roughness": { "type": 5126, "value": 0.5 }, "metalness": { "type": 5126, "value": 0.5 }, "opacity": { "type": 5126, "value": 1 }, "clearCoat": { "type": 5126 }, "clearCoatRoughness": { "type": 5126 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "aoMap": { "type": 35678 }, "aoMapIntensity": { "type": 5126, "value": 1 }, "emissiveMap": { "type": 35678 }, "reflectivity": { "type": 5126, "value": 1 }, "envMapIntensity": { "type": 5126, "value": 1 }, "envMap": { "type": 35678 }, "flipEnvMap": { "type": 5126, "value": 1 }, "maxMipLevel": { "type": 5124 }, "refractionRatio": { "type": 5126, "value": 0.98 }, "bumpMap": { "type": 35678 }, "bumpScale": { "type": 5126, "value": 1 }, "normalMap": { "type": 35678 }, "normalScale": { "type": 35664, "value": [1, 1] }, "roughnessMap": { "type": 35678 }, "metalnessMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.normal = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "normal_vert", "type": 35633, "uri": "#define NORMAL\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\n\tvarying vec3 vViewPosition;\n#endif\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <beginnormal_vertex>\n\t#include <morphnormal_vertex>\n\t#include <skinbase_vertex>\n\t#include <skinnormal_vertex>\n\t#include <defaultnormal_vertex>\n#ifndef FLAT_SHADED\n\tvNormal = normalize( transformedNormal );\n#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\n\tvViewPosition = - mvPosition.xyz;\n#endif\n}\n" }, { "name": "normal_frag", "type": 35632, "uri": "#define NORMAL\nuniform float opacity;\n#if defined( FLAT_SHADED ) || defined( USE_BUMPMAP ) || ( defined( USE_NORMALMAP ) && ! defined( OBJECTSPACE_NORMALMAP ) )\n\tvarying vec3 vViewPosition;\n#endif\n#ifndef FLAT_SHADED\n\tvarying vec3 vNormal;\n#endif\n#include <packing>\n#include <uv_pars_fragment>\n#include <bumpmap_pars_fragment>\n#include <normalmap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\nvoid main() {\n\t#include <logdepthbuf_fragment>\n\t#include <normal_fragment_begin>\n\t#include <normal_fragment_maps>\n\tgl_FragColor = vec4( packNormalToRGB( normal ), opacity );\n}\n" }], "techniques": [{ "name": "normal", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "boneTexture": { "type": 35678 }, "boneTextureSize": { "type": 5124 }, "opacity": { "type": 5126, "value": 1 }, "bumpMap": { "type": 35678 }, "bumpScale": { "type": 5126, "value": 1 }, "normalMap": { "type": 35678 }, "normalScale": { "type": 35664, "value": [1, 1] } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.particle = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "particle_vert", "type": 35633, "uri": "\n#include <common>\n#if defined(SPHERHBILLBOARD)||defined(STRETCHEDBILLBOARD)||defined(HORIZONTALBILLBOARD)||defined(VERTICALBILLBOARD)\n\tattribute vec2 corner;\n#endif\nattribute vec3 startPosition;\nattribute vec3 startVelocity;\nattribute vec4 startColor;\nattribute vec3 startSize;\nattribute vec3 startRotation;\nattribute vec2 time;\n#if defined(COLOROGRADIENT)||defined(COLORTWOGRADIENTS)||defined(SIZETWOCURVES)||defined(SIZETWOCURVESSEPERATE)||defined(ROTATIONTWOCONSTANTS)||defined(ROTATIONTWOCURVES)\n  attribute vec4 random0;\n#endif\n#if defined(TEXTURESHEETANIMATIONTWOCURVE)||defined(VELOCITYTWOCONSTANT)||defined(VELOCITYTWOCURVE)\n  attribute vec4 random1;\n#endif\nattribute vec3 startWorldPosition;\nattribute vec4 startWorldRotation;\n#include <particle_common>\n#include <fog_pars_vertex>\nvoid main()\n{\n\tfloat age = u_currentTime - time.y;\n\tfloat t = age/time.x;\n\tif(t>1.0){ \t\t\t\n\t\t\tv_discard=1.0;\n\t\t\treturn;\n  }\n\t  \n\t#include <particle_affector>\n\tvec4 mvPosition = viewMatrix * vec4( center, 1.0 );\n\tgl_Position = projectionMatrix * mvPosition;\n\tv_color = computeColor(startColor, t);\n\tv_texcoord = computeUV(uv, t);\n\tv_discard=0.0;\n\t#include <fog_vertex>\n}\n" }, { "name": "particle_frag", "type": 35632, "uri": "\n#include <common>\n#include <fog_pars_fragment>\nuniform sampler2D map;\nuniform vec3 diffuse;\nuniform float opacity;\nvarying float v_discard;\nvarying vec4 v_color;\nvarying vec2 v_texcoord;\n#ifdef RENDERMESH\n\tvarying vec4 v_mesh_color;\n#endif\nvoid main()\n{\t\n\t#ifdef RENDERMESH\n\t\tgl_FragColor=v_mesh_color;\n\t#else\n\t\tgl_FragColor=vec4(1.0);\t\n\t#endif\n\tif(v_discard!=0.0)\n\t\tdiscard;\n\tgl_FragColor*=texture2D(map,v_texcoord)*vec4(diffuse, opacity)*v_color*2.0;\n\t#include <fog_fragment>\n}" }], "techniques": [{ "name": "particle", "attributes": {}, "uniforms": { "u_currentTime": { "type": 5126 }, "u_gravity": { "type": 35665 }, "u_worldPosition": { "type": 35665, "value": [0, 0, 0] }, "u_worldRotation": { "type": 35666, "value": [0, 0, 0, 1] }, "u_startRotation3D": { "type": 35670 }, "u_scalingMode": { "type": 5124 }, "u_positionScale": { "type": 35665 }, "u_sizeScale": { "type": 35665 }, "u_lengthScale": { "type": 5126 }, "u_speeaScale": { "type": 5126 }, "u_simulationSpace": { "type": 5124 }, "u_spaceType": { "type": 5124 }, "u_velocityConst": { "type": 35665 }, "u_velocityCurveX[0]": { "type": 35664 }, "u_velocityCurveY[0]": { "type": 35664 }, "u_velocityCurveZ[0]": { "type": 35664 }, "u_velocityConstMax": { "type": 35665 }, "u_velocityCurveMaxX[0]": { "type": 35664 }, "u_velocityCurveMaxY[0]": { "type": 35664 }, "u_velocityCurveMaxZ[0]": { "type": 35664 }, "u_colorGradient[0]": { "type": 35666 }, "u_alphaGradient[0]": { "type": 35664 }, "u_colorGradientMax[0]": { "type": 35666 }, "u_alphaGradientMax[0]": { "type": 35664 }, "u_sizeCurve[0]": { "type": 35664 }, "u_sizeCurveMax[0]": { "type": 35664 }, "u_sizeCurveX[0]": { "type": 35664 }, "u_sizeCurveY[0]": { "type": 35664 }, "u_sizeCurveZ[0]": { "type": 35664 }, "u_sizeCurveMaxX[0]": { "type": 35664 }, "u_sizeCurveMaxY[0]": { "type": 35664 }, "u_sizeCurveMaxZ[0]": { "type": 35664 }, "u_rotationConst": { "type": 5126 }, "u_rotationConstMax": { "type": 5126 }, "u_rotationCurve[0]": { "type": 35664 }, "u_rotationCurveMax[0]": { "type": 35664 }, "u_rotationConstSeprarate": { "type": 35665 }, "u_rotationConstMaxSeprarate": { "type": 35665 }, "u_rotationCurveX[0]": { "type": 35664 }, "u_rotationCurveY[0]": { "type": 35664 }, "u_rotationCurveZ[0]": { "type": 35664 }, "u_rotationCurveW[0]": { "type": 35664 }, "u_rotationCurveMaxX[0]": { "type": 35664 }, "u_rotationCurveMaxY[0]": { "type": 35664 }, "u_rotationCurveMaxZ[0]": { "type": 35664 }, "u_rotationCurveMaxW[0]": { "type": 35664 }, "u_cycles": { "type": 5126 }, "u_subUV": { "type": 35666 }, "u_uvCurve[0]": { "type": 35664 }, "u_uvCurveMax[0]": { "type": 35664 }, "map": { "type": 35678 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.points = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "points_vert", "type": 35633, "uri": "uniform float size;\nuniform float scale;\n#include <common>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <color_vertex>\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <project_vertex>\n\tgl_PointSize = size;\n\t#ifdef USE_SIZEATTENUATION\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\n\t\tif ( isPerspective ) gl_PointSize *= ( scale / - mvPosition.z );\n\t#endif\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <worldpos_vertex>\n\t#include <fog_vertex>\n}\n" }, { "name": "points_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform float opacity;\n#include <common>\n#include <color_pars_fragment>\n#include <map_particle_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec3 outgoingLight = vec3( 0.0 );\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <logdepthbuf_fragment>\n\t#include <map_particle_fragment>\n\t#include <color_fragment>\n\t#include <alphatest_fragment>\n\toutgoingLight = diffuseColor.rgb;\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <premultiplied_alpha_fragment>\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n}\n" }], "techniques": [{ "name": "points", "attributes": {}, "uniforms": { "size": { "type": 5126 }, "scale": { "type": 5126, "value": 1 }, "morphTargetInfluences[0]": { "type": 5126 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "map": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.shadow = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "shadow_vert", "type": 35633, "uri": "\n#include <fog_pars_vertex>\n#include <shadowmap_pars_vertex>\nvoid main() {\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\t#include <worldpos_vertex>\n\t#include <shadowmap_vertex>\n\t#include <fog_vertex>\n}\n" }, { "name": "shadow_frag", "type": 35632, "uri": "uniform vec3 color;\nuniform float opacity;\n#include <common>\n#include <packing>\n#include <fog_pars_fragment>\n#include <bsdfs>\n#include <lights_pars_begin>\n#include <shadowmap_pars_fragment>\n#include <shadowmask_pars_fragment>\nvoid main() {\n\tgl_FragColor = vec4( color, opacity * ( 1.0 - getShadowMask() ) );\n\t#include <fog_fragment>\n}\n" }], "techniques": [{ "name": "shadow", "attributes": {}, "uniforms": { "color": { "type": 35665 }, "opacity": { "type": 5126, "value": 1 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.sprite = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "sprite_vert", "type": 35633, "uri": "uniform float rotation;\nuniform vec2 center;\n#include <common>\n#include <uv_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\tvec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );\n\tvec2 scale;\n\tscale.x = length( vec3( modelMatrix[ 0 ].x, modelMatrix[ 0 ].y, modelMatrix[ 0 ].z ) );\n\tscale.y = length( vec3( modelMatrix[ 1 ].x, modelMatrix[ 1 ].y, modelMatrix[ 1 ].z ) );\n\t#ifndef USE_SIZEATTENUATION\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\n\t\tif ( isPerspective ) scale *= - mvPosition.z;\n\t#endif\n\tvec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\n\tvec2 rotatedPosition;\n\trotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\n\trotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\n\tmvPosition.xy += rotatedPosition;\n\tgl_Position = projectionMatrix * mvPosition;\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <fog_vertex>\n}\n" }, { "name": "sprite_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform float opacity;\n#include <common>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec3 outgoingLight = vec3( 0.0 );\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <alphatest_fragment>\n\toutgoingLight = diffuseColor.rgb;\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n}\n" }], "techniques": [{ "name": "sprite", "attributes": {}, "uniforms": { "rotation": { "type": 5126 }, "center": { "type": 35664 }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
+        ShaderLib.sprite = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "sprite_vert", "type": 35633, "uri": "\nuniform vec2 scale2D;\nuniform float rotation;\nuniform vec2 center;\n#include <common>\n#include <uv_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\tvec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );\n\tvec2 scale = scale2D;\n\t#ifndef USE_SIZEATTENUATION\n\t\tbool isPerspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\n\t\tif ( isPerspective ) scale *= - mvPosition.z;\n\t#endif\n\tvec2 alignedPosition = ( position.xy - ( center - vec2( 0.5 ) ) ) * scale;\n\tvec2 rotatedPosition;\n\trotatedPosition.x = cos( rotation ) * alignedPosition.x - sin( rotation ) * alignedPosition.y;\n\trotatedPosition.y = sin( rotation ) * alignedPosition.x + cos( rotation ) * alignedPosition.y;\n\tmvPosition.xy += rotatedPosition;\n\tgl_Position = projectionMatrix * mvPosition;\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <fog_vertex>\n}\n" }, { "name": "sprite_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform float opacity;\n#include <common>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec3 outgoingLight = vec3( 0.0 );\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <logdepthbuf_fragment>\n\t#include <map_fragment>\n\t#include <alphatest_fragment>\n\toutgoingLight = diffuseColor.rgb;\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n}\n" }], "techniques": [{ "name": "sprite", "attributes": {}, "uniforms": { "center": { "type": 35664, "value": [0.5, 0.5] }, "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
     })(ShaderLib = egret3d.ShaderLib || (egret3d.ShaderLib = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -29608,7 +29455,7 @@ var egret3d;
         ShaderChunk.shadowmap_vertex = "#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\t\tvDirectionalShadowCoord[ i ] = directionalShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n\t#if NUM_SPOT_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tvSpotShadowCoord[ i ] = spotShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n\t#if NUM_POINT_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tvPointShadowCoord[ i ] = pointShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n#endif\n";
         ShaderChunk.shadowmask_pars_fragment = "float getShadowMask() {\n\tfloat shadow = 1.0;\n\t#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHTS > 0\n\tDirectionalLight directionalLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\t\tdirectionalLight.shadow = int(directionalLights[ i  * 11 + 6]);\n\t\tdirectionalLight.shadowBias = directionalLights[ i  * 11 + 7];\n\t\tdirectionalLight.shadowRadius = directionalLights[ i  * 11 + 8];\n\t\tdirectionalLight.shadowMapSize = vec2(directionalLights[ i  * 11 + 9], directionalLights[ i  * 11 + 10]);\n\t\tshadow *= bool( directionalLight.shadow ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n\t}\n\t#endif\n\t#if NUM_SPOT_LIGHTS > 0\n\tSpotLight spotLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tspotLight.shadow = int(spotLights[ i  * 18 + 13]);\n\t\tspotLight.shadowBias = spotLights[ i  * 18 + 14];\n\t\tspotLight.shadowRadius = spotLights[ i  * 18 + 15];\n\t\tspotLight.shadowMapSize = vec2(spotLights[ i  * 18 + 16], spotLights[ i  * 18 + 17]);\n\t\tshadow *= bool(spotLight.shadow) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n\t}\n\t#endif\n\t#if NUM_POINT_LIGHTS > 0\n\tPointLight pointLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tpointLight.shadow = int(pointLights[ i  * 15 + 8]);\n\t\tpointLight.shadowBias = pointLights[ i  * 15 + 9];\n\t\tpointLight.shadowRadius = pointLights[ i  * 15 + 10];\n\t\tpointLight.shadowMapSize = vec2(pointLights[ i  * 15 + 11], pointLights[ i  * 15 + 12]);\n\t\tpointLight.shadowCameraNear = pointLights[ i  * 15 + 13];\n\t\tpointLight.shadowCameraFar = pointLights[ i  * 15 + 14];\n\t\tshadow *= bool(pointLight.shadow) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n\t}\n\t#endif\n\t#endif\n\treturn shadow;\n}\n";
         ShaderChunk.skinbase_vertex = "#ifdef USE_SKINNING\n\tmat4 boneMatX = getBoneMatrix( skinIndex.x );\n\tmat4 boneMatY = getBoneMatrix( skinIndex.y );\n\tmat4 boneMatZ = getBoneMatrix( skinIndex.z );\n\tmat4 boneMatW = getBoneMatrix( skinIndex.w );\n#endif";
-        ShaderChunk.skinning_pars_vertex = "#ifdef USE_SKINNING\n\t#ifdef BONE_TEXTURE\n\t\tuniform sampler2D boneTexture;\n\t\tuniform int boneTextureSize;\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\t\n\t\t\tfloat j = i * 4.0;\n\t\t\tfloat dx = 1.0 / float( boneTextureSize );\n\t\t\tvec4 v1 = texture2D( boneTexture, vec2( dx * ( j + 0.5 ), 0.0 ) );\n\t\t\tvec4 v2 = texture2D( boneTexture, vec2( dx * ( j + 1.5 ), 0.0 ) );\n\t\t\tvec4 v3 = texture2D( boneTexture, vec2( dx * ( j + 2.5 ), 0.0 ) );\n\t\t\tvec4 v4 = texture2D( boneTexture, vec2( dx * ( j + 3.5 ), 0.0 ) );\n\t\t\tmat4 bone = mat4( v1, v2, v3, v4 );\n\t\t\treturn bone;\n\t\t}\n\t#else\n\t\tuniform mat4 boneMatrices[ MAX_BONES ];\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\tmat4 bone = boneMatrices[ int(i) ];\n\t\t\treturn bone;\n\t\t}\n\t#endif\n#endif\n";
+        ShaderChunk.skinning_pars_vertex = "#ifdef USE_SKINNING\n\t#ifdef BONE_TEXTURE\n\t\tuniform sampler2D boneTexture;\n\t\tuniform int boneTextureSize;\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\tfloat j = i * 4.0;\n\t\t\tfloat x = mod( j, float( boneTextureSize ) );\n\t\t\tfloat y = floor( j / float( boneTextureSize ) );\n\t\t\tfloat dx = 1.0 / float( boneTextureSize );\n\t\t\tfloat dy = 1.0 / float( boneTextureSize );\n\t\t\ty = dy * ( y + 0.5 );\n\t\t\tvec4 v1 = texture2D( boneTexture, vec2( dx * ( x + 0.5 ), y ) );\n\t\t\tvec4 v2 = texture2D( boneTexture, vec2( dx * ( x + 1.5 ), y ) );\n\t\t\tvec4 v3 = texture2D( boneTexture, vec2( dx * ( x + 2.5 ), y ) );\n\t\t\tvec4 v4 = texture2D( boneTexture, vec2( dx * ( x + 3.5 ), y ) );\n\t\t\tmat4 bone = mat4( v1, v2, v3, v4 );\n\t\t\treturn bone;\n\t\t}\n\t#else\n\t\tuniform mat4 boneMatrices[ MAX_BONES ];\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\tmat4 bone = boneMatrices[ int(i) ];\n\t\t\treturn bone;\n\t\t}\n\t#endif\n#endif\n";
         ShaderChunk.skinning_vertex = "#ifdef USE_SKINNING\n\tvec4 skinVertex = vec4( transformed, 1.0 );\n\tvec4 skinned = vec4( 0.0 );\n\tskinned += boneMatX * skinVertex * skinWeight.x;\n\tskinned += boneMatY * skinVertex * skinWeight.y;\n\tskinned += boneMatZ * skinVertex * skinWeight.z;\n\tskinned += boneMatW * skinVertex * skinWeight.w;\n\ttransformed = skinned.xyz;\n#endif\n";
         ShaderChunk.skinnormal_vertex = "#ifdef USE_SKINNING\n\tmat4 skinMatrix = mat4( 0.0 );\n\tskinMatrix += skinWeight.x * boneMatX;\n\tskinMatrix += skinWeight.y * boneMatY;\n\tskinMatrix += skinWeight.z * boneMatZ;\n\tskinMatrix += skinWeight.w * boneMatW;\n\t\n\tobjectNormal = vec4( skinMatrix * vec4( objectNormal, 0.0 ) ).xyz;\n#endif\n";
         ShaderChunk.specularmap_fragment = "float specularStrength;\n#ifdef USE_SPECULARMAP\n\tvec4 texelSpecular = texture2D( specularMap, vUv );\n\tspecularStrength = texelSpecular.r;\n#else\n\tspecularStrength = 1.0;\n#endif";
@@ -29777,9 +29624,13 @@ var egret3d;
                     else if (format === "Gray") {
                         textureFormat_1 = 6409 /* Luminance */;
                     }
-                    var linear_1 = true;
-                    if (filterMode.indexOf("linear") < 0) {
-                        linear_1 = false;
+                    //Trilinear   Bilinear
+                    var linear_1 = 0 /* Point */;
+                    if (filterMode.indexOf("Trilinear") >= 0) {
+                        linear_1 = 2 /* Trilinear */;
+                    }
+                    else if (filterMode.indexOf("Bilinear") >= 0) {
+                        linear_1 = 1 /* Bilinear */;
                     }
                     var repeat_1 = false;
                     if (wrap.indexOf("Repeat") >= 0) {
@@ -30605,7 +30456,7 @@ var egret3d;
                 var sampler = this._sampler;
                 var extension = this._gltfTexture.extensions.paper;
                 var format = extension.format || 6408 /* RGBA */;
-                var dataType = extension.type || 5121 /* UnsignedByte */;
+                var dataType = extension.type || 5121 /* UNSIGNED_BYTE */;
                 // const isMutilyLayers = extension.layers !== undefined && extension.layers > 1; // TODO
                 if (extension.depth !== undefined && extension.depth > 1) {
                     textureType = 32879 /* Texture3D */;
@@ -30615,18 +30466,14 @@ var egret3d;
                     textureType = 34067 /* TextureCube */;
                     uploadType = 34069 /* TextureCubeStart */;
                 }
-                else {
+                else if (extension.height > 1) {
                     textureType = 3553 /* Texture2D */;
                     uploadType = textureType;
                 }
-                // else if (extension.height! > 1) { // TODO
-                //     textureType = gltf.TextureType.Texture2D;
-                //     uploadType = textureType;
-                // }
-                // else {
-                //     textureType = gltf.TextureType.Texture1D;
-                //     uploadType = textureType;
-                // }
+                else {
+                    textureType = -1 /* Texture1D */;
+                    uploadType = textureType;
+                }
                 this.type = textureType;
                 if (!this.webGLTexture) {
                     this.webGLTexture = webgl.createTexture();
@@ -30746,7 +30593,7 @@ var egret3d;
                 var width = extension.width;
                 var height = extension.height;
                 var format = extension.format || 6408 /* RGBA */;
-                var dataType = extension.type || 5121 /* UnsignedByte */;
+                var dataType = extension.type || 5121 /* UNSIGNED_BYTE */;
                 if (extension.depth !== undefined && extension.depth > 1) {
                     type = 32879 /* Texture3D */;
                     uploadType = type;
@@ -31011,7 +30858,7 @@ var egret3d;
              * 更新该网格的索引缓存。
              * @param subMeshIndex
              */
-            WebGLMesh.prototype.uploadSubIndexBuffer = function (subMeshIndex) {
+            WebGLMesh.prototype.uploadSubIndexBuffer = function (subMeshIndex, offset, count) {
                 if (subMeshIndex === void 0) { subMeshIndex = 0; }
                 if (!this.vbo) {
                     return;
@@ -31020,7 +30867,7 @@ var egret3d;
                     var primitive = this._glTFMesh.primitives[subMeshIndex];
                     if (primitive.indices !== undefined) {
                         var accessor = this.getAccessor(primitive.indices);
-                        var subIndexBuffer = this.createTypeArrayFromAccessor(accessor);
+                        var subIndexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
                         var ibo = this.ibos[subMeshIndex];
                         var webgl_13 = webgl_11.WebGLRenderState.webgl;
                         webgl_13.bindBuffer(34963 /* ElementArrayBuffer */, ibo);
@@ -31276,6 +31123,9 @@ var egret3d;
                                 var fogColor = fog.color;
                                 webgl.uniform3f(location_3, fogColor.r, fogColor.g, fogColor.b);
                                 break;
+                            case "_RESOLUTION" /* _RESOLUTION */:
+                                webgl.uniform2f(location_3, 1.0 / egret3d.stage.viewport.w, 1.0 / egret3d.stage.viewport.h);
+                                break;
                         }
                     }
                 }
@@ -31396,26 +31246,15 @@ var egret3d;
                             var skinnedMeshRenderer = renderer.source || renderer;
                             webgl.uniformMatrix4fv(location_7, false, skinnedMeshRenderer.boneMatrices);
                             break;
-                        case "_BONETEXTURE" /* _BONETEXTURE */:
-                            if (uniform.textureUnits && uniform.textureUnits.length === 1) {
-                                var skinnedMeshRenderer_1 = renderer.source || renderer;
-                                var texture = skinnedMeshRenderer_1.boneTexture; //TODO可能有空
-                                var unit = uniform.textureUnits[0];
-                                webgl.uniform1i(location_7, unit);
-                                texture.bindTexture(unit);
-                            }
-                            else {
-                                console.error("Error texture unit.");
-                            }
-                            break;
-                        case "_BONETEXTURESIZE" /* _BONETEXTURESIZE */:
-                            {
-                                var skinnedMeshRenderer_2 = renderer.source || renderer;
-                                webgl.uniform1i(location_7, skinnedMeshRenderer_2.boneTexture.width);
-                                break;
-                            }
                         case "_CLOCK" /* _CLOCK */:
                             webgl.uniform4fv(location_7, renderState.caches.clockBuffer);
+                            break;
+                        case "_ROTATION" /* _ROTATION */:
+                            webgl.uniform1f(location_7, renderer.transform.euler.z);
+                            break;
+                        case "_SCALE2D" /* _SCALE2D */:
+                            var scale = renderer.transform.scale;
+                            webgl.uniform2f(location_7, scale.x, scale.y);
                             break;
                         case "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */:
                             webgl.uniformMatrix4fv(location_7, false, context.directShadowMatrix);
@@ -31676,6 +31515,7 @@ var egret3d;
                         }
                         egret2DRenderer._draw();
                         renderState.clearState();
+                        this._cacheProgram = null; //防止2d的program污染3d的
                     }
                 }
             };
@@ -31735,7 +31575,6 @@ var egret3d;
                     renderState_2.caches.egret2DOrderCount = 0;
                     renderState_2.caches.cullingMask = 0 /* Nothing */;
                     renderState_2.caches.clockBuffer[0] = clock.time; // TODO more clock info.
-                    this._cacheProgram = null;
                     // Render lights shadows. TODO 
                     // if (camera.cullingMask !== renderState.caches.cullingMask) {
                     var lights = this._cameraAndLightCollecter.lights;
@@ -31758,6 +31597,7 @@ var egret3d;
                             this.render(camera);
                         }
                     }
+                    this._cacheProgram = null; //TODO
                 }
                 else {
                     this._renderState.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.BLACK);
@@ -31773,12 +31613,29 @@ var egret3d;
                 if (cameraAndLightCollecter.currentCamera !== camera) {
                     cameraAndLightCollecter.currentCamera = camera;
                     camera._update();
+                    //TODO
+                    if (camera.gameObject._beforeRenderBehaviorCount > 0) {
+                        var flag = false;
+                        var isEditor = paper.Application.playerMode === 4 /* Editor */;
+                        for (var _i = 0, _a = camera.entity.components; _i < _a.length; _i++) {
+                            var component = _a[_i];
+                            if (component.isActiveAndEnabled &&
+                                component.constructor.isBehaviour &&
+                                (!isEditor || component.constructor.executeInEditMode) &&
+                                component.onBeforeRender) {
+                                flag = !component.onBeforeRender() || flag;
+                            }
+                        }
+                        if (flag) {
+                            return;
+                        }
+                    }
                     //
                     var isPostprocessing = false;
                     var postprocessings = camera.entity.getComponents(egret3d.CameraPostprocessing, true);
                     if (postprocessings.length > 0) {
-                        for (var _i = 0, postprocessings_1 = postprocessings; _i < postprocessings_1.length; _i++) {
-                            var postprocessing = postprocessings_1[_i];
+                        for (var _b = 0, postprocessings_1 = postprocessings; _b < postprocessings_1.length; _b++) {
+                            var postprocessing = postprocessings_1[_b];
                             if (postprocessing.isActiveAndEnabled) {
                                 isPostprocessing = true;
                                 break;
@@ -31791,8 +31648,8 @@ var egret3d;
                     }
                     else {
                         this._render(camera, camera.postprocessingRenderTarget, material);
-                        for (var _a = 0, postprocessings_2 = postprocessings; _a < postprocessings_2.length; _a++) {
-                            var postprocessing = postprocessings_2[_a];
+                        for (var _c = 0, postprocessings_2 = postprocessings; _c < postprocessings_2.length; _c++) {
+                            var postprocessing = postprocessings_2[_c];
                             if (postprocessing.isActiveAndEnabled) {
                                 this._backupCamera = camera;
                                 postprocessing.onRender(camera);
@@ -31908,6 +31765,7 @@ var egret3d;
                         this._cacheLight = null;
                         this._cacheMesh = null;
                         this._cacheMaterial = null;
+                        this._cacheMaterialVersion = -1;
                         this._cacheLightmapIndex = -1;
                         forceUpdate = true;
                     }
@@ -31943,7 +31801,7 @@ var egret3d;
                     // Draw.
                     if (primitive.indices !== undefined) {
                         var indexAccessor = mesh.getAccessor(primitive.indices);
-                        webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
+                        webgl.drawElements(drawMode, drawCall.count || indexAccessor.count, indexAccessor.componentType, 0); //TODO 暂时不支持交错
                     }
                     else {
                         webgl.drawArrays(drawMode, 0, vertexAccessor.count);
@@ -32427,41 +32285,41 @@ var egret3d;
 var paper;
 (function (paper) {
     /**
-     * @internal
+     * 已丢失或不支持的组件数据备份。
      */
-    var GroupComponent = (function (_super) {
-        __extends(GroupComponent, _super);
-        function GroupComponent() {
+    var MissingComponent = (function (_super) {
+        __extends(MissingComponent, _super);
+        function MissingComponent() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.componentIndex = -1;
-            _this.components = [];
+            /**
+             * 已丢失或不支持的组件数据。
+             */
+            _this.missingObject = null;
             return _this;
         }
-        GroupComponent.prototype.initialize = function (componentIndex) {
-            _super.prototype.initialize.call(this);
-            this.componentIndex = componentIndex;
-        };
-        GroupComponent.prototype.uninitialize = function () {
-            this.componentIndex = -1;
-            this.components.length = 0;
-            this.entity = null;
-            this._lifeStates = 0 /* None */;
-        };
-        GroupComponent.prototype.addComponent = function (component) {
-            this.components.push(component);
-        };
-        GroupComponent.prototype.removeComponent = function (component) {
-            var index = this.components.indexOf(component);
-            if (index >= 0) {
-                this.components.splice(index, 1);
-                return true;
-            }
-            return false;
-        };
-        return GroupComponent;
+        Object.defineProperty(MissingComponent.prototype, "missingClass", {
+            /**
+             * 丢失的组件类名
+             */
+            get: function () {
+                if (this.missingObject) {
+                    return this.missingObject.class;
+                }
+                return "";
+            },
+            enumerable: true,
+            configurable: true
+        });
+        __decorate([
+            paper.editor.property("TEXT" /* TEXT */, { readonly: true })
+        ], MissingComponent.prototype, "missingClass", null);
+        __decorate([
+            paper.serializedField
+        ], MissingComponent.prototype, "missingObject", void 0);
+        return MissingComponent;
     }(paper.Component));
-    paper.GroupComponent = GroupComponent;
-    __reflect(GroupComponent.prototype, "paper.GroupComponent");
+    paper.MissingComponent = MissingComponent;
+    __reflect(MissingComponent.prototype, "paper.MissingComponent");
 })(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
@@ -32524,7 +32382,6 @@ var egret3d;
             .preRegister(egret3d.Egret2DRendererSystem, gameObjectContext, 7000 /* BeforeRenderer */, options)
             .preRegister(egret3d.CameraAndLightSystem, gameObjectContext, 7000 /* BeforeRenderer */);
         paper.Application.initialize(options);
-        paper.Application.start();
         console.info("Egret start complete.");
     }
     egret3d.runEgret = runEgret;
@@ -32549,30 +32406,30 @@ window.egret3d = egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 圆柱（锥）体碰撞组件。
+     * 胶囊体碰撞组件。
      * - 与 Y 轴对齐。
      */
-    var CylinderCollider = (function (_super) {
-        __extends(CylinderCollider, _super);
-        function CylinderCollider() {
+    var CapsuleCollider = (function (_super) {
+        __extends(CapsuleCollider, _super);
+        function CapsuleCollider() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.colliderType = egret3d.ColliderType.Cylinder;
-            _this.cylinder = egret3d.Cylinder.create(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
+            _this.colliderType = egret3d.ColliderType.Capsule;
+            _this.capsule = egret3d.Capsule.create(egret3d.Vector3.ZERO, 0.25, 0.5);
             return _this;
         }
-        CylinderCollider.prototype.raycast = function (ray, raycastInfo) {
+        CapsuleCollider.prototype.raycast = function (ray, raycastInfo) {
             if (raycastInfo === void 0) { raycastInfo = null; }
-            return egret3d._colliderRaycast(this, this.cylinder, null, ray, raycastInfo, true);
+            return egret3d._colliderRaycast(this, this.capsule, null, ray, raycastInfo, true);
         };
         __decorate([
             paper.editor.property("NESTED" /* NESTED */),
             paper.serializedField
-        ], CylinderCollider.prototype, "cylinder", void 0);
-        CylinderCollider = __decorate([
+        ], CapsuleCollider.prototype, "capsule", void 0);
+        CapsuleCollider = __decorate([
             paper.allowMultiple
-        ], CylinderCollider);
-        return CylinderCollider;
+        ], CapsuleCollider);
+        return CapsuleCollider;
     }(paper.BaseComponent));
-    egret3d.CylinderCollider = CylinderCollider;
-    __reflect(CylinderCollider.prototype, "egret3d.CylinderCollider", ["egret3d.ICylinderCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
+    egret3d.CapsuleCollider = CapsuleCollider;
+    __reflect(CapsuleCollider.prototype, "egret3d.CapsuleCollider", ["egret3d.ICapsuleCollider", "egret3d.ICollider", "egret3d.IRaycast"]);
 })(egret3d || (egret3d = {}));

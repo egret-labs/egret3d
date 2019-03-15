@@ -1,3 +1,5 @@
+//modified by egret
+uniform vec2 scale2D;
 uniform float rotation;
 uniform vec2 center;
 
@@ -12,10 +14,11 @@ void main() {
 	#include <uv_vertex>
 
 	vec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );
-
-	vec2 scale;
-	scale.x = length( vec3( modelMatrix[ 0 ].x, modelMatrix[ 0 ].y, modelMatrix[ 0 ].z ) );
-	scale.y = length( vec3( modelMatrix[ 1 ].x, modelMatrix[ 1 ].y, modelMatrix[ 1 ].z ) );
+	//modified by egret
+	vec2 scale = scale2D;
+	// vec2 scale;
+	// scale.x = length( vec3( modelMatrix[ 0 ].x, modelMatrix[ 0 ].y, modelMatrix[ 0 ].z ) );
+	// scale.y = length( vec3( modelMatrix[ 1 ].x, modelMatrix[ 1 ].y, modelMatrix[ 1 ].z ) );
 
 	#ifndef USE_SIZEATTENUATION
 

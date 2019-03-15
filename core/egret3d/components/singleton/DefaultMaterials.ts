@@ -56,6 +56,10 @@ namespace egret3d {
          * @internal
          */
         public static COPY: Material;
+        /**
+         * @internal
+         */
+        public static FXAA: Material;
 
         private _createMaterial(name: string, shader: Shader) {
             const material = Material.create(name, shader);
@@ -109,6 +113,8 @@ namespace egret3d {
                 .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
 
             DefaultMaterials.COPY = this._createMaterial("builtin/copy.mat.json", DefaultShaders.COPY);
+            
+            DefaultMaterials.FXAA = this._createMaterial("builtin/fxaa.mat.json", DefaultShaders.FXAA);
         }
     }
 }

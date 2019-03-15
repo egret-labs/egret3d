@@ -77,13 +77,13 @@ namespace egret3d {
         /**
          * 此帧的非透明绘制信息列表。
          * - 已进行视锥剔除的。
-         * @internal
+         * TODO
          */
         public readonly opaqueCalls: DrawCall[] = [];
         /**
          * 此帧的透明绘制信息列表。
          * - 已进行视锥剔除的。
-         * @internal
+         * TODO
          */
         public readonly transparentCalls: DrawCall[] = [];
         /**
