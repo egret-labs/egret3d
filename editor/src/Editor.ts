@@ -116,7 +116,7 @@ namespace paper.editor {
          * @param sceneUrl 场景资源URL
          */
         public static async editScene(sceneUrl: string) {
-            const rawScene = await RES.getResAsync(sceneUrl) as RawScene;
+            const rawScene = await this.getRes(sceneUrl) as RawScene;
             if (rawScene) {
                 let scene = rawScene.createInstance(true);
                 if (scene) {
@@ -130,12 +130,22 @@ namespace paper.editor {
                 }
             }
         }
+
+        private static async getRes(name: string) {
+            let asset: paper.Asset | null = paper.Asset.find(name);
+        
+            if (!asset)
+                asset = await RES.getResAsync(name);
+        
+            return asset;
+        }
+
         /**
          * 编辑预置体
          * @param prefabUrl 预置体资源URL
          */
         public static async editPrefab(prefabUrl: string) {
-            const prefab = await RES.getResAsync(prefabUrl) as Prefab;
+            const prefab = await this.getRes(prefabUrl) as Prefab;
             if (prefab) {
                 let scene = Scene.createEmpty('prefabEditScene', false);
                 let prefabInstance = prefab.createInstance(scene, true);

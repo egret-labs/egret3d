@@ -365,6 +365,7 @@ namespace paper.editor {
                                     throw Error("apply prefab error")
                                 }
                                 newObj.parent = gameObj;
+                                addGameObjDetail.cacheSerializeData = Object.create(null);
                                 ids = this.getAllUUidFromGameObject(newObj);
                                 addGameObjDetail.cacheSerializeData![gameObj.uuid] = [];
                                 addGameObjDetail.cacheSerializeData![gameObj.uuid][index] = paper.serialize(newObj);
