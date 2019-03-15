@@ -158,7 +158,7 @@ namespace examples.oimo {
                     .setLocalScale(0.4);
 
                 const entityB = egret3d.creater.createGameObject("Spherical Joint Connected", {
-                    mesh: egret3d.DefaultMeshes.SPHERE,
+                    mesh: egret3d.DefaultMeshes.CUBE,
                     material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT),
                     castShadows: true,
                     receiveShadows: true,
@@ -177,7 +177,7 @@ namespace examples.oimo {
                 joint.connectedRigidbody = rigidbodyB;
 
                 const wander = entityA.addComponent(behaviors.Wander);
-                wander.radius = 1.0;
+                wander.radius = 0.5;
                 wander.center.set(2.0, 0.0, 0.0);
             }
         }

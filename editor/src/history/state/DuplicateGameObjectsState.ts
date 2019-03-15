@@ -11,12 +11,32 @@ namespace paper.editor {
             editorModel.filtTopHierarchyGameObjects(objs);
             //排序
             objs=editorModel.sortGameObjectsForHierarchy(objs);
-            let duplicateInfo: { UUID: string, parentUUID: string, serializeData: any }[] = [];
+            let duplicateInfo: { UUID: string, parentUUID: string, serializeData: ISerializedData | null }[] = [];
             for (let i: number = 0; i < objs.length; i++) {
                 let obj = objs[i];
                 let UUID = obj.uuid;
                 let parentUUID = obj.transform.parent ? obj.transform.parent.gameObject.uuid : null;
-                let serializeData = serialize(obj);
+                
+                let extrasCollection:(EntityExtras | undefined)[] = [];
+                
+                if (editorModel.isPrefabChild(obj)) {
+                    extrasCollection = editorModel.clearAndCollectGameObjectExtras(obj);
+                }
+
+                let serializeData:ISerializedData | null = null;
+                
+                try {
+                    serializeData = serialize(obj);
+                    if (extrasCollection.length > 0) {
+                        editorModel.resetGameObjectExtras(obj,extrasCollection);
+                    }
+                } catch (error) {
+                    console.error("copyGameObject serialize error")
+                    if (extrasCollection.length > 0) {
+                        editorModel.resetGameObjectExtras(obj,extrasCollection);
+                    }
+                }
+
                 duplicateInfo.push({ UUID, parentUUID:parentUUID!, serializeData });
             }
             const state = new DuplicateGameObjectsState();

@@ -253,6 +253,8 @@ declare namespace paper.editor {
          * @param objs
          */
         copyGameObject(objs: GameObject[]): void;
+        clearAndCollectGameObjectExtras(gameObj: paper.GameObject, extrasCollection?: (EntityExtras | undefined)[] | null): (EntityExtras | undefined)[];
+        resetGameObjectExtras(gameObj: GameObject, extrasCollection: (EntityExtras | undefined)[]): void;
         /**
          * 粘贴游戏对象
          * @param parent
@@ -312,17 +314,18 @@ declare namespace paper.editor {
         /**将对象按照层级进行排序
          */
         sortGameObjectsForHierarchy(gameobjects: paper.GameObject[]): paper.GameObject[];
-        createApplyPrefabState(applyData: editor.ApplyData, applyPrefabInstanceId: string, prefab: paper.Prefab): void;
+        createApplyPrefabState(applyData: editor.ApplyData, applyPrefabInstanceId: string, prefabName: string): void;
         createRevertPrefabState(revertData: editor.revertData, revertPrefabInstanceId: string): void;
         deepClone<T>(obj: T): T;
         updateAsset(asset: Asset, prefabInstance?: GameObject | null): void;
         private _cacheIds;
         private findAssetRefs(target, as, refs?);
         private findFromChildren(source, as, refs, parent, key);
-        getAllGameObjectsFromPrefabInstance(gameObj: paper.GameObject, objs?: paper.GameObject[] | null): GameObject[] | null;
+        getAllGameObjectsFromPrefabInstance(gameObj: paper.GameObject, objs?: paper.GameObject[] | null): GameObject[];
         modifyMaterialPropertyValues(target: egret3d.Material, valueList: any[]): Promise<void>;
         private modifyMaterialUniformProperty(target, uniformType, propName, copyValue);
         private modifyMaterialGltfStates(target, propName, copyValue);
+        getRes(name: string): Promise<any>;
     }
 }
 declare namespace paper.editor {
@@ -619,54 +622,56 @@ declare namespace paper.editor {
     type EventData = {
         isUndo: boolean;
     };
+    type ApplyDataDetail = {
+        addGameObjects?: {
+            serializeData: ISerializedData;
+            id: string;
+            cacheSerializeData?: {
+                [key: string]: ISerializedData[];
+            };
+        }[];
+        addComponents?: {
+            serializeData: ISerializedData;
+            id: string;
+            gameObjId: string;
+            cacheSerializeData?: {
+                [key: string]: ISerializedData;
+            };
+        }[];
+        modifyGameObjectPropertyList?: {
+            newValueList: any[];
+            preValueCopylist: any[];
+        }[];
+        modifyComponentPropertyList?: {
+            componentId: string;
+            newValueList: any[];
+            preValueCopylist: any[];
+        }[];
+    };
     type ApplyData = {
-        [linkedId: string]: {
-            addGameObjects?: {
-                serializeData: any;
-                id: string;
-                cacheSerializeData?: {
-                    [key: string]: ISerializedData[];
-                };
-            }[];
-            addComponents?: {
-                serializeData: any;
-                id: string;
-                gameObjId: string;
-                cacheSerializeData?: {
-                    [key: string]: ISerializedData;
-                };
-            }[];
-            modifyGameObjectPropertyList?: {
-                newValueList: any[];
-                preValueCopylist: any[];
-            }[];
-            modifyComponentPropertyList?: {
-                componentId: string;
-                newValueList: any[];
-                preValueCopylist: any[];
-            }[];
-        };
+        [linkedId: string]: ApplyDataDetail;
+    };
+    type revertDataDetail = {
+        revertGameObjects?: {
+            serializeData: ISerializedData;
+            id: string;
+        }[];
+        revertComponents?: {
+            serializeData: ISerializedData;
+            id?: string;
+        }[];
+        modifyGameObjectPropertyList?: {
+            newValueList: any[];
+            preValueCopylist: any[];
+        }[];
+        modifyComponentPropertyList?: {
+            componentId: string;
+            newValueList: any[];
+            preValueCopylist: any[];
+        }[];
     };
     type revertData = {
-        [linkedId: string]: {
-            revertGameObjects?: {
-                serializeData: any;
-                id: string;
-            }[];
-            revertComponents?: {
-                serializeData: any;
-                id?: string;
-            }[];
-            modifyGameObjectPropertyList?: {
-                newValueList: any[];
-                preValueCopylist: any[];
-            }[];
-            modifyComponentPropertyList?: {
-                componentId: string;
-                newValueList: any[];
-                preValueCopylist: any[];
-            }[];
-        };
+        [linkedId: string]: revertDataDetail;
     };
     const EventType: {
         HistoryState: string;
@@ -713,10 +718,10 @@ declare namespace paper.editor {
     class ApplyPrefabInstanceState extends BaseState {
         private firstRedo;
         static toString(): string;
-        static create(applyData: editor.ApplyData, applyPrefabRootId: string, prefab: paper.Prefab): ApplyPrefabInstanceState | null;
+        static create(applyData: editor.ApplyData, applyPrefabRootId: string, prefabName: string): ApplyPrefabInstanceState | null;
         private readonly stateData;
         undo(): boolean;
-        getAllUUidFromGameObject(gameObj: paper.GameObject, uuids?: string[] | null): string[] | null;
+        getAllUUidFromGameObject(gameObj: paper.GameObject, uuids?: string[] | null): string[];
         setLinkedId(gameObj: GameObject, ids: string[]): void;
         clearLinkedId(gameObj: GameObject): void;
         protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
@@ -726,6 +731,7 @@ declare namespace paper.editor {
         getGameObjectsByLinkedId(linkedId: string, filterApplyRootId: string): GameObject[];
         getGameObjectByLinkedId(gameObj: paper.GameObject, linkedID: string): GameObject | null | undefined;
         getGameObjectByUUid(gameObj: GameObject, uuid: string): GameObject | null | undefined;
+        private getPrefabAsset();
         redo(): boolean;
         private clearGameObjectExtrasInfo(gameObj);
         private clearExtrasFromSerilizeData(data);

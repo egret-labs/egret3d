@@ -7200,15 +7200,11 @@ var paper;
          * @internal
          */
         BaseTransform.prototype._destroy = function () {
-            for (var _i = 0, _a = this._children; _i < _a.length; _i++) {
-                var child = _a[_i];
-                child.entity.destroy();
-            }
+            this.destroyChildren();
             if (this._parent) {
                 this._parent._removeChild(this);
             }
             _super.prototype._destroy.call(this);
-            this._children.length > 0 && (this._children.length = 0);
         };
         /**
          * @internal
@@ -7300,6 +7296,7 @@ var paper;
             while (i--) {
                 children[i].entity.destroy();
             }
+            children.length > 0 && (children.length = 0);
         };
         /**
          *

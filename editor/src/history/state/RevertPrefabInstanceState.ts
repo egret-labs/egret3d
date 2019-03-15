@@ -32,7 +32,7 @@ namespace paper.editor {
                         continue;
                     }
 
-                    let revertData: any = this.stateData.revertData[gameObj!.extras!.linkedID!];
+                    let revertData: editor.revertDataDetail = this.stateData.revertData[gameObj!.extras!.linkedID!];
 
                     if (revertData.revertGameObjects && revertData.revertGameObjects.length > 0) {
                         for (const obj of revertData.revertGameObjects) {
@@ -112,7 +112,7 @@ namespace paper.editor {
                         continue;
                     }
 
-                    let revertData: any = this.stateData.revertData[gameObj!.extras!.linkedID!];
+                    let revertData: editor.revertDataDetail = this.stateData.revertData[gameObj!.extras!.linkedID!];
 
                     if (revertData.revertGameObjects && revertData.revertGameObjects.length > 0) {
                         revertData.revertGameObjects.forEach((element:any) => {

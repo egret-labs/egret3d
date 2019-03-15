@@ -282,13 +282,78 @@ namespace paper.editor {
             objs = this.sortGameObjectsForHierarchy(objs);
             for (let i: number = 0; i < objs.length; i++) {
                 let obj = objs[i];
+
+                let extrasCollection:(EntityExtras | undefined)[] = [];
+                
+                if (this.isPrefabChild(obj)) {
+                    extrasCollection = this.clearAndCollectGameObjectExtras(obj);
+                }
+
+                let serializeData:ISerializedData | null = null;
+
+                try {
+                    serializeData = serialize(obj);
+                    if (extrasCollection.length > 0) {
+                        this.resetGameObjectExtras(obj,extrasCollection);
+                    }
+                } catch (error) {
+                    console.error("copyGameObject serialize error")
+                    if (extrasCollection.length > 0) {
+                        this.resetGameObjectExtras(obj,extrasCollection);
+                    }
+                }
+                
                 content.push({
                     type: "gameObject",
-                    serializeData: serialize(obj)
+                    serializeData
                 });
             }
             clipboard.writeText(JSON.stringify(content), "paper");
         }
+
+        public clearAndCollectGameObjectExtras(gameObj: paper.GameObject,extrasCollection:(EntityExtras | undefined)[] | null = null) {
+            extrasCollection = extrasCollection || [];
+
+            extrasCollection.push(gameObj.extras);
+            gameObj.extras = {};
+
+            for (const comp of gameObj.components) {
+                extrasCollection.push(comp.extras);
+                comp.extras = {};
+            }
+
+            for (let index = 0; index < gameObj.transform.children.length; index++) {
+                const element = gameObj.transform.children[index];
+                const obj: paper.GameObject = element.gameObject;
+                this.clearAndCollectGameObjectExtras(obj);
+            }
+
+            return extrasCollection;
+        }
+
+        public resetGameObjectExtras(gameObj: GameObject, extrasCollection: (EntityExtras | undefined)[]) {
+            let extras: EntityExtras | undefined = extrasCollection.shift();
+
+            if (extras === undefined) {
+                throw Error("reset extras error");
+            }
+            gameObj.extras = extras;
+
+            for (const com of gameObj.components) {
+                extras = extrasCollection.shift();
+                if (extras === undefined) {
+                    throw Error("reset extras error");
+                }
+                com.extras = extras;
+            }
+
+            for (let index = 0; index < gameObj.transform.children.length; index++) {
+                const element = gameObj.transform.children[index];
+                const obj: paper.GameObject = element.gameObject;
+                this.resetGameObjectExtras(obj, extrasCollection);
+            }
+        }
+
         /**
          * 粘贴游戏对象
          * @param parent 
@@ -667,9 +732,11 @@ namespace paper.editor {
             return gameobjects;
         }
 
-        public createApplyPrefabState(applyData: editor.ApplyData, applyPrefabInstanceId: string, prefab: paper.Prefab) {
-            let state = ApplyPrefabInstanceState.create(applyData, applyPrefabInstanceId, prefab);
-            this.addState(state);
+        public createApplyPrefabState(applyData: editor.ApplyData, applyPrefabInstanceId: string, prefabName: string) {
+            let state = ApplyPrefabInstanceState.create(applyData, applyPrefabInstanceId, prefabName);
+            if (state) {
+                this.addState(state);
+            }
         }
 
         public createRevertPrefabState(revertData: editor.revertData, revertPrefabInstanceId: string) {
@@ -767,17 +834,16 @@ namespace paper.editor {
         }
 
         public getAllGameObjectsFromPrefabInstance(gameObj: paper.GameObject, objs: paper.GameObject[] | null = null) {
-            if (gameObj) {
-                objs = objs || [];
-                if (gameObj.extras!.linkedID) {
-                    objs.push(gameObj);
-                }
+            objs = objs || [];
 
-                for (let index = 0; index < gameObj.transform.children.length; index++) {
-                    const element = gameObj.transform.children[index];
-                    const obj: paper.GameObject = element.gameObject;
-                    this.getAllGameObjectsFromPrefabInstance(obj, objs);
-                }
+            if (gameObj.extras!.linkedID) {
+                objs.push(gameObj);
+            }
+
+            for (let index = 0; index < gameObj.transform.children.length; index++) {
+                const element = gameObj.transform.children[index];
+                const obj: paper.GameObject = element.gameObject;
+                this.getAllGameObjectsFromPrefabInstance(obj, objs);
             }
 
             return objs;
@@ -866,6 +932,22 @@ namespace paper.editor {
             }
 
             (target.config.materials![0] as egret3d.GLTFMaterial).extensions.paper.states = target.technique.states;
+        }
+
+        public async getRes(name: string) {
+            let asset : paper.Asset | null = paper.Asset.find(name);
+        
+            if (asset) {
+                return asset;
+            }
+        
+            asset = RES.getRes(name);
+        
+            if (asset) {
+                return asset;
+            }
+        
+            return await RES.getResAsync(name);
         }
     }
 }

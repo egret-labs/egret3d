@@ -1,22 +1,26 @@
 namespace paper.editor {
     export type EventData = { isUndo: boolean };
 
-    export type ApplyData = {
-        [linkedId: string]:{
-            addGameObjects?: { serializeData: any,id:string,cacheSerializeData?:{ [key: string]:ISerializedData[] } }[],
-            addComponents?: { serializeData: any,id:string,gameObjId:string,cacheSerializeData?:{[key:string]:ISerializedData} }[],
-            modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
-            modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
-        }
+    export type ApplyDataDetail = {
+        addGameObjects?: { serializeData: ISerializedData,id:string,cacheSerializeData?:{ [key: string]:ISerializedData[] } }[],
+        addComponents?: { serializeData: ISerializedData,id:string,gameObjId:string,cacheSerializeData?:{[key:string]:ISerializedData} }[],
+        modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
+        modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
     };
 
+    export type ApplyData = {
+        [linkedId: string]:ApplyDataDetail;
+    };
+
+    export type revertDataDetail = {
+        revertGameObjects?: { serializeData: ISerializedData,id:string}[],
+        revertComponents?: { serializeData: ISerializedData,id?:string }[],
+        modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
+        modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
+    }
+
     export type revertData = {
-        [linkedId: string]:{
-            revertGameObjects?: { serializeData: any,id:string}[],
-            revertComponents?: { serializeData: any,id?:string }[],
-            modifyGameObjectPropertyList?: { newValueList: any[], preValueCopylist: any[] }[],
-            modifyComponentPropertyList?: { componentId: string, newValueList: any[], preValueCopylist: any[] }[]
-        }
+        [linkedId: string]:revertDataDetail;
     };
 
     export const EventType = {
