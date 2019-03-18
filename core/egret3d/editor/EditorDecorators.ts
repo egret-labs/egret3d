@@ -59,6 +59,10 @@ namespace paper.editor {
          * 下拉项。
          */
         listItems?: ListItem[] | string | ((value: any) => ListItem[]);
+        /**
+         * 
+         */
+        clazz?:any;
     };
     /**
      * 编辑类型。
@@ -188,6 +192,9 @@ namespace paper.editor {
             }
 
             if (editType !== undefined) {
+                if (option && option.clazz) {
+                    option.clazz = egret.getQualifiedClassName(option.clazz);
+                }
                 target['__props__'].push(new PropertyInfo(property, editType, option));
             }
             else {

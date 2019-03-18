@@ -3213,6 +3213,11 @@ var paper;
                             return null;
                         }
                         return value.uuid;
+                    case "COMPONENT" /* COMPONENT */:
+                        if (!value) {
+                            return null;
+                        }
+                        return { gameObjuuid: value.gameObjuuid, componentuuid: value.componentuuid };
                     case "MATERIAL" /* MATERIAL */:
                     case "TRANSFROM" /* TRANSFROM */:
                     case "SOUND" /* SOUND */:
@@ -3269,6 +3274,15 @@ var paper;
                             return null;
                         }
                         return this.getGameObjectByUUid(serializeData);
+                    case "COMPONENT" /* COMPONENT */:
+                        if (!serializeData || !serializeData.gameObjuuid || !serializeData.componentuuid) {
+                            return null;
+                        }
+                        var gameObj = this.getGameObjectByUUid(serializeData.gameObjuuid);
+                        if (gameObj) {
+                            return this.getComponentById(gameObj, serializeData.componentuuid);
+                        }
+                        return null;
                     case "MATERIAL" /* MATERIAL */:
                     case "TRANSFROM" /* TRANSFROM */:
                     case "SOUND" /* SOUND */:
@@ -8838,6 +8852,18 @@ var paper;
                     obj.layer = 32 /* UI */;
                     var camera = obj.addComponent(egret3d.Camera);
                     camera.cullingMask = 32 /* UI */;
+                }
+                else if (createType === "CAMERA") {
+                    obj.addComponent(egret3d.Camera);
+                }
+                else if (createType === "DIRECTINALLIGHT") {
+                    obj.addComponent(egret3d.DirectionalLight);
+                }
+                else if (createType === "POINTLIGHT") {
+                    obj.addComponent(egret3d.PointLight);
+                }
+                else if (createType === "SPOTLIGHT") {
+                    obj.addComponent(egret3d.SpotLight);
                 }
                 else {
                     var meshFilter = void 0;
