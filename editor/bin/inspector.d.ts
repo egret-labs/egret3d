@@ -591,6 +591,7 @@ declare namespace paper.editor {
          * @param sceneUrl 场景资源URL
          */
         static editScene(sceneUrl: string): Promise<void>;
+        private static getRes(name);
         /**
          * 编辑预置体
          * @param prefabUrl 预置体资源URL

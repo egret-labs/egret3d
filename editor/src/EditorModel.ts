@@ -150,6 +150,11 @@ namespace paper.editor {
                         return null;
                     }
                     return value.uuid;
+                case paper.editor.EditType.COMPONENT:
+                    if (!value) {
+                        return null;
+                    }
+                    return {gameObjuuid:value.gameObjuuid,componentuuid:value.componentuuid}
                 case paper.editor.EditType.MATERIAL:
                 case paper.editor.EditType.TRANSFROM:
                 case paper.editor.EditType.SOUND:
@@ -206,6 +211,15 @@ namespace paper.editor {
                         return null;
                     }
                     return this.getGameObjectByUUid(serializeData);
+                case paper.editor.EditType.COMPONENT:
+                    if (!serializeData || !serializeData.gameObjuuid) {
+                        return null;
+                    }
+                    const gameObj:GameObject | null = this.getGameObjectByUUid(serializeData.gameObjuuid);
+                    if (gameObj) {
+                        return this.getComponentById(gameObj!,serializeData.componentuuid);
+                    }
+                    return null;
                 case paper.editor.EditType.MATERIAL:
                 case paper.editor.EditType.TRANSFROM:
                 case paper.editor.EditType.SOUND:

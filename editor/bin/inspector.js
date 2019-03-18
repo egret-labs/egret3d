@@ -3365,6 +3365,11 @@ var paper;
                             return null;
                         }
                         return value.uuid;
+                    case "COMPONENT" /* COMPONENT */:
+                        if (!value) {
+                            return null;
+                        }
+                        return { gameObjuuid: value.gameObjuuid, componentuuid: value.componentuuid };
                     case "MATERIAL" /* MATERIAL */:
                     case "TRANSFROM" /* TRANSFROM */:
                     case "SOUND" /* SOUND */:
@@ -3421,6 +3426,15 @@ var paper;
                             return null;
                         }
                         return this.getGameObjectByUUid(serializeData);
+                    case "COMPONENT" /* COMPONENT */:
+                        if (!serializeData || !serializeData.gameObjuuid || !serializeData.componentuuid) {
+                            return null;
+                        }
+                        var gameObj = this.getGameObjectByUUid(serializeData.gameObjuuid);
+                        if (gameObj) {
+                            return this.getComponentById(gameObj, serializeData.componentuuid);
+                        }
+                        return null;
                     case "MATERIAL" /* MATERIAL */:
                     case "TRANSFROM" /* TRANSFROM */:
                     case "SOUND" /* SOUND */:
@@ -8029,7 +8043,7 @@ var paper;
                     var rawScene, scene, sceneEditorModel;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, RES.getResAsync(sceneUrl)];
+                            case 0: return [4 /*yield*/, this.getRes(sceneUrl)];
                             case 1:
                                 rawScene = _a.sent();
                                 if (rawScene) {
@@ -8049,6 +8063,23 @@ var paper;
                     });
                 });
             };
+            Editor.getRes = function (name) {
+                return __awaiter(this, void 0, void 0, function () {
+                    var asset;
+                    return __generator(this, function (_a) {
+                        switch (_a.label) {
+                            case 0:
+                                asset = paper.Asset.find(name);
+                                if (!!asset) return [3 /*break*/, 2];
+                                return [4 /*yield*/, RES.getResAsync(name)];
+                            case 1:
+                                asset = _a.sent();
+                                _a.label = 2;
+                            case 2: return [2 /*return*/, asset];
+                        }
+                    });
+                });
+            };
             /**
              * 编辑预置体
              * @param prefabUrl 预置体资源URL
@@ -8058,7 +8089,7 @@ var paper;
                     var prefab, scene, prefabInstance, prefabEditorModel_1, clearPrefabInfo_1;
                     return __generator(this, function (_a) {
                         switch (_a.label) {
-                            case 0: return [4 /*yield*/, RES.getResAsync(prefabUrl)];
+                            case 0: return [4 /*yield*/, this.getRes(prefabUrl)];
                             case 1:
                                 prefab = _a.sent();
                                 if (prefab) {
@@ -8808,6 +8839,7 @@ var paper;
                                         throw Error("apply prefab error");
                                     }
                                     newObj.parent = gameObj;
+                                    addGameObjDetail.cacheSerializeData = Object.create(null);
                                     ids = this.getAllUUidFromGameObject(newObj);
                                     addGameObjDetail.cacheSerializeData[gameObj.uuid] = [];
                                     addGameObjDetail.cacheSerializeData[gameObj.uuid][index] = paper.serialize(newObj);
@@ -9168,6 +9200,18 @@ var paper;
                     obj.layer = 32 /* UI */;
                     var camera = obj.addComponent(egret3d.Camera);
                     camera.cullingMask = 32 /* UI */;
+                }
+                else if (createType === "CAMERA") {
+                    obj.addComponent(egret3d.Camera);
+                }
+                else if (createType === "DIRECTINALLIGHT") {
+                    obj.addComponent(egret3d.DirectionalLight);
+                }
+                else if (createType === "POINTLIGHT") {
+                    obj.addComponent(egret3d.PointLight);
+                }
+                else if (createType === "SPOTLIGHT") {
+                    obj.addComponent(egret3d.SpotLight);
                 }
                 else {
                     var meshFilter = void 0;
