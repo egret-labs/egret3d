@@ -41542,6 +41542,73 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        /**
+         * 刚体类型。
+         */
+        var RigidbodyType;
+        (function (RigidbodyType) {
+            /**
+             * 动态。
+             */
+            RigidbodyType[RigidbodyType["Dynamic"] = 0] = "Dynamic";
+            /**
+             * 静态。
+             */
+            RigidbodyType[RigidbodyType["Static"] = 1] = "Static";
+            /**
+             * 动力学。
+             */
+            RigidbodyType[RigidbodyType["Kinematic"] = 2] = "Kinematic";
+            /**
+             * @deprecated
+             */
+            RigidbodyType[RigidbodyType["DYNAMIC"] = 0] = "DYNAMIC";
+            /**
+             * @deprecated
+             */
+            RigidbodyType[RigidbodyType["STATIC"] = 1] = "STATIC";
+            /**
+             * @deprecated
+             */
+            RigidbodyType[RigidbodyType["KINEMATIC"] = 2] = "KINEMATIC";
+        })(RigidbodyType = oimo.RigidbodyType || (oimo.RigidbodyType = {}));
+        /**
+         * 关节类型。
+         */
+        var JointType;
+        (function (JointType) {
+            /**
+             * 移动关节。
+             */
+            JointType[JointType["Prismatic"] = OIMO.JointType.PRISMATIC] = "Prismatic";
+            /**
+             * 转动关节。
+             */
+            JointType[JointType["Revolute"] = OIMO.JointType.REVOLUTE] = "Revolute";
+            /**
+             * 柱面关节。
+             */
+            JointType[JointType["Cylindrical"] = OIMO.JointType.CYLINDRICAL] = "Cylindrical";
+            /**
+             * 球面关节。
+             */
+            JointType[JointType["Spherical"] = OIMO.JointType.SPHERICAL] = "Spherical";
+            /**
+             * 万向关节。
+             */
+            JointType[JointType["Universal"] = OIMO.JointType.UNIVERSAL] = "Universal";
+            /**
+             * 锥形旋转关节。
+             */
+            JointType[JointType["ConeTwist"] = OIMO.JointType.RAGDOLL] = "ConeTwist";
+        })(JointType = oimo.JointType || (oimo.JointType = {}));
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        0 /* DYNAMIC */; // Import error.
         var ValueType;
         (function (ValueType) {
             ValueType[ValueType["Type"] = 0] = "Type";
@@ -41893,6 +41960,9 @@ var egret3d;
             __decorate([
                 paper.serializedField
             ], Rigidbody.prototype, "_values", void 0);
+            __decorate([
+                paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(egret3d.oimo.RigidbodyType) })
+            ], Rigidbody.prototype, "type", null);
             __decorate([
                 paper.editor.property("FLOAT" /* FLOAT */)
             ], Rigidbody.prototype, "mass", null);
@@ -42735,72 +42805,6 @@ var egret3d;
         }(oimo.BaseCollider));
         oimo.CylinderCollider = CylinderCollider;
         __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider", ["egret3d.ICylinderCollider"]);
-    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var oimo;
-    (function (oimo) {
-        /**
-         * 刚体类型。
-         */
-        var RigidbodyType;
-        (function (RigidbodyType) {
-            /**
-             * 动态。
-             */
-            RigidbodyType[RigidbodyType["Dynamic"] = 0] = "Dynamic";
-            /**
-             * 静态。
-             */
-            RigidbodyType[RigidbodyType["Static"] = 1] = "Static";
-            /**
-             * 动力学。
-             */
-            RigidbodyType[RigidbodyType["Kinematic"] = 2] = "Kinematic";
-            /**
-             * @deprecated
-             */
-            RigidbodyType[RigidbodyType["DYNAMIC"] = 0] = "DYNAMIC";
-            /**
-             * @deprecated
-             */
-            RigidbodyType[RigidbodyType["STATIC"] = 1] = "STATIC";
-            /**
-             * @deprecated
-             */
-            RigidbodyType[RigidbodyType["KINEMATIC"] = 2] = "KINEMATIC";
-        })(RigidbodyType = oimo.RigidbodyType || (oimo.RigidbodyType = {}));
-        /**
-         * 关节类型。
-         */
-        var JointType;
-        (function (JointType) {
-            /**
-             * 移动关节。
-             */
-            JointType[JointType["Prismatic"] = OIMO.JointType.PRISMATIC] = "Prismatic";
-            /**
-             * 转动关节。
-             */
-            JointType[JointType["Revolute"] = OIMO.JointType.REVOLUTE] = "Revolute";
-            /**
-             * 柱面关节。
-             */
-            JointType[JointType["Cylindrical"] = OIMO.JointType.CYLINDRICAL] = "Cylindrical";
-            /**
-             * 球面关节。
-             */
-            JointType[JointType["Spherical"] = OIMO.JointType.SPHERICAL] = "Spherical";
-            /**
-             * 万向关节。
-             */
-            JointType[JointType["Universal"] = OIMO.JointType.UNIVERSAL] = "Universal";
-            /**
-             * 锥形旋转关节。
-             */
-            JointType[JointType["ConeTwist"] = OIMO.JointType.RAGDOLL] = "ConeTwist";
-        })(JointType = oimo.JointType || (oimo.JointType = {}));
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 // namespace egret3d.oimo {

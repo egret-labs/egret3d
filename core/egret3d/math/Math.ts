@@ -30,21 +30,6 @@ namespace egret3d {
             return from + (to - from) * t;
         }
 
-        export function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>) {
-            const planes = frustum.planes;
-            const center = sphere.center;
-            const negRadius = -sphere.radius;
-
-            for (const plane of planes) {
-                const distance = plane.getDistance(center);
-                if (distance < negRadius) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         export function randFloat(low: number, high: number): number {
             return low + Math.random() * (high - low);
         }
@@ -63,6 +48,22 @@ namespace egret3d {
 
         export function floorPowerOfTwo(value: number): uint {
             return Math.pow(2, Math.floor(Math.log(value) / Math.LN2));
+        }
+        
+        export function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>) {
+            const planes = frustum.planes;
+            const center = sphere.center;
+            const negRadius = -sphere.radius;
+
+            for (const plane of planes) {
+                const distance = plane.getDistance(center);
+
+                if (distance < negRadius) {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
     /**

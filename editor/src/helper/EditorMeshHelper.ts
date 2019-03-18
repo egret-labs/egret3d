@@ -27,7 +27,7 @@ namespace paper.editor {
 
         public static createIcon(name: string, icon: egret3d.Texture) {
             const material = egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC); // TODO sprite raycast
-            material.setTexture(icon).setColor(egret3d.Color.RED).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay - 1, 1.0)
+            material.setTexture(icon).setColor(egret3d.Color.RED).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay - 1, 1.0);
             const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material);
 
             return gameObject;

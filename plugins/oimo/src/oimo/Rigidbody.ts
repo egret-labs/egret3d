@@ -1,4 +1,5 @@
 namespace egret3d.oimo {
+    egret3d.oimo.RigidbodyType.Dynamic; // Import error.
 
     const enum ValueType {
         Type,
@@ -21,7 +22,7 @@ namespace egret3d.oimo {
          */
         @paper.serializedField
         private readonly _values: Float32Array = new Float32Array([
-            RigidbodyType.DYNAMIC, 1.0, 1.0, 0.0, 0.0,
+            RigidbodyType.Dynamic, 1.0, 1.0, 0.0, 0.0,
         ]);
         private _oimoRigidbody: OIMO.RigidBody | null = null;
 
@@ -210,6 +211,7 @@ namespace egret3d.oimo {
         /**
          * 该刚体的类型。
          */
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((egret3d.oimo as any).RigidbodyType) })
         public get type(): RigidbodyType {
             return this._values[ValueType.Type];
         }

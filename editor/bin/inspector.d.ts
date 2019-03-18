@@ -179,6 +179,9 @@ declare namespace paper.editor {
         private _gizmosContainerEntity;
         private _touchContainerEntity;
         private _transformControllerEntity;
+        private readonly _frustum;
+        private readonly _projectionMatrix;
+        private _updateSelectFrustum(camera);
         lookAtSelected(): void;
         protected getMatchers(): IAnyOfMatcher<GameObject>[];
         onEnable(): void;
@@ -377,9 +380,10 @@ declare namespace paper.editor {
     class TouchContainerFlag extends EditorComponent {
     }
     /**
-     * 标尺网格标记。
+     * 选框网格标记。
      */
-    class GridFlag extends EditorComponent {
+    class SelectFrameFlag extends EditorComponent {
+        readonly viewport: egret3d.Rectangle;
     }
     /**
      * 高亮标记。
@@ -397,13 +401,7 @@ declare namespace paper.editor {
     class LastSelectedFlag extends EditorComponent {
     }
     /**
-     *
-     */
-    class SceneSelectedFlag extends EditorComponent {
-        scene: Scene | null;
-    }
-    /**
-     *
+     * 选取重定向标记。
      */
     class PickedFlag extends EditorComponent {
         target: GameObject | null;

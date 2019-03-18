@@ -6,9 +6,9 @@ namespace paper.editor {
         LastSelectedTransform,
 
         TransformController,
+        SelectFrame,
         HoveredBox,
         SelectedBoxes,
-        Gird,
         AllCameras,
         AllLights,
         LastSelectedCamera,
@@ -63,6 +63,7 @@ namespace paper.editor {
         private _gridA: GameObject | null = null;
         private _gridB: GameObject | null = null;
         private _hoverBox: GameObject | null = null;
+        private _selectFrameDrawer: GameObject | null = null;
         private _skeletonDrawer: GameObject | null = null;
         private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
 
@@ -230,6 +231,24 @@ namespace paper.editor {
                         drawer.enabled = false;
                     }
                 }
+            }
+        }
+
+        private _updateSelectFrame() {
+            const selectFrame = this.groups[GroupIndex.SelectFrame].singleEntity;
+            const selectFrameDrawer = this._selectFrameDrawer!;
+
+            if (selectFrame) {
+                const editorCamera = egret3d.Camera.editor;
+                const eyeDistance = editorCamera.gameObject.transform.position.getDistance(selectFrameDrawer.transform.localPosition);
+                const selectFrameFlag = selectFrame.getComponent(SelectFrameFlag)!;
+
+                selectFrameDrawer.enabled = true;
+                selectFrameDrawer.transform.localRotation = editorCamera.gameObject.transform.rotation;
+                selectFrameDrawer.transform.setLocalScale(eyeDistance * selectFrameFlag.viewport.w, eyeDistance * selectFrameFlag.viewport.h, 1.0);
+            }
+            else {
+                selectFrameDrawer.enabled = false;
             }
         }
 
@@ -942,11 +961,12 @@ namespace paper.editor {
                 Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag), // Last selected transform
 
                 Matcher.create<GameObject>(false, egret3d.Transform, TransformController),
+                Matcher.create<GameObject>(egret3d.Transform, SelectFrameFlag),
+
                 Matcher.create<GameObject>(egret3d.Transform, HoveredFlag) // Hovered box
                     .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
                 Matcher.create<GameObject>(egret3d.Transform, SelectedFlag) // Selected boxes
                     .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
-                Matcher.create<GameObject>(egret3d.Transform, GridFlag), // Grid
                 Matcher.create<GameObject>(false, egret3d.Transform, egret3d.Camera), // All cameras
                 Matcher.create<GameObject>(false, egret3d.Transform) // All lights
                     .anyOf(egret3d.DirectionalLight, egret3d.SpotLight, egret3d.PointLight, egret3d.HemisphereLight),
@@ -996,12 +1016,22 @@ namespace paper.editor {
             this._gridA = this._createGrid("Grid A");
             this._gridB = this._createGrid("Grid B", 100.0 * _girdStep, 100 * _girdStep);
             this._hoverBox = EditorMeshHelper.createBox("Hover Box", egret3d.Color.WHITE, 0.6);
-            this._skeletonDrawer = EditorMeshHelper.createGameObject("Skeleton Drawer");
+            this._selectFrameDrawer = EditorMeshHelper.createGameObject(
+                "Select Frame",
+                egret3d.DefaultMeshes.QUAD,
+                [
+                    egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED)
+                        .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.2)
+                        .setColor(egret3d.Color.WHITE)
+                        .setDepth(false, false)
+                ]
+            );
+            this._skeletonDrawer = EditorMeshHelper.createGameObject("Skeleton");
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
             this._cameraViewFrustum.enabled = false;
 
             { //
-                const drawer = this._skeletonDrawer;
+                const skeleton = this._skeletonDrawer;
                 const mesh = egret3d.Mesh.create(1024, 0, [gltf.AttributeSemantics.POSITION]);
                 const material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
@@ -1011,8 +1041,8 @@ namespace paper.editor {
                     .setDepth(false, false)
                     .renderQueue = RenderQueue.Overlay;
 
-                drawer.addComponent(egret3d.MeshFilter).mesh = mesh;
-                drawer.addComponent(egret3d.MeshRenderer).material = material;
+                skeleton.addComponent(egret3d.MeshFilter).mesh = mesh;
+                skeleton.addComponent(egret3d.MeshRenderer).material = material;
             }
         }
 
@@ -1032,6 +1062,7 @@ namespace paper.editor {
             this._sphericalJointDrawer.length = 0;
             this._prismaticJointDrawer.length = 0;
             this._hoverBox = null;
+            this._selectFrameDrawer = null;
             this._skeletonDrawer = null;
             this._cameraViewFrustum = null;
         }
@@ -1039,19 +1070,18 @@ namespace paper.editor {
         public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
             const groups = this.groups;
 
-            if (group === groups[GroupIndex.Gird]) {
+            if (group === groups[GroupIndex.GizmosContainer]) {
                 this._gridA!.parent = entity;
                 this._gridB!.parent = entity;
+                this._hoverBox!.transform.parent = entity.transform;
+                this._selectFrameDrawer!.transform.parent = entity.transform;
+                this._skeletonDrawer!.transform.parent = entity.transform;
 
                 const mA = (this._gridA!.renderer as egret3d.MeshRenderer).material!;
                 const mB = (this._gridB!.renderer as egret3d.MeshRenderer).material!;
 
                 mA.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
                 mB.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
-            }
-            else if (group === groups[GroupIndex.GizmosContainer]) {
-                this._hoverBox!.transform.parent = entity.transform;
-                this._skeletonDrawer!.transform.parent = entity.transform;
             }
             else if (group === groups[GroupIndex.LastSelectedTransform]) {
                 if (this.enabled) {
@@ -1074,6 +1104,7 @@ namespace paper.editor {
             this._updateTransformController();
             this._updateBoxes();
             this._updateCameraAndLights();
+            this._updateSelectFrame();
             this._updateCamera();
             this._updateSkeleton();
             this._updateColliders();

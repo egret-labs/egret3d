@@ -15,18 +15,6 @@ namespace egret3d.oimo {
          * 动力学。
          */
         Kinematic = 2, // OIMO.RigidBodyType.KINEMATIC
-        /**
-         * @deprecated
-         */
-        DYNAMIC = Dynamic, // OIMO.RigidBodyType.DYNAMIC
-        /**
-         * @deprecated
-         */
-        STATIC = Static, // OIMO.RigidBodyType.STATIC
-        /**
-         * @deprecated
-         */
-        KINEMATIC = Kinematic, // OIMO.RigidBodyType.KINEMATIC
     }
     /**
      * 关节类型。

@@ -17,7 +17,7 @@ namespace egret3d {
             const transform = this.gameObject.transform;
             //
             shadowCamera.viewport.set(0.0, 0.0, 1, 1);
-            shadowCamera.projectionMatrix = Matrix4.create().fromProjection(0.0, shadow.near, shadow.far, shadow.size, 0.0, 1.0, 0.0).release();
+            shadowCamera.projectionMatrix = Matrix4.create().fromProjection(shadow.near, shadow.far, 0.0, shadow.size, 0.0, 1.0, 0.0).release();
             shadowCamera.transform
                 .setLocalPosition(transform.position)
                 .setLocalRotation(transform.rotation); // TODO

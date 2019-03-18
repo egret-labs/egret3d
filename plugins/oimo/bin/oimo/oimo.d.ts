@@ -7406,6 +7406,66 @@ declare module OIMO {
 
 declare namespace egret3d.oimo {
     /**
+     * 刚体类型。
+     */
+    const enum RigidbodyType {
+        /**
+         * 动态。
+         */
+        Dynamic = 0,
+        /**
+         * 静态。
+         */
+        Static = 1,
+        /**
+         * 动力学。
+         */
+        Kinematic = 2,
+        /**
+         * @deprecated
+         */
+        DYNAMIC = 0,
+        /**
+         * @deprecated
+         */
+        STATIC = 1,
+        /**
+         * @deprecated
+         */
+        KINEMATIC = 2,
+    }
+    /**
+     * 关节类型。
+     */
+    enum JointType {
+        /**
+         * 移动关节。
+         */
+        Prismatic,
+        /**
+         * 转动关节。
+         */
+        Revolute,
+        /**
+         * 柱面关节。
+         */
+        Cylindrical,
+        /**
+         * 球面关节。
+         */
+        Spherical,
+        /**
+         * 万向关节。
+         */
+        Universal,
+        /**
+         * 锥形旋转关节。
+         */
+        ConeTwist,
+    }
+}
+declare namespace egret3d.oimo {
+    /**
      * 刚体组件。
      */
     class Rigidbody extends paper.BaseComponent implements egret3d.IRigidbody {
@@ -7619,35 +7679,6 @@ declare namespace egret3d.oimo {
         initialize(): void;
     }
 }
-declare namespace paper {
-    /**
-     * 默认标识和自定义标识。
-     */
-    const enum DefaultTags {
-    }
-    /**
-     * 内置层级和自定义层级。
-     */
-    const enum Layer {
-    }
-}
-declare namespace egret3d {
-    /**
-     * 渲染排序。
-     */
-    const enum RenderQueue {
-    }
-    /**
-     *
-     */
-    const enum AttributeSemantics {
-    }
-    /**
-     *
-     */
-    const enum UniformSemantics {
-    }
-}
 declare namespace egret3d.oimo {
     /**
      *
@@ -7723,64 +7754,33 @@ declare namespace egret3d.oimo {
         initialize(): void;
     }
 }
-declare namespace egret3d.oimo {
+declare namespace paper {
     /**
-     * 刚体类型。
+     * 默认标识和自定义标识。
      */
-    const enum RigidbodyType {
-        /**
-         * 动态。
-         */
-        Dynamic = 0,
-        /**
-         * 静态。
-         */
-        Static = 1,
-        /**
-         * 动力学。
-         */
-        Kinematic = 2,
-        /**
-         * @deprecated
-         */
-        DYNAMIC = 0,
-        /**
-         * @deprecated
-         */
-        STATIC = 1,
-        /**
-         * @deprecated
-         */
-        KINEMATIC = 2,
+    const enum DefaultTags {
     }
     /**
-     * 关节类型。
+     * 内置层级和自定义层级。
      */
-    enum JointType {
-        /**
-         * 移动关节。
-         */
-        Prismatic,
-        /**
-         * 转动关节。
-         */
-        Revolute,
-        /**
-         * 柱面关节。
-         */
-        Cylindrical,
-        /**
-         * 球面关节。
-         */
-        Spherical,
-        /**
-         * 万向关节。
-         */
-        Universal,
-        /**
-         * 锥形旋转关节。
-         */
-        ConeTwist,
+    const enum Layer {
+    }
+}
+declare namespace egret3d {
+    /**
+     * 渲染排序。
+     */
+    const enum RenderQueue {
+    }
+    /**
+     *
+     */
+    const enum AttributeSemantics {
+    }
+    /**
+     *
+     */
+    const enum UniformSemantics {
     }
 }
 declare namespace egret3d.oimo {

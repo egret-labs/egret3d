@@ -18,6 +18,19 @@ namespace paper.editor {
         private _touchContainerEntity: GameObject | null = null;
         private _transformControllerEntity: GameObject | null = null;
 
+        private readonly _frustum: egret3d.Frustum = egret3d.Frustum.create();
+        private readonly _projectionMatrix: egret3d.Matrix4 = egret3d.Matrix4.create();
+
+        private _updateSelectFrustum(camera: egret3d.Camera) {
+
+            this._projectionMatrix.fromProjection(
+                camera.fov, camera.near, camera.far,
+                camera.size,
+                camera.opvalue,
+                camera.aspect, egret3d.stage.matchFactor
+            );
+        }
+
         public lookAtSelected() {
             const orbitControls = egret3d.Camera.editor.gameObject.getComponent(OrbitControls)!;
             orbitControls!.distance = 10.0;
@@ -51,7 +64,6 @@ namespace paper.editor {
             this._transformControllerEntity = EditorMeshHelper.createGameObject("Transform Controller");
             this._transformControllerEntity.enabled = false;
             this._gizmosContainerEntity.addComponent(GizmosContainerFlag);
-            this._gizmosContainerEntity.addComponent(GridFlag);
             this._touchContainerEntity.addComponent(TouchContainerFlag);
             this._transformControllerEntity.addComponent(TransformController);
         }
@@ -79,12 +91,14 @@ namespace paper.editor {
         }
 
         public onFrame() {
+            const editorCamera = egret3d.Camera.editor;
             const groups = this.groups;
             const hoveredEntity = groups[0].singleEntity;
             const lastSelectedEntity = this.groups[1].singleEntity;
 
             const transformController = this._transformControllerEntity!.getComponent(TransformController)!;
             const defaultPointer = egret3d.inputCollecter.defaultPointer;
+
 
             if (defaultPointer.isDown(egret3d.PointerButtonsType.LeftMouse, false)) {
                 if (defaultPointer.event!.buttons & egret3d.PointerButtonsType.RightMouse) { // 正在控制摄像机。
@@ -93,8 +107,15 @@ namespace paper.editor {
                     if (transformController.isActiveAndEnabled && transformController.hovered) {
                         transformController.start(defaultPointer.downPosition);
                     }
+                    else {
+                        const selectFrameFlag = this._gizmosContainerEntity!.addComponent(SelectFrameFlag);
+                        selectFrameFlag.viewport.x = defaultPointer.position.x / egret3d.stage.viewport.w;
+                        selectFrameFlag.viewport.y = defaultPointer.position.y / egret3d.stage.viewport.h;
+                    }
                 }
             }
+
+            let selectFrameFlag = this._gizmosContainerEntity!.getComponent(SelectFrameFlag);
 
             if (defaultPointer.isUp(egret3d.PointerButtonsType.LeftMouse, false)) {
                 if (transformController.isActiveAndEnabled && transformController.hovered) {
@@ -139,6 +160,11 @@ namespace paper.editor {
                             this._modelComponent.select(Scene.activeScene);
                         }
                     }
+
+                    if (selectFrameFlag) {
+                        this._gizmosContainerEntity!.removeComponent(SelectFrameFlag);
+                        selectFrameFlag = null;
+                    }
                 }
             }
 
@@ -154,7 +180,11 @@ namespace paper.editor {
 
                     }
                     else if (event.buttons & 0b01) {
-
+                        if (selectFrameFlag) {
+                            selectFrameFlag.viewport.w = defaultPointer.position.x / egret3d.stage.viewport.w - selectFrameFlag.viewport.x;
+                            selectFrameFlag.viewport.h = defaultPointer.position.y / egret3d.stage.viewport.h - selectFrameFlag.viewport.y;
+                            console.log(defaultPointer.position.x,defaultPointer.position.y);
+                        }
                     }
                     else {
                         // 更新变换控制器的控制柄。

@@ -37,7 +37,7 @@ namespace egret3d {
         private _dirtyRadius: boolean = true;
         private _dirtyCenter: boolean = true;
         private _dirtySize: boolean = true;
-        private _boundingSphereRadius: number = 0.0;
+        private _boundingSphereRadius: float = 0.0;
         private readonly _minimum: Vector3 = Vector3.create(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
         private readonly _maximum: Vector3 = Vector3.create(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
         private readonly _center: Vector3 = Vector3.create();
@@ -68,7 +68,7 @@ namespace egret3d {
             return [this._minimum.x, this._minimum.y, this._minimum.z, this._maximum.x, this._maximum.y, this._maximum.z];
         }
 
-        public deserialize(value: Readonly<[number, number, number, number, number, number]>) {
+        public deserialize(value: Readonly<[float, float, float, float, float, float]>) {
             return this.fromArray(value);
         }
 
@@ -106,7 +106,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: ArrayLike<number>, offset: number = 0) {
+        public fromArray(value: ArrayLike<float>, offset: uint = 0) {
             this._minimum.fromArray(value, offset);
             this._maximum.fromArray(value, offset + 3);
 
@@ -211,14 +211,14 @@ namespace egret3d {
          * 通过一个标量或向量扩大该立方体。
          * @param scalarOrVector 一个标量或向量。
          */
-        public expand(scalarOrVector: number | Readonly<IVector3>): this;
+        public expand(scalarOrVector: float | Readonly<IVector3>): this;
         /**
          * 通过一个标量或向量扩大输入立方体，并将改变的结果写入该立方体。
          * @param scalarOrVector 一个标量或向量。
          * @param input 输入立方体。 
          */
-        public expand(scalarOrVector: number | Readonly<IVector3>, input: Readonly<Box>): this;
-        public expand(scalarOrVector: number | Readonly<IVector3>, input?: Readonly<Box>) {
+        public expand(scalarOrVector: float | Readonly<IVector3>, input: Readonly<Box>): this;
+        public expand(scalarOrVector: float | Readonly<IVector3>, input?: Readonly<Box>) {
             if (this.isEmpty) {
                 return this;
             }
@@ -249,14 +249,14 @@ namespace egret3d {
          * 通过一个标量或向量移动该立方体。
          * @param scalarOrVector 一个标量或向量。
          */
-        public translate(scalarOrVector: number | Readonly<IVector3>): this;
+        public translate(scalarOrVector: float | Readonly<IVector3>): this;
         /**
          * 通过一个标量或向量移动输入立方体，并将改变的结果写入该立方体。
          * @param scalarOrVector 一个标量或向量。
          * @param input 输入立方体。 
          */
-        public translate(scalarOrVector: number | Readonly<IVector3>, input: Readonly<Box>): this;
-        public translate(scalarOrVector: number | Readonly<IVector3>, input?: Readonly<Box>) {
+        public translate(scalarOrVector: float | Readonly<IVector3>, input: Readonly<Box>): this;
+        public translate(scalarOrVector: float | Readonly<IVector3>, input?: Readonly<Box>) {
             if (this.isEmpty) {
                 return this;
             }
@@ -303,7 +303,7 @@ namespace egret3d {
          * 获取一个点到该立方体的最近距离。
          * @param point 一个点。
          */
-        public getDistance(point: Readonly<IVector3>): number {
+        public getDistance(point: Readonly<IVector3>): float {
             if (this.isEmpty) {
                 return helpVector3A.copy(Vector3.ZERO).subtract(point).length;
             }
@@ -340,12 +340,12 @@ namespace egret3d {
                 return false;
             }
 
-            let tmin: number, tmax: number, tymin: number, tymax: number, tzmin: number, tzmax: number;
+            let tmin: float, tmax: float, tymin: float, tymax: float, tzmin: float, tzmax: float;
             let hitDirection: 0 | 1 | 2 = 0;
             const origin = ray.origin;
             const direction = ray.direction;
-            const minimum = this.minimum;
-            const maximum = this.maximum;
+            const minimum = this.minimum,
+                maximum = this.maximum;
             const invdirx = 1.0 / direction.x,
                 invdiry = 1.0 / direction.y,
                 invdirz = 1.0 / direction.z;
@@ -401,6 +401,8 @@ namespace egret3d {
             // return point closest to the ray (positive side)
 
             if (tmax < 0.0) return false;
+            
+            if (tmin <= 0.0) return false;
 
             if (raycastInfo) {
                 const normal = raycastInfo.normal;
@@ -435,7 +437,7 @@ namespace egret3d {
         /**
          * 该立方体的包围球半径。
          */
-        public get boundingSphereRadius(): number {
+        public get boundingSphereRadius(): float {
             if (this._dirtyRadius) {
                 if (this.isEmpty) {
                     this._boundingSphereRadius = 0.0;

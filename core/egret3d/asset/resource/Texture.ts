@@ -329,7 +329,7 @@ namespace egret3d {
             if (source) {
                 if (ArrayBuffer.isView(source)) {
                     config!.buffers = [];
-                    config!.buffers[0] = { byteLength: source.byteLength };
+                    config!.buffers![0] = { byteLength: source.byteLength };
                     image.bufferView = 0;
                 }
                 else {
