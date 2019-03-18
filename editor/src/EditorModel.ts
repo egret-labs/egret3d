@@ -499,6 +499,9 @@ namespace paper.editor {
                     }
                 }
             }
+
+            //标脏根对象数组（不标脏的话根对象数组和gameobjects的排序会不对）
+            (this.scene as any)['_rootEntitiesDirty']=true;
         }
         /**
          * 筛选层级中的顶层游戏对象
