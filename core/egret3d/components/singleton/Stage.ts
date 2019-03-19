@@ -1,7 +1,6 @@
 namespace egret3d {
     /**
      * 全局舞台信息组件。
-     * TODO 调整文件结构，标记接口源码链接。
      */
     @paper.singleton
     export class Stage extends paper.BaseComponent {
@@ -14,12 +13,12 @@ namespace egret3d {
          */
         public readonly onResize: signals.Signal = new signals.Signal();
         /**
-         * 
+         * 舞台到屏幕的缩放系数。
          */
-        public readonly scaler: number = 1.0;
+        public readonly scaler: float = 1.0;
 
         private _rotated: boolean = false;
-        private _matchFactor: number = 1.0;
+        private _matchFactor: float = 1.0;
         private readonly _screenSize: ISize = { w: 1024, h: 1024 };
         private readonly _size: ISize = { w: 1024, h: 1024 };
         private readonly _viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
@@ -40,22 +39,22 @@ namespace egret3d {
 
                 const scalerW = size.w / screenW;
                 const scalerH = size.h / screenH;
-                (this.scaler as number) = math.lerp(scalerW, scalerH, this._matchFactor);
+                (this.scaler as float) = math.lerp(scalerW, scalerH, this._matchFactor);
 
                 viewport.w = Math.ceil(screenW * this.scaler);
                 viewport.h = Math.ceil(screenH * this.scaler);
+                (this.scaler as float) = screenW / screenSize.w;
             }
             else {
                 const scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
                 const scalerH = size.h / screenSize.h;
-                (this.scaler as number) = math.lerp(scalerW, scalerH, this._matchFactor);
+                (this.scaler as float) = math.lerp(scalerW, scalerH, this._matchFactor);
 
                 this._rotated = false;
                 viewport.w = Math.ceil(screenSize.w * this.scaler);
                 viewport.h = Math.ceil(screenSize.h * this.scaler);
+                (this.scaler as float) = viewport.w / screenSize.w;
             }
-
-            // size.h = viewport.h / this.scaler;
         }
 
         public initialize(config: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
@@ -71,7 +70,7 @@ namespace egret3d {
         /**
          * 屏幕到舞台坐标的转换。
          */
-        public screenToStage(value: Readonly<Vector3>, out: Vector3) {
+        public screenToStage(value: Readonly<Vector3>, out: Vector3): this {
             const screenSize = this._screenSize;
             const viewPort = this._viewport;
             const { x, y } = value;
@@ -91,7 +90,7 @@ namespace egret3d {
          * 舞台到屏幕坐标的转换。
             // TODO
          */
-        public stageToScreen(value: Readonly<Vector3>, out: Vector3) {
+        public stageToScreen(value: Readonly<Vector3>, out: Vector3): this {
             return this;
         }
         /**
@@ -99,17 +98,20 @@ namespace egret3d {
          * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转。
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX, { readonly: true })
-        public get rotated() {
+        public get rotated(): boolean {
             return this._rotated;
         }
         /**
          * 以宽或高适配的系数。
+         * - `0.0` ~ `1.0`。
+         * - `0.0` 以宽适配。
+         * - `1.0` 以高适配。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0 })
-        public get matchFactor(): number {
+        public get matchFactor(): float {
             return this._matchFactor;
         }
-        public set matchFactor(value: number) {
+        public set matchFactor(value: float) {
             if (this._matchFactor === value) {
                 return;
             }

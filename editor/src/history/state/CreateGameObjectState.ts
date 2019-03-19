@@ -71,6 +71,17 @@ namespace paper.editor {
                 let camera: egret3d.Camera = obj.addComponent(egret3d.Camera);
                 camera.cullingMask = Layer.UI;
             }
+            else if(createType === "CAMERA"){
+                obj.addComponent(egret3d.Camera);
+            }
+            else if(createType === "DIRECTINALLIGHT"){
+                obj.addComponent(egret3d.DirectionalLight);
+            }
+            else if(createType === "POINTLIGHT"){
+                obj.addComponent(egret3d.PointLight);
+            }else if(createType === "SPOTLIGHT"){
+                obj.addComponent(egret3d.SpotLight);
+            }
             else {
                 let meshFilter: egret3d.MeshFilter;
                 if (this.mesh) {

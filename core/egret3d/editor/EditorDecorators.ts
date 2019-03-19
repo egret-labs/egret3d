@@ -56,6 +56,10 @@ namespace paper.editor {
          */
         set?: string;
         /**
+         * 
+         */
+        componentClass?: IComponentClass<IComponent> | string;
+        /**
          * 下拉项。
          */
         listItems?: ListItem[] | string | ((value: any) => ListItem[]);
@@ -188,6 +192,10 @@ namespace paper.editor {
             }
 
             if (editType !== undefined) {
+                if (option && option.componentClass) {
+                    option.componentClass = egret.getQualifiedClassName(option.componentClass);
+                }
+
                 target['__props__'].push(new PropertyInfo(property, editType, option));
             }
             else {

@@ -15,14 +15,23 @@ namespace paper.editor {
     export class GizmosContainerFlag extends EditorComponent {
     }
     /**
+     * Gizmos 容器标记。
+     */
+    export class GizmosContainerForwardFlag extends EditorComponent {
+    }
+    /**
      * 可点选容器标记。
      */
     export class TouchContainerFlag extends EditorComponent {
     }
     /**
-     * 标尺网格标记。
+     * 选框网格标记。
      */
-    export class GridFlag extends EditorComponent {
+    export class SelectFrameFlag extends EditorComponent {
+        /**
+         * 相对于舞台的选框视口。
+         */
+        public readonly viewport: egret3d.Rectangle = egret3d.Rectangle.create();
     }
     /**
      * 高亮标记。
@@ -40,13 +49,7 @@ namespace paper.editor {
     export class LastSelectedFlag extends EditorComponent {
     }
     /**
-     * 
-     */
-    export class SceneSelectedFlag extends EditorComponent {
-        public scene: Scene | null = null;
-    }
-    /**
-     * 
+     * 选取重定向标记。
      */
     export class PickedFlag extends EditorComponent {
         public target: GameObject | null = null;

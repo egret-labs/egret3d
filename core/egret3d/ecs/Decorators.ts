@@ -100,8 +100,8 @@ namespace paper {
         };
     }
     /**
-     * 
-     * @param executeMode 
+     * 通过装饰器标记系统在哪些模式可以被执行。
+     * @param executeMode 系统可以被运行的模式。
      */
     export function executeMode(executeMode: PlayerMode) {
         return function (systemClass: ISystemClass<ISystem<IEntity>, IEntity>) {

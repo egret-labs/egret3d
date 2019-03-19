@@ -36,7 +36,11 @@ namespace paper {
         /**
          * 当应用程序的播放模式改变时派发事件。
          */
-        public readonly onPlayerModeChange: signals.Signal<PlayerMode> = new signals.Signal();
+        public readonly onPlayerModeChanged: signals.Signal<PlayerMode> = new signals.Signal();
+        // /**
+        //  * 
+        //  */
+        // public delayStatrup: uint = 0;
         /**
          * 引擎版本。
          */
@@ -57,34 +61,39 @@ namespace paper {
         private _isFocused: boolean = false;
         private _isRunning: boolean = false;
         private _playerMode: PlayerMode = PlayerMode.Player;
+        // private _runOptions: RunOptions | null = null;
 
         /**
          * core updating loop
          */
-        private _loop(timestamp?: number) {
+        private _loop(timestamp: number) {
             if (!this._isRunning) { return; }
             if (!timestamp) {//TODO 解决微信和web上时间不统一
                 requestAnimationFrame(this._loop);
                 return;
             }
 
-            timestamp = timestamp || performance.now();
+            // 由 clock 组件计算此次循环可以产生多少个逻辑帧和多少个渲染帧
             const result: ClockUpdateFlags = clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
+
+            // 根据上述结果进行更新
             this._update(result);
+
+            // 下一次循环
             requestAnimationFrame(this._loop);
         }
         /**
          * including calculating, status updating, rerendering and logical updating
          */
         private _update({ tickCount, frameCount }: ClockUpdateFlags = { tickCount: 1, frameCount: 1 }) {
-            const systemManager = this.systemManager;
+            // TOFIX: 只有逻辑帧不为零的时候, systemManager 的以下部分才做才有意义
+            if (!tickCount) { return; }
 
-            if (tickCount) {
-                systemManager._startup();
-                systemManager._execute(tickCount, frameCount);
-                systemManager._cleanup(frameCount);
-                systemManager._teardown();
-            }
+            const systemManager = this.systemManager;
+            systemManager._startup();
+            systemManager._execute(tickCount, frameCount);
+            systemManager._cleanup(frameCount);
+            systemManager._teardown();
         }
         /**
          * 
@@ -101,12 +110,10 @@ namespace paper {
             systemManager.register(DisableSystem, gameObjectContext, SystemOrder.Disable);
             systemManager.preRegisterSystems();
 
-            if (options.tickInterval !== (void 0)) { clock.tickInterval = options.tickInterval; }
-            console.info("tick rate:", clock.tickInterval ? (1.0 / clock.tickInterval) : "auto");
-            if (options.frameInterval !== (void 0)) { clock.frameInterval = options.frameInterval; }
-            console.info("frame rate:", clock.frameInterval ? (1.0 / clock.frameInterval) : "auto");
-
-            this.resume();
+            clock.tickInterval = options.tickRate ? 1.0 / options.tickRate : 0;
+            console.info("tick rate:", options.tickRate ? options.tickRate : "auto");
+            clock.frameInterval = options.frameRate ? 1.0 / options.frameRate : 0;
+            console.info("frame rate:", options.frameRate ? options.frameRate : "auto");
         }
         /**
          * TODO
@@ -127,7 +134,8 @@ namespace paper {
 
             this._isRunning = true;
             clock.reset();
-            this._loop();
+
+            requestAnimationFrame(this._loop);
         }
 
         /**
@@ -141,12 +149,15 @@ namespace paper {
                     this.pause();
                     this._update();
                     break;
+
                 case PlayerMode.Player:
                 // breakthrough
                 case PlayerMode.DebugPlayer:
                     this.resume();
                     break;
-                default: break;
+
+                default:
+                    break;
             }
         }
         /**
@@ -194,7 +205,7 @@ namespace paper {
             }
 
             this._playerMode = value;
-            this.onPlayerModeChange.dispatch(this.playerMode);
+            this.onPlayerModeChanged.dispatch(this.playerMode);
         }
     }
     /**

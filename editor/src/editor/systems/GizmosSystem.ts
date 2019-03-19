@@ -2,28 +2,34 @@ namespace paper.editor {
 
     const enum GroupIndex {
         GizmosContainer,
+        GizmosForwardContainer,
         TouchContainer,
         LastSelectedTransform,
 
         TransformController,
+        SelectFrame,
         HoveredBox,
         SelectedBoxes,
-        Gird,
         AllCameras,
         AllLights,
         LastSelectedCamera,
         LastSelectedSkeleton,
 
-        SelectedBoxColliders,
-        SelectedSphereColliders,
-        SelectedCylinderColliders,
-        SelectedCapsuleColliders,
+        BoxColliders,
+        SphereColliders,
+        CylinderColliders,
+        CapsuleColliders,
 
-        OimoSelectedBoxColliders,
-        OimoSelectedSphereColliders,
-        OimoSelectedCylinderColliders,
-        OimoSelectedConeColliders,
-        OimoSelectedCapsuleColliders,
+        OimoBoxColliders,
+        OimoSphereColliders,
+        OimoCylinderColliders,
+        OimoConeColliders,
+        OimoCapsuleColliders,
+
+        OimoPrismaticJoints,
+        OimoRevoluteJoints,
+        OimoCylindricalJoints,
+        OimoSphericalJoints,
     }
 
     const _girdStep = 5;
@@ -32,6 +38,17 @@ namespace paper.editor {
      */
     @executeMode(PlayerMode.DebugPlayer | PlayerMode.Editor)
     export class GizmosSystem extends BaseSystem<GameObject> {
+        private readonly _jointMesh: egret3d.Mesh = egret3d.Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION]);
+        private readonly _jointLineMaterial: egret3d.Material = egret3d.Material.create("editor/joint_line.mat.json", egret3d.DefaultShaders.LINEDASHED)
+            .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.4)
+            .setDepth(false, false)
+            .setColor(egret3d.Color.PURPLE);
+        private readonly _jointPointMaterial: egret3d.Material = egret3d.Material.create("editor/joint_point.mat.json", egret3d.DefaultShaders.POINTS)
+            .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.4)
+            .setDepth(false, false)
+            .setColor(egret3d.Color.PURPLE)
+            .setFloat(egret3d.ShaderUniformName.Size, 4.0);
+
         private readonly _selectedBoxDrawer: GameObject[] = [];
         private readonly _cameraDrawer: GameObject[] = [];
         private readonly _lightDrawer: GameObject[] = [];
@@ -39,10 +56,15 @@ namespace paper.editor {
         private readonly _sphereColliderDrawer: GameObject[] = [];
         private readonly _cylinderColliderDrawer: GameObject[] = [];
         private readonly _capsuleColliderDrawer: GameObject[] = [];
+        private readonly _prismaticJointDrawer: GameObject[] = [];
+        private readonly _revoluteJointDrawer: GameObject[] = [];
+        private readonly _cylindricalJointDrawer: GameObject[] = [];
+        private readonly _sphericalJointDrawer: GameObject[] = [];
 
         private _gridA: GameObject | null = null;
         private _gridB: GameObject | null = null;
         private _hoverBox: GameObject | null = null;
+        private _selectFrameDrawer: GameObject | null = null;
         private _skeletonDrawer: GameObject | null = null;
         private _cameraViewFrustum: GameObject | null = null; // TODO封装一下
 
@@ -66,6 +88,13 @@ namespace paper.editor {
             const gameObject = EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
             return gameObject;
+        }
+
+        private _updateGizmosForwardContainer() {
+            const cameraTransform = egret3d.Camera.editor.gameObject.transform;
+            const entityTransform = this.groups[GroupIndex.GizmosForwardContainer].singleEntity!.transform;
+            cameraTransform.getForward(entityTransform.localPosition).add(cameraTransform.position).update();
+            entityTransform.setLocalRotation(cameraTransform.rotation);
         }
 
         private _updateTransformController(): any {
@@ -210,6 +239,36 @@ namespace paper.editor {
                         drawer.enabled = false;
                     }
                 }
+            }
+        }
+
+        private _updateSelectFrame() {
+            const selectFrame = this.groups[GroupIndex.SelectFrame].singleEntity;
+            const selectFrameDrawer = this._selectFrameDrawer!;
+
+            if (selectFrame) {
+                const editorCamera = egret3d.Camera.editor;
+                const selectViewport = selectFrame.getComponent(SelectFrameFlag)!.viewport;
+
+                const h = Math.tan(editorCamera.fov * 0.5) * 2.0;
+                const w = h * editorCamera.aspect;
+
+                selectFrameDrawer.enabled = true;
+                selectFrameDrawer.transform
+                    .setLocalPosition(
+                        (selectViewport.x + selectViewport.w * 0.5 - 0.5) * w,
+                        (0.5 - selectViewport.y - selectViewport.h * 0.5) * h,
+                        0.0
+                    )
+                    .setLocalScale(
+                        selectViewport.w * w,
+                        selectViewport.h * h,
+                        1.0
+                    );
+
+            }
+            else {
+                selectFrameDrawer.enabled = false;
             }
         }
 
@@ -498,14 +557,14 @@ namespace paper.editor {
             }
         }
 
-        private _updateCollider() {
+        private _updateColliders() {
             const groups = this.groups;
             // const editorCamera = egret3d.Camera.editor;
 
             const boxColliderDrawer = this._boxColliderDrawer;
             let drawerIndex = 0;
 
-            for (const entity of groups[GroupIndex.SelectedBoxColliders].entities) {
+            for (const entity of groups[GroupIndex.BoxColliders].entities) {
                 for (const component of entity.getComponents(egret3d.BoxCollider)) {
                     if (!component.enabled) {
                         continue;
@@ -516,7 +575,7 @@ namespace paper.editor {
             }
 
             if (egret3d.oimo) {
-                for (const entity of groups[GroupIndex.OimoSelectedBoxColliders].entities) {
+                for (const entity of groups[GroupIndex.OimoBoxColliders].entities) {
                     for (const component of entity.getComponents(egret3d.oimo.BoxCollider)) {
                         if (!component.enabled) {
                             continue;
@@ -534,7 +593,7 @@ namespace paper.editor {
             const sphereColliderDrawer = this._sphereColliderDrawer;
             drawerIndex = 0;
 
-            for (const entity of groups[GroupIndex.SelectedSphereColliders].entities) {
+            for (const entity of groups[GroupIndex.SphereColliders].entities) {
                 for (const component of entity.getComponents(egret3d.SphereCollider)) {
                     if (!component.enabled) {
                         continue;
@@ -545,7 +604,7 @@ namespace paper.editor {
             }
 
             if (egret3d.oimo) {
-                for (const entity of groups[GroupIndex.OimoSelectedSphereColliders].entities) {
+                for (const entity of groups[GroupIndex.OimoSphereColliders].entities) {
                     for (const component of entity.getComponents(egret3d.oimo.SphereCollider)) {
                         if (!component.enabled) {
                             continue;
@@ -563,7 +622,7 @@ namespace paper.editor {
             const cylinderColliderDrawer = this._cylinderColliderDrawer;
             drawerIndex = 0;
 
-            for (const entity of groups[GroupIndex.SelectedCylinderColliders].entities) {
+            for (const entity of groups[GroupIndex.CylinderColliders].entities) {
                 for (const component of entity.getComponents(egret3d.CylinderCollider)) {
                     if (!component.enabled) {
                         continue;
@@ -574,7 +633,7 @@ namespace paper.editor {
             }
 
             if (egret3d.oimo) {
-                for (const entity of groups[GroupIndex.OimoSelectedCylinderColliders].entities) {
+                for (const entity of groups[GroupIndex.OimoCylinderColliders].entities) {
                     for (const component of entity.getComponents(egret3d.oimo.CylinderCollider)) {
                         if (!component.enabled) {
                             continue;
@@ -584,7 +643,7 @@ namespace paper.editor {
                     }
                 }
 
-                for (const entity of groups[GroupIndex.OimoSelectedConeColliders].entities) {
+                for (const entity of groups[GroupIndex.OimoConeColliders].entities) {
                     for (const component of entity.getComponents(egret3d.oimo.ConeCollider)) {
                         if (!component.enabled) {
                             continue;
@@ -602,7 +661,7 @@ namespace paper.editor {
             const capsuleColliderDrawer = this._capsuleColliderDrawer;
             drawerIndex = 0;
 
-            for (const entity of groups[GroupIndex.SelectedCapsuleColliders].entities) {
+            for (const entity of groups[GroupIndex.CapsuleColliders].entities) {
                 for (const component of entity.getComponents(egret3d.CapsuleCollider)) {
                     if (!component.enabled) {
                         continue;
@@ -613,7 +672,7 @@ namespace paper.editor {
             }
 
             if (egret3d.oimo) {
-                for (const entity of groups[GroupIndex.OimoSelectedCapsuleColliders].entities) {
+                for (const entity of groups[GroupIndex.OimoCapsuleColliders].entities) {
                     for (const component of entity.getComponents(egret3d.oimo.CapsuleCollider)) {
                         if (!component.enabled) {
                             continue;
@@ -628,19 +687,307 @@ namespace paper.editor {
                 capsuleColliderDrawer[i].enabled = false;
             }
         }
+        /**
+         * @internal
+         */
+        private _updatePrismaticJointDrawer(entity: GameObject, component: egret3d.oimo.PrismaticJoint, index: uint) {
+            if (index >= this._prismaticJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Prismatic Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("TLM", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                EditorMeshHelper.createGameObject("Joint", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                this._prismaticJointDrawer.push(entity);
+            }
+
+            const drawer = this._prismaticJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const tlm = drawer.transform.find("TLM")!;
+            const joint = drawer.transform.find("Joint")!;
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.limitMotor.lowerLimit <= component.limitMotor.upperLimit) {
+                const axis = component.axis.clone().release();
+
+                if (!component.useWorldSpace) {
+                    axis.applyDirection(component.rigidbody.gameObject.transform.localToWorldMatrix);
+                }
+
+                tlm.entity.enabled = true;
+                tlm
+                    .lookRotation(axis)
+                    .setLocalPosition(axis.multiplyScalar(component.limitMotor.lowerLimit))
+                    .setLocalScale(1.0, 1.0, component.limitMotor.upperLimit - component.limitMotor.lowerLimit);
+            }
+            else {
+                tlm.entity.enabled = false;
+            }
+
+            if (component.connectedRigidbody) {
+                joint.entity.enabled = true;
+                jointC.entity.enabled = true;
+
+                const connectedAnchor = component.getConnectedAnchor(null, true).release();
+                joint
+                    .lookAt(connectedAnchor)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(connectedAnchor));
+                jointC
+                    .setPosition(component.connectedRigidbody.transform.position)
+                    .lookAt(connectedAnchor)
+                    .setLocalScale(1.0, 1.0, component.connectedRigidbody.transform.position.getDistance(connectedAnchor));
+            }
+            else {
+                joint.entity.enabled = false;
+                jointC.entity.enabled = false;
+            }
+        }
+        /**
+         * @internal
+         */
+        private _updateRevoluteJointDrawer(entity: GameObject, component: egret3d.oimo.RevoluteJoint, index: uint) {
+            if (index >= this._revoluteJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Revolute Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                this._revoluteJointDrawer.push(entity);
+            }
+
+            const drawer = this._revoluteJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.connectedRigidbody) {
+                jointC.entity.enabled = true;
+
+                jointC.lookAt(component.connectedRigidbody.transform.position)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(component.connectedRigidbody.transform.position));
+            }
+            else {
+                jointC.entity.enabled = false;
+            }
+        }
+        /**
+         * @internal
+         */
+        private _updateCylindricalJointDrawer(entity: GameObject, component: egret3d.oimo.CylindricalJoint, index: uint) {
+            if (index >= this._cylindricalJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Cylindrical Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("TLM", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                EditorMeshHelper.createGameObject("Joint", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                this._cylindricalJointDrawer.push(entity);
+            }
+
+            const drawer = this._cylindricalJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const tlm = drawer.transform.find("TLM")!;
+            const joint = drawer.transform.find("Joint")!;
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.translationalLimitMotor.lowerLimit <= component.translationalLimitMotor.upperLimit) {
+                const axis = component.axis.clone().release();
+
+                if (!component.useWorldSpace) {
+                    axis.applyDirection(component.rigidbody.gameObject.transform.localToWorldMatrix);
+                }
+
+                tlm.entity.enabled = true;
+                tlm
+                    .lookRotation(axis)
+                    .setLocalPosition(axis.multiplyScalar(component.translationalLimitMotor.lowerLimit))
+                    .setLocalScale(1.0, 1.0, component.translationalLimitMotor.upperLimit - component.translationalLimitMotor.lowerLimit);
+            }
+            else {
+                tlm.entity.enabled = false;
+            }
+
+            if (component.connectedRigidbody) {
+                joint.entity.enabled = true;
+                jointC.entity.enabled = true;
+
+                const connectedAnchor = component.getConnectedAnchor(null, true).release();
+                joint
+                    .lookAt(connectedAnchor)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(connectedAnchor));
+                jointC
+                    .setPosition(component.connectedRigidbody.transform.position)
+                    .lookAt(connectedAnchor)
+                    .setLocalScale(1.0, 1.0, component.connectedRigidbody.transform.position.getDistance(connectedAnchor));
+            }
+            else {
+                joint.entity.enabled = false;
+                jointC.entity.enabled = false;
+            }
+        }
+        /**
+         * @internal
+         */
+        private _updateSphericalJointDrawer(entity: GameObject, component: egret3d.oimo.SphericalJoint, index: uint) {
+            if (index >= this._sphericalJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Revolute Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                    .transform.setParent(entity.transform);
+
+                this._sphericalJointDrawer.push(entity);
+            }
+
+            const drawer = this._sphericalJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.connectedRigidbody) {
+                jointC.entity.enabled = true;
+
+                jointC.lookAt(component.connectedRigidbody.transform.position)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(component.connectedRigidbody.transform.position));
+            }
+            else {
+                jointC.entity.enabled = false;
+            }
+        }
+
+        private _updateJoints() {
+            const groups = this.groups;
+
+            let drawerIndex = 0;
+
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoPrismaticJoints].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.PrismaticJoint)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
+
+                        this._updatePrismaticJointDrawer(entity, component, drawerIndex++);
+                    }
+                }
+            }
+
+            for (let i = drawerIndex, l = this._prismaticJointDrawer.length; i < l; ++i) {
+                this._prismaticJointDrawer[i].enabled = false;
+            }
+
+            drawerIndex = 0;
+
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoRevoluteJoints].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.RevoluteJoint)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
+
+                        this._updateRevoluteJointDrawer(entity, component, drawerIndex++);
+                    }
+                }
+            }
+
+            for (let i = drawerIndex, l = this._revoluteJointDrawer.length; i < l; ++i) {
+                this._revoluteJointDrawer[i].enabled = false;
+            }
+
+            drawerIndex = 0;
+
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoCylindricalJoints].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.CylindricalJoint)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
+
+                        this._updateCylindricalJointDrawer(entity, component, drawerIndex++);
+                    }
+                }
+            }
+
+            for (let i = drawerIndex, l = this._cylindricalJointDrawer.length; i < l; ++i) {
+                this._cylindricalJointDrawer[i].enabled = false;
+            }
+
+            drawerIndex = 0;
+
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoSphericalJoints].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.SphericalJoint)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
+
+                        this._updateSphericalJointDrawer(entity, component, drawerIndex++);
+                    }
+                }
+            }
+
+            for (let i = drawerIndex, l = this._sphericalJointDrawer.length; i < l; ++i) {
+                this._sphericalJointDrawer[i].enabled = false;
+            }
+        }
 
         protected getMatchers() {
             const matchers = [
                 Matcher.create<GameObject>(false, egret3d.Transform, GizmosContainerFlag),
+                Matcher.create<GameObject>(false, egret3d.Transform, GizmosContainerForwardFlag),
                 Matcher.create<GameObject>(false, egret3d.Transform, TouchContainerFlag),
                 Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag), // Last selected transform
 
                 Matcher.create<GameObject>(false, egret3d.Transform, TransformController),
+                Matcher.create<GameObject>(egret3d.Transform, SelectFrameFlag),
+
                 Matcher.create<GameObject>(egret3d.Transform, HoveredFlag) // Hovered box
                     .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
                 Matcher.create<GameObject>(egret3d.Transform, SelectedFlag) // Selected boxes
                     .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
-                Matcher.create<GameObject>(egret3d.Transform, GridFlag), // Grid
                 Matcher.create<GameObject>(false, egret3d.Transform, egret3d.Camera), // All cameras
                 Matcher.create<GameObject>(false, egret3d.Transform) // All lights
                     .anyOf(egret3d.DirectionalLight, egret3d.SpotLight, egret3d.PointLight, egret3d.HemisphereLight),
@@ -660,22 +1007,52 @@ namespace paper.editor {
                     Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.CylinderCollider).anyOf(HoveredFlag, SelectedFlag),
                     Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.ConeCollider).anyOf(HoveredFlag, SelectedFlag),
                     Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.CapsuleCollider).anyOf(HoveredFlag, SelectedFlag),
+
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.PrismaticJoint).anyOf(HoveredFlag, SelectedFlag),
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.RevoluteJoint).anyOf(HoveredFlag, SelectedFlag),
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.CylindricalJoint).anyOf(HoveredFlag, SelectedFlag),
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.SphericalJoint).anyOf(HoveredFlag, SelectedFlag),
                 );
             }
 
             return matchers;
         }
 
+        public onAwake() {
+            const jointMesh = this._jointMesh;
+            jointMesh.name = "editor/joint.mesh.bin";
+            jointMesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+            jointMesh.setAttributes(gltf.AttributeSemantics.POSITION, [
+                0.0, 0.0, 0.0, // Line start.
+                0.0, 0.0, 1.0, // Line end.
+
+                0.0, 0.0, 0.0, // Point start.
+                0.0, 0.0, 1.0, // Point end.
+            ]);
+            jointMesh.setIndices([0, 1], 0);
+            jointMesh.setIndices([2, 3], jointMesh.addSubMesh(2, 1, gltf.MeshPrimitiveMode.Points));
+        }
+
         public onEnable() {
             this._gridA = this._createGrid("Grid A");
             this._gridB = this._createGrid("Grid B", 100.0 * _girdStep, 100 * _girdStep);
             this._hoverBox = EditorMeshHelper.createBox("Hover Box", egret3d.Color.WHITE, 0.6);
-            this._skeletonDrawer = EditorMeshHelper.createGameObject("Skeleton Drawer");
+            this._selectFrameDrawer = EditorMeshHelper.createGameObject(
+                "Select Frame",
+                egret3d.DefaultMeshes.QUAD,
+                [
+                    egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED)
+                        .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.2)
+                        .setColor(egret3d.Color.INDIGO)
+                        .setDepth(false, false)
+                ]
+            );
+            this._skeletonDrawer = EditorMeshHelper.createGameObject("Skeleton");
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
             this._cameraViewFrustum.enabled = false;
 
             { //
-                const drawer = this._skeletonDrawer;
+                const skeleton = this._skeletonDrawer;
                 const mesh = egret3d.Mesh.create(1024, 0, [gltf.AttributeSemantics.POSITION]);
                 const material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
                 mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
@@ -685,8 +1062,8 @@ namespace paper.editor {
                     .setDepth(false, false)
                     .renderQueue = RenderQueue.Overlay;
 
-                drawer.addComponent(egret3d.MeshFilter).mesh = mesh;
-                drawer.addComponent(egret3d.MeshRenderer).material = material;
+                skeleton.addComponent(egret3d.MeshFilter).mesh = mesh;
+                skeleton.addComponent(egret3d.MeshRenderer).material = material;
             }
         }
 
@@ -700,7 +1077,13 @@ namespace paper.editor {
             this._sphereColliderDrawer.length = 0;
             this._cylinderColliderDrawer.length = 0;
             this._capsuleColliderDrawer.length = 0;
+            this._prismaticJointDrawer.length = 0;
+            this._revoluteJointDrawer.length = 0;
+            this._cylindricalJointDrawer.length = 0;
+            this._sphericalJointDrawer.length = 0;
+            this._prismaticJointDrawer.length = 0;
             this._hoverBox = null;
+            this._selectFrameDrawer = null;
             this._skeletonDrawer = null;
             this._cameraViewFrustum = null;
         }
@@ -708,9 +1091,11 @@ namespace paper.editor {
         public onEntityAdded(entity: GameObject, group: Group<GameObject>) {
             const groups = this.groups;
 
-            if (group === groups[GroupIndex.Gird]) {
+            if (group === groups[GroupIndex.GizmosContainer]) {
                 this._gridA!.parent = entity;
                 this._gridB!.parent = entity;
+                this._hoverBox!.transform.parent = entity.transform;
+                this._skeletonDrawer!.transform.parent = entity.transform;
 
                 const mA = (this._gridA!.renderer as egret3d.MeshRenderer).material!;
                 const mB = (this._gridB!.renderer as egret3d.MeshRenderer).material!;
@@ -718,9 +1103,8 @@ namespace paper.editor {
                 mA.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
                 mB.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
             }
-            else if (group === groups[GroupIndex.GizmosContainer]) {
-                this._hoverBox!.transform.parent = entity.transform;
-                this._skeletonDrawer!.transform.parent = entity.transform;
+            else if (group === groups[GroupIndex.GizmosForwardContainer]) {
+                this._selectFrameDrawer!.transform.parent = entity.transform;
             }
             else if (group === groups[GroupIndex.LastSelectedTransform]) {
                 if (this.enabled) {
@@ -740,12 +1124,16 @@ namespace paper.editor {
         }
 
         public onFrame() {
+            this._updateGizmosForwardContainer();
+
             this._updateTransformController();
             this._updateBoxes();
             this._updateCameraAndLights();
+            this._updateSelectFrame();
             this._updateCamera();
             this._updateSkeleton();
-            this._updateCollider();
+            this._updateColliders();
+            this._updateJoints();
             this._updateGrid();
         }
     }

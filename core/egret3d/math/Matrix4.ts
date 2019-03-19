@@ -394,18 +394,21 @@ namespace egret3d {
         }
 
         public perspectiveProjectMatrix(left: float, right: float, top: float, bottom: float, near: float, far: float): this {
+            const iDeltaX = 1.0 / (right - left);
+            const iDeltaY = 1.0 / (top - bottom);
             const iDeltaZ = 1.0 / (near - far);
             const doubleNear = 2.0 * near;
             const { rawData } = this;
 
-            rawData[0] = doubleNear / (right - left);
+            rawData[0] = doubleNear * iDeltaX;
             rawData[1] = rawData[2] = rawData[3] = 0.0;
 
             rawData[4] = rawData[6] = rawData[7] = 0.0;
-            rawData[5] = doubleNear / (top - bottom);
+            rawData[5] = doubleNear * iDeltaY;
 
-            rawData[8] = rawData[9] = 0.0;
-            rawData[10] = (far + near) * -iDeltaZ;
+            rawData[8] = (right + left) * iDeltaX;
+            rawData[9] = (top + bottom) * iDeltaY;
+            rawData[10] = -(far + near) * iDeltaZ;
             rawData[11] = 1.0;
 
             rawData[12] = rawData[13] = rawData[15] = 0.0;
@@ -414,35 +417,39 @@ namespace egret3d {
             return this;
         }
 
-        public orthographicProjectLH(width: float, height: float, znear: float, zfar: float): this {
-            const hw = 2.0 / width;
-            const hh = 2.0 / height;
-            const id = 2.0 / (zfar - znear);
-            const nid = (znear + zfar) / (znear - zfar);
+        public orthographicProjectMatrix(left: float, right: float, top: float, bottom: float, near: float, far: float): this {
+            const w = 1.0 / (right - left);
+            const h = 1.0 / (top - bottom);
+            const p = 1.0 / (near - far);
+
             const { rawData } = this;
 
-            rawData[0] = hw;
+            rawData[0] = 2.0 * w;
             rawData[1] = rawData[2] = rawData[3] = 0.0;
 
             rawData[4] = rawData[6] = rawData[7] = 0.0;
-            rawData[5] = hh;
+            rawData[5] = 2.0 * h;
 
             rawData[8] = rawData[9] = rawData[11] = 0.0;
-            rawData[10] = id;
+            rawData[10] = -2.0 * p;
 
-            rawData[12] = rawData[13] = rawData[15] = 1.0;
-            rawData[14] = nid;
+            rawData[12] = -(right + left) * w;
+            rawData[13] = - (top + bottom) * h;
+            rawData[14] = (far + near) * p;
+            rawData[15] = 1.0;
 
             return this;
         }
         /**
          * 根据投影参数设置该矩阵。
-         * @param fov 投影视角。
-         * - 透视投影
+         * @param offsetX 投影近平面水平偏移。
+         * @param offsetY 投影远平面垂直偏移。
          * @param near 投影近平面。
          * @param far 投影远平面。
+         * @param fov 投影视角。
+         * - 透视投影时生效。
          * @param size 投影尺寸。
-         * - 正交投影
+         * - 正交投影时生效。
          * @param opvalue 透视投影和正交投影的插值系数。
          * - `0.0` ~ `1.0`
          * - `0.0` 正交投影。
@@ -450,30 +457,40 @@ namespace egret3d {
          * @param asp 投影宽高比。
          * @param matchFactor 宽高适配的插值系数。
          * - `0.0` ~ `1.0`
-         * - `0.0` 以高适配。
-         * - `1.0` 以宽适配。
+         * - `0.0` 以宽适配。
+         * - `1.0` 以高适配。
          */
-        public fromProjection(fov: float, near: float, far: float, size: float, opvalue: float, asp: float, matchFactor: float): this {
+        public fromProjection(
+            near: float, far: float,
+            fov: float, size: float,
+            opvalue: float, asp: float, matchFactor: float,
+            viewport: Rectangle | null = null
+        ): this {
             const orthographicMatrix = _helpMatrix;
             matchFactor = 1.0 - matchFactor;
 
+            const offsetX = (viewport !== null ? viewport.x : 0.0) - 0.5;
+            const offsetY = (viewport !== null ? viewport.y : 0.0) + 0.5;
+            const scaleX = viewport !== null ? viewport.w : 1.0;
+            const scaleY = viewport !== null ? viewport.h : 1.0;
+
             if (opvalue > 0.0) {
-                const tan = Math.tan(fov * 0.5);
+                const wh = 2.0 * near * Math.tan(fov * 0.5);
 
-                const topX = near * tan;
-                const heightX = 2.0 * topX;
+                const heightX = wh;
                 const widthX = asp * heightX;
-                const leftX = -0.5 * widthX;
+                const leftX = offsetX * widthX;
+                const topX = offsetY * heightX;
 
-                const leftY = -near * tan;
-                const widthY = 2.0 * -leftY;
+                const widthY = wh;
                 const heightY = widthY / asp;
-                const topY = 0.5 * heightY;
+                const leftY = offsetX * widthY;
+                const topY = offsetY * heightY;
 
-                const top = topX + (topY - topX) * matchFactor;
                 const left = leftX + (leftY - leftX) * matchFactor;
-                const width = widthX + (widthY - widthX) * matchFactor;
-                const height = heightX + (heightY - heightX) * matchFactor;
+                const top = topX + (topY - topX) * matchFactor;
+                const width = (widthX + (widthY - widthX) * matchFactor) * scaleX;
+                const height = (heightX + (heightY - heightX) * matchFactor) * scaleY;
 
                 this.perspectiveProjectMatrix(left, left + width, top, top - height, near, far);
             }
@@ -481,14 +498,20 @@ namespace egret3d {
             if (opvalue < 1.0) {
                 const widthX = size * asp;
                 const heightX = size;
+                const leftX = offsetX * widthX;
+                const topX = offsetY * heightX;
 
                 const widthY = size;
                 const heightY = size / asp;
+                const leftY = offsetX * widthY;
+                const topY = offsetY * heightY;
 
-                const width = widthX + (widthY - widthX) * matchFactor;
-                const height = heightX + (heightY - heightX) * matchFactor;
+                const left = leftX + (leftY - leftX) * matchFactor;
+                const top = topX + (topY - topX) * matchFactor;
+                const width = (widthX + (widthY - widthX) * matchFactor) * scaleX;
+                const height = (heightX + (heightY - heightX) * matchFactor) * scaleY;
 
-                orthographicMatrix.orthographicProjectLH(width, height, near, far);
+                orthographicMatrix.orthographicProjectMatrix(left, left + width, top, top - height, near, far);
             }
 
             if (opvalue === 0.0) {

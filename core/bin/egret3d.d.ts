@@ -269,7 +269,7 @@ declare namespace paper {
         /**
          *
          */
-        readonly asset: number;
+        readonly asset: int;
     }
     /**
      *
@@ -412,7 +412,7 @@ declare namespace paper {
      */
     interface ISystemClass<TSystem extends ISystem<TEntity>, TEntity extends IEntity> {
         /**
-         *
+         * 该系统允许运行的模式。
          */
         readonly executeMode: PlayerMode;
         /**
@@ -635,22 +635,22 @@ declare namespace paper {
          * 生成一个新的逻辑帧时调用
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
-        onTick?(deltaTime?: number): void;
+        onTick?(deltaTime?: float): void;
         /**
          * 在新的逻辑帧的清理阶段调用
          * @param deltaTime 上一逻辑帧到此帧流逝的时间。（以秒为单位）
          */
-        onTickCleanup?(deltaTime?: number): void;
+        onTickCleanup?(deltaTime?: float): void;
         /**
          * 生成一个新的渲染帧时调用
          * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
          */
-        onFrame?(deltaTime?: number): void;
+        onFrame?(deltaTime?: float): void;
         /**
          * 在新的渲染帧的清理阶段调用
          * @param deltaTime 上一渲染帧到此帧流逝的时间。（以秒为单位）
          */
-        onFrameCleanup?(deltaTime?: number): void;
+        onFrameCleanup?(deltaTime?: float): void;
         /**
          * 该系统被禁用时调用。
          * @see paper.BaseSystem#enabled
@@ -782,15 +782,18 @@ declare namespace paper {
      *
      */
     interface RunOptions {
+        /**
+         *
+         */
         playerMode?: PlayerMode;
         /**
-         * 逻辑帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         * 逻辑帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        tickInterval?: number;
+        tickRate?: number;
         /**
-         * 渲染帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         * 渲染帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        frameInterval?: number;
+        frameRate?: number;
     }
 }
 declare namespace paper {
@@ -838,8 +841,8 @@ declare namespace paper {
      */
     function requireComponent(requireComponentClass: IComponentClass<IComponent>): (componentClass: IComponentClass<IComponent>) => void;
     /**
-     *
-     * @param executeMode
+     * 通过装饰器标记系统在哪些模式可以被执行。
+     * @param executeMode 系统可以被运行的模式。
      */
     function executeMode(executeMode: PlayerMode): (systemClass: ISystemClass<ISystem<IEntity>, IEntity>) => void;
     /**
@@ -944,6 +947,10 @@ declare namespace paper.editor {
          * 赋值函数
          */
         set?: string;
+        /**
+         *
+         */
+        componentClass?: IComponentClass<IComponent> | string;
         /**
          * 下拉项。
          */
@@ -1557,9 +1564,9 @@ declare namespace egret3d {
         format?: gltf.TextureFormat;
         /**
          * 纹理数据类型。
-         * @defaults gltf.TextureDataType.UNSIGNED_BYTE
+         * @defaults gltf.ComponentType.UnsignedByte
          */
-        type?: gltf.TextureDataType;
+        type?: gltf.ComponentType;
         /**
          * 纹理对齐方式。
          * @defaults gltf.TextureAlignment.Four
@@ -1582,6 +1589,10 @@ declare namespace egret3d {
          */
         faces?: uint;
         /**
+         * 使用 mipmap 的方式。
+         * - 0: 自动生成。
+         * - 1：不使用 mipmap 。
+         * - N: 提供 mipmap 。
          * @defaults 1
          */
         levels?: uint;
@@ -1824,15 +1835,6 @@ declare namespace gltf {
     /**
      *
      */
-    const enum TextureDataType {
-        UNSIGNED_BYTE = 5121,
-        UNSIGNED_SHORT_5_6_5 = 33635,
-        UNSIGNED_SHORT_4_4_4_4 = 32819,
-        UNSIGNED_SHORT_5_5_5_1 = 32820,
-    }
-    /**
-     *
-     */
     const enum TextureFilter {
         Nearest = 9728,
         Linear = 9729,
@@ -1890,6 +1892,7 @@ declare namespace gltf {
      * Component type.
      */
     const enum ComponentType {
+        STRUCT = -1,
         Byte = 5120,
         UnsignedByte = 5121,
         Short = 5122,
@@ -1897,6 +1900,24 @@ declare namespace gltf {
         Int = 5124,
         UnsignedInt = 5125,
         Float = 5126,
+        UnsignedShort4444 = 32819,
+        UnsignedShort5551 = 32820,
+        UnsignedShort565 = 33635,
+        FloatVec2 = 35664,
+        FloatVec3 = 35665,
+        FloatVec4 = 35666,
+        IntVec2 = 35667,
+        IntVec3 = 35668,
+        IntVec4 = 35669,
+        BOOL = 35670,
+        BoolVec2 = 35671,
+        BoolVec3 = 35672,
+        BoolVec4 = 35673,
+        FloatMat2 = 35674,
+        FloatMat3 = 35675,
+        FloatMat4 = 35676,
+        Sampler2D = 35678,
+        SamplerCube = 35680,
     }
     /**
      * The uniform type.  All valid values correspond to WebGL enums.
@@ -2007,6 +2028,8 @@ declare namespace gltf {
         MODELVIEWINVERSETRANSPOSE = "MODELVIEWINVERSETRANSPOSE",
         VIEWPORT = "VIEWPORT",
         JOINTMATRIX = "JOINTMATRIX",
+        _BONETEXTURE = "_BONETEXTURE",
+        _BONETEXTURESIZE = "_BONETEXTURESIZE",
         _RESOLUTION = "_RESOLUTION",
         _CLOCK = "_CLOCK",
         _VIEWPROJECTION = "_VIEWPROJECTION",
@@ -3048,7 +3071,7 @@ declare namespace egret3d {
         /**
          * z 轴分量。
          */
-        z: number;
+        z: float;
     }
     /**
      * 欧拉旋转顺序。
@@ -3117,23 +3140,23 @@ declare namespace egret3d {
          * @param y Y 轴分量。
          * @param z Z 轴分量。
          */
-        static create(x?: number, y?: number, z?: number): Vector3;
-        x: number;
-        y: number;
-        z: number;
+        static create(x?: float, y?: float, z?: float): Vector3;
+        x: float;
+        y: float;
+        z: float;
         /**
          * 请使用 `egret3d.Vector3.create()` 创建实例。
          * @see egret3d.Vector3.create()
          * @deprecated
          * @private
          */
-        constructor(x?: number, y?: number, z?: number);
+        constructor(x?: float, y?: float, z?: float);
         serialize(): number[];
-        deserialize(value: Readonly<[number, number, number]>): this;
+        deserialize(value: Readonly<[float, float, float]>): this;
         copy(value: Readonly<IVector3>): this;
         clone(): Vector3;
-        set(x: number, y: number, z: number): this;
-        fromArray(array: ArrayLike<number>, offset?: number): this;
+        set(x: float, y: float, z: float): this;
+        fromArray(array: ArrayLike<float>, offset?: uint): this;
         fromMatrixPosition(matrix: Readonly<Matrix4>): this;
         fromMatrixColumn(matrix: Readonly<Matrix4>, index: 0 | 1 | 2): this;
         clear(): this;
@@ -3142,7 +3165,7 @@ declare namespace egret3d {
          * @param value 一个向量。
          * @param threshold 阈值。
          */
-        equal(value: Readonly<IVector3>, threshold?: number): boolean;
+        equal(value: Readonly<IVector3>, threshold?: float): boolean;
         /**
          * 归一化该向量。
          * - v /= v.length
@@ -3152,9 +3175,20 @@ declare namespace egret3d {
          * 将输入向量的归一化结果写入该向量。
          * - v = input / input.length
          * @param input 输入向量。
-         * @param defaultVector 当向量不能合法归一化时将指向何方向。
          */
-        normalize(input: Readonly<IVector3>, defaultVector?: Readonly<IVector3>): this;
+        normalize(input: Readonly<IVector3>): this;
+        normalize(input: Readonly<IVector3>, defaultVector: Readonly<IVector3>): this;
+        /**
+         * 归一化该向量，并使该向量垂直于自身。
+         * - 向量长度不能为 `0` 。
+         */
+        orthoNormal(): this;
+        /**
+         * 归一化该向量，并使该向量垂直于输入向量。
+         * @param input 输入向量。
+         * - 向量长度不能为 `0` 。
+         */
+        orthoNormal(input: Readonly<IVector3>): this;
         /**
          * 反转该向量。
          */
@@ -3166,7 +3200,8 @@ declare namespace egret3d {
         negate(input: Readonly<IVector3>): this;
         /**
          * 通过一个球面坐标设置该向量。
-         * @param vector3 一个球面坐标。（球面半径、极角、赤道角）
+         * @param vector3 一个球面坐标。
+         * - x：球面半径，y：极角，z：赤道角
          */
         fromSphericalCoords(vector3: Readonly<IVector3>): this;
         /**
@@ -3174,7 +3209,7 @@ declare namespace egret3d {
          * @param phi 相对于 Y 轴的极角。
          * @param theta 围绕 Y 轴的赤道角。
          */
-        fromSphericalCoords(radius: number, phi: number, theta: number): this;
+        fromSphericalCoords(radius: float, phi: float, theta: float): this;
         /**
          * 将该向量乘以一个 3x3 矩阵。
          * - v *= matrix
@@ -3236,27 +3271,27 @@ declare namespace egret3d {
          * - v += scalar
          * @param scalar 标量。
          */
-        addScalar(scalar: number): this;
+        addScalar(scalar: float): this;
         /**
          * 将输入向量与标量相加的结果写入该向量。
          * - v = input + scalar
          * @param scalar 一个标量。
          * @param input 输入向量。
          */
-        addScalar(scalar: number, input: Readonly<IVector3>): this;
+        addScalar(scalar: float, input: Readonly<IVector3>): this;
         /**
          * 将该向量乘以一个标量。
          * - v *= scalar
          * @param scalar 标量。
          */
-        multiplyScalar(scalar: number): this;
+        multiplyScalar(scalar: float): this;
         /**
          * 将输入向量与标量相乘的结果写入该向量。
          * - v = input * scalar
          * @param scalar 一个标量。
          * @param input 输入向量。
          */
-        multiplyScalar(scalar: number, input: Readonly<IVector3>): this;
+        multiplyScalar(scalar: float, input: Readonly<IVector3>): this;
         /**
          * 将该向量加上一个向量。
          * - v += vector
@@ -3316,7 +3351,7 @@ declare namespace egret3d {
          * - v · vector
          * @param vector 一个向量。
          */
-        dot(vector: Readonly<IVector3>): number;
+        dot(vector: Readonly<IVector3>): float;
         /**
          * 将该向量叉乘以一个向量。
          * - v ×= vector
@@ -3337,7 +3372,7 @@ declare namespace egret3d {
          * @param to 目标向量。
          * @param t 插值因子。
          */
-        lerp(to: Readonly<IVector3>, t: number): this;
+        lerp(to: Readonly<IVector3>, t: float): this;
         /**
          * 将两个向量插值的结果写入该向量。
          * - v = from * (1 - t) + to * t
@@ -3346,15 +3381,20 @@ declare namespace egret3d {
          * @param to 目标向量。
          * @param t 插值因子。
          */
-        lerp(from: Readonly<IVector3>, to: Readonly<IVector3>, t: number): this;
+        lerp(from: Readonly<IVector3>, to: Readonly<IVector3>, t: float): this;
         /**
          * @deprecated
          */
-        lerp(t: number, to: Readonly<IVector3>): this;
+        lerp(t: float, to: Readonly<IVector3>): this;
         /**
          * @deprecated
          */
-        lerp(t: number, from: Readonly<IVector3>, to: Readonly<IVector3>): this;
+        lerp(t: float, from: Readonly<IVector3>, to: Readonly<IVector3>): this;
+        /**
+         *
+         */
+        slerp(to: Readonly<Vector3>, t: float): this;
+        slerp(from: Readonly<Vector3>, to: Readonly<Vector3>, t: float): this;
         /**
          * 将该向量与一个向量的分量取最小值。
          * @param value 一个向量。
@@ -3401,38 +3441,39 @@ declare namespace egret3d {
          * @param normal 一个法线向量。
          * @param input 输入向量。
          */
-        reflect(normal: Readonly<IVector3>, input: Readonly<IVector3>): this;
+        reflect(normal: Readonly<IVector3>, input: Readonly<Vector3>): this;
         /**
-         * 获取该向量和一个向量的夹角。（弧度制）
-         * - 假设向量长度均不为零。
+         * 获取一个向量和该向量的夹角。
+         * - 弧度制。
+         * @param vector 一个向量。
          */
-        getAngle(vector: Readonly<IVector3>): number;
+        getAngle(vector: Readonly<Vector3>): float;
         /**
-         * 获取两点的最近距离的平方。
+         * 获取一点到该点的欧氏距离（直线距离）的平方。
          * @param point 一个点。
          */
-        getSquaredDistance(point: Readonly<IVector3>): number;
+        getSquaredDistance(point: Readonly<IVector3>): float;
         /**
-         * 获取两点的最近距离。
+         * 获取一点到该点的欧氏距离（直线距离）。
          * @param point 一个点。
          */
-        getDistance(point: Readonly<IVector3>): number;
+        getDistance(point: Readonly<IVector3>): float;
         /**
          * 将该向量转换为数组。
          * @param array 数组。
          * @param offset 数组偏移。
          */
-        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        toArray(array?: float[] | Float32Array | null, offset?: uint): float[] | Float32Array;
         /**
          * 该向量的长度。
          * - 该值是实时计算的。
          */
-        readonly length: number;
+        readonly length: float;
         /**
          * 该向量的长度的平方。
          * - 该值是实时计算的。
          */
-        readonly squaredLength: number;
+        readonly squaredLength: float;
         /**
          * @deprecated
          */
@@ -3531,7 +3572,6 @@ declare namespace paper {
         protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
         protected _setEnabled(value: boolean): void;
         protected _addComponent(component: IComponent, config?: any): void;
-        protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
         private _getComponent(componentClass);
         private _isRequireComponent(componentClass);
         initialize(): void;
@@ -3724,7 +3764,7 @@ declare namespace egret3d {
          *
          * @param source
          */
-        uploadTexture(source?: gltf.ImageSource): this;
+        uploadTexture(source?: ArrayBuffer | gltf.ImageSource): this;
     }
 }
 declare namespace paper {
@@ -3916,7 +3956,7 @@ declare namespace egret3d {
      * 全局渲染状态组件。
      */
     class RenderState extends paper.BaseComponent {
-        version: number;
+        version: string;
         standardDerivativesEnabled: boolean;
         textureFloatEnabled: boolean;
         fragDepthEnabled: boolean;
@@ -4020,7 +4060,7 @@ declare namespace egret3d {
         /**
          *
          */
-        gammaFactor: number;
+        gammaFactor: float;
         /**
          *
          */
@@ -4028,11 +4068,11 @@ declare namespace egret3d {
         /**
          *
          */
-        toneMappingExposure: number;
+        toneMappingExposure: float;
         /**
          *
          */
-        toneMappingWhitePoint: number;
+        toneMappingWhitePoint: float;
     }
     /**
      * 全局渲染状态组件实例。
@@ -4257,15 +4297,17 @@ declare namespace egret3d {
          */
         fromAxis(axis: Readonly<IVector3>, angle: float): this;
         perspectiveProjectMatrix(left: float, right: float, top: float, bottom: float, near: float, far: float): this;
-        orthographicProjectLH(width: float, height: float, znear: float, zfar: float): this;
+        orthographicProjectMatrix(left: float, right: float, top: float, bottom: float, near: float, far: float): this;
         /**
          * 根据投影参数设置该矩阵。
-         * @param fov 投影视角。
-         * - 透视投影
+         * @param offsetX 投影近平面水平偏移。
+         * @param offsetY 投影远平面垂直偏移。
          * @param near 投影近平面。
          * @param far 投影远平面。
+         * @param fov 投影视角。
+         * - 透视投影时生效。
          * @param size 投影尺寸。
-         * - 正交投影
+         * - 正交投影时生效。
          * @param opvalue 透视投影和正交投影的插值系数。
          * - `0.0` ~ `1.0`
          * - `0.0` 正交投影。
@@ -4273,10 +4315,10 @@ declare namespace egret3d {
          * @param asp 投影宽高比。
          * @param matchFactor 宽高适配的插值系数。
          * - `0.0` ~ `1.0`
-         * - `0.0` 以高适配。
-         * - `1.0` 以宽适配。
+         * - `0.0` 以宽适配。
+         * - `1.0` 以高适配。
          */
-        fromProjection(fov: float, near: float, far: float, size: float, opvalue: float, asp: float, matchFactor: float): this;
+        fromProjection(near: float, far: float, fov: float, size: float, opvalue: float, asp: float, matchFactor: float, viewport?: Rectangle | null): this;
         /**
          * 通过 X、Y、Z 轴设置该矩阵。
          * @param axisX X 轴。
@@ -4846,13 +4888,14 @@ declare namespace egret3d {
          * @see egret3d.AABB.create()
          */
         private constructor();
+        private _updateValue(value);
         serialize(): number[];
-        deserialize(value: Readonly<[number, number, number, number, number, number]>): this;
+        deserialize(value: Readonly<[float, float, float, float, float, float]>): this;
         clone(): Box;
         copy(value: Readonly<Box>): this;
         clear(): this;
         set(minimum?: Readonly<IVector3> | null, maximum?: Readonly<IVector3> | null): this;
-        fromArray(value: ArrayLike<number>, offset?: number): this;
+        fromArray(value: ArrayLike<float>, offset?: uint): this;
         /**
          * 设置该立方体，使得全部点都在立方体内。
          * @param points 全部点。
@@ -4886,24 +4929,24 @@ declare namespace egret3d {
          * 通过一个标量或向量扩大该立方体。
          * @param scalarOrVector 一个标量或向量。
          */
-        expand(scalarOrVector: number | Readonly<IVector3>): this;
+        expand(scalarOrVector: float | Readonly<IVector3>): this;
         /**
          * 通过一个标量或向量扩大输入立方体，并将改变的结果写入该立方体。
          * @param scalarOrVector 一个标量或向量。
          * @param input 输入立方体。
          */
-        expand(scalarOrVector: number | Readonly<IVector3>, input: Readonly<Box>): this;
+        expand(scalarOrVector: float | Readonly<IVector3>, input: Readonly<Box>): this;
         /**
          * 通过一个标量或向量移动该立方体。
          * @param scalarOrVector 一个标量或向量。
          */
-        translate(scalarOrVector: number | Readonly<IVector3>): this;
+        translate(scalarOrVector: float | Readonly<IVector3>): this;
         /**
          * 通过一个标量或向量移动输入立方体，并将改变的结果写入该立方体。
          * @param scalarOrVector 一个标量或向量。
          * @param input 输入立方体。
          */
-        translate(scalarOrVector: number | Readonly<IVector3>, input: Readonly<Box>): this;
+        translate(scalarOrVector: float | Readonly<IVector3>, input: Readonly<Box>): this;
         /**
          * 获取一个点到该立方体的最近点。（如果该点在立方体内部，则最近点就是该点）
          * @param point 一个点。
@@ -4914,12 +4957,17 @@ declare namespace egret3d {
          * 获取一个点到该立方体的最近距离。
          * @param point 一个点。
          */
-        getDistance(point: Readonly<IVector3>): number;
+        getDistance(point: Readonly<IVector3>): float;
         /**
          * 该立方体是否包含指定的点或立方体。
          */
         contains(pointOrBox: Readonly<IVector3 | Box>): boolean;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
+        /**
+         *
+         * @param sphere
+         */
+        intersectsSphere(sphere: Readonly<Sphere>): boolean;
         /**
          * 该立方体是否为空。
          */
@@ -4927,7 +4975,7 @@ declare namespace egret3d {
         /**
          * 该立方体的包围球半径。
          */
-        readonly boundingSphereRadius: number;
+        readonly boundingSphereRadius: float;
         /**
          * 该立方体的最小点。
          */
@@ -4950,10 +4998,26 @@ declare namespace paper {
     /**
      * 基础系统。
      * - 全部系统的基类。
+     * - 生命周期的顺序如下：
+     * - onAwake();
+     * - onEnable();
+     * - onStart();
+     * - onComponentRemoved();
+     * - onEntityRemoved();
+     * - onEntityAdded();
+     * - onComponentAdded();
+     * - onTick();
+     * - onFrame();
+     * - onFrameCleanup();
+     * - onTickCleanup();
+     * - onDisable();
+     * - onDestroy();
      */
     abstract class BaseSystem<TEntity extends IEntity> implements ISystem<TEntity> {
         /**
-         *
+         * 该系统允许运行的模式。
+         * - 默认可以在所有模式运行。
+         * - 通过系统装饰器 `@paper.executeMode()` 来修改该值。
          */
         static readonly executeMode: PlayerMode;
         enabled: boolean;
@@ -4986,10 +5050,10 @@ declare namespace paper {
         onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
         onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
         onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
-        onTick?(deltaTime?: number): void;
-        onTickCleanup?(deltaTime?: number): void;
-        onFrame?(deltaTime?: number): void;
-        onFrameCleanup?(deltaTime?: number): void;
+        onTick?(deltaTime?: float): void;
+        onFrame?(deltaTime?: float): void;
+        onFrameCleanup?(deltaTime?: float): void;
+        onTickCleanup?(deltaTime?: float): void;
         onDisable?(): void;
         onDestroy?(): void;
         /**
@@ -5085,7 +5149,7 @@ declare namespace egret3d {
         readonly determinant: number;
     }
     /**
-     * @deprecated
+     * @@interanl
      */
     const helpMatrix3A: Matrix3;
 }
@@ -5106,12 +5170,12 @@ declare namespace egret3d {
          *
          */
         function lerp(from: number, to: number, t: number): number;
-        function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>): boolean;
         function randFloat(low: number, high: number): number;
         function randFloatSpread(range: number): number;
         function isPowerOfTwo(value: number): boolean;
         function ceilPowerOfTwo(value: number): uint;
         function floorPowerOfTwo(value: number): uint;
+        function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>): boolean;
     }
     /**
      * 内联的数字常数枚举。
@@ -5134,6 +5198,14 @@ declare namespace egret3d {
          * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
          */
         EPSILON = 2.220446049250313e-16,
+        /**
+         * The square root of 2.
+         */
+        SQRT_2 = 1.4142135623731,
+        /**
+         * The square root of 0.5, or, equivalently, one divided by the square root of 2.
+         */
+        SQRT1_2 = 0.70710678118655,
     }
     function sign(value: number): number;
     function triangleIntersectsAABB(triangle: Readonly<Triangle>, box: Readonly<Box>): boolean;
@@ -5377,7 +5449,6 @@ declare namespace paper {
         protected _setScene(value: Scene | null, dispatchEvent: boolean): void;
         protected _setEnabled(value: boolean): void;
         protected _addComponent(component: IComponent, config?: any): void;
-        protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void;
         uninitialize(): void;
         /**
          * 获取一个自己或父级中指定的组件实例。
@@ -6082,6 +6153,21 @@ declare namespace paper {
          * reset
          */
         reset(): void;
+        /**
+         * 时间戳
+         *
+         * 因为 `performance.now()` 精确度更高, 更应该使用它作为时间戳
+         * , 但是这个 API 在微信小游戏里支持有问题, 所以暂时使用 `Date.now()` 的实现
+         *
+         * 关于 `Date.now()` 与 `performance.now()`
+         *
+         * * 两者都是以毫秒为单位
+         * * `Date.now()` 是从 Unix 纪元 (1970-01-01T00:00:00Z) 至今的毫秒数, 而后者是从页面加载至今的毫秒数
+         * * `Date.now()` 精确到毫秒, 一般是整数, 后者可以精确到 5 微秒 (理论上, 可能各平台各浏览器实现的不同), 为浮点数
+         * * `Date.now()` 是 Javascript 的 API, 而后者为 Web API
+         * * `window.requestAnimationFrame()` 回调中使用的时间戳可认为和 `performance.now()` 的基本一致, 区别只是它不是实时的 "now", 而是 `window.requestAnimationFrame()` 调用产生时的 "now"
+         */
+        timestamp(): number;
     }
     /**
      * 全局时钟信息组件实例。
@@ -6187,7 +6273,7 @@ declare namespace paper {
      */
     class FixedUpdateSystem extends BaseSystem<GameObject> {
         protected getMatchers(): INoneOfMatcher<GameObject>[];
-        onTick(delta?: number): void;
+        onTick(delta?: float): void;
     }
 }
 declare namespace paper {
@@ -6199,7 +6285,7 @@ declare namespace paper {
     class LateUpdateSystem extends BaseSystem<GameObject> {
         private readonly _laterCalls;
         protected getMatchers(): INoneOfMatcher<GameObject>[];
-        onFrame(deltaTime: number): void;
+        onFrame(deltaTime: float): void;
         /**
          * @deprecated
          */
@@ -6367,6 +6453,7 @@ declare namespace egret3d {
         ENVMAP_BLENDING_ADD = "ENVMAP_BLENDING_ADD",
         FLAT_SHADED = "FLAT_SHADED",
         MAX_BONES = "MAX_BONES",
+        BONE_TEXTURE = "BONE_TEXTURE",
         NUM_DIR_LIGHTS = "NUM_DIR_LIGHTS",
         NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
         NUM_RECT_AREA_LIGHTS = "NUM_RECT_AREA_LIGHTS",
@@ -6947,7 +7034,6 @@ declare namespace egret3d {
 declare namespace egret3d {
     /**
      * 全局舞台信息组件。
-     * TODO 调整文件结构，标记接口源码链接。
      */
     class Stage extends paper.BaseComponent {
         /**
@@ -6959,9 +7045,9 @@ declare namespace egret3d {
          */
         readonly onResize: signals.Signal;
         /**
-         *
+         * 舞台到屏幕的缩放系数。
          */
-        readonly scaler: number;
+        readonly scaler: float;
         private _rotated;
         private _matchFactor;
         private readonly _screenSize;
@@ -6988,8 +7074,11 @@ declare namespace egret3d {
         readonly rotated: boolean;
         /**
          * 以宽或高适配的系数。
+         * - `0.0` ~ `1.0`。
+         * - `0.0` 以宽适配。
+         * - `1.0` 以高适配。
          */
-        matchFactor: number;
+        matchFactor: float;
         /**
          * 屏幕尺寸。
          */
@@ -7017,16 +7106,47 @@ declare namespace egret3d {
      * 提供默认的几何网格资源的快速访问方式。
      */
     class DefaultMeshes extends paper.BaseComponent {
+        /**
+         * 一个三角形网格。
+         */
         static TRIANGLE: Mesh;
-        static QUAD: Mesh;
-        static QUAD_PARTICLE: Mesh;
         static SPRITE: Mesh;
+        /**
+         * 一个正方形网格。
+         */
+        static QUAD: Mesh;
+        /**
+         * 一个正方形网格。
+         * - 坐标系原点在其中的一边中点上。
+         */
+        static QUAD_PARTICLE: Mesh;
+        /**
+         * 一个平面网格。
+         */
         static PLANE: Mesh;
+        /**
+         * 一个正方体网格。
+         */
         static CUBE: Mesh;
+        /**
+         * 一个金字塔网格。
+         */
         static PYRAMID: Mesh;
+        /**
+         * 一个圆锥体网格。
+         */
         static CONE: Mesh;
+        /**
+         * 一个圆柱体网格。
+         */
         static CYLINDER: Mesh;
+        /**
+         * 一个圆环体网格。
+         */
         static TORUS: Mesh;
+        /**
+         * 一个球体网格。
+         */
         static SPHERE: Mesh;
         static LINE_X: Mesh;
         static LINE_Y: Mesh;
@@ -8050,7 +8170,7 @@ declare namespace egret3d {
          * @param stageY 舞台垂直坐标。
          * @param ray 射线。
          */
-        stageToRay(stageX: number, stageY: number, ray?: Ray): Ray;
+        stageToRay(stageX: float, stageY: float, ray?: Ray): Ray;
         /**
          *
          */
@@ -8070,28 +8190,28 @@ declare namespace egret3d {
         /**
          * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
          */
-        opvalue: number;
+        opvalue: float;
         /**
          * 该相机的视点到近裁剪面距离。
          * - 该值过小会引起深度冲突。
          */
-        near: number;
+        near: float;
         /**
          * 该相机的视点到远裁剪面距离。
          */
-        far: number;
+        far: float;
         /**
          * 透视投影的视野。
          */
-        fov: number;
+        fov: float;
         /**
          * 该相机的正交投影的尺寸。
          */
-        size: number;
+        size: float;
         /**
          * 该相机视口的宽高比。
          */
-        readonly aspect: number;
+        readonly aspect: float;
         /**
          * 该相机渲染目标的尺寸。
          */
@@ -8105,7 +8225,7 @@ declare namespace egret3d {
          */
         pixelViewport: Readonly<IRectangle>;
         /**
-         *
+         * 该相机的截头锥体。
          */
         readonly frustum: Readonly<Frustum>;
         /**
@@ -8145,7 +8265,7 @@ declare namespace egret3d {
         /**
          * @deprecated
          */
-        getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2): void;
+        getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: float, out: Vector2): void;
         /**
          * @deprecated
          */
@@ -8157,7 +8277,7 @@ declare namespace egret3d {
         /**
          * @deprecated
          */
-        createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray): Ray;
+        createRayByScreen(screenPosX: float, screenPosY: float, ray?: Ray): Ray;
         /**
          * @deprecated
          */
@@ -8456,7 +8576,7 @@ declare namespace egret3d {
         /**
          * 此次绘制的子网格索引。
          */
-        subMeshIndex: number;
+        subMeshIndex: int;
         /**
          * 此次绘制的网格资源。
          */
@@ -8468,7 +8588,7 @@ declare namespace egret3d {
         /**
          *
          */
-        zdist: number;
+        zdist: float;
         /**
          * TODO
          */
@@ -8493,17 +8613,17 @@ declare namespace egret3d {
         /**
          * 雾的强度。
          */
-        density: number;
+        density: float;
         /**
          * 雾的近平面。
          * - 最小值 0.01。
          */
-        near: number;
+        near: float;
         /**
          * 雾的远平面。
          * - 最小值 0.02。
          */
-        far: number;
+        far: float;
         /**
          * 雾的颜色。
          */
@@ -8512,7 +8632,7 @@ declare namespace egret3d {
         private readonly _scene;
         private constructor();
         serialize(): number[];
-        deserialize(data: Readonly<[number, number, number, number, number, number, number, number]>): this;
+        deserialize(data: Readonly<[float, float, float, float, float, float, float, float]>): this;
         /**
          * 雾的模式。
          */
@@ -8731,6 +8851,10 @@ declare namespace egret3d {
          *
          */
         boneMatrices: Float32Array | null;
+        /**
+         *
+         */
+        boneTexture: Texture | null;
         /**
          *
          */
@@ -10240,7 +10364,7 @@ declare namespace paper {
         /**
          * 当应用程序的播放模式改变时派发事件。
          */
-        readonly onPlayerModeChange: signals.Signal<PlayerMode>;
+        readonly onPlayerModeChanged: signals.Signal<PlayerMode>;
         /**
          * 引擎版本。
          */
@@ -10263,7 +10387,7 @@ declare namespace paper {
         /**
          * core updating loop
          */
-        private _loop(timestamp?);
+        private _loop(timestamp);
         /**
          * including calculating, status updating, rerendering and logical updating
          */
@@ -10563,16 +10687,16 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     *
+     * 几何截头锥体。
      */
     class Frustum extends paper.BaseRelease<Frustum> implements paper.ICCS<Frustum>, paper.ISerializable {
         private static readonly _instances;
         /**
-         *
+         * 创建一个几何截头锥体。
          */
         static create(): Frustum;
         /**
-         *
+         * 构成该锥体的平面。
          */
         readonly planes: [Plane, Plane, Plane, Plane, Plane, Plane];
         /**
@@ -10586,8 +10710,17 @@ declare namespace egret3d {
         copy(value: Readonly<Frustum>): this;
         set(planes: [Plane, Plane, Plane, Plane, Plane, Plane]): this;
         fromArray(array: ReadonlyArray<number>, offset?: number): this;
+        /**
+         * 通过一个矩阵设置该锥体。
+         * @param matrix 一个矩阵。
+         */
         fromMatrix(matrix: Readonly<Matrix4>): this;
+        /**
+         * 该锥体是否包含指定点。
+         * @param point 一个点。
+         */
         containsPoint(point: Readonly<IVector3>): boolean;
+        intersectsSphere(sphere: Readonly<Sphere>): boolean;
     }
 }
 declare namespace egret3d {
@@ -10900,12 +11033,6 @@ declare namespace egret3d.ShaderLib {
                         "morphTargetInfluences[0]": {
                             "type": number;
                         };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
-                            "type": number;
-                        };
                         "opacity": {
                             "type": number;
                             "value": number;
@@ -10958,12 +11085,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "map": {
@@ -11189,12 +11310,6 @@ declare namespace egret3d.ShaderLib {
                         "morphTargetInfluences[0]": {
                             "type": number;
                         };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
-                            "type": number;
-                        };
                         "diffuse": {
                             "type": number;
                             "value": number[];
@@ -11273,12 +11388,6 @@ declare namespace egret3d.ShaderLib {
                             "value": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "diffuse": {
@@ -11376,12 +11485,6 @@ declare namespace egret3d.ShaderLib {
                             "value": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "diffuse": {
@@ -11500,12 +11603,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "diffuse": {
@@ -11634,12 +11731,6 @@ declare namespace egret3d.ShaderLib {
                             "type": number;
                         };
                         "morphTargetInfluences[0]": {
-                            "type": number;
-                        };
-                        "boneTexture": {
-                            "type": number;
-                        };
-                        "boneTextureSize": {
                             "type": number;
                         };
                         "opacity": {
@@ -12067,7 +12158,7 @@ declare namespace egret3d.ShaderChunk {
     const shadowmap_vertex = "#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\t\tvDirectionalShadowCoord[ i ] = directionalShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n\t#if NUM_SPOT_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tvSpotShadowCoord[ i ] = spotShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n\t#if NUM_POINT_LIGHTS > 0\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tvPointShadowCoord[ i ] = pointShadowMatrix[ i ] * worldPosition;\n\t}\n\t#endif\n#endif\n";
     const shadowmask_pars_fragment = "float getShadowMask() {\n\tfloat shadow = 1.0;\n\t#ifdef USE_SHADOWMAP\n\t#if NUM_DIR_LIGHTS > 0\n\tDirectionalLight directionalLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {\n\t\tdirectionalLight.shadow = int(directionalLights[ i  * 11 + 6]);\n\t\tdirectionalLight.shadowBias = directionalLights[ i  * 11 + 7];\n\t\tdirectionalLight.shadowRadius = directionalLights[ i  * 11 + 8];\n\t\tdirectionalLight.shadowMapSize = vec2(directionalLights[ i  * 11 + 9], directionalLights[ i  * 11 + 10]);\n\t\tshadow *= bool( directionalLight.shadow ) ? getShadow( directionalShadowMap[ i ], directionalLight.shadowMapSize, directionalLight.shadowBias, directionalLight.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;\n\t}\n\t#endif\n\t#if NUM_SPOT_LIGHTS > 0\n\tSpotLight spotLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {\n\t\tspotLight.shadow = int(spotLights[ i  * 18 + 13]);\n\t\tspotLight.shadowBias = spotLights[ i  * 18 + 14];\n\t\tspotLight.shadowRadius = spotLights[ i  * 18 + 15];\n\t\tspotLight.shadowMapSize = vec2(spotLights[ i  * 18 + 16], spotLights[ i  * 18 + 17]);\n\t\tshadow *= bool(spotLight.shadow) ? getShadow( spotShadowMap[ i ], spotLight.shadowMapSize, spotLight.shadowBias, spotLight.shadowRadius, vSpotShadowCoord[ i ] ) : 1.0;\n\t}\n\t#endif\n\t#if NUM_POINT_LIGHTS > 0\n\tPointLight pointLight;\n\t#pragma unroll_loop\n\tfor ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {\n\t\tpointLight.shadow = int(pointLights[ i  * 15 + 8]);\n\t\tpointLight.shadowBias = pointLights[ i  * 15 + 9];\n\t\tpointLight.shadowRadius = pointLights[ i  * 15 + 10];\n\t\tpointLight.shadowMapSize = vec2(pointLights[ i  * 15 + 11], pointLights[ i  * 15 + 12]);\n\t\tpointLight.shadowCameraNear = pointLights[ i  * 15 + 13];\n\t\tpointLight.shadowCameraFar = pointLights[ i  * 15 + 14];\n\t\tshadow *= bool(pointLight.shadow) ? getPointShadow( pointShadowMap[ i ], pointLight.shadowMapSize, pointLight.shadowBias, pointLight.shadowRadius, vPointShadowCoord[ i ], pointLight.shadowCameraNear, pointLight.shadowCameraFar ) : 1.0;\n\t}\n\t#endif\n\t#endif\n\treturn shadow;\n}\n";
     const skinbase_vertex = "#ifdef USE_SKINNING\n\tmat4 boneMatX = getBoneMatrix( skinIndex.x );\n\tmat4 boneMatY = getBoneMatrix( skinIndex.y );\n\tmat4 boneMatZ = getBoneMatrix( skinIndex.z );\n\tmat4 boneMatW = getBoneMatrix( skinIndex.w );\n#endif";
-    const skinning_pars_vertex = "#ifdef USE_SKINNING\n\t#ifdef BONE_TEXTURE\n\t\tuniform sampler2D boneTexture;\n\t\tuniform int boneTextureSize;\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\tfloat j = i * 4.0;\n\t\t\tfloat x = mod( j, float( boneTextureSize ) );\n\t\t\tfloat y = floor( j / float( boneTextureSize ) );\n\t\t\tfloat dx = 1.0 / float( boneTextureSize );\n\t\t\tfloat dy = 1.0 / float( boneTextureSize );\n\t\t\ty = dy * ( y + 0.5 );\n\t\t\tvec4 v1 = texture2D( boneTexture, vec2( dx * ( x + 0.5 ), y ) );\n\t\t\tvec4 v2 = texture2D( boneTexture, vec2( dx * ( x + 1.5 ), y ) );\n\t\t\tvec4 v3 = texture2D( boneTexture, vec2( dx * ( x + 2.5 ), y ) );\n\t\t\tvec4 v4 = texture2D( boneTexture, vec2( dx * ( x + 3.5 ), y ) );\n\t\t\tmat4 bone = mat4( v1, v2, v3, v4 );\n\t\t\treturn bone;\n\t\t}\n\t#else\n\t\tuniform mat4 boneMatrices[ MAX_BONES ];\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\tmat4 bone = boneMatrices[ int(i) ];\n\t\t\treturn bone;\n\t\t}\n\t#endif\n#endif\n";
+    const skinning_pars_vertex = "#ifdef USE_SKINNING\n\t#ifdef BONE_TEXTURE\n\t\tuniform sampler2D boneTexture;\n\t\tuniform int boneTextureSize;\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\t\n\t\t\tfloat j = i * 4.0;\n\t\t\tfloat dx = 1.0 / float( boneTextureSize );\n\t\t\tvec4 v1 = texture2D( boneTexture, vec2( dx * ( j + 0.5 ), 0.0 ) );\n\t\t\tvec4 v2 = texture2D( boneTexture, vec2( dx * ( j + 1.5 ), 0.0 ) );\n\t\t\tvec4 v3 = texture2D( boneTexture, vec2( dx * ( j + 2.5 ), 0.0 ) );\n\t\t\tvec4 v4 = texture2D( boneTexture, vec2( dx * ( j + 3.5 ), 0.0 ) );\n\t\t\tmat4 bone = mat4( v1, v2, v3, v4 );\n\t\t\treturn bone;\n\t\t}\n\t#else\n\t\tuniform mat4 boneMatrices[ MAX_BONES ];\n\t\tmat4 getBoneMatrix( const in float i ) {\n\t\t\tmat4 bone = boneMatrices[ int(i) ];\n\t\t\treturn bone;\n\t\t}\n\t#endif\n#endif\n";
     const skinning_vertex = "#ifdef USE_SKINNING\n\tvec4 skinVertex = vec4( transformed, 1.0 );\n\tvec4 skinned = vec4( 0.0 );\n\tskinned += boneMatX * skinVertex * skinWeight.x;\n\tskinned += boneMatY * skinVertex * skinWeight.y;\n\tskinned += boneMatZ * skinVertex * skinWeight.z;\n\tskinned += boneMatW * skinVertex * skinWeight.w;\n\ttransformed = skinned.xyz;\n#endif\n";
     const skinnormal_vertex = "#ifdef USE_SKINNING\n\tmat4 skinMatrix = mat4( 0.0 );\n\tskinMatrix += skinWeight.x * boneMatX;\n\tskinMatrix += skinWeight.y * boneMatY;\n\tskinMatrix += skinWeight.z * boneMatZ;\n\tskinMatrix += skinWeight.w * boneMatW;\n\t\n\tobjectNormal = vec4( skinMatrix * vec4( objectNormal, 0.0 ) ).xyz;\n#endif\n";
     const specularmap_fragment = "float specularStrength;\n#ifdef USE_SPECULARMAP\n\tvec4 texelSpecular = texture2D( specularMap, vUv );\n\tspecularStrength = texelSpecular.r;\n#else\n\tspecularStrength = 1.0;\n#endif";

@@ -15,15 +15,23 @@ namespace paper.editor {
         private readonly _keyF: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.KeyF);
 
         private _gizmosContainerEntity: GameObject | null = null;
+        private _gizmosForwardContainerEntity: GameObject | null = null;
         private _touchContainerEntity: GameObject | null = null;
         private _transformControllerEntity: GameObject | null = null;
+
+        private readonly _selectBox: egret3d.Box = egret3d.Box.create();
+
+        private _updateSelectBox(camera: egret3d.Camera, viewport: egret3d.Rectangle) {
+            this._selectBox.minimum.set(viewport.x, viewport.y, camera.near);
+            this._selectBox.maximum.set(viewport.x + viewport.w, viewport.y + viewport.h, camera.near + camera.far);
+        }
 
         public lookAtSelected() {
             const orbitControls = egret3d.Camera.editor.gameObject.getComponent(OrbitControls)!;
             orbitControls!.distance = 10.0;
             orbitControls!.lookAtOffset.set(0.0, 0.0, 0.0);
 
-            const lastSelectedEntity = this.groups[1].singleEntity;
+            const lastSelectedEntity = this.groups[2].singleEntity;
 
             if (lastSelectedEntity) {
                 orbitControls!.lookAtPoint.copy(lastSelectedEntity.transform.position);
@@ -35,6 +43,8 @@ namespace paper.editor {
 
         protected getMatchers() {
             return [
+                Matcher.create<GameObject>(egret3d.Transform)
+                    .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
                 Matcher.create<GameObject>(egret3d.Transform, HoveredFlag)
                     .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
                 Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag),
@@ -46,12 +56,14 @@ namespace paper.editor {
             editorCamera.gameObject.addComponent(OrbitControls);
             editorCamera.enabled = true;
 
-            this._gizmosContainerEntity = EditorMeshHelper.createGameObject("Drawer");
-            this._touchContainerEntity = EditorMeshHelper.createGameObject("Touch Drawer");
+            this._gizmosContainerEntity = EditorMeshHelper.createGameObject("Gizmos");
+            this._gizmosForwardContainerEntity = EditorMeshHelper.createGameObject("Gizmos Forward");
+            this._touchContainerEntity = EditorMeshHelper.createGameObject("Touch");
             this._transformControllerEntity = EditorMeshHelper.createGameObject("Transform Controller");
             this._transformControllerEntity.enabled = false;
+
             this._gizmosContainerEntity.addComponent(GizmosContainerFlag);
-            this._gizmosContainerEntity.addComponent(GridFlag);
+            this._gizmosForwardContainerEntity.addComponent(GizmosContainerForwardFlag);
             this._touchContainerEntity.addComponent(TouchContainerFlag);
             this._transformControllerEntity.addComponent(TransformController);
         }
@@ -62,10 +74,12 @@ namespace paper.editor {
             editorCamera.enabled = false;
 
             this._gizmosContainerEntity!.destroy();
+            this._gizmosForwardContainerEntity!.destroy();
             this._touchContainerEntity!.destroy();
             this._transformControllerEntity!.destroy();
 
             this._gizmosContainerEntity = null;
+            this._gizmosForwardContainerEntity = null;
             this._touchContainerEntity = null;
             this._transformControllerEntity = null;
         }
@@ -79,9 +93,10 @@ namespace paper.editor {
         }
 
         public onFrame() {
+            const editorScene = paper.Application.sceneManager.editorScene;
+            const editorCamera = egret3d.Camera.editor;
             const groups = this.groups;
-            const hoveredEntity = groups[0].singleEntity;
-            const lastSelectedEntity = this.groups[1].singleEntity;
+            const hoveredEntity = groups[1].singleEntity;
 
             const transformController = this._transformControllerEntity!.getComponent(TransformController)!;
             const defaultPointer = egret3d.inputCollecter.defaultPointer;
@@ -93,8 +108,13 @@ namespace paper.editor {
                     if (transformController.isActiveAndEnabled && transformController.hovered) {
                         transformController.start(defaultPointer.downPosition);
                     }
+                    else {
+                        this._gizmosForwardContainerEntity!.addComponent(SelectFrameFlag);
+                    }
                 }
             }
+
+            let selectFrameFlag = this._gizmosForwardContainerEntity!.getComponent(SelectFrameFlag);
 
             if (defaultPointer.isUp(egret3d.PointerButtonsType.LeftMouse, false)) {
                 if (transformController.isActiveAndEnabled && transformController.hovered) {
@@ -139,6 +159,11 @@ namespace paper.editor {
                             this._modelComponent.select(Scene.activeScene);
                         }
                     }
+
+                    if (selectFrameFlag) {
+                        this._gizmosForwardContainerEntity!.removeComponent(SelectFrameFlag);
+                        selectFrameFlag = null;
+                    }
                 }
             }
 
@@ -154,7 +179,48 @@ namespace paper.editor {
 
                     }
                     else if (event.buttons & 0b01) {
+                        if (selectFrameFlag) {
+                            const { w, h } = egret3d.stage.viewport;
+                            const { viewport } = selectFrameFlag;
+                            const { downPosition, position } = defaultPointer;
+                            const dX = position.x - downPosition.x;
+                            const dY = position.y - downPosition.y;
 
+                            if (downPosition.x <= position.x) {
+                                viewport.x = downPosition.x / w;
+                                viewport.w = dX / w;
+                            }
+                            else {
+                                viewport.x = position.x / w;
+                                viewport.w = -dX / w;
+                            }
+
+                            if (downPosition.y <= position.y) {
+                                viewport.y = downPosition.y / h;
+                                viewport.h = dY / h;
+                            }
+                            else {
+                                viewport.y = position.y / h;
+                                viewport.h = -dY / h;
+                            }
+
+                            if (Math.abs(dX) > 5.0 || Math.abs(dY) > 5.0) {
+                                this._updateSelectBox(editorCamera, viewport);
+
+                                for (const entity of groups[0].entities) {
+                                    if (entity.scene === editorScene) {
+                                        continue;
+                                    }
+
+                                    if (this._selectBox.intersectsSphere(entity.renderer!.boundingSphere)) {
+                                        this._modelComponent.select(entity, false);
+                                    }
+                                    else {
+                                        this._modelComponent.unselect(entity);
+                                    }
+                                }
+                            }
+                        }
                     }
                     else {
                         // 更新变换控制器的控制柄。
@@ -201,7 +267,7 @@ namespace paper.editor {
             }
 
             if (this._keyDelete.isUp(false) && !this._keyDelete.event!.altKey && !this._keyDelete.event!.ctrlKey && !this._keyDelete.event!.shiftKey) {
-                if (Application.playerMode !== PlayerMode.Editor) {
+                if ((Application.playerMode & PlayerMode.Editor) === 0) {
                     this._modelComponent.delete();
                 }
             }

@@ -37,7 +37,7 @@ namespace egret3d {
         /**
          * 此次绘制的子网格索引。
          */
-        public subMeshIndex: number = -1;
+        public subMeshIndex: int = -1;
         /**
          * 此次绘制的网格资源。
          */
@@ -49,7 +49,7 @@ namespace egret3d {
         /**
          * 
          */
-        public zdist: number = -1;
+        public zdist: float = -1.0;
         /**
          * TODO
          */
@@ -67,7 +67,7 @@ namespace egret3d {
             this.subMeshIndex = -1;
             this.mesh = null!;
             this.material = null!;
-            this.zdist = -1;
+            this.zdist = -1.0;
         }
     }
 }

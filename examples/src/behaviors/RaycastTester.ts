@@ -5,9 +5,8 @@ namespace behaviors {
         public readonly raycastInfo: egret3d.RaycastInfo = egret3d.RaycastInfo.create();
 
         protected _lineMesh: egret3d.Mesh | null = null;
-        protected _normalMesh: egret3d.Mesh | null = null;
 
-        protected readonly _line: paper.GameObject = egret3d.creater.createGameObject("Line", { mesh: egret3d.DefaultMeshes.LINE_Z, material: egret3d.DefaultMaterials.LINEDASHED });
+        protected readonly _line: paper.GameObject = egret3d.creater.createGameObject("Line", { mesh: egret3d.DefaultMeshes.LINE_Z.clone(), material: egret3d.DefaultMaterials.LINEDASHED });
         protected readonly _normal: paper.GameObject = egret3d.creater.createGameObject("Normal", { mesh: egret3d.DefaultMeshes.LINE_Z, material: egret3d.DefaultMaterials.LINEDASHED });
 
         public onAwake() {
@@ -42,7 +41,6 @@ namespace behaviors {
     }
 
     export class RendererRaycast extends BaseRaycast {
-        @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public target: paper.GameObject | null = null;
 
         public onUpdate() {
@@ -56,13 +54,13 @@ namespace behaviors {
                 this._updateRay();
 
                 if (this.target.renderer.raycast(this.ray, raycastInfo)) {
-
                     lineTransform.setLocalScale(1.0, 1.0, raycastInfo.distance);
                     this._normal.activeSelf = true;
                     this._normal.transform
                         .setPosition(raycastInfo.position)
                         .lookRotation(raycastInfo.normal!)
                         .setLocalScale(1.0, 1.0, raycastInfo.normal!.length);
+
                     return;
                 }
             }
@@ -91,6 +89,7 @@ namespace behaviors {
                         .setPosition(raycastInfo.position)
                         .lookRotation(raycastInfo.normal!)
                         .setLocalScale(1.0, 1.0, raycastInfo.normal!.length);
+
                     return;
                 }
             }

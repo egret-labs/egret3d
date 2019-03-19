@@ -11,7 +11,7 @@ namespace paper {
             ];
         }
 
-        public onTick(delta?:number) {
+        public onTick(delta?: float) {
             const behaviours = this.groups[0].behaviours;
 
             for (const behaviour of behaviours) {

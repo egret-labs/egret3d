@@ -6,25 +6,43 @@ namespace egret3d.oimo {
         /**
          * 动态。
          */
-        DYNAMIC = 0, // OIMO.RigidBodyType.DYNAMIC
+        Dynamic = 0, // OIMO.RigidBodyType.DYNAMIC
         /**
          * 静态。
          */
-        STATIC = 1, // OIMO.RigidBodyType.STATIC
+        Static = 1, // OIMO.RigidBodyType.STATIC
         /**
          * 动力学。
          */
-        KINEMATIC = 2, // OIMO.RigidBodyType.KINEMATIC
+        Kinematic = 2, // OIMO.RigidBodyType.KINEMATIC
     }
     /**
      * 关节类型。
      */
     export enum JointType {
-        Spherical = OIMO.JointType.SPHERICAL,
+        /**
+         * 移动关节。
+         */
         Prismatic = OIMO.JointType.PRISMATIC,
-        Hinge = OIMO.JointType.REVOLUTE,
+        /**
+         * 转动关节。
+         */
+        Revolute = OIMO.JointType.REVOLUTE,
+        /**
+         * 柱面关节。
+         */
         Cylindrical = OIMO.JointType.CYLINDRICAL,
-        ConeTwist = OIMO.JointType.RAGDOLL,
+        /**
+         * 球面关节。
+         */
+        Spherical = OIMO.JointType.SPHERICAL,
+        /**
+         * 万向关节。
+         */
         Universal = OIMO.JointType.UNIVERSAL,
+        /**
+         * 锥形旋转关节。
+         */
+        ConeTwist = OIMO.JointType.RAGDOLL,
     }
 }

@@ -305,8 +305,8 @@ namespace egret3d {
         public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF, buffers?: ReadonlyArray<ArrayBufferView>) {
             let name: string;
             let texture: Texture;
+            let source: any; // TODO ?!
 
-            let source;
             if (typeof parametersOrName === "string") {
                 name = parametersOrName;
             }
@@ -317,17 +317,19 @@ namespace egret3d {
                 if (ArrayBuffer.isView(parametersOrName.source)) {
                     buffers = [parametersOrName.source];
                 }
+
                 source = parametersOrName.source;
             }
 
             const gltfTexture = config!.textures![0] as GLTFTexture;
             const image = config!.images![gltfTexture.source!];
             const extension = gltfTexture.extensions.paper;
-            // const source = image.uri as gltf.ImageSource;
+            // const source = image.uri as gltf.ImageSource; // TODO ?!
+
             if (source) {
                 if (ArrayBuffer.isView(source)) {
-                    (config as any).buffers = [];
-                    (config as any).buffers[0] = { byteLength: source.byteLength };
+                    config!.buffers = [];
+                    config!.buffers![0] = { byteLength: source.byteLength };
                     image.bufferView = 0;
                 }
                 else {
@@ -391,9 +393,34 @@ namespace egret3d {
          * 
          * @param source 
          */
-        public uploadTexture(source?: gltf.ImageSource): this {
+        public uploadTexture(source?: ArrayBuffer | gltf.ImageSource): this {
             this._sourceDirty = true;
-            this._image.uri = source;
+
+            const config = this.config;
+            const image = this._image;
+            const extension = (config!.textures![0] as GLTFTexture).extensions.paper;
+            // const source = image.uri as gltf.ImageSource;
+
+            if (source) {
+                if (ArrayBuffer.isView(source)) {
+                    config.buffers = [];
+                    config.buffers[0] = { byteLength: source.byteLength };
+                    image.bufferView = 0;
+                }
+                else {
+                    image.uri = (source as gltf.ImageSource); // 兼容
+                    extension.width = (source as gltf.ImageSource).width;
+                    extension.height = (source as gltf.ImageSource).height;
+                }
+            }
+            else {
+                image.uri = source;
+
+                if (source) {
+                    extension.width = (source as gltf.ImageSource).width;
+                    extension.height = (source as gltf.ImageSource).height;
+                }
+            }
 
             return this;
         }

@@ -4,22 +4,47 @@ namespace egret3d {
      */
     @paper.singleton
     export class DefaultMeshes extends paper.BaseComponent {
-        public static TRIANGLE: Mesh;
-        public static QUAD: Mesh;
-        public static QUAD_PARTICLE: Mesh;
-
-        public static SPRITE: Mesh;
         /**
-         * 后期渲染使用的网格。
-         * @internal
+         * 一个三角形网格。
          */
-        public static FULLSCREEN_QUAD: Mesh;
+        public static TRIANGLE: Mesh;
+        public static SPRITE: Mesh; // TODO
+        /**
+         * 一个正方形网格。
+         */
+        public static QUAD: Mesh;
+        /**
+         * 一个正方形网格。
+         * - 坐标系原点在其中的一边中点上。
+         */
+        public static QUAD_PARTICLE: Mesh;
+        /**
+         * 一个平面网格。
+         */
         public static PLANE: Mesh;
+        /**
+         * 一个正方体网格。
+         */
         public static CUBE: Mesh;
+        /**
+         * 一个金字塔网格。
+         */
         public static PYRAMID: Mesh;
+        /**
+         * 一个圆锥体网格。
+         */
         public static CONE: Mesh;
+        /**
+         * 一个圆柱体网格。
+         */
         public static CYLINDER: Mesh;
+        /**
+         * 一个圆环体网格。
+         */
         public static TORUS: Mesh;
+        /**
+         * 一个球体网格。
+         */
         public static SPHERE: Mesh;
 
         public static LINE_X: Mesh;
@@ -27,6 +52,11 @@ namespace egret3d {
         public static LINE_Z: Mesh;
         public static CIRCLE_LINE: Mesh;
         public static CUBE_LINE: Mesh;
+        /**
+         * 后期渲染使用的网格。
+         * @internal
+         */
+        public static FULLSCREEN_QUAD: Mesh;
 
         public initialize() {
             super.initialize();

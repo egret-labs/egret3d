@@ -143,7 +143,7 @@ namespace paper.editor {
         public initialize() {
             super.initialize();
 
-            if (Application.playerMode === PlayerMode.Editor) {
+            if ((Application.playerMode & PlayerMode.Editor) !== 0) {
                 editor.Editor.addEventListener(editor.EditorEvent.CHANGE_SCENE, () => {
                     if (this._editorModel) {
                         this._editorModel.removeEventListener(editor.EditorModelEvent.SELECT_GAMEOBJECTS, this._onEditorSelectGameObjects, this);

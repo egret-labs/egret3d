@@ -7406,6 +7406,66 @@ declare module OIMO {
 
 declare namespace egret3d.oimo {
     /**
+     * 刚体类型。
+     */
+    const enum RigidbodyType {
+        /**
+         * 动态。
+         */
+        Dynamic = 0,
+        /**
+         * 静态。
+         */
+        Static = 1,
+        /**
+         * 动力学。
+         */
+        Kinematic = 2,
+        /**
+         * @deprecated
+         */
+        DYNAMIC = 0,
+        /**
+         * @deprecated
+         */
+        STATIC = 1,
+        /**
+         * @deprecated
+         */
+        KINEMATIC = 2,
+    }
+    /**
+     * 关节类型。
+     */
+    enum JointType {
+        /**
+         * 移动关节。
+         */
+        Prismatic,
+        /**
+         * 转动关节。
+         */
+        Revolute,
+        /**
+         * 柱面关节。
+         */
+        Cylindrical,
+        /**
+         * 球面关节。
+         */
+        Spherical,
+        /**
+         * 万向关节。
+         */
+        Universal,
+        /**
+         * 锥形旋转关节。
+         */
+        ConeTwist,
+    }
+}
+declare namespace egret3d.oimo {
+    /**
      * 刚体组件。
      */
     class Rigidbody extends paper.BaseComponent implements egret3d.IRigidbody {
@@ -7471,7 +7531,7 @@ declare namespace egret3d.oimo {
         /**
          * 该刚体此次休眠的累计时间。
          */
-        readonly sleepTime: number;
+        readonly sleepTime: float;
         /**
          * 该刚体的类型。
          */
@@ -7479,19 +7539,19 @@ declare namespace egret3d.oimo {
         /**
          * 该刚体的质量。
          */
-        mass: number;
+        mass: float;
         /**
          * 该刚体的重力缩放系数。
          */
-        gravityScale: number;
+        gravityScale: float;
         /**
          * 该刚体的线性阻尼。
          */
-        linearDamping: number;
+        linearDamping: float;
         /**
          * 该刚体的旋转阻尼。
          */
-        angularDamping: number;
+        angularDamping: float;
         /**
          * 该刚体的线性速度。
          */
@@ -7518,9 +7578,11 @@ declare namespace egret3d.oimo {
          * [CollisionMask, Friction, Restitution, Density];
          */
         protected readonly _values: Float32Array;
-        protected _oimoShape: OIMO.Shape;
+        protected _oimoShape: OIMO.Shape | null;
         protected abstract _createShape(): OIMO.Shape;
         protected _updateConfig(): OIMO.ShapeConfig;
+        initialize(): void;
+        uninitialize(): void;
         /**
          * 该碰撞体的碰撞掩码。
          */
@@ -7528,16 +7590,16 @@ declare namespace egret3d.oimo {
         /**
          * 该碰撞体的摩擦力。
          */
-        friction: number;
+        friction: float;
         /**
          * 该碰撞体的恢复系数。
          */
-        restitution: number;
+        restitution: float;
         /**
          * 该碰撞体的密度。
          * - 单位为`千克/立方米`。
          */
-        density: number;
+        density: float;
         /**
          * 该碰撞体的 OIMO 碰撞体。
          */
@@ -7560,26 +7622,34 @@ declare namespace egret3d.oimo {
          * 0, 0,
          */
         protected readonly _values: Float32Array;
-        protected _oimoJoint: T;
-        protected _rigidbody: Rigidbody;
+        protected _rigidbody: Rigidbody | null;
         protected _connectedBody: Rigidbody | null;
+        protected _oimoJoint: T | null;
         protected abstract _createJoint(): T;
+        initialize(): void;
+        uninitialize(): void;
+        /**
+         * 获取该关节的在连接刚体上的锚点。
+         */
+        getConnectedAnchor(output?: Vector3 | null, isWorldSpace?: boolean): Vector3;
         /**
          * 获取该关节承受的力。
          */
-        getAppliedForce(out?: Vector3): Vector3;
+        getAppliedForce(output?: Vector3 | null): Vector3;
         /**
          * 获取该关节承受的扭矩。
          */
-        getAppliedTorque(out?: Vector3): Vector3;
+        getAppliedTorque(output?: Vector3 | null): Vector3;
         /**
-         * 该关节所连接的两个刚体之前是否允许碰撞。
+         * 该关节所连接的两个刚体之间是否允许碰撞。
+         * - 默认 `false` ，不允许碰撞。
          */
         collisionEnabled: boolean;
         /**
-         * 该关节的锚点是否为世界坐标系。
+         * 该关节的锚点和轴是否为世界坐标系。
+         * - 默认 `false` ，使用本地坐标系。
          */
-        useWorldAnchor: boolean;
+        useWorldSpace: boolean;
         /**
          * 该关节的锚点。
          */
@@ -7600,42 +7670,13 @@ declare namespace egret3d.oimo {
 }
 declare namespace egret3d.oimo {
     /**
-     * 圆柱体碰撞组件。
-     * - 与 Y 轴对齐。
+     * 球体碰撞组件。
      */
-    class CylinderCollider extends BaseCollider implements ICylinderCollider {
+    class SphereCollider extends BaseCollider implements ISphereCollider {
         readonly colliderType: ColliderType;
-        readonly cylinder: Cylinder;
+        readonly sphere: Sphere;
         protected _createShape(): OIMO.Shape;
-    }
-}
-declare namespace paper {
-    /**
-     * 默认标识和自定义标识。
-     */
-    const enum DefaultTags {
-    }
-    /**
-     * 内置层级和自定义层级。
-     */
-    const enum Layer {
-    }
-}
-declare namespace egret3d {
-    /**
-     * 渲染排序。
-     */
-    const enum RenderQueue {
-    }
-    /**
-     *
-     */
-    const enum AttributeSemantics {
-    }
-    /**
-     *
-     */
-    const enum UniformSemantics {
+        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7674,6 +7715,7 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly box: Box;
         protected _createShape(): OIMO.Shape;
+        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7685,6 +7727,7 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly capsule: Capsule;
         protected _createShape(): OIMO.Shape;
+        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7696,51 +7739,53 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly cylinder: Cylinder;
         protected _createShape(): OIMO.Shape;
+        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     * 刚体类型。
+     * 圆柱体碰撞组件。
+     * - 与 Y 轴对齐。
      */
-    const enum RigidbodyType {
-        /**
-         * 动态。
-         */
-        DYNAMIC = 0,
-        /**
-         * 静态。
-         */
-        STATIC = 1,
-        /**
-         * 动力学。
-         */
-        KINEMATIC = 2,
-    }
-    /**
-     * 关节类型。
-     */
-    enum JointType {
-        Spherical,
-        Prismatic,
-        Hinge,
-        Cylindrical,
-        ConeTwist,
-        Universal,
-    }
-}
-declare namespace egret3d.oimo {
-    /**
-     * 球体碰撞组件。
-     */
-    class SphereCollider extends BaseCollider implements ISphereCollider {
+    class CylinderCollider extends BaseCollider implements ICylinderCollider {
         readonly colliderType: ColliderType;
-        readonly sphere: Sphere;
+        readonly cylinder: Cylinder;
         protected _createShape(): OIMO.Shape;
+        initialize(): void;
     }
 }
-declare namespace egret3d.oimo {
+declare namespace paper {
+    /**
+     * 默认标识和自定义标识。
+     */
+    const enum DefaultTags {
+    }
+    /**
+     * 内置层级和自定义层级。
+     */
+    const enum Layer {
+    }
+}
+declare namespace egret3d {
+    /**
+     * 渲染排序。
+     */
+    const enum RenderQueue {
+    }
     /**
      *
+     */
+    const enum AttributeSemantics {
+    }
+    /**
+     *
+     */
+    const enum UniformSemantics {
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     * 锥形旋转关节组件。
      */
     class ConeTwistJoint extends BaseJoint<OIMO.RagdollJoint> {
         private static readonly _config;
@@ -7748,140 +7793,300 @@ declare namespace egret3d.oimo {
         private static readonly _twistSpringDamper;
         private static readonly _twistLimitMotor;
         readonly jointType: JointType;
-        readonly swingSpringDamper: SpringDamper;
+        /**
+         * 沿着关节的旋转弹簧缓冲器设置。
+         */
         readonly twistSpringDamper: SpringDamper;
+        /**
+         * 沿着关节的旋转马达设置。
+         */
         readonly twistLimitMotor: RotationalLimitMotor;
+        /**
+         * 沿着关节的摇摆弹簧缓冲器设置。
+         */
+        readonly swingSpringDamper: SpringDamper;
         private readonly _twistAxis;
         private readonly _swingAxis;
         protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.RagdollJoint;
+        initialize(): void;
+        uninitialize(): void;
         /**
          *
          */
-        maxSwingAngleX: number;
+        maxSwingAngleX: float;
         /**
          *
          */
-        maxSwingAngleZ: number;
+        maxSwingAngleZ: float;
         /**
-         *
+         * 该关节的旋转轴。
          */
         twistAxis: Readonly<Vector3>;
         /**
-         *
+         * 该关节的摇摆轴。
          */
         swingAxis: Readonly<Vector3>;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     *
+     * 柱面关节组件。
+     * - https://en.wikipedia.org/wiki/Cylindrical_joint
      */
-    class HingeJoint extends BaseJoint<OIMO.RevoluteJoint> {
+    class CylindricalJoint extends BaseJoint<OIMO.CylindricalJoint> {
         private static readonly _config;
-        private static readonly _springDamper;
+        private static readonly _translationalSpringDamper;
+        private static readonly _translationalLimitMotor;
+        private static readonly _rotationalSpringDamper;
         private static readonly _rotationalLimitMotor;
         readonly jointType: JointType;
-        readonly springDamper: SpringDamper;
-        readonly limitMotor: RotationalLimitMotor;
+        /**
+         * 该关节的移动弹簧缓冲器设置。
+         */
+        readonly translationalSpringDamper: SpringDamper;
+        /**
+         * 该关节的移动马达设置。
+         */
+        readonly translationalLimitMotor: TranslationalLimitMotor;
+        /**
+         * 该关节的旋转弹簧缓冲器设置。
+         */
+        readonly rotationalSpringDamper: SpringDamper;
+        /**
+         * 该关节的旋转马达设置。
+         */
+        readonly rotationalLimitMotor: RotationalLimitMotor;
         private readonly _axis;
         protected readonly _values: Float32Array;
-        protected _createJoint(): OIMO.RevoluteJoint;
+        protected _createJoint(): OIMO.CylindricalJoint;
+        initialize(): void;
+        uninitialize(): void;
         /**
-         *
+         * 该关节的旋转轴。
          */
         axis: Readonly<Vector3>;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     * 关节的旋转限位马达设置。
+     * 移动关节组件。
+     * - https://en.wikipedia.org/wiki/Prismatic_joint
      */
-    class RotationalLimitMotor implements paper.ISerializable {
-        private readonly _values;
-        private constructor();
-        serialize(): Float32Array;
-        deserialize(value: [number, number, number, number]): this;
+    class PrismaticJoint extends BaseJoint<OIMO.PrismaticJoint> {
+        private static readonly _config;
+        private static readonly _springDamper;
+        private static readonly _translationalLimitMotor;
+        readonly jointType: JointType;
         /**
-         *
+         * 该关节的移动弹簧缓冲器设置。
          */
-        lowerLimit: number;
+        readonly springDamper: SpringDamper;
         /**
-         *
+         * 该关节的移动马达设置。
          */
-        upperLimit: number;
+        readonly limitMotor: TranslationalLimitMotor;
+        private readonly _axis;
+        protected readonly _values: Float32Array;
+        protected _createJoint(): OIMO.PrismaticJoint;
+        initialize(): void;
+        uninitialize(): void;
         /**
-         *
+         * 该关节的移动轴。
          */
-        motorSpeed: number;
-        /**
-         *
-         */
-        motorTorque: number;
+        axis: Readonly<Vector3>;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     *
+     * 转动关节组件。
+     * - https://en.wikipedia.org/wiki/Revolute_joint
+     */
+    class RevoluteJoint extends BaseJoint<OIMO.RevoluteJoint> {
+        private static readonly _config;
+        private static readonly _springDamper;
+        private static readonly _rotationalLimitMotor;
+        readonly jointType: JointType;
+        /**
+         * 该关节的弹簧缓冲器设置。
+         */
+        readonly springDamper: SpringDamper;
+        /**
+         * 该关节的旋转马达设置。
+         */
+        readonly limitMotor: RotationalLimitMotor;
+        private readonly _axis;
+        protected readonly _values: Float32Array;
+        protected _createJoint(): OIMO.RevoluteJoint;
+        initialize(): void;
+        uninitialize(): void;
+        /**
+         * 该关节的旋转轴。
+         */
+        axis: Readonly<Vector3>;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     * 球面关节组件。
+     * - https://en.wikipedia.org/wiki/Ball_joint
      */
     class SphericalJoint extends BaseJoint<OIMO.SphericalJoint> {
         private static readonly _config;
         private static readonly _springDamper;
         readonly jointType: JointType;
+        /**
+         * 该关节的旋转弹簧缓冲器设置。
+         */
         readonly springDamper: SpringDamper;
         protected readonly _values: Float32Array;
         protected _createJoint(): OIMO.SphericalJoint;
+        uninitialize(): void;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     * 关节的弹簧和阻尼器设置。
+     * 万向关节组件。
+     * - https://en.wikipedia.org/wiki/Universal_joint
+     */
+    class UniversalJoint extends BaseJoint<OIMO.UniversalJoint> {
+        private static readonly _config;
+        private static readonly _springDamperX;
+        private static readonly _springDamperY;
+        private static readonly _limitMotorX;
+        private static readonly _limitMotorY;
+        readonly jointType: JointType;
+        /**
+         * 该关节的 X 轴旋转弹簧缓冲器设置。
+         */
+        readonly springDamperX: SpringDamper;
+        /**
+         * 该关节的 X 轴旋转马达设置。
+         */
+        readonly limitMotorX: RotationalLimitMotor;
+        /**
+         * 该关节的 Y 轴旋转弹簧缓冲器设置。
+         */
+        readonly springDamperY: SpringDamper;
+        /**
+         * 该关节的 Y 轴旋转马达设置。
+         */
+        readonly limitMotorY: RotationalLimitMotor;
+        private readonly _axisX;
+        private readonly _axisY;
+        protected readonly _values: Float32Array;
+        protected _createJoint(): OIMO.UniversalJoint;
+        initialize(): void;
+        uninitialize(): void;
+        /**
+         * 该关节的 X 旋转轴。
+         */
+        axisX: Readonly<Vector3>;
+        /**
+         * 该关节的 Y 旋转轴。
+         */
+        axisY: Readonly<Vector3>;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     * 关节的旋转马达设置。
+     */
+    class RotationalLimitMotor implements paper.ISerializable {
+        private readonly _values;
+        private constructor();
+        serialize(): Float32Array;
+        deserialize(value: [float, float, float, float]): this;
+        /**
+         * 该马达的最低旋转角限制。
+         * - 弧度制。
+         * - 当 `lowerLimit > upperLimit` 时关闭限位。
+         */
+        lowerLimit: float;
+        /**
+         * 该马达的最高旋转角限制。
+         * - 弧度制。
+         * - 当 `upperLimit < lowerLimit` 时关闭限位。
+         */
+        upperLimit: float;
+        /**
+         * 该马达的最大转速。
+         * - 单位为`弧度/秒`。
+         */
+        motorSpeed: float;
+        /**
+         * 该马达的最大扭矩。
+         * - 单位为`牛顿/米`。
+         * - [`0.0` ~ N]
+         * - 设置为 `0.0` 停用马达。
+         * - 默认为 `0.0`。
+         */
+        motorTorque: float;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     * 关节的弹簧缓冲器设置。
      */
     class SpringDamper implements paper.ISerializable {
         private readonly _values;
         private constructor();
         serialize(): Float32Array;
-        deserialize(value: [number, number, number]): this;
+        deserialize(value: [float, float, float]): this;
         /**
-         *
+         * 该弹簧的频率。
+         * - 单位为`赫兹`。
+         * - [`0.0` ~ N]
+         * - 默认为 `0.0` ，禁用弹性，使约束完全刚性。
          */
-        frequency: number;
+        frequency: float;
         /**
-         *
+         * 该缓冲器的阻尼系数。
+         * - [`0.0` ~ N]
+         * - 默认为 `0.0` 。
          */
-        dampingRatio: number;
+        dampingRatio: float;
         /**
-         *
+         * 是否使用辛欧拉法代替隐式欧拉法，辛欧拉法比隐式欧拉法有更好的性能，但约束在高频下不稳定。
+         * - 默认为 `false`，使用隐式欧拉法。
          */
         useSymplecticEuler: boolean;
     }
 }
 declare namespace egret3d.oimo {
     /**
-     *
+     * 关节的移动马达设置。
      */
-    class UniversalJoint extends BaseJoint<OIMO.UniversalJoint> {
-        private static readonly _config;
-        private static readonly _springDamperY;
-        private static readonly _springDamperZ;
-        private static readonly _limitMotorY;
-        private static readonly _limitMotorZ;
-        readonly jointType: JointType;
-        readonly springDamperY: SpringDamper;
-        readonly springDamperZ: SpringDamper;
-        readonly limitMotorY: RotationalLimitMotor;
-        readonly limitMotorZ: RotationalLimitMotor;
-        private readonly _axisY;
-        private readonly _axisZ;
-        protected readonly _values: Float32Array;
-        protected _createJoint(): OIMO.UniversalJoint;
+    class TranslationalLimitMotor implements paper.ISerializable {
+        private readonly _values;
+        private constructor();
+        serialize(): Float32Array;
+        deserialize(value: [float, float, float, float]): this;
         /**
-         *
+         * 该马达的最低位移限制。
+         * - 单位为`米`。
+         * - 当 `lowerLimit > upperLimit` 时关闭限位。
          */
-        axisY: Readonly<Vector3>;
+        lowerLimit: float;
         /**
-         *
+         * 该马达的最高位移限制。
+         * - 单位为`米`。
+         * - 当 `upperLimit < lowerLimit` 时关闭限位。
          */
-        axisZ: Readonly<Vector3>;
+        upperLimit: float;
+        /**
+         * 该马达的最大线速度。
+         * - 单位为`米 / 秒`。
+         * - 默认为 `0.0`。
+         */
+        motorSpeed: float;
+        /**
+         * 该马达的最大输出力。
+         * - 单位为`牛顿`。
+         * - [`0.0` ~ N]
+         * - 设置为 `0.0` 停用马达。
+         * - 默认为 `0.0`。
+         */
+        motorForce: float;
     }
 }

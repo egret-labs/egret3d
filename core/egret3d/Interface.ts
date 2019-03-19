@@ -42,6 +42,7 @@ namespace egret3d {
         FLAT_SHADED = "FLAT_SHADED",
         //
         MAX_BONES = "MAX_BONES",
+        BONE_TEXTURE = "BONE_TEXTURE",
         //
         NUM_DIR_LIGHTS = "NUM_DIR_LIGHTS",
         NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
@@ -336,6 +337,8 @@ namespace egret3d {
         "modelViewProjectionMatrix": gltf.UniformSemantics.MODELVIEWPROJECTION,
         "normalMatrix": gltf.UniformSemantics.MODELVIEWINVERSE,
         "boneMatrices[0]": gltf.UniformSemantics.JOINTMATRIX,
+        "boneTexture": gltf.UniformSemantics._BONETEXTURE,
+        "boneTextureSize": gltf.UniformSemantics._BONETEXTURESIZE,
         "clock": gltf.UniformSemantics._CLOCK,
         "lightMap": gltf.UniformSemantics._LIGHTMAPTEX,
         "lightMapScaleOffset": gltf.UniformSemantics._LIGHTMAP_SCALE_OFFSET,

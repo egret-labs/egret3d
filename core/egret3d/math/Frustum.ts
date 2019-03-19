@@ -1,14 +1,14 @@
 namespace egret3d {
     const _helpVector3 = Vector3.create();
     /**
-     * 
+     * 几何截头锥体。
      */
     export class Frustum extends paper.BaseRelease<Frustum> implements paper.ICCS<Frustum>, paper.ISerializable {
         private static readonly _instances: Frustum[] = [];
         /**
-         * 
+         * 创建一个几何截头锥体。
          */
-        public static create() {
+        public static create(): Frustum {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!;
                 instance._released = false;
@@ -18,7 +18,7 @@ namespace egret3d {
             return new Frustum();
         }
         /**
-         * 
+         * 构成该锥体的平面。
          */
         public readonly planes: [Plane, Plane, Plane, Plane, Plane, Plane] = [
             Plane.create(),
@@ -76,7 +76,10 @@ namespace egret3d {
 
             return this;
         }
-
+        /**
+         * 通过一个矩阵设置该锥体。
+         * @param matrix 一个矩阵。
+         */
         public fromMatrix(matrix: Readonly<Matrix4>): this {
             const planes = this.planes;
             const me = matrix.rawData;
@@ -95,10 +98,28 @@ namespace egret3d {
 
             return this;
         }
-
+        /**
+         * 该锥体是否包含指定点。
+         * @param point 一个点。
+         */
         public containsPoint(point: Readonly<IVector3>): boolean {
             for (const plane of this.planes) {
                 if (plane.getDistance(point) < 0.0) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public intersectsSphere(sphere: Readonly<Sphere>) {
+            const center = sphere.center;
+            const negRadius = -sphere.radius;
+
+            for (const plane of this.planes) {
+                const distance = plane.getDistance(center);
+
+                if (distance < negRadius) {
                     return false;
                 }
             }

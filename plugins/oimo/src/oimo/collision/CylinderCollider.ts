@@ -9,7 +9,7 @@ namespace egret3d.oimo {
 
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
-        public readonly cylinder: Cylinder = Cylinder.create(Vector3.ZERO, 0.5, 0.5, 1.0);
+        public readonly cylinder: Cylinder = Cylinder.create();
 
         protected _createShape() {
             const config = this._updateConfig();
@@ -19,6 +19,12 @@ namespace egret3d.oimo {
             shape.userData = this;
 
             return shape;
+        }
+
+        public initialize() {
+            super.initialize();
+
+            this.cylinder.set(Vector3.ZERO, 0.5, 0.5, 1.0);
         }
     }
 }
