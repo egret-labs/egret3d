@@ -703,12 +703,12 @@ namespace paper {
          */
         playerMode?: PlayerMode;
         /**
-         * 逻辑帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         * 逻辑帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        tickInterval?: float;
+        tickRate?: number;
         /**
-         * 渲染帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         * 渲染帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        frameInterval?: float;
+        frameRate?: number;
     }
 }

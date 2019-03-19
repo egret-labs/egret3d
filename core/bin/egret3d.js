@@ -6692,14 +6692,14 @@ var paper;
                     }
                     if (true) {
                         system.deltaTime = 0;
-                        startTime = paper.clock.now;
+                        startTime = paper.clock.timestamp();
                     }
                     if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
                         this._reactive(system);
                     }
                     system.onTick && system.onTick(paper.clock.lastTickDelta);
                     if (true) {
-                        system.deltaTime += paper.clock.now - startTime;
+                        system.deltaTime += paper.clock.timestamp() - startTime;
                     }
                 }
             }
@@ -6710,14 +6710,14 @@ var paper;
                         continue;
                     }
                     if (true) {
-                        startTime = paper.clock.now;
+                        startTime = paper.clock.timestamp();
                     }
                     if (reactiveSystems.indexOf(system) >= 0) {
                         this._reactive(system);
                     }
                     system.onFrame && system.onFrame(paper.clock.lastFrameDelta);
                     if (true) {
-                        system.deltaTime += paper.clock.now - startTime;
+                        system.deltaTime += paper.clock.timestamp() - startTime;
                     }
                 }
             }
@@ -6736,11 +6736,11 @@ var paper;
                         continue;
                     }
                     if (true) {
-                        startTime = paper.clock.now;
+                        startTime = paper.clock.timestamp();
                     }
                     system.onFrameCleanup(paper.clock.lastFrameDelta);
                     if (true) {
-                        system.deltaTime += paper.clock.now - startTime;
+                        system.deltaTime += paper.clock.timestamp() - startTime;
                     }
                 }
             }
@@ -6751,11 +6751,11 @@ var paper;
                     continue;
                 }
                 if (true) {
-                    startTime = paper.clock.now;
+                    startTime = paper.clock.timestamp();
                 }
                 system.onTickCleanup(paper.clock.lastFrameDelta);
                 if (true) {
-                    system.deltaTime += paper.clock.now - startTime;
+                    system.deltaTime += paper.clock.timestamp() - startTime;
                 }
             }
         };
@@ -11180,7 +11180,7 @@ var paper;
              * 程序启动后运行的总逻辑帧数
              */
             _this._tickCount = 0;
-            _this._beginTime = 0.0;
+            _this._beginTime = -1.0;
             _this._unscaledTime = 0.0;
             _this._unscaledDeltaTime = 0.0;
             _this._fixedTime = 0.0;
@@ -11192,32 +11192,32 @@ var paper;
         Clock.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             paper.Time = paper.clock = this;
-            // this._beginTime = performance.now() * 0.001;//TODO 解决微信和web上时间不统一
         };
         /**
          * @internal
          * @returns 此次生成的渲染帧和逻辑帧数量, @see `ClockResult`
          */
-        Clock.prototype.update = function (time) {
-            var isReseted = false;
-            var now = (time || performance.now()) * 0.001;
-            if (!this._beginTime) {
+        Clock.prototype.update = function (now) {
+            now = now * 0.001;
+            if (this._beginTime < 0) {
                 this._beginTime = now;
             }
             if (this._needReset) {
                 this._unscaledTime = now - this._beginTime;
                 this._unscaledDeltaTime = 0;
                 this._needReset = false;
-                isReseted = true;
+                // 产生起始的渲染帧和逻辑帧
+                this._tickCount++;
+                this._frameCount++;
+                return { frameCount: 1, tickCount: 1 };
             }
-            else {
-                var lastTime = this._unscaledTime;
-                this._unscaledTime = now - this._beginTime;
-                this._unscaledDeltaTime = this._unscaledTime - lastTime;
-            }
+            // 计算和上此的间隔
+            var lastTime = this._unscaledTime;
+            this._unscaledTime = now - this._beginTime;
+            this._unscaledDeltaTime = this._unscaledTime - lastTime;
             var returnValue = { frameCount: 0, tickCount: 0 };
             // 判断是否够一个逻辑帧
-            if (!isReseted && this.tickInterval) {
+            if (this.tickInterval) {
                 this._unusedTickDelta += this._unscaledDeltaTime;
                 if (this._unusedTickDelta >= this.tickInterval) {
                     // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
@@ -11232,8 +11232,12 @@ var paper;
                 returnValue.tickCount = 1;
                 this._tickCount++;
             }
+            // TOFIX: 暂时保护性处理, 如果没产生逻辑帧, 那么也不产生渲染帧
+            if (!returnValue.tickCount) {
+                return returnValue;
+            }
             // 判断渲染帧
-            if (!isReseted && this.frameInterval) {
+            if (this.frameInterval) {
                 this._unusedFrameDelta += this._unscaledDeltaTime;
                 if (this._unusedFrameDelta >= this.frameInterval) {
                     // 渲染帧不需要补帧
@@ -11346,6 +11350,23 @@ var paper;
          */
         Clock.prototype.reset = function () {
             this._needReset = true;
+        };
+        /**
+         * 时间戳
+         *
+         * 因为 `performance.now()` 精确度更高, 更应该使用它作为时间戳
+         * , 但是这个 API 在微信小游戏里支持有问题, 所以暂时使用 `Date.now()` 的实现
+         *
+         * 关于 `Date.now()` 与 `performance.now()`
+         *
+         * * 两者都是以毫秒为单位
+         * * `Date.now()` 是从 Unix 纪元 (1970-01-01T00:00:00Z) 至今的毫秒数, 而后者是从页面加载至今的毫秒数
+         * * `Date.now()` 精确到毫秒, 一般是整数, 后者可以精确到 5 微秒 (理论上, 可能各平台各浏览器实现的不同), 为浮点数
+         * * `Date.now()` 是 Javascript 的 API, 而后者为 Web API
+         * * `window.requestAnimationFrame()` 回调中使用的时间戳可认为和 `performance.now()` 的基本一致, 区别只是它不是实时的 "now", 而是 `window.requestAnimationFrame()` 调用产生时的 "now"
+         */
+        Clock.prototype.timestamp = function () {
+            return this.now;
         };
         return Clock;
     }(paper.Component));
@@ -26837,9 +26858,11 @@ var paper;
                 requestAnimationFrame(this._loop);
                 return;
             }
-            timestamp = timestamp || performance.now();
+            // 由 clock 组件计算此次循环可以产生多少个逻辑帧和多少个渲染帧
             var result = paper.clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
+            // 根据上述结果进行更新
             this._update(result);
+            // 下一次循环
             requestAnimationFrame(this._loop);
         };
         /**
@@ -26847,13 +26870,15 @@ var paper;
          */
         ECS.prototype._update = function (_a) {
             var _b = _a === void 0 ? { tickCount: 1, frameCount: 1 } : _a, tickCount = _b.tickCount, frameCount = _b.frameCount;
-            var systemManager = this.systemManager;
-            if (tickCount) {
-                systemManager._startup();
-                systemManager._execute(tickCount, frameCount);
-                systemManager._cleanup(frameCount);
-                systemManager._teardown();
+            // TOFIX: 只有逻辑帧不为零的时候, systemManager 的以下部分才做才有意义
+            if (!tickCount) {
+                return;
             }
+            var systemManager = this.systemManager;
+            systemManager._startup();
+            systemManager._execute(tickCount, frameCount);
+            systemManager._cleanup(frameCount);
+            systemManager._teardown();
         };
         /**
          *
@@ -26868,14 +26893,10 @@ var paper;
             systemManager.register(paper.LateUpdateSystem, gameObjectContext, 6000 /* LateUpdate */);
             systemManager.register(paper.DisableSystem, gameObjectContext, 9000 /* Disable */);
             systemManager.preRegisterSystems();
-            if (options.tickInterval !== (void 0)) {
-                paper.clock.tickInterval = options.tickInterval;
-            }
-            console.info("tick rate:", paper.clock.tickInterval ? (1.0 / paper.clock.tickInterval) : "auto");
-            if (options.frameInterval !== (void 0)) {
-                paper.clock.frameInterval = options.frameInterval;
-            }
-            console.info("frame rate:", paper.clock.frameInterval ? (1.0 / paper.clock.frameInterval) : "auto");
+            paper.clock.tickInterval = options.tickRate ? 1.0 / options.tickRate : 0;
+            console.info("tick rate:", options.tickRate ? options.tickRate : "auto");
+            paper.clock.frameInterval = options.frameRate ? 1.0 / options.frameRate : 0;
+            console.info("frame rate:", options.frameRate ? options.frameRate : "auto");
         };
         /**
          * TODO
@@ -26895,7 +26916,7 @@ var paper;
             }
             this._isRunning = true;
             paper.clock.reset();
-            this._loop();
+            requestAnimationFrame(this._loop);
         };
         /**
          * engine start

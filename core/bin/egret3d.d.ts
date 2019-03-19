@@ -787,13 +787,13 @@ declare namespace paper {
          */
         playerMode?: PlayerMode;
         /**
-         * 逻辑帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         * 逻辑帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        tickInterval?: float;
+        tickRate?: number;
         /**
-         * 渲染帧时间, 单位为秒, 例如设置为 1.0 / 60.0 为每秒 60 帧
+         * 渲染帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        frameInterval?: float;
+        frameRate?: number;
     }
 }
 declare namespace paper {
@@ -6153,6 +6153,21 @@ declare namespace paper {
          * reset
          */
         reset(): void;
+        /**
+         * 时间戳
+         *
+         * 因为 `performance.now()` 精确度更高, 更应该使用它作为时间戳
+         * , 但是这个 API 在微信小游戏里支持有问题, 所以暂时使用 `Date.now()` 的实现
+         *
+         * 关于 `Date.now()` 与 `performance.now()`
+         *
+         * * 两者都是以毫秒为单位
+         * * `Date.now()` 是从 Unix 纪元 (1970-01-01T00:00:00Z) 至今的毫秒数, 而后者是从页面加载至今的毫秒数
+         * * `Date.now()` 精确到毫秒, 一般是整数, 后者可以精确到 5 微秒 (理论上, 可能各平台各浏览器实现的不同), 为浮点数
+         * * `Date.now()` 是 Javascript 的 API, 而后者为 Web API
+         * * `window.requestAnimationFrame()` 回调中使用的时间戳可认为和 `performance.now()` 的基本一致, 区别只是它不是实时的 "now", 而是 `window.requestAnimationFrame()` 调用产生时的 "now"
+         */
+        timestamp(): number;
     }
     /**
      * 全局时钟信息组件实例。
@@ -10372,7 +10387,7 @@ declare namespace paper {
         /**
          * core updating loop
          */
-        private _loop(timestamp?);
+        private _loop(timestamp);
         /**
          * including calculating, status updating, rerendering and logical updating
          */

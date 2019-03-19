@@ -76,11 +76,9 @@
             var list = manifest.initial.concat(manifest.game);
             loadScript(list, function () {
                 egret3d.runEgret({
-                    /**
-                     * 启动时设置帧频
-                    tickInterval: 1.0 / 60.0, // 启动时设置逻辑帧频
-                    frameInterval: 1.0 / 30.0, // 启动时设置渲染帧频
-                     */
+                    // 启动时设置帧频
+                    tickRate: 60.0, // 启动时设置逻辑帧频
+                    frameRate: 30.0, // 启动时设置渲染帧频
                     antialias: true,
                     alpha: false
                 });
