@@ -151,6 +151,10 @@
         "egret3d/components/particle/ParticleComponent.ts",
         "egret3d/components/particle/ParticleRenderer.ts",
         "egret3d/components/particle/ParticleSystem.ts",
+        
+        "egret3d/components/trail/TrailBatcher.ts",
+        "egret3d/components/trail/TrailComponent.ts",
+        "egret3d/components/trail/TrailSystem.ts",
 
         "egret3d/components/audio/Audio.ts",
 
