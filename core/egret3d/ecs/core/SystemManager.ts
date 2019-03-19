@@ -153,7 +153,7 @@ namespace paper {
 
                     if (DEBUG) {
                         (system.deltaTime as uint) = 0;
-                        startTime = clock.now;
+                        startTime = clock.timestamp();
                     }
 
                     if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
@@ -163,7 +163,7 @@ namespace paper {
                     system.onTick && system.onTick(clock.lastTickDelta);
 
                     if (DEBUG) {
-                        (system.deltaTime as uint) += clock.now - startTime;
+                        (system.deltaTime as uint) += clock.timestamp() - startTime;
                     }
                 }
             }
@@ -175,7 +175,7 @@ namespace paper {
                     }
 
                     if (DEBUG) {
-                        startTime = clock.now;
+                        startTime = clock.timestamp();
                     }
 
                     if (reactiveSystems.indexOf(system) >= 0) {
@@ -185,7 +185,7 @@ namespace paper {
                     system.onFrame && system.onFrame(clock.lastFrameDelta);
 
                     if (DEBUG) {
-                        (system.deltaTime as uint) += clock.now - startTime;
+                        (system.deltaTime as uint) += clock.timestamp() - startTime;
                     }
                 }
             }
@@ -207,13 +207,13 @@ namespace paper {
                     }
 
                     if (DEBUG) {
-                        startTime = clock.now;
+                        startTime = clock.timestamp();
                     }
 
                     system.onFrameCleanup!(clock.lastFrameDelta);
 
                     if (DEBUG) {
-                        (system.deltaTime as uint) += clock.now - startTime;
+                        (system.deltaTime as uint) += clock.timestamp() - startTime;
                     }
                 }
             }
@@ -227,13 +227,13 @@ namespace paper {
                 }
 
                 if (DEBUG) {
-                    startTime = clock.now;
+                    startTime = clock.timestamp();
                 }
 
                 system.onTickCleanup!(clock.lastFrameDelta);
 
                 if (DEBUG) {
-                    (system.deltaTime as uint) += clock.now - startTime;
+                    (system.deltaTime as uint) += clock.timestamp() - startTime;
                 }
             }
         }
