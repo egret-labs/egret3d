@@ -36,7 +36,11 @@ namespace paper {
         /**
          * 当应用程序的播放模式改变时派发事件。
          */
-        public readonly onPlayerModeChange: signals.Signal<PlayerMode> = new signals.Signal();
+        public readonly onPlayerModeChanged: signals.Signal<PlayerMode> = new signals.Signal();
+        // /**
+        //  * 
+        //  */
+        // public delayStatrup: uint = 0;
         /**
          * 引擎版本。
          */
@@ -57,12 +61,17 @@ namespace paper {
         private _isFocused: boolean = false;
         private _isRunning: boolean = false;
         private _playerMode: PlayerMode = PlayerMode.Player;
+        // private _runOptions: RunOptions | null = null;
 
         /**
          * core updating loop
          */
         private _loop(timestamp: number) {
             if (!this._isRunning) { return; }
+            if (!timestamp) {//TODO 解决微信和web上时间不统一
+                requestAnimationFrame(this._loop);
+                return;
+            }
 
             // 由 clock 组件计算此次循环可以产生多少个逻辑帧和多少个渲染帧
             const result: ClockUpdateFlags = clock.update(timestamp) || { tickCount: 1, frameCount: 1 };
@@ -105,8 +114,6 @@ namespace paper {
             console.info("tick rate:", options.tickRate ? options.tickRate : "auto");
             clock.frameInterval = options.frameRate ? 1.0 / options.frameRate : 0;
             console.info("frame rate:", options.frameRate ? options.frameRate : "auto");
-
-            this.resume();
         }
         /**
          * TODO
@@ -142,12 +149,15 @@ namespace paper {
                     this.pause();
                     this._update();
                     break;
+
                 case PlayerMode.Player:
                 // breakthrough
                 case PlayerMode.DebugPlayer:
                     this.resume();
                     break;
-                default: break;
+
+                default:
+                    break;
             }
         }
         /**
@@ -195,7 +205,7 @@ namespace paper {
             }
 
             this._playerMode = value;
-            this.onPlayerModeChange.dispatch(this.playerMode);
+            this.onPlayerModeChanged.dispatch(this.playerMode);
         }
     }
     /**

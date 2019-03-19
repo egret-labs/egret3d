@@ -59,8 +59,8 @@ namespace paper.editor {
         }
         public set dirty(v: boolean) {
             // if (this._dirty !== v) {
-                this._dirty = v;
-                this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_DIRTY));
+            this._dirty = v;
+            this.dispatchEvent(new EditorModelEvent(EditorModelEvent.CHANGE_DIRTY));
             // }
         }
         /**
@@ -154,7 +154,7 @@ namespace paper.editor {
                     if (!value) {
                         return null;
                     }
-                    return {gameObjuuid:value.gameObjuuid,componentuuid:value.componentuuid}
+                    return { gameObjuuid: value.gameObjuuid, componentuuid: value.componentuuid };
                 case paper.editor.EditType.MATERIAL:
                 case paper.editor.EditType.TRANSFROM:
                 case paper.editor.EditType.SOUND:
@@ -215,9 +215,9 @@ namespace paper.editor {
                     if (!serializeData || !serializeData.gameObjuuid) {
                         return null;
                     }
-                    const gameObj:GameObject | null = this.getGameObjectByUUid(serializeData.gameObjuuid);
+                    const gameObj: GameObject | null = this.getGameObjectByUUid(serializeData.gameObjuuid);
                     if (gameObj) {
-                        return this.getComponentById(gameObj!,serializeData.componentuuid);
+                        return this.getComponentById(gameObj!, serializeData.componentuuid);
                     }
                     return null;
                 case paper.editor.EditType.MATERIAL:
@@ -297,26 +297,26 @@ namespace paper.editor {
             for (let i: number = 0; i < objs.length; i++) {
                 let obj = objs[i];
 
-                let extrasCollection:(EntityExtras | undefined)[] = [];
-                
+                let extrasCollection: (EntityExtras | undefined)[] = [];
+
                 if (this.isPrefabChild(obj)) {
                     extrasCollection = this.clearAndCollectGameObjectExtras(obj);
                 }
 
-                let serializeData:ISerializedData | null = null;
+                let serializeData: ISerializedData | null = null;
 
                 try {
                     serializeData = serialize(obj);
                     if (extrasCollection.length > 0) {
-                        this.resetGameObjectExtras(obj,extrasCollection);
+                        this.resetGameObjectExtras(obj, extrasCollection);
                     }
                 } catch (error) {
                     console.error("copyGameObject serialize error")
                     if (extrasCollection.length > 0) {
-                        this.resetGameObjectExtras(obj,extrasCollection);
+                        this.resetGameObjectExtras(obj, extrasCollection);
                     }
                 }
-                
+
                 content.push({
                     type: "gameObject",
                     serializeData
@@ -325,7 +325,7 @@ namespace paper.editor {
             clipboard.writeText(JSON.stringify(content), "paper");
         }
 
-        public clearAndCollectGameObjectExtras(gameObj: paper.GameObject,extrasCollection:(EntityExtras | undefined)[] | null = null) {
+        public clearAndCollectGameObjectExtras(gameObj: paper.GameObject, extrasCollection: (EntityExtras | undefined)[] | null = null) {
             extrasCollection = extrasCollection || [];
 
             extrasCollection.push(gameObj.extras);
@@ -499,6 +499,9 @@ namespace paper.editor {
                     }
                 }
             }
+
+            //标脏根对象数组（不标脏的话根对象数组和gameobjects的排序会不对）
+            (this.scene as any)['_rootEntitiesDirty']=true;
         }
         /**
          * 筛选层级中的顶层游戏对象
@@ -949,18 +952,18 @@ namespace paper.editor {
         }
 
         public async getRes(name: string) {
-            let asset : paper.Asset | null = paper.Asset.find(name);
-        
+            let asset: paper.Asset | null = paper.Asset.find(name);
+
             if (asset) {
                 return asset;
             }
-        
+
             asset = RES.getRes(name);
-        
+
             if (asset) {
                 return asset;
             }
-        
+
             return await RES.getResAsync(name);
         }
     }

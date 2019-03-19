@@ -78,6 +78,7 @@ UNIFORM_TEMPLATE["ambientLightColor"] = { semantic: gltf.UniformSemanticType._AM
 UNIFORM_TEMPLATE["directionalLights[0]"] = { semantic: gltf.UniformSemanticType._DIRECTLIGHTS };//
 UNIFORM_TEMPLATE["pointLights[0]"] = { semantic: gltf.UniformSemanticType._POINTLIGHTS };//
 UNIFORM_TEMPLATE["spotLights[0]"] = { semantic: gltf.UniformSemanticType._SPOTLIGHTS };//
+
 UNIFORM_TEMPLATE["ltc_1"] = { semantic: "Unknown" };
 UNIFORM_TEMPLATE["ltc_2"] = { semantic: "Unknown" };
 UNIFORM_TEMPLATE["rectAreaLights[0]"] = { semantic: "Unknown" };//
@@ -114,6 +115,10 @@ UNIFORM_TEMPLATE["toneMappingExposure"] = { semantic: gltf.UniformSemanticType._
 UNIFORM_TEMPLATE["toneMappingWhitePoint"] = { semantic: gltf.UniformSemanticType._TONE_MAPPING_WHITE_POINT };
 //
 UNIFORM_TEMPLATE["logDepthBufFC"] = { semantic: gltf.UniformSemanticType._LOG_DEPTH_BUFFC };
+//
+UNIFORM_TEMPLATE["rotation"] = { semantic: gltf.UniformSemanticType._ROTATION };
+UNIFORM_TEMPLATE["scale2D"] = { semantic: gltf.UniformSemanticType._SCALE2D };
+
 //
 UNIFORM_TEMPLATE["specular"] = { value: [0.066666, 0.066666, 0.066666] };
 UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
@@ -155,6 +160,8 @@ UNIFORM_TEMPLATE["dashScale"] = { value: 1 };
 UNIFORM_TEMPLATE["dashSize"] = { value: 1 };
 UNIFORM_TEMPLATE["gapSize"] = { value: 1 };
 UNIFORM_TEMPLATE["totalSize"] = { value: 1 };
+
+UNIFORM_TEMPLATE["center"] = { value: [0.5, 0.5] };
 //old
 // UNIFORM_TEMPLATE["lightMapOffset"] = { semantic: gltf.UniformSemanticType._LIGHTMAPOFFSET };
 // UNIFORM_TEMPLATE["lightMapUV"] = { semantic: gltf.UniformSemanticType._LIGHTMAPUV };

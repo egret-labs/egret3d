@@ -164,6 +164,34 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
+    /**
+     * TODO
+     */
+    class SceneSystem extends BaseSystem<GameObject> {
+        private readonly _modelComponent;
+        private readonly _keyEscape;
+        private readonly _keyDelete;
+        private readonly _keyE;
+        private readonly _keyW;
+        private readonly _keyR;
+        private readonly _keyX;
+        private readonly _keyF;
+        private _gizmosContainerEntity;
+        private _touchContainerEntity;
+        private _transformControllerEntity;
+        private readonly _frustum;
+        private readonly _projectionMatrix;
+        private _updateSelectFrustum(camera);
+        lookAtSelected(): void;
+        protected getMatchers(): IAnyOfMatcher<GameObject>[];
+        onEnable(): void;
+        onDisable(): void;
+        onEntityAdded(entity: GameObject, group: Group<GameObject>): void;
+        onEntityRemoved(entity: GameObject, group: Group<GameObject>): void;
+        onFrame(): void;
+        private static readonly _defalutPosition;
+        private _clearDefaultPointerDownPosition();
+    }
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -352,9 +380,10 @@ declare namespace paper.editor {
     class TouchContainerFlag extends EditorComponent {
     }
     /**
-     * 标尺网格标记。
+     * 选框网格标记。
      */
-    class GridFlag extends EditorComponent {
+    class SelectFrameFlag extends EditorComponent {
+        readonly viewport: egret3d.Rectangle;
     }
     /**
      * 高亮标记。
@@ -372,13 +401,7 @@ declare namespace paper.editor {
     class LastSelectedFlag extends EditorComponent {
     }
     /**
-     *
-     */
-    class SceneSelectedFlag extends EditorComponent {
-        scene: Scene | null;
-    }
-    /**
-     *
+     * 选取重定向标记。
      */
     class PickedFlag extends EditorComponent {
         target: GameObject | null;
@@ -470,6 +493,9 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
+declare var VConsole: {
+    new (): any;
+} | null;
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
@@ -477,31 +503,6 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
-    /**
-     * TODO
-     */
-    class SceneSystem extends BaseSystem<GameObject> {
-        private readonly _modelComponent;
-        private readonly _keyEscape;
-        private readonly _keyDelete;
-        private readonly _keyE;
-        private readonly _keyW;
-        private readonly _keyR;
-        private readonly _keyX;
-        private readonly _keyF;
-        private _gizmosContainerEntity;
-        private _touchContainerEntity;
-        private _transformControllerEntity;
-        lookAtSelected(): void;
-        protected getMatchers(): IAnyOfMatcher<GameObject>[];
-        onEnable(): void;
-        onDisable(): void;
-        onEntityAdded(entity: GameObject, group: Group<GameObject>): void;
-        onEntityRemoved(entity: GameObject, group: Group<GameObject>): void;
-        onFrame(): void;
-        private static readonly _defalutPosition;
-        private _clearDefaultPointerDownPosition();
-    }
 }
 declare namespace paper {
     /**
@@ -531,6 +532,8 @@ declare namespace egret3d {
      */
     const enum UniformSemantics {
     }
+}
+declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }

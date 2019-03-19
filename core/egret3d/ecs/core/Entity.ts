@@ -29,7 +29,6 @@ namespace paper {
         public tag: DefaultTags | string = "";
 
         @serializedField
-        @editor.property(editor.EditType.LIST, { listItems: editor.getItemsFromEnum((paper as any).HideFlags) }) // TODO
         public hideFlags: HideFlags = HideFlags.None;
 
         @serializedField
@@ -105,9 +104,11 @@ namespace paper {
                 component.dispatchEnabledEvent(true);
             }
         }
-
+        /**
+         * @internal
+         */
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null): void {
-            const componentClass = component.constructor as IComponentClass<IComponent>
+            const componentClass = component.constructor as IComponentClass<IComponent>;
             component.enabled = false;
             //
             Component.onComponentDestroy.dispatch([this, component]);

@@ -1028,10 +1028,11 @@ var OptionController = function (_Controller) {
 
 var StringController = function (_Controller) {
   inherits(StringController, _Controller);
-  function StringController(object, property) {
+  function StringController(object, property, getValueFunction) {
     classCallCheck(this, StringController);
     var _this2 = possibleConstructorReturn(this, (StringController.__proto__ || Object.getPrototypeOf(StringController)).call(this, object, property));
     var _this = _this2;
+    _this2._getValueFunction = getValueFunction;
     function onChange() {
       _this.setValue(_this.__input.value);
     }
@@ -1055,6 +1056,15 @@ var StringController = function (_Controller) {
     return _this2;
   }
   createClass(StringController, [{
+    key: 'getValue',
+    value: function getValue() {
+      var value = this.object[this.property];
+      if (this._getValueFunction) {
+        return this._getValueFunction(value);
+      }
+      return value;
+    }
+  }, {
     key: 'updateDisplay',
     value: function updateDisplay() {
       if (!dom.isActive(this.__input)) {
@@ -1583,7 +1593,7 @@ var saveDialogContents = "<div id=\"dg-save\" class=\"dg dialogue\">\n\n  Here's
 
 var ControllerFactory = function ControllerFactory(object, property) {
   var initialValue = object[property];
-  if (Common.isArray(arguments[2]) || Common.isObject(arguments[2])) {
+  if (Common.isArray(arguments[2]) || Common.isObject(arguments[2]) && !Common.isFunction(arguments[2])) {
     return new OptionController(object, property, arguments[2]);
   }
   if (Common.isNumber(initialValue)) {
@@ -1599,7 +1609,7 @@ var ControllerFactory = function ControllerFactory(object, property) {
     return new NumberControllerBox(object, property, { min: arguments[2], max: arguments[3] });
   }
   if (Common.isString(initialValue)) {
-    return new StringController(object, property);
+    return new StringController(object, property, arguments[2]);
   }
   if (Common.isFunction(initialValue)) {
     return new FunctionController(object, property, '');
@@ -1607,6 +1617,7 @@ var ControllerFactory = function ControllerFactory(object, property) {
   if (Common.isBoolean(initialValue)) {
     return new BooleanController(object, property);
   }
+  return new StringController(object, property, arguments[2]);
   return null;
 };
 

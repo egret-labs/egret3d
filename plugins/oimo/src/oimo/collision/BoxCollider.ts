@@ -8,7 +8,7 @@ namespace egret3d.oimo {
 
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
-        public readonly box: Box = Box.ONE.clone();
+        public readonly box: Box = Box.create();
 
         protected _createShape() {
             const config = this._updateConfig();
@@ -19,6 +19,12 @@ namespace egret3d.oimo {
             shape.userData = this;
 
             return shape;
+        }
+
+        public initialize() {
+            super.initialize();
+
+            this.box.copy(Box.ONE);
         }
     }
 }

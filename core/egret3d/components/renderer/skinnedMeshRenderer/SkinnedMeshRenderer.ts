@@ -25,6 +25,10 @@ namespace egret3d {
         /**
          * 
          */
+        public boneTexture: Texture | null = null;
+        /**
+         * 
+         */
         public source: SkinnedMeshRenderer | null = null;
 
         private _skinnedDirty: boolean = true;
@@ -107,6 +111,10 @@ namespace egret3d {
                     _helpMatrix.fromArray(inverseBindMatrices as any, offset).premultiply(matrix).toArray(boneMatrices, offset);
                 }
 
+                if (this.boneTexture) {
+                    this.boneTexture.uploadTexture(boneMatrices); // TODO
+                }
+
                 if (this.forceCPUSkin) {
                     // this._skinning(0, 0); TODO
                 }
@@ -133,6 +141,7 @@ namespace egret3d {
 
             const mesh = this._mesh;
             const parent = this.gameObject.transform.parent;
+            const bones = this._bones;
 
             if (mesh && parent) {
                 const config = mesh.config;
@@ -152,18 +161,39 @@ namespace egret3d {
 
                     if (node.name! in children) {
                         const transforms = children[node.name!];
-                        this._bones.push(Array.isArray(transforms) ? transforms[0] : transforms);
+                        bones.push(Array.isArray(transforms) ? transforms[0] : transforms);
                     }
                     else {
-                        this._bones.push(null);
+                        bones.push(null);
                     }
                 }
 
-                this.boneMatrices = new Float32Array(this._bones.length * 16);
+                if (renderState.textureFloatEnabled) {
+                    // let size = Math.sqrt(bones.length * 4); // 4 pixels needed for 1 matrix
+                    // size = Math.max(math.ceilPowerOfTwo(size), 4);
 
-                if (this._bones.length > renderState.maxBoneCount) {
-                    this.forceCPUSkin = true;
-                    console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
+                    // this.boneMatrices = new Float32Array(size * size * 4); // 4 floats per RGBA pixel
+                    // this.boneTexture = Texture.create({
+                    //     source: this.boneMatrices,
+                    //     width: size, height: size,
+                    //     type: gltf.ComponentType.Float
+                    // });
+
+                    this.boneMatrices = new Float32Array((bones.length + 1) * 16);
+                    this.boneTexture = Texture.create({
+                        source: this.boneMatrices,
+                        width: (bones.length + 1) * 4, height: 1,
+                        type: gltf.ComponentType.Float
+                    });
+                    this.boneTexture.retain();
+                }
+                else {
+                    this.boneMatrices = new Float32Array(bones.length * 16);
+
+                    if (bones.length > renderState.maxBoneCount) {
+                        this.forceCPUSkin = true;
+                        console.warn("The bone count of this mesh has exceeded the maxBoneCount and will use the forced CPU skin.", mesh.name);
+                    }
                 }
 
                 this._update();
@@ -179,9 +209,15 @@ namespace egret3d {
                 this._mesh.release();
             }
 
+            if (this.boneTexture) {
+                this.boneTexture.release();
+                this.boneTexture.dispose();
+            }
+
             this.getBoundingTransform().unregisterObserver(this);
 
             this.boneMatrices = null;
+            this.boneTexture = null;
 
             this._bones.length = 0;
             this._rootBone = null;

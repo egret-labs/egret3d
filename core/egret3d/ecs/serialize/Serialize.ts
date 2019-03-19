@@ -2,7 +2,7 @@ namespace paper {
     /**
      * @private
      */
-    export const DATA_VERSION: number = 5;
+    export const DATA_VERSION: string = "5";
     /**
      * @private
      */
@@ -137,7 +137,8 @@ namespace paper {
             return true;
         }
 
-        if (egret.is(source, "paper.ISerializable")) {
+        // if (source[KEY_SERIALIZE] !== null) {
+        if (KEY_SERIALIZE in source) {
             return equal((source as ISerializable).serialize(), (target as ISerializable).serialize());
         }
 
@@ -347,7 +348,8 @@ namespace paper {
                     return target;
                 }
 
-                if (egret.is(source, "paper.ISerializable")) {
+                // if (source[KEY_SERIALIZE] !== null) {
+                if (KEY_SERIALIZE in source) {
                     return (source as paper.ISerializable).serialize();
                 }
 

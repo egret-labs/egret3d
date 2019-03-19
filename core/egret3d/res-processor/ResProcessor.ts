@@ -187,10 +187,13 @@ namespace egret3d {
                     else if (format === "Gray") {
                         textureFormat = gltf.TextureFormat.Luminance;
                     }
-
-                    let linear: boolean = true;
-                    if (filterMode.indexOf("linear") < 0) {
-                        linear = false;
+                    //Trilinear   Bilinear
+                    let linear: FilterMode = FilterMode.Point;
+                    if (filterMode.indexOf("Trilinear") >= 0) {
+                        linear = FilterMode.Trilinear;
+                    }
+                    else if (filterMode.indexOf("Bilinear") >= 0) {
+                        linear = FilterMode.Bilinear;
                     }
 
                     let repeat: boolean = false;

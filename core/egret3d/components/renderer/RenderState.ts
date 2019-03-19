@@ -12,7 +12,7 @@ namespace egret3d {
          */
         public readonly onGammaInputChanged: signals.Signal = new signals.Signal();
 
-        public version: number;
+        public version: string;
         public standardDerivativesEnabled: boolean;
         public textureFloatEnabled: boolean;
         public fragDepthEnabled: boolean;
@@ -74,7 +74,7 @@ namespace egret3d {
         private _logarithmicDepthBuffer: boolean = false;
         private _gammaInput: boolean = true; //
         private _gammaOutput: boolean = true; //
-        private _gammaFactor: number = 1.0;
+        private _gammaFactor: float = 1.0;
         private _toneMapping: ToneMapping = ToneMapping.None;
         // TODO move to caches
         protected readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest];
@@ -91,6 +91,10 @@ namespace egret3d {
                 extensions += "#extension GL_EXT_frag_depth : enable \n";
             }
 
+            if (this.textureFloatEnabled) {
+                extensions += "#extension GL_EXT_frag_depth : enable \n";
+            }
+
             this.fragmentExtensions = extensions;
         }
 
@@ -99,6 +103,9 @@ namespace egret3d {
             defines += "precision " + this.maxPrecision + " float; \n";
             defines += "precision " + this.maxPrecision + " int; \n";
             this.commonDefines = defines;
+
+            defines = ""; // vertexDefines
+            this.vertexDefines = defines;
 
             defines = ""; // fragmentDefines
             defines += ShaderChunk.encodings_pars_fragment + " \n";
@@ -191,14 +198,27 @@ namespace egret3d {
                 caches.useLightMap = useLightMap;
             }
 
-            if (caches.boneCount !== boneCount) { // TODO 浮点纹理。
-                if (boneCount) {
+            if (caches.boneCount !== boneCount) {
+
+                if (boneCount > 0) {
                     defines.addDefine(ShaderDefine.USE_SKINNING);
-                    defines.addDefine(ShaderDefine.MAX_BONES, boneCount);
+
+                    if (this.textureFloatEnabled) {
+                        defines.addDefine(ShaderDefine.BONE_TEXTURE);
+                    }
+                    else {
+                        defines.addDefine(ShaderDefine.MAX_BONES, boneCount);
+                    }
                 }
                 else {
                     defines.removeDefine(ShaderDefine.USE_SKINNING);
-                    defines.removeDefine(ShaderDefine.MAX_BONES);
+
+                    if (this.textureFloatEnabled) {
+                        defines.addDefine(ShaderDefine.BONE_TEXTURE);
+                    }
+                    else {
+                        defines.removeDefine(ShaderDefine.MAX_BONES);
+                    }
                 }
 
                 caches.boneCount = boneCount;
@@ -434,10 +454,10 @@ namespace egret3d {
          * 
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { step: 0.1 })
-        public get gammaFactor(): number {
+        public get gammaFactor(): float {
             return this._gammaFactor;
         }
-        public set gammaFactor(value: number) {
+        public set gammaFactor(value: float) {
             if (value !== value || value < 1.0) {
                 value = 1.0;
             }
@@ -498,12 +518,12 @@ namespace egret3d {
          * 
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 10.0 })
-        public toneMappingExposure: number = 1.0;
+        public toneMappingExposure: float = 1.0;
         /**
          * 
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 10.0 })
-        public toneMappingWhitePoint: number = 1.0;
+        public toneMappingWhitePoint: float = 1.0;
     }
     /**
      * 全局渲染状态组件实例。

@@ -116,7 +116,9 @@ namespace paper {
 
             super._addComponent(component, config);
         }
-
+        /**
+         * @internal
+         */
         protected _removeComponent(component: IComponent, groupComponent: GroupComponent | null) {
             super._removeComponent(component, groupComponent);
 
@@ -354,7 +356,7 @@ namespace paper {
          * @see paper.Scene#find()
          */
         public static find(name: string, scene: Scene | null = null) {
-            return (scene || Application.sceneManager.activeScene).find(name);
+            return (scene || Application.sceneManager.activeScene).find<GameObject>(name);
         }
         /**
          * @deprecated

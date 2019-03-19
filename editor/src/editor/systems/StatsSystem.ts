@@ -24,7 +24,7 @@ namespace paper.editor {
         public onEnable() {
             const quaryValues = this._guiComponent.quaryValues;
 
-            if (quaryValues.FPS === 1 || (quaryValues.FPS !== 0 && !paper.Application.isMobile)) {
+            if (quaryValues.FPS !== 0) {
                 this._guiComponent.showStates |= ShowState.FPS;
                 this._fpsIndex = 0;
             }

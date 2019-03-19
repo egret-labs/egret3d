@@ -512,8 +512,15 @@ namespace paper.editor {
                     break;
                 }
 
-                case editor.EditType.GAMEOBJECT:
+                case editor.EditType.COMPONENT: {
+                    parent.add(parent.instance, info.name, this._getComponentValue).listen();
                     break;
+                }
+
+                case editor.EditType.GAMEOBJECT: {
+                    parent.add(parent.instance, info.name, this._getEntityValue).listen();
+                    break;
+                }
 
                 case editor.EditType.BUTTON:
                     parent.add(parent.instance, info.name);
@@ -526,6 +533,14 @@ namespace paper.editor {
                     break;
                 }
             }
+        }
+        
+        private _getEntityValue(entity: IEntity | null) {
+            return entity ? entity.name : "null";
+        }
+
+        private _getComponentValue(component: IComponent | null) {
+            return component ? component.entity.name : "null";
         }
 
         private _addUniformItemToInspector(uniform: gltf.Uniform, parent: dat.GUI) {

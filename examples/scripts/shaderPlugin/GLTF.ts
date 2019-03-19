@@ -347,6 +347,10 @@ export const enum UniformSemanticType {
     _FOG_DENSITY = "_FOG_DENSITY",
     _FOG_NEAR = "_FOG_NEAR",
     _FOG_FAR = "_FOG_FAR",
+
+    //
+    _ROTATION = "_ROTATION",
+    _SCALE2D = "_SCALE2D",
 }
 
 export const enum AccessorType {

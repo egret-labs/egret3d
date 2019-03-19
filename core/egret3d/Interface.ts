@@ -42,6 +42,7 @@ namespace egret3d {
         FLAT_SHADED = "FLAT_SHADED",
         //
         MAX_BONES = "MAX_BONES",
+        BONE_TEXTURE = "BONE_TEXTURE",
         //
         NUM_DIR_LIGHTS = "NUM_DIR_LIGHTS",
         NUM_POINT_LIGHTS = "NUM_POINT_LIGHTS",
@@ -106,6 +107,10 @@ namespace egret3d {
         EmissiveIntensity = "emissiveIntensity",
         FlipEnvMap = "flipEnvMap",
         MaxMipLevel = "maxMipLevel",
+
+        Rotation = "rotation",
+        Scale2D = "scale2D",
+        Center = "center",
     }
     /**
      * Shader宏定义排序。
@@ -226,6 +231,7 @@ namespace egret3d {
         "envMap": ShaderDefine.USE_ENVMAP,
         "emissiveMap": ShaderDefine.USE_EMISSIVEMAP,
     };
+    
     /**
      * 内置提供的全局 Attribute。
      * @private
@@ -285,6 +291,7 @@ namespace egret3d {
         "fogFar": gltf.UniformSemantics._FOG_FAR,
         "toneMappingExposure": gltf.UniformSemantics._TONE_MAPPING_EXPOSURE,
         "toneMappingWhitePoint": gltf.UniformSemantics._TONE_MAPPING_WHITE_POINT,
+        "resolution": gltf.UniformSemantics._RESOLUTION,
     };
     /**
      * 内置提供的场景 Uniform。
@@ -330,6 +337,8 @@ namespace egret3d {
         "modelViewProjectionMatrix": gltf.UniformSemantics.MODELVIEWPROJECTION,
         "normalMatrix": gltf.UniformSemantics.MODELVIEWINVERSE,
         "boneMatrices[0]": gltf.UniformSemantics.JOINTMATRIX,
+        "boneTexture": gltf.UniformSemantics._BONETEXTURE,
+        "boneTextureSize": gltf.UniformSemantics._BONETEXTURESIZE,
         "clock": gltf.UniformSemantics._CLOCK,
         "lightMap": gltf.UniformSemantics._LIGHTMAPTEX,
         "lightMapScaleOffset": gltf.UniformSemantics._LIGHTMAP_SCALE_OFFSET,
@@ -339,6 +348,8 @@ namespace egret3d {
         "directionalShadowMap[0]": gltf.UniformSemantics._DIRECTIONSHADOWMAP,
         "pointShadowMap[0]": gltf.UniformSemantics._POINTSHADOWMAP,
         "spotShadowMap[0]": gltf.UniformSemantics._SPOTSHADOWMAP,
+        "rotation": gltf.UniformSemantics._ROTATION,
+        "scale2D": gltf.UniformSemantics._SCALE2D,
     };
     /**
      * 

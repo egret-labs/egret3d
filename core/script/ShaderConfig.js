@@ -82,8 +82,8 @@ exports.UNIFORM_TEMPLATE["ltc_1"] = { semantic: "Unknown" };
 exports.UNIFORM_TEMPLATE["ltc_2"] = { semantic: "Unknown" };
 // UNIFORM_TEMPLATE["bindMatrix"] = { semantic: gltf.UniformSemanticType._BINDMATRIX };
 // UNIFORM_TEMPLATE["bindMatrixInverse"] = { semantic: gltf.UniformSemanticType._BINDMATRIXINVERSE };
-// UNIFORM_TEMPLATE["boneTexture"] = {  semantic: gltf.UniformSemanticType._BONETEXTURE };
-// UNIFORM_TEMPLATE["boneTextureSize"] = { semantic: gltf.UniformSemanticType._BONETEXTURESIZE };
+exports.UNIFORM_TEMPLATE["boneTexture"] = {  semantic: "_BONETEXTURE" };
+exports.UNIFORM_TEMPLATE["boneTextureSize"] = { semantic: "_BONETEXTURESIZE" };
 exports.UNIFORM_TEMPLATE["boneMatrices[0]"] = { semantic: "JOINTMATRIX" /* JOINTMATRIX */ };
 exports.UNIFORM_TEMPLATE["directionalShadowMatrix[0]"] = { semantic: "_DIRECTIONSHADOWMAT" /* _DIRECTIONSHADOWMAT */ };
 exports.UNIFORM_TEMPLATE["spotShadowMatrix[0]"] = { semantic: "_SPOTSHADOWMAT" /* _SPOTSHADOWMAT */ };
@@ -107,6 +107,10 @@ exports.UNIFORM_TEMPLATE["toneMappingExposure"] = { semantic: "_TONE_MAPPING_EXP
 exports.UNIFORM_TEMPLATE["toneMappingWhitePoint"] = { semantic: "_TONE_MAPPING_WHITE_POINT" /* _TONE_MAPPING_WHITE_POINT */ };
 //
 exports.UNIFORM_TEMPLATE["logDepthBufFC"] = { semantic: "_LOG_DEPTH_BUFFC" /* _LOG_DEPTH_BUFFC */ };
+//
+exports.UNIFORM_TEMPLATE["rotation"] = { semantic: "_ROTATION" };
+exports.UNIFORM_TEMPLATE["scale2D"] = { semantic: "_SCALE2D" };
+
 //
 exports.UNIFORM_TEMPLATE["specular"] = { value: [0.066666, 0.066666, 0.066666] };
 exports.UNIFORM_TEMPLATE["shininess"] = { value: 30.0 };
@@ -145,6 +149,9 @@ exports.UNIFORM_TEMPLATE["dashScale"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["dashSize"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["gapSize"] = { value: 1 };
 exports.UNIFORM_TEMPLATE["totalSize"] = { value: 1 };
+
+
+exports.UNIFORM_TEMPLATE["center"] = { value: [0.5, 0.5] };
 //old
 // UNIFORM_TEMPLATE["lightMapOffset"] = { semantic: gltf.UniformSemanticType._LIGHTMAPOFFSET };
 // UNIFORM_TEMPLATE["lightMapUV"] = { semantic: gltf.UniformSemanticType._LIGHTMAPUV };

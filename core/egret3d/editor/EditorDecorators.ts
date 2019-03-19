@@ -56,13 +56,13 @@ namespace paper.editor {
          */
         set?: string;
         /**
+         * 
+         */
+        componentClass?: IComponentClass<IComponent> | string;
+        /**
          * 下拉项。
          */
         listItems?: ListItem[] | string | ((value: any) => ListItem[]);
-        /**
-         * 
-         */
-        clazz?:any;
     };
     /**
      * 编辑类型。
@@ -192,9 +192,10 @@ namespace paper.editor {
             }
 
             if (editType !== undefined) {
-                if (option && option.clazz) {
-                    option.clazz = egret.getQualifiedClassName(option.clazz);
+                if (option && option.componentClass) {
+                    option.componentClass = egret.getQualifiedClassName(option.componentClass);
                 }
+
                 target['__props__'].push(new PropertyInfo(property, editType, option));
             }
             else {

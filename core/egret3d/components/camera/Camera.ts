@@ -113,11 +113,11 @@ namespace egret3d {
         private _nativeProjection: boolean = false;
         private _nativeTransform: boolean = false;
         private _dirtyMask: DirtyMask = DirtyMask.All;
-        private _opvalue: number = 1.0;
-        private _fov: number = Const.PI_QUARTER;
-        private _near: number = 0.3;
-        private _far: number = 1000.0;
-        private _size: number = 1.0;
+        private _opvalue: float = 1.0;
+        private _fov: float = Const.PI_QUARTER;
+        private _near: float = 0.3;
+        private _far: float = 1000.0;
+        private _size: float = 1.0;
         private readonly _viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
         private readonly _pixelViewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
         private readonly _frustum: Frustum = Frustum.create();
@@ -289,7 +289,7 @@ namespace egret3d {
          * @param stageY 舞台垂直坐标。
          * @param ray 射线。
          */
-        public stageToRay(stageX: number, stageY: number, ray?: Ray): Ray {
+        public stageToRay(stageX: float, stageY: float, ray?: Ray): Ray {
             if (!ray) {
                 ray = Ray.create();
             }
@@ -351,10 +351,10 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0, step: 0.01 })
-        public get opvalue(): number {
+        public get opvalue(): float {
             return this._opvalue;
         }
-        public set opvalue(value: number) {
+        public set opvalue(value: float) {
             if (value !== value || value < 0.0) {
                 value = 0.0;
             }
@@ -382,10 +382,10 @@ namespace egret3d {
          */
         @paper.serializedField("_near")
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
-        public get near(): number {
+        public get near(): float {
             return this._near;
         }
-        public set near(value: number) {
+        public set near(value: float) {
             if (value >= this._far) {
                 value = this._far - 0.01;
             }
@@ -413,10 +413,10 @@ namespace egret3d {
          */
         @paper.serializedField("_far")
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.02, maximum: 3000.0, step: 1 })
-        public get far(): number {
+        public get far(): float {
             return this._far;
         }
-        public set far(value: number) {
+        public set far(value: float) {
             if (value <= this._near) {
                 value = this._near + 0.01;
             }
@@ -440,10 +440,10 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Const.PI - 0.01, step: 0.01 })
-        public get fov(): number {
+        public get fov(): float {
             return this._fov;
         }
-        public set fov(value: number) {
+        public set fov(value: float) {
             if (value !== value || value < 0.01) {
                 value = 0.01;
             }
@@ -470,10 +470,10 @@ namespace egret3d {
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
-        public get size(): number {
+        public get size(): float {
             return this._size;
         }
-        public set size(value: number) {
+        public set size(value: float) {
             if (value !== value || value < 0.01) {
                 value = 0.01;
             }
@@ -495,7 +495,7 @@ namespace egret3d {
         /**
          * 该相机视口的宽高比。
          */
-        public get aspect(): number {
+        public get aspect(): float {
             const { w, h } = this.pixelViewport;
 
             return w / h;
@@ -504,8 +504,8 @@ namespace egret3d {
          * 该相机渲染目标的尺寸。
          */
         public get renderTargetSize(): Readonly<ISize> {
-            let w: number;
-            let h: number;
+            let w: float;
+            let h: float;
             const renderTarget = this._renderTarget;
 
             if (renderTarget) {
@@ -587,7 +587,7 @@ namespace egret3d {
             }
         }
         /**
-         * 
+         * 该相机的截头锥体。
          */
         public get frustum(): Readonly<Frustum> {
             if (this._dirtyMask & DirtyMask.CullingFrustum) {
@@ -609,7 +609,6 @@ namespace egret3d {
 
             return this._cullingMatrix;
         }
-
         public set cullingMatrix(value: Readonly<Matrix4>) {
             const cullingMatrix = this._cullingMatrix;
             if (cullingMatrix !== value) {
@@ -631,10 +630,9 @@ namespace egret3d {
 
             if (this._dirtyMask & DirtyMask.ProjectionMatrix) {
                 viewportMatrix.fromProjection(
-                    this._fov, this._near, this._far,
-                    this._size,
-                    this._opvalue,
-                    this.aspect, stage.matchFactor
+                    this._near, this._far,
+                    this._fov, this._size,
+                    this._opvalue, this.aspect, stage.matchFactor
                 );
                 this._dirtyMask &= ~DirtyMask.ProjectionMatrix;
             }
@@ -755,11 +753,11 @@ namespace egret3d {
          */
         public get postprocessingRenderTarget(): RenderTexture {
             if (!this._readRenderTarget) {
-                this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setRepeat(false).retain();
+                this._readRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setLiner(FilterMode.Bilinear).setRepeat(false).retain();
             }
 
             if (!this._writeRenderTarget) {
-                this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setRepeat(false).retain();
+                this._writeRenderTarget = RenderTexture.create({ width: stage.viewport.w, height: stage.viewport.h }).setLiner(FilterMode.Bilinear).setRepeat(false).retain();
             }
 
             return this._readRenderTarget;
@@ -768,7 +766,7 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: number, out: Vector2) {
+        public getPosAtXPanelInViewCoordinateByScreenPos(screenPos: Vector2, z: float, out: Vector2) {
             const { w, h } = this.renderTargetSize;
 
             const nearpos = helpVector3A;
@@ -805,7 +803,7 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public createRayByScreen(screenPosX: number, screenPosY: number, ray?: Ray) {
+        public createRayByScreen(screenPosX: float, screenPosY: float, ray?: Ray) {
             return this.stageToRay(screenPosX, screenPosY, ray);
         }
         /**

@@ -16,7 +16,7 @@ namespace egret3d.webgl {
             const width = extension.width!;
             const height = extension.height!;
             const format = extension.format || gltf.TextureFormat.RGBA;
-            const dataType = extension.type || gltf.TextureDataType.UNSIGNED_BYTE;
+            const dataType = extension.type || gltf.ComponentType.UnsignedByte;
 
             if (extension.depth !== undefined && extension.depth > 1) {
                 type = gltf.TextureType.Texture3D;

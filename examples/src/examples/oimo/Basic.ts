@@ -36,7 +36,7 @@ namespace examples.oimo {
 
                 const rigidbody = entity.addComponent(egret3d.oimo.Rigidbody);
                 const boxCollider = entity.addComponent(egret3d.oimo.BoxCollider);
-                rigidbody.type = egret3d.oimo.RigidbodyType.STATIC;
+                rigidbody.type = egret3d.oimo.RigidbodyType.KINEMATIC;
                 boxCollider.box.size = groundSize;
             }
 

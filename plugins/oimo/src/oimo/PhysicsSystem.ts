@@ -20,7 +20,7 @@ namespace egret3d.oimo {
             return [
                 paper.Matcher.create<paper.GameObject>(egret3d.Transform, Rigidbody).extraOf(
                     BoxCollider, SphereCollider, CylinderCollider, ConeCollider, CapsuleCollider,
-                    SphericalJoint, HingeJoint, ConeTwistJoint, UniversalJoint,
+                    PrismaticJoint, RevoluteJoint, CylindricalJoint, SphericalJoint, UniversalJoint, ConeTwistJoint,
                 ),
             ];
         }
@@ -92,12 +92,19 @@ namespace egret3d.oimo {
 
         public onEntityRemoved(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
             const rigidbody = entity.getRemovedComponent(Rigidbody) || entity.getComponent(Rigidbody)!;
+            const oimoRigidbody = rigidbody.oimoRigidbody;
 
-            for (const joint of entity.getComponents(BaseJoint as any, true) as BaseJoint<any>[]) {
-                this._oimoWorld.removeJoint(joint.oimoJoint);
+            let joint = oimoRigidbody.getJointLinkList();
+
+            while (joint !== null) {
+                if (joint.getContact().getRigidBody1() === oimoRigidbody) {
+                    this._oimoWorld.removeJoint(joint.getContact());
+                }
+
+                joint = joint.getNext();
             }
 
-            this._oimoWorld.removeRigidBody(rigidbody.oimoRigidbody);
+            this._oimoWorld.removeRigidBody(oimoRigidbody);
         }
 
         public onEntityAdded(entity: paper.GameObject, group: paper.Group<paper.GameObject>) {
@@ -218,6 +225,7 @@ namespace egret3d.oimo {
 
                 raycastInfo.collider = rayCastClosest.shape.userData;
                 raycastInfo.rigidbody = rayCastClosest.shape.getRigidBody().userData; // TODO
+                raycastInfo.transform = (raycastInfo.rigidbody as egret3d.oimo.Rigidbody).gameObject!.transform;
 
                 return true;
             }

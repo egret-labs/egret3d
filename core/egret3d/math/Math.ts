@@ -30,21 +30,6 @@ namespace egret3d {
             return from + (to - from) * t;
         }
 
-        export function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>) {
-            const planes = frustum.planes;
-            const center = sphere.center;
-            const negRadius = -sphere.radius;
-
-            for (const plane of planes) {
-                const distance = plane.getDistance(center);
-                if (distance < negRadius) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
         export function randFloat(low: number, high: number): number {
             return low + Math.random() * (high - low);
         }
@@ -63,6 +48,22 @@ namespace egret3d {
 
         export function floorPowerOfTwo(value: number): uint {
             return Math.pow(2, Math.floor(Math.log(value) / Math.LN2));
+        }
+        
+        export function frustumIntersectsSphere(frustum: Readonly<Frustum>, sphere: Readonly<Sphere>) {
+            const planes = frustum.planes;
+            const center = sphere.center;
+            const negRadius = -sphere.radius;
+
+            for (const plane of planes) {
+                const distance = plane.getDistance(center);
+
+                if (distance < negRadius) {
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
     /**
@@ -86,6 +87,14 @@ namespace egret3d {
          * - https://developer.mozilla.org/zh-CN/docs/Web/JavaScript/Reference/Global_Objects/Number/EPSILON
          */
         EPSILON = 2.2204460492503130808472633361816E-16,
+        /**
+         * The square root of 2.
+         */
+        SQRT_2 = 1.4142135623731,
+        /**
+         * The square root of 0.5, or, equivalently, one divided by the square root of 2.
+         */
+        SQRT1_2 = SQRT_2 * 0.5,
     }
 
     export function sign(value: number): number {

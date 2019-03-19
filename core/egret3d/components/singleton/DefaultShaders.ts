@@ -23,7 +23,9 @@ namespace egret3d {
         public static DEPTH: Shader;
         public static DISTANCE_RGBA: Shader;
         public static SHADOW: Shader;
+        //
         public static COPY: Shader;
+        public static FXAA: Shader;
 
         /**
          * @deprecated
@@ -179,6 +181,9 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.COPY = this._createShader("builtin/copy.shader.json", ShaderLib.copy as any, RenderQueue.Geometry, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, true);
+            DefaultShaders.FXAA = this._createShader("builtin/fxaa.shader.json", ShaderLib.fxaa as any, RenderQueue.Geometry, helpStates);
 
             // deprecated
             helpMaterial.clearStates().setDepth(true, true);

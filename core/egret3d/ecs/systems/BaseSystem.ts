@@ -2,10 +2,26 @@ namespace paper {
     /**
      * 基础系统。
      * - 全部系统的基类。
+     * - 生命周期的顺序如下：
+     * - onAwake();
+     * - onEnable();
+     * - onStart();
+     * - onComponentRemoved();
+     * - onEntityRemoved();
+     * - onEntityAdded();
+     * - onComponentAdded();
+     * - onTick();
+     * - onFrame();
+     * - onFrameCleanup();
+     * - onTickCleanup();
+     * - onDisable();
+     * - onDestroy();
      */
     export abstract class BaseSystem<TEntity extends IEntity> implements ISystem<TEntity> {
         /**
-         * 
+         * 该系统允许运行的模式。
+         * - 默认可以在所有模式运行。
+         * - 通过系统装饰器 `@paper.executeMode()` 来修改该值。
          */
         public static readonly executeMode: PlayerMode = PlayerMode.Player | PlayerMode.DebugPlayer | PlayerMode.Editor;
         /**
@@ -98,10 +114,10 @@ namespace paper {
         public onEntityRemoved?(entity: TEntity, group: Group<TEntity>): void;
         public onEntityAdded?(entity: TEntity, group: Group<TEntity>): void;
         public onComponentAdded?(component: IComponent, group: Group<TEntity>): void;
-        public onTick?(deltaTime?: number): void;
-        public onTickCleanup?(deltaTime?: number): void;
-        public onFrame?(deltaTime?: number): void;
-        public onFrameCleanup?(deltaTime?: number): void;
+        public onTick?(deltaTime?: float): void;
+        public onFrame?(deltaTime?: float): void;
+        public onFrameCleanup?(deltaTime?: float): void;
+        public onTickCleanup?(deltaTime?: float): void;
         public onDisable?(): void;
         public onDestroy?(): void;
 

@@ -3,7 +3,7 @@ namespace paper.editor {
      * @internal
      */
     export class EditorMeshHelper {
-        public static createGameObject(name: string, mesh: egret3d.Mesh | null = null, material: egret3d.Material | null = null) {
+        public static createGameObject(name: string, mesh: egret3d.Mesh | null = null, material: egret3d.Material[] | egret3d.Material | null = null) {
             const gameObject = GameObject.create(name, DefaultTags.EditorOnly, Scene.editorScene);
             gameObject.layer = Layer.Editor;
 
@@ -12,7 +12,14 @@ namespace paper.editor {
             }
 
             if (material) {
-                gameObject.addComponent(egret3d.MeshRenderer).material = material;
+                const meshRenderer = gameObject.addComponent(egret3d.MeshRenderer);
+
+                if (Array.isArray(material)) {
+                    meshRenderer.materials = material;
+                }
+                else {
+                    meshRenderer.material = material;
+                }
             }
 
             return gameObject;
@@ -20,7 +27,7 @@ namespace paper.editor {
 
         public static createIcon(name: string, icon: egret3d.Texture) {
             const material = egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC); // TODO sprite raycast
-            material.setTexture(icon).setColor(egret3d.Color.RED).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay - 1, 1.0)
+            material.setTexture(icon).setColor(egret3d.Color.RED).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay - 1, 1.0);
             const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material);
 
             return gameObject;

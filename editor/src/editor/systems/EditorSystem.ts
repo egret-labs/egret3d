@@ -13,9 +13,7 @@ namespace paper.editor {
         public onAwake() {
             Application.sceneManager.globalEntity.getOrAddComponent(EditorDefaultAsset); // TODO
             //
-            if (Application.playerMode === PlayerMode.Editor) {
-            }
-            else {
+            if ((Application.playerMode & PlayerMode.Editor) === 0) {
                 const guiComponent = this._guiComponent!;
                 const oldContainer = guiComponent!.hierarchy.domElement.parentElement!;
                 const container = document.createElement("div");
@@ -81,11 +79,15 @@ namespace paper.editor {
         }
 
         public onStart() {
+            if ((Application.playerMode & PlayerMode.Editor) !== 0) {
+                return;
+            }
+
             console.info(`小提示：通过 H 键切换 Inspector 的显示与隐藏。`);
         }
 
         public onFrame() {
-            if (Application.playerMode === PlayerMode.Editor) {
+            if ((Application.playerMode & PlayerMode.Editor) !== 0) {
                 return;
             }
 
@@ -141,5 +143,5 @@ namespace paper.editor {
         }
     }
     //
-    Application.systemManager.preRegister(EditorSystem, Application.gameObjectContext, SystemOrder.End + 10000);
+    Application.systemManager.preRegister(EditorSystem, Application.gameObjectContext, SystemOrder.End);
 }
