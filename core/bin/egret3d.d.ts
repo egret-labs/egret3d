@@ -10437,12 +10437,12 @@ declare namespace egret3d {
          * 为该材质添加指定的 define。
          * @param defineString define 字符串。
          */
-        addDefine(defineString: string, value?: number): this;
+        addDefine(defineString: string, value?: number | string): this;
         /**
          * 从该材质移除指定的 define。
          * @param defineString define 字符串。
          */
-        removeDefine(defineString: string, value?: number): this;
+        removeDefine(defineString: string, value?: number | string): this;
         /**
          * 设置该材质的混合模式。
          * @param blend 混合模式。

@@ -26864,7 +26864,8 @@ var egret3d;
                 var define = linked_1[_c];
                 var context = define.context;
                 if (context) {
-                    if (typeof context === "number") {
+                    // if (typeof context === "number") {
+                    if (!define.isCode) {
                         context = define.name + " " + context;
                     }
                 }
@@ -27472,9 +27473,9 @@ var egret3d;
          * @param defineString define 字符串。
          */
         Material.prototype.removeDefine = function (defineString, value) {
-            if (value !== undefined) {
-                defineString += " " + value;
-            }
+            // if (value !== undefined) {
+            //     defineString += " " + value;
+            // }
             this.defines.removeDefine(defineString);
             return this;
         };
