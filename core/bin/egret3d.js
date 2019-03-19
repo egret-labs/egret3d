@@ -5665,8 +5665,8 @@ var egret3d;
          * @param asp 投影宽高比。
          * @param matchFactor 宽高适配的插值系数。
          * - `0.0` ~ `1.0`
-         * - `0.0` 以高适配。
-         * - `1.0` 以宽适配。
+         * - `0.0` 以宽适配。
+         * - `1.0` 以高适配。
          */
         Matrix4.prototype.fromProjection = function (near, far, fov, size, opvalue, asp, matchFactor, viewport) {
             if (viewport === void 0) { viewport = null; }
@@ -5701,8 +5701,8 @@ var egret3d;
                 var heightY = size / asp;
                 var leftY = offsetX * widthY;
                 var topY = offsetY * heightY;
-                var left = leftX + (leftY - leftX) * matchFactor * (viewport !== null ? viewport.x : 1.0);
-                var top_2 = topX + (topY - topX) * matchFactor * (viewport !== null ? viewport.y : 1.0);
+                var left = leftX + (leftY - leftX) * matchFactor;
+                var top_2 = topX + (topY - topX) * matchFactor;
                 var width = (widthX + (widthY - widthX) * matchFactor) * scaleX;
                 var height = (heightX + (heightY - heightX) * matchFactor) * scaleY;
                 orthographicMatrix.orthographicProjectMatrix(left, left + width, top_2, top_2 - height, near, far);
@@ -7795,6 +7795,19 @@ var egret3d;
                 }
             }
             return true;
+        };
+        /**
+         *
+         * @param sphere
+         */
+        Box.prototype.intersectsSphere = function (sphere) {
+            if (this.isEmpty) {
+                return false;
+            }
+            // Find the point on the AABB closest to the sphere center.
+            var closestPoint = egret3d.helpVector3A.copy(sphere.center).clamp(this.minimum, this.maximum);
+            // If that point is inside the sphere, the AABB and sphere intersect.
+            return closestPoint.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
         };
         Object.defineProperty(Box.prototype, "isEmpty", {
             /**
@@ -13949,7 +13962,6 @@ var egret3d;
 (function (egret3d) {
     /**
      * 全局舞台信息组件。
-     * TODO 调整文件结构，标记接口源码链接。
      */
     var Stage = (function (_super) {
         __extends(Stage, _super);
@@ -13964,7 +13976,7 @@ var egret3d;
              */
             _this.onResize = new signals.Signal();
             /**
-             *
+             * 舞台到屏幕的缩放系数。
              */
             _this.scaler = 1.0;
             _this._rotated = false;
@@ -13990,6 +14002,7 @@ var egret3d;
                 this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
                 viewport.w = Math.ceil(screenW * this.scaler);
                 viewport.h = Math.ceil(screenH * this.scaler);
+                this.scaler = screenW / screenSize.w;
             }
             else {
                 var scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
@@ -13998,8 +14011,8 @@ var egret3d;
                 this._rotated = false;
                 viewport.w = Math.ceil(screenSize.w * this.scaler);
                 viewport.h = Math.ceil(screenSize.h * this.scaler);
+                this.scaler = viewport.w / screenSize.w;
             }
-            // size.h = viewport.h / this.scaler;
         };
         Stage.prototype.initialize = function (config) {
             _super.prototype.initialize.call(this);
@@ -14048,6 +14061,9 @@ var egret3d;
         Object.defineProperty(Stage.prototype, "matchFactor", {
             /**
              * 以宽或高适配的系数。
+             * - `0.0` ~ `1.0`。
+             * - `0.0` 以宽适配。
+             * - `1.0` 以高适配。
              */
             get: function () {
                 return this._matchFactor;

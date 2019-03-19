@@ -177,11 +177,12 @@ declare namespace paper.editor {
         private readonly _keyX;
         private readonly _keyF;
         private _gizmosContainerEntity;
+        private _gizmosForwardContainerEntity;
         private _touchContainerEntity;
         private _transformControllerEntity;
         private readonly _frustum;
         private readonly _projectionMatrix;
-        private _updateSelectFrustum(camera);
+        private _updateSelectFrustum(camera, viewport);
         lookAtSelected(): void;
         protected getMatchers(): IAnyOfMatcher<GameObject>[];
         onEnable(): void;
@@ -375,6 +376,11 @@ declare namespace paper.editor {
     class GizmosContainerFlag extends EditorComponent {
     }
     /**
+     * Gizmos 容器标记。
+     */
+    class GizmosContainerForwardFlag extends EditorComponent {
+    }
+    /**
      * 可点选容器标记。
      */
     class TouchContainerFlag extends EditorComponent {
@@ -383,6 +389,9 @@ declare namespace paper.editor {
      * 选框网格标记。
      */
     class SelectFrameFlag extends EditorComponent {
+        /**
+         * 相对于舞台的选框视口。
+         */
         readonly viewport: egret3d.Rectangle;
     }
     /**

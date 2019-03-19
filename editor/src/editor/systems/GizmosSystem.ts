@@ -2,6 +2,7 @@ namespace paper.editor {
 
     const enum GroupIndex {
         GizmosContainer,
+        GizmosForwardContainer,
         TouchContainer,
         LastSelectedTransform,
 
@@ -87,6 +88,13 @@ namespace paper.editor {
             const gameObject = EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
             return gameObject;
+        }
+
+        private _updateGizmosForwardContainer() {
+            const cameraTransform = egret3d.Camera.editor.gameObject.transform;
+            const entityTransform = this.groups[GroupIndex.GizmosForwardContainer].singleEntity!.transform;
+            cameraTransform.getForward(entityTransform.localPosition).add(cameraTransform.position).update();
+            entityTransform.setLocalRotation(cameraTransform.rotation);
         }
 
         private _updateTransformController(): any {
@@ -240,12 +248,24 @@ namespace paper.editor {
 
             if (selectFrame) {
                 const editorCamera = egret3d.Camera.editor;
-                const eyeDistance = editorCamera.gameObject.transform.position.getDistance(selectFrameDrawer.transform.localPosition);
-                const selectFrameFlag = selectFrame.getComponent(SelectFrameFlag)!;
+                const selectViewport = selectFrame.getComponent(SelectFrameFlag)!.viewport;
+
+                const h = Math.tan(editorCamera.fov * 0.5) * 2.0;
+                const w = h * editorCamera.aspect;
 
                 selectFrameDrawer.enabled = true;
-                selectFrameDrawer.transform.localRotation = editorCamera.gameObject.transform.rotation;
-                selectFrameDrawer.transform.setLocalScale(eyeDistance * selectFrameFlag.viewport.w, eyeDistance * selectFrameFlag.viewport.h, 1.0);
+                selectFrameDrawer.transform
+                    .setLocalPosition(
+                        (selectViewport.x + selectViewport.w * 0.5 - 0.5) * w,
+                        (0.5 - selectViewport.y - selectViewport.h * 0.5) * h,
+                        0.0
+                    )
+                    .setLocalScale(
+                        selectViewport.w * w,
+                        selectViewport.h * h,
+                        1.0
+                    );
+
             }
             else {
                 selectFrameDrawer.enabled = false;
@@ -957,6 +977,7 @@ namespace paper.editor {
         protected getMatchers() {
             const matchers = [
                 Matcher.create<GameObject>(false, egret3d.Transform, GizmosContainerFlag),
+                Matcher.create<GameObject>(false, egret3d.Transform, GizmosContainerForwardFlag),
                 Matcher.create<GameObject>(false, egret3d.Transform, TouchContainerFlag),
                 Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag), // Last selected transform
 
@@ -1022,7 +1043,7 @@ namespace paper.editor {
                 [
                     egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED)
                         .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.2)
-                        .setColor(egret3d.Color.WHITE)
+                        .setColor(egret3d.Color.INDIGO)
                         .setDepth(false, false)
                 ]
             );
@@ -1074,7 +1095,6 @@ namespace paper.editor {
                 this._gridA!.parent = entity;
                 this._gridB!.parent = entity;
                 this._hoverBox!.transform.parent = entity.transform;
-                this._selectFrameDrawer!.transform.parent = entity.transform;
                 this._skeletonDrawer!.transform.parent = entity.transform;
 
                 const mA = (this._gridA!.renderer as egret3d.MeshRenderer).material!;
@@ -1082,6 +1102,9 @@ namespace paper.editor {
 
                 mA.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
                 mB.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
+            }
+            else if (group === groups[GroupIndex.GizmosForwardContainer]) {
+                this._selectFrameDrawer!.transform.parent = entity.transform;
             }
             else if (group === groups[GroupIndex.LastSelectedTransform]) {
                 if (this.enabled) {
@@ -1101,6 +1124,8 @@ namespace paper.editor {
         }
 
         public onFrame() {
+            this._updateGizmosForwardContainer();
+
             this._updateTransformController();
             this._updateBoxes();
             this._updateCameraAndLights();

@@ -401,7 +401,7 @@ namespace egret3d {
             // return point closest to the ray (positive side)
 
             if (tmax < 0.0) return false;
-            
+
             if (tmin <= 0.0) return false;
 
             if (raycastInfo) {
@@ -426,6 +426,20 @@ namespace egret3d {
             }
 
             return true;
+        }
+        /**
+         * 
+         * @param sphere 
+         */
+        public intersectsSphere(sphere: Readonly<Sphere>): boolean {
+            if (this.isEmpty) {
+                return false;
+            }
+
+            // Find the point on the AABB closest to the sphere center.
+            const closestPoint = helpVector3A.copy(sphere.center).clamp(this.minimum, this.maximum);
+            // If that point is inside the sphere, the AABB and sphere intersect.
+            return closestPoint.getSquaredDistance(sphere.center) <= (sphere.radius * sphere.radius);
         }
         /**
          * 该立方体是否为空。

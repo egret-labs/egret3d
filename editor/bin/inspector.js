@@ -3000,6 +3000,7 @@ var paper;
                 _this._keyX = egret3d.inputCollecter.getKey("KeyX" /* KeyX */);
                 _this._keyF = egret3d.inputCollecter.getKey("KeyF" /* KeyF */);
                 _this._gizmosContainerEntity = null;
+                _this._gizmosForwardContainerEntity = null;
                 _this._touchContainerEntity = null;
                 _this._transformControllerEntity = null;
                 _this._frustum = egret3d.Frustum.create();
@@ -3007,14 +3008,15 @@ var paper;
                 return _this;
             }
             SceneSystem_1 = SceneSystem;
-            SceneSystem.prototype._updateSelectFrustum = function (camera) {
-                this._projectionMatrix.fromProjection(camera.fov, camera.near, camera.far, camera.size, camera.opvalue, camera.aspect, egret3d.stage.matchFactor);
+            SceneSystem.prototype._updateSelectFrustum = function (camera, viewport) {
+                this._projectionMatrix.fromProjection(camera.near, camera.far, camera.fov, camera.size, camera.opvalue, camera.aspect, egret3d.stage.matchFactor, viewport);
+                this._frustum.fromMatrix(this._projectionMatrix.multiply(this._projectionMatrix, camera.transform.worldToLocalMatrix));
             };
             SceneSystem.prototype.lookAtSelected = function () {
                 var orbitControls = egret3d.Camera.editor.gameObject.getComponent(editor.OrbitControls);
                 orbitControls.distance = 10.0;
                 orbitControls.lookAtOffset.set(0.0, 0.0, 0.0);
-                var lastSelectedEntity = this.groups[1].singleEntity;
+                var lastSelectedEntity = this.groups[2].singleEntity;
                 if (lastSelectedEntity) {
                     orbitControls.lookAtPoint.copy(lastSelectedEntity.transform.position);
                 }
@@ -3024,6 +3026,8 @@ var paper;
             };
             SceneSystem.prototype.getMatchers = function () {
                 return [
+                    paper.Matcher.create(egret3d.Transform)
+                        .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
                     paper.Matcher.create(egret3d.Transform, editor.HoveredFlag)
                         .anyOf(egret3d.MeshRenderer, egret3d.SkinnedMeshRenderer, egret3d.particle.ParticleRenderer),
                     paper.Matcher.create(egret3d.Transform, editor.LastSelectedFlag),
@@ -3033,11 +3037,13 @@ var paper;
                 var editorCamera = egret3d.Camera.editor;
                 editorCamera.gameObject.addComponent(editor.OrbitControls);
                 editorCamera.enabled = true;
-                this._gizmosContainerEntity = editor.EditorMeshHelper.createGameObject("Drawer");
-                this._touchContainerEntity = editor.EditorMeshHelper.createGameObject("Touch Drawer");
+                this._gizmosContainerEntity = editor.EditorMeshHelper.createGameObject("Gizmos");
+                this._gizmosForwardContainerEntity = editor.EditorMeshHelper.createGameObject("Gizmos Forward");
+                this._touchContainerEntity = editor.EditorMeshHelper.createGameObject("Touch");
                 this._transformControllerEntity = editor.EditorMeshHelper.createGameObject("Transform Controller");
                 this._transformControllerEntity.enabled = false;
                 this._gizmosContainerEntity.addComponent(editor.GizmosContainerFlag);
+                this._gizmosForwardContainerEntity.addComponent(editor.GizmosContainerForwardFlag);
                 this._touchContainerEntity.addComponent(editor.TouchContainerFlag);
                 this._transformControllerEntity.addComponent(editor.TransformController);
             };
@@ -3046,9 +3052,11 @@ var paper;
                 editorCamera.gameObject.removeComponent(editor.OrbitControls);
                 editorCamera.enabled = false;
                 this._gizmosContainerEntity.destroy();
+                this._gizmosForwardContainerEntity.destroy();
                 this._touchContainerEntity.destroy();
                 this._transformControllerEntity.destroy();
                 this._gizmosContainerEntity = null;
+                this._gizmosForwardContainerEntity = null;
                 this._touchContainerEntity = null;
                 this._transformControllerEntity = null;
             };
@@ -3059,10 +3067,10 @@ var paper;
                 var groups = this.groups;
             };
             SceneSystem.prototype.onFrame = function () {
+                var editorScene = paper.Application.sceneManager.editorScene;
                 var editorCamera = egret3d.Camera.editor;
                 var groups = this.groups;
-                var hoveredEntity = groups[0].singleEntity;
-                var lastSelectedEntity = this.groups[1].singleEntity;
+                var hoveredEntity = groups[1].singleEntity;
                 var transformController = this._transformControllerEntity.getComponent(editor.TransformController);
                 var defaultPointer = egret3d.inputCollecter.defaultPointer;
                 if (defaultPointer.isDown(1 /* LeftMouse */, false)) {
@@ -3073,13 +3081,11 @@ var paper;
                             transformController.start(defaultPointer.downPosition);
                         }
                         else {
-                            var selectFrameFlag_1 = this._gizmosContainerEntity.addComponent(editor.SelectFrameFlag);
-                            selectFrameFlag_1.viewport.x = defaultPointer.position.x / egret3d.stage.viewport.w;
-                            selectFrameFlag_1.viewport.y = defaultPointer.position.y / egret3d.stage.viewport.h;
+                            this._gizmosForwardContainerEntity.addComponent(editor.SelectFrameFlag);
                         }
                     }
                 }
-                var selectFrameFlag = this._gizmosContainerEntity.getComponent(editor.SelectFrameFlag);
+                var selectFrameFlag = this._gizmosForwardContainerEntity.getComponent(editor.SelectFrameFlag);
                 if (defaultPointer.isUp(1 /* LeftMouse */, false)) {
                     if (transformController.isActiveAndEnabled && transformController.hovered) {
                         transformController.end();
@@ -3119,7 +3125,7 @@ var paper;
                             }
                         }
                         if (selectFrameFlag) {
-                            this._gizmosContainerEntity.removeComponent(editor.SelectFrameFlag);
+                            this._gizmosForwardContainerEntity.removeComponent(editor.SelectFrameFlag);
                             selectFrameFlag = null;
                         }
                     }
@@ -3134,9 +3140,42 @@ var paper;
                         }
                         else if (event_2.buttons & 1) {
                             if (selectFrameFlag) {
-                                selectFrameFlag.viewport.w = defaultPointer.position.x / egret3d.stage.viewport.w - selectFrameFlag.viewport.x;
-                                selectFrameFlag.viewport.h = defaultPointer.position.y / egret3d.stage.viewport.h - selectFrameFlag.viewport.y;
-                                console.log(defaultPointer.position.x, defaultPointer.position.y);
+                                var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
+                                var viewport = selectFrameFlag.viewport;
+                                var downPosition = defaultPointer.downPosition, position = defaultPointer.position;
+                                var dX = position.x - downPosition.x;
+                                var dY = position.y - downPosition.y;
+                                if (downPosition.x <= position.x) {
+                                    viewport.x = downPosition.x / w;
+                                    viewport.w = dX / w;
+                                }
+                                else {
+                                    viewport.x = position.x / w;
+                                    viewport.w = -dX / w;
+                                }
+                                if (downPosition.y <= position.y) {
+                                    viewport.y = downPosition.y / h;
+                                    viewport.h = dY / h;
+                                }
+                                else {
+                                    viewport.y = position.y / h;
+                                    viewport.h = -dY / h;
+                                }
+                                if (Math.abs(dX) > 5.0 || Math.abs(dY) > 5.0) {
+                                    this._updateSelectFrustum(editorCamera, viewport);
+                                    for (var _i = 0, _b = groups[0].entities; _i < _b.length; _i++) {
+                                        var entity = _b[_i];
+                                        if (entity.scene === editorScene) {
+                                            continue;
+                                        }
+                                        if (this._frustum.intersectsSphere(entity.renderer.boundingSphere)) {
+                                            this._modelComponent.select(entity, false);
+                                        }
+                                        else {
+                                            this._modelComponent.unselect(entity);
+                                        }
+                                    }
+                                }
                             }
                         }
                         else {
@@ -3725,6 +3764,8 @@ var paper;
                         }
                     }
                 }
+                //标脏根对象数组（不标脏的话根对象数组和gameobjects的排序会不对）
+                this.scene['_rootEntitiesDirty'] = true;
             };
             /**
              * 筛选层级中的顶层游戏对象
@@ -4513,6 +4554,18 @@ var paper;
         editor.GizmosContainerFlag = GizmosContainerFlag;
         __reflect(GizmosContainerFlag.prototype, "paper.editor.GizmosContainerFlag");
         /**
+         * Gizmos 容器标记。
+         */
+        var GizmosContainerForwardFlag = (function (_super) {
+            __extends(GizmosContainerForwardFlag, _super);
+            function GizmosContainerForwardFlag() {
+                return _super !== null && _super.apply(this, arguments) || this;
+            }
+            return GizmosContainerForwardFlag;
+        }(EditorComponent));
+        editor.GizmosContainerForwardFlag = GizmosContainerForwardFlag;
+        __reflect(GizmosContainerForwardFlag.prototype, "paper.editor.GizmosContainerForwardFlag");
+        /**
          * 可点选容器标记。
          */
         var TouchContainerFlag = (function (_super) {
@@ -4531,6 +4584,9 @@ var paper;
             __extends(SelectFrameFlag, _super);
             function SelectFrameFlag() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
+                /**
+                 * 相对于舞台的选框视口。
+                 */
                 _this.viewport = egret3d.Rectangle.create();
                 return _this;
             }
@@ -5846,29 +5902,30 @@ var paper;
         var GroupIndex;
         (function (GroupIndex) {
             GroupIndex[GroupIndex["GizmosContainer"] = 0] = "GizmosContainer";
-            GroupIndex[GroupIndex["TouchContainer"] = 1] = "TouchContainer";
-            GroupIndex[GroupIndex["LastSelectedTransform"] = 2] = "LastSelectedTransform";
-            GroupIndex[GroupIndex["TransformController"] = 3] = "TransformController";
-            GroupIndex[GroupIndex["SelectFrame"] = 4] = "SelectFrame";
-            GroupIndex[GroupIndex["HoveredBox"] = 5] = "HoveredBox";
-            GroupIndex[GroupIndex["SelectedBoxes"] = 6] = "SelectedBoxes";
-            GroupIndex[GroupIndex["AllCameras"] = 7] = "AllCameras";
-            GroupIndex[GroupIndex["AllLights"] = 8] = "AllLights";
-            GroupIndex[GroupIndex["LastSelectedCamera"] = 9] = "LastSelectedCamera";
-            GroupIndex[GroupIndex["LastSelectedSkeleton"] = 10] = "LastSelectedSkeleton";
-            GroupIndex[GroupIndex["BoxColliders"] = 11] = "BoxColliders";
-            GroupIndex[GroupIndex["SphereColliders"] = 12] = "SphereColliders";
-            GroupIndex[GroupIndex["CylinderColliders"] = 13] = "CylinderColliders";
-            GroupIndex[GroupIndex["CapsuleColliders"] = 14] = "CapsuleColliders";
-            GroupIndex[GroupIndex["OimoBoxColliders"] = 15] = "OimoBoxColliders";
-            GroupIndex[GroupIndex["OimoSphereColliders"] = 16] = "OimoSphereColliders";
-            GroupIndex[GroupIndex["OimoCylinderColliders"] = 17] = "OimoCylinderColliders";
-            GroupIndex[GroupIndex["OimoConeColliders"] = 18] = "OimoConeColliders";
-            GroupIndex[GroupIndex["OimoCapsuleColliders"] = 19] = "OimoCapsuleColliders";
-            GroupIndex[GroupIndex["OimoPrismaticJoints"] = 20] = "OimoPrismaticJoints";
-            GroupIndex[GroupIndex["OimoRevoluteJoints"] = 21] = "OimoRevoluteJoints";
-            GroupIndex[GroupIndex["OimoCylindricalJoints"] = 22] = "OimoCylindricalJoints";
-            GroupIndex[GroupIndex["OimoSphericalJoints"] = 23] = "OimoSphericalJoints";
+            GroupIndex[GroupIndex["GizmosForwardContainer"] = 1] = "GizmosForwardContainer";
+            GroupIndex[GroupIndex["TouchContainer"] = 2] = "TouchContainer";
+            GroupIndex[GroupIndex["LastSelectedTransform"] = 3] = "LastSelectedTransform";
+            GroupIndex[GroupIndex["TransformController"] = 4] = "TransformController";
+            GroupIndex[GroupIndex["SelectFrame"] = 5] = "SelectFrame";
+            GroupIndex[GroupIndex["HoveredBox"] = 6] = "HoveredBox";
+            GroupIndex[GroupIndex["SelectedBoxes"] = 7] = "SelectedBoxes";
+            GroupIndex[GroupIndex["AllCameras"] = 8] = "AllCameras";
+            GroupIndex[GroupIndex["AllLights"] = 9] = "AllLights";
+            GroupIndex[GroupIndex["LastSelectedCamera"] = 10] = "LastSelectedCamera";
+            GroupIndex[GroupIndex["LastSelectedSkeleton"] = 11] = "LastSelectedSkeleton";
+            GroupIndex[GroupIndex["BoxColliders"] = 12] = "BoxColliders";
+            GroupIndex[GroupIndex["SphereColliders"] = 13] = "SphereColliders";
+            GroupIndex[GroupIndex["CylinderColliders"] = 14] = "CylinderColliders";
+            GroupIndex[GroupIndex["CapsuleColliders"] = 15] = "CapsuleColliders";
+            GroupIndex[GroupIndex["OimoBoxColliders"] = 16] = "OimoBoxColliders";
+            GroupIndex[GroupIndex["OimoSphereColliders"] = 17] = "OimoSphereColliders";
+            GroupIndex[GroupIndex["OimoCylinderColliders"] = 18] = "OimoCylinderColliders";
+            GroupIndex[GroupIndex["OimoConeColliders"] = 19] = "OimoConeColliders";
+            GroupIndex[GroupIndex["OimoCapsuleColliders"] = 20] = "OimoCapsuleColliders";
+            GroupIndex[GroupIndex["OimoPrismaticJoints"] = 21] = "OimoPrismaticJoints";
+            GroupIndex[GroupIndex["OimoRevoluteJoints"] = 22] = "OimoRevoluteJoints";
+            GroupIndex[GroupIndex["OimoCylindricalJoints"] = 23] = "OimoCylindricalJoints";
+            GroupIndex[GroupIndex["OimoSphericalJoints"] = 24] = "OimoSphericalJoints";
         })(GroupIndex || (GroupIndex = {}));
         var _girdStep = 5;
         /**
@@ -5926,8 +5983,14 @@ var paper;
                 var gameObject = editor.EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 return gameObject;
             };
+            GizmosSystem.prototype._updateGizmosForwardContainer = function () {
+                var cameraTransform = egret3d.Camera.editor.gameObject.transform;
+                var entityTransform = this.groups[1 /* GizmosForwardContainer */].singleEntity.transform;
+                cameraTransform.getForward(entityTransform.localPosition).add(cameraTransform.position).update();
+                entityTransform.setLocalRotation(cameraTransform.rotation);
+            };
             GizmosSystem.prototype._updateTransformController = function () {
-                var transformController = this.groups[3 /* TransformController */].singleEntity.getComponent(editor.TransformController);
+                var transformController = this.groups[4 /* TransformController */].singleEntity.getComponent(editor.TransformController);
                 if (transformController.isActiveAndEnabled) {
                     transformController.update(egret3d.inputCollecter.defaultPointer.position);
                 }
@@ -5949,9 +6012,9 @@ var paper;
             GizmosSystem.prototype._updateBoxes = function () {
                 var groups = this.groups;
                 var containerEntity = groups[0 /* GizmosContainer */].singleEntity;
-                var selectedEntities = groups[6 /* SelectedBoxes */].entities;
+                var selectedEntities = groups[7 /* SelectedBoxes */].entities;
                 var hoverBox = this._hoverBox;
-                var hoveredEntity = groups[5 /* HoveredBox */].singleEntity;
+                var hoveredEntity = groups[6 /* HoveredBox */].singleEntity;
                 if (hoveredEntity) {
                     var renderer = hoveredEntity.renderer;
                     var boundingTransform = renderer.getBoundingTransform();
@@ -5986,8 +6049,8 @@ var paper;
             };
             GizmosSystem.prototype._updateCameraAndLights = function () {
                 var groups = this.groups;
-                var touchContainerEntity = groups[1 /* TouchContainer */].singleEntity;
-                var cameraEntities = groups[7 /* AllCameras */].entities;
+                var touchContainerEntity = groups[2 /* TouchContainer */].singleEntity;
+                var cameraEntities = groups[8 /* AllCameras */].entities;
                 var editorScene = paper.Scene.editorScene;
                 var editorCamera = egret3d.Camera.editor;
                 var cameraPosition = editorCamera.gameObject.transform.position;
@@ -6017,7 +6080,7 @@ var paper;
                         }
                     }
                 }
-                var lightEntities = groups[8 /* AllLights */].entities;
+                var lightEntities = groups[9 /* AllLights */].entities;
                 for (var i = 0, l = Math.max(this._lightDrawer.length, lightEntities.length); i < l; ++i) {
                     if (i + 1 > this._lightDrawer.length) {
                         var entity = editor.EditorMeshHelper.createIcon("Light Icon " + i, editor.EditorDefaultAsset.LIGHT_ICON);
@@ -6046,15 +6109,17 @@ var paper;
                 }
             };
             GizmosSystem.prototype._updateSelectFrame = function () {
-                var selectFrame = this.groups[4 /* SelectFrame */].singleEntity;
+                var selectFrame = this.groups[5 /* SelectFrame */].singleEntity;
                 var selectFrameDrawer = this._selectFrameDrawer;
                 if (selectFrame) {
                     var editorCamera = egret3d.Camera.editor;
-                    var eyeDistance = editorCamera.gameObject.transform.position.getDistance(selectFrameDrawer.transform.localPosition);
-                    var selectFrameFlag = selectFrame.getComponent(editor.SelectFrameFlag);
+                    var selectViewport = selectFrame.getComponent(editor.SelectFrameFlag).viewport;
+                    var h = Math.tan(editorCamera.fov * 0.5) * 2.0;
+                    var w = h * editorCamera.aspect;
                     selectFrameDrawer.enabled = true;
-                    selectFrameDrawer.transform.localRotation = editorCamera.gameObject.transform.rotation;
-                    selectFrameDrawer.transform.setLocalScale(eyeDistance * selectFrameFlag.viewport.w, eyeDistance * selectFrameFlag.viewport.h, 1.0);
+                    selectFrameDrawer.transform
+                        .setLocalPosition((selectViewport.x + selectViewport.w * 0.5 - 0.5) * w, (0.5 - selectViewport.y - selectViewport.h * 0.5) * h, 0.0)
+                        .setLocalScale(selectViewport.w * w, selectViewport.h * h, 1.0);
                 }
                 else {
                     selectFrameDrawer.enabled = false;
@@ -6077,7 +6142,7 @@ var paper;
                     matrix.release();
                 };
                 var cameraViewFrustum = this._cameraViewFrustum;
-                var selectedCameraEntity = this.groups[9 /* LastSelectedCamera */].singleEntity;
+                var selectedCameraEntity = this.groups[10 /* LastSelectedCamera */].singleEntity;
                 if (selectedCameraEntity) {
                     cameraViewFrustum.enabled = true;
                     var selectedCamera = selectedCameraEntity.getComponent(egret3d.Camera);
@@ -6119,7 +6184,7 @@ var paper;
                 }
             };
             GizmosSystem.prototype._updateSkeleton = function () {
-                var skeletonEntity = this.groups[10 /* LastSelectedSkeleton */].singleEntity;
+                var skeletonEntity = this.groups[11 /* LastSelectedSkeleton */].singleEntity;
                 var skeletonDrawer = this._skeletonDrawer;
                 if (skeletonEntity) {
                     var offset = 0;
@@ -6320,7 +6385,7 @@ var paper;
                 // const editorCamera = egret3d.Camera.editor;
                 var boxColliderDrawer = this._boxColliderDrawer;
                 var drawerIndex = 0;
-                for (var _i = 0, _a = groups[11 /* BoxColliders */].entities; _i < _a.length; _i++) {
+                for (var _i = 0, _a = groups[12 /* BoxColliders */].entities; _i < _a.length; _i++) {
                     var entity = _a[_i];
                     for (var _b = 0, _c = entity.getComponents(egret3d.BoxCollider); _b < _c.length; _b++) {
                         var component = _c[_b];
@@ -6331,7 +6396,7 @@ var paper;
                     }
                 }
                 if (egret3d.oimo) {
-                    for (var _d = 0, _e = groups[15 /* OimoBoxColliders */].entities; _d < _e.length; _d++) {
+                    for (var _d = 0, _e = groups[16 /* OimoBoxColliders */].entities; _d < _e.length; _d++) {
                         var entity = _e[_d];
                         for (var _f = 0, _g = entity.getComponents(egret3d.oimo.BoxCollider); _f < _g.length; _f++) {
                             var component = _g[_f];
@@ -6347,7 +6412,7 @@ var paper;
                 }
                 var sphereColliderDrawer = this._sphereColliderDrawer;
                 drawerIndex = 0;
-                for (var _h = 0, _j = groups[12 /* SphereColliders */].entities; _h < _j.length; _h++) {
+                for (var _h = 0, _j = groups[13 /* SphereColliders */].entities; _h < _j.length; _h++) {
                     var entity = _j[_h];
                     for (var _k = 0, _l = entity.getComponents(egret3d.SphereCollider); _k < _l.length; _k++) {
                         var component = _l[_k];
@@ -6358,7 +6423,7 @@ var paper;
                     }
                 }
                 if (egret3d.oimo) {
-                    for (var _m = 0, _o = groups[16 /* OimoSphereColliders */].entities; _m < _o.length; _m++) {
+                    for (var _m = 0, _o = groups[17 /* OimoSphereColliders */].entities; _m < _o.length; _m++) {
                         var entity = _o[_m];
                         for (var _p = 0, _q = entity.getComponents(egret3d.oimo.SphereCollider); _p < _q.length; _p++) {
                             var component = _q[_p];
@@ -6374,7 +6439,7 @@ var paper;
                 }
                 var cylinderColliderDrawer = this._cylinderColliderDrawer;
                 drawerIndex = 0;
-                for (var _r = 0, _s = groups[13 /* CylinderColliders */].entities; _r < _s.length; _r++) {
+                for (var _r = 0, _s = groups[14 /* CylinderColliders */].entities; _r < _s.length; _r++) {
                     var entity = _s[_r];
                     for (var _t = 0, _u = entity.getComponents(egret3d.CylinderCollider); _t < _u.length; _t++) {
                         var component = _u[_t];
@@ -6385,7 +6450,7 @@ var paper;
                     }
                 }
                 if (egret3d.oimo) {
-                    for (var _v = 0, _w = groups[17 /* OimoCylinderColliders */].entities; _v < _w.length; _v++) {
+                    for (var _v = 0, _w = groups[18 /* OimoCylinderColliders */].entities; _v < _w.length; _v++) {
                         var entity = _w[_v];
                         for (var _x = 0, _y = entity.getComponents(egret3d.oimo.CylinderCollider); _x < _y.length; _x++) {
                             var component = _y[_x];
@@ -6395,7 +6460,7 @@ var paper;
                             this._updateCylinderColliderDrawer(entity, component, drawerIndex++, false);
                         }
                     }
-                    for (var _z = 0, _0 = groups[18 /* OimoConeColliders */].entities; _z < _0.length; _z++) {
+                    for (var _z = 0, _0 = groups[19 /* OimoConeColliders */].entities; _z < _0.length; _z++) {
                         var entity = _0[_z];
                         for (var _1 = 0, _2 = entity.getComponents(egret3d.oimo.ConeCollider); _1 < _2.length; _1++) {
                             var component = _2[_1];
@@ -6411,7 +6476,7 @@ var paper;
                 }
                 var capsuleColliderDrawer = this._capsuleColliderDrawer;
                 drawerIndex = 0;
-                for (var _3 = 0, _4 = groups[14 /* CapsuleColliders */].entities; _3 < _4.length; _3++) {
+                for (var _3 = 0, _4 = groups[15 /* CapsuleColliders */].entities; _3 < _4.length; _3++) {
                     var entity = _4[_3];
                     for (var _5 = 0, _6 = entity.getComponents(egret3d.CapsuleCollider); _5 < _6.length; _5++) {
                         var component = _6[_5];
@@ -6422,7 +6487,7 @@ var paper;
                     }
                 }
                 if (egret3d.oimo) {
-                    for (var _7 = 0, _8 = groups[19 /* OimoCapsuleColliders */].entities; _7 < _8.length; _7++) {
+                    for (var _7 = 0, _8 = groups[20 /* OimoCapsuleColliders */].entities; _7 < _8.length; _7++) {
                         var entity = _8[_7];
                         for (var _9 = 0, _10 = entity.getComponents(egret3d.oimo.CapsuleCollider); _9 < _10.length; _9++) {
                             var component = _10[_9];
@@ -6613,7 +6678,7 @@ var paper;
                 var groups = this.groups;
                 var drawerIndex = 0;
                 if (egret3d.oimo) {
-                    for (var _i = 0, _a = groups[20 /* OimoPrismaticJoints */].entities; _i < _a.length; _i++) {
+                    for (var _i = 0, _a = groups[21 /* OimoPrismaticJoints */].entities; _i < _a.length; _i++) {
                         var entity = _a[_i];
                         for (var _b = 0, _c = entity.getComponents(egret3d.oimo.PrismaticJoint); _b < _c.length; _b++) {
                             var component = _c[_b];
@@ -6629,7 +6694,7 @@ var paper;
                 }
                 drawerIndex = 0;
                 if (egret3d.oimo) {
-                    for (var _d = 0, _e = groups[21 /* OimoRevoluteJoints */].entities; _d < _e.length; _d++) {
+                    for (var _d = 0, _e = groups[22 /* OimoRevoluteJoints */].entities; _d < _e.length; _d++) {
                         var entity = _e[_d];
                         for (var _f = 0, _g = entity.getComponents(egret3d.oimo.RevoluteJoint); _f < _g.length; _f++) {
                             var component = _g[_f];
@@ -6645,7 +6710,7 @@ var paper;
                 }
                 drawerIndex = 0;
                 if (egret3d.oimo) {
-                    for (var _h = 0, _j = groups[22 /* OimoCylindricalJoints */].entities; _h < _j.length; _h++) {
+                    for (var _h = 0, _j = groups[23 /* OimoCylindricalJoints */].entities; _h < _j.length; _h++) {
                         var entity = _j[_h];
                         for (var _k = 0, _l = entity.getComponents(egret3d.oimo.CylindricalJoint); _k < _l.length; _k++) {
                             var component = _l[_k];
@@ -6661,7 +6726,7 @@ var paper;
                 }
                 drawerIndex = 0;
                 if (egret3d.oimo) {
-                    for (var _m = 0, _o = groups[23 /* OimoSphericalJoints */].entities; _m < _o.length; _m++) {
+                    for (var _m = 0, _o = groups[24 /* OimoSphericalJoints */].entities; _m < _o.length; _m++) {
                         var entity = _o[_m];
                         for (var _p = 0, _q = entity.getComponents(egret3d.oimo.SphericalJoint); _p < _q.length; _p++) {
                             var component = _q[_p];
@@ -6679,6 +6744,7 @@ var paper;
             GizmosSystem.prototype.getMatchers = function () {
                 var matchers = [
                     paper.Matcher.create(false, egret3d.Transform, editor.GizmosContainerFlag),
+                    paper.Matcher.create(false, egret3d.Transform, editor.GizmosContainerForwardFlag),
                     paper.Matcher.create(false, egret3d.Transform, editor.TouchContainerFlag),
                     paper.Matcher.create(egret3d.Transform, editor.LastSelectedFlag),
                     paper.Matcher.create(false, egret3d.Transform, editor.TransformController),
@@ -6722,7 +6788,7 @@ var paper;
                 this._selectFrameDrawer = editor.EditorMeshHelper.createGameObject("Select Frame", egret3d.DefaultMeshes.QUAD, [
                     egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED)
                         .setBlend(2 /* Normal */, 4000 /* Overlay */, 0.2)
-                        .setColor(egret3d.Color.WHITE)
+                        .setColor(egret3d.Color.INDIGO)
                         .setDepth(false, false)
                 ]);
                 this._skeletonDrawer = editor.EditorMeshHelper.createGameObject("Skeleton");
@@ -6767,28 +6833,31 @@ var paper;
                     this._gridA.parent = entity;
                     this._gridB.parent = entity;
                     this._hoverBox.transform.parent = entity.transform;
-                    this._selectFrameDrawer.transform.parent = entity.transform;
                     this._skeletonDrawer.transform.parent = entity.transform;
                     var mA = this._gridA.renderer.material;
                     var mB = this._gridB.renderer.material;
                     mA.setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
                     mB.setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
                 }
-                else if (group === groups[2 /* LastSelectedTransform */]) {
+                else if (group === groups[1 /* GizmosForwardContainer */]) {
+                    this._selectFrameDrawer.transform.parent = entity.transform;
+                }
+                else if (group === groups[3 /* LastSelectedTransform */]) {
                     if (this.enabled) {
-                        groups[3 /* TransformController */].singleEntity.enabled = true;
+                        groups[4 /* TransformController */].singleEntity.enabled = true;
                     }
                 }
             };
             GizmosSystem.prototype.onEntityRemoved = function (entity, group) {
                 var groups = this.groups;
-                if (group === groups[2 /* LastSelectedTransform */]) {
+                if (group === groups[3 /* LastSelectedTransform */]) {
                     if (this.enabled) {
-                        groups[3 /* TransformController */].singleEntity.enabled = false;
+                        groups[4 /* TransformController */].singleEntity.enabled = false;
                     }
                 }
             };
             GizmosSystem.prototype.onFrame = function () {
+                this._updateGizmosForwardContainer();
                 this._updateTransformController();
                 this._updateBoxes();
                 this._updateCameraAndLights();
@@ -7809,14 +7878,14 @@ var paper;
                 gameObject.layer = 64 /* Editor */;
                 if (mesh) {
                     gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
-                }
-                if (material) {
                     var meshRenderer = gameObject.addComponent(egret3d.MeshRenderer);
-                    if (Array.isArray(material)) {
-                        meshRenderer.materials = material;
-                    }
-                    else {
-                        meshRenderer.material = material;
+                    if (material) {
+                        if (Array.isArray(material)) {
+                            meshRenderer.materials = material;
+                        }
+                        else {
+                            meshRenderer.material = material;
+                        }
                     }
                 }
                 return gameObject;
@@ -9562,7 +9631,7 @@ var paper;
                         }
                     }
                     else {
-                        var all = editorModel.scene.gameObjects;
+                        var all = editorModel.scene.getRootGameObjects();
                         var index = all.indexOf(obj);
                         if (++index < all.length) {
                             oldTargetUUID = all[index].uuid;
@@ -9591,7 +9660,7 @@ var paper;
                         var oldTarget = this.editorModel.getGameObjectByUUid(info.oldTargetUUID);
                         var oldDir = info.oldDir;
                         if (info.oldTargetUUID === 'scene') {
-                            var all = this.editorModel.scene.gameObjects;
+                            var all = this.editorModel.scene.getRootGameObjects();
                             oldTarget = all[all.length - 1];
                             oldDir = 'bottom';
                         }

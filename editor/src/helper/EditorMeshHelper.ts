@@ -9,16 +9,16 @@ namespace paper.editor {
 
             if (mesh) {
                 gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
-            }
 
-            if (material) {
                 const meshRenderer = gameObject.addComponent(egret3d.MeshRenderer);
 
-                if (Array.isArray(material)) {
-                    meshRenderer.materials = material;
-                }
-                else {
-                    meshRenderer.material = material;
+                if (material) {
+                    if (Array.isArray(material)) {
+                        meshRenderer.materials = material;
+                    }
+                    else {
+                        meshRenderer.material = material;
+                    }
                 }
             }
 

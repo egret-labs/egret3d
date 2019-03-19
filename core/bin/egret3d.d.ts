@@ -4315,8 +4315,8 @@ declare namespace egret3d {
          * @param asp 投影宽高比。
          * @param matchFactor 宽高适配的插值系数。
          * - `0.0` ~ `1.0`
-         * - `0.0` 以高适配。
-         * - `1.0` 以宽适配。
+         * - `0.0` 以宽适配。
+         * - `1.0` 以高适配。
          */
         fromProjection(near: float, far: float, fov: float, size: float, opvalue: float, asp: float, matchFactor: float, viewport?: Rectangle | null): this;
         /**
@@ -4963,6 +4963,11 @@ declare namespace egret3d {
          */
         contains(pointOrBox: Readonly<IVector3 | Box>): boolean;
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
+        /**
+         *
+         * @param sphere
+         */
+        intersectsSphere(sphere: Readonly<Sphere>): boolean;
         /**
          * 该立方体是否为空。
          */
@@ -7014,7 +7019,6 @@ declare namespace egret3d {
 declare namespace egret3d {
     /**
      * 全局舞台信息组件。
-     * TODO 调整文件结构，标记接口源码链接。
      */
     class Stage extends paper.BaseComponent {
         /**
@@ -7026,9 +7030,9 @@ declare namespace egret3d {
          */
         readonly onResize: signals.Signal;
         /**
-         *
+         * 舞台到屏幕的缩放系数。
          */
-        readonly scaler: number;
+        readonly scaler: float;
         private _rotated;
         private _matchFactor;
         private readonly _screenSize;
@@ -7055,8 +7059,11 @@ declare namespace egret3d {
         readonly rotated: boolean;
         /**
          * 以宽或高适配的系数。
+         * - `0.0` ~ `1.0`。
+         * - `0.0` 以宽适配。
+         * - `1.0` 以高适配。
          */
-        matchFactor: number;
+        matchFactor: float;
         /**
          * 屏幕尺寸。
          */
