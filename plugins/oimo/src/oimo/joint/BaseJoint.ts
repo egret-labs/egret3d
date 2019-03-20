@@ -65,6 +65,18 @@ namespace egret3d.oimo {
                     this._oimoJoint.getLocalAnchor2To(output as any);
                 }
             }
+            else {
+                output.copy(this.anchor);
+
+                if (isWorldSpace) {
+                    if (!this.useWorldSpace) {
+                        output.applyMatrix(this.gameObject.transform.localToWorldMatrix);
+                    }
+                }
+                else if (this.useWorldSpace) {
+                    output.applyMatrix(this.gameObject.transform.worldToLocalMatrix);
+                }
+            }
 
             return output;
         }

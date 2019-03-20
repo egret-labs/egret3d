@@ -7421,18 +7421,6 @@ declare namespace egret3d.oimo {
          * 动力学。
          */
         Kinematic = 2,
-        /**
-         * @deprecated
-         */
-        DYNAMIC = 0,
-        /**
-         * @deprecated
-         */
-        STATIC = 1,
-        /**
-         * @deprecated
-         */
-        KINEMATIC = 2,
     }
     /**
      * 关节类型。
