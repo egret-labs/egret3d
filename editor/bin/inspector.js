@@ -5958,6 +5958,8 @@ var paper;
             GroupIndex[GroupIndex["OimoRevoluteJoints"] = 22] = "OimoRevoluteJoints";
             GroupIndex[GroupIndex["OimoCylindricalJoints"] = 23] = "OimoCylindricalJoints";
             GroupIndex[GroupIndex["OimoSphericalJoints"] = 24] = "OimoSphericalJoints";
+            GroupIndex[GroupIndex["OimoUniversalJoints"] = 25] = "OimoUniversalJoints";
+            GroupIndex[GroupIndex["OimoConeTwistJoints"] = 26] = "OimoConeTwistJoints";
         })(GroupIndex || (GroupIndex = {}));
         var _girdStep = 5;
         /**
@@ -5978,6 +5980,8 @@ var paper;
                 _this._revoluteJointDrawer = [];
                 _this._cylindricalJointDrawer = [];
                 _this._sphericalJointDrawer = [];
+                _this._universalJointDrawer = [];
+                _this._coneTwistJointDrawer = [];
                 _this._gridA = null;
                 _this._gridB = null;
                 _this._hoverBox = null;
@@ -6672,13 +6676,71 @@ var paper;
              */
             GizmosSystem.prototype._updateSphericalJointDrawer = function (entity, component, index) {
                 if (index >= this._sphericalJointDrawer.length) {
-                    var entity_8 = editor.EditorMeshHelper.createGameObject("Revolute Joint " + index);
+                    var entity_8 = editor.EditorMeshHelper.createGameObject("Spherical Joint " + index);
                     entity_8.parent = this.groups[0 /* GizmosContainer */].singleEntity;
                     editor.EditorMeshHelper.createGameObject("JointC", editor.EditorAssets.JOINT_MESH, [editor.EditorAssets.JOINT_LINE_MATERIAL, editor.EditorAssets.JOINT_POINT_MATERIAL])
                         .transform.setParent(entity_8.transform);
                     this._sphericalJointDrawer.push(entity_8);
                 }
                 var drawer = this._sphericalJointDrawer[index];
+                drawer.enabled = true;
+                if (component.useWorldSpace) {
+                    drawer.transform.localPosition = component.anchor;
+                }
+                else {
+                    drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+                }
+                var jointC = drawer.transform.find("JointC");
+                if (component.connectedRigidbody) {
+                    jointC.entity.enabled = true;
+                    jointC.lookAt(component.connectedRigidbody.transform.position)
+                        .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(component.connectedRigidbody.transform.position));
+                }
+                else {
+                    jointC.entity.enabled = false;
+                }
+            };
+            /**
+             * @internal
+             */
+            GizmosSystem.prototype._updateUniversalJointDrawer = function (entity, component, index) {
+                if (index >= this._universalJointDrawer.length) {
+                    var entity_9 = editor.EditorMeshHelper.createGameObject("Universal Joint " + index);
+                    entity_9.parent = this.groups[0 /* GizmosContainer */].singleEntity;
+                    editor.EditorMeshHelper.createGameObject("JointC", editor.EditorAssets.JOINT_MESH, [editor.EditorAssets.JOINT_LINE_MATERIAL, editor.EditorAssets.JOINT_POINT_MATERIAL])
+                        .transform.setParent(entity_9.transform);
+                    this._universalJointDrawer.push(entity_9);
+                }
+                var drawer = this._universalJointDrawer[index];
+                drawer.enabled = true;
+                if (component.useWorldSpace) {
+                    drawer.transform.localPosition = component.anchor;
+                }
+                else {
+                    drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+                }
+                var jointC = drawer.transform.find("JointC");
+                if (component.connectedRigidbody) {
+                    jointC.entity.enabled = true;
+                    jointC.lookAt(component.connectedRigidbody.transform.position)
+                        .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(component.connectedRigidbody.transform.position));
+                }
+                else {
+                    jointC.entity.enabled = false;
+                }
+            };
+            /**
+             * @internal
+             */
+            GizmosSystem.prototype._updateConeTwistJointDrawer = function (entity, component, index) {
+                if (index >= this._coneTwistJointDrawer.length) {
+                    var entity_10 = editor.EditorMeshHelper.createGameObject("Cone Twist Joint " + index);
+                    entity_10.parent = this.groups[0 /* GizmosContainer */].singleEntity;
+                    editor.EditorMeshHelper.createGameObject("JointC", editor.EditorAssets.JOINT_MESH, [editor.EditorAssets.JOINT_LINE_MATERIAL, editor.EditorAssets.JOINT_POINT_MATERIAL])
+                        .transform.setParent(entity_10.transform);
+                    this._coneTwistJointDrawer.push(entity_10);
+                }
+                var drawer = this._coneTwistJointDrawer[index];
                 drawer.enabled = true;
                 if (component.useWorldSpace) {
                     drawer.transform.localPosition = component.anchor;
@@ -6762,6 +6824,38 @@ var paper;
                 for (var i = drawerIndex, l = this._sphericalJointDrawer.length; i < l; ++i) {
                     this._sphericalJointDrawer[i].enabled = false;
                 }
+                drawerIndex = 0;
+                if (egret3d.oimo) {
+                    for (var _r = 0, _s = groups[25 /* OimoUniversalJoints */].entities; _r < _s.length; _r++) {
+                        var entity = _s[_r];
+                        for (var _t = 0, _u = entity.getComponents(egret3d.oimo.UniversalJoint); _t < _u.length; _t++) {
+                            var component = _u[_t];
+                            if (!component.enabled) {
+                                continue;
+                            }
+                            this._updateUniversalJointDrawer(entity, component, drawerIndex++);
+                        }
+                    }
+                }
+                for (var i = drawerIndex, l = this._universalJointDrawer.length; i < l; ++i) {
+                    this._universalJointDrawer[i].enabled = false;
+                }
+                drawerIndex = 0;
+                if (egret3d.oimo) {
+                    for (var _v = 0, _w = groups[26 /* OimoConeTwistJoints */].entities; _v < _w.length; _v++) {
+                        var entity = _w[_v];
+                        for (var _x = 0, _y = entity.getComponents(egret3d.oimo.ConeTwistJoint); _x < _y.length; _x++) {
+                            var component = _y[_x];
+                            if (!component.enabled) {
+                                continue;
+                            }
+                            this._updateConeTwistJointDrawer(entity, component, drawerIndex++);
+                        }
+                    }
+                }
+                for (var i = drawerIndex, l = this._coneTwistJointDrawer.length; i < l; ++i) {
+                    this._coneTwistJointDrawer[i].enabled = false;
+                }
             };
             GizmosSystem.prototype.getMatchers = function () {
                 var matchers = [
@@ -6786,7 +6880,7 @@ var paper;
                     paper.Matcher.create(egret3d.Transform, egret3d.CapsuleCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag),
                 ];
                 if (egret3d.oimo) {
-                    matchers.push(paper.Matcher.create(egret3d.Transform, egret3d.oimo.BoxCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.SphereCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CylinderCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.ConeCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CapsuleCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.PrismaticJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.RevoluteJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CylindricalJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.SphericalJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag));
+                    matchers.push(paper.Matcher.create(egret3d.Transform, egret3d.oimo.BoxCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.SphereCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CylinderCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.ConeCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CapsuleCollider).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.PrismaticJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.RevoluteJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.CylindricalJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.SphericalJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.UniversalJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag), paper.Matcher.create(egret3d.Transform, egret3d.oimo.ConeTwistJoint).anyOf(editor.HoveredFlag, editor.SelectedFlag));
                 }
                 return matchers;
             };
@@ -6815,6 +6909,10 @@ var paper;
                 this._cylindricalJointDrawer.length = 0;
                 this._sphericalJointDrawer.length = 0;
                 this._prismaticJointDrawer.length = 0;
+                this._universalJointDrawer.length = 0;
+                this._coneTwistJointDrawer.length = 0;
+                this._gridA = null;
+                this._gridB = null;
                 this._hoverBox = null;
                 this._selectFrameDrawer = null;
                 this._skeletonDrawer = null;

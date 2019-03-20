@@ -94,39 +94,36 @@ namespace egret3d {
                 <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
         }
 
-        if (options.playerMode === paper.PlayerMode.Editor) {
-            if (!_runEditor) {
-                _runEditor = true;
-                await _entity(options);
-
-                return;
-            }
-        }
-
-        const { systemManager, gameObjectContext } = paper.Application;
-
-        paper.Application.initialize(options);
-        systemManager
-            .preRegister(webgl.BeginSystem, gameObjectContext, paper.SystemOrder.Begin, options)
-            .preRegister(webgl.WebGLRenderSystem, gameObjectContext, paper.SystemOrder.Renderer, options)
-            .preRegister(webgl.InputSystem, gameObjectContext, paper.SystemOrder.End, options)
-
-            .preRegister(CollisionSystem, gameObjectContext, paper.SystemOrder.FixedUpdate)
-            .preRegister(AnimationSystem, gameObjectContext, paper.SystemOrder.Animation)
-            .preRegister(MeshRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer)
-            .preRegister(SkinnedMeshRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer)
-            .preRegister(particle.ParticleSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer)
-            .preRegister(Egret2DRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer, options)
-            .preRegister(CameraAndLightSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
-
-        paper.Application.registerSystems();
-        paper.Application.start();
-
-        if (!_runEditor) {
+        if (options.playerMode === paper.PlayerMode.Editor && !_runEditor) {
+            _runEditor = true;
             await _entity(options);
         }
+        else {
+            const { systemManager, gameObjectContext } = paper.Application;
 
-        await _scene(options);
+            paper.Application.initialize(options);
+            systemManager
+                .preRegister(webgl.BeginSystem, gameObjectContext, paper.SystemOrder.Begin, options)
+                .preRegister(webgl.WebGLRenderSystem, gameObjectContext, paper.SystemOrder.Renderer, options)
+                .preRegister(webgl.InputSystem, gameObjectContext, paper.SystemOrder.End, options)
+
+                .preRegister(CollisionSystem, gameObjectContext, paper.SystemOrder.FixedUpdate)
+                .preRegister(AnimationSystem, gameObjectContext, paper.SystemOrder.Animation)
+                .preRegister(MeshRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer)
+                .preRegister(SkinnedMeshRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer)
+                .preRegister(particle.ParticleSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer)
+                .preRegister(Egret2DRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer, options)
+                .preRegister(CameraAndLightSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
+
+            paper.Application.registerSystems();
+            paper.Application.start();
+
+            if (!_runEditor) {
+                await _entity(options);
+            }
+
+            await _scene(options);
+        }
     }
 
     function _parseBoolean(playerDiv: HTMLDivElement | null, attributeName: string, defaultValue: boolean) {
