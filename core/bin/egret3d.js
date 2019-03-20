@@ -14027,8 +14027,8 @@ var egret3d;
                     screenW = screenSize.h;
                     screenH = screenSize.w;
                 }
-                var scalerW = (screenSize.w > size.w ? screenSize.w : Math.min(size.w, screenSize.w)) / screenSize.w;
-                // const scalerW = size.w / screenW;
+                // const scalerW = (screenSize.w > size.w ? screenSize.w : size.w) / screenSize.w;
+                var scalerW = size.w / screenW;
                 var scalerH = size.h / screenH;
                 this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
                 viewport.w = Math.ceil(screenW * this.scaler);
@@ -14036,7 +14036,8 @@ var egret3d;
                 this.scaler = screenW / screenSize.w;
             }
             else {
-                var scalerW = (screenSize.w > size.w ? screenSize.w : Math.min(size.w, screenSize.w)) / screenSize.w;
+                // const scalerW = (screenSize.w > size.w ? screenSize.w : size.w) / screenSize.w;
+                var scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
                 var scalerH = size.h / screenSize.h;
                 this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
                 this._rotated = false;
