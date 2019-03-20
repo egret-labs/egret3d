@@ -30,7 +30,7 @@ namespace examples.postprocessing {
             camera.gameObject.addComponent(Starter);
             //
             selectGameObjectAndComponents(egret3d.Camera.main.gameObject,
-                Starter, components.NightVisionPostProcess, components.ThermalVisionPostProcess, components.ThermalVisionPostProcess2
+                Starter, components.NightVisionPostprocess, components.ThermalVisionPostprocess, components.ThermalVisionPostprocess2
             );
         }
 
@@ -62,9 +62,9 @@ namespace examples.postprocessing {
         }
 
         private _changeNightVision() {
-            const nightVision = this.gameObject.getOrAddComponent(components.NightVisionPostProcess);
-            const thermalVision = this.gameObject.getOrAddComponent(components.ThermalVisionPostProcess);
-            const thermalVision2 = this.gameObject.getOrAddComponent(components.ThermalVisionPostProcess2);
+            const nightVision = this.gameObject.getOrAddComponent(components.NightVisionPostprocess);
+            const thermalVision = this.gameObject.getOrAddComponent(components.ThermalVisionPostprocess);
+            const thermalVision2 = this.gameObject.getOrAddComponent(components.ThermalVisionPostprocess2);
             switch (this._type) {
                 case NightVisionType.NightVision:
                     {

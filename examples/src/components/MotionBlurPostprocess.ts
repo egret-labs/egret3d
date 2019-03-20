@@ -1,6 +1,6 @@
 namespace components {
 
-    export class MotionBlurPostProcess extends egret3d.CameraPostprocessing {
+    export class MotionBlurPostprocess extends egret3d.CameraPostprocessing {
         private _velocityFactor: number = 1.0;
         private _samples: number = 20;
         private _resolution: egret3d.Vector2 = egret3d.Vector2.create(1.0, 1.0);

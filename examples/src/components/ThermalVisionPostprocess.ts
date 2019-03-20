@@ -1,5 +1,5 @@
 namespace components {
-    export class ThermalVisionPostProcess extends egret3d.CameraPostprocessing {
+    export class ThermalVisionPostprocess extends egret3d.CameraPostprocessing {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0, maximum: 1 })
         public thermaValue: number = 1.0;
         private _material: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/thermalVision/thermalVision.shader.json"));
