@@ -1,5 +1,5 @@
 namespace egret3d.postprocess {
-    export class FXAAPostProcess extends egret3d.CameraPostprocessing {
+    export class FXAAPostprocess extends egret3d.CameraPostprocessing {
         public onRender(camera: egret3d.Camera) {
             this.renderPostprocessTarget(camera);
             egret3d.DefaultMaterials.FXAA.setTexture(camera.postprocessingRenderTarget);

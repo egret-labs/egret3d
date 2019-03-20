@@ -32,7 +32,7 @@ namespace egret3d.postprocess {
         ]
     ];
     const roundingRange = 1 / 32;
-    export class SSAAPostProcess extends egret3d.CameraPostprocessing {
+    export class SSAAPostprocess extends egret3d.CameraPostprocessing {
         @paper.editor.property(paper.editor.EditType.UINT, { minimum: 0, maximum: 5 })
         public sampleLevel: number = 2;
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
