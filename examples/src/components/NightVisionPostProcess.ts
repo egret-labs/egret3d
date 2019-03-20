@@ -16,6 +16,7 @@ namespace components {
         }
 
         public onRender(camera: egret3d.Camera) {
+            this.renderPostprocessTarget(camera);
             this._time += paper.clock.lastTickDelta;
             if (this._time > 100) {
                 this._time = 0.0;

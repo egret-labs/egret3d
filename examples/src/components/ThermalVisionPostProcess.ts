@@ -12,7 +12,7 @@ namespace components {
         }
 
         public onRender(camera: egret3d.Camera) {
-            
+            this.renderPostprocessTarget(camera);
             //
             const material = this._material;
             material.setFloat("thermaValue", this.thermaValue);

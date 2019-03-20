@@ -16,7 +16,7 @@ namespace components {
         }
 
         public onRender(camera: egret3d.Camera) {
-            
+            this.renderPostprocessTarget(camera);
             //
             this._rnd.set(Math.random(), Math.random());
             const material = this._material;
