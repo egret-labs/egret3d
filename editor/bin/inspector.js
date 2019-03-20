@@ -4703,7 +4703,6 @@ var paper;
             function GUIComponent() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.showStates = 0 /* None */;
-                _this.quaryValues = {};
                 /**
                  * @internal
                  */
@@ -5852,8 +5851,8 @@ var paper;
                     };
                     this._isMobile = paper.Application.isMobile;
                     guiComponent_1.showStates = 0 /* None */;
-                    guiComponent_1.quaryValues = editor.getQueryValues(location.search);
-                    if (guiComponent_1.quaryValues.GUI === 1 || (guiComponent_1.quaryValues.GUI !== 0 && !this._isMobile)) {
+                    var options = paper.Application.options;
+                    if (options.showInspector) {
                         guiComponent_1.showStates |= 6 /* HierarchyAndInspector */;
                         hierarchyContainer_1.appendChild(guiComponent_1.hierarchy.domElement);
                         inspectorContainer_1.appendChild(guiComponent_1.inspector.domElement);
@@ -7812,8 +7811,8 @@ var paper;
                 }
             };
             StatsSystem.prototype.onEnable = function () {
-                var quaryValues = this._guiComponent.quaryValues;
-                if (quaryValues.FPS !== 0) {
+                var options = paper.Application.options;
+                if (options.showStats) {
                     this._guiComponent.showStates |= 1 /* FPS */;
                     this._fpsIndex = 0;
                 }
@@ -8055,7 +8054,7 @@ var paper;
                                 //处理一些不和谐内容
                                 _a.sent();
                                 //初始化编辑环境
-                                this.initEditEnvironment();
+                                egret3d.runEgret();
                                 //允许重新加载
                                 RES.FEATURE_FLAG.FIX_DUPLICATE_LOAD = 0;
                                 //初始化资源
@@ -8270,15 +8269,6 @@ var paper;
                         }
                     });
                 });
-            };
-            Editor.initEditEnvironment = function () {
-                egret3d.runEgret({
-                    antialias: false,
-                    alpha: false,
-                    playerMode: 4 /* Editor */,
-                });
-                paper.clock.tickInterval = 1.0 / 30.0;
-                paper.clock.frameInterval = 1.0 / 30.0;
             };
             return Editor;
         }());

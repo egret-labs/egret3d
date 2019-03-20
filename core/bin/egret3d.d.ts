@@ -234,8 +234,17 @@ declare namespace paper {
      * 应用程序运行模式。
      */
     const enum PlayerMode {
+        /**
+         *
+         */
         Player = 1,
+        /**
+         *
+         */
         DebugPlayer = 2,
+        /**
+         *
+         */
         Editor = 4,
     }
     /**
@@ -787,6 +796,14 @@ declare namespace paper {
          */
         playerMode?: PlayerMode;
         /**
+         * 程序启动后需要显示调用的入口。
+         */
+        entity?: string;
+        /**
+         * 程序启动后加载的入口场景。
+         */
+        scene?: string;
+        /**
          * 逻辑帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
         tickRate?: uint;
@@ -794,6 +811,21 @@ declare namespace paper {
          * 渲染帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
         frameRate?: uint;
+        /**
+         * 是否显示状态面板。
+         * - 未设置则默认为 PC 模式显示，手机模式不显示。
+         * - 包含 FPS、TPS、内存消耗、渲染耗时、DrawCall 等。
+         */
+        showStats?: boolean;
+        /**
+         * 是否显示 Inspector 面板。
+         * - 未设置则默认为 PC 模式显示，手机模式不显示。
+         */
+        showInspector?: boolean;
+        /**
+         * 可扩展的。
+         */
+        [key: string]: any;
     }
 }
 declare namespace paper {
@@ -6668,10 +6700,6 @@ declare namespace egret3d {
      */
     interface RunOptions extends paper.RunOptions {
         /**
-         *
-         */
-        defaultScene?: string;
-        /**
          * 舞台宽。
          */
         contentWidth?: number;
@@ -6694,17 +6722,6 @@ declare namespace egret3d {
         antialiasSamples?: number;
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
-        /**
-         * 是否显示状态面板。
-         * - 未设置则默认为 PC 模式显示，手机模式不显示。
-         * - 包含 FPS、TPS、内存消耗、渲染耗时、DrawCall 等。
-         */
-        showStats?: boolean;
-        /**
-         * 是否显示 Inspector 面板。
-         * - 未设置则默认为 PC 模式显示，手机模式不显示。
-         */
-        showInspector?: boolean;
     }
 }
 declare namespace egret3d {
@@ -12325,7 +12342,7 @@ declare namespace egret3d {
      * 引擎启动入口。
      * @param options
      */
-    function runEgret(options?: RunOptions): void;
+    function runEgret(options?: RunOptions): Promise<void>;
 }
 interface Window {
     gltf: any;

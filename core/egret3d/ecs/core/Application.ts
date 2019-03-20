@@ -103,6 +103,8 @@ namespace paper {
          * 初始化程序。
          */
         public initialize(options: RunOptions): void {
+            console.info("Egret", this.version, "start.");
+
             (this.options as RunOptions) = options;
             this._playerMode = options.playerMode!;
         }
@@ -162,6 +164,8 @@ namespace paper {
                 default:
                     break;
             }
+
+            console.info("Egret start complete.");
         }
         /**
          * 显式更新

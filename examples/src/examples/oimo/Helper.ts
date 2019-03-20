@@ -32,7 +32,7 @@ namespace examples.oimo {
                 if (physicsSystem.raycast(this._ray, paper.Layer.Default, 0.0, this._raycastInfo)) {
                     const rigidbody = this._raycastInfo.rigidbody as egret3d.oimo.Rigidbody;
 
-                    if (rigidbody.type === egret3d.oimo.RigidbodyType.DYNAMIC) { // Only add joint to dynamic body.
+                    if (rigidbody.type === egret3d.oimo.RigidbodyType.Dynamic) { // Only add joint to dynamic body.
                         // Update touch plane.
                         this._touchPlane.fromPoint(this._raycastInfo.position);
                         // Create touch entity.
@@ -42,7 +42,7 @@ namespace examples.oimo {
                             .setLocalPosition(this._raycastInfo.position)
                             .lookRotation(this._ray.direction);
                         // Set rigidbogy type.
-                        this._touchEntity.addComponent(egret3d.oimo.Rigidbody).type = egret3d.oimo.RigidbodyType.KINEMATIC;
+                        this._touchEntity.addComponent(egret3d.oimo.Rigidbody).type = egret3d.oimo.RigidbodyType.Kinematic;
                         // Add joint.
                         const joint = this._touchEntity.addComponent(egret3d.oimo.SphericalJoint);
                         joint.collisionEnabled = false;

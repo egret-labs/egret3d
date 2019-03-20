@@ -1,9 +1,10 @@
 namespace egret3d {
+    let _runEditor: boolean = false;
     /**
      * 引擎启动入口。
      * @param options 
      */
-    export function runEgret(options?: RunOptions) {
+    export async function runEgret(options?: RunOptions) {
         if (!options) {
             options = {};
         }
@@ -14,11 +15,41 @@ namespace egret3d {
             (egret.Capabilities as any)["renderMode" + ""] = "webgl";
 
             const isWeb = !window.canvas;
+            const urlSearchParams = isWeb ? new URLSearchParams(location.search) : null;
             const playerDiv = isWeb ? <HTMLDivElement>document.getElementsByClassName("egret-player")[0]! : null;
             const canvas = _getMainCanvas(options, playerDiv);
 
             if (options.playerMode === undefined) {
-                options.playerMode = _parseInt(playerDiv, "data-player-model", paper.PlayerMode.Player);
+                const param = urlSearchParams !== null ? urlSearchParams.get("player-mode") : "";
+
+                if (param) {
+                    options.playerMode = parseInt(param);
+                }
+                else {
+                    options.playerMode = _parseInt(playerDiv, "data-player-mode", paper.PlayerMode.Player);
+                }
+            }
+
+            if (options.entry === undefined) {
+                const param = urlSearchParams !== null ? urlSearchParams.get("entry") : "";
+
+                if (param) {
+                    options.entry = param;
+                }
+                else {
+                    options.entry = _parseString(playerDiv, "data-entry", "");
+                }
+            }
+
+            if (options.scene === undefined) {
+                const param = urlSearchParams !== null ? urlSearchParams.get("scene") : "";
+
+                if (param) {
+                    options.scene = param.split("\\").join('/');
+                }
+                else {
+                    options.scene = _parseString(playerDiv, "data-scene", "");
+                }
             }
 
             if (options.tickRate === undefined) {
@@ -49,10 +80,6 @@ namespace egret3d {
                 options.antialiasSamples = 4;
             }
 
-            if (options.antialiasSamples === undefined) {
-                options.antialiasSamples = 4;
-            }
-
             if (options.showStats === undefined) {
                 options.showStats = _parseBoolean(playerDiv, "data-show-stats", !paper.Application.isMobile);
             }
@@ -67,9 +94,16 @@ namespace egret3d {
                 <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
         }
 
-        const { version, systemManager, gameObjectContext } = paper.Application;
+        if (options.playerMode === paper.PlayerMode.Editor) {
+            if (!_runEditor) {
+                _runEditor = true;
+                await _entity(options);
 
-        console.info("Egret", version, "start.");
+                return;
+            }
+        }
+
+        const { systemManager, gameObjectContext } = paper.Application;
 
         paper.Application.initialize(options);
         systemManager
@@ -88,14 +122,18 @@ namespace egret3d {
         paper.Application.registerSystems();
         paper.Application.start();
 
-        console.info("Egret start complete.");
+        if (!_runEditor) {
+            await _entity(options);
+        }
+
+        await _scene(options);
     }
 
     function _parseBoolean(playerDiv: HTMLDivElement | null, attributeName: string, defaultValue: boolean) {
         if (playerDiv !== null) {
             const attribute = playerDiv.getAttribute(attributeName);
 
-            if (attribute !== null) {
+            if (attribute !== null && attribute !== "auto") {
                 return attribute === "true";
             }
         }
@@ -107,8 +145,20 @@ namespace egret3d {
         if (playerDiv !== null) {
             const attribute = playerDiv.getAttribute(attributeName);
 
-            if (attribute !== null) {
+            if (attribute !== null && attribute !== "auto") {
                 return parseInt(attribute);
+            }
+        }
+
+        return defaultValue;
+    }
+
+    function _parseString(playerDiv: HTMLDivElement | null, attributeName: string, defaultValue: string) {
+        if (playerDiv !== null) {
+            const attribute = playerDiv.getAttribute(attributeName);
+
+            if (attribute !== null && attribute !== "auto") {
+                return attribute;
             }
         }
 
@@ -128,6 +178,24 @@ namespace egret3d {
         playerDiv!.appendChild(canvas);
 
         return canvas;
+    }
+
+    async function _entity(options: RunOptions) {
+        if (options.entry) {
+            const entity = global[options.entry] || (window as any)[options.entry] || null;
+
+            if (entity !== null) {
+                await entity();
+            }
+        }
+    }
+
+    async function _scene(options: RunOptions) {
+        if (options.scene) {
+            await RES.loadConfig("resource/default.res.json", "resource/"); // TODO
+            await RES.getResAsync(options.scene);
+            paper.Application.sceneManager.createScene(options.scene);
+        }
     }
 }
 
