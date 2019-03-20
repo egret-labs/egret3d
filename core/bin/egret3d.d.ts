@@ -4004,7 +4004,7 @@ declare namespace egret3d {
         /**
          *
          */
-        render: (camera: Camera, material?: Material) => void;
+        render: (camera: Camera, material?: Material, renderTarget?: RenderTexture) => void;
         /**
          *
          */
@@ -4032,7 +4032,7 @@ declare namespace egret3d {
         /**
          *
          */
-        updateViewport(viewport: Rectangle, renderTarget: RenderTexture | null): void;
+        updateViewport(viewport: Rectangle): void;
         /**
          *
          */
@@ -5220,7 +5220,9 @@ declare namespace egret3d {
      * @beta 这是一个试验性质的 API，有可能会被删除或修改。
      */
     abstract class CameraPostprocessing extends paper.BaseComponent {
+        protected readonly _renderState: egret3d.RenderState;
         abstract onRender(camera: Camera): void;
+        protected renderPostprocessTarget(camera: Camera, material?: Material): void;
         blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null, bufferMask?: gltf.BufferMask | null): void;
     }
 }
@@ -6655,7 +6657,7 @@ declare namespace egret3d {
          * 渲染相机。
          * @param camera
          */
-        render(camera: Camera, material: Material | null): void;
+        render(camera: Camera, material: Material | null, renderTarget: RenderTexture | null): void;
         /**
          * 绘制一个绘制信息。
          * @param camera
@@ -8143,6 +8145,7 @@ declare namespace egret3d {
         private _readRenderTarget;
         private _writeRenderTarget;
         private _renderTarget;
+        private _subViewport;
         /**
          * @private
          */
@@ -8220,6 +8223,7 @@ declare namespace egret3d {
          * 该相机归一化的渲染视口。
          */
         viewport: Readonly<Rectangle>;
+        subViewport: Readonly<Rectangle>;
         /**
          * 该相机像素化的渲染视口。
          */
@@ -8369,6 +8373,20 @@ declare namespace egret3d {
 }
 declare namespace egret3d.postprocess {
     class FXAAPostProcess extends egret3d.CameraPostprocessing {
+        onRender(camera: egret3d.Camera): void;
+    }
+}
+declare namespace egret3d.postprocess {
+    class SSAAPostProcess extends egret3d.CameraPostprocessing {
+        sampleLevel: number;
+        unbiased: boolean;
+        private readonly _subViewport;
+        private readonly _copyMaterial;
+        private readonly _clearColor;
+        private readonly _sampleRenderTarget;
+        private _onStageResize();
+        initialize(): void;
+        uninitialize(): void;
         onRender(camera: egret3d.Camera): void;
     }
 }

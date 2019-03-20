@@ -116,6 +116,7 @@
         "egret3d/components/camera/CameraAndLightSystem.ts",
         "egret3d/components/camera/SkyBox.ts",
         "egret3d/components/camera/postprocess/FXAAPostProcess.ts",
+        "egret3d/components/camera/postprocess/SSAAPostProcess.ts",
 
         "egret3d/components/light/LightShadow.ts",
         "egret3d/components/light/BaseLight.ts",

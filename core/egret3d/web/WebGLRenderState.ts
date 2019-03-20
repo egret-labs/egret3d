@@ -133,9 +133,10 @@ namespace egret3d.webgl {
             }
         }
 
-        public updateViewport(viewport: Rectangle, renderTarget: RenderTexture | null) { // TODO
+        public updateViewport(viewport: Rectangle) { // TODO
             const webgl = WebGLRenderState.webgl!;
             const currentViewport = this.viewport;
+            const renderTarget = this.renderTarget;
             let w: number;
             let h: number;
             if (renderTarget) {

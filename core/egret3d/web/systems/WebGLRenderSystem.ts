@@ -586,7 +586,7 @@ namespace egret3d.webgl {
         private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
             const renderState = this._renderState;
             renderState.updateRenderTarget(renderTarget);
-            renderState.updateViewport(camera.viewport, renderTarget);
+            renderState.updateViewport(camera.viewport);
             renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
             // Skybox.
             const skyBox = camera.entity.getComponent(SkyBox);
@@ -729,13 +729,12 @@ namespace egret3d.webgl {
 
                 for (const camera of cameras) {
                     const scene = camera.entity.scene;
-
+                    const renderTarget = camera.renderTarget || camera._previewRenderTarget;
                     if (
-                        camera.renderTarget
-                        || camera._previewRenderTarget
+                        renderTarget
                         || (isPlayerMode ? scene !== editorScene : scene === editorScene)
                     ) {
-                        this.render(camera);
+                        this.render(camera, null, renderTarget);
                     }
                 }
 
@@ -750,9 +749,8 @@ namespace egret3d.webgl {
             this._drawCallCollecter.drawCallCount = 0;
         }
 
-        public render(camera: Camera, material: Material | null = null) {
+        public render(camera: Camera, material: Material | null = null, renderTarget: RenderTexture | null = null) {
             const cameraAndLightCollecter = this._cameraAndLightCollecter;
-            const renderTarget = camera.renderTarget || camera._previewRenderTarget;
             if (cameraAndLightCollecter.currentCamera !== camera) { //如果相等，没必要在更新摄像机
                 cameraAndLightCollecter.currentCamera = camera;
                 camera._update();
@@ -795,8 +793,6 @@ namespace egret3d.webgl {
                     this._render(camera, renderTarget, material);
                 }
                 else {
-                    this._render(camera, camera.postprocessingRenderTarget, material);
-
                     for (const postprocessing of postprocessings) {
                         if (postprocessing.isActiveAndEnabled) {
                             this._backupCamera = camera;

@@ -4894,7 +4894,7 @@ var egret3d;
         /**
          *
          */
-        RenderState.prototype.updateViewport = function (viewport, renderTarget) { };
+        RenderState.prototype.updateViewport = function (viewport) { };
         /**
          *
          */
@@ -5672,7 +5672,7 @@ var egret3d;
             if (viewport === void 0) { viewport = null; }
             var orthographicMatrix = _helpMatrix;
             matchFactor = 1.0 - matchFactor;
-            var offsetX = (viewport !== null ? viewport.x : 0.0) - 0.5;
+            var offsetX = (viewport !== null ? -viewport.x : 0.0) - 0.5;
             var offsetY = (viewport !== null ? viewport.y : 0.0) + 0.5;
             var scaleX = viewport !== null ? viewport.w : 1.0;
             var scaleY = viewport !== null ? viewport.h : 1.0;
@@ -8639,8 +8639,13 @@ var egret3d;
     var CameraPostprocessing = (function (_super) {
         __extends(CameraPostprocessing, _super);
         function CameraPostprocessing() {
-            return _super !== null && _super.apply(this, arguments) || this;
+            var _this = _super !== null && _super.apply(this, arguments) || this;
+            _this._renderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState);
+            return _this;
         }
+        CameraPostprocessing.prototype.renderPostprocessTarget = function (camera, material) {
+            this._renderState.render(camera, material, camera.postprocessingRenderTarget);
+        };
         CameraPostprocessing.prototype.blit = function (src, material, dest, bufferMask) {
             if (material === void 0) { material = null; }
             if (dest === void 0) { dest = null; }
@@ -8654,8 +8659,10 @@ var egret3d;
             //
             var camera = egret3d.cameraAndLightCollecter.postprocessingCamera;
             egret3d.renderState.updateRenderTarget(dest);
-            egret3d.renderState.updateViewport(camera.viewport, dest);
-            egret3d.renderState.clearBuffer(bufferMask || saveCamera.bufferMask, saveCamera.backgroundColor);
+            egret3d.renderState.updateViewport(camera.viewport);
+            if (bufferMask === null || bufferMask !== 0 /* None */) {
+                egret3d.renderState.clearBuffer(bufferMask || saveCamera.bufferMask, saveCamera.backgroundColor);
+            }
             //
             camerasAndLights.currentCamera = camera; // TODO
             egret3d.renderState.draw(egret3d.drawCallCollecter.postprocessing, material);
@@ -10808,9 +10815,10 @@ var egret3d;
                     }
                 }
             };
-            WebGLRenderState.prototype.updateViewport = function (viewport, renderTarget) {
+            WebGLRenderState.prototype.updateViewport = function (viewport) {
                 var webgl = WebGLRenderState.webgl;
                 var currentViewport = this.viewport;
+                var renderTarget = this.renderTarget;
                 var w;
                 var h;
                 if (renderTarget) {
@@ -14019,7 +14027,8 @@ var egret3d;
                     screenW = screenSize.h;
                     screenH = screenSize.w;
                 }
-                var scalerW = size.w / screenW;
+                var scalerW = (screenSize.w > size.w ? screenSize.w : Math.min(size.w, screenSize.w)) / screenSize.w;
+                // const scalerW = size.w / screenW;
                 var scalerH = size.h / screenH;
                 this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
                 viewport.w = Math.ceil(screenW * this.scaler);
@@ -14027,7 +14036,7 @@ var egret3d;
                 this.scaler = screenW / screenSize.w;
             }
             else {
-                var scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
+                var scalerW = (screenSize.w > size.w ? screenSize.w : Math.min(size.w, screenSize.w)) / screenSize.w;
                 var scalerH = size.h / screenSize.h;
                 this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
                 this._rotated = false;
@@ -16840,6 +16849,7 @@ var egret3d;
             _this._readRenderTarget = null;
             _this._writeRenderTarget = null;
             _this._renderTarget = null;
+            _this._subViewport = egret3d.Rectangle.create(0.0, 0.0, 1.0, 1.0);
             /**
              * @private
              */
@@ -17262,6 +17272,28 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(Camera.prototype, "subViewport", {
+            get: function () {
+                return this._subViewport;
+            },
+            set: function (value) {
+                var subViewport = this._subViewport;
+                if (subViewport !== value) {
+                    subViewport.copy(value);
+                }
+                subViewport.w = subViewport.w || 1.0;
+                subViewport.h = subViewport.h || 1.0;
+                this._dirtyMask |= 32 /* PixelViewport */;
+                if (!this._nativeProjection) {
+                    this._dirtyMask |= 13 /* ProjectionAndClipMatrix */;
+                    if (!this._nativeCulling) {
+                        this._dirtyMask |= 80 /* Culling */;
+                    }
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(Camera.prototype, "pixelViewport", {
             /**
              * 该相机像素化的渲染视口。
@@ -17346,7 +17378,7 @@ var egret3d;
                 }
                 var viewportMatrix = this._viewportMatrix;
                 if (this._dirtyMask & 1 /* ProjectionMatrix */) {
-                    viewportMatrix.fromProjection(this._near, this._far, this._fov, this._size, this._opvalue, this.aspect, egret3d.stage.matchFactor);
+                    viewportMatrix.fromProjection(this._near, this._far, this._fov, this._size, this._opvalue, this.aspect, egret3d.stage.matchFactor, this._subViewport);
                     this._dirtyMask &= ~1 /* ProjectionMatrix */;
                 }
                 return viewportMatrix;
@@ -17599,6 +17631,10 @@ var egret3d;
             paper.serializedField,
             paper.editor.property("RECT" /* RECT */, { step: 0.01 })
         ], Camera.prototype, "viewport", null);
+        __decorate([
+            paper.serializedField,
+            paper.editor.property("RECT" /* RECT */, { step: 0.01 })
+        ], Camera.prototype, "subViewport", null);
         __decorate([
             paper.editor.property("RECT" /* RECT */, { step: 1 })
         ], Camera.prototype, "pixelViewport", null);
@@ -18273,6 +18309,7 @@ var egret3d;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             FXAAPostProcess.prototype.onRender = function (camera) {
+                this.renderPostprocessTarget(camera);
                 egret3d.DefaultMaterials.FXAA.setTexture(camera.postprocessingRenderTarget);
                 this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA);
             };
@@ -18280,6 +18317,120 @@ var egret3d;
         }(egret3d.CameraPostprocessing));
         postprocess.FXAAPostProcess = FXAAPostProcess;
         __reflect(FXAAPostProcess.prototype, "egret3d.postprocess.FXAAPostProcess");
+    })(postprocess = egret3d.postprocess || (egret3d.postprocess = {}));
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
+    var postprocess;
+    (function (postprocess) {
+        // Sample patterns reference: https://msdn.microsoft.com/en-us/library/windows/desktop/ff476218%28v=vs.85%29.aspx?f=255&MSPPError=-2147217396
+        var JitterVectors = [
+            [
+                [0, 0]
+            ],
+            [
+                [4, 4], [-4, -4]
+            ],
+            [
+                [-2, -6], [6, -2], [-6, 2], [2, 6]
+            ],
+            [
+                [1, -3], [-1, 3], [5, 1], [-3, -5],
+                [-5, 5], [-7, -1], [3, 7], [7, -7]
+            ],
+            [
+                [1, 1], [-1, -3], [-3, 2], [4, -1],
+                [-5, -2], [2, 5], [5, 3], [3, -5],
+                [-2, 6], [0, -7], [-4, -6], [-6, 4],
+                [-8, 0], [7, -4], [6, 7], [-7, -8]
+            ],
+            [
+                [-4, -7], [-7, -5], [-3, -5], [-5, -4],
+                [-1, -4], [-2, -2], [-6, -1], [-4, 0],
+                [-7, 1], [-1, 2], [-6, 3], [-3, 3],
+                [-7, 6], [-3, 6], [-5, 7], [-1, 7],
+                [5, -7], [1, -6], [6, -5], [4, -4],
+                [2, -3], [7, -2], [1, -1], [4, -1],
+                [2, 1], [6, 2], [0, 4], [4, 4],
+                [2, 5], [7, 5], [5, 6], [3, 7]
+            ]
+        ];
+        var roundingRange = 1 / 32;
+        var SSAAPostProcess = (function (_super) {
+            __extends(SSAAPostProcess, _super);
+            function SSAAPostProcess() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.sampleLevel = 2;
+                _this.unbiased = false;
+                _this._subViewport = egret3d.Rectangle.create(0, 0, 1, 1);
+                _this._copyMaterial = egret3d.Material.create(egret3d.DefaultShaders.COPY);
+                _this._clearColor = egret3d.Color.create(0, 0, 0, 0);
+                _this._sampleRenderTarget = egret3d.RenderTexture.create({
+                    width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
+                    minFilter: 9729 /* Linear */, magFilter: 9729 /* Linear */,
+                    format: 6408 /* RGBA */
+                });
+                return _this;
+            }
+            SSAAPostProcess.prototype._onStageResize = function () {
+                var sampleRenderTarget = this._sampleRenderTarget;
+                if (sampleRenderTarget) {
+                    var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
+                    sampleRenderTarget.uploadTexture(w, h);
+                }
+            };
+            SSAAPostProcess.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                egret3d.stage.onScreenResize.add(this._onStageResize, this);
+                this._copyMaterial.setBlend(5 /* Additive_PreMultiply */, 3000 /* Transparent */);
+                this._copyMaterial.setDepth(false, false);
+                this._copyMaterial.addDefine("PREMULTIPLIED_ALPHA" /* PREMULTIPLIED_ALPHA */);
+            };
+            SSAAPostProcess.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                egret3d.stage.onScreenResize.remove(this._onStageResize, this);
+            };
+            SSAAPostProcess.prototype.onRender = function (camera) {
+                var renderState = this._renderState;
+                var unbiased = this.unbiased;
+                var copyMaterial = this._copyMaterial;
+                var clearColor = this._clearColor;
+                var sampleRenderTarget = this._sampleRenderTarget;
+                var subViewport = this._subViewport;
+                var jitterOffsets = JitterVectors[Math.max(0, Math.min(this.sampleLevel, 5))];
+                var baseSampleWeight = 1.0 / jitterOffsets.length;
+                var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
+                copyMaterial.setTexture(sampleRenderTarget);
+                for (var i = 0, l = jitterOffsets.length; i < l; i++) {
+                    var offset = jitterOffsets[i];
+                    camera.subViewport = subViewport.set(offset[0] * 0.0625 / w, offset[1] * 0.0625 / h, 1, 1);
+                    var sampleWeight = baseSampleWeight;
+                    if (unbiased) {
+                        var uniformCenteredDistribution = (-0.5 + (i + 0.5) / l);
+                        sampleWeight += roundingRange * uniformCenteredDistribution;
+                    }
+                    renderState.updateRenderTarget(sampleRenderTarget);
+                    renderState.clearBuffer(17664 /* All */, clearColor);
+                    renderState.render(camera, undefined, sampleRenderTarget);
+                    renderState.updateRenderTarget(null);
+                    if (i === 0) {
+                        renderState.clearBuffer(17664 /* All */, clearColor);
+                    }
+                    copyMaterial.setOpacity(sampleWeight);
+                    this.blit(sampleRenderTarget, copyMaterial, null, 0 /* None */);
+                }
+                camera.subViewport.set(0, 0, 1, 1);
+            };
+            __decorate([
+                paper.editor.property("UINT" /* UINT */, { minimum: 0, maximum: 5 })
+            ], SSAAPostProcess.prototype, "sampleLevel", void 0);
+            __decorate([
+                paper.editor.property("CHECKBOX" /* CHECKBOX */)
+            ], SSAAPostProcess.prototype, "unbiased", void 0);
+            return SSAAPostProcess;
+        }(egret3d.CameraPostprocessing));
+        postprocess.SSAAPostProcess = SSAAPostProcess;
+        __reflect(SSAAPostProcess.prototype, "egret3d.postprocess.SSAAPostProcess");
     })(postprocess = egret3d.postprocess || (egret3d.postprocess = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -31753,7 +31904,7 @@ var egret3d;
             WebGLRenderSystem.prototype._render = function (camera, renderTarget, material) {
                 var renderState = this._renderState;
                 renderState.updateRenderTarget(renderTarget);
-                renderState.updateViewport(camera.viewport, renderTarget);
+                renderState.updateViewport(camera.viewport);
                 renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
                 // Skybox.
                 var skyBox = camera.entity.getComponent(egret3d.SkyBox);
@@ -31879,10 +32030,10 @@ var egret3d;
                     for (var _a = 0, cameras_1 = cameras; _a < cameras_1.length; _a++) {
                         var camera = cameras_1[_a];
                         var scene = camera.entity.scene;
-                        if (camera.renderTarget
-                            || camera._previewRenderTarget
+                        var renderTarget = camera.renderTarget || camera._previewRenderTarget;
+                        if (renderTarget
                             || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
-                            this.render(camera);
+                            this.render(camera, null, renderTarget);
                         }
                     }
                     this._cacheProgram = null; //TODO
@@ -31894,10 +32045,10 @@ var egret3d;
             WebGLRenderSystem.prototype.onFrameCleanup = function () {
                 this._drawCallCollecter.drawCallCount = 0;
             };
-            WebGLRenderSystem.prototype.render = function (camera, material) {
+            WebGLRenderSystem.prototype.render = function (camera, material, renderTarget) {
                 if (material === void 0) { material = null; }
+                if (renderTarget === void 0) { renderTarget = null; }
                 var cameraAndLightCollecter = this._cameraAndLightCollecter;
-                var renderTarget = camera.renderTarget || camera._previewRenderTarget;
                 if (cameraAndLightCollecter.currentCamera !== camera) {
                     cameraAndLightCollecter.currentCamera = camera;
                     camera._update();
@@ -31935,7 +32086,6 @@ var egret3d;
                         this._render(camera, renderTarget, material);
                     }
                     else {
-                        this._render(camera, camera.postprocessingRenderTarget, material);
                         for (var _c = 0, postprocessings_2 = postprocessings; _c < postprocessings_2.length; _c++) {
                             var postprocessing = postprocessings_2[_c];
                             if (postprocessing.isActiveAndEnabled) {
