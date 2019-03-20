@@ -16838,6 +16838,7 @@ var egret3d;
             _this._size = 1.0;
             _this._viewport = egret3d.Rectangle.create(0.0, 0.0, 1.0, 1.0);
             _this._pixelViewport = egret3d.Rectangle.create(0.0, 0.0, 1.0, 1.0);
+            _this._subViewport = egret3d.Rectangle.create(0.0, 0.0, 1.0, 1.0);
             _this._frustum = egret3d.Frustum.create();
             _this._viewportMatrix = egret3d.Matrix4.create();
             _this._cullingMatrix = egret3d.Matrix4.create();
@@ -16849,7 +16850,6 @@ var egret3d;
             _this._readRenderTarget = null;
             _this._writeRenderTarget = null;
             _this._renderTarget = null;
-            _this._subViewport = egret3d.Rectangle.create(0.0, 0.0, 1.0, 1.0);
             /**
              * @private
              */
@@ -18303,20 +18303,20 @@ var egret3d;
 (function (egret3d) {
     var postprocess;
     (function (postprocess) {
-        var FXAAPostProcess = (function (_super) {
-            __extends(FXAAPostProcess, _super);
-            function FXAAPostProcess() {
+        var FXAAPostprocess = (function (_super) {
+            __extends(FXAAPostprocess, _super);
+            function FXAAPostprocess() {
                 return _super !== null && _super.apply(this, arguments) || this;
             }
-            FXAAPostProcess.prototype.onRender = function (camera) {
+            FXAAPostprocess.prototype.onRender = function (camera) {
                 this.renderPostprocessTarget(camera);
                 egret3d.DefaultMaterials.FXAA.setTexture(camera.postprocessingRenderTarget);
                 this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA);
             };
-            return FXAAPostProcess;
+            return FXAAPostprocess;
         }(egret3d.CameraPostprocessing));
-        postprocess.FXAAPostProcess = FXAAPostProcess;
-        __reflect(FXAAPostProcess.prototype, "egret3d.postprocess.FXAAPostProcess");
+        postprocess.FXAAPostprocess = FXAAPostprocess;
+        __reflect(FXAAPostprocess.prototype, "egret3d.postprocess.FXAAPostprocess");
     })(postprocess = egret3d.postprocess || (egret3d.postprocess = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -18356,9 +18356,9 @@ var egret3d;
             ]
         ];
         var roundingRange = 1 / 32;
-        var SSAAPostProcess = (function (_super) {
-            __extends(SSAAPostProcess, _super);
-            function SSAAPostProcess() {
+        var SSAAPostprocess = (function (_super) {
+            __extends(SSAAPostprocess, _super);
+            function SSAAPostprocess() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.sampleLevel = 2;
                 _this.unbiased = false;
@@ -18372,25 +18372,25 @@ var egret3d;
                 });
                 return _this;
             }
-            SSAAPostProcess.prototype._onStageResize = function () {
+            SSAAPostprocess.prototype._onStageResize = function () {
                 var sampleRenderTarget = this._sampleRenderTarget;
                 if (sampleRenderTarget) {
                     var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
                     sampleRenderTarget.uploadTexture(w, h);
                 }
             };
-            SSAAPostProcess.prototype.initialize = function () {
+            SSAAPostprocess.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
                 egret3d.stage.onScreenResize.add(this._onStageResize, this);
                 this._copyMaterial.setBlend(5 /* Additive_PreMultiply */, 3000 /* Transparent */);
                 this._copyMaterial.setDepth(false, false);
                 this._copyMaterial.addDefine("PREMULTIPLIED_ALPHA" /* PREMULTIPLIED_ALPHA */);
             };
-            SSAAPostProcess.prototype.uninitialize = function () {
+            SSAAPostprocess.prototype.uninitialize = function () {
                 _super.prototype.uninitialize.call(this);
                 egret3d.stage.onScreenResize.remove(this._onStageResize, this);
             };
-            SSAAPostProcess.prototype.onRender = function (camera) {
+            SSAAPostprocess.prototype.onRender = function (camera) {
                 var renderState = this._renderState;
                 var unbiased = this.unbiased;
                 var copyMaterial = this._copyMaterial;
@@ -18423,14 +18423,14 @@ var egret3d;
             };
             __decorate([
                 paper.editor.property("UINT" /* UINT */, { minimum: 0, maximum: 5 })
-            ], SSAAPostProcess.prototype, "sampleLevel", void 0);
+            ], SSAAPostprocess.prototype, "sampleLevel", void 0);
             __decorate([
                 paper.editor.property("CHECKBOX" /* CHECKBOX */)
-            ], SSAAPostProcess.prototype, "unbiased", void 0);
-            return SSAAPostProcess;
+            ], SSAAPostprocess.prototype, "unbiased", void 0);
+            return SSAAPostprocess;
         }(egret3d.CameraPostprocessing));
-        postprocess.SSAAPostProcess = SSAAPostProcess;
-        __reflect(SSAAPostProcess.prototype, "egret3d.postprocess.SSAAPostProcess");
+        postprocess.SSAAPostprocess = SSAAPostprocess;
+        __reflect(SSAAPostprocess.prototype, "egret3d.postprocess.SSAAPostprocess");
     })(postprocess = egret3d.postprocess || (egret3d.postprocess = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;

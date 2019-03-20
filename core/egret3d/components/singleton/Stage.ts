@@ -37,7 +37,8 @@ namespace egret3d {
                     screenH = screenSize.w;
                 }
 
-                const scalerW = size.w / screenW;
+                const scalerW = (screenSize.w > size.w ? screenSize.w : Math.min(size.w, screenSize.w)) / screenSize.w;
+                // const scalerW = size.w / screenW;
                 const scalerH = size.h / screenH;
                 (this.scaler as float) = math.lerp(scalerW, scalerH, this._matchFactor);
 
@@ -46,7 +47,7 @@ namespace egret3d {
                 (this.scaler as float) = screenW / screenSize.w;
             }
             else {
-                const scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
+                const scalerW = (screenSize.w > size.w ? screenSize.w : Math.min(size.w, screenSize.w)) / screenSize.w;
                 const scalerH = size.h / screenSize.h;
                 (this.scaler as float) = math.lerp(scalerW, scalerH, this._matchFactor);
 

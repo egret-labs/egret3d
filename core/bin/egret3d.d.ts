@@ -8134,6 +8134,7 @@ declare namespace egret3d {
         private _size;
         private readonly _viewport;
         private readonly _pixelViewport;
+        private readonly _subViewport;
         private readonly _frustum;
         private readonly _viewportMatrix;
         private readonly _cullingMatrix;
@@ -8145,7 +8146,6 @@ declare namespace egret3d {
         private _readRenderTarget;
         private _writeRenderTarget;
         private _renderTarget;
-        private _subViewport;
         /**
          * @private
          */
@@ -8372,12 +8372,12 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d.postprocess {
-    class FXAAPostProcess extends egret3d.CameraPostprocessing {
+    class FXAAPostprocess extends egret3d.CameraPostprocessing {
         onRender(camera: egret3d.Camera): void;
     }
 }
 declare namespace egret3d.postprocess {
-    class SSAAPostProcess extends egret3d.CameraPostprocessing {
+    class SSAAPostprocess extends egret3d.CameraPostprocessing {
         sampleLevel: number;
         unbiased: boolean;
         private readonly _subViewport;
