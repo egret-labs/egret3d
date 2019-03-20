@@ -789,11 +789,11 @@ declare namespace paper {
         /**
          * 逻辑帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        tickRate?: number;
+        tickRate?: uint;
         /**
          * 渲染帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        frameRate?: number;
+        frameRate?: uint;
     }
 }
 declare namespace paper {
@@ -6666,11 +6666,7 @@ declare namespace egret3d {
     /**
      *
      */
-    type RunOptions = {
-        /**
-         *
-         */
-        playerMode?: paper.PlayerMode;
+    interface RunOptions extends paper.RunOptions {
         /**
          *
          */
@@ -6698,7 +6694,18 @@ declare namespace egret3d {
         antialiasSamples?: number;
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
-    };
+        /**
+         * 是否显示状态面板。
+         * - 未设置则默认为 PC 模式显示，手机模式不显示。
+         * - 包含 FPS、TPS、内存消耗、渲染耗时、DrawCall 等。
+         */
+        showStats?: boolean;
+        /**
+         * 是否显示 Inspector 面板。
+         * - 未设置则默认为 PC 模式显示，手机模式不显示。
+         */
+        showInspector?: boolean;
+    }
 }
 declare namespace egret3d {
     /**
@@ -10370,6 +10377,10 @@ declare namespace paper {
          */
         readonly version: string;
         /**
+         * 程序启动项。
+         */
+        readonly options: RunOptions;
+        /**
          * 系统管理器。
          */
         readonly systemManager: SystemManager;
@@ -10393,9 +10404,13 @@ declare namespace paper {
          */
         private _update({tickCount, frameCount}?);
         /**
-         *
+         * 初始化程序。
          */
         initialize(options: RunOptions): void;
+        /**
+         * 注册程序系统。
+         */
+        registerSystems(): void;
         /**
          * engine start
          *
@@ -10414,7 +10429,7 @@ declare namespace paper {
          */
         readonly isMobile: boolean;
         /**
-         * 运行模式。
+         * 程序的运行模式。
          */
         playerMode: PlayerMode;
     }

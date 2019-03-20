@@ -705,10 +705,10 @@ namespace paper {
         /**
          * 逻辑帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        tickRate?: number;
+        tickRate?: uint;
         /**
          * 渲染帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        frameRate?: number;
+        frameRate?: uint;
     }
 }

@@ -11,7 +11,7 @@ namespace paper.editor {
         private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.addComponent(GUIComponent);
 
         public onAwake() {
-            Application.sceneManager.globalEntity.getOrAddComponent(EditorDefaultAsset); // TODO
+            Application.sceneManager.globalEntity.getOrAddComponent(EditorAssets); // TODO
             //
             if ((Application.playerMode & PlayerMode.Editor) === 0) {
                 const guiComponent = this._guiComponent!;
@@ -57,9 +57,10 @@ namespace paper.editor {
 
                 this._isMobile = paper.Application.isMobile;
                 guiComponent.showStates = ShowState.None;
-                guiComponent.quaryValues = getQueryValues(location.search) as QuaryValues;
 
-                if (guiComponent.quaryValues.GUI === 1 || (guiComponent.quaryValues.GUI !== 0 && !this._isMobile)) {
+                const options = Application.options as egret3d.RunOptions;
+
+                if (options.showInspector!) {
                     guiComponent.showStates |= ShowState.HierarchyAndInspector;
                     hierarchyContainer.appendChild(guiComponent.hierarchy.domElement);
                     inspectorContainer.appendChild(guiComponent.inspector.domElement);

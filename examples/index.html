@@ -29,14 +29,19 @@
     <div 
         style="margin: auto;width: 100%;height: 100%;overflow: hidden;" 
         class="egret-player" 
-        data-orientation="auto"
-        data-frame-rate="30"
-        data-scale-mode="showAll"
+        data-tick-rate="60"
+        data-frame-rate="60"
         data-content-width="1136"
         data-content-height="640"
+        data-antialias="true"
+        data-alpha="false"
+
+        data-orientation="auto"
+        data-scale-mode="showAll"
         data-multi-fingered="2"
         
-        data-show-fps="false"
+        data-show-stats="true"
+        data-show-inspector="true"
         >
     </div>
 
@@ -75,13 +80,7 @@
             var manifest = JSON.parse(xhr.response);
             var list = manifest.initial.concat(manifest.game);
             loadScript(list, function () {
-                egret3d.runEgret({
-                    // 启动时设置帧频
-                    tickRate: 60.0, // 启动时设置逻辑帧频
-                    frameRate: 30.0, // 启动时设置渲染帧频
-                    antialias: true,
-                    alpha: false
-                });
+                egret3d.runEgret();
                 /*
                  * `paper.Application.pause(); // 如果是编辑器模式, egret3d.runEgret() 之后即可暂停主循环`
                  */

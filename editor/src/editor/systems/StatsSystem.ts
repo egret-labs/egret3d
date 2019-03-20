@@ -22,9 +22,9 @@ namespace paper.editor {
         }
 
         public onEnable() {
-            const quaryValues = this._guiComponent.quaryValues;
+            const options = Application.options as egret3d.RunOptions;
 
-            if (quaryValues.FPS !== 0) {
+            if (options.showStats!) {
                 this._guiComponent.showStates |= ShowState.FPS;
                 this._fpsIndex = 0;
             }

@@ -13,52 +13,65 @@ namespace egret3d {
             egret.Sound = egret.web ? egret.web.HtmlSound : (egret as any)['wxgame']['HtmlSound']; //TODO:Sound
             (egret.Capabilities as any)["renderMode" + ""] = "webgl";
 
-            const canvas = _getMainCanvas(options);
+            const isWeb = !window.canvas;
+            const playerDiv = isWeb ? <HTMLDivElement>document.getElementsByClassName("egret-player")[0]! : null;
+            const canvas = _getMainCanvas(options, playerDiv);
+
+            if (options.playerMode === undefined) {
+                options.playerMode = _parseInt(playerDiv, "data-player-model", paper.PlayerMode.Player);
+            }
+
+            if (options.tickRate === undefined) {
+                options.tickRate = _parseInt(playerDiv, "data-tick-rate", 0);
+            }
+
+            if (options.frameRate === undefined) {
+                options.frameRate = _parseInt(playerDiv, "data-frame-rate", 0);
+            }
+
+            if (options.contentWidth === undefined) {
+                options.contentWidth = _parseInt(playerDiv, "data-content-width", 1136);
+            }
+
+            if (options.contentHeight === undefined) {
+                options.contentHeight = _parseInt(playerDiv, "data-content-height", 640);
+            }
 
             if (options.alpha === undefined) {
-                options.alpha = false;
+                options.alpha = _parseBoolean(playerDiv, "data-alpha", false);
             }
 
             if (options.antialias === undefined) {
-                options.antialias = true;
+                options.alpha = _parseBoolean(playerDiv, "data-antialias", true);
             }
 
             if (options.antialiasSamples === undefined) {
                 options.antialiasSamples = 4;
             }
 
-            if (options.contentWidth === undefined) {
-                const defaultWidth = 1136;
-
-                if (window.canvas) {
-                    options.contentWidth = defaultWidth;
-                }
-                else {
-                    const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0]!;
-                    options.contentWidth = parseInt(div.getAttribute("data-content-width")!) || defaultWidth;
-                }
+            if (options.antialiasSamples === undefined) {
+                options.antialiasSamples = 4;
             }
 
-            if (options.contentHeight === undefined) {
-                const defaultHeight = 640;
+            if (options.showStats === undefined) {
+                options.showStats = _parseBoolean(playerDiv, "data-show-stats", !paper.Application.isMobile);
+            }
 
-                if (window.canvas) {
-                    options.contentHeight = defaultHeight;
-                }
-                else {
-                    const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0]!;
-                    options.contentHeight = parseInt(div.getAttribute("data-content-height")!) || defaultHeight;
-                }
+            if (options.showInspector === undefined) {
+                options.showInspector = _parseBoolean(playerDiv, "data-show-inspector", !paper.Application.isMobile);
             }
 
             options.canvas = canvas;
-            options.webgl = <WebGLRenderingContext>canvas.getContext("webgl", options) || <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
+            options.webgl =
+                <WebGLRenderingContext>canvas.getContext("webgl", options) ||
+                <WebGLRenderingContext>canvas.getContext("experimental-webgl", options);
         }
 
         const { version, systemManager, gameObjectContext } = paper.Application;
 
         console.info("Egret", version, "start.");
 
+        paper.Application.initialize(options);
         systemManager
             .preRegister(webgl.BeginSystem, gameObjectContext, paper.SystemOrder.Begin, options)
             .preRegister(webgl.WebGLRenderSystem, gameObjectContext, paper.SystemOrder.Renderer, options)
@@ -72,26 +85,49 @@ namespace egret3d {
             .preRegister(Egret2DRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer, options)
             .preRegister(CameraAndLightSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
 
-        paper.Application.initialize(options);
+        paper.Application.registerSystems();
         paper.Application.start();
 
         console.info("Egret start complete.");
     }
 
-    function _getMainCanvas(options: RunOptions) {
+    function _parseBoolean(playerDiv: HTMLDivElement | null, attributeName: string, defaultValue: boolean) {
+        if (playerDiv !== null) {
+            const attribute = playerDiv.getAttribute(attributeName);
+
+            if (attribute !== null) {
+                return attribute === "true";
+            }
+        }
+
+        return defaultValue;
+    }
+
+    function _parseInt(playerDiv: HTMLDivElement | null, attributeName: string, defaultValue: int) {
+        if (playerDiv !== null) {
+            const attribute = playerDiv.getAttribute(attributeName);
+
+            if (attribute !== null) {
+                return parseInt(attribute);
+            }
+        }
+
+        return defaultValue;
+    }
+
+    function _getMainCanvas(options: RunOptions, playerDiv: HTMLDivElement | null) {
         if (window.canvas) {
             return window.canvas;
         }
-        else if (options.canvas) {
+
+        if (options.canvas) {
             return options.canvas;
         }
-        else {
-            const div = <HTMLDivElement>document.getElementsByClassName("egret-player")[0];
-            const canvas = document.createElement("canvas");
-            div.appendChild(canvas);
 
-            return canvas;
-        }
+        const canvas = document.createElement("canvas");
+        playerDiv!.appendChild(canvas);
+
+        return canvas;
     }
 }
 

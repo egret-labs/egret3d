@@ -7,11 +7,21 @@ namespace paper.editor {
      * @internal
      */
     @singleton
-    export class EditorDefaultAsset extends Component {
+    export class EditorAssets extends Component {
+        public static SKELETON_MESH: egret3d.Mesh;
         public static CIRCLE_LINE_HALF: egret3d.Mesh;
+        public static JOINT_MESH: egret3d.Mesh;
 
         public static CAMERA_ICON: egret3d.Texture;
         public static LIGHT_ICON: egret3d.Texture;
+
+        public static HOVER_MATERIAL: egret3d.Material;
+        public static SELECTED_MATERIAL: egret3d.Material;
+        public static COLLIDER_MATERIAL: egret3d.Material;
+        public static SELECT_MATERIAL: egret3d.Material;
+        public static SKELETON_MATERIAL: egret3d.Material;
+        public static JOINT_LINE_MATERIAL: egret3d.Material;
+        public static JOINT_POINT_MATERIAL: egret3d.Material;
 
         /**专门为编辑器写的API，解决再调用纹理时纹理尚未加载完毕的问题 */
         public static async initializeForEditor(): Promise<void> {
@@ -29,7 +39,7 @@ namespace paper.editor {
                             const texture = egret3d.Texture.create({
                                 source: image
                             }).setLiner(true).setRepeat(false).setMipmap(false);
-                            (EditorDefaultAsset as any)[mapList[index].target] = texture;
+                            (EditorAssets as any)[mapList[index].target] = texture;
 
                             index++;
                             loadNext()
@@ -46,38 +56,81 @@ namespace paper.editor {
         public initialize() {
             super.initialize();
 
+            EditorAssets.SKELETON_MESH = egret3d.Mesh.create(1024, 0, [gltf.AttributeSemantics.POSITION]);
+            EditorAssets.SKELETON_MESH.drawMode = gltf.DrawMode.Dynamic;
+
+            EditorAssets.CIRCLE_LINE_HALF = egret3d.MeshBuilder.createCircle(0.5, 0.5);
+
             {
-                const mesh = egret3d.MeshBuilder.createCircle(0.5, 0.5);
-                mesh.name = "builtin/circle_line_half.mesh.bin";
-                paper.Asset.register(mesh);
-                EditorDefaultAsset.CIRCLE_LINE_HALF = mesh;
+                const mesh = EditorAssets.JOINT_MESH = egret3d.Mesh.create(2, 2, [gltf.AttributeSemantics.POSITION]);
+                mesh.name = "editor/joint.mesh.bin";
+                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
+                mesh.setAttributes(gltf.AttributeSemantics.POSITION, [
+                    0.0, 0.0, 0.0,
+                    0.0, 0.0, 1.0,
+                ]);
+                mesh.setIndices([0, 1], 0);
+                mesh.setIndices([0, 1], mesh.addSubMesh(2, 1, gltf.MeshPrimitiveMode.Points));
             }
 
             {
-                if (!EditorDefaultAsset.CAMERA_ICON) {
+                if (!EditorAssets.CAMERA_ICON) {
                     const image = new Image();
                     image.src = _icons.camera;
                     image.onload = () => {
                         const texture = egret3d.Texture.create({
                             source: image
                         }).setLiner(true).setRepeat(false).setMipmap(false);
-                        EditorDefaultAsset.CAMERA_ICON = texture;
+                        EditorAssets.CAMERA_ICON = texture;
                     };
                 }
             }
 
             {
-                if (!EditorDefaultAsset.LIGHT_ICON) {
+                if (!EditorAssets.LIGHT_ICON) {
                     const image = new Image();
                     image.src = _icons.light;
                     image.onload = () => {
                         const texture = egret3d.Texture.create({
                             source: image
                         }).setLiner(true).setRepeat(false).setMipmap(false);
-                        EditorDefaultAsset.LIGHT_ICON = texture;
+                        EditorAssets.LIGHT_ICON = texture;
                     };
                 }
             }
+
+            EditorAssets.HOVER_MATERIAL = egret3d.Material.create("editor/hover.mat.json", egret3d.DefaultShaders.LINEDASHED)
+                .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, 0.6)
+                .setColor(egret3d.Color.WHITE);
+
+            EditorAssets.SELECTED_MATERIAL = egret3d.Material.create("editor/selected.mat.json", egret3d.DefaultShaders.LINEDASHED)
+                .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, 0.8)
+                .setColor(egret3d.Color.INDIGO);
+
+            EditorAssets.COLLIDER_MATERIAL = egret3d.Material.create("editor/collider.mat.json", egret3d.DefaultShaders.LINEDASHED)
+                .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, 0.6)
+                .setColor(egret3d.Color.YELLOW);
+
+            EditorAssets.SELECT_MATERIAL = egret3d.Material.create("editor/select.mat.json", egret3d.DefaultShaders.MESH_BASIC)
+                .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.4)
+                .setColor(egret3d.Color.INDIGO)
+                .setDepth(false, false);
+
+            EditorAssets.SKELETON_MATERIAL = egret3d.Material.create("editor/skeleton.mat.json", egret3d.DefaultShaders.LINEDASHED)
+                .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.6)
+                .setColor(egret3d.Color.YELLOW)
+                .setDepth(false, false);
+
+            EditorAssets.JOINT_LINE_MATERIAL = egret3d.Material.create("editor/joint_line.mat.json", egret3d.DefaultShaders.LINEDASHED)
+                .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.6)
+                .setColor(egret3d.Color.PURPLE)
+                .setDepth(false, false);
+
+            EditorAssets.JOINT_POINT_MATERIAL = egret3d.Material.create("editor/joint_point.mat.json", egret3d.DefaultShaders.POINTS)
+                .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.6)
+                .setColor(egret3d.Color.PURPLE)
+                .setFloat(egret3d.ShaderUniformName.Size, 4.0)
+                .setDepth(false, false);
         }
     }
 }

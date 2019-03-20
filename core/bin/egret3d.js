@@ -11593,10 +11593,14 @@ var paper;
         function EnableSystem() {
             return _super !== null && _super.apply(this, arguments) || this;
         }
-        EnableSystem.prototype.onAwake = function () {
+        EnableSystem.prototype.onAwake = function (config) {
             var globalEntity = paper.Application.sceneManager.globalEntity;
             globalEntity.addComponent(paper.Clock);
             globalEntity.addComponent(paper.DisposeCollecter);
+            paper.clock.tickInterval = config.tickRate > 0 ? 1.0 / config.tickRate : 0;
+            paper.clock.frameInterval = config.frameRate > 0 ? 1.0 / config.frameRate : 0;
+            console.info("Tick rate: ", config.tickRate > 0 ? config.tickRate : "Auto");
+            console.info("Frame rate: ", config.frameRate > 0 ? config.frameRate : "Auto");
         };
         return EnableSystem;
     }(paper.BaseSystem));
@@ -13029,6 +13033,7 @@ var egret3d;
         "rotation": "_ROTATION" /* _ROTATION */,
         "scale2D": "_SCALE2D" /* _SCALE2D */,
     };
+    ;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -26824,7 +26829,11 @@ var paper;
             /**
              * 引擎版本。
              */
-            this.version = "1.5.0.001";
+            this.version = "1.5.1.001";
+            /**
+             * 程序启动项。
+             */
+            this.options = null;
             /**
              * 系统管理器。
              */
@@ -26886,22 +26895,24 @@ var paper;
             systemManager._teardown();
         };
         /**
-         *
+         * 初始化程序。
          */
         ECS.prototype.initialize = function (options) {
-            this._playerMode = options.playerMode || 1 /* Player */;
+            this.options = options;
+            this._playerMode = options.playerMode;
+        };
+        /**
+         * 注册程序系统。
+         */
+        ECS.prototype.registerSystems = function () {
             var _a = this, systemManager = _a.systemManager, gameObjectContext = _a.gameObjectContext;
-            systemManager.register(paper.EnableSystem, gameObjectContext, 1000 /* Enable */);
+            systemManager.register(paper.EnableSystem, gameObjectContext, 1000 /* Enable */, this.options);
             systemManager.register(paper.StartSystem, gameObjectContext, 2000 /* Start */);
             systemManager.register(paper.FixedUpdateSystem, gameObjectContext, 3000 /* FixedUpdate */);
             systemManager.register(paper.UpdateSystem, gameObjectContext, 4000 /* Update */);
             systemManager.register(paper.LateUpdateSystem, gameObjectContext, 6000 /* LateUpdate */);
             systemManager.register(paper.DisableSystem, gameObjectContext, 9000 /* Disable */);
             systemManager.preRegisterSystems();
-            paper.clock.tickInterval = options.tickRate ? 1.0 / options.tickRate : 0;
-            console.info("tick rate:", options.tickRate ? options.tickRate : "auto");
-            paper.clock.frameInterval = options.frameRate ? 1.0 / options.frameRate : 0;
-            console.info("frame rate:", options.frameRate ? options.frameRate : "auto");
         };
         /**
          * TODO
@@ -26991,7 +27002,7 @@ var paper;
         });
         Object.defineProperty(ECS.prototype, "playerMode", {
             /**
-             * 运行模式。
+             * 程序的运行模式。
              */
             get: function () {
                 return this._playerMode;
@@ -32623,41 +32634,50 @@ var egret3d;
             // TODO
             egret.Sound = egret.web ? egret.web.HtmlSound : egret['wxgame']['HtmlSound']; //TODO:Sound
             egret.Capabilities["renderMode" + ""] = "webgl";
-            var canvas = _getMainCanvas(options);
+            var isWeb = !window.canvas;
+            var playerDiv = isWeb ? document.getElementsByClassName("egret-player")[0] : null;
+            var canvas = _getMainCanvas(options, playerDiv);
+            if (options.playerMode === undefined) {
+                options.playerMode = _parseInt(playerDiv, "data-player-model", 1 /* Player */);
+            }
+            if (options.tickRate === undefined) {
+                options.tickRate = _parseInt(playerDiv, "data-tick-rate", 0);
+            }
+            if (options.frameRate === undefined) {
+                options.frameRate = _parseInt(playerDiv, "data-frame-rate", 0);
+            }
+            if (options.contentWidth === undefined) {
+                options.contentWidth = _parseInt(playerDiv, "data-content-width", 1136);
+            }
+            if (options.contentHeight === undefined) {
+                options.contentHeight = _parseInt(playerDiv, "data-content-height", 640);
+            }
             if (options.alpha === undefined) {
-                options.alpha = false;
+                options.alpha = _parseBoolean(playerDiv, "data-alpha", false);
             }
             if (options.antialias === undefined) {
-                options.antialias = true;
+                options.alpha = _parseBoolean(playerDiv, "data-antialias", true);
             }
             if (options.antialiasSamples === undefined) {
                 options.antialiasSamples = 4;
             }
-            if (options.contentWidth === undefined) {
-                var defaultWidth = 1136;
-                if (window.canvas) {
-                    options.contentWidth = defaultWidth;
-                }
-                else {
-                    var div = document.getElementsByClassName("egret-player")[0];
-                    options.contentWidth = parseInt(div.getAttribute("data-content-width")) || defaultWidth;
-                }
+            if (options.antialiasSamples === undefined) {
+                options.antialiasSamples = 4;
             }
-            if (options.contentHeight === undefined) {
-                var defaultHeight = 640;
-                if (window.canvas) {
-                    options.contentHeight = defaultHeight;
-                }
-                else {
-                    var div = document.getElementsByClassName("egret-player")[0];
-                    options.contentHeight = parseInt(div.getAttribute("data-content-height")) || defaultHeight;
-                }
+            if (options.showStats === undefined) {
+                options.showStats = _parseBoolean(playerDiv, "data-show-stats", !paper.Application.isMobile);
+            }
+            if (options.showInspector === undefined) {
+                options.showInspector = _parseBoolean(playerDiv, "data-show-inspector", !paper.Application.isMobile);
             }
             options.canvas = canvas;
-            options.webgl = canvas.getContext("webgl", options) || canvas.getContext("experimental-webgl", options);
+            options.webgl =
+                canvas.getContext("webgl", options) ||
+                    canvas.getContext("experimental-webgl", options);
         }
         var _a = paper.Application, version = _a.version, systemManager = _a.systemManager, gameObjectContext = _a.gameObjectContext;
         console.info("Egret", version, "start.");
+        paper.Application.initialize(options);
         systemManager
             .preRegister(egret3d.webgl.BeginSystem, gameObjectContext, 0 /* Begin */, options)
             .preRegister(egret3d.webgl.WebGLRenderSystem, gameObjectContext, 8000 /* Renderer */, options)
@@ -32669,24 +32689,39 @@ var egret3d;
             .preRegister(egret3d.particle.ParticleSystem, gameObjectContext, 7000 /* BeforeRenderer */)
             .preRegister(egret3d.Egret2DRendererSystem, gameObjectContext, 7000 /* BeforeRenderer */, options)
             .preRegister(egret3d.CameraAndLightSystem, gameObjectContext, 7000 /* BeforeRenderer */);
-        paper.Application.initialize(options);
+        paper.Application.registerSystems();
         paper.Application.start();
         console.info("Egret start complete.");
     }
     egret3d.runEgret = runEgret;
-    function _getMainCanvas(options) {
+    function _parseBoolean(playerDiv, attributeName, defaultValue) {
+        if (playerDiv !== null) {
+            var attribute = playerDiv.getAttribute(attributeName);
+            if (attribute !== null) {
+                return attribute === "true";
+            }
+        }
+        return defaultValue;
+    }
+    function _parseInt(playerDiv, attributeName, defaultValue) {
+        if (playerDiv !== null) {
+            var attribute = playerDiv.getAttribute(attributeName);
+            if (attribute !== null) {
+                return parseInt(attribute);
+            }
+        }
+        return defaultValue;
+    }
+    function _getMainCanvas(options, playerDiv) {
         if (window.canvas) {
             return window.canvas;
         }
-        else if (options.canvas) {
+        if (options.canvas) {
             return options.canvas;
         }
-        else {
-            var div = document.getElementsByClassName("egret-player")[0];
-            var canvas = document.createElement("canvas");
-            div.appendChild(canvas);
-            return canvas;
-        }
+        var canvas = document.createElement("canvas");
+        playerDiv.appendChild(canvas);
+        return canvas;
     }
 })(egret3d || (egret3d = {}));
 window.gltf = gltf;

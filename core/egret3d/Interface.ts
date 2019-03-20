@@ -231,7 +231,7 @@ namespace egret3d {
         "envMap": ShaderDefine.USE_ENVMAP,
         "emissiveMap": ShaderDefine.USE_EMISSIVEMAP,
     };
-    
+
     /**
      * 内置提供的全局 Attribute。
      * @private
@@ -379,11 +379,7 @@ namespace egret3d {
     /**
      * 
      */
-    export type RunOptions = {
-        /**
-         * 
-         */
-        playerMode?: paper.PlayerMode;
+    export interface RunOptions extends paper.RunOptions {
         /**
          * 
          */
@@ -413,5 +409,16 @@ namespace egret3d {
 
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
+        /**
+         * 是否显示状态面板。
+         * - 未设置则默认为 PC 模式显示，手机模式不显示。
+         * - 包含 FPS、TPS、内存消耗、渲染耗时、DrawCall 等。
+         */
+        showStats?: boolean;
+        /**
+         * 是否显示 Inspector 面板。
+         * - 未设置则默认为 PC 模式显示，手机模式不显示。
+         */
+        showInspector?: boolean;
     };
 }

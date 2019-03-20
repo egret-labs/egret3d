@@ -180,9 +180,8 @@ declare namespace paper.editor {
         private _gizmosForwardContainerEntity;
         private _touchContainerEntity;
         private _transformControllerEntity;
-        private readonly _frustum;
-        private readonly _projectionMatrix;
-        private _updateSelectFrustum(camera, viewport);
+        private readonly _selectBox;
+        private _updateSelectBox(camera, viewport);
         lookAtSelected(): void;
         protected getMatchers(): IAnyOfMatcher<GameObject>[];
         onEnable(): void;

@@ -221,7 +221,7 @@ namespace paper.editor {
             this.eventDispatcher.dispatchEvent(event);
         }
         private static async preDo(){
-            await EditorDefaultAsset.initializeForEditor();
+            await EditorAssets.initializeForEditor();
         }
         private static initEditEnvironment() {
             egret3d.runEgret({
