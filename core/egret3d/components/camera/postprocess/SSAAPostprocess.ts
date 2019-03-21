@@ -46,6 +46,12 @@ namespace egret3d.postprocess {
                 minFilter: gltf.TextureFilter.Linear, magFilter: gltf.TextureFilter.Linear,
                 format: gltf.TextureFormat.RGBA
             });
+        private readonly _finalSampleRenderTarget: egret3d.RenderTexture = egret3d.RenderTexture.create
+            ({
+                width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
+                minFilter: gltf.TextureFilter.Linear, magFilter: gltf.TextureFilter.Linear,
+                format: gltf.TextureFormat.RGBA
+            });
         private _onStageResize(): void {
             const sampleRenderTarget = this._sampleRenderTarget;
             if (sampleRenderTarget) {
@@ -72,6 +78,7 @@ namespace egret3d.postprocess {
             const copyMaterial = this._copyMaterial;
             const clearColor = this._clearColor;
             const sampleRenderTarget = this._sampleRenderTarget;
+            const finalSampleRenderTarget = this._finalSampleRenderTarget;
             const subViewport = this._subViewport;
             const jitterOffsets = JitterVectors[Math.max(0, Math.min(this.sampleLevel, 5))];
             const baseSampleWeight = 1.0 / jitterOffsets.length;
@@ -90,14 +97,17 @@ namespace egret3d.postprocess {
                 renderState.updateRenderTarget(sampleRenderTarget);
                 renderState.clearBuffer(gltf.BufferMask.All, clearColor);
                 renderState.render(camera, undefined, sampleRenderTarget);
-                renderState.updateRenderTarget(null);
+                renderState.updateRenderTarget(finalSampleRenderTarget);
 
                 if (i === 0) {
                     renderState.clearBuffer(gltf.BufferMask.All, clearColor);
                 }
                 copyMaterial.setOpacity(sampleWeight);
-                this.blit(sampleRenderTarget, copyMaterial, null, gltf.BufferMask.None);
+                this.blit(sampleRenderTarget, copyMaterial, finalSampleRenderTarget, gltf.BufferMask.None);
             }
+
+            
+            this.blit(finalSampleRenderTarget);
 
             camera.subViewport.set(0, 0, 1, 1);
         }

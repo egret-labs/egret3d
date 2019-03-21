@@ -4068,6 +4068,10 @@ declare namespace egret3d {
         /**
          *
          */
+        premultipltedAlpha: boolean;
+        /**
+         *
+         */
         toneMappingExposure: float;
         /**
          *
@@ -8384,6 +8388,7 @@ declare namespace egret3d.postprocess {
         private readonly _copyMaterial;
         private readonly _clearColor;
         private readonly _sampleRenderTarget;
+        private readonly _finalSampleRenderTarget;
         private _onStageResize();
         initialize(): void;
         uninitialize(): void;

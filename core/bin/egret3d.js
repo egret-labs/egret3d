@@ -4635,6 +4635,10 @@ var egret3d;
             /**
              *
              */
+            _this.premultipltedAlpha = false;
+            /**
+             *
+             */
             _this.toneMappingExposure = 1.0;
             /**
              *
@@ -5058,6 +5062,9 @@ var egret3d;
         __decorate([
             paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(egret3d.ToneMapping) }) // TODO
         ], RenderState.prototype, "toneMapping", null);
+        __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */)
+        ], RenderState.prototype, "premultipltedAlpha", void 0);
         __decorate([
             paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 10.0 })
         ], RenderState.prototype, "toneMappingExposure", void 0);
@@ -10843,7 +10850,12 @@ var egret3d;
                     webgl.clearStencil(1.0);
                 }
                 if (bufferBit & 16384 /* Color */) {
-                    clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                    if (this.premultipltedAlpha) {
+                        clearColor && webgl.clearColor(clearColor.r * clearColor.a, clearColor.g * clearColor.a, clearColor.b * clearColor.a, clearColor.a);
+                    }
+                    else {
+                        clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                    }
                 }
                 webgl.clear(bufferBit);
             };
@@ -14629,8 +14641,12 @@ var egret3d;
                 .setDepth(true, true)
                 .addDefine("FLIP_SIDED" /* FLIP_SIDED */).addDefine("USE_SHADOWMAP" /* USE_SHADOWMAP */)
                 .setCullFace(true, 2305 /* CCW */, 1029 /* Back */);
-            DefaultMaterials_1.COPY = this._createMaterial("builtin/copy.mat.json", egret3d.DefaultShaders.COPY);
-            DefaultMaterials_1.FXAA = this._createMaterial("builtin/fxaa.mat.json", egret3d.DefaultShaders.FXAA);
+            DefaultMaterials_1.COPY = this._createMaterial("builtin/copy.mat.json", egret3d.DefaultShaders.COPY)
+                .setBlend(2 /* Normal */, 3000 /* Transparent */)
+                .setDepth(false, false);
+            DefaultMaterials_1.FXAA = this._createMaterial("builtin/fxaa.mat.json", egret3d.DefaultShaders.FXAA)
+                .setBlend(2 /* Normal */, 3000 /* Transparent */)
+                .setDepth(false, false);
         };
         DefaultMaterials = DefaultMaterials_1 = __decorate([
             paper.singleton
@@ -18310,9 +18326,11 @@ var egret3d;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             FXAAPostprocess.prototype.onRender = function (camera) {
+                egret3d.renderState.updateRenderTarget(camera.postprocessingRenderTarget);
+                egret3d.renderState.clearBuffer(17664 /* All */, camera.backgroundColor);
                 this.renderPostprocessTarget(camera);
                 egret3d.DefaultMaterials.FXAA.setTexture(camera.postprocessingRenderTarget);
-                this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA);
+                this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA, null, 0 /* None */);
             };
             return FXAAPostprocess;
         }(egret3d.CameraPostprocessing));
@@ -18371,6 +18389,11 @@ var egret3d;
                     minFilter: 9729 /* Linear */, magFilter: 9729 /* Linear */,
                     format: 6408 /* RGBA */
                 });
+                _this._finalSampleRenderTarget = egret3d.RenderTexture.create({
+                    width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
+                    minFilter: 9729 /* Linear */, magFilter: 9729 /* Linear */,
+                    format: 6408 /* RGBA */
+                });
                 return _this;
             }
             SSAAPostprocess.prototype._onStageResize = function () {
@@ -18397,6 +18420,7 @@ var egret3d;
                 var copyMaterial = this._copyMaterial;
                 var clearColor = this._clearColor;
                 var sampleRenderTarget = this._sampleRenderTarget;
+                var finalSampleRenderTarget = this._finalSampleRenderTarget;
                 var subViewport = this._subViewport;
                 var jitterOffsets = JitterVectors[Math.max(0, Math.min(this.sampleLevel, 5))];
                 var baseSampleWeight = 1.0 / jitterOffsets.length;
@@ -18413,13 +18437,14 @@ var egret3d;
                     renderState.updateRenderTarget(sampleRenderTarget);
                     renderState.clearBuffer(17664 /* All */, clearColor);
                     renderState.render(camera, undefined, sampleRenderTarget);
-                    renderState.updateRenderTarget(null);
+                    renderState.updateRenderTarget(finalSampleRenderTarget);
                     if (i === 0) {
                         renderState.clearBuffer(17664 /* All */, clearColor);
                     }
                     copyMaterial.setOpacity(sampleWeight);
-                    this.blit(sampleRenderTarget, copyMaterial, null, 0 /* None */);
+                    this.blit(sampleRenderTarget, copyMaterial, finalSampleRenderTarget, 0 /* None */);
                 }
+                this.blit(finalSampleRenderTarget);
                 camera.subViewport.set(0, 0, 1, 1);
             };
             __decorate([

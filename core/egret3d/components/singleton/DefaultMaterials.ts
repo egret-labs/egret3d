@@ -112,9 +112,13 @@ namespace egret3d {
                 .addDefine(ShaderDefine.FLIP_SIDED).addDefine(ShaderDefine.USE_SHADOWMAP)
                 .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
 
-            DefaultMaterials.COPY = this._createMaterial("builtin/copy.mat.json", DefaultShaders.COPY);
+            DefaultMaterials.COPY = this._createMaterial("builtin/copy.mat.json", DefaultShaders.COPY)
+            .setBlend(BlendMode.Normal, RenderQueue.Transparent)
+            .setDepth(false, false);
             
-            DefaultMaterials.FXAA = this._createMaterial("builtin/fxaa.mat.json", DefaultShaders.FXAA);
+            DefaultMaterials.FXAA = this._createMaterial("builtin/fxaa.mat.json", DefaultShaders.FXAA)
+            .setBlend(BlendMode.Normal, RenderQueue.Transparent)
+            .setDepth(false, false);
         }
     }
 }

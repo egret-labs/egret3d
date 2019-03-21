@@ -166,7 +166,13 @@ namespace egret3d.webgl {
             }
 
             if (bufferBit & gltf.BufferMask.Color) {
-                clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                if (this.premultipltedAlpha) {
+                    clearColor && webgl.clearColor(clearColor.r * clearColor.a, clearColor.g * clearColor.a, clearColor.b * clearColor.a, clearColor.a);
+                }
+                else {
+                    clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                }
+
             }
 
             webgl.clear(bufferBit);

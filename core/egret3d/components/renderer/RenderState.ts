@@ -517,6 +517,11 @@ namespace egret3d {
         /**
          * 
          */
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public premultipltedAlpha: boolean = false;
+        /**
+         * 
+         */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 10.0 })
         public toneMappingExposure: float = 1.0;
         /**
