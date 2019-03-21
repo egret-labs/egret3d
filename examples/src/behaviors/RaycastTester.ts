@@ -13,7 +13,7 @@ namespace behaviors {
             const meshFilter = this._line.getComponent(egret3d.MeshFilter)!;
             const meshRenderer = this._line.getComponent(egret3d.MeshRenderer)!;
 
-            this._lineMesh = meshFilter.mesh!;
+        this._lineMesh = meshFilter.mesh!;
             this._lineMesh.setIndices([2, 3], this._lineMesh.addSubMesh(2, 1, gltf.MeshPrimitiveMode.Points));
             this._lineMesh.setAttributes(gltf.AttributeSemantics.COLOR_0, [
                 0.0, 0.0, 0.0, 0.0,

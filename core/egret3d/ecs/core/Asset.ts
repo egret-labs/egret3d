@@ -2,6 +2,7 @@ namespace paper {
     /**
      * 基础资源。
      * - 全部资源的基类。
+     * - 资源不能直接静态初始化，需要等待引擎启动完毕后初始化。
      */
     export abstract class Asset extends BaseObject {
         /**
@@ -14,7 +15,7 @@ namespace paper {
         public static readonly _assets: { [key: string]: Asset } = {};
         /**
          * 将一个资源注册为全局可访问资源。
-         * - 引用计数加 1 。
+         * - 资源引用计数加 1 。
          */
         public static register(asset: Asset): boolean {
             const assetName = asset.name;

@@ -561,6 +561,7 @@ namespace egret3d {
         }
         /**
          * 设置该材质的混合模式。
+         * - 该设置会修改深度缓冲的状态。
          * @param blend 混合模式。
          * @param renderQueue 渲染顺序。
          * @param opacity 透明度。（未设置则不更改透明度）

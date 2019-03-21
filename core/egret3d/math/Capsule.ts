@@ -10,7 +10,7 @@ namespace egret3d {
          * @param center 中心点。
          * @param radius 半径。
          */
-        public static create(center: Readonly<IVector3> = Vector3.ZERO, radius: number = 0.0, height: number = 0.0) {
+        public static create(center: Readonly<IVector3> = Vector3.ZERO, radius: float = 0.0, height: float = 0.0) {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(center, radius, height);
                 instance._released = false;
@@ -24,12 +24,12 @@ namespace egret3d {
          * 该胶囊体的半径。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public radius: number = 0.0;
+        public radius: float = 0.0;
         /**
          * 该胶囊体圆柱部分的高度。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public height: number = 0.0;
+        public height: float = 0.0;
         /**
          * 该胶囊体的中心点。
          */
@@ -47,7 +47,7 @@ namespace egret3d {
             return [this.center.x, this.center.y, this.center.z, this.radius, this.height];
         }
 
-        public deserialize(value: Readonly<[number, number, number, number, number]>) {
+        public deserialize(value: Readonly<[float, float, float, float, float]>) {
             this.radius = value[3];
             this.height = value[4];
             this.center.fromArray(value);
@@ -63,7 +63,7 @@ namespace egret3d {
             return this.set(value.center, value.radius, value.height);
         }
 
-        public set(center: Readonly<IVector3>, radius: number, height: number) {
+        public set(center: Readonly<IVector3>, radius: float, height: float) {
             this.radius = radius;
             this.height = height;
             this.center.copy(center);
@@ -161,7 +161,7 @@ namespace egret3d {
                 tmaxxz = 1.0;
             }
 
-            let min: number;
+            let min: float;
             const crossY = p1y + dy * tminxz;
 
             if (-halfHeight < crossY && crossY < halfHeight) {
@@ -171,12 +171,12 @@ namespace egret3d {
 
                     if (raycastInfo) {
                         const px = p1x + min * dx;
-                        const py = p1z + min * dy;
+                        const pz = p1z + min * dz;
                         raycastInfo.distance = min;
-                        raycastInfo.position.set(px, crossY, py).add(center);
+                        raycastInfo.position.set(px, crossY, pz).add(center);
 
                         if (raycastInfo.normal) {
-                            raycastInfo.normal.set(px, 0.0, py).normalize();
+                            raycastInfo.normal.set(px, 0.0, pz).normalize();
                         }
                     }
 

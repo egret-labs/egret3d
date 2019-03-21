@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 提供默认的几何网格资源的快速访问方式。
+     * 默认的网格资源。
      */
     @paper.singleton
     export class DefaultMeshes extends paper.BaseComponent {
@@ -8,7 +8,6 @@ namespace egret3d {
          * 一个三角形网格。
          */
         public static TRIANGLE: Mesh;
-        public static SPRITE: Mesh; // TODO
         /**
          * 一个正方形网格。
          */
@@ -46,6 +45,10 @@ namespace egret3d {
          * 一个球体网格。
          */
         public static SPHERE: Mesh;
+        /**
+         * 渲染精灵使用的网格。
+         */
+        public static SPRITE: Mesh;
 
         public static LINE_X: Mesh;
         public static LINE_Y: Mesh;

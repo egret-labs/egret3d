@@ -712,6 +712,10 @@ namespace paper {
          */
         playerMode?: PlayerMode;
         /**
+         * 编辑器覆盖整个程序入口。
+         */
+        editorEntry?: string;
+        /**
          * 程序启动后需要显示调用的入口。
          */
         entry?: string;

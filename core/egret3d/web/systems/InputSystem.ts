@@ -445,8 +445,8 @@ namespace egret3d.webgl {
             }
         }
 
-        public onAwake(config: RunOptions) {
-            this._canvas = config.canvas!;
+        public onAwake() {
+            this._canvas = paper.Application.options.canvas!;
         }
 
         public onEnable() {

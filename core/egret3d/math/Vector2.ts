@@ -6,11 +6,11 @@ namespace egret3d {
         /**
          * X 轴分量。
          */
-        x: number;
+        x: float;
         /**
          * Y 轴分量。
          */
-        y: number;
+        y: float;
     }
     /**
      * 二维向量。
@@ -26,7 +26,7 @@ namespace egret3d {
          * @param x X 轴分量。
          * @param y Y 轴分量。
          */
-        public static create(x: number = 0.0, y: number = 0.0) {
+        public static create(x: float = 0.0, y: float = 0.0) {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(x, y);
                 instance._released = false;
@@ -35,15 +35,15 @@ namespace egret3d {
 
             return new Vector2().set(x, y);
         }
-        public x: number;
-        public y: number;
+        public x: float;
+        public y: float;
         /**
          * 请使用 `egret3d.Vector2.create()` 创建实例。
          * @see egret3d.Vector2.create()
          * @deprecated
          * @private
          */
-        public constructor(x: number = 0.0, y: number = 0.0) {
+        public constructor(x: float = 0.0, y: float = 0.0) {
             super();
             this.x = x;
             this.y = y;
@@ -53,7 +53,7 @@ namespace egret3d {
             return [this.x, this.y];
         }
 
-        public deserialize(value: [number, number]) {
+        public deserialize(value: [float, float]) {
             return this.fromArray(value);
         }
 
@@ -65,7 +65,7 @@ namespace egret3d {
             return Vector2.create(this.x, this.y);
         }
 
-        public set(x: number, y: number) {
+        public set(x: float, y: float) {
             this.x = x;
             this.y = y;
 
@@ -79,7 +79,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(array: ArrayLike<number>, offset: number = 0) {
+        public fromArray(array: ArrayLike<float>, offset: uint = 0) {
             this.x = array[offset];
             this.y = array[offset + 1];
 
@@ -94,11 +94,10 @@ namespace egret3d {
          * 将输入向量的归一化结果写入该向量。
          * - v = input / input.length
          * @param input 输入向量。
-         * @param defaultVector 当向量不能合法归一化时将指向何方向。
          */
-        public normalize(input: Readonly<IVector2>, defaultVector?: Readonly<IVector2>): this;
-        public normalize(input?: Readonly<IVector2>) {
-            if (!input) {
+        public normalize(input: Readonly<IVector2>): this;
+        public normalize(input: Readonly<IVector2> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -130,8 +129,8 @@ namespace egret3d {
          * @param vectorB 另一个向量。
          */
         public add(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2>): this;
-        public add(vectorA: Readonly<IVector2>, vectorB?: Readonly<IVector2>) {
-            if (!vectorB) {
+        public add(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2> | null = null) {
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -154,8 +153,8 @@ namespace egret3d {
          * @param vectorB 另一个向量。
          */
         public subtract(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2>): this;
-        public subtract(vectorA: Readonly<IVector2>, vectorB?: Readonly<IVector2>) {
-            if (!vectorB) {
+        public subtract(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2> | null = null) {
+            if (vectorB === null) {
                 vectorB = vectorA;
                 vectorA = this;
             }
@@ -170,16 +169,16 @@ namespace egret3d {
          * - v += scalar
          * @param scalar 标量。
          */
-        public addScalar(scalar: number): this;
+        public addScalar(scalar: float): this;
         /**
          * 将输入向量与标量相加的结果写入该向量。
          * - v = input + scalar
          * @param scalar 一个标量。
          * @param input 输入向量。
          */
-        public addScalar(scalar: number, input: Readonly<IVector2>): this;
-        public addScalar(scalar: number, input?: Readonly<IVector2>) {
-            if (!input) {
+        public addScalar(scalar: float, input: Readonly<IVector2>): this;
+        public addScalar(scalar: float, input: Readonly<IVector2> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -188,10 +187,19 @@ namespace egret3d {
 
             return this;
         }
-        public multiplyScalar(scalar: number): this;
-        public multiplyScalar(scalar: number, input: Readonly<IVector2>): this;
-        public multiplyScalar(scalar: number, input?: Readonly<IVector2>) {
-            if (!input) {
+        /**
+         * 
+         * @param scalar 
+         */
+        public multiplyScalar(scalar: float): this;
+        /**
+         * 
+         * @param scalar 
+         * @param input 
+         */
+        public multiplyScalar(scalar: float, input: Readonly<IVector2>): this;
+        public multiplyScalar(scalar: float, input: Readonly<IVector2> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -200,29 +208,47 @@ namespace egret3d {
 
             return this;
         }
-        public min(value: Readonly<IVector2>): this;
-        public min(valueA: Readonly<IVector2>, valueB: Readonly<IVector2>): this;
-        public min(valueA: Readonly<IVector2>, valueB?: Readonly<IVector2>) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
+        /**
+         * 
+         * @param vector 
+         */
+        public min(vector: Readonly<IVector2>): this;
+        /**
+         * 
+         * @param vectorA 
+         * @param vectorB 
+         */
+        public min(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2>): this;
+        public min(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2> | null = null) {
+            if (vectorB === null) {
+                vectorB = vectorA;
+                vectorA = this;
             }
 
-            this.x = Math.min(valueA.x, valueB.x);
-            this.y = Math.min(valueA.y, valueB.y);
+            this.x = Math.min(vectorA.x, vectorB.x);
+            this.y = Math.min(vectorA.y, vectorB.y);
 
             return this;
         }
-        public max(value: Readonly<IVector2>): this;
-        public max(valueA: Readonly<IVector2>, valueB: Readonly<IVector2>): this;
-        public max(valueA: Readonly<IVector2>, valueB?: Readonly<IVector2>) {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
+        /**
+         * 
+         * @param vector 
+         */
+        public max(vector: Readonly<IVector2>): this;
+        /**
+         * 
+         * @param vectorA 
+         * @param vectorB 
+         */
+        public max(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2>): this;
+        public max(vectorA: Readonly<IVector2>, vectorB: Readonly<IVector2> | null = null) {
+            if (vectorB === null) {
+                vectorB = vectorA;
+                vectorA = this;
             }
 
-            this.x = Math.max(valueA.x, valueB.x);
-            this.y = Math.max(valueA.y, valueB.y);
+            this.x = Math.max(vectorA.x, vectorB.x);
+            this.y = Math.max(vectorA.y, vectorB.y);
 
             return this;
         }
@@ -239,8 +265,8 @@ namespace egret3d {
          * @param input 输入向量。
          */
         public clamp(min: Readonly<IVector2>, max: Readonly<IVector2>, input: Readonly<IVector2>): this;
-        public clamp(min: Readonly<IVector2>, max: Readonly<IVector2>, input?: Readonly<IVector2>) {
-            if (!input) {
+        public clamp(min: Readonly<IVector2>, max: Readonly<IVector2>, input: Readonly<IVector2> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -258,15 +284,19 @@ namespace egret3d {
          * 该向量的长度。
          * - 该值是实时计算的。
          */
-        public get length() {
-            return Math.sqrt(this.sqrtLength);
+        public get length(): float {
+            const { x, y } = this;
+
+            return Math.sqrt(x * x + y * y);
         }
         /**
          * 该向量的长度的平方。
          * - 该值是实时计算的。
          */
-        public get sqrtLength() {
-            return this.x * this.x + this.y * this.y;
+        public get sqrtLength(): float {
+            const { x, y } = this;
+
+            return x * x + y * y;
         }
         /**
          * @deprecated 
@@ -295,13 +325,13 @@ namespace egret3d {
         /**
          * @deprecated 
          */
-        public static dot(v1: Vector2, v2: Vector2): number {
+        public static dot(v1: Vector2, v2: Vector2): float {
             return v1.x * v2.x + v1.y * v2.y;
         }
         /**
          * @deprecated 
          */
-        public static scale(v: Vector2, scaler: number): Vector2 {
+        public static scale(v: Vector2, scaler: float): Vector2 {
             v.x = v.x * scaler;
             v.y = v.y * scaler;
             return v;
@@ -309,13 +339,13 @@ namespace egret3d {
         /**
          * @deprecated 
          */
-        public static getLength(v: Vector2): number {
+        public static getLength(v: Vector2): float {
             return Math.sqrt(v.x * v.x + v.y * v.y);
         }
         /**
          * @deprecated 
          */
-        public static getDistance(v1: Vector2, v2: Vector2): number {
+        public static getDistance(v1: Vector2, v2: Vector2): float {
             this.subtract(v1, v2, _helpVector2A);
 
             return this.getLength(_helpVector2A);
@@ -323,7 +353,7 @@ namespace egret3d {
         /**
          * @deprecated 
          */
-        public static equal(v1: Vector2, v2: Vector2, threshold: number = 0.00001): boolean {
+        public static equal(v1: Vector2, v2: Vector2, threshold: float = 0.00001): boolean {
             if (Math.abs(v1.x - v2.x) > threshold) {
                 return false;
             }
@@ -337,7 +367,7 @@ namespace egret3d {
         /**
          * @deprecated 
          */
-        public static lerp(v1: Vector2, v2: Vector2, value: number, out: Vector2): Vector2 {
+        public static lerp(v1: Vector2, v2: Vector2, value: float, out: Vector2): Vector2 {
             out.x = v1.x * (1 - value) + v2.x * value;
             out.y = v1.y * (1 - value) + v2.y * value;
             return out;

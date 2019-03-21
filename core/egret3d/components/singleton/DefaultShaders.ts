@@ -1,32 +1,92 @@
 namespace egret3d {
     /**
-     * 默认的 shader。
+     * 默认的着色器资源。
      */
     @paper.singleton
     export class DefaultShaders extends paper.BaseComponent {
-        public static LINEDASHED: Shader;
-        public static VERTEX_COLOR: Shader;
-
+        /**
+         * 默认的 mesh basic 着色器。
+         * - 注意请不要修改该值。
+         */
         public static MESH_BASIC: Shader;
+        /**
+         * 默认的 mesh normal 着色器。
+         * - 注意请不要修改该值。
+         */
         public static MESH_NORMAL: Shader;
+        /**
+         * 默认的 mesh lambert 着色器。
+         * - 注意请不要修改该值。
+         */
         public static MESH_LAMBERT: Shader;
+        /**
+         * 默认的 mesh phone 着色器。
+         * - 注意请不要修改该值。
+         */
         public static MESH_PHONG: Shader;
+        /**
+         * 默认的 mesh physical 着色器。
+         * - 注意请不要修改该值。
+         */
         public static MESH_PHYSICAL: Shader;
+        /**
+         * 默认的 mesh standard 着色器。
+         * - 注意请不要修改该值。
+         */
         public static MESH_STANDARD: Shader;
-
-        public static PARTICLE: Shader;
-
+        /**
+         * 默认的 points 着色器。
+         * - 注意请不要修改该值。
+         */
         public static POINTS: Shader;
+        /**
+         * 默认的 vertex color 着色器。
+         * - 注意请不要修改该值。
+         */
+        public static VERTEX_COLOR: Shader;
+        /**
+         * 默认的虚线着色器。
+         * - 注意请不要修改该值。
+         */
+        public static LINEDASHED: Shader;
+        /**
+         * 默认的 sprite 着色器。
+         * - 注意请不要修改该值。
+         */
         public static SPRITE: Shader;
+        /**
+         * 默认的 cube 着色器。
+         * - 注意请不要修改该值。
+         */
         public static CUBE: Shader;
+        /**
+         * 
+         */
         public static EQUIRECT: Shader;
+        /**
+         * 
+         */
         public static DEPTH: Shader;
+        /**
+         * 
+         */
         public static DISTANCE_RGBA: Shader;
+        /**
+         * 
+         */
         public static SHADOW: Shader;
-        //
+        /**
+         * 
+         */
         public static COPY: Shader;
+        /**
+         * 
+         */
         public static FXAA: Shader;
-
+        /**
+         * 
+         */
+        public static PARTICLE: Shader;
         /**
          * @deprecated
          */
@@ -132,12 +192,6 @@ namespace egret3d {
             const helpStates = helpMaterial.technique.states!;
             //
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
-            DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", ShaderLib.linedashed as any, RenderQueue.Geometry, helpStates);
-
-            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
-            DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", ShaderLib.meshbasic as any, RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);
-
-            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             DefaultShaders.MESH_BASIC = this._createShader("builtin/meshbasic.shader.json", ShaderLib.meshbasic as any, RenderQueue.Geometry, helpStates);
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
@@ -155,11 +209,14 @@ namespace egret3d {
             helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
             DefaultShaders.MESH_STANDARD = this._createShader("builtin/meshstandard.shader.json", ShaderLib.meshphysical as any, RenderQueue.Geometry, helpStates, [ShaderDefine.STANDARD]);
 
-            helpMaterial.clearStates().setDepth(true, true).setCullFace(false);
-            DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", ShaderLib.particle as any, RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);
-
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.POINTS = this._createShader("builtin/points.shader.json", ShaderLib.points as any, RenderQueue.Geometry, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            DefaultShaders.VERTEX_COLOR = this._createShader("builtin/vertcolor.shader.json", ShaderLib.meshbasic as any, RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);
+
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            DefaultShaders.LINEDASHED = this._createShader("builtin/linedashed.shader.json", ShaderLib.linedashed as any, RenderQueue.Geometry, helpStates);
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.SPRITE = this._createShader("builtin/sprite.shader.json", ShaderLib.sprite as any, RenderQueue.Geometry, helpStates);
@@ -184,6 +241,9 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders.FXAA = this._createShader("builtin/fxaa.shader.json", ShaderLib.fxaa as any, RenderQueue.Geometry, helpStates);
+
+            helpMaterial.clearStates().setDepth(true, true).setCullFace(false);
+            DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", ShaderLib.particle as any, RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);
 
             // deprecated
             helpMaterial.clearStates().setDepth(true, true);

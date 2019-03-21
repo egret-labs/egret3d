@@ -129,7 +129,45 @@ namespace egret3d {
 
             return false;
         }
+        /**
+         * 使用射线检测一个实体的碰撞体，并返回是否有碰撞。
+         * @param ray 一个射线。
+         * @param entity 一个实体。
+         * @param cullingMask 允许检测的实体层级。
+         * - 默认为 `paper.Layer.Default`。
+         * @param maxDistance 允许检测的射线原点到实体变换组件的最大欧氏距离。
+         * - [`0.0` ~ N]
+         * - `0.0`：无限制。
+         * @param raycastInfo 精确检测信息。
+         * - 默认为 `null`，不进行精确检测。
+         */
+        public raycastSingle(ray: Readonly<Ray>, entity: paper.GameObject, cullingMask: paper.Layer = paper.Layer.Default, maxDistance: float = 0.0, raycastInfo: RaycastInfo | null = null): boolean {
+            if (raycastInfo !== null) {
 
+                _helpVector3 = Vector3.create().release();
+                _helpRaycastInfo = RaycastInfo.create().release();
+
+                const isHit = this._raycast(ray, entity, cullingMask, maxDistance, raycastInfo);
+
+                _helpVector3 = null;
+                _helpRaycastInfo = null;
+
+                return isHit;
+            }
+
+            return this._raycast(ray, entity, cullingMask, maxDistance, null);
+        }
+        /**
+         * 使用射线检测所有实体的碰撞体，并返回是否有碰撞。
+         * @param ray 一个射线。
+         * @param cullingMask 允许检测的实体层级。
+         * - 默认为 `paper.Layer.Default`。
+         * @param maxDistance 允许检测的射线原点到实体变换组件的最大欧氏距离。
+         * - [`0.0` ~ N]
+         * - `0.0`：无限制。
+         * @param raycastInfo 精确检测信息。
+         * - 默认为 `null`，不进行精确检测。
+         */
         public raycast(ray: Readonly<Ray>, cullingMask: paper.Layer = paper.Layer.Default, maxDistance: float = 0.0, raycastInfo: RaycastInfo | null = null): boolean {
             const { entities } = this.groups[0];
 

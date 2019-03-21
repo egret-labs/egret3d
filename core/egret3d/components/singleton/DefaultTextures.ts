@@ -1,23 +1,27 @@
 namespace egret3d {
     /**
-     * 默认的纹理。
+     * 默认的纹理资源。
      */
     @paper.singleton
     export class DefaultTextures extends paper.BaseComponent {
         /**
          * 纯白色纹理。
+         * - 注意请不要修改该值。
          */
         public static WHITE: BaseTexture;
         /**
          * 纯灰色纹理。
+         * - 注意请不要修改该值。
          */
         public static GRAY: BaseTexture;
         /**
          * 黑白网格纹理。
+         * - 注意请不要修改该值。
          */
         public static GRID: BaseTexture;
         /**
-         * 用于表示纹理丢失的紫色纹理。
+         * 用于表示纹理资源丢失的纹理。
+         * - 注意请不要修改该值。
          */
         public static MISSING: BaseTexture;
 

@@ -142,8 +142,8 @@ namespace egret3d {
          * @param input 输入立方体。
          */
         public applyMatrix(matrix: Readonly<Matrix4>, input: Readonly<Box>): this;
-        public applyMatrix(matrix: Readonly<Matrix4>, input?: Readonly<Box>) {
-            if (!input) {
+        public applyMatrix(matrix: Readonly<Matrix4>, input: Readonly<Box> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -184,8 +184,8 @@ namespace egret3d {
          * @param input 输入立方体。 
          */
         public add(pointOrBox: Readonly<IVector3 | Box>, input: Readonly<Box>): this;
-        public add(pointOrBox: Readonly<IVector3 | Box>, input?: Readonly<Box>) {
-            if (!input) {
+        public add(pointOrBox: Readonly<IVector3 | Box>, input: Readonly<Box> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -218,12 +218,12 @@ namespace egret3d {
          * @param input 输入立方体。 
          */
         public expand(scalarOrVector: float | Readonly<IVector3>, input: Readonly<Box>): this;
-        public expand(scalarOrVector: float | Readonly<IVector3>, input?: Readonly<Box>) {
+        public expand(scalarOrVector: float | Readonly<IVector3>, input: Readonly<Box> | null = null) {
             if (this.isEmpty) {
                 return this;
             }
 
-            if (!input) {
+            if (input === null) {
                 input = this;
             }
 
@@ -256,12 +256,12 @@ namespace egret3d {
          * @param input 输入立方体。 
          */
         public translate(scalarOrVector: float | Readonly<IVector3>, input: Readonly<Box>): this;
-        public translate(scalarOrVector: float | Readonly<IVector3>, input?: Readonly<Box>) {
+        public translate(scalarOrVector: float | Readonly<IVector3>, input: Readonly<Box> | null = null) {
             if (this.isEmpty) {
                 return this;
             }
 
-            if (!input) {
+            if (input === null) {
                 input = this;
             }
 
@@ -286,18 +286,18 @@ namespace egret3d {
         /**
          * 获取一个点到该立方体的最近点。（如果该点在立方体内部，则最近点就是该点）
          * @param point 一个点。
-         * @param out 最近点。
+         * @param output 最近点。
          */
-        public getClosestPointToPoint(point: Readonly<IVector3>, out?: Vector3): Vector3 {
-            if (!out) {
-                out = Vector3.create();
+        public getClosestPointToPoint(point: Readonly<IVector3>, output: Vector3 | null = null): Vector3 {
+            if (output === null) {
+                output = Vector3.create();
             }
 
             if (this.isEmpty) {
-                return out.copy(Vector3.ZERO);
+                return output.copy(Vector3.ZERO);
             }
 
-            return out.clamp(this._minimum, this._maximum, point);
+            return output.clamp(this._minimum, this._maximum, point);
         }
         /**
          * 获取一个点到该立方体的最近距离。

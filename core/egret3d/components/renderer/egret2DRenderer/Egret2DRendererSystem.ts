@@ -87,9 +87,9 @@ namespace egret3d {
             ];
         }
 
-        public onAwake(config: RunOptions) {
-            Egret2DRendererSystem.canvas = config.canvas!;
-            Egret2DRendererSystem.webgl = config.webgl!;
+        public onAwake() {
+            Egret2DRendererSystem.canvas = paper.Application.options.canvas!;
+            Egret2DRendererSystem.webgl = paper.Application.options.webgl!;
             const webgl = Egret2DRendererSystem.webgl;
 
             if (!webgl) {

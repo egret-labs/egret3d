@@ -1,9 +1,11 @@
 namespace egret3d {
+
     const _helpVector3 = Vector3.create();
     /**
      * 几何截头锥体。
      */
     export class Frustum extends paper.BaseRelease<Frustum> implements paper.ICCS<Frustum>, paper.ISerializable {
+
         private static readonly _instances: Frustum[] = [];
         /**
          * 创建一个几何截头锥体。
@@ -38,16 +40,17 @@ namespace egret3d {
 
         public serialize() {
             let index = 0;
-            const array: number[] = [];
+            const array = new Array<float>(24);
 
             for (const plane of this.planes) {
-                plane.toArray(array, index++);
+                plane.toArray(array, index);
+                index += 4;
             }
 
             return array;
         }
 
-        public deserialize(value: ReadonlyArray<number>) {
+        public deserialize(value: ReadonlyArray<float>) {
             return this.fromArray(value);
         }
 
@@ -68,7 +71,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(array: ReadonlyArray<number>, offset: number = 0) {
+        public fromArray(array: ReadonlyArray<float>, offset: uint = 0) {
             for (const plane of this.planes) {
                 plane.fromArray(array, offset);
                 offset += 4;
@@ -111,8 +114,11 @@ namespace egret3d {
 
             return true;
         }
-
-        public intersectsSphere(sphere: Readonly<Sphere>) {
+        /**
+         * 
+         * @param sphere 
+         */
+        public intersectsSphere(sphere: Readonly<Sphere>): boolean {
             const center = sphere.center;
             const negRadius = -sphere.radius;
 

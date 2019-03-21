@@ -351,14 +351,15 @@ namespace egret3d {
             return prefixContext;
         }
 
-        public initialize(config: RunOptions) {
+        public initialize() {
             super.initialize();
 
             (renderState as RenderState) = this;
             //
+            const options = paper.Application.options as egret3d.RunOptions;
             this.toneMapping = ToneMapping.LinearToneMapping;
             this.gammaFactor = 2.0;
-            this.gammaInput = config.gammaInput ? true : false;
+            this.gammaInput = options.gammaInput !== undefined ? options.gammaInput : false;
             this.gammaOutput = false;
         }
         /**
