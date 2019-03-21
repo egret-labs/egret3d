@@ -101,17 +101,22 @@ namespace paper.editor {
         }
 
         public createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]) {
-            let state = ModifyGameObjectPropertyState.create(gameObjectUUid, newValueList, preValueCopylist);
+            const state = ModifyGameObjectPropertyState.create(gameObjectUUid, newValueList, preValueCopylist);
             this.addState(state);
         }
 
         public createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any {
-            let state = ModifyComponentPropertyState.create(gameObjectUUid, componentUUid, newValueList, preValueCopylist);
+            const state = ModifyComponentPropertyState.create(gameObjectUUid, componentUUid, newValueList, preValueCopylist);
             this.addState(state);
         }
 
         public createPrefabState(prefab: Prefab, parent?: GameObject) {
             const state = CreatePrefabState.create(prefab, parent);
+            this.addState(state);
+        }
+
+        public createModifyScenePropertyState(sceneUUid:string,newValueList: any[], preValueCopylist: any[]){
+            const state = ModifyScenePropertyState.create(sceneUUid,newValueList,preValueCopylist);
             this.addState(state);
         }
 

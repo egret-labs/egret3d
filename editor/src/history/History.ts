@@ -96,7 +96,7 @@ namespace paper.editor {
             return true;
         }
 
-        public go(index: number): boolean {
+    public go(index: number): boolean {
             if (this._batchIndex > 0) {
                 return false;
             }

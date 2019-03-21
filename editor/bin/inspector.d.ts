@@ -164,34 +164,6 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    /**
-     * TODO
-     */
-    class SceneSystem extends BaseSystem<GameObject> {
-        private readonly _modelComponent;
-        private readonly _keyEscape;
-        private readonly _keyDelete;
-        private readonly _keyE;
-        private readonly _keyW;
-        private readonly _keyR;
-        private readonly _keyX;
-        private readonly _keyF;
-        private _gizmosContainerEntity;
-        private _gizmosForwardContainerEntity;
-        private _touchContainerEntity;
-        private _transformControllerEntity;
-        private readonly _selectBox;
-        private _updateSelectBox(camera, viewport);
-        lookAtSelected(): void;
-        protected getMatchers(): IAnyOfMatcher<GameObject>[];
-        onEnable(): void;
-        onDisable(): void;
-        onEntityAdded(entity: GameObject, group: Group<GameObject>): void;
-        onEntityRemoved(entity: GameObject, group: Group<GameObject>): void;
-        onFrame(): void;
-        private static readonly _defalutPosition;
-        private _clearDefaultPointerDownPosition();
-    }
 }
 declare namespace paper.editor {
     const context: EventDispatcher;
@@ -244,6 +216,7 @@ declare namespace paper.editor {
         createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any;
         createPrefabState(prefab: Prefab, parent?: GameObject): void;
+        createModifyScenePropertyState(sceneUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         serializeProperty(value: any, editType: paper.editor.EditType): any;
         deserializeProperty(serializeData: any, editType: paper.editor.EditType): any;
         createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): void;
@@ -503,6 +476,36 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
+declare namespace paper.editor {
+    /**
+     * TODO
+     */
+    class SceneSystem extends BaseSystem<GameObject> {
+        private readonly _modelComponent;
+        private readonly _keyEscape;
+        private readonly _keyDelete;
+        private readonly _keyE;
+        private readonly _keyW;
+        private readonly _keyR;
+        private readonly _keyX;
+        private readonly _keyF;
+        private _gizmosContainerEntity;
+        private _gizmosForwardContainerEntity;
+        private _touchContainerEntity;
+        private _transformControllerEntity;
+        private readonly _selectBox;
+        private _updateSelectBox(camera, viewport);
+        lookAtSelected(): void;
+        protected getMatchers(): IAnyOfMatcher<GameObject>[];
+        onEnable(): void;
+        onDisable(): void;
+        onEntityAdded(entity: GameObject, group: Group<GameObject>): void;
+        onEntityRemoved(entity: GameObject, group: Group<GameObject>): void;
+        onFrame(): void;
+        private static readonly _defalutPosition;
+        private _clearDefaultPointerDownPosition();
+    }
+}
 declare namespace paper {
     /**
      * 默认标识和自定义标识。
@@ -531,8 +534,6 @@ declare namespace egret3d {
      */
     const enum UniformSemantics {
     }
-}
-declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
@@ -827,6 +828,15 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class ModifyGameObjectPropertyState extends BaseState {
         static create(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyGameObjectPropertyState | null;
+        private readonly stateData;
+        undo(): boolean;
+        private modifyProperty(valueList);
+        redo(): boolean;
+    }
+}
+declare namespace paper.editor {
+    class ModifyScenePropertyState extends BaseState {
+        static create(sceneUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyScenePropertyState;
         private readonly stateData;
         undo(): boolean;
         private modifyProperty(valueList);
