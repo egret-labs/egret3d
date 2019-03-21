@@ -65,7 +65,7 @@ namespace paper.editor {
             mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, colors);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
-            const material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
+            const material = (egret3d.DefaultMaterials as any).LINEDASHED_COLOR.clone();
             material.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent, 0.8);
 
             const gameObject = this.createGameObject(name, mesh, material);
