@@ -7152,41 +7152,42 @@ declare namespace egret3d {
         private readonly _size;
         private readonly _viewport;
         private _updateViewport();
-        initialize(config: {
+        initialize({size, screenSize}: {
             size: Readonly<ISize>;
             screenSize: Readonly<ISize>;
         }): void;
         /**
          * 屏幕到舞台坐标的转换。
          */
-        screenToStage(value: Readonly<Vector3>, out: Vector3): this;
+        screenToStage(input: Readonly<IVector3>, output?: Vector3 | null): this;
         /**
          * 舞台到屏幕坐标的转换。
-            // TODO
          */
-        stageToScreen(value: Readonly<Vector3>, out: Vector3): this;
+        stageToScreen(value: Readonly<IVector3>, out: Vector3): this;
         /**
          * 舞台是否因屏幕尺寸的改变而发生了旋转。
          * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转。
          */
         readonly rotated: boolean;
         /**
-         * 以宽或高适配的系数。
-         * - `0.0` ~ `1.0`。
-         * - `0.0` 以宽适配。
-         * - `1.0` 以高适配。
+         * 舞台以宽或高为基准适配屏幕的系数。
+         * - [`0.0` ~ `1.0`]。
+         * - `0.0` 以宽适配屏幕。
+         * - `1.0` 以高适配屏幕。
          */
         matchFactor: float;
         /**
-         * 屏幕尺寸。
+         * 程序运行使用的屏幕尺寸。
          */
         screenSize: Readonly<ISize>;
         /**
          * 舞台初始尺寸。
+         * - 该尺寸仅做为横屏竖屏的选择，以及最大分辨率的依据。
          */
         size: Readonly<ISize>;
         /**
-         * 渲染视口。
+         * 舞台的渲染视口。
+         * - 舞台的偏移和实际尺寸。
          */
         readonly viewport: Readonly<Rectangle>;
         /**

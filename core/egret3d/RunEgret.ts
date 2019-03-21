@@ -105,11 +105,25 @@ namespace egret3d {
         }
 
         if (options.contentWidth === undefined) {
-            options.contentWidth = _parseInt(playerDiv, "data-content-width", 1136);
+            const param = urlSearchParams !== null ? urlSearchParams.get("content-width") : "";
+
+            if (param) {
+                options.contentWidth = parseInt(param);
+            }
+            else {
+                options.contentWidth = _parseInt(playerDiv, "data-content-width", 1280);
+            }
         }
 
         if (options.contentHeight === undefined) {
-            options.contentHeight = _parseInt(playerDiv, "data-content-height", 640);
+            const param = urlSearchParams !== null ? urlSearchParams.get("content-height") : "";
+
+            if (param) {
+                options.contentHeight = parseInt(param);
+            }
+            else {
+                options.contentHeight = _parseInt(playerDiv, "data-content-height", 640);
+            }
         }
 
         if (options.alpha === undefined) {

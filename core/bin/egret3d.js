@@ -14076,60 +14076,71 @@ var egret3d;
             var screenSize = this._screenSize;
             var size = this._size;
             var viewport = this._viewport;
-            if (paper.Application.isMobile) {
-                var screenW = screenSize.w;
-                var screenH = screenSize.h;
-                if (this._rotated = (size.w > size.h) ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
-                    screenW = screenSize.h;
-                    screenH = screenSize.w;
-                }
-                var scalerW = size.w / screenW;
-                var scalerH = size.h / screenH;
-                this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
-                viewport.w = Math.ceil(screenW * this.scaler);
-                viewport.h = Math.ceil(screenH * this.scaler);
-                this.scaler = screenW / screenSize.w;
+            var allowRotated = paper.Application.isMobile;
+            var screenW = screenSize.w;
+            var screenH = screenSize.h;
+            if (allowRotated &&
+                (this._rotated = (size.w > size.h) ? screenH > screenW : screenW > screenH)) {
+                screenW = screenSize.h;
+                screenH = screenSize.w;
             }
             else {
-                var scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
-                var scalerH = size.h / screenSize.h;
-                this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
                 this._rotated = false;
-                viewport.w = Math.ceil(screenSize.w * this.scaler);
-                viewport.h = Math.ceil(screenSize.h * this.scaler);
-                this.scaler = viewport.w / screenSize.w;
+            }
+            var scalerW = Math.min(size.w, screenW) / screenW;
+            var scalerH = Math.min(size.h, screenH) / screenH;
+            this.scaler = egret3d.math.lerp(scalerW, scalerH, this._matchFactor);
+            viewport.w = Math.ceil(screenW * this.scaler);
+            viewport.h = Math.ceil(screenH * this.scaler);
+            if (viewport.w > size.w) {
+                viewport.w = size.w;
+                this.scaler = viewport.w / screenW;
+                viewport.h = Math.ceil(screenH * this.scaler);
+            }
+            else if (viewport.h > size.h) {
+                viewport.h = size.h;
+                this.scaler = viewport.h / screenH;
+                viewport.w = Math.ceil(screenW * this.scaler);
+            }
+            else {
+                this.scaler = egret3d.math.lerp(viewport.w / screenW, viewport.h / screenH, this._matchFactor);
             }
         };
-        Stage.prototype.initialize = function (config) {
+        Stage.prototype.initialize = function (_a) {
+            var size = _a.size, screenSize = _a.screenSize;
             _super.prototype.initialize.call(this);
             egret3d.stage = this;
-            this._size.w = config.size.w || 1.0;
-            this._size.h = config.size.h || 1.0;
-            this._screenSize.w = config.screenSize.w || 1.0;
-            this._screenSize.h = config.screenSize.h || 1.0;
+            this._size.w = size.w > 1.0 ? size.w : 1.0;
+            this._size.h = size.h > 1.0 ? size.h : 1.0;
+            this._screenSize.w = screenSize.w > 1.0 ? screenSize.w : 1.0;
+            this._screenSize.h = screenSize.h > 1.0 ? screenSize.h : 1.0;
             this._updateViewport();
         };
         /**
          * 屏幕到舞台坐标的转换。
          */
-        Stage.prototype.screenToStage = function (value, out) {
+        Stage.prototype.screenToStage = function (input, output) {
+            if (output === void 0) { output = null; }
+            if (output === null) {
+                output = egret3d.Vector3.create();
+            }
             var screenSize = this._screenSize;
             var viewPort = this._viewport;
-            var x = value.x, y = value.y;
+            var x = input.x, y = input.y;
             if (this._rotated) {
-                out.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
-                out.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
+                output.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
+                output.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
             }
             else {
-                out.x = (x - viewPort.x) * (viewPort.w / screenSize.w);
-                out.y = (y - viewPort.y) * (viewPort.h / screenSize.h);
+                output.x = (x - viewPort.x) * (viewPort.w / screenSize.w);
+                output.y = (y - viewPort.y) * (viewPort.h / screenSize.h);
             }
             return this;
         };
         /**
          * 舞台到屏幕坐标的转换。
-            // TODO
          */
+        // TODO
         Stage.prototype.stageToScreen = function (value, out) {
             return this;
         };
@@ -14146,15 +14157,21 @@ var egret3d;
         });
         Object.defineProperty(Stage.prototype, "matchFactor", {
             /**
-             * 以宽或高适配的系数。
-             * - `0.0` ~ `1.0`。
-             * - `0.0` 以宽适配。
-             * - `1.0` 以高适配。
+             * 舞台以宽或高为基准适配屏幕的系数。
+             * - [`0.0` ~ `1.0`]。
+             * - `0.0` 以宽适配屏幕。
+             * - `1.0` 以高适配屏幕。
              */
             get: function () {
                 return this._matchFactor;
             },
             set: function (value) {
+                if (value < 0.0) {
+                    value = 0.0;
+                }
+                else if (value > 1.0) {
+                    value = 1.0;
+                }
                 if (this._matchFactor === value) {
                     return;
                 }
@@ -14167,14 +14184,14 @@ var egret3d;
         });
         Object.defineProperty(Stage.prototype, "screenSize", {
             /**
-             * 屏幕尺寸。
+             * 程序运行使用的屏幕尺寸。
              */
             get: function () {
                 return this._screenSize;
             },
             set: function (value) {
-                this._screenSize.w = value.w || 1.0;
-                this._screenSize.h = value.h || 1.0;
+                this._screenSize.w = value.w > 1.0 ? value.w : 1.0;
+                this._screenSize.h = value.h > 1.0 ? value.h : 1.0;
                 this._updateViewport();
                 this.onScreenResize.dispatch();
             },
@@ -14184,13 +14201,14 @@ var egret3d;
         Object.defineProperty(Stage.prototype, "size", {
             /**
              * 舞台初始尺寸。
+             * - 该尺寸仅做为横屏竖屏的选择，以及最大分辨率的依据。
              */
             get: function () {
                 return this._size;
             },
             set: function (value) {
-                this._size.w = value.w || 1.0;
-                this._size.h = value.h || 1.0;
+                this._size.w = value.w > 1.0 ? value.w : 1.0;
+                this._size.h = value.h > 1.0 ? value.h : 1.0;
                 this._updateViewport();
                 this.onResize.dispatch();
             },
@@ -14199,7 +14217,8 @@ var egret3d;
         });
         Object.defineProperty(Stage.prototype, "viewport", {
             /**
-             * 渲染视口。
+             * 舞台的渲染视口。
+             * - 舞台的偏移和实际尺寸。
              */
             get: function () {
                 return this._viewport;
@@ -32835,10 +32854,22 @@ var egret3d;
             options.frameRate = _parseInt(playerDiv, "data-frame-rate", 0);
         }
         if (options.contentWidth === undefined) {
-            options.contentWidth = _parseInt(playerDiv, "data-content-width", 1136);
+            var param = urlSearchParams !== null ? urlSearchParams.get("content-width") : "";
+            if (param) {
+                options.contentWidth = parseInt(param);
+            }
+            else {
+                options.contentWidth = _parseInt(playerDiv, "data-content-width", 1280);
+            }
         }
         if (options.contentHeight === undefined) {
-            options.contentHeight = _parseInt(playerDiv, "data-content-height", 640);
+            var param = urlSearchParams !== null ? urlSearchParams.get("content-height") : "";
+            if (param) {
+                options.contentHeight = parseInt(param);
+            }
+            else {
+                options.contentHeight = _parseInt(playerDiv, "data-content-height", 640);
+            }
         }
         if (options.alpha === undefined) {
             options.alpha = _parseBoolean(playerDiv, "data-alpha", false);
