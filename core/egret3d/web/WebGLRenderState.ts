@@ -121,7 +121,7 @@ namespace egret3d.webgl {
         }
 
         public updateRenderTarget(renderTarget: RenderTexture | null) {
-            if (this.renderTarget !== renderTarget) {
+            // if (this.renderTarget !== renderTarget) {//TODO 2d节点污染次cache
                 this.renderTarget = renderTarget;
 
                 if (renderTarget) {
@@ -131,7 +131,7 @@ namespace egret3d.webgl {
                     const webgl = WebGLRenderState.webgl!;
                     webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
                 }
-            }
+            // }
         }
 
         public updateViewport(viewport: Rectangle) { // TODO

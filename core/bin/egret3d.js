@@ -4977,7 +4977,6 @@ var egret3d;
             for (var key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
-            this.renderTarget = null;
         };
         Object.defineProperty(RenderState.prototype, "logarithmicDepthBuffer", {
             /**
@@ -10888,16 +10887,16 @@ var egret3d;
                 console.info("Maximum anisotropy:", this.maxAnisotropy);
             };
             WebGLRenderState.prototype.updateRenderTarget = function (renderTarget) {
-                if (this.renderTarget !== renderTarget) {
-                    this.renderTarget = renderTarget;
-                    if (renderTarget) {
-                        renderTarget.activateTexture();
-                    }
-                    else {
-                        var webgl_2 = WebGLRenderState.webgl;
-                        webgl_2.bindFramebuffer(36160 /* FrameBuffer */, null);
-                    }
+                // if (this.renderTarget !== renderTarget) {//TODO 2d节点污染次cache
+                this.renderTarget = renderTarget;
+                if (renderTarget) {
+                    renderTarget.activateTexture();
                 }
+                else {
+                    var webgl_2 = WebGLRenderState.webgl;
+                    webgl_2.bindFramebuffer(36160 /* FrameBuffer */, null);
+                }
+                // }
             };
             WebGLRenderState.prototype.updateViewport = function (viewport) {
                 var webgl = WebGLRenderState.webgl;
