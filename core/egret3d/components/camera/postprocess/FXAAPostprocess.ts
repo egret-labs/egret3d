@@ -5,7 +5,7 @@ namespace egret3d.postprocess {
             renderState.clearBuffer(gltf.BufferMask.All, camera.backgroundColor);
             this.renderPostprocessTarget(camera);
             egret3d.DefaultMaterials.FXAA.setTexture(camera.postprocessingRenderTarget);
-            this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA, null, gltf.BufferMask.None);
+            this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA);
         }
     }
 }
