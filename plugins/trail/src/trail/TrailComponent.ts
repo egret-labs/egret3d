@@ -21,12 +21,12 @@ namespace egret3d.trail {
          * 拖尾的存活时间 (秒)
          */
         @paper.serializedField
-        public time: number;
+        public time: number = 1.0;
         /**
          * 生成下一个拖尾片段的最小距离 
          */
         @paper.serializedField
-        public minVertexDistance: number;
+        public minVertexDistance: number = 0.1;
         /**
          * 拖尾的宽度 (值 / 变化曲线) 
          */
@@ -96,30 +96,49 @@ namespace egret3d.trail {
         public update(elapsedTime: number) {
             this._batcher.update(elapsedTime * this._timeScale);
         }
+        /**
+         * 从头开始播放
+         */
         public play() {
             this._isPlaying = true;
             this._isPaused = false;
             this._batcher.clean();
         }
+        /**
+         * (从暂停中)恢复播放, 如果未暂停, 就从头开始播放
+         */
         public resume() {
             if (this._isPaused) {
                 this._isPaused = false;
                 this._batcher.resume();
             } else {
+                if (this._isPlaying) { return; }
                 this.play();
             }
         }
+        /**
+         * 暂停
+         */
         public pause(): void {
             if (!this._isPlaying) { return; }
             this._isPaused = true;
         }
+        /**
+         * 停止播放
+         */
         public stop(): void {
             this._isPlaying = false;
             this._isPaused = false;
         }
+        /**
+         * 是否正在播放
+         */
         public get isPlaying() {
             return this._isPlaying;
         }
+        /**
+         * 是否播放已经暂停
+         */
         public get isPaused() {
             return this._isPaused;
         }

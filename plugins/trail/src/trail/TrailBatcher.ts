@@ -1,23 +1,23 @@
 namespace egret3d.trail {
+    function vec3Add(a: Vector3, b: Vector3): Vector3 { return new Vector3().add(a, b); }
+    function vec3Substract(a: Vector3, b: Vector3): Vector3 { return new Vector3().subtract(a, b); }
+    function vec3Mutiply(a: Vector3, b: float): Vector3 { return new Vector3().multiplyScalar(b, a); }
+    function vec3Cross(a: Vector3, b: Vector3): Vector3 { return new Vector3().cross(a, b); }
+
     interface TrailRenderSegment {
         position: Vector3;
         timeCreated: uint;
         lineBreak: boolean;
     }
 
-    function vec3Add(a: Vector3, b: Vector3): Vector3 { return new Vector3().add(a, b); }
-    function vec3Substract(a: Vector3, b: Vector3): Vector3 { return new Vector3().subtract(a, b); }
-    function vec3Mutiply(a: Vector3, b: float): Vector3 { return new Vector3().multiplyScalar(b, a); }
-    function vec3Cross(a: Vector3, b: Vector3): Vector3 { return new Vector3().cross(a, b); }
-    function vec3ToArray(vec: Vector3): float[] { return [vec.x, vec.y, vec.z]; }
-    function colorToArray(color: Color): float[] { return [color.r, color.g, color.b, color.a]; }
-
     /**
      * @internal
      */
     export class TrailBatcher {
+        // 假设存活 5 秒, 每秒 60 帧, 则最多在存活时间内生成 300 个片段
+        private _maxFragmentCount: uint = 5 * 60;
         private _points: TrailRenderSegment[] = []; // 每个片段
-        private _lastPosition: Readonly<Vector3> | undefined = (void 0);
+        private _lastPosition: Readonly<Vector3> | undefined; // 上一次添加片段的位置
         private _lastFrameEmit: boolean = true;
         private _pausedTime: uint = -1;     // 暂停时候的时间戳
 
@@ -51,19 +51,21 @@ namespace egret3d.trail {
 
         public init(comp: TrailComponent) {
             this._comp = comp;
-            // TODO: create mesh
+            this._createMesh();
         }
 
         public update(elapsedTime: float) {
-            const comp = this._comp;
-            if (!comp) { return; }
+            if (!this._comp) { return; }
+            const comp: TrailComponent = this._comp;
 
             // 暂停情况下不更新
             if (comp.isPaused) { return; }
 
             // 自动销毁
             if (!comp.isPlaying) {
-                if (comp.autoDestruct && this._points.length < 2) { comp.uninitialize(); }
+                if (comp.autoDestruct && this._points.length < 2) {
+                    comp.gameObject.destroy();
+                }
             }
 
             const now = paper.clock.timestamp();
@@ -77,6 +79,10 @@ namespace egret3d.trail {
             // 更新 mesh
             this._composeMesh();
         }
+        /**
+         * 更新片段数据
+         * @param now 当前时间戳
+         */
         private _updateSegments(now: float) {
             const comp = this._comp;
             const curPosition = comp.transform.position;
@@ -121,7 +127,6 @@ namespace egret3d.trail {
                 }
             }
         }
-
         /**
          * 重新组成 mesh 的相关数据
          * @param now 当前时间戳
@@ -137,15 +142,16 @@ namespace egret3d.trail {
             const camera = this._getCamera();
 
             // 如果没有可用的 camera
-            if (!camera) { return; } // TODO:
+            if (!camera) { return; }
 
             let curDistance = 0.00;
             const comp = this._comp;
 
             for (let i = 0; i < count; ++i) {
                 const p = this._points[i];
+                
+                // 根据片段生存的时间获取对应的宽度和颜色采样
                 const time = (now - p.timeCreated) / comp.time;
-
                 const color: Color = this._getColorSample(comp, time);
                 const width: float = this._getWidthSample(comp, time);
 
@@ -161,33 +167,50 @@ namespace egret3d.trail {
                 const perpendicular = vec3Cross(lineDirection, vectorToCamera).normalize();
 
                 // 上述向量正反方向各走半个宽度值即为两个新的顶点值
-                this._verticles.push(...vec3ToArray(vec3Add(p.position, vec3Mutiply(perpendicular, width * 0.5))));
-                this._verticles.push(...vec3ToArray(vec3Add(p.position, vec3Mutiply(perpendicular, -width * 0.5))));
+                let vertex: Vector3;
+                vertex = vec3Add(p.position, vec3Mutiply(perpendicular, width * 0.5));
+                this._verticles[i * 6 + 0] = vertex.x;
+                this._verticles[i * 6 + 1] = vertex.y;
+                this._verticles[i * 6 + 2] = vertex.z;
+
+                vertex = vec3Add(p.position, vec3Mutiply(perpendicular, -width * 0.5));
+                this._verticles[i * 6 + 3] = vertex.x;
+                this._verticles[i * 6 + 4] = vertex.y;
+                this._verticles[i * 6 + 5] = vertex.z;
 
                 // 同样的颜色值
-                this._colors.push(...colorToArray(color));
-                this._colors.push(...colorToArray(color));
+                this._colors[i * 8 + 0] = color.r;
+                this._colors[i * 8 + 1] = color.g;
+                this._colors[i * 8 + 2] = color.b;
+                this._colors[i * 8 + 3] = color.a;
+                this._colors[i * 8 + 4] = color.r;
+                this._colors[i * 8 + 5] = color.g;
+                this._colors[i * 8 + 6] = color.b;
+                this._colors[i * 8 + 7] = color.a;
 
                 // 两点的 uv 值
                 if (comp.textureMode === TrailTextureMode.Stretch) {
-                    this._uvs.push(curDistance * uvLengthScale, 1);
-                    this._uvs.push(curDistance * uvLengthScale, 0)
+                    this._uvs[i * 2 + 0] = curDistance * uvLengthScale;
+                    this._uvs[i * 2 + 1] = 1;
+                    this._uvs[i * 2 + 0] = curDistance * uvLengthScale;
+                    this._uvs[i * 2 + 1] = 0;
                 } else {
                     // TODO: 在每个片段上重复贴图
-                    this._uvs.push(0, 1);
-                    this._uvs.push(0, 0)
+                    this._uvs[i * 2 + 0] = 0;
+                    this._uvs[i * 2 + 1] = 1;
+                    this._uvs[i * 2 + 0] = 0;
+                    this._uvs[i * 2 + 1] = 0;
                 }
 
                 if (i > 0 && !this._points[count - 1].lineBreak) {
                     curDistance += p.position.getDistance(this._points[count - 1].position);
 
-                    this._indices[(i - 1) * 6] = (i * 2) - 2;
-                    this._indices[((i - 1) * 6) + 1] = (i * 2) - 1;
-                    this._indices[((i - 1) * 6) + 2] = i * 2;
-
-                    this._indices[((i - 1) * 6) + 3] = (i * 2) + 1;
-                    this._indices[((i - 1) * 6) + 4] = i * 2;
-                    this._indices[((i - 1) * 6) + 5] = (i * 2) - 1;
+                    this._indices[(i - 1) * 6 + 0] = (i * 2) - 2;
+                    this._indices[(i - 1) * 6 + 1] = (i * 2) - 1;
+                    this._indices[(i - 1) * 6 + 2] = i * 2;
+                    this._indices[(i - 1) * 6 + 3] = (i * 2) + 1;
+                    this._indices[(i - 1) * 6 + 4] = i * 2;
+                    this._indices[(i - 1) * 6 + 5] = (i * 2) - 1;
                 }
             }
         }
@@ -246,10 +269,20 @@ namespace egret3d.trail {
          * 更新 mesh
          */
         private _composeMesh() {
+            if (this._points.length > this._maxFragmentCount) {
+                this._createMesh();
+            }
             this._mesh.setAttributes(gltf.AttributeSemantics.POSITION, this._verticles);
             this._mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, this._uvs);
             this._mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, this._colors);
             this._mesh.setIndices(this._indices);
+        }
+        /**
+         * 生成 mesh 对象
+         */
+        private _createMesh() {
+            // TODO: 在极端的情况 (tile 模式贴图), 无法准确的预估生成的顶点数
+            this._mesh = Mesh.create(this._maxFragmentCount * 4, (this._maxFragmentCount - 1) * 6);
         }
     }
 }
