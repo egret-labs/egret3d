@@ -30,6 +30,17 @@ namespace egret3d {
             return from + (to - from) * t;
         }
 
+        /**
+         * Calculates the Lerp parameter between of two values.
+         * 计算两个值之间的 Lerp 参数。也就是 value 在 from 和 to 之间的比例值: inverseLerp(5.0, 10.0, 8.0) === 3/5
+         * @param from start value
+         * @param to end value
+         * @param t target value
+         */
+        export function inverseLerp(from: number, to: number, t: number) {
+            return (t - from) / (to - from);
+        }
+
         export function randFloat(low: number, high: number): number {
             return low + Math.random() * (high - low);
         }
