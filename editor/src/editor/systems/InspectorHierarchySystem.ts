@@ -11,7 +11,7 @@ namespace paper.editor {
         private readonly _controlRight: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlRight);
 
         private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
-        private readonly _guiComponent: InspectorComponent = Application.sceneManager.globalEntity.getOrAddComponent(InspectorComponent);
+        private readonly _inspectorComponent: InspectorComponent = Application.sceneManager.globalEntity.getOrAddComponent(InspectorComponent);
         private readonly _sceneOrEntityBuffer: (IScene | IEntity | null)[] = [];
         private readonly _selectedItems: dat.GUI[] = [];
 
@@ -63,7 +63,7 @@ namespace paper.editor {
         }
 
         private _removeSceneOrEntity(value: IScene | IEntity) {
-            const { hierarchyItems } = this._guiComponent;
+            const { hierarchyItems } = this._inspectorComponent;
 
             if (value.uuid in hierarchyItems) {
                 const item = hierarchyItems[value.uuid];
@@ -90,20 +90,20 @@ namespace paper.editor {
                 return null;
             }
 
-            const guiComponent = this._guiComponent;
+            const inspectorComponent = this._inspectorComponent;
 
-            if (!(scene.uuid in guiComponent.hierarchyItems)) {
-                const item = guiComponent.hierarchy.addFolder(scene.uuid, scene.name + " <Scene>");
+            if (!(scene.uuid in inspectorComponent.hierarchyItems)) {
+                const item = inspectorComponent.hierarchy.addFolder(scene.uuid, scene.name + " <Scene>");
                 item.instance = scene;
                 item.onClick = this._sceneOrGameObjectGUIClickHandler;
-                guiComponent.hierarchyItems[scene.uuid] = item;
+                inspectorComponent.hierarchyItems[scene.uuid] = item;
             }
 
-            return guiComponent.hierarchyItems[scene.uuid];
+            return inspectorComponent.hierarchyItems[scene.uuid];
         }
 
         private _addEntity(entity: IEntity) {
-            const { hierarchyItems } = this._guiComponent;
+            const { hierarchyItems } = this._inspectorComponent;
 
             if (
                 entity.uuid in hierarchyItems ||
@@ -144,7 +144,7 @@ namespace paper.editor {
         }
 
         private _openFolder(folder: dat.GUI) {
-            if (!folder.parent || folder.parent === this._guiComponent.hierarchy) {
+            if (!folder.parent || folder.parent === this._inspectorComponent.hierarchy) {
                 return;
             }
 
@@ -166,7 +166,7 @@ namespace paper.editor {
                 Spector: false,
             };
 
-            this._guiComponent.hierarchy.add(sceneOptions, "Debug").onChange((v: boolean) => {
+            this._inspectorComponent.hierarchy.add(sceneOptions, "Debug").onChange((v: boolean) => {
                 if (v) {
                     Application.playerMode = PlayerMode.DebugPlayer;
                 }
@@ -175,7 +175,7 @@ namespace paper.editor {
                 }
             });
 
-            this._guiComponent.hierarchy.add(sceneOptions, "Spector").onChange((v: boolean) => {
+            this._inspectorComponent.hierarchy.add(sceneOptions, "Spector").onChange((v: boolean) => {
                 const spectorSystem = Application.systemManager.getSystem(SpectorSystem)!;
 
                 if (v) {
@@ -202,7 +202,7 @@ namespace paper.editor {
             Scene.onSceneDestroy.remove(this._onSceneDestroy, this);
             BaseTransform.onTransformParentChanged.remove(this._onTransformParentChanged, this);
 
-            const { hierarchyItems } = this._guiComponent;
+            const { hierarchyItems } = this._inspectorComponent;
 
             for (const k in hierarchyItems) {
                 const item = hierarchyItems[k];
@@ -246,7 +246,7 @@ namespace paper.editor {
                 this._removeSceneOrEntity(entity);
             }
             else if (group === groups[1]) {
-                const item = this._guiComponent.hierarchyItems[entity.uuid];
+                const item = this._inspectorComponent.hierarchyItems[entity.uuid];
 
                 if (item) {
                     item.selected = false;
@@ -257,7 +257,7 @@ namespace paper.editor {
         }
 
         public onFrame() {
-            const { hierarchy, hierarchyItems } = this._guiComponent;
+            const { hierarchy, hierarchyItems } = this._inspectorComponent;
             if (hierarchy.closed || hierarchy.domElement.style.display === "none") {
                 return;
             }

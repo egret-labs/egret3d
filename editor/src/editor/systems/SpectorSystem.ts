@@ -12,20 +12,18 @@ namespace paper.editor {
         }
 
         public onAwake() {
-            if (!Application.isMobile) {
-                if (typeof SPECTOR !== "undefined") {
+            if (typeof SPECTOR !== "undefined") {
+                this._createSpector();
+            }
+            else {
+                const head = document.getElementsByTagName("head")[0];
+                const script = document.createElement("script");
+                script.type = "text/javascript";
+                script.src = "https://spectorcdn.babylonjs.com/spector.bundle.js";
+                script.onload = (): void => {
                     this._createSpector();
-                }
-                else {
-                    const head = document.getElementsByTagName("head")[0];
-                    const script = document.createElement("script");
-                    script.type = "text/javascript";
-                    script.src = "https://spectorcdn.babylonjs.com/spector.bundle.js";
-                    script.onload = (): void => {
-                        this._createSpector();
-                    };
-                    head.appendChild(script);
-                }
+                };
+                head.appendChild(script);
             }
 
             this.enabled = false;
@@ -47,8 +45,6 @@ namespace paper.editor {
             }
         }
     }
-
-    Application.systemManager.preRegister(SpectorSystem, Application.gameObjectContext, SystemOrder.Begin - 1);
 }
 
 declare namespace SPECTOR {

@@ -15,6 +15,7 @@ namespace paper {
             return this._instance;
         }
 
+        private _isStarted: boolean = false;
         private readonly _preSystems: [
             ISystemClass<ISystem<IEntity>, IEntity>,
             Context<IEntity>,
@@ -59,8 +60,10 @@ namespace paper {
          */
         public _startup() {
             const playerMode = Application.playerMode;
+            this._isStarted = true;
+
             for (const system of this._systems) {
-                if ((system.constructor as ISystemClass<ISystem<IEntity>, IEntity>).executeMode & playerMode) {
+                if (((system.constructor as ISystemClass<ISystem<IEntity>, IEntity>).executeMode & playerMode) !== 0) {
                     if ((system as BaseSystem<IEntity>)._executeEnabled && !system.enabled) {
                         system.enabled = true;
                     }
@@ -289,6 +292,7 @@ namespace paper {
         ): SystemManager {
             if (this._systems.length > 0) {
                 this.register(systemClass, context, order, config);
+
                 return this;
             }
 
@@ -305,7 +309,7 @@ namespace paper {
         ): TSystem {
             let system = this.getSystem(systemClass);
 
-            if (system) {
+            if (system !== null) {
                 console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
 
                 return system;
@@ -349,7 +353,7 @@ namespace paper {
             systemClass: ISystemClass<TSystem, TEntity>,
         ): TSystem | null {
             for (const system of this._systems) {
-                if (system && system.constructor === systemClass) {
+                if (system.constructor === systemClass) {
                     return <any>system as TSystem;
                 }
             }

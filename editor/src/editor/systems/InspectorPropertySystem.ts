@@ -6,7 +6,7 @@ namespace paper.editor {
     @executeMode(PlayerMode.Player | PlayerMode.DebugPlayer)
     export class InspectorPropertySystem extends BaseSystem<GameObject> {
         private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
-        private readonly _guiComponent: InspectorComponent = Application.sceneManager.globalEntity.getOrAddComponent(InspectorComponent);
+        private readonly _inspectorComponent: InspectorComponent = Application.sceneManager.globalEntity.getOrAddComponent(InspectorComponent);
 
         private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
             const lastSelectedEntity = this.groups[0].singleEntity;
@@ -29,7 +29,7 @@ namespace paper.editor {
         }
 
         private _addComponent(component: IComponent) {
-            const { property, propertyItems } = this._guiComponent;
+            const { property, propertyItems } = this._inspectorComponent;
 
             if (!(component.uuid in propertyItems)) {
                 const item = property.addFolder(component.uuid, egret.getQualifiedClassName(component));
@@ -42,7 +42,7 @@ namespace paper.editor {
         }
 
         private _removeComponent(component: IComponent) {
-            const { propertyItems } = this._guiComponent;
+            const { propertyItems } = this._inspectorComponent;
 
             if (component.uuid in propertyItems) {
                 const item = propertyItems[component.uuid];
@@ -71,7 +71,7 @@ namespace paper.editor {
         }
 
         private _destroySceneOrGameObject = () => {
-            const selectedSceneOrGameObject = this._guiComponent.property.instance as Scene | GameObject;
+            const selectedSceneOrGameObject = this._inspectorComponent.property.instance as Scene | GameObject;
             if (selectedSceneOrGameObject) {
                 (selectedSceneOrGameObject).destroy();
             }
@@ -135,23 +135,23 @@ namespace paper.editor {
         }
 
         private _selectSceneOrGameObject(sceneOrGameObject: Scene | GameObject | null) {
-            const inspector = this._guiComponent.property;
-            inspector.instance = sceneOrGameObject;
+            const property = this._inspectorComponent.property;
+            property.instance = sceneOrGameObject;
 
-            for (const k in this._guiComponent.propertyItems) {
-                delete this._guiComponent.propertyItems[k];
+            for (const k in this._inspectorComponent.propertyItems) {
+                delete this._inspectorComponent.propertyItems[k];
             }
 
-            if (inspector.__controllers) {
-                for (const controller of inspector.__controllers.concat()) {
-                    inspector.remove(controller);
+            if (property.__controllers) {
+                for (const controller of property.__controllers.concat()) {
+                    property.remove(controller);
                 }
             }
 
-            if (inspector.__folders) {
-                for (const k in inspector.__folders) {
+            if (property.__folders) {
+                for (const k in property.__folders) {
                     try {
-                        inspector.removeFolder(inspector.__folders[k]);
+                        property.removeFolder(property.__folders[k]);
                     }
                     catch (e) {
                     }
@@ -163,7 +163,7 @@ namespace paper.editor {
                 prefabs: "None",
             };
 
-            inspector.add(options, "scenes", this._getAssets("Scene")).onChange(async (v: string | null) => {
+            property.add(options, "scenes", this._getAssets("Scene")).onChange(async (v: string | null) => {
                 if (!v) {
                     return;
                 }
@@ -173,7 +173,7 @@ namespace paper.editor {
                 this._modelComponent.select(Scene.create(v));
             });
 
-            inspector.add(options, "prefabs", this._getAssets("Prefab")).onChange(async (v: string | null) => {
+            property.add(options, "prefabs", this._getAssets("Prefab")).onChange(async (v: string | null) => {
                 if (!v) {
                     return;
                 }
@@ -193,9 +193,9 @@ namespace paper.editor {
             });
 
             if (sceneOrGameObject) {
-                inspector.add(this, "destroy|_destroySceneOrGameObject");
-                inspector.add(this, "save|_saveSceneOrGameObject");
-                this._addToInspector(inspector);
+                property.add(this, "destroy|_destroySceneOrGameObject");
+                property.add(this, "save|_saveSceneOrGameObject");
+                this._addToInspector(property);
 
                 if (sceneOrGameObject instanceof Scene) { // Update scene.
                 }
@@ -205,10 +205,10 @@ namespace paper.editor {
                             continue;
                         }
 
-                        const item = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
+                        const item = property.addFolder(component.uuid, egret.getQualifiedClassName(component));
                         item.instance = component;
                         item.open();
-                        this._guiComponent.propertyItems[component.uuid] = item;
+                        this._inspectorComponent.propertyItems[component.uuid] = item;
                         this._addToInspector(item);
                     }
                 }
@@ -233,7 +233,7 @@ namespace paper.editor {
         private _addToInspector(gui: dat.GUI) {
             const infos = editor.getEditInfo(gui.instance);
 
-            if (gui !== this._guiComponent.property) {
+            if (gui !== this._inspectorComponent.property) {
                 gui.onClick = this._componentOrPropertyGUIClickHandler;
             }
 
@@ -256,7 +256,7 @@ namespace paper.editor {
         }
 
         private _addItemToInspector(type: editor.EditType, parent: dat.GUI, info: editor.PropertyInfo) {
-            if (parent !== this._guiComponent.property) {
+            if (parent !== this._inspectorComponent.property) {
                 parent.onClick = this._componentOrPropertyGUIClickHandler;
             }
 
@@ -544,7 +544,7 @@ namespace paper.editor {
         }
 
         private _addUniformItemToInspector(uniform: gltf.Uniform, parent: dat.GUI) {
-            if (parent !== this._guiComponent.property) {
+            if (parent !== this._inspectorComponent.property) {
                 parent.onClick = this._componentOrPropertyGUIClickHandler;
             }
 
@@ -571,7 +571,7 @@ namespace paper.editor {
         }
 
         private _addToArray(gui: dat.GUI, type: any) {
-            if (gui !== this._guiComponent.property) {
+            if (gui !== this._inspectorComponent.property) {
                 gui.onClick = this._componentOrPropertyGUIClickHandler;
             }
 
@@ -604,7 +604,7 @@ namespace paper.editor {
             Component.onComponentCreated.remove(this._onComponentCreated, this);
             Component.onComponentDestroy.remove(this._onComponentDestroy, this);
 
-            const { propertyItems } = this._guiComponent;
+            const { propertyItems } = this._inspectorComponent;
 
             for (const k in propertyItems) {
                 const item = propertyItems[k];
@@ -635,7 +635,7 @@ namespace paper.editor {
         }
 
         public onFrame() {
-            const { property, propertyItems } = this._guiComponent;
+            const { property, propertyItems } = this._inspectorComponent;
             const isInspectorShowed = !property.closed && property.domElement.style.display !== "none";
 
             if (isInspectorShowed) {
