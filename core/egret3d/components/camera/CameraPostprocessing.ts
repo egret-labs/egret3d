@@ -4,7 +4,12 @@ namespace egret3d {
      */
     @paper.abstract
     export abstract class CameraPostprocessing extends paper.BaseComponent {
+        protected readonly _renderState: egret3d.RenderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState)!;
         public abstract onRender(camera: Camera): void;
+
+        protected renderPostprocessTarget(camera: Camera, material?: Material) {
+            this._renderState.render(camera, material, camera.postprocessingRenderTarget);
+        }
 
         public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null, bufferMask: gltf.BufferMask | null = null) {
             if (!material) {
@@ -16,8 +21,10 @@ namespace egret3d {
             //
             const camera = cameraAndLightCollecter.postprocessingCamera;
             renderState.updateRenderTarget(dest);
-            renderState.updateViewport(camera.viewport, dest);
-            renderState.clearBuffer(bufferMask || saveCamera.bufferMask, saveCamera.backgroundColor);
+            renderState.updateViewport(camera.viewport);
+            if (bufferMask === null || bufferMask !== gltf.BufferMask.None) {
+                renderState.clearBuffer(bufferMask || saveCamera.bufferMask, saveCamera.backgroundColor);
+            }
             //
             camerasAndLights.currentCamera = camera; // TODO
             renderState.draw(drawCallCollecter.postprocessing, material);

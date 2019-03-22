@@ -1,5 +1,5 @@
 namespace components {
-    export class NightVisionPostProcess extends egret3d.CameraPostprocessing {
+    export class NightVisionPostprocess extends egret3d.CameraPostprocessing {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0, maximum: 1 })
         public fadeFX: number = 1.0;
         private _matrix9: number[] = [2, -2, -2, 1.95, 0.04, -1.6, 2, -2, -2, -2, 0.1, -2];
@@ -16,6 +16,7 @@ namespace components {
         }
 
         public onRender(camera: egret3d.Camera) {
+            this.renderPostprocessTarget(camera);
             this._time += paper.clock.lastTickDelta;
             if (this._time > 100) {
                 this._time = 0.0;

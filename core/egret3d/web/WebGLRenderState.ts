@@ -134,9 +134,10 @@ namespace egret3d.webgl {
             }
         }
 
-        public updateViewport(viewport: Rectangle, renderTarget: RenderTexture | null) { // TODO
+        public updateViewport(viewport: Rectangle) { // TODO
             const webgl = WebGLRenderState.webgl!;
             const currentViewport = this.viewport;
+            const renderTarget = this.renderTarget;
             let w: number;
             let h: number;
             if (renderTarget) {
@@ -166,7 +167,12 @@ namespace egret3d.webgl {
             }
 
             if (bufferBit & gltf.BufferMask.Color) {
-                clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                if (this.premultipliedAlpha) {
+                    clearColor && webgl.clearColor(clearColor.r * clearColor.a, clearColor.g * clearColor.a, clearColor.b * clearColor.a, clearColor.a);
+                }
+                else {
+                    clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                }
             }
 
             webgl.clear(bufferBit);

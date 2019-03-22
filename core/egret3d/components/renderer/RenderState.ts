@@ -65,7 +65,7 @@ namespace egret3d {
         /**
          * 
          */
-        public render: (camera: Camera, material?: Material) => void = null!;
+        public render: (camera: Camera, material?: Material, renderTarget?: RenderTexture) => void = null!;
         /**
          * 
          */
@@ -283,7 +283,7 @@ namespace egret3d {
                 if (texture) {
                     const { mapping } = texture.gltfTexture.extensions.paper;
                     let typeDefine = ShaderDefine.ENVMAP_TYPE_CUBE;
-                    let blendDefine = ShaderDefine.ENVMAP_BLENDING_MULTIPLY; // TODO
+                    const blendDefine = ShaderDefine.ENVMAP_BLENDING_MULTIPLY; // TODO
                     let define: Define | null;
 
                     switch (mapping) {
@@ -369,7 +369,7 @@ namespace egret3d {
         /**
          * 
          */
-        public updateViewport(viewport: Rectangle, renderTarget: RenderTexture | null) { }
+        public updateViewport(viewport: Rectangle) { }
         /**
          * 
          */
@@ -385,6 +385,8 @@ namespace egret3d {
             for (const key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
+
+            this.renderTarget = null;
         }
         /**
          * 
@@ -515,6 +517,11 @@ namespace egret3d {
 
             this._toneMapping = value;
         }
+        /**
+         * 
+         */
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public premultipliedAlpha: boolean = false;
         /**
          * 
          */
