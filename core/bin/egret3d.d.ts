@@ -5285,6 +5285,14 @@ declare namespace egret3d {
          *
          */
         function lerp(from: number, to: number, t: number): number;
+        /**
+         * Calculates the Lerp parameter between of two values.
+         * 计算两个值之间的 Lerp 参数。也就是 value 在 from 和 to 之间的比例值: inverseLerp(5.0, 10.0, 8.0) === 3/5
+         * @param from start value
+         * @param to end value
+         * @param t target value
+         */
+        function inverseLerp(from: number, to: number, t: number): number;
         function randFloat(low: number, high: number): number;
         function randFloatSpread(range: number): number;
         function isPowerOfTwo(value: number): boolean;

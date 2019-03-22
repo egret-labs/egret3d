@@ -66,16 +66,13 @@ namespace paper.editor {
             let obj: GameObject = GameObject.create();
             obj.name = createType.toLowerCase();
             if (createType === 'NODE_2D') {
-                
+                const component2D: egret3d.Egret2DRenderer = obj.addComponent(egret3d.Egret2DRenderer);
+                obj.layer = Layer.UI;
+
                 const camera: egret3d.Camera = obj.addComponent(egret3d.Camera);
                 camera.cullingMask = Layer.UI;
                 camera.order = 1;
                 camera.bufferMask = gltf.BufferMask.Depth;
-
-                setTimeout(() => {
-                    const component2D: egret3d.Egret2DRenderer = obj.addComponent(egret3d.Egret2DRenderer);
-                    obj.layer = Layer.UI;
-                }, 1000);
             }
             else if (createType === "CAMERA") {
                 obj.addComponent(egret3d.Camera);

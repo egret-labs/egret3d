@@ -9420,14 +9420,12 @@ var paper;
                 var obj = paper.GameObject.create();
                 obj.name = createType.toLowerCase();
                 if (createType === 'NODE_2D') {
+                    var component2D = obj.addComponent(egret3d.Egret2DRenderer);
+                    obj.layer = 32 /* UI */;
                     var camera = obj.addComponent(egret3d.Camera);
                     camera.cullingMask = 32 /* UI */;
                     camera.order = 1;
                     camera.bufferMask = 256 /* Depth */;
-                    setTimeout(function () {
-                        var component2D = obj.addComponent(egret3d.Egret2DRenderer);
-                        obj.layer = 32 /* UI */;
-                    }, 1000);
                 }
                 else if (createType === "CAMERA") {
                     obj.addComponent(egret3d.Camera);
