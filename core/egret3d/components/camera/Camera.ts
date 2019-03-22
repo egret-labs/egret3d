@@ -55,6 +55,7 @@ namespace egret3d {
 
             if (!gameObject) {
                 gameObject = paper.GameObject.create(paper.DefaultNames.EditorCamera, paper.DefaultTags.EditorOnly, paper.Application.sceneManager.editorScene);
+                gameObject.layer = paper.Layer.Editor;
                 gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                 gameObject.transform.lookAt(Vector3.ZERO);
 
@@ -78,8 +79,8 @@ namespace egret3d {
         /**
          * 该相机的绘制缓冲掩码。
          */
-        @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((gltf as any).BufferMask) }) // TODO
+        @paper.serializedField
         public bufferMask: gltf.BufferMask = gltf.BufferMask.DepthAndColor;
         /**
          * 该相机的渲染剔除掩码。
@@ -88,21 +89,21 @@ namespace egret3d {
          * - camera.cullingMask |= paper.Layer.UI;
          * - camera.cullingMask &= ~paper.Layer.UI;
          */
-        @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((paper as any).Layer) }) // TODO
+        @paper.serializedField
         public cullingMask: paper.Layer = paper.Layer.Default | paper.Layer.TransparentFX | paper.Layer.UI;
         /**
          * 该相机渲染排序。
          * - 该值越低的相机优先绘制。
          */
-        @paper.serializedField
         @paper.editor.property(paper.editor.EditType.INT)
+        @paper.serializedField
         public order: int = 0;
         /**
          * 该相机的背景色。
          */
-        @paper.serializedField
         @paper.editor.property(paper.editor.EditType.COLOR)
+        @paper.serializedField
         public readonly backgroundColor: Color = Color.create(0.15, 0.25, 0.5, 1.0);
         /**
          * 该相机的渲染上下文。
@@ -229,8 +230,8 @@ namespace egret3d {
          * @param stagePosition 舞台坐标。
          * @param worldPosition 世界坐标。
          */
-        public stageToWorld(stagePosition: Readonly<IVector3>, worldPosition?: Vector3): Vector3 {
-            if (!worldPosition) {
+        public stageToWorld(stagePosition: Readonly<IVector3>, worldPosition: Vector3 | null = null): Vector3 {
+            if (worldPosition === null) {
                 worldPosition = Vector3.create();
             }
 
@@ -268,8 +269,8 @@ namespace egret3d {
          * @param worldPosition 世界坐标。
          * @param stagePosition 舞台坐标。
          */
-        public worldToStage(worldPosition: Readonly<IVector3>, stagePosition?: Vector3): Vector3 {
-            if (!stagePosition) {
+        public worldToStage(worldPosition: Readonly<IVector3>, stagePosition: Vector3 | null = null): Vector3 {
+            if (!stagePosition ) {
                 stagePosition = Vector3.create();
             }
 
@@ -347,10 +348,14 @@ namespace egret3d {
             return this;
         }
         /**
-         * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
+         * 控制该相机从正交到透视的过渡的系数。
+         * - [`0.0` ~ `1.0`]
+         * - `0.0`：正交。
+         * - `1.0`：透视。
+         * - 中间值则在两种状态间插值。
          */
-        @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0, step: 0.01 })
+        @paper.serializedField
         public get opvalue(): float {
             return this._opvalue;
         }
@@ -377,11 +382,12 @@ namespace egret3d {
             }
         }
         /**
-         * 该相机的视点到近裁剪面距离。
+         * 该相机视点到近裁剪面的距离。
+         * - 单位为`米`。
          * - 该值过小会引起深度冲突。
          */
-        @paper.serializedField("_near")
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
+        @paper.serializedField("_near")
         public get near(): float {
             return this._near;
         }
@@ -390,7 +396,7 @@ namespace egret3d {
                 value = this._far - 0.01;
             }
 
-            if (value < 0.01) {
+            if (value !== value || value < 0.01) {
                 value = 0.01;
             }
 
@@ -410,14 +416,15 @@ namespace egret3d {
         }
         /**
          * 该相机的视点到远裁剪面距离。
+         * - 单位为`米`。
          */
-        @paper.serializedField("_far")
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.02, maximum: 3000.0, step: 1 })
+        @paper.serializedField("_far")
         public get far(): float {
             return this._far;
         }
         public set far(value: float) {
-            if (value <= this._near) {
+            if (value !== value || value <= this._near) {
                 value = this._near + 0.01;
             }
 
@@ -436,10 +443,11 @@ namespace egret3d {
             }
         }
         /**
-         * 透视投影的视野。
+         * 该相机透视投影的视野。
+         * - 弧度制。
          */
-        @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01, maximum: Const.PI - 0.01, step: 0.01 })
+        @paper.serializedField
         public get fov(): float {
             return this._fov;
         }
@@ -466,10 +474,11 @@ namespace egret3d {
             }
         }
         /**
-         * 该相机的正交投影的尺寸。
+         * 该相机正交投影的尺寸。
+         * - 单位为`米`。
          */
-        @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.01 })
+        @paper.serializedField
         public get size(): float {
             return this._size;
         }
@@ -502,6 +511,7 @@ namespace egret3d {
         }
         /**
          * 该相机渲染目标的尺寸。
+         * - 单位为`米`。
          */
         public get renderTargetSize(): Readonly<ISize> {
             let w: float;
@@ -523,8 +533,8 @@ namespace egret3d {
         /**
          * 该相机归一化的渲染视口。
          */
-        @paper.serializedField
         @paper.editor.property(paper.editor.EditType.RECT, { step: 0.01 })
+        @paper.serializedField
         public get viewport(): Readonly<Rectangle> {
             return this._viewport;
         }
@@ -549,6 +559,7 @@ namespace egret3d {
         }
         /**
          * 该相机像素化的渲染视口。
+         * - 单位为`像素`。
          */
         @paper.editor.property(paper.editor.EditType.RECT, { step: 1 })
         public get pixelViewport(): Readonly<IRectangle> {

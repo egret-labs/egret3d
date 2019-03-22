@@ -1,6 +1,6 @@
 namespace egret3d {
     /**
-     * 圆柱（锥）体碰撞组件。
+     * 圆柱、圆台、圆锥体碰撞组件。
      * - 与 Y 轴对齐。
      */
     @paper.allowMultiple

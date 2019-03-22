@@ -128,8 +128,17 @@ namespace paper {
      * 应用程序运行模式。
      */
     export const enum PlayerMode {
+        /**
+         * 
+         */
         Player = 0b0001,
+        /**
+         * 
+         */
         DebugPlayer = 0b0010,
+        /**
+         * 
+         */
         Editor = 0b0100,
     }
     /**
@@ -703,12 +712,39 @@ namespace paper {
          */
         playerMode?: PlayerMode;
         /**
+         * 编辑器覆盖整个程序入口。
+         */
+        editorEntry?: string;
+        /**
+         * 程序启动后需要显示调用的入口。
+         */
+        entry?: string;
+        /**
+         * 程序启动后加载的入口场景。
+         */
+        scene?: string;
+        /**
          * 逻辑帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        tickRate?: number;
+        tickRate?: uint;
         /**
          * 渲染帧频率, 单位为(帧/秒), 例如设置为 60 为每秒 60 帧
          */
-        frameRate?: number;
+        frameRate?: uint;
+        /**
+         * 是否显示状态面板。
+         * - 未设置则默认为 PC 模式显示，手机模式不显示。
+         * - 包含 FPS、TPS、内存消耗、渲染耗时、DrawCall 等。
+         */
+        showStats?: boolean;
+        /**
+         * 是否显示 Inspector 面板。
+         * - 未设置则默认为 PC 模式显示，手机模式不显示。
+         */
+        showInspector?: boolean;
+        /**
+         * 可扩展的。
+         */
+        [key: string]: any;
     }
 }

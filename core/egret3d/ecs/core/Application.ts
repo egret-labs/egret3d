@@ -44,7 +44,11 @@ namespace paper {
         /**
          * 引擎版本。
          */
-        public readonly version: string = "1.5.0.001";
+        public readonly version: string = "1.5.1.001";
+        /**
+         * 程序启动项。
+         */
+        public readonly options: RunOptions = null!;
         /**
          * 系统管理器。
          */
@@ -96,24 +100,26 @@ namespace paper {
             systemManager._teardown();
         }
         /**
-         * 
+         * 初始化程序。
          */
         public initialize(options: RunOptions): void {
-            this._playerMode = options.playerMode || PlayerMode.Player;
+            console.info("Egret", this.version, "start.");
 
+            (this.options as RunOptions) = options;
+            this._playerMode = options.playerMode!;
+        }
+        /**
+         * 注册程序系统。
+         */
+        public registerSystems(): void {
             const { systemManager, gameObjectContext } = this;
-            systemManager.register(EnableSystem, gameObjectContext, SystemOrder.Enable);
+            systemManager.register(EnableSystem, gameObjectContext, SystemOrder.Enable, this.options);
             systemManager.register(StartSystem, gameObjectContext, SystemOrder.Start);
             systemManager.register(FixedUpdateSystem, gameObjectContext, SystemOrder.FixedUpdate);
             systemManager.register(UpdateSystem, gameObjectContext, SystemOrder.Update);
             systemManager.register(LateUpdateSystem, gameObjectContext, SystemOrder.LateUpdate);
             systemManager.register(DisableSystem, gameObjectContext, SystemOrder.Disable);
             systemManager.preRegisterSystems();
-
-            clock.tickInterval = options.tickRate ? 1.0 / options.tickRate : 0;
-            console.info("tick rate:", options.tickRate ? options.tickRate : "auto");
-            clock.frameInterval = options.frameRate ? 1.0 / options.frameRate : 0;
-            console.info("frame rate:", options.frameRate ? options.frameRate : "auto");
         }
         /**
          * TODO
@@ -137,7 +143,6 @@ namespace paper {
 
             requestAnimationFrame(this._loop);
         }
-
         /**
          * engine start
          * 
@@ -159,6 +164,8 @@ namespace paper {
                 default:
                     break;
             }
+
+            console.info("Egret start complete.");
         }
         /**
          * 显式更新
@@ -194,7 +201,7 @@ namespace paper {
             return this._isRunning;
         }
         /**
-         * 运行模式。
+         * 程序的运行模式。
          */
         public get playerMode(): PlayerMode {
             return this._playerMode;

@@ -77,7 +77,7 @@ namespace egret3d {
         public deserialize(data: ReadonlyArray<number>) {
             this.radius = data[0];
             this.bias = data[1];
-            this._mapSize = data[2];
+            this.mapSize = data[2];
             this.near = data[3];
             this.far = data[4];
             this.size = data[5];

@@ -1,23 +1,27 @@
 namespace egret3d {
     /**
-     * 
+     * 四维向量接口。
      */
     export interface IVector4 extends IVector3 {
         /**
-         * w 轴分量。
+         * W 轴分量。
          */
-        w: number;
+        w: float;
     }
     /**
-     * 
+     * 四维向量。
      */
     export class Vector4 extends paper.BaseRelease<Vector4> implements IVector4, paper.ICCS<Vector4>, paper.ISerializable {
 
         protected static readonly _instances: Vector4[] = [];
         /**
-         * 
+         * 创建一个四维向量。
+         * @param x X 轴分量。
+         * @param y Y 轴分量。
+         * @param z Z 轴分量。
+         * @param w W 轴分量。
          */
-        public static create(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
+        public static create(x: float = 0.0, y: float = 0.0, z: float = 0.0, w: float = 1.0) {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(x, y, z, w);
                 instance._released = false;
@@ -27,17 +31,17 @@ namespace egret3d {
             return new Vector4().set(x, y, z, w);
         }
 
-        public x: number;
-        public y: number;
-        public z: number;
-        public w: number;
+        public x: float;
+        public y: float;
+        public z: float;
+        public w: float;
         /**
          * 请使用 `egret3d.Vector4.create(); egret3d.Quaternion.create()` 创建实例。
          * @see egret3d.Quaternion.create()
          * @see egret3d.Vector4.create()
          * @deprecated
          */
-        public constructor(x: number = 0.0, y: number = 0.0, z: number = 0.0, w: number = 1.0) {
+        public constructor(x: float = 0.0, y: float = 0.0, z: float = 0.0, w: float = 1.0) {
             super();
 
             this.x = x;
@@ -50,7 +54,7 @@ namespace egret3d {
             return [this.x, this.y, this.z, this.w];
         }
 
-        public deserialize(value: Readonly<[number, number, number, number]>) {
+        public deserialize(value: Readonly<[float, float, float, float]>) {
             return this.fromArray(value);
         }
 
@@ -62,7 +66,7 @@ namespace egret3d {
             return Vector4.create(this.x, this.y, this.z, this.w);
         }
 
-        public set(x: number, y: number, z: number, w: number) {
+        public set(x: float, y: float, z: float, w: float) {
             this.x = x;
             this.y = y;
             this.z = z;
@@ -80,7 +84,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: ArrayLike<number>, offset: number = 0) {
+        public fromArray(value: ArrayLike<float>, offset: uint = 0) {
             this.x = value[offset];
             this.y = value[offset + 1];
             this.z = value[offset + 2];
@@ -93,7 +97,7 @@ namespace egret3d {
          * @param value 一个向量。
          * @param threshold 阈值。
          */
-        public equal(value: Readonly<IVector4>, threshold: number = 0.000001) {
+        public equal(value: Readonly<IVector4>, threshold: float = 0.000001) {
             if (
                 Math.abs(this.x - value.x) <= threshold &&
                 Math.abs(this.y - value.y) <= threshold &&
@@ -116,8 +120,8 @@ namespace egret3d {
          * @param input 输入向量。
          */
         public normalize(input: Readonly<IVector4>): this;
-        public normalize(input?: Readonly<IVector4>) {
-            if (!input) {
+        public normalize(input: Readonly<IVector4> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -145,8 +149,8 @@ namespace egret3d {
          * @param input 输入向量。
          */
         public inverse(input: Readonly<IVector4>): this;
-        public inverse(input?: Readonly<IVector4>) {
-            if (!input) {
+        public inverse(input: Readonly<IVector4> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -164,8 +168,8 @@ namespace egret3d {
          * @param scalar 标量。
          * @param input 输入向量。
          */
-        public multiplyScalar(scalar: number, input?: Readonly<IVector4>): this {
-            if (!input) {
+        public multiplyScalar(scalar: float, input: Readonly<IVector4> | null = null) {
+            if (input === null) {
                 input = this;
             }
 
@@ -181,7 +185,7 @@ namespace egret3d {
          * - v · vector
          * @param vector 一个向量。
          */
-        public dot(vector: Readonly<IVector4>): number {
+        public dot(vector: Readonly<IVector4>): float {
             return this.x * vector.x + this.y * vector.y + this.z * vector.z + this.w * vector.w;
         }
         /**
@@ -191,7 +195,7 @@ namespace egret3d {
          * @param to 目标矩阵。
          * @param t 插值因子。
          */
-        public lerp(to: Readonly<IVector4>, t: number): this;
+        public lerp(to: Readonly<IVector4>, t: float): this;
         /**
          * 将两个向量插值的结果写入该向量。
          * - v = from * (1 - t) + to * t
@@ -200,16 +204,16 @@ namespace egret3d {
          * @param to 目标矩阵。
          * @param t 插值因子。
          */
-        public lerp(from: Readonly<IVector4>, to: Readonly<IVector4>, t: number): this;
+        public lerp(from: Readonly<IVector4>, to: Readonly<IVector4>, t: float): this;
         /**
          * @deprecated
          */
-        public lerp(t: number, to: Readonly<IVector4>): this;
+        public lerp(t: float, to: Readonly<IVector4>): this;
         /**
          * @deprecated
          */
-        public lerp(t: number, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
-        public lerp(p1: Readonly<IVector4> | number, p2: Readonly<IVector4> | number, p3?: number | Readonly<IVector4>) {
+        public lerp(t: float, from: Readonly<IVector4>, to: Readonly<IVector4>): this;
+        public lerp(p1: Readonly<IVector4> | float, p2: Readonly<IVector4> | float, p3?: float | Readonly<IVector4>) {
             if (typeof p1 === "number") {
                 if (!p3) {
                     p3 = p1;
@@ -228,10 +232,10 @@ namespace egret3d {
                 p1 = this;
             }
 
-            this.x = (p1 as Readonly<IVector4>).x + ((p2 as Readonly<IVector4>).x - (p1 as Readonly<IVector4>).x) * <number>p3;
-            this.y = (p1 as Readonly<IVector4>).y + ((p2 as Readonly<IVector4>).y - (p1 as Readonly<IVector4>).y) * <number>p3;
-            this.z = (p1 as Readonly<IVector4>).z + ((p2 as Readonly<IVector4>).z - (p1 as Readonly<IVector4>).z) * <number>p3;
-            this.w = (p1 as Readonly<IVector4>).w + ((p2 as Readonly<IVector4>).w - (p1 as Readonly<IVector4>).w) * <number>p3;
+            this.x = (p1 as Readonly<IVector4>).x + ((p2 as Readonly<IVector4>).x - (p1 as Readonly<IVector4>).x) * <float>p3;
+            this.y = (p1 as Readonly<IVector4>).y + ((p2 as Readonly<IVector4>).y - (p1 as Readonly<IVector4>).y) * <float>p3;
+            this.z = (p1 as Readonly<IVector4>).z + ((p2 as Readonly<IVector4>).z - (p1 as Readonly<IVector4>).z) * <float>p3;
+            this.w = (p1 as Readonly<IVector4>).w + ((p2 as Readonly<IVector4>).w - (p1 as Readonly<IVector4>).w) * <float>p3;
 
             return this;
         }
@@ -240,8 +244,8 @@ namespace egret3d {
          * @param array 数组。
          * @param offset 数组偏移。
          */
-        public toArray(array?: number[] | Float32Array, offset: number = 0) {
-            if (!array) {
+        public toArray(array: float[] | Float32Array | null = null, offset: float = 0) {
+            if (array === null) {
                 array = [];
             }
 
@@ -256,15 +260,19 @@ namespace egret3d {
          * 该向量的长度。
          * - 该值是实时计算的。
          */
-        public get length(): number {
-            return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w);
+        public get length(): float {
+            const { x, y, z, w } = this;
+
+            return Math.sqrt(x * x + y * y + z * z + w * w);
         }
         /**
          * 该向量的长度的平方。
          * - 该值是实时计算的。
          */
-        public get squaredLength(): number {
-            return this.x * this.x + this.y * this.y + this.z * this.z + this.w * this.w;
+        public get squaredLength(): float {
+            const { x, y, z, w } = this;
+
+            return x * x + y * y + z * z + w * w;
         }
     }
 }

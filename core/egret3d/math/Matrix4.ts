@@ -457,8 +457,8 @@ namespace egret3d {
          * @param asp 投影宽高比。
          * @param matchFactor 宽高适配的插值系数。
          * - `0.0` ~ `1.0`
-         * - `0.0` 以高适配。
-         * - `1.0` 以宽适配。
+         * - `0.0` 以宽适配。
+         * - `1.0` 以高适配。
          */
         public fromProjection(
             near: float, far: float,
@@ -506,8 +506,8 @@ namespace egret3d {
                 const leftY = offsetX * widthY;
                 const topY = offsetY * heightY;
 
-                const left = leftX + (leftY - leftX) * matchFactor * (viewport !== null ? viewport.x : 1.0);
-                const top = topX + (topY - topX) * matchFactor * (viewport !== null ? viewport.y : 1.0);
+                const left = leftX + (leftY - leftX) * matchFactor;
+                const top = topX + (topY - topX) * matchFactor;
                 const width = (widthX + (widthY - widthX) * matchFactor) * scaleX;
                 const height = (heightX + (heightY - heightX) * matchFactor) * scaleY;
 

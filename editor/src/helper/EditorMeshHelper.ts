@@ -9,16 +9,16 @@ namespace paper.editor {
 
             if (mesh) {
                 gameObject.addComponent(egret3d.MeshFilter).mesh = mesh;
-            }
 
-            if (material) {
                 const meshRenderer = gameObject.addComponent(egret3d.MeshRenderer);
 
-                if (Array.isArray(material)) {
-                    meshRenderer.materials = material;
-                }
-                else {
-                    meshRenderer.material = material;
+                if (material) {
+                    if (Array.isArray(material)) {
+                        meshRenderer.materials = material;
+                    }
+                    else {
+                        meshRenderer.material = material;
+                    }
                 }
             }
 
@@ -29,34 +29,6 @@ namespace paper.editor {
             const material = egret3d.Material.create(egret3d.DefaultShaders.MESH_BASIC); // TODO sprite raycast
             material.setTexture(icon).setColor(egret3d.Color.RED).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay - 1, 1.0);
             const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.QUAD, material);
-
-            return gameObject;
-        }
-
-        public static createLine(name: string, color: egret3d.Color, opacity: number) {
-            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.LINE_Y, egret3d.DefaultMaterials.LINEDASHED.clone());
-            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, opacity);
-
-            return gameObject;
-        }
-
-        public static createBox(name: string, color: egret3d.Color, opacity: number) {
-            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CUBE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone());
-            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, opacity);
-
-            return gameObject;
-        }
-
-        public static createCircle(name: string, color: egret3d.Color, opacity: number) {
-            const gameObject = this.createGameObject(name, egret3d.DefaultMeshes.CIRCLE_LINE, egret3d.DefaultMaterials.LINEDASHED.clone());
-            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, opacity);
-
-            return gameObject;
-        }
-
-        public static createCircleHalf(name: string, color: egret3d.Color, opacity: number) {
-            const gameObject = this.createGameObject(name, EditorDefaultAsset.CIRCLE_LINE_HALF, egret3d.DefaultMaterials.LINEDASHED.clone());
-            gameObject.getComponent(egret3d.MeshRenderer)!.material!.setColor(color).setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Blend, opacity);
 
             return gameObject;
         }
@@ -93,7 +65,7 @@ namespace paper.editor {
             mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, colors);
             mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
-            const material = egret3d.DefaultMaterials.LINEDASHED_COLOR.clone();
+            const material = (egret3d.DefaultMaterials as any).LINEDASHED_COLOR.clone();
             material.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent, 0.8);
 
             const gameObject = this.createGameObject(name, mesh, material);

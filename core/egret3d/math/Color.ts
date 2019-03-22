@@ -4,21 +4,25 @@ namespace egret3d {
      */
     export interface IColor {
         /**
-         * 红色通道。（0.0 ~ 1.0）
+         * 红色通道。
+         * - [`0.0` ~ `1.0`]
          */
-        r: number;
+        r: float;
         /**
-         * 绿色通道。（0.0 ~ 1.0）
+         * 绿色通道。
+         * - [`0.0` ~ `1.0`]
          */
-        g: number;
+        g: float;
         /**
-         * 蓝色通道。（0.0 ~ 1.0）
+         * 蓝色通道。
+         * - [`0.0` ~ `1.0`]
          */
-        b: number;
+        b: float;
         /**
-         * 透明通道。（0.0 ~ 1.0）
+         * 透明通道。
+         * - [`0.0` ~ `1.0`]
          */
-        a: number;
+        a: float;
     }
     /**
      * 颜色。
@@ -83,7 +87,7 @@ namespace egret3d {
          * @param b 蓝色通道
          * @param a 透明通道
          */
-        public static create(r: number = 1.0, g: number = 1.0, b: number = 1.0, a: number = 1.0): Color {
+        public static create(r: float = 1.0, g: float = 1.0, b: float = 1.0, a: float = 1.0): Color {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(r, g, b, a);
                 instance._released = false;
@@ -93,10 +97,10 @@ namespace egret3d {
             return new Color().set(r, g, b, a);
         }
 
-        public r: number = 1.0;
-        public g: number = 1.0;
-        public b: number = 1.0;
-        public a: number = 1.0;
+        public r: float;
+        public g: float;
+        public b: float;
+        public a: float;
         /**
          * 请使用 `egret3d.Color.create()` 创建实例。
          * @see egret3d.Color.create()
@@ -109,7 +113,7 @@ namespace egret3d {
             return [this.r, this.g, this.b, this.a];
         }
 
-        public deserialize(value: Readonly<[number, number, number, number]>) {
+        public deserialize(value: Readonly<[float, float, float, float]>) {
             return this.fromArray(value);
         }
 
@@ -121,7 +125,7 @@ namespace egret3d {
             return this.set(value.r, value.g, value.b, value.a);
         }
 
-        public set(r: number, g: number, b: number, a?: number): this {
+        public set(r: float, g: float, b: float, a?: float): this {
             this.r = r;
             this.g = g;
             this.b = b;
@@ -133,7 +137,7 @@ namespace egret3d {
             return this;
         }
 
-        public fromArray(value: ArrayLike<number>, offset: number = 0) {
+        public fromArray(value: ArrayLike<float>, offset: uint = 0) {
             this.r = value[0 + offset];
             this.g = value[1 + offset];
             this.b = value[2 + offset];
@@ -173,44 +177,80 @@ namespace egret3d {
 
         //     return this;
         // }
-
-        public multiply(valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this {
-            if (!valueB) {
-                valueB = valueA;
+        /**
+         * 将该颜色乘以一个颜色。
+         * - v *= color
+         * @param color 一个颜色。
+         */
+        public multiply(color: Readonly<IColor>): this;
+        /**
+         * 将该两个颜色相乘的结果写入该颜色。
+         * - v = colorA * colorB
+         * @param colorA 一个向量。
+         * @param colorB 另一个向量。
+         */
+        public multiply(colorA: Readonly<IColor>, colorB: Readonly<IColor>): this;
+        public multiply(colorA: Readonly<IColor>, colorB: Readonly<IColor> | null = null) {
+            if (colorB === null) {
+                colorB = colorA;
             }
-            valueA = this;
 
-            this.r = valueA.r * valueB.r;
-            this.g = valueA.g * valueB.g;
-            this.b = valueA.b * valueB.b;
-            this.a = valueA.a * valueB.a;
+            colorA = this;
+
+            this.r = colorA.r * colorB.r;
+            this.g = colorA.g * colorB.g;
+            this.b = colorA.b * colorB.b;
+            this.a = colorA.a * colorB.a;
 
             return this;
         }
-
-        public scale(value: number, source?: Readonly<IColor>): this {
-            if (!source) {
-                source = this;
+        /**
+         * 
+         * @param scalar 
+         */
+        public scale(scalar: float): this;
+        /**
+         * 
+         * @param scalar 
+         * @param input 
+         */
+        public scale(scalar: float, input: Readonly<IColor>): this;
+        public scale(scalar: float, input: Readonly<IColor> | null = null): this {
+            if (input === null) {
+                input = this;
             }
 
-            this.r = source.r * value;
-            this.g = source.g * value;
-            this.b = source.b * value;
-            this.a = source.a * value;
+            this.r = input.r * scalar;
+            this.g = input.g * scalar;
+            this.b = input.b * scalar;
+            this.a = input.a * scalar;
 
             return this;
         }
-
-        public lerp(t: number, valueA: Readonly<IColor>, valueB?: Readonly<IColor>): this {
-            if (!valueB) {
-                valueB = valueA;
-                valueA = this;
+        /**
+         * 
+         * @param to 
+         * @param t 
+         */
+        public lerp(to: Readonly<IColor>, t: float): this;
+        /**
+         * 
+         * @param from 
+         * @param to 
+         * @param t 
+         */
+        public lerp(from: Readonly<IColor>, to: Readonly<IColor>, t: float): this;
+        public lerp(toOrFrom: Readonly<IColor>, tOrTo: float | Readonly<IColor>, t: float = 0.0) {
+            if (typeof tOrTo === "number") {
+                t = tOrTo;
+                tOrTo = toOrFrom;
+                toOrFrom = this;
             }
 
-            this.r = t * (valueB.r - valueA.r) + valueA.r;
-            this.g = t * (valueB.g - valueA.g) + valueA.g;
-            this.b = t * (valueB.b - valueA.b) + valueA.b;
-            this.a = t * (valueB.a - valueA.a) + valueA.a;
+            this.r = t * (tOrTo.r - toOrFrom.r) + toOrFrom.r;
+            this.g = t * (tOrTo.g - toOrFrom.g) + toOrFrom.g;
+            this.b = t * (tOrTo.b - toOrFrom.b) + toOrFrom.b;
+            this.a = t * (tOrTo.a - toOrFrom.a) + toOrFrom.a;
 
             return this;
         }

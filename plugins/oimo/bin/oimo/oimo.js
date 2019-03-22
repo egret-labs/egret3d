@@ -41559,18 +41559,6 @@ var egret3d;
              * 动力学。
              */
             RigidbodyType[RigidbodyType["Kinematic"] = 2] = "Kinematic";
-            /**
-             * @deprecated
-             */
-            RigidbodyType[RigidbodyType["DYNAMIC"] = 0] = "DYNAMIC";
-            /**
-             * @deprecated
-             */
-            RigidbodyType[RigidbodyType["STATIC"] = 1] = "STATIC";
-            /**
-             * @deprecated
-             */
-            RigidbodyType[RigidbodyType["KINEMATIC"] = 2] = "KINEMATIC";
         })(RigidbodyType = oimo.RigidbodyType || (oimo.RigidbodyType = {}));
         /**
          * 关节类型。
@@ -41608,7 +41596,7 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
-        0 /* DYNAMIC */; // Import error.
+        0 /* Dynamic */; // Import error.
         var ValueType;
         (function (ValueType) {
             ValueType[ValueType["Type"] = 0] = "Type";
@@ -41630,7 +41618,7 @@ var egret3d;
                  * [Type, Mass, LinearDamping, AngularDamping];
                  */
                 _this._values = new Float32Array([
-                    0 /* DYNAMIC */, 1.0, 1.0, 0.0, 0.0,
+                    0 /* Dynamic */, 1.0, 1.0, 0.0, 0.0,
                 ]);
                 _this._oimoRigidbody = null;
                 return _this;
@@ -42206,6 +42194,17 @@ var egret3d;
                         this._oimoJoint.getLocalAnchor2To(output);
                     }
                 }
+                else {
+                    output.copy(this.anchor);
+                    if (isWorldSpace) {
+                        if (!this.useWorldSpace) {
+                            output.applyMatrix(this.gameObject.transform.localToWorldMatrix);
+                        }
+                    }
+                    else if (this.useWorldSpace) {
+                        output.applyMatrix(this.gameObject.transform.worldToLocalMatrix);
+                    }
+                }
                 return output;
             };
             /**
@@ -42538,7 +42537,7 @@ var egret3d;
                     var entity = entities_1[_i];
                     var rigidbody = entity.getComponent(oimo.Rigidbody);
                     switch (rigidbody.type) {
-                        case 2 /* KINEMATIC */:
+                        case 2 /* Kinematic */:
                             if (rigidbody.isSleeping) {
                             }
                             else {
@@ -42554,7 +42553,7 @@ var egret3d;
                     var rigidbody = gameObject.getComponent(oimo.Rigidbody);
                     var oimoRigidbody = rigidbody.oimoRigidbody;
                     switch (rigidbody.type) {
-                        case 0 /* DYNAMIC */:
+                        case 0 /* Dynamic */:
                             if (oimoRigidbody.isSleeping()) {
                             }
                             else {

@@ -27,7 +27,7 @@ namespace examples.oimo {
                 });
                 const rigidbodyA = entityA.addComponent(egret3d.oimo.Rigidbody);
                 const boxColliderA = entityA.addComponent(egret3d.oimo.BoxCollider);
-                rigidbodyA.type = egret3d.oimo.RigidbodyType.KINEMATIC;
+                rigidbodyA.type = egret3d.oimo.RigidbodyType.Kinematic;
                 boxColliderA.box.size.set(0.1, 1.0, 0.1).update();
                 entityA.transform
                     .setLocalPosition(-6.0, 0.0, 0.0)
@@ -67,7 +67,7 @@ namespace examples.oimo {
                 });
                 const rigidbodyA = entityA.addComponent(egret3d.oimo.Rigidbody);
                 const boxColliderA = entityA.addComponent(egret3d.oimo.CylinderCollider);
-                rigidbodyA.type = egret3d.oimo.RigidbodyType.KINEMATIC;
+                rigidbodyA.type = egret3d.oimo.RigidbodyType.Kinematic;
                 boxColliderA.cylinder.topRadius = 0.05;
                 boxColliderA.cylinder.bottomRadius = 0.05;
                 boxColliderA.cylinder.height = 1.0;
@@ -107,7 +107,7 @@ namespace examples.oimo {
                 });
                 const rigidbodyA = entityA.addComponent(egret3d.oimo.Rigidbody);
                 const boxColliderA = entityA.addComponent(egret3d.oimo.CylinderCollider);
-                rigidbodyA.type = egret3d.oimo.RigidbodyType.KINEMATIC;
+                rigidbodyA.type = egret3d.oimo.RigidbodyType.Kinematic;
                 boxColliderA.cylinder.topRadius = 0.05;
                 boxColliderA.cylinder.bottomRadius = 0.05;
                 boxColliderA.cylinder.height = 1.0;
@@ -151,7 +151,7 @@ namespace examples.oimo {
                 });
                 const rigidbodyA = entityA.addComponent(egret3d.oimo.Rigidbody);
                 const boxColliderA = entityA.addComponent(egret3d.oimo.SphereCollider);
-                rigidbodyA.type = egret3d.oimo.RigidbodyType.KINEMATIC;
+                rigidbodyA.type = egret3d.oimo.RigidbodyType.Kinematic;
                 boxColliderA.sphere.radius = 0.2;
                 entityA.transform
                     .setLocalPosition(2.0, 0.0, 0.0)

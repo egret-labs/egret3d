@@ -15,6 +15,11 @@ namespace paper.editor {
     export class GizmosContainerFlag extends EditorComponent {
     }
     /**
+     * Gizmos 容器标记。
+     */
+    export class GizmosContainerForwardFlag extends EditorComponent {
+    }
+    /**
      * 可点选容器标记。
      */
     export class TouchContainerFlag extends EditorComponent {
@@ -23,6 +28,9 @@ namespace paper.editor {
      * 选框网格标记。
      */
     export class SelectFrameFlag extends EditorComponent {
+        /**
+         * 相对于舞台的选框视口。
+         */
         public readonly viewport: egret3d.Rectangle = egret3d.Rectangle.create();
     }
     /**

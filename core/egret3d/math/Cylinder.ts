@@ -10,7 +10,7 @@ namespace egret3d {
          * @param center 中心点。
          * @param radius 半径。
          */
-        public static create(center: Readonly<IVector3> = Vector3.ZERO, topRadius: number = 0.0, bottomRadius: number = 0.0, height: number = 0.0) {
+        public static create(center: Readonly<IVector3> = Vector3.ZERO, topRadius: float = 0.0, bottomRadius: float = 0.0, height: float = 0.0) {
             if (this._instances.length > 0) {
                 const instance = this._instances.pop()!.set(center, topRadius, bottomRadius, height);
                 instance._released = false;
@@ -24,17 +24,17 @@ namespace egret3d {
          * 该圆柱（锥）体的顶部半径。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public topRadius: number = 0.0;
+        public topRadius: float = 0.0;
         /**
          * 该圆柱（锥）体的底部半径。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public bottomRadius: number = 0.0;
+        public bottomRadius: float = 0.0;
         /**
          * 该圆柱（锥）体的高度。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
-        public height: number = 0.0;
+        public height: float = 0.0;
         /**
          * 该圆柱（锥）体的中心点。
          */
@@ -52,7 +52,7 @@ namespace egret3d {
             return [this.center.x, this.center.y, this.center.z, this.topRadius, this.bottomRadius, this.height];
         }
 
-        public deserialize(value: Readonly<[number, number, number, number, number, number]>) {
+        public deserialize(value: Readonly<[float, float, float, float, float, float]>) {
             this.topRadius = value[3];
             this.bottomRadius = value[4];
             this.height = value[5];
@@ -69,7 +69,7 @@ namespace egret3d {
             return this.set(value.center, value.topRadius, value.bottomRadius, value.height);
         }
 
-        public set(center: Readonly<IVector3>, topRadius: number, bottomRadius: number, height: number) {
+        public set(center: Readonly<IVector3>, topRadius: float, bottomRadius: float, height: float) {
             this.topRadius = topRadius;
             this.bottomRadius = bottomRadius;
             this.height = height;
@@ -242,7 +242,7 @@ namespace egret3d {
                 }
             }
 
-            let min: number;
+            let min: float;
 
             if (tmaxxz <= tminy || tmaxy <= tminxz) return false;
 

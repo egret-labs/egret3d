@@ -162,15 +162,27 @@ namespace paper.editor {
 
         public onEnable() {
             const sceneOptions = {
-                debug: false,
+                Debug: false,
+                Spector: false,
             };
 
-            this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange((v: boolean) => {
+            this._guiComponent.hierarchy.add(sceneOptions, "Debug").onChange((v: boolean) => {
                 if (v) {
                     Application.playerMode = PlayerMode.DebugPlayer;
                 }
                 else {
                     Application.playerMode = PlayerMode.Player;
+                }
+            });
+
+            this._guiComponent.hierarchy.add(sceneOptions, "Spector").onChange((v: boolean) => {
+                const spectorSystem = Application.systemManager.getSystem(SpectorSystem)!;
+
+                if (v) {
+                    spectorSystem.enabled = true;
+                }
+                else {
+                    spectorSystem.enabled = false;
                 }
             });
 

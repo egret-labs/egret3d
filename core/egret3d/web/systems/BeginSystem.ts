@@ -39,16 +39,17 @@ namespace egret3d.webgl {
             }
         }
 
-        public onAwake(config: RunOptions) {
+        public onAwake() {
+            const options = paper.Application.options;
             const globalEntity = paper.Application.sceneManager.globalEntity;
-            const parentElement = config.canvas!.parentElement;
+            const parentElement = options.canvas!.parentElement;
             const screenWidth = parentElement ? parentElement.clientWidth : window.innerWidth;
             const screenHeight = parentElement ? parentElement.clientHeight : window.innerHeight;
-            this._canvas = config.canvas!;
+            this._canvas = options.canvas!;
 
-            globalEntity.addComponent(RenderState, config);
+            globalEntity.addComponent(RenderState);
             globalEntity.addComponent(Stage, {
-                size: { w: config.contentWidth!, h: config.contentHeight! },
+                size: { w: options.contentWidth!, h: options.contentHeight! },
                 screenSize: { w: screenWidth, h: screenHeight },
             });
             globalEntity.addComponent(DefaultMeshes);

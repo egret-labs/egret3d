@@ -164,35 +164,10 @@ declare namespace paper.editor {
     }
 }
 declare namespace paper.editor {
-    /**
-     * TODO
-     */
-    class SceneSystem extends BaseSystem<GameObject> {
-        private readonly _modelComponent;
-        private readonly _keyEscape;
-        private readonly _keyDelete;
-        private readonly _keyE;
-        private readonly _keyW;
-        private readonly _keyR;
-        private readonly _keyX;
-        private readonly _keyF;
-        private _gizmosContainerEntity;
-        private _touchContainerEntity;
-        private _transformControllerEntity;
-        private readonly _frustum;
-        private readonly _projectionMatrix;
-        private _updateSelectFrustum(camera);
-        lookAtSelected(): void;
-        protected getMatchers(): IAnyOfMatcher<GameObject>[];
-        onEnable(): void;
-        onDisable(): void;
-        onEntityAdded(entity: GameObject, group: Group<GameObject>): void;
-        onEntityRemoved(entity: GameObject, group: Group<GameObject>): void;
-        onFrame(): void;
-        private static readonly _defalutPosition;
-        private _clearDefaultPointerDownPosition();
-    }
 }
+declare var VConsole: {
+    new (): any;
+} | null;
 declare namespace paper.editor {
     const context: EventDispatcher;
     enum selectItemType {
@@ -244,6 +219,7 @@ declare namespace paper.editor {
         createModifyGameObjectPropertyState(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any;
         createPrefabState(prefab: Prefab, parent?: GameObject): void;
+        createModifyScenePropertyState(sceneUUid: string, newValueList: any[], preValueCopylist: any[]): void;
         serializeProperty(value: any, editType: paper.editor.EditType): any;
         deserializeProperty(serializeData: any, editType: paper.editor.EditType): any;
         createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): void;
@@ -375,6 +351,11 @@ declare namespace paper.editor {
     class GizmosContainerFlag extends EditorComponent {
     }
     /**
+     * Gizmos 容器标记。
+     */
+    class GizmosContainerForwardFlag extends EditorComponent {
+    }
+    /**
      * 可点选容器标记。
      */
     class TouchContainerFlag extends EditorComponent {
@@ -383,6 +364,9 @@ declare namespace paper.editor {
      * 选框网格标记。
      */
     class SelectFrameFlag extends EditorComponent {
+        /**
+         * 相对于舞台的选框视口。
+         */
         readonly viewport: egret3d.Rectangle;
     }
     /**
@@ -411,14 +395,6 @@ declare namespace paper.editor {
     /**
      *
      */
-    type QuaryValues = {
-        FPS?: 0 | 1;
-        GUI?: 0 | 1;
-        DEBUG?: 0 | 1;
-    };
-    /**
-     *
-     */
     const enum ShowState {
         None = 0,
         FPS = 1,
@@ -432,7 +408,6 @@ declare namespace paper.editor {
      */
     class GUIComponent extends Component {
         showStates: ShowState;
-        quaryValues: QuaryValues;
         readonly hierarchy: dat.GUI;
         readonly inspector: dat.GUI;
         readonly stats: Stats;
@@ -476,31 +451,51 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
+}
+declare namespace paper.editor {
     /**
-     *
+     * TODO
      */
-    class WorldAxisesDrawer extends BaseComponent {
-        readonly cube: paper.GameObject;
-        readonly left: paper.GameObject;
-        readonly right: paper.GameObject;
-        readonly bottom: paper.GameObject;
-        readonly top: paper.GameObject;
-        readonly back: paper.GameObject;
-        readonly forward: paper.GameObject;
-        initialize(): void;
-        update(): void;
+    class SceneSystem extends BaseSystem<GameObject> {
+        private readonly _modelComponent;
+        private readonly _keyEscape;
+        private readonly _keyDelete;
+        private readonly _keyE;
+        private readonly _keyW;
+        private readonly _keyR;
+        private readonly _keyX;
+        private readonly _keyF;
+        private _gizmosContainerEntity;
+        private _gizmosForwardContainerEntity;
+        private _touchContainerEntity;
+        private _transformControllerEntity;
+        private readonly _selectBox;
+        private _updateSelectBox(camera, viewport);
+        lookAtSelected(): void;
+        protected getMatchers(): IAnyOfMatcher<GameObject>[];
+        onEnable(): void;
+        onDisable(): void;
+        onEntityAdded(entity: GameObject, group: Group<GameObject>): void;
+        onEntityRemoved(entity: GameObject, group: Group<GameObject>): void;
+        onFrame(): void;
+        private static readonly _defalutPosition;
+        private _clearDefaultPointerDownPosition();
     }
 }
 declare namespace paper.editor {
 }
-declare var VConsole: {
-    new (): any;
-} | null;
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
-}
-declare namespace paper.editor {
+declare namespace SPECTOR {
+    class Spector {
+        displayUI(): void;
+        captureCanvas(canvas: HTMLCanvasElement, commandCount: uint, quickCapture: boolean): void;
+        spyCanvas(canvas: HTMLCanvasElement): void;
+    }
 }
 declare namespace paper.editor {
 }
@@ -532,8 +527,6 @@ declare namespace egret3d {
      */
     const enum UniformSemantics {
     }
-}
-declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
@@ -614,7 +607,6 @@ declare namespace paper.editor {
         static removeEventListener(type: string, fun: Function, thisObj: any): void;
         static dispatchEvent(event: BaseEvent): void;
         private static preDo();
-        private static initEditEnvironment();
     }
 }
 declare namespace paper.editor {
@@ -829,6 +821,15 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class ModifyGameObjectPropertyState extends BaseState {
         static create(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyGameObjectPropertyState | null;
+        private readonly stateData;
+        undo(): boolean;
+        private modifyProperty(valueList);
+        redo(): boolean;
+    }
+}
+declare namespace paper.editor {
+    class ModifyScenePropertyState extends BaseState {
+        static create(sceneUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyScenePropertyState;
         private readonly stateData;
         undo(): boolean;
         private modifyProperty(valueList);

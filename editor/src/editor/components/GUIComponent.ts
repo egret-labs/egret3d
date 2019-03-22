@@ -2,14 +2,6 @@ namespace paper.editor {
     /**
      * 
      */
-    export type QuaryValues = {
-        FPS?: 0 | 1,
-        GUI?: 0 | 1,
-        DEBUG?: 0 | 1,
-    };
-    /**
-     * 
-     */
     export const enum ShowState {
         None = 0b000,
 
@@ -27,7 +19,6 @@ namespace paper.editor {
     export class GUIComponent extends Component {
 
         public showStates: ShowState = ShowState.None;
-        public quaryValues: QuaryValues = {};
         public readonly hierarchy: dat.GUI;
         public readonly inspector: dat.GUI;
         public readonly stats: Stats;

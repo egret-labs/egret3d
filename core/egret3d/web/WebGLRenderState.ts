@@ -68,11 +68,12 @@ namespace egret3d.webgl {
          */
         public static webgl: WebGLRenderingContext | null = null;
 
-        public initialize(config: RunOptions) {
-            super.initialize(config);
+        public initialize() {
+            super.initialize();
 
-            WebGLRenderState.canvas = config.canvas!;
-            WebGLRenderState.webgl = config.webgl!;
+            const options = paper.Application.options;
+            WebGLRenderState.canvas = options.canvas!;
+            WebGLRenderState.webgl = options.webgl!;
 
             const webgl = WebGLRenderState.webgl;
             if (!webgl) {

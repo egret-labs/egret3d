@@ -14,33 +14,41 @@
         html,
         body {
             overflow: hidden;
-            touch-action: none;
             background: #000000;
             padding: 0;
             border: 0;
             margin: 0;
             height: 100%;
+            touch-action: none;
         }
     </style>
-    <script src="https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js"></script>
+    <script type="text/javascript" src="https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js"></script>
 </head>
 
-<body>
+<body onContextMenu="return false">
     <div 
         style="margin: auto;width: 100%;height: 100%;overflow: hidden;" 
         class="egret-player" 
-        data-orientation="auto"
-        data-frame-rate="30"
-        data-scale-mode="showAll"
+        data-entry="main"
+        data-scene=""
+        data-tick-rate="auto"
+        data-frame-rate="auto"
         data-content-width="1136"
         data-content-height="640"
+        data-antialias="true"
+        data-alpha="false"
+
+        data-orientation="auto"
+        data-scale-mode="showAll"
         data-multi-fingered="2"
         
-        data-show-fps="false"
+        data-show-stats="true"
+        data-show-inspector="auto"
         >
     </div>
 
     <script>
+        
         var loadScript = function (list, callback) {
             var loaded = 0;
             var loadNext = function () {
@@ -75,17 +83,10 @@
             var manifest = JSON.parse(xhr.response);
             var list = manifest.initial.concat(manifest.game);
             loadScript(list, function () {
-                egret3d.runEgret({
-                    // 启动时设置帧频
-                    tickRate: 60.0, // 启动时设置逻辑帧频
-                    frameRate: 30.0, // 启动时设置渲染帧频
-                    antialias: true,
-                    alpha: false
-                });
-                /*
+                egret3d.runEgret();
+                /**
                  * `paper.Application.pause(); // 如果是编辑器模式, egret3d.runEgret() 之后即可暂停主循环`
                  */
-                main();
             });
         });
         xhr.send(null);

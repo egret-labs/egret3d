@@ -154,7 +154,7 @@ namespace egret3d.oimo {
                 const rigidbody = entity.getComponent(Rigidbody)!;
 
                 switch (rigidbody.type) {
-                    case RigidbodyType.KINEMATIC:
+                    case RigidbodyType.Kinematic:
                         if (rigidbody.isSleeping) {
                         }
                         else {
@@ -172,7 +172,7 @@ namespace egret3d.oimo {
                 const oimoRigidbody = rigidbody.oimoRigidbody;
 
                 switch (rigidbody.type) {
-                    case RigidbodyType.DYNAMIC:
+                    case RigidbodyType.Dynamic:
                         if (oimoRigidbody.isSleeping()) {
                         }
                         else {

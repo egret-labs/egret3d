@@ -2,6 +2,7 @@ namespace paper.editor {
 
     const enum GroupIndex {
         GizmosContainer,
+        GizmosForwardContainer,
         TouchContainer,
         LastSelectedTransform,
 
@@ -29,6 +30,8 @@ namespace paper.editor {
         OimoRevoluteJoints,
         OimoCylindricalJoints,
         OimoSphericalJoints,
+        OimoUniversalJoints,
+        OimoConeTwistJoints,
     }
 
     const _girdStep = 5;
@@ -37,17 +40,6 @@ namespace paper.editor {
      */
     @executeMode(PlayerMode.DebugPlayer | PlayerMode.Editor)
     export class GizmosSystem extends BaseSystem<GameObject> {
-        private readonly _jointMesh: egret3d.Mesh = egret3d.Mesh.create(4, 2, [gltf.AttributeSemantics.POSITION]);
-        private readonly _jointLineMaterial: egret3d.Material = egret3d.Material.create("editor/joint_line.mat.json", egret3d.DefaultShaders.LINEDASHED)
-            .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.4)
-            .setDepth(false, false)
-            .setColor(egret3d.Color.PURPLE);
-        private readonly _jointPointMaterial: egret3d.Material = egret3d.Material.create("editor/joint_point.mat.json", egret3d.DefaultShaders.POINTS)
-            .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.4)
-            .setDepth(false, false)
-            .setColor(egret3d.Color.PURPLE)
-            .setFloat(egret3d.ShaderUniformName.Size, 4.0);
-
         private readonly _selectedBoxDrawer: GameObject[] = [];
         private readonly _cameraDrawer: GameObject[] = [];
         private readonly _lightDrawer: GameObject[] = [];
@@ -59,9 +51,12 @@ namespace paper.editor {
         private readonly _revoluteJointDrawer: GameObject[] = [];
         private readonly _cylindricalJointDrawer: GameObject[] = [];
         private readonly _sphericalJointDrawer: GameObject[] = [];
+        private readonly _universalJointDrawer: GameObject[] = [];
+        private readonly _coneTwistJointDrawer: GameObject[] = [];
 
         private _gridA: GameObject | null = null;
         private _gridB: GameObject | null = null;
+        private _worldAxises: GameObject | null = null;
         private _hoverBox: GameObject | null = null;
         private _selectFrameDrawer: GameObject | null = null;
         private _skeletonDrawer: GameObject | null = null;
@@ -87,6 +82,37 @@ namespace paper.editor {
             const gameObject = EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
             return gameObject;
+        }
+
+        private _createWorldAxises() {
+            const cube = EditorMeshHelper.createGameObject("World Axises", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC);
+            const left = EditorMeshHelper.createGameObject("Left", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+            const right = EditorMeshHelper.createGameObject("Right", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+            const bottom = EditorMeshHelper.createGameObject("Bottom", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+            const top = EditorMeshHelper.createGameObject("Top", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+            const back = EditorMeshHelper.createGameObject("Back", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+            const forward = EditorMeshHelper.createGameObject("Forward", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+            
+            cube.transform.setLocalScale(0.05);
+            left.transform.setLocalPosition(-1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            right.transform.setLocalPosition(1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            bottom.transform.setLocalPosition(0.0, -1.5, 0.0).setLocalEuler(0.0, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            top.transform.setLocalPosition(0.0, 1.5, 0.0).setLocalEuler(Math.PI, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            back.transform.setLocalPosition(0.0, 0.0, -1.5).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            forward.transform.setLocalPosition(0.0, 0.0, 1.5).setLocalEuler(-Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+
+            right.renderer!.material!.setColor(egret3d.Color.RED);
+            top.renderer!.material!.setColor(egret3d.Color.GREEN);
+            forward.renderer!.material!.setColor(egret3d.Color.BLUE);
+
+            return cube;
+        }
+
+        private _updateGizmosForwardContainer() {
+            const cameraTransform = egret3d.Camera.editor.gameObject.transform;
+            const entityTransform = this.groups[GroupIndex.GizmosForwardContainer].singleEntity!.transform;
+            cameraTransform.getForward(entityTransform.localPosition).add(cameraTransform.position).update();
+            entityTransform.setLocalRotation(cameraTransform.rotation);
         }
 
         private _updateTransformController(): any {
@@ -138,7 +164,7 @@ namespace paper.editor {
 
             for (let i = 0, l = Math.max(this._selectedBoxDrawer.length, selectedEntities.length); i < l; ++i) {
                 if (i + 1 > this._selectedBoxDrawer.length) {
-                    const entity = EditorMeshHelper.createBox(`Box ${i}`, egret3d.Color.INDIGO, 0.8);
+                    const entity = EditorMeshHelper.createGameObject(`Selected Box ${i}`, egret3d.DefaultMeshes.CUBE_LINE, EditorAssets.SELECTED_MATERIAL);
                     entity.parent = containerEntity;
                     this._selectedBoxDrawer.push(entity);
                 }
@@ -171,7 +197,7 @@ namespace paper.editor {
 
             for (let i = 0, l = Math.max(this._cameraDrawer.length, cameraEntities.length); i < l; ++i) {
                 if (i + 1 > this._cameraDrawer.length) {
-                    const entity = EditorMeshHelper.createIcon(`Camera Icon ${i}`, EditorDefaultAsset.CAMERA_ICON);
+                    const entity = EditorMeshHelper.createIcon(`Camera Icon ${i}`, EditorAssets.CAMERA_ICON);
                     entity.parent = touchContainerEntity;
                     entity.addComponent(PickedFlag);
                     this._cameraDrawer.push(entity);
@@ -204,7 +230,7 @@ namespace paper.editor {
 
             for (let i = 0, l = Math.max(this._lightDrawer.length, lightEntities.length); i < l; ++i) {
                 if (i + 1 > this._lightDrawer.length) {
-                    const entity = EditorMeshHelper.createIcon(`Light Icon ${i}`, EditorDefaultAsset.LIGHT_ICON);
+                    const entity = EditorMeshHelper.createIcon(`Light Icon ${i}`, EditorAssets.LIGHT_ICON);
                     entity.parent = touchContainerEntity;
                     entity.addComponent(PickedFlag);
                     this._lightDrawer.push(entity);
@@ -240,12 +266,24 @@ namespace paper.editor {
 
             if (selectFrame) {
                 const editorCamera = egret3d.Camera.editor;
-                const eyeDistance = editorCamera.gameObject.transform.position.getDistance(selectFrameDrawer.transform.localPosition);
-                const selectFrameFlag = selectFrame.getComponent(SelectFrameFlag)!;
+                const selectViewport = selectFrame.getComponent(SelectFrameFlag)!.viewport;
+
+                const h = Math.tan(editorCamera.fov * 0.5) * 2.0;
+                const w = h * editorCamera.aspect;
 
                 selectFrameDrawer.enabled = true;
-                selectFrameDrawer.transform.localRotation = editorCamera.gameObject.transform.rotation;
-                selectFrameDrawer.transform.setLocalScale(eyeDistance * selectFrameFlag.viewport.w, eyeDistance * selectFrameFlag.viewport.h, 1.0);
+                selectFrameDrawer.transform
+                    .setLocalPosition(
+                        (selectViewport.x + selectViewport.w * 0.5 - 0.5) * w,
+                        (0.5 - selectViewport.y - selectViewport.h * 0.5) * h,
+                        0.0
+                    )
+                    .setLocalScale(
+                        selectViewport.w * w,
+                        selectViewport.h * h,
+                        1.0
+                    );
+
             }
             else {
                 selectFrameDrawer.enabled = false;
@@ -365,7 +403,7 @@ namespace paper.editor {
 
         private _updateBoxColliderDrawer(entity: GameObject, component: egret3d.IBoxCollider, index: uint, scaleEnabled: boolean) {
             if (index >= this._boxColliderDrawer.length) {
-                const entity = EditorMeshHelper.createBox(`Box Collider ${index}`, egret3d.Color.YELLOW, 0.4);
+                const entity = EditorMeshHelper.createGameObject(`Box Collider ${index}`, egret3d.DefaultMeshes.CUBE_LINE, EditorAssets.COLLIDER_MATERIAL);
                 entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
                 this._boxColliderDrawer.push(entity);
             }
@@ -387,11 +425,11 @@ namespace paper.editor {
             if (index >= this._sphereColliderDrawer.length) {
                 const entity = EditorMeshHelper.createGameObject(`Sphere Collider ${index}`);
                 entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
-                EditorMeshHelper.createCircle("AxisX", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("AxisX", egret3d.DefaultMeshes.CIRCLE_LINE, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalEulerAngles(0.0, 90.0, 0.0);
-                EditorMeshHelper.createCircle("AxisY", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("AxisY", egret3d.DefaultMeshes.CIRCLE_LINE, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalEulerAngles(90.0, 0.0, 0.0);
-                EditorMeshHelper.createCircle("AxisZ", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("AxisZ", egret3d.DefaultMeshes.CIRCLE_LINE, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform);
                 this._sphereColliderDrawer.push(entity);
             }
@@ -413,17 +451,17 @@ namespace paper.editor {
             if (index >= this._cylinderColliderDrawer.length) {
                 const entity = EditorMeshHelper.createGameObject(`Cylinder Collider ${index}`);
                 entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
-                EditorMeshHelper.createCircle("Top", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Top", egret3d.DefaultMeshes.CIRCLE_LINE, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(0.0, 0.5, 0.0).setLocalEuler(Math.PI * 0.5, 0.0, 0.0);
-                EditorMeshHelper.createCircle("Bottom", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Bottom", egret3d.DefaultMeshes.CIRCLE_LINE, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(0.0, -0.5, 0.0).setLocalEuler(-Math.PI * 0.5, 0.0, 0.0);
-                EditorMeshHelper.createLine("Left", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Left", egret3d.DefaultMeshes.LINE_Y, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(-0.5, -0.5, 0.0);
-                EditorMeshHelper.createLine("Right", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Right", egret3d.DefaultMeshes.LINE_Y, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(0.5, -0.5, 0.0);
-                EditorMeshHelper.createLine("Back", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Back", egret3d.DefaultMeshes.LINE_Y, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(0.0, -0.5, -0.5);
-                EditorMeshHelper.createLine("Forward", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Forward", egret3d.DefaultMeshes.LINE_Y, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(0.0, -0.5, 0.5);
                 this._cylinderColliderDrawer.push(entity);
             }
@@ -471,25 +509,25 @@ namespace paper.editor {
             if (index >= this._capsuleColliderDrawer.length) {
                 const entity = EditorMeshHelper.createGameObject(`Capsule Collider ${index}`);
                 entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
-                EditorMeshHelper.createCircleHalf("TopX", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("TopX", EditorAssets.CIRCLE_LINE_HALF, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform);
-                EditorMeshHelper.createCircleHalf("TopZ", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("TopZ", EditorAssets.CIRCLE_LINE_HALF, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalEulerAngles(0.0, 90.0, 0.0);
-                EditorMeshHelper.createCircle("Top", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Top", egret3d.DefaultMeshes.CIRCLE_LINE, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalEulerAngles(90.0, 0.0, 0.0);
-                EditorMeshHelper.createLine("Left", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Left", egret3d.DefaultMeshes.LINE_Y, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(-0.5, -0.5, 0.0);
-                EditorMeshHelper.createLine("Right", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Right", egret3d.DefaultMeshes.LINE_Y, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(0.5, -0.5, 0.0);
-                EditorMeshHelper.createLine("Back", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Back", egret3d.DefaultMeshes.LINE_Y, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(0.0, -0.5, -0.5);
-                EditorMeshHelper.createLine("Forward", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Forward", egret3d.DefaultMeshes.LINE_Y, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalPosition(0.0, -0.5, 0.5);
-                EditorMeshHelper.createCircle("Bottom", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("Bottom", egret3d.DefaultMeshes.CIRCLE_LINE, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalEulerAngles(-90.0, 0.0, 0.0);
-                EditorMeshHelper.createCircleHalf("BottomX", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("BottomX", EditorAssets.CIRCLE_LINE_HALF, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalEulerAngles(180.0, 0.0, 0.0);
-                EditorMeshHelper.createCircleHalf("BottomZ", egret3d.Color.YELLOW, 0.4).transform
+                EditorMeshHelper.createGameObject("BottomZ", EditorAssets.CIRCLE_LINE_HALF, EditorAssets.COLLIDER_MATERIAL).transform
                     .setParent(entity.transform).setLocalEulerAngles(180.0, 90.0, 0.0);
                 this._capsuleColliderDrawer.push(entity);
             }
@@ -675,13 +713,13 @@ namespace paper.editor {
                 const entity = EditorMeshHelper.createGameObject(`Prismatic Joint ${index}`);
                 entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
 
-                EditorMeshHelper.createGameObject("TLM", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                EditorMeshHelper.createGameObject("TLM", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
                     .transform.setParent(entity.transform);
 
-                EditorMeshHelper.createGameObject("Joint", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                EditorMeshHelper.createGameObject("Joint", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
                     .transform.setParent(entity.transform);
 
-                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                EditorMeshHelper.createGameObject("JointC", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
                     .transform.setParent(entity.transform);
 
                 this._prismaticJointDrawer.push(entity);
@@ -744,7 +782,7 @@ namespace paper.editor {
                 const entity = EditorMeshHelper.createGameObject(`Revolute Joint ${index}`);
                 entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
 
-                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                EditorMeshHelper.createGameObject("JointC", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
                     .transform.setParent(entity.transform);
 
                 this._revoluteJointDrawer.push(entity);
@@ -780,13 +818,13 @@ namespace paper.editor {
                 const entity = EditorMeshHelper.createGameObject(`Cylindrical Joint ${index}`);
                 entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
 
-                EditorMeshHelper.createGameObject("TLM", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                EditorMeshHelper.createGameObject("TLM", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
                     .transform.setParent(entity.transform);
 
-                EditorMeshHelper.createGameObject("Joint", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                EditorMeshHelper.createGameObject("Joint", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
                     .transform.setParent(entity.transform);
 
-                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                EditorMeshHelper.createGameObject("JointC", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
                     .transform.setParent(entity.transform);
 
                 this._cylindricalJointDrawer.push(entity);
@@ -846,16 +884,88 @@ namespace paper.editor {
          */
         private _updateSphericalJointDrawer(entity: GameObject, component: egret3d.oimo.SphericalJoint, index: uint) {
             if (index >= this._sphericalJointDrawer.length) {
-                const entity = EditorMeshHelper.createGameObject(`Revolute Joint ${index}`);
+                const entity = EditorMeshHelper.createGameObject(`Spherical Joint ${index}`);
                 entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
 
-                EditorMeshHelper.createGameObject("JointC", this._jointMesh, [this._jointLineMaterial, this._jointPointMaterial])
+                EditorMeshHelper.createGameObject("JointC", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
                     .transform.setParent(entity.transform);
 
                 this._sphericalJointDrawer.push(entity);
             }
 
             const drawer = this._sphericalJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.connectedRigidbody) {
+                jointC.entity.enabled = true;
+
+                jointC.lookAt(component.connectedRigidbody.transform.position)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(component.connectedRigidbody.transform.position));
+            }
+            else {
+                jointC.entity.enabled = false;
+            }
+        }
+        /**
+         * @internal
+         */
+        private _updateUniversalJointDrawer(entity: GameObject, component: egret3d.oimo.UniversalJoint, index: uint) {
+            if (index >= this._universalJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Universal Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("JointC", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
+                    .transform.setParent(entity.transform);
+
+                this._universalJointDrawer.push(entity);
+            }
+
+            const drawer = this._universalJointDrawer[index];
+            drawer.enabled = true;
+
+            if (component.useWorldSpace) {
+                drawer.transform.localPosition = component.anchor;
+            }
+            else {
+                drawer.transform.localPosition.applyMatrix(component.rigidbody.gameObject.transform.localToWorldMatrix, component.anchor).update();
+            }
+
+            const jointC = drawer.transform.find("JointC")!;
+
+            if (component.connectedRigidbody) {
+                jointC.entity.enabled = true;
+
+                jointC.lookAt(component.connectedRigidbody.transform.position)
+                    .setLocalScale(1.0, 1.0, drawer.transform.localPosition.getDistance(component.connectedRigidbody.transform.position));
+            }
+            else {
+                jointC.entity.enabled = false;
+            }
+        }
+        /**
+         * @internal
+         */
+        private _updateConeTwistJointDrawer(entity: GameObject, component: egret3d.oimo.ConeTwistJoint, index: uint) {
+            if (index >= this._coneTwistJointDrawer.length) {
+                const entity = EditorMeshHelper.createGameObject(`Cone Twist Joint ${index}`);
+                entity.parent = this.groups[GroupIndex.GizmosContainer].singleEntity;
+
+                EditorMeshHelper.createGameObject("JointC", EditorAssets.JOINT_MESH, [EditorAssets.JOINT_LINE_MATERIAL, EditorAssets.JOINT_POINT_MATERIAL])
+                    .transform.setParent(entity.transform);
+
+                this._coneTwistJointDrawer.push(entity);
+            }
+
+            const drawer = this._coneTwistJointDrawer[index];
             drawer.enabled = true;
 
             if (component.useWorldSpace) {
@@ -952,11 +1062,48 @@ namespace paper.editor {
             for (let i = drawerIndex, l = this._sphericalJointDrawer.length; i < l; ++i) {
                 this._sphericalJointDrawer[i].enabled = false;
             }
+
+            drawerIndex = 0;
+
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoUniversalJoints].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.UniversalJoint)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
+
+                        this._updateUniversalJointDrawer(entity, component, drawerIndex++);
+                    }
+                }
+            }
+
+            for (let i = drawerIndex, l = this._universalJointDrawer.length; i < l; ++i) {
+                this._universalJointDrawer[i].enabled = false;
+            }
+
+            drawerIndex = 0;
+
+            if (egret3d.oimo) {
+                for (const entity of groups[GroupIndex.OimoConeTwistJoints].entities) {
+                    for (const component of entity.getComponents(egret3d.oimo.ConeTwistJoint)) {
+                        if (!component.enabled) {
+                            continue;
+                        }
+
+                        this._updateConeTwistJointDrawer(entity, component, drawerIndex++);
+                    }
+                }
+            }
+
+            for (let i = drawerIndex, l = this._coneTwistJointDrawer.length; i < l; ++i) {
+                this._coneTwistJointDrawer[i].enabled = false;
+            }
         }
 
         protected getMatchers() {
             const matchers = [
                 Matcher.create<GameObject>(false, egret3d.Transform, GizmosContainerFlag),
+                Matcher.create<GameObject>(false, egret3d.Transform, GizmosContainerForwardFlag),
                 Matcher.create<GameObject>(false, egret3d.Transform, TouchContainerFlag),
                 Matcher.create<GameObject>(egret3d.Transform, LastSelectedFlag), // Last selected transform
 
@@ -991,59 +1138,29 @@ namespace paper.editor {
                     Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.RevoluteJoint).anyOf(HoveredFlag, SelectedFlag),
                     Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.CylindricalJoint).anyOf(HoveredFlag, SelectedFlag),
                     Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.SphericalJoint).anyOf(HoveredFlag, SelectedFlag),
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.UniversalJoint).anyOf(HoveredFlag, SelectedFlag),
+                    Matcher.create<GameObject>(egret3d.Transform, egret3d.oimo.ConeTwistJoint).anyOf(HoveredFlag, SelectedFlag),
                 );
             }
 
             return matchers;
         }
 
-        public onAwake() {
-            const jointMesh = this._jointMesh;
-            jointMesh.name = "editor/joint.mesh.bin";
-            jointMesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-            jointMesh.setAttributes(gltf.AttributeSemantics.POSITION, [
-                0.0, 0.0, 0.0, // Line start.
-                0.0, 0.0, 1.0, // Line end.
-
-                0.0, 0.0, 0.0, // Point start.
-                0.0, 0.0, 1.0, // Point end.
-            ]);
-            jointMesh.setIndices([0, 1], 0);
-            jointMesh.setIndices([2, 3], jointMesh.addSubMesh(2, 1, gltf.MeshPrimitiveMode.Points));
-        }
-
         public onEnable() {
             this._gridA = this._createGrid("Grid A");
             this._gridB = this._createGrid("Grid B", 100.0 * _girdStep, 100 * _girdStep);
-            this._hoverBox = EditorMeshHelper.createBox("Hover Box", egret3d.Color.WHITE, 0.6);
-            this._selectFrameDrawer = EditorMeshHelper.createGameObject(
-                "Select Frame",
-                egret3d.DefaultMeshes.QUAD,
-                [
-                    egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED)
-                        .setBlend(egret3d.BlendMode.Normal, egret3d.RenderQueue.Overlay, 0.2)
-                        .setColor(egret3d.Color.WHITE)
-                        .setDepth(false, false)
-                ]
-            );
-            this._skeletonDrawer = EditorMeshHelper.createGameObject("Skeleton");
+            // this._worldAxises = this._createWorldAxises();
+            this._hoverBox = EditorMeshHelper.createGameObject("Hover Box", egret3d.DefaultMeshes.CUBE_LINE, EditorAssets.HOVER_MATERIAL);
+            // this._selectFrameDrawer = EditorMeshHelper.createGameObject(
+            //     "Select Frame",
+            //     egret3d.DefaultMeshes.QUAD,
+            //     [
+            //         EditorAssets.SELECT_MATERIAL
+            //     ]
+            // );
+            this._skeletonDrawer = EditorMeshHelper.createGameObject("Skeleton", EditorAssets.SKELETON_MESH, EditorAssets.SKELETON_MATERIAL);
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
             this._cameraViewFrustum.enabled = false;
-
-            { //
-                const skeleton = this._skeletonDrawer;
-                const mesh = egret3d.Mesh.create(1024, 0, [gltf.AttributeSemantics.POSITION]);
-                const material = egret3d.Material.create(egret3d.DefaultShaders.LINEDASHED);
-                mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-                mesh.drawMode = gltf.DrawMode.Dynamic;
-                material
-                    .setColor(egret3d.Color.YELLOW)
-                    .setDepth(false, false)
-                    .renderQueue = RenderQueue.Overlay;
-
-                skeleton.addComponent(egret3d.MeshFilter).mesh = mesh;
-                skeleton.addComponent(egret3d.MeshRenderer).material = material;
-            }
         }
 
         public onDisable() {
@@ -1061,6 +1178,11 @@ namespace paper.editor {
             this._cylindricalJointDrawer.length = 0;
             this._sphericalJointDrawer.length = 0;
             this._prismaticJointDrawer.length = 0;
+            this._universalJointDrawer.length = 0;
+            this._coneTwistJointDrawer.length = 0;
+            this._gridA = null;
+            this._gridB = null;
+            this._worldAxises = null;
             this._hoverBox = null;
             this._selectFrameDrawer = null;
             this._skeletonDrawer = null;
@@ -1074,7 +1196,6 @@ namespace paper.editor {
                 this._gridA!.parent = entity;
                 this._gridB!.parent = entity;
                 this._hoverBox!.transform.parent = entity.transform;
-                this._selectFrameDrawer!.transform.parent = entity.transform;
                 this._skeletonDrawer!.transform.parent = entity.transform;
 
                 const mA = (this._gridA!.renderer as egret3d.MeshRenderer).material!;
@@ -1082,6 +1203,10 @@ namespace paper.editor {
 
                 mA.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
                 mB.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
+            }
+            else if (group === groups[GroupIndex.GizmosForwardContainer]) {
+                // this._worldAxises!.transform.parent = entity.transform;
+                // this._selectFrameDrawer!.transform.parent = entity.transform;
             }
             else if (group === groups[GroupIndex.LastSelectedTransform]) {
                 if (this.enabled) {
@@ -1101,15 +1226,23 @@ namespace paper.editor {
         }
 
         public onFrame() {
+            this._updateGizmosForwardContainer();
+            // this._updateWorldAxises();
             this._updateTransformController();
             this._updateBoxes();
             this._updateCameraAndLights();
-            this._updateSelectFrame();
+            // this._updateSelectFrame();
             this._updateCamera();
             this._updateSkeleton();
             this._updateColliders();
             this._updateJoints();
             this._updateGrid();
+        }
+
+        private _updateWorldAxises() {
+            this._worldAxises!.transform
+                .setLocalPosition(0.4, 0.4, 0.0)
+                .setLocalRotation(egret3d.Camera.editor.gameObject.transform.rotation);
         }
     }
 }

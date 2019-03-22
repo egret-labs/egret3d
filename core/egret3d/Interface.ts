@@ -231,7 +231,7 @@ namespace egret3d {
         "envMap": ShaderDefine.USE_ENVMAP,
         "emissiveMap": ShaderDefine.USE_EMISSIVEMAP,
     };
-    
+
     /**
      * 内置提供的全局 Attribute。
      * @private
@@ -379,15 +379,7 @@ namespace egret3d {
     /**
      * 
      */
-    export type RunOptions = {
-        /**
-         * 
-         */
-        playerMode?: paper.PlayerMode;
-        /**
-         * 
-         */
-        defaultScene?: string;
+    export interface RunOptions extends paper.RunOptions {
         /**
          * 舞台宽。
          */
@@ -413,5 +405,5 @@ namespace egret3d {
 
         canvas?: HTMLCanvasElement;
         webgl?: WebGLRenderingContext;
-    };
+    }
 }

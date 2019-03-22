@@ -100,7 +100,7 @@
         "egret3d/components/singleton/ContactCollecter.ts",
         "egret3d/components/singleton/InputCollecter.ts",
 
-        "egret3d/components/collision/ICollider.ts",
+        "egret3d/components/collision/Interface.ts",
         "egret3d/components/collision/RaycastInfo.ts",
         "egret3d/components/collision/BoxCollider.ts",
         "egret3d/components/collision/SphereCollider.ts",

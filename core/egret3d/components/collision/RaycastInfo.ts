@@ -46,8 +46,9 @@ namespace egret3d {
          */
         public readonly coord: Vector2 = Vector2.create();
         /**
-         * 相交的法线。
-         * - 提供法线向量将计算法线。
+         * 相交的法线向量。
+         * - 设置该值，将会在检测时计算相交的法线向量，并将结果写入该值。
+         * - 默认为 `null` ，不计算。
          */
         public normal: Vector3 | null = null;
         /**

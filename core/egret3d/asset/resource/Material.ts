@@ -542,7 +542,7 @@ namespace egret3d {
          * 为该材质添加指定的 define。
          * @param defineString define 字符串。
          */
-        public addDefine(defineString: string, value?: number): this {
+        public addDefine(defineString: string, value?: number | string): this {
             this.defines.addDefine(defineString, value);
 
             return this;
@@ -551,16 +551,17 @@ namespace egret3d {
          * 从该材质移除指定的 define。
          * @param defineString define 字符串。
          */
-        public removeDefine(defineString: string, value?: number): this {
-            if (value !== undefined) {
-                defineString += " " + value;
-            }
+        public removeDefine(defineString: string, value?: number | string): this {
+            // if (value !== undefined) {
+            //     defineString += " " + value;
+            // }
             this.defines.removeDefine(defineString);
 
             return this;
         }
         /**
          * 设置该材质的混合模式。
+         * - 该设置会修改深度缓冲的状态。
          * @param blend 混合模式。
          * @param renderQueue 渲染顺序。
          * @param opacity 透明度。（未设置则不更改透明度）

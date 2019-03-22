@@ -67,7 +67,7 @@ namespace paper.editor {
             //处理一些不和谐内容
             await this.preDo();
             //初始化编辑环境
-            this.initEditEnvironment();
+            egret3d.runEgret();
             //允许重新加载
             RES.FEATURE_FLAG.FIX_DUPLICATE_LOAD = 0;
             //初始化资源
@@ -221,16 +221,7 @@ namespace paper.editor {
             this.eventDispatcher.dispatchEvent(event);
         }
         private static async preDo(){
-            await EditorDefaultAsset.initializeForEditor();
-        }
-        private static initEditEnvironment() {
-            egret3d.runEgret({
-                antialias: false,
-                alpha: false,
-                playerMode: PlayerMode.Editor,
-            });
-            paper.clock.tickInterval = 1.0 / 30.0;
-            paper.clock.frameInterval = 1.0 / 30.0;
+            await EditorAssets.initializeForEditor();
         }
     }
 }

@@ -4,7 +4,7 @@ namespace egret3d {
      */
     export interface IVector3 extends IVector2 {
         /**
-         * z 轴分量。
+         * Z 轴分量。
          */
         z: float;
     }
@@ -257,17 +257,17 @@ namespace egret3d {
         }
         /**
          * 通过一个球面坐标设置该向量。
-         * @param vector3 一个球面坐标。
+         * @param vector 一个球面坐标。
          * - x：球面半径，y：极角，z：赤道角
          */
-        public fromSphericalCoords(vector3: Readonly<IVector3>): this;
+        public fromSphericalCoords(vector: Readonly<IVector3>): this;
         /**
          * @param radius 从球面半径或球面一点到球原点的欧氏距离（直线距离）。
          * @param phi 相对于 Y 轴的极角。
          * @param theta 围绕 Y 轴的赤道角。
          */
         public fromSphericalCoords(radius: float, phi: float, theta: float): this;
-        public fromSphericalCoords(p1: Readonly<IVector3> | float, p2?: float, p3?: float) {
+        public fromSphericalCoords(p1: Readonly<IVector3> | float, p2: float = 0.0, p3: float = 0.0) {
             if (p1.hasOwnProperty("x")) {
                 p3 = (p1 as Readonly<IVector3>).z;
                 p2 = (p1 as Readonly<IVector3>).y;
@@ -704,47 +704,47 @@ namespace egret3d {
         }
         /**
          * 将该向量与一个向量的分量取最小值。
-         * @param value 一个向量。
+         * @param vector 一个向量。
          */
-        public min(value: Readonly<IVector3>): this;
+        public min(vector: Readonly<IVector3>): this;
         /**
          * 将两个向量的分量的最小值写入该向量。
-         * @param valueA 一个向量。
-         * @param valueB 另一个向量。
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
          */
-        public min(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>): this;
-        public min(valueA: Readonly<IVector3>, valueB: Readonly<IVector3> | null = null) {
-            if (valueB === null) {
-                valueB = valueA;
-                valueA = this;
+        public min(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
+        public min(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3> | null = null) {
+            if (vectorB === null) {
+                vectorB = vectorA;
+                vectorA = this;
             }
 
-            this.x = Math.min(valueA.x, valueB.x);
-            this.y = Math.min(valueA.y, valueB.y);
-            this.z = Math.min(valueA.z, valueB.z);
+            this.x = Math.min(vectorA.x, vectorB.x);
+            this.y = Math.min(vectorA.y, vectorB.y);
+            this.z = Math.min(vectorA.z, vectorB.z);
 
             return this;
         }
         /**
          * 将该向量与一个向量的分量取最大值。
-         * @param value 一个向量。
+         * @param vector 一个向量。
          */
-        public max(value: Readonly<IVector3>): this;
+        public max(vector: Readonly<IVector3>): this;
         /**
          * 将两个向量的分量的最大值写入该向量。
-         * @param valueA 一个向量。
-         * @param valueB 另一个向量。
+         * @param vectorA 一个向量。
+         * @param vectorB 另一个向量。
          */
-        public max(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>): this;
-        public max(valueA: Readonly<IVector3>, valueB: Readonly<IVector3> | null = null) {
-            if (valueB === null) {
-                valueB = valueA;
-                valueA = this;
+        public max(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3>): this;
+        public max(vectorA: Readonly<IVector3>, vectorB: Readonly<IVector3> | null = null) {
+            if (vectorB === null) {
+                vectorB = vectorA;
+                vectorA = this;
             }
 
-            this.x = Math.max(valueA.x, valueB.x);
-            this.y = Math.max(valueA.y, valueB.y);
-            this.z = Math.max(valueA.z, valueB.z);
+            this.x = Math.max(vectorA.x, vectorB.x);
+            this.y = Math.max(vectorA.y, vectorB.y);
+            this.z = Math.max(vectorA.z, vectorB.z);
 
             return this;
         }
@@ -852,20 +852,24 @@ namespace egret3d {
          * - 该值是实时计算的。
          */
         public get length(): float {
-            return Math.sqrt(this.x * this.x + this.y * this.y + this.z * this.z);
+            const { x, y, z } = this;
+
+            return Math.sqrt(x * x + y * y + z * z);
         }
         /**
          * 该向量的长度的平方。
          * - 该值是实时计算的。
          */
         public get squaredLength(): float {
-            return this.x * this.x + this.y * this.y + this.z * this.z;
+            const { x, y, z } = this;
+
+            return x * x + y * y + z * z;
         }
 
         /**
          * @deprecated
          */
-        public static set(x: number, y: number, z: number, out: Vector3): Vector3 {
+        public static set(x: float, y: float, z: float, out: Vector3): Vector3 {
             out.x = x;
             out.y = y;
             out.z = z;
@@ -907,7 +911,7 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public static scale(v: Vector3, scale: number): Vector3 {
+        public static scale(v: Vector3, scale: float): Vector3 {
             v.x = v.x * scale;
             v.y = v.y * scale;
             v.z = v.z * scale;
@@ -926,13 +930,13 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public static dot(v1: Vector3, v2: Vector3): number {
+        public static dot(v1: Vector3, v2: Vector3): float {
             return v1.x * v2.x + v1.y * v2.y + v1.z * v2.z;
         }
         /**
          * @deprecated
          */
-        public static lerp(v1: Vector3, v2: Vector3, v: number, out: Vector3): Vector3 {
+        public static lerp(v1: Vector3, v2: Vector3, v: float, out: Vector3): Vector3 {
             out.x = v1.x * (1 - v) + v2.x * v;
             out.y = v1.y * (1 - v) + v2.y * v;
             out.z = v1.z * (1 - v) + v2.z * v;
@@ -941,7 +945,7 @@ namespace egret3d {
         /**
          * @deprecated
          */
-        public static equal(v1: Vector3, v2: Vector3, threshold: number = 0.00001): boolean {
+        public static equal(v1: Vector3, v2: Vector3, threshold: float = 0.00001): boolean {
             if (Math.abs(v1.x - v2.x) > threshold) {
                 return false;
             }

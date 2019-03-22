@@ -1,12 +1,11 @@
 namespace paper.editor{
-    type ModifyGameObjectPropertyStateData = {gameObjectUUid:string,newValueList:any[],preValueCopylist:any[]};
+    type ModifyScenePropertyStateData = {sceneUUid:string,newValueList:any[],preValueCopylist:any[]};
 
-    export class ModifyGameObjectPropertyState extends BaseState {
-
-        public static create(gameObjectUUid:string,newValueList:any[],preValueCopylist:any[]): ModifyGameObjectPropertyState | null {
-            const state = new ModifyGameObjectPropertyState();
-            const data:ModifyGameObjectPropertyStateData = {
-                gameObjectUUid,
+    export class ModifyScenePropertyState extends BaseState {
+        public static create(sceneUUid:string,newValueList:any[],preValueCopylist:any[]){
+            const state = new ModifyScenePropertyState();
+            const data:ModifyScenePropertyStateData = {
+                sceneUUid,
                 newValueList,
                 preValueCopylist,
             }
@@ -14,9 +13,9 @@ namespace paper.editor{
             return state;
         }
 
-        private get stateData():ModifyGameObjectPropertyStateData
+        private get stateData()
         {
-            return this.data as ModifyGameObjectPropertyStateData;
+            return this.data as ModifyScenePropertyStateData;
         }
 
         public undo(): boolean {
@@ -28,12 +27,11 @@ namespace paper.editor{
         }
 
         private modifyProperty(valueList: any[]) {
-            let uuid:string = this.stateData.gameObjectUUid;
-            let modifyObj = this.editorModel.getGameObjectByUUid(uuid);
+            let modifyObj = this.editorModel.scene;
             if (modifyObj !== null) {
                 valueList.forEach(async (propertyValue) => {
                     const { propName, copyValue, valueEditType } = propertyValue;
-                    let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                    const newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
                     this.editorModel.setTargetProperty(propName, modifyObj, newValue,valueEditType);
                     this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
                 });
@@ -49,5 +47,4 @@ namespace paper.editor{
             return false;
         }
     }
-
 }

@@ -1,7 +1,6 @@
 namespace egret3d {
     /**
      * 全局舞台信息组件。
-     * TODO 调整文件结构，标记接口源码链接。
      */
     @paper.singleton
     export class Stage extends paper.BaseComponent {
@@ -14,12 +13,12 @@ namespace egret3d {
          */
         public readonly onResize: signals.Signal = new signals.Signal();
         /**
-         * 
+         * 舞台到屏幕的缩放系数。
          */
-        public readonly scaler: number = 1.0;
+        public readonly scaler: float = 1.0;
 
         private _rotated: boolean = false;
-        private _matchFactor: number = 1.0;
+        private _matchFactor: float = 1.0;
         private readonly _screenSize: ISize = { w: 1024, h: 1024 };
         private readonly _size: ISize = { w: 1024, h: 1024 };
         private readonly _viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
@@ -28,88 +27,130 @@ namespace egret3d {
             const screenSize = this._screenSize;
             const size = this._size;
             const viewport = this._viewport;
+            const allowRotated = paper.Application.isMobile;
 
-            if (paper.Application.isMobile) {
-                let screenW = screenSize.w;
-                let screenH = screenSize.h;
+            let screenW = screenSize.w;
+            let screenH = screenSize.h;
 
-                if (this._rotated = (size.w > size.h) ? screenSize.h > screenSize.w : screenSize.w > screenSize.h) {
-                    screenW = screenSize.h;
-                    screenH = screenSize.w;
-                }
-
-                const scalerW = size.w / screenW;
-                const scalerH = size.h / screenH;
-                (this.scaler as number) = math.lerp(scalerW, scalerH, this._matchFactor);
-
-                viewport.w = Math.ceil(screenW * this.scaler);
-                viewport.h = Math.ceil(screenH * this.scaler);
+            if (
+                allowRotated &&
+                (this._rotated = (size.w > size.h) ? screenH > screenW : screenW > screenH)
+            ) {
+                screenW = screenSize.h;
+                screenH = screenSize.w;
             }
             else {
-                const scalerW = Math.min(size.w, screenSize.w) / screenSize.w;
-                const scalerH = size.h / screenSize.h;
-                (this.scaler as number) = math.lerp(scalerW, scalerH, this._matchFactor);
-
                 this._rotated = false;
-                viewport.w = Math.ceil(screenSize.w * this.scaler);
-                viewport.h = Math.ceil(screenSize.h * this.scaler);
             }
 
-            // size.h = viewport.h / this.scaler;
+            const scalerW = Math.min(size.w, screenW) / screenW;
+            const scalerH = Math.min(size.h, screenH) / screenH;
+            (this.scaler as float) = math.lerp(scalerW, scalerH, this._matchFactor);
+
+            viewport.w = Math.ceil(screenW * this.scaler);
+            viewport.h = Math.ceil(screenH * this.scaler);
+
+            if (viewport.w > size.w) {
+                viewport.w = size.w;
+                (this.scaler as float) = viewport.w / screenW;
+                viewport.h = Math.ceil(screenH * this.scaler);
+            }
+            else if (viewport.h > size.h) {
+                viewport.h = size.h;
+                (this.scaler as float) = viewport.h / screenH;
+                viewport.w = Math.ceil(screenW * this.scaler);
+            }
+            else {
+                (this.scaler as float) = math.lerp(viewport.w / screenW, viewport.h / screenH, this._matchFactor);
+            }
         }
 
-        public initialize(config: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
+        public initialize({ size, screenSize }: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
             super.initialize();
 
             (stage as Stage) = this;
-            this._size.w = config.size.w || 1.0;
-            this._size.h = config.size.h || 1.0;
-            this._screenSize.w = config.screenSize.w || 1.0;
-            this._screenSize.h = config.screenSize.h || 1.0;
+            this._size.w = size.w > 1.0 ? size.w : 1.0;
+            this._size.h = size.h > 1.0 ? size.h : 1.0;
+            this._screenSize.w = screenSize.w > 1.0 ? screenSize.w : 1.0;
+            this._screenSize.h = screenSize.h > 1.0 ? screenSize.h : 1.0;
             this._updateViewport();
         }
         /**
          * 屏幕到舞台坐标的转换。
+         * @param input 屏幕坐标。
+         * @param output 舞台坐标。
          */
-        public screenToStage(value: Readonly<Vector3>, out: Vector3) {
+        public screenToStage(input: Readonly<IVector2>, output: Vector3 | null = null): Vector3 {
+            if (output === null) {
+                output = Vector3.create();
+            }
+
             const screenSize = this._screenSize;
             const viewPort = this._viewport;
-            const { x, y } = value;
+            const { x, y } = input;
 
             if (this._rotated) {
-                out.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
-                out.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
+                output.y = (screenSize.w - (x - viewPort.x)) * viewPort.w / screenSize.h;
+                output.x = (y - viewPort.y) * viewPort.h / screenSize.w;
             }
             else {
-                out.x = (x - viewPort.x) * (viewPort.w / screenSize.w);
-                out.y = (y - viewPort.y) * (viewPort.h / screenSize.h);
+                output.x = (x - viewPort.x) * viewPort.w / screenSize.w;
+                output.y = (y - viewPort.y) * viewPort.h / screenSize.h;
             }
 
-            return this;
+            return output;
         }
         /**
-         * 舞台到屏幕坐标的转换。
-            // TODO
+         * 舞台到屏幕坐标的转换。  
+         * @param input 舞台坐标。
+         * @param output 屏幕坐标。
          */
-        public stageToScreen(value: Readonly<Vector3>, out: Vector3) {
-            return this;
+        public stageToScreen(input: Readonly<IVector2>, output: Vector3 | null = null): Vector3 {
+            if (output === null) {
+                output = Vector3.create();
+            }
+
+            const screenSize = this._screenSize;
+            const viewPort = this._viewport;
+            const { x, y } = input;
+
+            if (this._rotated) {
+                output.x = screenSize.w + viewPort.x - y / viewPort.w * screenSize.h;
+                output.y = x / viewPort.h * screenSize.w + viewPort.y;
+            }
+            else {
+                output.x = x / viewPort.w * screenSize.w + viewPort.x;
+                output.y = y / viewPort.h * screenSize.h + viewPort.y;
+            }
+
+            return output;
         }
         /**
          * 舞台是否因屏幕尺寸的改变而发生了旋转。
          * - 旋转不会影响渲染视口的宽高交替，引擎通过反向旋转外部画布来抵消屏幕的旋转。
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX, { readonly: true })
-        public get rotated() {
+        public get rotated(): boolean {
             return this._rotated;
         }
         /**
-         * 以宽或高适配的系数。
+         * 舞台以宽或高为基准适配屏幕的系数。
+         * - [`0.0` ~ `1.0`]。
+         * - `0.0` 以宽适配屏幕。
+         * - `1.0` 以高适配屏幕。
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 1.0 })
-        public get matchFactor(): number {
+        public get matchFactor(): float {
             return this._matchFactor;
         }
-        public set matchFactor(value: number) {
+        public set matchFactor(value: float) {
+            if (value < 0.0) {
+                value = 0.0;
+            }
+            else if (value > 1.0) {
+                value = 1.0;
+            }
+
             if (this._matchFactor === value) {
                 return;
             }
@@ -119,33 +160,35 @@ namespace egret3d {
             this.onResize.dispatch();
         }
         /**
-         * 屏幕尺寸。
+         * 程序运行使用的屏幕尺寸。
          */
         @paper.editor.property(paper.editor.EditType.SIZE)
         public get screenSize(): Readonly<ISize> {
             return this._screenSize;
         }
         public set screenSize(value: Readonly<ISize>) {
-            this._screenSize.w = value.w || 1.0;
-            this._screenSize.h = value.h || 1.0;
+            this._screenSize.w = value.w > 1.0 ? value.w : 1.0;
+            this._screenSize.h = value.h > 1.0 ? value.h : 1.0;
             this._updateViewport();
             this.onScreenResize.dispatch();
         }
         /**
          * 舞台初始尺寸。
+         * - 该尺寸仅做为横屏竖屏的选择，以及最大分辨率的依据。
          */
         @paper.editor.property(paper.editor.EditType.SIZE)
         public get size(): Readonly<ISize> {
             return this._size;
         }
         public set size(value: Readonly<ISize>) {
-            this._size.w = value.w || 1.0;
-            this._size.h = value.h || 1.0;
+            this._size.w = value.w > 1.0 ? value.w : 1.0;
+            this._size.h = value.h > 1.0 ? value.h : 1.0;
             this._updateViewport();
             this.onResize.dispatch();
         }
         /**
-         * 渲染视口。
+         * 舞台的渲染视口。
+         * - 舞台的偏移和实际尺寸。
          */
         @paper.editor.property(paper.editor.EditType.RECT, { readonly: true })
         public get viewport(): Readonly<Rectangle> {
