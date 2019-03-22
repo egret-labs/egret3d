@@ -4068,7 +4068,7 @@ declare namespace egret3d {
         /**
          *
          */
-        premultipltedAlpha: boolean;
+        premultipliedAlpha: boolean;
         /**
          *
          */

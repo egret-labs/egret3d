@@ -518,7 +518,7 @@ namespace egret3d {
          * 
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
-        public premultipltedAlpha: boolean = false;
+        public premultipliedAlpha: boolean = false;
         /**
          * 
          */

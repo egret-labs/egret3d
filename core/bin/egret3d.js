@@ -4635,7 +4635,7 @@ var egret3d;
             /**
              *
              */
-            _this.premultipltedAlpha = false;
+            _this.premultipliedAlpha = false;
             /**
              *
              */
@@ -5064,7 +5064,7 @@ var egret3d;
         ], RenderState.prototype, "toneMapping", null);
         __decorate([
             paper.editor.property("CHECKBOX" /* CHECKBOX */)
-        ], RenderState.prototype, "premultipltedAlpha", void 0);
+        ], RenderState.prototype, "premultipliedAlpha", void 0);
         __decorate([
             paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 10.0 })
         ], RenderState.prototype, "toneMappingExposure", void 0);
@@ -10850,7 +10850,7 @@ var egret3d;
                     webgl.clearStencil(1.0);
                 }
                 if (bufferBit & 16384 /* Color */) {
-                    if (this.premultipltedAlpha) {
+                    if (this.premultipliedAlpha) {
                         clearColor && webgl.clearColor(clearColor.r * clearColor.a, clearColor.g * clearColor.a, clearColor.b * clearColor.a, clearColor.a);
                     }
                     else {
