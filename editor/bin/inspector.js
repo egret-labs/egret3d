@@ -2987,68 +2987,42 @@ var paper;
         /**
          * @internal
          */
-        var StatsSystem = (function (_super) {
-            __extends(StatsSystem, _super);
-            function StatsSystem() {
+        var VConsoleSystem = (function (_super) {
+            __extends(VConsoleSystem, _super);
+            function VConsoleSystem() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._fpsIndex = 0;
-                _this._guiComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.GUIComponent);
-                _this._fpsShowQueue = [true, false, false, true];
+                _this._vConsole = null;
                 return _this;
             }
-            StatsSystem.prototype._updateFPSShowState = function () {
-                if (this._guiComponent) {
-                    var statsDOM = this._guiComponent.stats.dom;
-                    if (this._guiComponent.showStates & 1 /* FPS */) {
-                        statsDOM.style.display = "block";
+            VConsoleSystem.prototype._createVconsole = function () {
+                this._vConsole = new VConsole();
+            };
+            VConsoleSystem.prototype.onAwake = function () {
+                var _this = this;
+                if (paper.Application.isMobile) {
+                    if (typeof VConsole !== "undefined") {
+                        this._createVconsole();
                     }
                     else {
-                        statsDOM.style.display = "none";
+                        var head = document.getElementsByTagName("head")[0];
+                        var script = document.createElement("script");
+                        script.type = "text/javascript";
+                        script.src = "https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js";
+                        script.onload = function () {
+                            _this._createVconsole();
+                        };
+                        head.appendChild(script);
                     }
                 }
             };
-            StatsSystem.prototype.onEnable = function () {
-                var options = paper.Application.options;
-                if (options.showStats) {
-                    this._guiComponent.showStates |= 1 /* FPS */;
-                    this._fpsIndex = 0;
-                }
-                else {
-                    this._fpsIndex = 1;
-                    this._updateFPSShowState();
-                }
-            };
-            StatsSystem.prototype.onTick = function () {
-                if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
-                    this._fpsIndex++;
-                    if (this._fpsIndex >= this._fpsShowQueue.length) {
-                        this._fpsIndex = 0;
-                    }
-                    if (this._fpsShowQueue[this._fpsIndex]) {
-                        this._guiComponent.showStates |= 1 /* FPS */;
-                    }
-                    else {
-                        this._guiComponent.showStates &= ~1 /* FPS */;
-                    }
-                    this._updateFPSShowState();
-                }
-                // TODO tc vc
-                var guiComponent = this._guiComponent;
-                guiComponent.stats.update(); // TODO 每个面板独立
-            };
-            StatsSystem.prototype.onFrame = function () {
-                var guiComponent = this._guiComponent;
-                guiComponent.stats.onFrame();
-                guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["webgl"]["WebGLRenderSystem"]).deltaTime, 200);
-                guiComponent.drawCallPanel.update(egret3d.drawCallCollecter.drawCallCount, 500);
-            };
-            StatsSystem = __decorate([
+            VConsoleSystem = __decorate([
                 paper.executeMode(1 /* Player */ | 2 /* DebugPlayer */)
-            ], StatsSystem);
-            return StatsSystem;
+            ], VConsoleSystem);
+            return VConsoleSystem;
         }(paper.BaseSystem));
-        editor.StatsSystem = StatsSystem;
-        __reflect(StatsSystem.prototype, "paper.editor.StatsSystem");
+        editor.VConsoleSystem = VConsoleSystem;
+        __reflect(VConsoleSystem.prototype, "paper.editor.VConsoleSystem");
+        paper.Application.systemManager.preRegister(VConsoleSystem, paper.Application.gameObjectContext, 0 /* Begin */ - 1);
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 /// <reference path="./EventDispatcher.ts" />
@@ -5512,97 +5486,6 @@ var paper;
 (function (paper) {
     var editor;
     (function (editor) {
-        /**
-         *
-         */
-        var WorldAxisesDrawer = (function (_super) {
-            __extends(WorldAxisesDrawer, _super);
-            function WorldAxisesDrawer() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.cube = editor.EditorMeshHelper.createGameObject("Cube", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC);
-                _this.left = editor.EditorMeshHelper.createGameObject("Left", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
-                _this.right = editor.EditorMeshHelper.createGameObject("Right", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                _this.bottom = editor.EditorMeshHelper.createGameObject("Bottom", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
-                _this.top = editor.EditorMeshHelper.createGameObject("Top", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                _this.back = editor.EditorMeshHelper.createGameObject("Back", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
-                _this.forward = editor.EditorMeshHelper.createGameObject("Forward", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-                return _this;
-            }
-            WorldAxisesDrawer.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-                this.cube.transform.setParent(this.gameObject.transform);
-                this.left.transform.setLocalPosition(-1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
-                this.right.transform.setLocalPosition(1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
-                this.bottom.transform.setLocalPosition(0.0, -1.5, 0.0).setLocalEuler(0.0, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
-                this.top.transform.setLocalPosition(0.0, 1.5, 0.0).setLocalEuler(Math.PI, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
-                this.back.transform.setLocalPosition(0.0, 0.0, -1.5).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
-                this.forward.transform.setLocalPosition(0.0, 0.0, 1.5).setLocalEuler(-Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(this.cube.transform);
-                this.right.renderer.material.setColor(egret3d.Color.RED);
-                this.top.renderer.material.setColor(egret3d.Color.GREEN);
-                this.forward.renderer.material.setColor(egret3d.Color.BLUE);
-                this.gameObject.transform.setLocalScale(0.01);
-            };
-            WorldAxisesDrawer.prototype.update = function () {
-                var stage = egret3d.stage;
-                var camera = egret3d.Camera.editor;
-                var scenePosition = egret3d.Vector3.create(stage.screenSize.w - 50.0, 50.0, 0.0);
-                stage.screenToStage(scenePosition, scenePosition);
-                camera.calcWorldPosFromScreenPos(scenePosition, scenePosition);
-                this.gameObject.transform.position = scenePosition;
-                this.gameObject.transform.lookAt(camera.transform);
-            };
-            return WorldAxisesDrawer;
-        }(paper.BaseComponent));
-        editor.WorldAxisesDrawer = WorldAxisesDrawer;
-        __reflect(WorldAxisesDrawer.prototype, "paper.editor.WorldAxisesDrawer");
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
-        /**
-         * @internal
-         */
-        var ConsoleSystem = (function (_super) {
-            __extends(ConsoleSystem, _super);
-            function ConsoleSystem() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this._vConsole = null;
-                return _this;
-            }
-            ConsoleSystem.prototype.onAwake = function () {
-                var _this = this;
-                if (paper.Application.isMobile) {
-                    if (VConsole) {
-                        this._vConsole = new VConsole();
-                    }
-                    else {
-                        var head = document.getElementsByTagName("head")[0];
-                        var script = document.createElement("script");
-                        script.type = 'text/javascript';
-                        script.src = "https://res.wx.qq.com/mmbizwap/zh_CN/htmledition/js/vconsole/3.0.0/vconsole.min.js";
-                        script.onload = function () {
-                            _this._vConsole = new VConsole();
-                        };
-                        head.appendChild(script);
-                    }
-                }
-            };
-            ConsoleSystem = __decorate([
-                paper.executeMode(1 /* Player */ | 2 /* DebugPlayer */)
-            ], ConsoleSystem);
-            return ConsoleSystem;
-        }(paper.BaseSystem));
-        editor.ConsoleSystem = ConsoleSystem;
-        __reflect(ConsoleSystem.prototype, "paper.editor.ConsoleSystem");
-        paper.Application.systemManager.preRegister(ConsoleSystem, paper.Application.gameObjectContext, 0 /* Begin */ - 1);
-    })(editor = paper.editor || (paper.editor = {}));
-})(paper || (paper = {}));
-var paper;
-(function (paper) {
-    var editor;
-    (function (editor) {
         var containerHTML = "\n        <div class=\"egret-hierarchy\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n        <div class=\"egret-inspector\" style=\"margin: auto;height: 100%;background: #000000;\"></div>\n    ";
         /**
          * @internal
@@ -5789,6 +5672,7 @@ var paper;
                 _this._coneTwistJointDrawer = [];
                 _this._gridA = null;
                 _this._gridB = null;
+                _this._worldAxises = null;
                 _this._hoverBox = null;
                 _this._selectFrameDrawer = null;
                 _this._skeletonDrawer = null;
@@ -5813,6 +5697,26 @@ var paper;
                 mesh.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 var gameObject = editor.EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
                 return gameObject;
+            };
+            GizmosSystem.prototype._createWorldAxises = function () {
+                var cube = editor.EditorMeshHelper.createGameObject("World Axises", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC);
+                var left = editor.EditorMeshHelper.createGameObject("Left", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+                var right = editor.EditorMeshHelper.createGameObject("Right", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                var bottom = editor.EditorMeshHelper.createGameObject("Bottom", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+                var top = editor.EditorMeshHelper.createGameObject("Top", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                var back = editor.EditorMeshHelper.createGameObject("Back", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+                var forward = editor.EditorMeshHelper.createGameObject("Forward", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+                cube.transform.setLocalScale(0.05);
+                left.transform.setLocalPosition(-1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+                right.transform.setLocalPosition(1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+                bottom.transform.setLocalPosition(0.0, -1.5, 0.0).setLocalEuler(0.0, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+                top.transform.setLocalPosition(0.0, 1.5, 0.0).setLocalEuler(Math.PI, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+                back.transform.setLocalPosition(0.0, 0.0, -1.5).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+                forward.transform.setLocalPosition(0.0, 0.0, 1.5).setLocalEuler(-Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+                right.renderer.material.setColor(egret3d.Color.RED);
+                top.renderer.material.setColor(egret3d.Color.GREEN);
+                forward.renderer.material.setColor(egret3d.Color.BLUE);
+                return cube;
             };
             GizmosSystem.prototype._updateGizmosForwardContainer = function () {
                 var cameraTransform = egret3d.Camera.editor.gameObject.transform;
@@ -6692,10 +6596,15 @@ var paper;
             GizmosSystem.prototype.onEnable = function () {
                 this._gridA = this._createGrid("Grid A");
                 this._gridB = this._createGrid("Grid B", 100.0 * _girdStep, 100 * _girdStep);
+                // this._worldAxises = this._createWorldAxises();
                 this._hoverBox = editor.EditorMeshHelper.createGameObject("Hover Box", egret3d.DefaultMeshes.CUBE_LINE, editor.EditorAssets.HOVER_MATERIAL);
-                this._selectFrameDrawer = editor.EditorMeshHelper.createGameObject("Select Frame", egret3d.DefaultMeshes.QUAD, [
-                    editor.EditorAssets.SELECT_MATERIAL
-                ]);
+                // this._selectFrameDrawer = EditorMeshHelper.createGameObject(
+                //     "Select Frame",
+                //     egret3d.DefaultMeshes.QUAD,
+                //     [
+                //         EditorAssets.SELECT_MATERIAL
+                //     ]
+                // );
                 this._skeletonDrawer = editor.EditorMeshHelper.createGameObject("Skeleton", editor.EditorAssets.SKELETON_MESH, editor.EditorAssets.SKELETON_MATERIAL);
                 this._cameraViewFrustum = editor.EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
                 this._cameraViewFrustum.enabled = false;
@@ -6718,6 +6627,7 @@ var paper;
                 this._coneTwistJointDrawer.length = 0;
                 this._gridA = null;
                 this._gridB = null;
+                this._worldAxises = null;
                 this._hoverBox = null;
                 this._selectFrameDrawer = null;
                 this._skeletonDrawer = null;
@@ -6736,7 +6646,8 @@ var paper;
                     mB.setBlend(gltf.BlendMode.Blend, paper.RenderQueue.Transparent);
                 }
                 else if (group === groups[1 /* GizmosForwardContainer */]) {
-                    this._selectFrameDrawer.transform.parent = entity.transform;
+                    // this._worldAxises!.transform.parent = entity.transform;
+                    // this._selectFrameDrawer!.transform.parent = entity.transform;
                 }
                 else if (group === groups[3 /* LastSelectedTransform */]) {
                     if (this.enabled) {
@@ -6754,15 +6665,21 @@ var paper;
             };
             GizmosSystem.prototype.onFrame = function () {
                 this._updateGizmosForwardContainer();
+                // this._updateWorldAxises();
                 this._updateTransformController();
                 this._updateBoxes();
                 this._updateCameraAndLights();
-                this._updateSelectFrame();
+                // this._updateSelectFrame();
                 this._updateCamera();
                 this._updateSkeleton();
                 this._updateColliders();
                 this._updateJoints();
                 this._updateGrid();
+            };
+            GizmosSystem.prototype._updateWorldAxises = function () {
+                this._worldAxises.transform
+                    .setLocalPosition(0.4, 0.4, 0.0)
+                    .setLocalRotation(egret3d.Camera.editor.gameObject.transform.rotation);
             };
             GizmosSystem = __decorate([
                 paper.executeMode(2 /* DebugPlayer */ | 4 /* Editor */)
@@ -6910,14 +6827,24 @@ var paper;
             };
             HierarchySystem.prototype.onEnable = function () {
                 var sceneOptions = {
-                    debug: false,
+                    Debug: false,
+                    Spector: false,
                 };
-                this._guiComponent.hierarchy.add(sceneOptions, "debug").onChange(function (v) {
+                this._guiComponent.hierarchy.add(sceneOptions, "Debug").onChange(function (v) {
                     if (v) {
                         paper.Application.playerMode = 2 /* DebugPlayer */;
                     }
                     else {
                         paper.Application.playerMode = 1 /* Player */;
+                    }
+                });
+                this._guiComponent.hierarchy.add(sceneOptions, "Spector").onChange(function (v) {
+                    var spectorSystem = paper.Application.systemManager.getSystem(editor.SpectorSystem);
+                    if (v) {
+                        spectorSystem.enabled = true;
+                    }
+                    else {
+                        spectorSystem.enabled = false;
                     }
                 });
                 paper.Scene.onSceneCreated.add(this._onSceneCreated, this);
@@ -7954,6 +7881,137 @@ var paper;
         }(paper.BaseSystem));
         editor.SceneSystem = SceneSystem;
         __reflect(SceneSystem.prototype, "paper.editor.SceneSystem");
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * @internal
+         */
+        var SpectorSystem = (function (_super) {
+            __extends(SpectorSystem, _super);
+            function SpectorSystem() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._showed = false;
+                _this._spector = null;
+                return _this;
+            }
+            SpectorSystem.prototype._createSpector = function () {
+                this._spector = new SPECTOR.Spector();
+            };
+            SpectorSystem.prototype.onAwake = function () {
+                var _this = this;
+                if (!paper.Application.isMobile) {
+                    if (typeof SPECTOR !== "undefined") {
+                        this._createSpector();
+                    }
+                    else {
+                        var head = document.getElementsByTagName("head")[0];
+                        var script = document.createElement("script");
+                        script.type = "text/javascript";
+                        script.src = "https://spectorcdn.babylonjs.com/spector.bundle.js";
+                        script.onload = function () {
+                            _this._createSpector();
+                        };
+                        head.appendChild(script);
+                    }
+                }
+                this.enabled = false;
+            };
+            SpectorSystem.prototype.onEnable = function () {
+            };
+            SpectorSystem.prototype.onDisable = function () {
+            };
+            SpectorSystem.prototype.onFrame = function () {
+                if (this._spector !== null && !this._showed) {
+                    var canvas = paper.Application.options.canvas;
+                    this._spector.displayUI();
+                    this._spector.spyCanvas(canvas);
+                    this._spector.captureCanvas(canvas);
+                    this._showed = true;
+                }
+            };
+            SpectorSystem = __decorate([
+                paper.executeMode(1 /* Player */ | 2 /* DebugPlayer */)
+            ], SpectorSystem);
+            return SpectorSystem;
+        }(paper.BaseSystem));
+        editor.SpectorSystem = SpectorSystem;
+        __reflect(SpectorSystem.prototype, "paper.editor.SpectorSystem");
+        paper.Application.systemManager.preRegister(SpectorSystem, paper.Application.gameObjectContext, 0 /* Begin */ - 1);
+    })(editor = paper.editor || (paper.editor = {}));
+})(paper || (paper = {}));
+var paper;
+(function (paper) {
+    var editor;
+    (function (editor) {
+        /**
+         * @internal
+         */
+        var StatsSystem = (function (_super) {
+            __extends(StatsSystem, _super);
+            function StatsSystem() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._fpsIndex = 0;
+                _this._guiComponent = paper.Application.sceneManager.globalEntity.getOrAddComponent(editor.GUIComponent);
+                _this._fpsShowQueue = [true, false, false, true];
+                return _this;
+            }
+            StatsSystem.prototype._updateFPSShowState = function () {
+                if (this._guiComponent) {
+                    var statsDOM = this._guiComponent.stats.dom;
+                    if (this._guiComponent.showStates & 1 /* FPS */) {
+                        statsDOM.style.display = "block";
+                    }
+                    else {
+                        statsDOM.style.display = "none";
+                    }
+                }
+            };
+            StatsSystem.prototype.onEnable = function () {
+                var options = paper.Application.options;
+                if (options.showStats) {
+                    this._guiComponent.showStates |= 1 /* FPS */;
+                    this._fpsIndex = 0;
+                }
+                else {
+                    this._fpsIndex = 1;
+                    this._updateFPSShowState();
+                }
+            };
+            StatsSystem.prototype.onTick = function () {
+                if (egret3d.inputCollecter.getKey("KeyH" /* KeyH */).isDown(false)) {
+                    this._fpsIndex++;
+                    if (this._fpsIndex >= this._fpsShowQueue.length) {
+                        this._fpsIndex = 0;
+                    }
+                    if (this._fpsShowQueue[this._fpsIndex]) {
+                        this._guiComponent.showStates |= 1 /* FPS */;
+                    }
+                    else {
+                        this._guiComponent.showStates &= ~1 /* FPS */;
+                    }
+                    this._updateFPSShowState();
+                }
+                // TODO tc vc
+                var guiComponent = this._guiComponent;
+                guiComponent.stats.update(); // TODO 每个面板独立
+            };
+            StatsSystem.prototype.onFrame = function () {
+                var guiComponent = this._guiComponent;
+                guiComponent.stats.onFrame();
+                guiComponent.renderPanel.update(paper.Application.systemManager.getSystem(egret3d["webgl"]["WebGLRenderSystem"]).deltaTime, 200);
+                guiComponent.drawCallPanel.update(egret3d.drawCallCollecter.drawCallCount, 500);
+            };
+            StatsSystem = __decorate([
+                paper.executeMode(1 /* Player */ | 2 /* DebugPlayer */)
+            ], StatsSystem);
+            return StatsSystem;
+        }(paper.BaseSystem));
+        editor.StatsSystem = StatsSystem;
+        __reflect(StatsSystem.prototype, "paper.editor.StatsSystem");
     })(editor = paper.editor || (paper.editor = {}));
 })(paper || (paper = {}));
 var paper;
@@ -9362,12 +9420,14 @@ var paper;
                 var obj = paper.GameObject.create();
                 obj.name = createType.toLowerCase();
                 if (createType === 'NODE_2D') {
-                    var component2D = obj.addComponent(egret3d.Egret2DRenderer);
-                    obj.layer = 32 /* UI */;
                     var camera = obj.addComponent(egret3d.Camera);
                     camera.cullingMask = 32 /* UI */;
                     camera.order = 1;
                     camera.bufferMask = 256 /* Depth */;
+                    setTimeout(function () {
+                        var component2D = obj.addComponent(egret3d.Egret2DRenderer);
+                        obj.layer = 32 /* UI */;
+                    }, 1000);
                 }
                 else if (createType === "CAMERA") {
                     obj.addComponent(egret3d.Camera);

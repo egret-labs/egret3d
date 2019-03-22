@@ -56,6 +56,7 @@ namespace paper.editor {
 
         private _gridA: GameObject | null = null;
         private _gridB: GameObject | null = null;
+        private _worldAxises: GameObject | null = null;
         private _hoverBox: GameObject | null = null;
         private _selectFrameDrawer: GameObject | null = null;
         private _skeletonDrawer: GameObject | null = null;
@@ -81,6 +82,30 @@ namespace paper.editor {
             const gameObject = EditorMeshHelper.createGameObject(name, mesh, egret3d.DefaultMaterials.MESH_BASIC.clone());
 
             return gameObject;
+        }
+
+        private _createWorldAxises() {
+            const cube = EditorMeshHelper.createGameObject("World Axises", egret3d.DefaultMeshes.CUBE, egret3d.DefaultMaterials.MESH_BASIC);
+            const left = EditorMeshHelper.createGameObject("Left", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+            const right = EditorMeshHelper.createGameObject("Right", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+            const bottom = EditorMeshHelper.createGameObject("Bottom", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+            const top = EditorMeshHelper.createGameObject("Top", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+            const back = EditorMeshHelper.createGameObject("Back", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
+            const forward = EditorMeshHelper.createGameObject("Forward", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
+            
+            cube.transform.setLocalScale(0.05);
+            left.transform.setLocalPosition(-1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            right.transform.setLocalPosition(1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            bottom.transform.setLocalPosition(0.0, -1.5, 0.0).setLocalEuler(0.0, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            top.transform.setLocalPosition(0.0, 1.5, 0.0).setLocalEuler(Math.PI, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            back.transform.setLocalPosition(0.0, 0.0, -1.5).setLocalEuler(Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+            forward.transform.setLocalPosition(0.0, 0.0, 1.5).setLocalEuler(-Math.PI * 0.5, 0.0, 0.0).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
+
+            right.renderer!.material!.setColor(egret3d.Color.RED);
+            top.renderer!.material!.setColor(egret3d.Color.GREEN);
+            forward.renderer!.material!.setColor(egret3d.Color.BLUE);
+
+            return cube;
         }
 
         private _updateGizmosForwardContainer() {
@@ -1124,14 +1149,15 @@ namespace paper.editor {
         public onEnable() {
             this._gridA = this._createGrid("Grid A");
             this._gridB = this._createGrid("Grid B", 100.0 * _girdStep, 100 * _girdStep);
+            // this._worldAxises = this._createWorldAxises();
             this._hoverBox = EditorMeshHelper.createGameObject("Hover Box", egret3d.DefaultMeshes.CUBE_LINE, EditorAssets.HOVER_MATERIAL);
-            this._selectFrameDrawer = EditorMeshHelper.createGameObject(
-                "Select Frame",
-                egret3d.DefaultMeshes.QUAD,
-                [
-                    EditorAssets.SELECT_MATERIAL
-                ]
-            );
+            // this._selectFrameDrawer = EditorMeshHelper.createGameObject(
+            //     "Select Frame",
+            //     egret3d.DefaultMeshes.QUAD,
+            //     [
+            //         EditorAssets.SELECT_MATERIAL
+            //     ]
+            // );
             this._skeletonDrawer = EditorMeshHelper.createGameObject("Skeleton", EditorAssets.SKELETON_MESH, EditorAssets.SKELETON_MATERIAL);
             this._cameraViewFrustum = EditorMeshHelper.createCameraWireframed("Camera Wire Frame");
             this._cameraViewFrustum.enabled = false;
@@ -1156,6 +1182,7 @@ namespace paper.editor {
             this._coneTwistJointDrawer.length = 0;
             this._gridA = null;
             this._gridB = null;
+            this._worldAxises = null;
             this._hoverBox = null;
             this._selectFrameDrawer = null;
             this._skeletonDrawer = null;
@@ -1178,7 +1205,8 @@ namespace paper.editor {
                 mB.setBlend(gltf.BlendMode.Blend, RenderQueue.Transparent);
             }
             else if (group === groups[GroupIndex.GizmosForwardContainer]) {
-                this._selectFrameDrawer!.transform.parent = entity.transform;
+                // this._worldAxises!.transform.parent = entity.transform;
+                // this._selectFrameDrawer!.transform.parent = entity.transform;
             }
             else if (group === groups[GroupIndex.LastSelectedTransform]) {
                 if (this.enabled) {
@@ -1199,16 +1227,22 @@ namespace paper.editor {
 
         public onFrame() {
             this._updateGizmosForwardContainer();
-
+            // this._updateWorldAxises();
             this._updateTransformController();
             this._updateBoxes();
             this._updateCameraAndLights();
-            this._updateSelectFrame();
+            // this._updateSelectFrame();
             this._updateCamera();
             this._updateSkeleton();
             this._updateColliders();
             this._updateJoints();
             this._updateGrid();
+        }
+
+        private _updateWorldAxises() {
+            this._worldAxises!.transform
+                .setLocalPosition(0.4, 0.4, 0.0)
+                .setLocalRotation(egret3d.Camera.editor.gameObject.transform.rotation);
         }
     }
 }

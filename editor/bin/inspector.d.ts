@@ -165,6 +165,9 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
+declare var VConsole: {
+    new (): any;
+} | null;
 declare namespace paper.editor {
     const context: EventDispatcher;
     enum selectItemType {
@@ -448,27 +451,6 @@ declare namespace paper.editor {
 declare namespace paper.editor {
 }
 declare namespace paper.editor {
-    /**
-     *
-     */
-    class WorldAxisesDrawer extends BaseComponent {
-        readonly cube: paper.GameObject;
-        readonly left: paper.GameObject;
-        readonly right: paper.GameObject;
-        readonly bottom: paper.GameObject;
-        readonly top: paper.GameObject;
-        readonly back: paper.GameObject;
-        readonly forward: paper.GameObject;
-        initialize(): void;
-        update(): void;
-    }
-}
-declare namespace paper.editor {
-}
-declare var VConsole: {
-    new (): any;
-} | null;
-declare namespace paper.editor {
 }
 declare namespace paper.editor {
 }
@@ -505,6 +487,17 @@ declare namespace paper.editor {
         private static readonly _defalutPosition;
         private _clearDefaultPointerDownPosition();
     }
+}
+declare namespace paper.editor {
+}
+declare namespace SPECTOR {
+    class Spector {
+        displayUI(): void;
+        captureCanvas(canvas: HTMLCanvasElement, commandCount: uint, quickCapture: boolean): void;
+        spyCanvas(canvas: HTMLCanvasElement): void;
+    }
+}
+declare namespace paper.editor {
 }
 declare namespace paper {
     /**

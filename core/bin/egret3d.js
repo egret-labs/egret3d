@@ -8003,6 +8003,11 @@ var paper;
      * 基础系统。
      * - 全部系统的基类。
      * - 生命周期的顺序如下：
+     * - Name | Data Type | Size (Bytes)
+     * - :---:|:---------:|:-----------:
+     * - Tag | Uint32 | 4
+     * - Version | Uint32 | 4
+     * - |  |
      * - onAwake();
      * - onEnable();
      * - onStart();
@@ -14118,6 +14123,8 @@ var egret3d;
         };
         /**
          * 屏幕到舞台坐标的转换。
+         * @param input 屏幕坐标。
+         * @param output 舞台坐标。
          */
         Stage.prototype.screenToStage = function (input, output) {
             if (output === void 0) { output = null; }
@@ -14128,21 +14135,37 @@ var egret3d;
             var viewPort = this._viewport;
             var x = input.x, y = input.y;
             if (this._rotated) {
-                output.y = (screenSize.w - (x - viewPort.x)) * (viewPort.w / screenSize.h);
-                output.x = (y - viewPort.y) * (viewPort.h / screenSize.w);
+                output.y = (screenSize.w - (x - viewPort.x)) * viewPort.w / screenSize.h;
+                output.x = (y - viewPort.y) * viewPort.h / screenSize.w;
             }
             else {
-                output.x = (x - viewPort.x) * (viewPort.w / screenSize.w);
-                output.y = (y - viewPort.y) * (viewPort.h / screenSize.h);
+                output.x = (x - viewPort.x) * viewPort.w / screenSize.w;
+                output.y = (y - viewPort.y) * viewPort.h / screenSize.h;
             }
-            return this;
+            return output;
         };
         /**
          * 舞台到屏幕坐标的转换。
+         * @param input 舞台坐标。
+         * @param output 屏幕坐标。
          */
-        // TODO
-        Stage.prototype.stageToScreen = function (value, out) {
-            return this;
+        Stage.prototype.stageToScreen = function (input, output) {
+            if (output === void 0) { output = null; }
+            if (output === null) {
+                output = egret3d.Vector3.create();
+            }
+            var screenSize = this._screenSize;
+            var viewPort = this._viewport;
+            var x = input.x, y = input.y;
+            if (this._rotated) {
+                output.x = screenSize.w + viewPort.x - y / viewPort.w * screenSize.h;
+                output.y = x / viewPort.h * screenSize.w + viewPort.y;
+            }
+            else {
+                output.x = x / viewPort.w * screenSize.w + viewPort.x;
+                output.y = y / viewPort.h * screenSize.h + viewPort.y;
+            }
+            return output;
         };
         Object.defineProperty(Stage.prototype, "rotated", {
             /**
@@ -17005,6 +17028,7 @@ var egret3d;
                 var gameObject = paper.Application.sceneManager.editorScene.find("Editor Camera" /* EditorCamera */);
                 if (!gameObject) {
                     gameObject = paper.GameObject.create("Editor Camera" /* EditorCamera */, "EditorOnly" /* EditorOnly */, paper.Application.sceneManager.editorScene);
+                    gameObject.layer = 64 /* Editor */;
                     gameObject.transform.setLocalPosition(0.0, 10.0, -10.0);
                     gameObject.transform.lookAt(egret3d.Vector3.ZERO);
                     var camera = gameObject.addComponent(Camera);
@@ -17106,7 +17130,8 @@ var egret3d;
          * @param worldPosition 世界坐标。
          */
         Camera.prototype.stageToWorld = function (stagePosition, worldPosition) {
-            if (!worldPosition) {
+            if (worldPosition === void 0) { worldPosition = null; }
+            if (worldPosition === null) {
                 worldPosition = egret3d.Vector3.create();
             }
             var backupZ = stagePosition.z;
@@ -17136,6 +17161,7 @@ var egret3d;
          * @param stagePosition 舞台坐标。
          */
         Camera.prototype.worldToStage = function (worldPosition, stagePosition) {
+            if (stagePosition === void 0) { stagePosition = null; }
             if (!stagePosition) {
                 stagePosition = egret3d.Vector3.create();
             }
@@ -17197,7 +17223,11 @@ var egret3d;
         };
         Object.defineProperty(Camera.prototype, "opvalue", {
             /**
-             * 控制该相机从正交到透视的过渡的系数，0：正交，1：透视，中间值则在两种状态间插值。
+             * 控制该相机从正交到透视的过渡的系数。
+             * - [`0.0` ~ `1.0`]
+             * - `0.0`：正交。
+             * - `1.0`：透视。
+             * - 中间值则在两种状态间插值。
              */
             get: function () {
                 return this._opvalue;
@@ -17225,7 +17255,8 @@ var egret3d;
         });
         Object.defineProperty(Camera.prototype, "near", {
             /**
-             * 该相机的视点到近裁剪面距离。
+             * 该相机视点到近裁剪面的距离。
+             * - 单位为`米`。
              * - 该值过小会引起深度冲突。
              */
             get: function () {
@@ -17235,7 +17266,7 @@ var egret3d;
                 if (value >= this._far) {
                     value = this._far - 0.01;
                 }
-                if (value < 0.01) {
+                if (value !== value || value < 0.01) {
                     value = 0.01;
                 }
                 if (this._near === value) {
@@ -17255,12 +17286,13 @@ var egret3d;
         Object.defineProperty(Camera.prototype, "far", {
             /**
              * 该相机的视点到远裁剪面距离。
+             * - 单位为`米`。
              */
             get: function () {
                 return this._far;
             },
             set: function (value) {
-                if (value <= this._near) {
+                if (value !== value || value <= this._near) {
                     value = this._near + 0.01;
                 }
                 if (this._far === value) {
@@ -17279,7 +17311,8 @@ var egret3d;
         });
         Object.defineProperty(Camera.prototype, "fov", {
             /**
-             * 透视投影的视野。
+             * 该相机透视投影的视野。
+             * - 弧度制。
              */
             get: function () {
                 return this._fov;
@@ -17307,7 +17340,8 @@ var egret3d;
         });
         Object.defineProperty(Camera.prototype, "size", {
             /**
-             * 该相机的正交投影的尺寸。
+             * 该相机正交投影的尺寸。
+             * - 单位为`米`。
              */
             get: function () {
                 return this._size;
@@ -17344,6 +17378,7 @@ var egret3d;
         Object.defineProperty(Camera.prototype, "renderTargetSize", {
             /**
              * 该相机渲染目标的尺寸。
+             * - 单位为`米`。
              */
             get: function () {
                 var w;
@@ -17391,6 +17426,7 @@ var egret3d;
         Object.defineProperty(Camera.prototype, "pixelViewport", {
             /**
              * 该相机像素化的渲染视口。
+             * - 单位为`像素`。
              */
             get: function () {
                 var pixelViewport = this._pixelViewport;
@@ -17686,44 +17722,46 @@ var egret3d;
             configurable: true
         });
         __decorate([
-            paper.serializedField,
             paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(gltf.BufferMask) }) // TODO
+            ,
+            paper.serializedField
         ], Camera.prototype, "bufferMask", void 0);
         __decorate([
-            paper.serializedField,
             paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) }) // TODO
+            ,
+            paper.serializedField
         ], Camera.prototype, "cullingMask", void 0);
         __decorate([
-            paper.serializedField,
-            paper.editor.property("INT" /* INT */)
+            paper.editor.property("INT" /* INT */),
+            paper.serializedField
         ], Camera.prototype, "order", void 0);
         __decorate([
-            paper.serializedField,
-            paper.editor.property("COLOR" /* COLOR */)
+            paper.editor.property("COLOR" /* COLOR */),
+            paper.serializedField
         ], Camera.prototype, "backgroundColor", void 0);
         __decorate([
-            paper.serializedField,
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 1.0, step: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 1.0, step: 0.01 }),
+            paper.serializedField
         ], Camera.prototype, "opvalue", null);
         __decorate([
-            paper.serializedField("_near"),
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01, maximum: 3000.0 - 0.01, step: 1 }),
+            paper.serializedField("_near")
         ], Camera.prototype, "near", null);
         __decorate([
-            paper.serializedField("_far"),
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.02, maximum: 3000.0, step: 1 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.02, maximum: 3000.0, step: 1 }),
+            paper.serializedField("_far")
         ], Camera.prototype, "far", null);
         __decorate([
-            paper.serializedField,
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01, maximum: 3.141592653589793 /* PI */ - 0.01, step: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01, maximum: 3.141592653589793 /* PI */ - 0.01, step: 0.01 }),
+            paper.serializedField
         ], Camera.prototype, "fov", null);
         __decorate([
-            paper.serializedField,
-            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01 })
+            paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.01 }),
+            paper.serializedField
         ], Camera.prototype, "size", null);
         __decorate([
-            paper.serializedField,
-            paper.editor.property("RECT" /* RECT */, { step: 0.01 })
+            paper.editor.property("RECT" /* RECT */, { step: 0.01 }),
+            paper.serializedField
         ], Camera.prototype, "viewport", null);
         __decorate([
             paper.editor.property("RECT" /* RECT */, { step: 1 })
