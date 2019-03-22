@@ -4916,6 +4916,7 @@ var egret3d;
             for (var key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
+            this.renderTarget = null;
         };
         Object.defineProperty(RenderState.prototype, "logarithmicDepthBuffer", {
             /**
@@ -18330,7 +18331,7 @@ var egret3d;
                 egret3d.renderState.clearBuffer(17664 /* All */, camera.backgroundColor);
                 this.renderPostprocessTarget(camera);
                 egret3d.DefaultMaterials.FXAA.setTexture(camera.postprocessingRenderTarget);
-                this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA, null, 0 /* None */);
+                this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA);
             };
             return FXAAPostprocess;
         }(egret3d.CameraPostprocessing));

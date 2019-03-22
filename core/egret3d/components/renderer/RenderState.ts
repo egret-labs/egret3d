@@ -384,6 +384,8 @@ namespace egret3d {
             for (const key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
+
+            this.renderTarget = null;
         }
         /**
          * 
