@@ -4,9 +4,9 @@ namespace paper.editor {
      * @internal
      */
     @executeMode(PlayerMode.Player | PlayerMode.DebugPlayer)
-    export class InspectorSystem extends BaseSystem<GameObject> {
+    export class InspectorPropertySystem extends BaseSystem<GameObject> {
         private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
-        private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
+        private readonly _guiComponent: InspectorComponent = Application.sceneManager.globalEntity.getOrAddComponent(InspectorComponent);
 
         private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
             const lastSelectedEntity = this.groups[0].singleEntity;
@@ -29,24 +29,24 @@ namespace paper.editor {
         }
 
         private _addComponent(component: IComponent) {
-            const { inspector, inspectorItems } = this._guiComponent;
+            const { property, propertyItems } = this._guiComponent;
 
-            if (!(component.uuid in inspectorItems)) {
-                const item = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
+            if (!(component.uuid in propertyItems)) {
+                const item = property.addFolder(component.uuid, egret.getQualifiedClassName(component));
                 item.instance = component;
                 item.open();
 
-                inspectorItems[component.uuid] = item;
+                propertyItems[component.uuid] = item;
                 this._addToInspector(item);
             }
         }
 
         private _removeComponent(component: IComponent) {
-            const { inspectorItems } = this._guiComponent;
+            const { propertyItems } = this._guiComponent;
 
-            if (component.uuid in inspectorItems) {
-                const item = inspectorItems[component.uuid];
-                delete inspectorItems[component.uuid];
+            if (component.uuid in propertyItems) {
+                const item = propertyItems[component.uuid];
+                delete propertyItems[component.uuid];
 
                 if (item.parent) {
                     try {
@@ -71,7 +71,7 @@ namespace paper.editor {
         }
 
         private _destroySceneOrGameObject = () => {
-            const selectedSceneOrGameObject = this._guiComponent.inspector.instance as Scene | GameObject;
+            const selectedSceneOrGameObject = this._guiComponent.property.instance as Scene | GameObject;
             if (selectedSceneOrGameObject) {
                 (selectedSceneOrGameObject).destroy();
             }
@@ -135,11 +135,11 @@ namespace paper.editor {
         }
 
         private _selectSceneOrGameObject(sceneOrGameObject: Scene | GameObject | null) {
-            const inspector = this._guiComponent.inspector;
+            const inspector = this._guiComponent.property;
             inspector.instance = sceneOrGameObject;
 
-            for (const k in this._guiComponent.inspectorItems) {
-                delete this._guiComponent.inspectorItems[k];
+            for (const k in this._guiComponent.propertyItems) {
+                delete this._guiComponent.propertyItems[k];
             }
 
             if (inspector.__controllers) {
@@ -208,7 +208,7 @@ namespace paper.editor {
                         const item = inspector.addFolder(component.uuid, egret.getQualifiedClassName(component));
                         item.instance = component;
                         item.open();
-                        this._guiComponent.inspectorItems[component.uuid] = item;
+                        this._guiComponent.propertyItems[component.uuid] = item;
                         this._addToInspector(item);
                     }
                 }
@@ -233,7 +233,7 @@ namespace paper.editor {
         private _addToInspector(gui: dat.GUI) {
             const infos = editor.getEditInfo(gui.instance);
 
-            if (gui !== this._guiComponent.inspector) {
+            if (gui !== this._guiComponent.property) {
                 gui.onClick = this._componentOrPropertyGUIClickHandler;
             }
 
@@ -256,7 +256,7 @@ namespace paper.editor {
         }
 
         private _addItemToInspector(type: editor.EditType, parent: dat.GUI, info: editor.PropertyInfo) {
-            if (parent !== this._guiComponent.inspector) {
+            if (parent !== this._guiComponent.property) {
                 parent.onClick = this._componentOrPropertyGUIClickHandler;
             }
 
@@ -534,7 +534,7 @@ namespace paper.editor {
                 }
             }
         }
-        
+
         private _getEntityValue(entity: IEntity | null) {
             return entity ? entity.name : "null";
         }
@@ -544,7 +544,7 @@ namespace paper.editor {
         }
 
         private _addUniformItemToInspector(uniform: gltf.Uniform, parent: dat.GUI) {
-            if (parent !== this._guiComponent.inspector) {
+            if (parent !== this._guiComponent.property) {
                 parent.onClick = this._componentOrPropertyGUIClickHandler;
             }
 
@@ -571,7 +571,7 @@ namespace paper.editor {
         }
 
         private _addToArray(gui: dat.GUI, type: any) {
-            if (gui !== this._guiComponent.inspector) {
+            if (gui !== this._guiComponent.property) {
                 gui.onClick = this._componentOrPropertyGUIClickHandler;
             }
 
@@ -604,11 +604,11 @@ namespace paper.editor {
             Component.onComponentCreated.remove(this._onComponentCreated, this);
             Component.onComponentDestroy.remove(this._onComponentDestroy, this);
 
-            const { inspectorItems } = this._guiComponent;
+            const { propertyItems } = this._guiComponent;
 
-            for (const k in inspectorItems) {
-                const item = inspectorItems[k];
-                delete inspectorItems[k];
+            for (const k in propertyItems) {
+                const item = propertyItems[k];
+                delete propertyItems[k];
 
                 if (item && item.parent) {
                     try {
@@ -635,35 +635,35 @@ namespace paper.editor {
         }
 
         public onFrame() {
-            const { inspector, inspectorItems } = this._guiComponent;
-            const isInspectorShowed = !inspector.closed && inspector.domElement.style.display !== "none";
+            const { property, propertyItems } = this._guiComponent;
+            const isInspectorShowed = !property.closed && property.domElement.style.display !== "none";
 
             if (isInspectorShowed) {
                 const selectedScene = this._modelComponent.selectedScene;
                 const lastSelectedEntity = this.groups[0].singleEntity;
 
                 if (selectedScene) {
-                    if (selectedScene !== inspector.instance) {
+                    if (selectedScene !== property.instance) {
                         this._selectSceneOrGameObject(selectedScene);
                     }
                 }
                 else if (lastSelectedEntity) {
-                    if (lastSelectedEntity !== inspector.instance) {
+                    if (lastSelectedEntity !== property.instance) {
                         this._selectSceneOrGameObject(lastSelectedEntity);
                     }
 
                     const { openedComponents } = this._modelComponent;
 
-                    if (inspector.instance === lastSelectedEntity && openedComponents.length > 0) {
-                        for (const k in inspectorItems) {
-                            inspectorItems[k].close();
+                    if (property.instance === lastSelectedEntity && openedComponents.length > 0) {
+                        for (const k in propertyItems) {
+                            propertyItems[k].close();
                         }
 
                         for (const componentClass of openedComponents) {
                             const component = lastSelectedEntity.getComponent(componentClass);
 
-                            if (component && component.uuid in inspectorItems) {
-                                inspectorItems[component.uuid].open();
+                            if (component && component.uuid in propertyItems) {
+                                propertyItems[component.uuid].open();
                             }
                         }
 
@@ -672,7 +672,7 @@ namespace paper.editor {
 
                     lastSelectedEntity.transform.localEulerAngles; // TODO
                 }
-                else if (inspector.instance) {
+                else if (property.instance) {
                     this._selectSceneOrGameObject(null);
                 }
             }

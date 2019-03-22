@@ -1,6 +1,6 @@
 {
   "name": "@egret/inspector",
-  "version": "1.4.0",
+  "version": "1.5.1",
   "compilerVersion": "5.3.2",
   "description": "egret 3d inspector lib",
   "main": "bin/inspector.js",

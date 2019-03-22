@@ -16,11 +16,11 @@ namespace paper.editor {
      * 
      */
     @singleton
-    export class GUIComponent extends Component {
+    export class InspectorComponent extends Component {
 
         public showStates: ShowState = ShowState.None;
         public readonly hierarchy: dat.GUI;
-        public readonly inspector: dat.GUI;
+        public readonly property: dat.GUI;
         public readonly stats: Stats;
         public readonly renderPanel: Stats.Panel;
         public readonly drawCallPanel: Stats.Panel;
@@ -31,14 +31,14 @@ namespace paper.editor {
         /**
          * @internal
          */
-        public readonly inspectorItems: { [key: string]: dat.GUI } = {};
+        public readonly propertyItems: { [key: string]: dat.GUI } = {};
 
         public initialize() {
             super.initialize();
 
             if ((Application.playerMode & PlayerMode.Editor) === 0) {
                 (this.hierarchy as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
-                (this.inspector as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
+                (this.property as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
                 (this.stats as Stats) = new Stats();
                 (this.renderPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
                 (this.drawCallPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));

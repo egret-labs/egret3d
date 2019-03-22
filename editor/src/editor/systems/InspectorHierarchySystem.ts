@@ -3,7 +3,7 @@ namespace paper.editor {
      * @internal
      */
     @executeMode(PlayerMode.Player | PlayerMode.DebugPlayer)
-    export class HierarchySystem extends BaseSystem<GameObject> {
+    export class InspectorHierarchySystem extends BaseSystem<GameObject> {
         private _delayShow: uint = 0;
         private _addEntityCount: uint = 0;
 
@@ -11,7 +11,7 @@ namespace paper.editor {
         private readonly _controlRight: egret3d.Key = egret3d.inputCollecter.getKey(egret3d.KeyCode.ControlRight);
 
         private readonly _modelComponent: ModelComponent = Application.sceneManager.globalEntity.getOrAddComponent(ModelComponent);
-        private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
+        private readonly _guiComponent: InspectorComponent = Application.sceneManager.globalEntity.getOrAddComponent(InspectorComponent);
         private readonly _sceneOrEntityBuffer: (IScene | IEntity | null)[] = [];
         private readonly _selectedItems: dat.GUI[] = [];
 

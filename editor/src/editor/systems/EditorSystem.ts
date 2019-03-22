@@ -8,7 +8,7 @@ namespace paper.editor {
      */
     export class EditorSystem extends BaseSystem<GameObject> {
         private _isMobile: boolean = false;
-        private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.addComponent(GUIComponent);
+        private readonly _guiComponent: InspectorComponent = Application.sceneManager.globalEntity.addComponent(InspectorComponent);
 
         public onAwake() {
             Application.sceneManager.globalEntity.getOrAddComponent(EditorAssets); // TODO
@@ -46,12 +46,12 @@ namespace paper.editor {
                     }
                 };
 
-                guiComponent.inspector.onClick = () => {
-                    if (guiComponent.inspector.closed) {
-                        oldContainer.appendChild(guiComponent.inspector.domElement);
+                guiComponent.property.onClick = () => {
+                    if (guiComponent.property.closed) {
+                        oldContainer.appendChild(guiComponent.property.domElement);
                     }
                     else {
-                        inspectorContainer.appendChild(guiComponent.inspector.domElement);
+                        inspectorContainer.appendChild(guiComponent.property.domElement);
                     }
                 };
 
@@ -63,17 +63,17 @@ namespace paper.editor {
                 if (options.showInspector!) {
                     guiComponent.showStates |= ShowState.HierarchyAndInspector;
                     hierarchyContainer.appendChild(guiComponent.hierarchy.domElement);
-                    inspectorContainer.appendChild(guiComponent.inspector.domElement);
+                    inspectorContainer.appendChild(guiComponent.property.domElement);
                 }
                 else {
                     dat.GUI.toggleHide();
                     guiComponent.hierarchy.close();
-                    guiComponent.inspector.close();
+                    guiComponent.property.close();
                 }
             }
 
-            Application.systemManager.register(HierarchySystem, Application.gameObjectContext, SystemOrder.LateUpdate);
-            Application.systemManager.register(InspectorSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(InspectorHierarchySystem, Application.gameObjectContext, SystemOrder.LateUpdate);
+            Application.systemManager.register(InspectorPropertySystem, Application.gameObjectContext, SystemOrder.LateUpdate);
             Application.systemManager.register(SceneSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
             Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
             Application.systemManager.register(StatsSystem, Application.gameObjectContext, SystemOrder.End);
@@ -92,7 +92,7 @@ namespace paper.editor {
                 return;
             }
 
-            const { hierarchy, inspector } = this._guiComponent!;
+            const { hierarchy, property } = this._guiComponent!;
             const isMobile = paper.Application.isMobile;
 
             if (this._isMobile !== isMobile) {
@@ -105,11 +105,11 @@ namespace paper.editor {
                         }
                     }
 
-                    if (!inspector.closed) {
-                        inspector.close();
+                    if (!property.closed) {
+                        property.close();
 
-                        if (inspector.onClick) {
-                            inspector.onClick(inspector);
+                        if (property.onClick) {
+                            property.onClick(property);
                         }
                     }
 
@@ -126,11 +126,11 @@ namespace paper.editor {
                         }
                     }
 
-                    if (inspector.closed) {
-                        inspector.open();
+                    if (property.closed) {
+                        property.open();
 
-                        if (inspector.onClick) {
-                            inspector.onClick(inspector);
+                        if (property.onClick) {
+                            property.onClick(property);
                         }
                     }
 
