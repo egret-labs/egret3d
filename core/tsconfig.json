@@ -151,7 +151,7 @@
         "egret3d/components/particle/ParticleComponent.ts",
         "egret3d/components/particle/ParticleRenderer.ts",
         "egret3d/components/particle/ParticleSystem.ts",
-
+        
         "egret3d/components/audio/Audio.ts",
 
         "egret3d/components/StaticBatchingUtility.ts",
