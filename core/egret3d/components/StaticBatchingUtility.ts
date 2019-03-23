@@ -177,7 +177,7 @@ namespace egret3d {
             combineAttributes.push(key as gltf.AttributeSemantics);
         }
         //
-        const combineMesh = Mesh.create(combineInstance.verticesCount, combineInstance.primitiveIndices[0], combineAttributes);
+        const combineMesh = Mesh.create(combineInstance.verticesCount, combineInstance.indicesCount, combineAttributes);
         combineMesh.drawMode = gltf.DrawMode.Dynamic;
 
         const combinePosition = combineMesh.getVertices() as Float32Array;

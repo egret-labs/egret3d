@@ -26723,7 +26723,7 @@ var egret3d;
             combineAttributes.push(key);
         }
         //
-        var combineMesh = egret3d.Mesh.create(combineInstance.verticesCount, combineInstance.primitiveIndices[0], combineAttributes);
+        var combineMesh = egret3d.Mesh.create(combineInstance.verticesCount, combineInstance.indicesCount, combineAttributes);
         combineMesh.drawMode = 35048 /* Dynamic */;
         var combinePosition = combineMesh.getVertices();
         var combineNormal = combineMesh.getNormals();
