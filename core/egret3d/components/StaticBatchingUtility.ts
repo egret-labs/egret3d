@@ -136,11 +136,11 @@ namespace egret3d {
                 }
             }
             //
-            // if (!combine.primitiveIndices[i]) {
-            //     combine.primitiveIndices[i] = 0;
-            // }
+            if (!combine.primitiveIndices[i]) {
+                combine.primitiveIndices[i] = 0;
+            }
             const indicesCount = meshData.getBufferLength(meshData.getAccessor(primitive.indices!)) / Uint16Array.BYTES_PER_ELEMENT;
-            // combine.primitiveIndices[i] += indicesCount;
+            combine.primitiveIndices[i] += indicesCount;
             combine.indicesCount += indicesCount;
         }
         //
