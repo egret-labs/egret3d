@@ -131,7 +131,7 @@ namespace egret3d {
         }
 
         if (options.antialias === undefined) {
-            options.alpha = _parseBoolean(playerDiv, "data-antialias", true);
+            options.antialias = _parseBoolean(playerDiv, "data-antialias", true);
         }
 
         if (options.antialiasSamples === undefined) {

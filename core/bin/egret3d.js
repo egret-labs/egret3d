@@ -33094,7 +33094,7 @@ var egret3d;
             options.alpha = _parseBoolean(playerDiv, "data-alpha", false);
         }
         if (options.antialias === undefined) {
-            options.alpha = _parseBoolean(playerDiv, "data-antialias", true);
+            options.antialias = _parseBoolean(playerDiv, "data-antialias", true);
         }
         if (options.antialiasSamples === undefined) {
             options.antialiasSamples = 4;
