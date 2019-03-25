@@ -37,6 +37,8 @@ var egret3d;
                 this._uvs = []; // UV, 每 2 个值对应一个定点
                 this._colors = []; // 颜色, 每 4 个值对应一个颜色
                 this._indices = []; // 三角形对应的定点索引, 每 3 个值对应一个颜色
+                this._pointDistances = [0.0]; // 点和点之间的距离, 为了便于对齐, 第一个值为零
+                this._distanceSum = 0; // 点和点之间的距离的总和
             }
             TrailBatcher.prototype.pause = function () {
                 this._pausedTime = paper.clock.timestamp();
@@ -60,6 +62,15 @@ var egret3d;
             TrailBatcher.prototype.init = function (comp) {
                 this._comp = comp;
                 this._createMesh();
+            };
+            TrailBatcher.prototype.connectRenderer = function () {
+                // mesh
+                var meshFilter = this._comp.gameObject.getComponent(egret3d.MeshFilter);
+                if (!meshFilter) {
+                    console.warn('');
+                    return;
+                }
+                meshFilter.mesh = this._mesh;
             };
             TrailBatcher.prototype.update = function (elapsedTime) {
                 if (!this._comp) {
@@ -95,23 +106,38 @@ var egret3d;
                 var theDistance = this._lastPosition ? curPosition.getDistance(this._lastPosition) : -1;
                 var count = this._points.length;
                 var isPlaying = comp.isPlaying;
+                var prevLastPoint = this._points[count - 1];
                 if (isPlaying) {
                     if (theDistance > comp.minVertexDistance || theDistance < 0) {
-                        this._points.push({ position: curPosition, timeCreated: now, lineBreak: false });
-                        this._lastPosition = curPosition;
+                        this._points.push({ position: egret3d.Vector3.create().copy(curPosition), timeCreated: now, lineBreak: false });
+                        if (!this._lastPosition) {
+                            this._lastPosition = egret3d.Vector3.create();
+                        }
+                        this._lastPosition.copy(curPosition);
+                        // 添加新的点到上一个点的距离
+                        if (prevLastPoint) {
+                            var newDistance = prevLastPoint.position.getDistance(curPosition);
+                            this._pointDistances.push(newDistance);
+                            this._distanceSum += newDistance;
+                        }
                     }
                     else if (count > 0) {
-                        var lastPoint = this._points[count - 1];
-                        lastPoint.position = curPosition;
-                        lastPoint.timeCreated = now;
+                        prevLastPoint.position.copy(curPosition);
+                        prevLastPoint.timeCreated = now;
+                        // 更新末尾点到上一个点的距离
+                        if (count > 1) {
+                            var newDistance = prevLastPoint.position.getDistance(this._points[count - 2].position);
+                            this._distanceSum = this._distanceSum - this._pointDistances[count - 1] + newDistance;
+                            this._pointDistances[count - 1] = newDistance;
+                        }
                     }
                 }
                 if (!isPlaying && this._lastFrameEmit && count > 0) {
-                    this._points[count - 1].lineBreak = true;
+                    prevLastPoint.lineBreak = true;
                     this._lastFrameEmit = false;
                 }
                 // 移除过期的片段
-                this._removeDeadPoints(now, comp.time);
+                this._removeDeadPoints(now, comp.time * 1000);
             };
             /**
              * 移除超过生命周期的片段
@@ -126,7 +152,11 @@ var egret3d;
                 for (var i = 0; i < len; i++) {
                     if (now - this._points[i].timeCreated < lifeTime) {
                         if (i > 0) {
-                            this._points = this._points.splice(0, i);
+                            this._points.splice(0, i);
+                            for (var j = 0; j < i; j++) {
+                                this._distanceSum -= this._pointDistances[j];
+                            }
+                            this._pointDistances.splice(0, i);
                         }
                         break;
                     }
@@ -137,7 +167,6 @@ var egret3d;
              * @param now 当前时间戳
              */
             TrailBatcher.prototype._rebuildMeshData = function (now) {
-                var uvLengthScale = 0.01;
                 this._resetMeshData();
                 var count = this._points.length;
                 if (count < 2) {
@@ -148,8 +177,8 @@ var egret3d;
                 if (!camera) {
                     return;
                 }
-                var curDistance = 0.00;
                 var comp = this._comp;
+                var ratioSum = 0.0;
                 for (var i = 0; i < count; ++i) {
                     var p = this._points[i];
                     // 根据片段生存的时间获取对应的宽度和颜色采样
@@ -185,10 +214,12 @@ var egret3d;
                     this._colors[i * 8 + 7] = color.a;
                     // 两点的 uv 值
                     if (comp.textureMode === trail.TrailTextureMode.Stretch) {
-                        this._uvs[i * 2 + 0] = curDistance * uvLengthScale;
-                        this._uvs[i * 2 + 1] = 1;
-                        this._uvs[i * 2 + 0] = curDistance * uvLengthScale;
-                        this._uvs[i * 2 + 1] = 0;
+                        var ratio = this._distanceSum ? this._pointDistances[i] / this._distanceSum : 0;
+                        ratioSum += ratio;
+                        this._uvs[i * 4 + 0] = ratioSum;
+                        this._uvs[i * 4 + 1] = 1;
+                        this._uvs[i * 4 + 2] = ratioSum;
+                        this._uvs[i * 4 + 3] = 0;
                     }
                     else {
                         // TODO: 在每个片段上重复贴图
@@ -198,7 +229,6 @@ var egret3d;
                         this._uvs[i * 2 + 1] = 0;
                     }
                     if (i > 0 && !this._points[count - 1].lineBreak) {
-                        curDistance += p.position.getDistance(this._points[count - 1].position);
                         this._indices[(i - 1) * 6 + 0] = (i * 2) - 2;
                         this._indices[(i - 1) * 6 + 1] = (i * 2) - 1;
                         this._indices[(i - 1) * 6 + 2] = i * 2;
@@ -214,18 +244,17 @@ var egret3d;
              * @param time 时间比例值
              */
             TrailBatcher.prototype._getColorSample = function (comp, time) {
-                var color = egret3d.Color.create();
-                if (comp.colors.length > 0) {
-                    var colorTime = time * (comp.colors.length - 1);
-                    var min = Math.floor(colorTime);
-                    var max = egret3d.math.clamp(Math.ceil(colorTime), 0, comp.colors.length - 1);
-                    var lerp = egret3d.math.inverseLerp(min, max, colorTime);
-                    color.lerp(lerp, comp.colors[min], comp.colors[max]);
-                }
-                else {
-                    color.lerp(time, egret3d.Color.WHITE, egret3d.Color.ZERO);
-                }
-                return color;
+                // const color: Color = Color.create();
+                // if (comp.color.length > 0) {
+                //     const colorTime = time * (comp.color.length - 1);
+                //     const min = Math.floor(colorTime);
+                //     const max = math.clamp(Math.ceil(colorTime), 0, comp.color.length - 1);
+                //     const lerp = math.inverseLerp(min, max, colorTime);
+                //     color.lerp(comp.color[min], comp.color[max], lerp);
+                // } else {
+                //     color.lerp(Color.WHITE, Color.ZERO, time);
+                // }
+                return comp.color;
             };
             /**
              * 根据时间在获得宽度值取样
@@ -233,18 +262,17 @@ var egret3d;
              * @param time 时间比例值
              */
             TrailBatcher.prototype._getWidthSample = function (comp, time) {
-                var width;
-                if (comp.widths.length > 0) {
-                    var widthTime = time * (comp.widths.length - 1);
-                    var min = Math.floor(widthTime);
-                    var max = egret3d.math.clamp(Math.ceil(widthTime), 0, comp.widths.length - 1);
-                    var lerp = egret3d.math.inverseLerp(min, max, widthTime);
-                    width = egret3d.math.lerp(comp.widths[min], comp.widths[max], lerp);
-                }
-                else {
-                    width = 1;
-                }
-                return width;
+                // let width: float;
+                // if (comp.width.length > 0) {
+                //     const widthTime = time * (comp.width.length - 1);
+                //     const min = Math.floor(widthTime);
+                //     const max = math.clamp(Math.ceil(widthTime), 0, comp.width.length - 1);
+                //     const lerp = math.inverseLerp(min, max, widthTime);
+                //     width = math.lerp(comp.width[min], comp.width[max], lerp);
+                // } else {
+                //     width = 1;
+                // }
+                return comp.width;
             };
             /**
              * 获取渲染用的相机
@@ -268,10 +296,28 @@ var egret3d;
                 if (this._points.length > this._maxFragmentCount) {
                     this._createMesh();
                 }
+                var buff = this._mesh.getAttributes("POSITION" /* POSITION */);
+                if (buff) {
+                    buff.fill(0.0);
+                }
                 this._mesh.setAttributes("POSITION" /* POSITION */, this._verticles);
+                buff = this._mesh.getAttributes("TEXCOORD_0" /* TEXCOORD_0 */);
+                if (buff) {
+                    buff.fill(0.0);
+                }
                 this._mesh.setAttributes("TEXCOORD_0" /* TEXCOORD_0 */, this._uvs);
+                buff = this._mesh.getAttributes("COLOR_0" /* COLOR_0 */);
+                if (buff) {
+                    buff.fill(0.0);
+                }
                 this._mesh.setAttributes("COLOR_0" /* COLOR_0 */, this._colors);
+                buff = this._mesh.getIndices();
+                if (buff) {
+                    buff.fill(0.0);
+                }
                 this._mesh.setIndices(this._indices);
+                this._mesh.uploadVertexBuffer();
+                this._mesh.uploadSubIndexBuffer(0);
             };
             /**
              * 生成 mesh 对象
@@ -279,6 +325,7 @@ var egret3d;
             TrailBatcher.prototype._createMesh = function () {
                 // TODO: 在极端的情况 (tile 模式贴图), 无法准确的预估生成的顶点数
                 this._mesh = egret3d.Mesh.create(this._maxFragmentCount * 4, (this._maxFragmentCount - 1) * 6);
+                this.connectRenderer();
             };
             return TrailBatcher;
         }());
@@ -316,7 +363,7 @@ var egret3d;
                 /**
                  * 拖尾的存活时间 (秒)
                  */
-                _this.time = 1.0;
+                _this.time = 3.0;
                 /**
                  * 生成下一个拖尾片段的最小距离
                  */
@@ -324,15 +371,15 @@ var egret3d;
                 /**
                  * 拖尾的宽度 (值 / 变化曲线)
                  */
-                _this.widths = [];
+                _this.width = 1.0;
                 /**
                  * 拖尾的颜色 (值 / 变化曲线)
                  */
-                _this.colors = [];
+                _this.color = egret3d.Color.WHITE;
                 /**
                  * 生命期结束后是否自动销毁
                  */
-                _this.autoDestruct = true;
+                _this.autoDestruct = false;
                 /**
                  * 拖尾的朝向是始终面对摄像机还是有自己的单独设置
                  * @see {TrailAlignment}
@@ -342,7 +389,7 @@ var egret3d;
                  * 拖尾的材质模式
                  * @see {TrailTextureMode}
                  */
-                _this.textureMode = TrailTextureMode.Tiling;
+                _this.textureMode = TrailTextureMode.Stretch;
                 /**
                  * @internal
                  */
@@ -360,17 +407,12 @@ var egret3d;
             };
             TrailComponent.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
+                this._batcher.init(this);
                 this._clean();
             };
             TrailComponent.prototype.uninitialize = function () {
                 _super.prototype.uninitialize.call(this);
                 this._clean();
-            };
-            /**
-             * @internal
-             */
-            TrailComponent.prototype.initBatcher = function () {
-                this._batcher.init(this);
             };
             /**
              * @internal
@@ -437,24 +479,32 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
+            /**
+             * TODO: temp
+             */
+            TrailComponent.prototype.syncRenderer = function () {
+                this._batcher.connectRenderer();
+            };
             __decorate([
-                paper.serializedField
+                paper.serializedField,
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
             ], TrailComponent.prototype, "time", void 0);
             __decorate([
-                paper.serializedField
+                paper.serializedField,
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
             ], TrailComponent.prototype, "minVertexDistance", void 0);
             __decorate([
-                paper.serializedField
-            ], TrailComponent.prototype, "widths", void 0);
+                paper.serializedField,
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            ], TrailComponent.prototype, "width", void 0);
             __decorate([
-                paper.serializedField
-            ], TrailComponent.prototype, "colors", void 0);
+                paper.serializedField,
+                paper.editor.property("COLOR" /* COLOR */)
+            ], TrailComponent.prototype, "color", void 0);
             __decorate([
-                paper.serializedField
+                paper.serializedField,
+                paper.editor.property("CHECKBOX" /* CHECKBOX */)
             ], TrailComponent.prototype, "autoDestruct", void 0);
-            __decorate([
-                paper.serializedField
-            ], TrailComponent.prototype, "material", void 0);
             __decorate([
                 paper.serializedField
             ], TrailComponent.prototype, "Alignment", void 0);
@@ -498,5 +548,15 @@ var egret3d;
         }(paper.BaseSystem));
         trail_1.TrailSystem = TrailSystem;
         __reflect(TrailSystem.prototype, "egret3d.trail.TrailSystem");
+        function createTrail(name) {
+            var o = egret3d.creater.createGameObject(name);
+            // o.addComponent(egret3d.MeshFilter);
+            // o.addComponent(egret3d.MeshRenderer);
+            o.addComponent(egret3d.trail.TrailComponent);
+            return o;
+        }
+        trail_1.createTrail = createTrail;
+        // 注册拖尾系统
+        paper.Application.systemManager.preRegister(TrailSystem, paper.Application.gameObjectContext, 7000 /* BeforeRenderer */ - 1);
     })(trail = egret3d.trail || (egret3d.trail = {}));
 })(egret3d || (egret3d = {}));

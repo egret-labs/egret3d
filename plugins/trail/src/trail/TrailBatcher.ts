@@ -17,7 +17,7 @@ namespace egret3d.trail {
         // 假设存活 5 秒, 每秒 60 帧, 则最多在存活时间内生成 300 个片段
         private _maxFragmentCount: uint = 5 * 60;
         private _points: TrailRenderSegment[] = []; // 每个片段
-        private _lastPosition: Readonly<Vector3> | undefined; // 上一次添加片段的位置
+        private _lastPosition: Vector3 | undefined; // 上一次添加片段的位置
         private _lastFrameEmit: boolean = true;
         private _pausedTime: uint = -1;     // 暂停时候的时间戳
 
@@ -25,6 +25,8 @@ namespace egret3d.trail {
         private _uvs: float[] = [];         // UV, 每 2 个值对应一个定点
         private _colors: float[] = [];      // 颜色, 每 4 个值对应一个颜色
         private _indices: uint[] = [];      // 三角形对应的定点索引, 每 3 个值对应一个颜色
+        private _pointDistances: float[] = [0.0]; // 点和点之间的距离, 为了便于对齐, 第一个值为零
+        private _distanceSum: float = 0; // 点和点之间的距离的总和
 
         private _mesh: Mesh;
 
@@ -52,6 +54,13 @@ namespace egret3d.trail {
         public init(comp: TrailComponent) {
             this._comp = comp;
             this._createMesh();
+        }
+
+        public connectRenderer() {
+            // mesh
+            const meshFilter = this._comp.gameObject.getComponent(MeshFilter);
+            if (!meshFilter) { console.warn(''); return; }
+            meshFilter.mesh = this._mesh;
         }
 
         public update(elapsedTime: float) {
@@ -92,24 +101,39 @@ namespace egret3d.trail {
             const count: uint = this._points.length;
             const isPlaying = comp.isPlaying;
 
+            const prevLastPoint = this._points[count - 1];
             if (isPlaying) {
                 if (theDistance > comp.minVertexDistance || theDistance < 0) {
-                    this._points.push({ position: curPosition, timeCreated: now, lineBreak: false });
-                    this._lastPosition = curPosition;
+                    this._points.push({ position: Vector3.create().copy(curPosition), timeCreated: now, lineBreak: false });
+                    if (!this._lastPosition) { this._lastPosition = Vector3.create(); }
+                    this._lastPosition.copy(curPosition);
+
+                    // 添加新的点到上一个点的距离
+                    if (prevLastPoint) {
+                        const newDistance = prevLastPoint.position.getDistance(curPosition);
+                        this._pointDistances.push(newDistance);
+                        this._distanceSum += newDistance;
+                    }
                 } else if (count > 0) {
-                    const lastPoint = this._points[count - 1];
-                    lastPoint.position = curPosition;
-                    lastPoint.timeCreated = now;
+                    prevLastPoint.position.copy(curPosition);
+                    prevLastPoint.timeCreated = now;
+
+                    // 更新末尾点到上一个点的距离
+                    if (count > 1) {
+                        const newDistance = prevLastPoint.position.getDistance(this._points[count - 2].position);
+                        this._distanceSum = this._distanceSum - this._pointDistances[count - 1] + newDistance;
+                        this._pointDistances[count - 1] = newDistance;
+                    }
                 }
             }
 
             if (!isPlaying && this._lastFrameEmit && count > 0) {
-                this._points[count - 1].lineBreak = true;
+                prevLastPoint.lineBreak = true;
                 this._lastFrameEmit = false;
             }
 
             // 移除过期的片段
-            this._removeDeadPoints(now, comp.time);
+            this._removeDeadPoints(now, comp.time * 1000);
         }
         /**
          * 移除超过生命周期的片段
@@ -122,7 +146,12 @@ namespace egret3d.trail {
 
             for (let i: uint = 0; i < len; i++) {
                 if (now - this._points[i].timeCreated < lifeTime) {
-                    if (i > 0) { this._points = this._points.splice(0, i); }
+                    if (i > 0) { 
+                        this._points.splice(0, i);
+
+                        for (let j = 0; j < i; j++) { this._distanceSum -= this._pointDistances[j]; }
+                        this._pointDistances.splice(0, i);
+                    }
                     break;
                 }
             }
@@ -132,8 +161,6 @@ namespace egret3d.trail {
          * @param now 当前时间戳
          */
         private _rebuildMeshData(now: float): void {
-            const uvLengthScale = 0.01;
-
             this._resetMeshData();
 
             const count = this._points.length;
@@ -144,12 +171,12 @@ namespace egret3d.trail {
             // 如果没有可用的 camera
             if (!camera) { return; }
 
-            let curDistance = 0.00;
             const comp = this._comp;
 
+            let ratioSum: float = 0.0;
             for (let i = 0; i < count; ++i) {
                 const p = this._points[i];
-                
+
                 // 根据片段生存的时间获取对应的宽度和颜色采样
                 const time = (now - p.timeCreated) / comp.time;
                 const color: Color = this._getColorSample(comp, time);
@@ -190,10 +217,12 @@ namespace egret3d.trail {
 
                 // 两点的 uv 值
                 if (comp.textureMode === TrailTextureMode.Stretch) {
-                    this._uvs[i * 2 + 0] = curDistance * uvLengthScale;
-                    this._uvs[i * 2 + 1] = 1;
-                    this._uvs[i * 2 + 0] = curDistance * uvLengthScale;
-                    this._uvs[i * 2 + 1] = 0;
+                    const ratio = this._distanceSum ? this._pointDistances[i] / this._distanceSum : 0;
+                    ratioSum += ratio;
+                    this._uvs[i * 4 + 0] = ratioSum;
+                    this._uvs[i * 4 + 1] = 1;
+                    this._uvs[i * 4 + 2] = ratioSum;
+                    this._uvs[i * 4 + 3] = 0;
                 } else {
                     // TODO: 在每个片段上重复贴图
                     this._uvs[i * 2 + 0] = 0;
@@ -203,8 +232,6 @@ namespace egret3d.trail {
                 }
 
                 if (i > 0 && !this._points[count - 1].lineBreak) {
-                    curDistance += p.position.getDistance(this._points[count - 1].position);
-
                     this._indices[(i - 1) * 6 + 0] = (i * 2) - 2;
                     this._indices[(i - 1) * 6 + 1] = (i * 2) - 1;
                     this._indices[(i - 1) * 6 + 2] = i * 2;
@@ -220,17 +247,17 @@ namespace egret3d.trail {
          * @param time 时间比例值
          */
         private _getColorSample(comp: TrailComponent, time: float): Color {
-            const color: Color = Color.create();
-            if (comp.colors.length > 0) {
-                const colorTime = time * (comp.colors.length - 1);
-                const min = Math.floor(colorTime);
-                const max = math.clamp(Math.ceil(colorTime), 0, comp.colors.length - 1);
-                const lerp = math.inverseLerp(min, max, colorTime);
-                color.lerp(lerp, comp.colors[min], comp.colors[max]);
-            } else {
-                color.lerp(time, Color.WHITE, Color.ZERO);
-            }
-            return color;
+            // const color: Color = Color.create();
+            // if (comp.color.length > 0) {
+            //     const colorTime = time * (comp.color.length - 1);
+            //     const min = Math.floor(colorTime);
+            //     const max = math.clamp(Math.ceil(colorTime), 0, comp.color.length - 1);
+            //     const lerp = math.inverseLerp(min, max, colorTime);
+            //     color.lerp(comp.color[min], comp.color[max], lerp);
+            // } else {
+            //     color.lerp(Color.WHITE, Color.ZERO, time);
+            // }
+            return comp.color;
         }
         /**
          * 根据时间在获得宽度值取样
@@ -238,17 +265,17 @@ namespace egret3d.trail {
          * @param time 时间比例值
          */
         private _getWidthSample(comp: TrailComponent, time: float): number {
-            let width: float;
-            if (comp.widths.length > 0) {
-                const widthTime = time * (comp.widths.length - 1);
-                const min = Math.floor(widthTime);
-                const max = math.clamp(Math.ceil(widthTime), 0, comp.widths.length - 1);
-                const lerp = math.inverseLerp(min, max, widthTime);
-                width = math.lerp(comp.widths[min], comp.widths[max], lerp);
-            } else {
-                width = 1;
-            }
-            return width;
+            // let width: float;
+            // if (comp.width.length > 0) {
+            //     const widthTime = time * (comp.width.length - 1);
+            //     const min = Math.floor(widthTime);
+            //     const max = math.clamp(Math.ceil(widthTime), 0, comp.width.length - 1);
+            //     const lerp = math.inverseLerp(min, max, widthTime);
+            //     width = math.lerp(comp.width[min], comp.width[max], lerp);
+            // } else {
+            //     width = 1;
+            // }
+            return comp.width;
         }
         /**
          * 获取渲染用的相机
@@ -272,10 +299,24 @@ namespace egret3d.trail {
             if (this._points.length > this._maxFragmentCount) {
                 this._createMesh();
             }
+            let buff = this._mesh.getAttributes(gltf.AttributeSemantics.POSITION);
+            if (buff) { buff.fill(0.0); }
             this._mesh.setAttributes(gltf.AttributeSemantics.POSITION, this._verticles);
+
+            buff = this._mesh.getAttributes(gltf.AttributeSemantics.TEXCOORD_0);
+            if (buff) { buff.fill(0.0); }
             this._mesh.setAttributes(gltf.AttributeSemantics.TEXCOORD_0, this._uvs);
+
+            buff = this._mesh.getAttributes(gltf.AttributeSemantics.COLOR_0);
+            if (buff) { buff.fill(0.0); }
             this._mesh.setAttributes(gltf.AttributeSemantics.COLOR_0, this._colors);
+
+            buff = this._mesh.getIndices();
+            if (buff) { buff.fill(0.0); }
             this._mesh.setIndices(this._indices);
+
+            this._mesh.uploadVertexBuffer();
+            this._mesh.uploadSubIndexBuffer(0);
         }
         /**
          * 生成 mesh 对象
@@ -283,6 +324,8 @@ namespace egret3d.trail {
         private _createMesh() {
             // TODO: 在极端的情况 (tile 模式贴图), 无法准确的预估生成的顶点数
             this._mesh = Mesh.create(this._maxFragmentCount * 4, (this._maxFragmentCount - 1) * 6);
+
+            this.connectRenderer();
         }
     }
 }

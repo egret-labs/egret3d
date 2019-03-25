@@ -23,6 +23,16 @@ namespace egret3d.trail {
         }
     }
 
+    export function createTrail(name?: string): paper.GameObject {
+        const o = egret3d.creater.createGameObject(name);
+
+        // o.addComponent(egret3d.MeshFilter);
+        // o.addComponent(egret3d.MeshRenderer);
+        o.addComponent(egret3d.trail.TrailComponent);
+
+        return o;
+    }
+
     // 注册拖尾系统
     paper.Application.systemManager.preRegister(
         TrailSystem,

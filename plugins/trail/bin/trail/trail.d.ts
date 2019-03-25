@@ -59,19 +59,15 @@ declare namespace egret3d.trail {
         /**
          * 拖尾的宽度 (值 / 变化曲线)
          */
-        widths: number[];
+        width: number;
         /**
          * 拖尾的颜色 (值 / 变化曲线)
          */
-        colors: Color[];
+        color: Color;
         /**
          * 生命期结束后是否自动销毁
          */
         autoDestruct: boolean;
-        /**
-         * 所用的材料
-         */
-        material: Material | undefined;
         /**
          * 拖尾的朝向是始终面对摄像机还是有自己的单独设置
          * @see {TrailAlignment}
@@ -111,6 +107,10 @@ declare namespace egret3d.trail {
          * 是否播放已经暂停
          */
         readonly isPaused: boolean;
+        /**
+         * TODO: temp
+         */
+        syncRenderer(): void;
     }
 }
 declare namespace egret3d.trail {
@@ -121,4 +121,5 @@ declare namespace egret3d.trail {
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
         onFrame(deltaTime: float): void;
     }
+    function createTrail(name?: string): paper.GameObject;
 }

@@ -21,32 +21,32 @@ namespace egret3d.trail {
          * 拖尾的存活时间 (秒)
          */
         @paper.serializedField
-        public time: number = 1.0;
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        public time: number = 3.0;
         /**
          * 生成下一个拖尾片段的最小距离 
          */
         @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public minVertexDistance: number = 0.1;
         /**
          * 拖尾的宽度 (值 / 变化曲线) 
          */
         @paper.serializedField
-        public widths: number[] = [];
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        public width: number = 1.0;
         /**
          * 拖尾的颜色 (值 / 变化曲线) 
          */
         @paper.serializedField
-        public colors: Color[] = [];
+        @paper.editor.property(paper.editor.EditType.COLOR)
+        public color: Color = Color.WHITE;
         /**
          * 生命期结束后是否自动销毁
          */
         @paper.serializedField
-        public autoDestruct: boolean = true;
-        /**
-         * 所用的材料
-         */
-        @paper.serializedField
-        public material: Material | undefined;
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public autoDestruct: boolean = false;
         /**
          * 拖尾的朝向是始终面对摄像机还是有自己的单独设置
          * @see {TrailAlignment}
@@ -58,7 +58,7 @@ namespace egret3d.trail {
          * @see {TrailTextureMode}
          */
         @paper.serializedField
-        public textureMode: TrailTextureMode = TrailTextureMode.Tiling;
+        public textureMode: TrailTextureMode = TrailTextureMode.Stretch;
         /**
          * @internal
          */
@@ -77,18 +77,13 @@ namespace egret3d.trail {
 
         public initialize() {
             super.initialize();
+            this._batcher.init(this)
             this._clean();
         }
 
         public uninitialize() {
             super.uninitialize();
             this._clean();
-        }
-        /**
-         * @internal 
-         */
-        public initBatcher() {
-            this._batcher.init(this);
         }
         /**
          * @internal 
@@ -141,6 +136,12 @@ namespace egret3d.trail {
          */
         public get isPaused() {
             return this._isPaused;
+        }
+        /**
+         * TODO: temp
+         */
+        public syncRenderer() {
+            this._batcher.connectRenderer();
         }
     }
 }
