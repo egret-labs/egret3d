@@ -62,8 +62,15 @@ namespace paper.editor {
 
             if (options.showInspector!) {
                 inspectorComponent.showStates |= ShowState.HierarchyAndInspector;
-                hierarchyContainer.appendChild(inspectorComponent.hierarchy.domElement);
-                inspectorContainer.appendChild(inspectorComponent.property.domElement);
+
+                if (this._isMobile) {
+                    inspectorComponent.hierarchy.close();
+                    inspectorComponent.property.close();
+                }
+                else {
+                    hierarchyContainer.appendChild(inspectorComponent.hierarchy.domElement);
+                    inspectorContainer.appendChild(inspectorComponent.property.domElement);
+                }
             }
             else {
                 dat.GUI.toggleHide();
@@ -77,7 +84,9 @@ namespace paper.editor {
             Application.systemManager.register(GizmosSystem, Application.gameObjectContext, SystemOrder.LateUpdate);
             Application.systemManager.register(SpectorSystem, Application.gameObjectContext, SystemOrder.End);
             Application.systemManager.register(StatsSystem, Application.gameObjectContext, SystemOrder.End);
+        }
 
+        public onStart() {
             console.info(`小提示：通过 H 键切换 Inspector 的显示与隐藏。`);
         }
 

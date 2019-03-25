@@ -58,7 +58,7 @@ namespace paper {
          */
         public readonly sceneManager: SceneManager = SceneManager.getInstance();
         /**
-         * 
+         * 游戏实体上下文。
          */
         public readonly gameObjectContext: Context<GameObject> = Context.create(GameObject);
 
@@ -117,33 +117,13 @@ namespace paper {
             systemManager.register(DisableSystem, gameObjectContext, SystemOrder.Disable);
         }
         /**
-         * TODO
-         * @internal
-         */
-        public pause(): void {
-            this._isRunning = false;
-            clock.reset();
-        }
-        /**
-         * TODO
-         * @internal
-         */
-        public resume(): void {
-            if (this._isRunning) {
-                return;
-            }
-
-            this._isRunning = true;
-            clock.reset();
-
-            requestAnimationFrame(this._loop);
-        }
-        /**
          * engine start
          * 
          * TODO: 
          */
-        public start() {
+        public start(): void {
+            this.systemManager._start();
+
             switch (this._playerMode) {
                 case PlayerMode.Editor:
                     this.pause();
@@ -163,12 +143,32 @@ namespace paper {
             console.info("Egret start complete.");
         }
         /**
+         * TODO
+         */
+        public pause(): void {
+            this._isRunning = false;
+            clock.reset();
+        }
+        /**
+         * TODO
+         */
+        public resume(): void {
+            if (this._isRunning) {
+                return;
+            }
+
+            this._isRunning = true;
+            clock.reset();
+
+            requestAnimationFrame(this._loop);
+        }
+        /**
          * 显式更新
          *
          * - 在暂停的情况下才有意义 (`this.isRunning === false`), 因为在运行的情况下下一帧自动会刷新
          * - 主要应用在类似编辑器模式下, 大多数情况只有数据更新的时候界面才需要刷新
          */
-        public update() {
+        public update(): void {
             // if it is running, updating will occur in next frame
             if (this._isRunning) { return; }
 

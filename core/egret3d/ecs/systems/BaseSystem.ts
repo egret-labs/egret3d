@@ -3,11 +3,6 @@ namespace paper {
      * 基础系统。
      * - 全部系统的基类。
      * - 生命周期的顺序如下：
-     * - Name | Data Type | Size (Bytes)
-     * - :---:|:---------:|:-----------:
-     * - Tag | Uint32 | 4
-     * - Version | Uint32 | 4
-     * - |  |
      * - onAwake();
      * - onEnable();
      * - onStart();

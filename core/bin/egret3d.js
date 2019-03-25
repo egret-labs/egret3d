@@ -6621,7 +6621,15 @@ var paper;
     var SystemManager = (function () {
         function SystemManager() {
             this._isStarted = false;
+            /**
+             * 程序启动前缓存。
+             * - 系统不能直接实例化。
+             */
             this._preSystems = [];
+            /**
+             * 程序启动后缓存。
+             * - 系统需要直接实例化，但不能立即初始化。
+             */
             this._cacheSystems = [];
             this._systems = [];
             this._startSystems = [];
@@ -6640,7 +6648,7 @@ var paper;
             }
             return this._instance;
         };
-        SystemManager.prototype._sortSystem = function (a, b) {
+        SystemManager.prototype._sortPreSystem = function (a, b) {
             return a[2] - b[2];
         };
         SystemManager.prototype._getSystemInsertIndex = function (systems, order) {
@@ -6686,33 +6694,74 @@ var paper;
             }
             system.initialize(config);
         };
+        SystemManager.prototype._reactive = function (system) {
+            for (var _i = 0, _a = system.collectors; _i < _a.length; _i++) {
+                var collector = _a[_i];
+                if (system.onComponentRemoved) {
+                    for (var _b = 0, _c = collector.removedComponentes; _b < _c.length; _b++) {
+                        var component = _c[_b];
+                        if (component !== null) {
+                            system.onComponentRemoved(component, collector.group);
+                        }
+                    }
+                }
+                if (system.onEntityRemoved) {
+                    for (var _d = 0, _e = collector.removedEntities; _d < _e.length; _d++) {
+                        var entity = _e[_d];
+                        if (entity !== null) {
+                            system.onEntityRemoved(entity, collector.group);
+                        }
+                    }
+                }
+                if (system.onEntityAdded) {
+                    for (var _f = 0, _g = collector.addedEntities; _f < _g.length; _f++) {
+                        var entity = _g[_f];
+                        if (entity !== null) {
+                            system.onEntityAdded(entity, collector.group);
+                        }
+                    }
+                }
+                if (system.onComponentAdded) {
+                    for (var _h = 0, _j = collector.addedComponentes; _h < _j.length; _h++) {
+                        var component = _j[_h];
+                        if (component !== null) {
+                            system.onComponentAdded(component, collector.group);
+                        }
+                    }
+                }
+                collector.clear();
+            }
+        };
+        /**
+         * @internal
+         */
+        SystemManager.prototype._start = function () {
+            var preSystems = this._preSystems;
+            if (preSystems.length > 0) {
+                preSystems.sort(this._sortPreSystem);
+                for (var _i = 0, preSystems_1 = preSystems; _i < preSystems_1.length; _i++) {
+                    var pair = preSystems_1[_i];
+                    this.register.apply(this, pair);
+                }
+                preSystems.length = 0;
+            }
+            this._isStarted = true;
+        };
         /**
          * @internal
          */
         SystemManager.prototype._startup = function () {
             var playerMode = paper.Application.playerMode;
             var cacheSystems = this._cacheSystems;
-            if (!this._isStarted) {
-                var preSystems = this._preSystems;
-                if (preSystems.length > 0) {
-                    preSystems.sort(this._sortSystem);
-                    for (var _i = 0, preSystems_1 = preSystems; _i < preSystems_1.length; _i++) {
-                        var pair = preSystems_1[_i];
-                        this.register.apply(this, pair);
-                    }
-                    preSystems.length = 0;
-                }
-                this._isStarted = true;
-            }
             if (cacheSystems.length > 0) {
-                for (var _a = 0, cacheSystems_1 = cacheSystems; _a < cacheSystems_1.length; _a++) {
-                    var pair = cacheSystems_1[_a];
+                for (var _i = 0, cacheSystems_1 = cacheSystems; _i < cacheSystems_1.length; _i++) {
+                    var pair = cacheSystems_1[_i];
                     this._register.apply(this, pair);
                 }
                 cacheSystems.length = 0;
             }
-            for (var _b = 0, _c = this._systems; _b < _c.length; _b++) {
-                var system = _c[_b];
+            for (var _a = 0, _b = this._systems; _a < _b.length; _a++) {
+                var system = _b[_a];
                 if ((system.constructor.executeMode & playerMode) !== 0) {
                     if (system._executeEnabled && !system.enabled) {
                         system.enabled = true;
@@ -6730,17 +6779,17 @@ var paper;
                     console.debug(egret.getQualifiedClassName(system), "enabled.");
                 }
                 if (system.onEntityAdded) {
-                    for (var _d = 0, _e = system.groups; _d < _e.length; _d++) {
-                        var group = _e[_d];
-                        for (var _f = 0, _g = group.entities; _f < _g.length; _f++) {
-                            var entity = _g[_f];
+                    for (var _c = 0, _d = system.groups; _c < _d.length; _c++) {
+                        var group = _d[_c];
+                        for (var _e = 0, _f = group.entities; _e < _f.length; _e++) {
+                            var entity = _f[_e];
                             system.onEntityAdded(entity, group);
                         }
                     }
                 }
             }
-            for (var _h = 0, _j = this._startSystems; _h < _j.length; _h++) {
-                var system = _j[_h];
+            for (var _g = 0, _h = this._startSystems; _g < _h.length; _g++) {
+                var system = _h[_g];
                 if (!system.enabled) {
                     continue;
                 }
@@ -6748,44 +6797,6 @@ var paper;
                     system.onStart();
                     system.onStart = undefined;
                 }
-            }
-        };
-        SystemManager.prototype._reactive = function (system) {
-            for (var _i = 0, _a = system.collectors; _i < _a.length; _i++) {
-                var collector = _a[_i];
-                if (system.onComponentRemoved) {
-                    for (var _b = 0, _c = collector.removedComponentes; _b < _c.length; _b++) {
-                        var component = _c[_b];
-                        if (component) {
-                            system.onComponentRemoved(component, collector.group);
-                        }
-                    }
-                }
-                if (system.onEntityRemoved) {
-                    for (var _d = 0, _e = collector.removedEntities; _d < _e.length; _d++) {
-                        var entity = _e[_d];
-                        if (entity) {
-                            system.onEntityRemoved(entity, collector.group);
-                        }
-                    }
-                }
-                if (system.onEntityAdded) {
-                    for (var _f = 0, _g = collector.addedEntities; _f < _g.length; _f++) {
-                        var entity = _g[_f];
-                        if (entity) {
-                            system.onEntityAdded(entity, collector.group);
-                        }
-                    }
-                }
-                if (system.onComponentAdded) {
-                    for (var _h = 0, _j = collector.addedComponentes; _h < _j.length; _h++) {
-                        var component = _j[_h];
-                        if (component) {
-                            system.onComponentAdded(component, collector.group);
-                        }
-                    }
-                }
-                collector.clear();
             }
         };
         /**
@@ -6804,7 +6815,8 @@ var paper;
                         system.deltaTime = 0;
                         startTime = paper.clock.timestamp();
                     }
-                    if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
+                    if (i === 0 &&
+                        reactiveSystems.indexOf(system) >= 0) {
                         this._reactive(system);
                     }
                     system.onTick && system.onTick(paper.clock.lastTickDelta);
@@ -6813,7 +6825,7 @@ var paper;
                     }
                 }
             }
-            if (frameCount) {
+            if (frameCount > 0) {
                 for (var _b = 0, _c = this._systems; _b < _c.length; _b++) {
                     var system = _c[_b];
                     if (!system.enabled) {
@@ -6838,7 +6850,7 @@ var paper;
         SystemManager.prototype._cleanup = function (frameCount) {
             var startTime = 0;
             var i = 0;
-            if (frameCount) {
+            if (frameCount > 0) {
                 i = this._frameCleanupSystems.length;
                 while (i--) {
                     var system = this._frameCleanupSystems[i];
@@ -6903,7 +6915,7 @@ var paper;
         SystemManager.prototype.preRegister = function (systemClass, context, order, config) {
             if (order === void 0) { order = 4000 /* Update */; }
             if (config === void 0) { config = null; }
-            if (this._systems.length > 0) {
+            if (this._isStarted) {
                 this.register(systemClass, context, order, config);
             }
             else {
@@ -8036,11 +8048,6 @@ var paper;
      * 基础系统。
      * - 全部系统的基类。
      * - 生命周期的顺序如下：
-     * - Name | Data Type | Size (Bytes)
-     * - :---:|:---------:|:-----------:
-     * - Tag | Uint32 | 4
-     * - Version | Uint32 | 4
-     * - |  |
      * - onAwake();
      * - onEnable();
      * - onStart();
@@ -11322,11 +11329,23 @@ var paper;
          */
         Clock.prototype.update = function (now) {
             now = now * 0.001;
-            if (this._beginTime < 0) {
+            if (this._beginTime < 0.0) {
                 this._beginTime = now;
             }
+            var lastTime = this._unscaledTime;
+            var unscaledTime = now - this._beginTime;
+            var unscaledDeltaTime = unscaledTime - lastTime;
+            if (this.tickInterval <= 0.0) {
+                this.tickInterval = 1.0 / 60;
+            }
+            if (this.frameInterval <= 0.0) {
+                this.frameInterval = 1.0 / 60;
+            }
+            if (true && unscaledDeltaTime > 10.0 * this.tickInterval) {
+                this._needReset = true;
+            }
             if (this._needReset) {
-                this._unscaledTime = now - this._beginTime;
+                this._unscaledTime = unscaledTime;
                 this._unscaledDeltaTime = 0;
                 this._needReset = false;
                 // 产生起始的渲染帧和逻辑帧
@@ -11335,32 +11354,25 @@ var paper;
                 return { frameCount: 1, tickCount: 1 };
             }
             // 计算和上此的间隔
-            var lastTime = this._unscaledTime;
-            this._unscaledTime = now - this._beginTime;
-            this._unscaledDeltaTime = this._unscaledTime - lastTime;
+            this._unscaledTime = unscaledTime;
+            this._unscaledDeltaTime = unscaledDeltaTime;
             var returnValue = { frameCount: 0, tickCount: 0 };
             // 判断是否够一个逻辑帧
-            if (this.tickInterval) {
-                this._unusedTickDelta += this._unscaledDeltaTime;
-                if (this._unusedTickDelta >= this.tickInterval) {
-                    // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
-                    while (this._unusedTickDelta >= this.tickInterval && returnValue.tickCount < this.tickCompensateSpeed) {
-                        this._unusedTickDelta -= this.tickInterval;
-                        returnValue.tickCount++;
-                        this._tickCount++;
-                    }
+            this._unusedTickDelta += this._unscaledDeltaTime;
+            if (this._unusedTickDelta >= this.tickInterval) {
+                // 逻辑帧需要补帧, 最多一次补 `this.maxFixedSubSteps` 帧
+                while (this._unusedTickDelta >= this.tickInterval && returnValue.tickCount < this.tickCompensateSpeed) {
+                    this._unusedTickDelta -= this.tickInterval;
+                    returnValue.tickCount++;
+                    this._tickCount++;
                 }
             }
-            else {
-                returnValue.tickCount = 1;
-                this._tickCount++;
-            }
             // TOFIX: 暂时保护性处理, 如果没产生逻辑帧, 那么也不产生渲染帧
-            if (!returnValue.tickCount) {
+            if (returnValue.tickCount <= 0) {
                 return returnValue;
             }
             // 判断渲染帧
-            if (this.frameInterval) {
+            if (this.frameInterval > 0.0) {
                 this._unusedFrameDelta += this._unscaledDeltaTime;
                 if (this._unusedFrameDelta >= this.frameInterval) {
                     // 渲染帧不需要补帧
@@ -27214,7 +27226,7 @@ var paper;
              */
             this.sceneManager = paper.SceneManager.getInstance();
             /**
-             *
+             * 游戏实体上下文。
              */
             this.gameObjectContext = paper.Context.create(paper.GameObject);
             this._isFocused = false;
@@ -27281,31 +27293,12 @@ var paper;
             systemManager.register(paper.DisableSystem, gameObjectContext, 9000 /* Disable */);
         };
         /**
-         * TODO
-         * @internal
-         */
-        ECS.prototype.pause = function () {
-            this._isRunning = false;
-            paper.clock.reset();
-        };
-        /**
-         * TODO
-         * @internal
-         */
-        ECS.prototype.resume = function () {
-            if (this._isRunning) {
-                return;
-            }
-            this._isRunning = true;
-            paper.clock.reset();
-            requestAnimationFrame(this._loop);
-        };
-        /**
          * engine start
          *
          * TODO:
          */
         ECS.prototype.start = function () {
+            this.systemManager._start();
             switch (this._playerMode) {
                 case 4 /* Editor */:
                     this.pause();
@@ -27320,6 +27313,24 @@ var paper;
                     break;
             }
             console.info("Egret start complete.");
+        };
+        /**
+         * TODO
+         */
+        ECS.prototype.pause = function () {
+            this._isRunning = false;
+            paper.clock.reset();
+        };
+        /**
+         * TODO
+         */
+        ECS.prototype.resume = function () {
+            if (this._isRunning) {
+                return;
+            }
+            this._isRunning = true;
+            paper.clock.reset();
+            requestAnimationFrame(this._loop);
         };
         /**
          * 显式更新
@@ -33000,12 +33011,13 @@ var egret3d;
      * @param options
      */
     function runEgret(options) {
+        if (options === void 0) { options = null; }
         return __awaiter(this, void 0, void 0, function () {
             var _a, systemManager, gameObjectContext;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0:
-                        if (!options) {
+                        if (options === null) {
                             options = {};
                         }
                         _formatOptions(options);
@@ -33090,7 +33102,7 @@ var egret3d;
             }
         }
         if (options.tickRate === undefined) {
-            options.tickRate = _parseInt(playerDiv, "data-tick-rate", 0);
+            options.tickRate = _parseInt(playerDiv, "data-tick-rate", 60);
         }
         if (options.frameRate === undefined) {
             options.frameRate = _parseInt(playerDiv, "data-frame-rate", 0);
@@ -33117,7 +33129,7 @@ var egret3d;
             options.alpha = _parseBoolean(playerDiv, "data-alpha", false);
         }
         if (options.antialias === undefined) {
-            options.alpha = _parseBoolean(playerDiv, "data-antialias", true);
+            options.antialias = _parseBoolean(playerDiv, "data-antialias", true);
         }
         if (options.antialiasSamples === undefined) {
             options.antialiasSamples = 4;
@@ -33173,14 +33185,14 @@ var egret3d;
     }
     function _editorEntry(options) {
         return __awaiter(this, void 0, void 0, function () {
-            var entry;
+            var editorEntry;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         if (!options.editorEntry) return [3 /*break*/, 2];
-                        entry = global[options.editorEntry] || window[options.editorEntry] || null;
-                        if (!(entry !== null)) return [3 /*break*/, 2];
-                        return [4 /*yield*/, entry()];
+                        editorEntry = global[options.editorEntry] || window[options.editorEntry] || null;
+                        if (!(editorEntry !== null)) return [3 /*break*/, 2];
+                        return [4 /*yield*/, editorEntry()];
                     case 1:
                         _a.sent();
                         _a.label = 2;

@@ -7590,8 +7590,14 @@ var paper;
                 var options = paper.Application.options;
                 if (options.showInspector) {
                     inspectorComponent.showStates |= 6 /* HierarchyAndInspector */;
-                    hierarchyContainer.appendChild(inspectorComponent.hierarchy.domElement);
-                    inspectorContainer.appendChild(inspectorComponent.property.domElement);
+                    if (this._isMobile) {
+                        inspectorComponent.hierarchy.close();
+                        inspectorComponent.property.close();
+                    }
+                    else {
+                        hierarchyContainer.appendChild(inspectorComponent.hierarchy.domElement);
+                        inspectorContainer.appendChild(inspectorComponent.property.domElement);
+                    }
                 }
                 else {
                     dat.GUI.toggleHide();
@@ -7604,6 +7610,8 @@ var paper;
                 paper.Application.systemManager.register(editor.GizmosSystem, paper.Application.gameObjectContext, 6000 /* LateUpdate */);
                 paper.Application.systemManager.register(editor.SpectorSystem, paper.Application.gameObjectContext, 10000 /* End */);
                 paper.Application.systemManager.register(editor.StatsSystem, paper.Application.gameObjectContext, 10000 /* End */);
+            };
+            InspectorSystem.prototype.onStart = function () {
                 console.info("\u5C0F\u63D0\u793A\uFF1A\u901A\u8FC7 H \u952E\u5207\u6362 Inspector \u7684\u663E\u793A\u4E0E\u9690\u85CF\u3002");
             };
             InspectorSystem.prototype.onFrame = function () {

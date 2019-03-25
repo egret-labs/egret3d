@@ -210,10 +210,33 @@ namespace egret3d {
         }
         /**
          * 根据指定 Accessor 创建二进制数组。
+         * @param accessor 
+         * @param offset 
+         * @param count 
          */
         public createTypeArrayFromAccessor(accessor: gltf.Accessor, offset: uint = 0, count: uint = 0): ArrayBufferView {
+            if (count === 0) {
+                count = accessor.count;
+            }
+
+            if (offset >= accessor.count) {
+                if (DEBUG) {
+                    console.warn("Overflow offset.", "offset: ", offset, "total count", accessor.count);
+                }
+
+                offset = accessor.count - 1;
+            }
+
+            if (count > accessor.count - offset) {
+                if (DEBUG) {
+                    console.warn("Overflow count.", "offset: ", offset, "count: ", count, "total count", accessor.count);
+                }
+
+                count = accessor.count - offset;
+            }
+
             const typeCount = accessor.typeCount!;
-            const bufferCount = typeCount * Math.min(accessor.count - offset, count || accessor.count);
+            const bufferCount = typeCount * count;
             const bufferView = this.getBufferView(accessor);
             const buffer = this.buffers[bufferView.buffer];
             // assert.config.buffers[bufferView.buffer];

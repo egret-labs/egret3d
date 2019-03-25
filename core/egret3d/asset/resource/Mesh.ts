@@ -1,4 +1,15 @@
 namespace egret3d {
+    /**
+     * 
+     */
+    export const enum MeshNeedUpdate {
+        VertexBuffer,
+        IndicesBuffer,
+        BoundingBox,
+        Normals,
+        Tangents,
+    }
+
     const _helpTriangleA = Triangle.create();
     const _helpTriangleB = Triangle.create();
     const _helpRaycastInfo = RaycastInfo.create();
@@ -14,8 +25,8 @@ namespace egret3d {
     export class Mesh extends GLTFAsset implements IRaycast {
         /**
          * 创建一个网格。
-         * @param vertexCount 
-         * @param indexCount 
+         * @param vertexCount
+         * @param indexCount
          * @param attributeNames 
          * @param attributeTypes 
          */
@@ -25,7 +36,7 @@ namespace egret3d {
         ): Mesh;
         /**
          * 加载一个网格。
-         * @private 
+         * @private
          */
         public static create(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView>): Mesh;
         public static create(
@@ -130,11 +141,13 @@ namespace egret3d {
         }
 
         protected _drawMode: gltf.DrawMode = gltf.DrawMode.Static;
+        protected _needUpdate: uint = 0;
         protected _vertexCount: uint = 0;
         protected _wireframeIndex: int = -1;
+        protected readonly _boundingBox: egret3d.Box = egret3d.Box.create();
         protected readonly _attributeNames: gltf.AttributeSemantics[] = [];
         protected readonly _attributeTypes: { [key: string]: gltf.AccessorType } = {};
-        protected _glTFMesh: gltf.Mesh = null!;
+        protected _glTFMesh: gltf.Mesh | null = null;
         protected _inverseBindMatrices: ArrayBufferView | null = null;
         protected _boneIndices: { [key: string]: uint } | null = null;
 
@@ -172,7 +185,7 @@ namespace egret3d {
             this._drawMode = gltf.DrawMode.Static;
             this._attributeNames.length = 0;
             // this._customAttributeTypes;
-            this._glTFMesh = null!;
+            this._glTFMesh = null;
             this._inverseBindMatrices = null;
             this._boneIndices = null;
 
@@ -207,7 +220,8 @@ namespace egret3d {
             return value;
         }
         /**
-         * 
+         * 对该网格进行矩阵变换。
+         * @param matrix 一个矩阵。
          */
         public applyMatrix(matrix: Readonly<Matrix4>): this {
             const helpVector3 = Vector3.create().release();
@@ -229,29 +243,34 @@ namespace egret3d {
             return this;
         }
         /**
-         * 
+         * 获取该网格指定的三角形数据。
+         * @param triangleIndex 三角形索引。
+         * @param output 被写入数据的三角形。
+         * - 未设置则会创建一个。
+         * @param vertices 
          */
-        public getTriangle(triangleIndex: uint, out?: Triangle, vertices?: Float32Array | null): Triangle {
-            if (!out) {
-                out = Triangle.create();
+        public getTriangle(triangleIndex: uint, output: Triangle | null = null, vertices: Float32Array | null = null): Triangle {
+            if (output === null) {
+                output = Triangle.create();
             }
 
             const indices = this.getIndices();
-            vertices = vertices || this.getVertices()!;
 
-            if (indices) {
+            if (vertices === null) {
+                vertices = this.getVertices()!;
+            }
+
+            if (indices !== null) {
                 const vertexOffset = triangleIndex * 3;
-                out.fromArray(vertices, indices[vertexOffset + 0] * 3, indices[vertexOffset + 1] * 3, indices[vertexOffset + 2] * 3);
+                output.fromArray(vertices, indices[vertexOffset + 0] * 3, indices[vertexOffset + 1] * 3, indices[vertexOffset + 2] * 3);
             }
             else {
-                out.fromArray(vertices, triangleIndex * 9);
+                output.fromArray(vertices, triangleIndex * 9);
             }
 
-            return out;
+            return output;
         }
-        /**
-         * 
-         */
+
         public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null, vertices: Float32Array | null = null) {
             let subMeshIndex = 0;
             const helpTriangleA = _helpTriangleA;
@@ -409,7 +428,7 @@ namespace egret3d {
         public addWireframeSubMesh(materialIndex: uint): this {
             if (this._wireframeIndex < 0) {
                 let index = 0;
-                const wireframeIndices = [] as number[];
+                const wireframeIndices = [] as float[];
 
                 for (const primitive of this._glTFMesh!.primitives) {
                     if (primitive.indices !== undefined) {
@@ -576,45 +595,54 @@ namespace egret3d {
         /**
          * 获取该网格顶点的指定属性数据。
          * @param attributeType 属性名。
-         * @param offset 顶点偏移。（默认从第一个点开始）
-         * @param count 顶点总数。（默认全部顶点）
+         * @param offset 顶点偏移。
+         * - [`0` ~ N]
+         * - 默认为 `0` ， 从第一个点开始。
+         * @param count 顶点总数。
+         * - [`0` ~ N]
+         * - 默认为 `0` ， 全部顶点。
          */
-        public getAttributes(attributeType: gltf.AttributeSemantics, offset: uint = 0, count: uint = 0): Float32Array | Uint16Array | null {
+        public getAttributes(attributeType: gltf.AttributeSemantics, offset: uint = 0, count: uint = 0): Float32Array | null {
             const accessorIndex = this._glTFMesh!.primitives[0].attributes[attributeType];
-            if (accessorIndex === undefined) {
-                return null;
+            if (accessorIndex !== undefined) {
+                return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex), offset, count) as Float32Array;
             }
 
-            return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex), offset, count) as any;
+            return null;
         }
         /**
          * 设置该网格指定的顶点属性数据。
+         * - 该操作始终会写入合适的数据，而不会改变顶点属性长度。
          * @param attributeType 属性名。
          * @param value 属性数据。
-         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param offset 顶点偏移。
+         * - 默认 `0`， 默认从第一个点开始。
          */
-        public setAttributes(attributeType: gltf.AttributeSemantics, value: ReadonlyArray<number>, offset: uint = 0): Float32Array | Uint16Array | null {
-            const target = this.getAttributes(attributeType, offset);
-            if (target) {
-                for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
-                    target[i] = value[i];
-                }
+        public setAttributes(attributeType: gltf.AttributeSemantics, value: ReadonlyArray<float>, offset: uint = 0): Float32Array | null {
+            const target = this.getAttributes(attributeType);
+
+            if (target !== null) {
+                target.set(value, offset);
             }
 
             return target;
         }
         /**
          * 获取该网格的顶点索引数据。
-         * @param subMeshIndex 子网格索引。（默认第一个子网格）
+         * @param subMeshIndex 子网格索引。
+         * - [`0` ~ N]
+         * - 默认为 `0` ， 第一个子网格。
          */
         public getIndices(subMeshIndex: uint = 0): Uint16Array | null { // TODO Uint32Array
-            if (0 <= subMeshIndex && subMeshIndex < this._glTFMesh!.primitives.length) {
-                const accessorIndex = this._glTFMesh!.primitives[subMeshIndex].indices;
-                if (accessorIndex === undefined) {
-                    return null;
+            const { primitives } = this._glTFMesh!;
+
+            if (0 <= subMeshIndex && subMeshIndex < primitives.length) {
+                const accessorIndex = primitives[subMeshIndex].indices;
+                if (accessorIndex !== undefined) {
+                    return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex)) as Uint16Array;
                 }
 
-                return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex)) as any;
+                return null;
             }
 
             console.warn("Error arguments.");
@@ -624,15 +652,18 @@ namespace egret3d {
         /**
          * 设置该网格的顶点索引数据。
          * @param value 顶点索引数据。
-         * @param subMeshIndex 子网格索引。（默认第一个子网格）
-         * @param offset 索引偏移。（默认不偏移）
+         * @param subMeshIndex 子网格索引。
+         * - [`0` ~ N]
+         * - 默认为 `0` ， 第一个子网格。
+         * @param offset 索引偏移。
+         * - [`0` ~ N]
+         * - 默认为 `0`， 从第一个索引开始。
          */
         public setIndices(value: ReadonlyArray<uint>, subMeshIndex: uint = 0, offset: uint = 0): Uint16Array | null {
             const target = this.getIndices(subMeshIndex);
-            if (target) {
-                for (let i = 0, l = Math.min(value.length, target.length); i < l; i++) {
-                    target[i] = value[offset + i];
-                }
+
+            if (target !== null) {
+                target.set(value, offset);
             }
 
             return target;

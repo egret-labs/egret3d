@@ -4715,7 +4715,15 @@ declare namespace paper {
          */
         static getInstance(): SystemManager;
         private _isStarted;
+        /**
+         * 程序启动前缓存。
+         * - 系统不能直接实例化。
+         */
         private readonly _preSystems;
+        /**
+         * 程序启动后缓存。
+         * - 系统需要直接实例化，但不能立即初始化。
+         */
         private readonly _cacheSystems;
         private readonly _systems;
         private readonly _startSystems;
@@ -4725,7 +4733,7 @@ declare namespace paper {
         private readonly _tickSystems;
         private readonly _tickCleanupSystems;
         private constructor();
-        private _sortSystem(a, b);
+        private _sortPreSystem(a, b);
         private _getSystemInsertIndex(systems, order);
         private _register(system, config?);
         private _reactive(system);
@@ -5109,11 +5117,6 @@ declare namespace paper {
      * 基础系统。
      * - 全部系统的基类。
      * - 生命周期的顺序如下：
-     * - Name | Data Type | Size (Bytes)
-     * - :---:|:---------:|:-----------:
-     * - Tag | Uint32 | 4
-     * - Version | Uint32 | 4
-     * - |  |
      * - onAwake();
      * - onEnable();
      * - onStart();
@@ -6197,8 +6200,8 @@ declare namespace paper {
 }
 declare namespace paper {
     interface ClockUpdateFlags {
-        frameCount: number;
-        tickCount: number;
+        frameCount: uint;
+        tickCount: uint;
     }
     /**
      * 全局时钟信息组件。
@@ -6211,17 +6214,17 @@ declare namespace paper {
         /**
          * 逻辑帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
          */
-        tickInterval: number;
+        tickInterval: float;
         /**
          * 渲染帧时间(秒), 例如设置为 1.0 / 60.0 为每秒 60 帧
          */
-        frameInterval: number;
+        frameInterval: float;
         /**
          * 运行倍速
          *
          * 为了保证平滑的效果, 不会影响逻辑/渲染帧频
          */
-        timeScale: number;
+        timeScale: float;
         /**
          * 程序启动后运行的总渲染帧数
          */
@@ -6253,27 +6256,27 @@ declare namespace paper {
         /**
          * 从程序开始运行时的累计时间(秒)
          */
-        readonly time: number;
+        readonly time: float;
         /**
          *
          */
-        readonly fixedTime: number;
+        readonly fixedTime: float;
         /**
          * 此次逻辑帧的时长
          */
-        readonly lastTickDelta: number;
+        readonly lastTickDelta: float;
         /**
          * 此次渲染帧的时长
          */
-        readonly lastFrameDelta: number;
+        readonly lastFrameDelta: float;
         /**
          *
          */
-        readonly unscaledTime: number;
+        readonly unscaledTime: float;
         /**
          *
          */
-        readonly unscaledDeltaTime: number;
+        readonly unscaledDeltaTime: float;
         /**
          * reset
          */
@@ -6292,7 +6295,7 @@ declare namespace paper {
          * * `Date.now()` 是 Javascript 的 API, 而后者为 Web API
          * * `window.requestAnimationFrame()` 回调中使用的时间戳可认为和 `performance.now()` 的基本一致, 区别只是它不是实时的 "now", 而是 `window.requestAnimationFrame()` 调用产生时的 "now"
          */
-        timestamp(): number;
+        timestamp(): float;
     }
     /**
      * 全局时钟信息组件实例。
@@ -10639,7 +10642,7 @@ declare namespace paper {
          */
         readonly sceneManager: SceneManager;
         /**
-         *
+         * 游戏实体上下文。
          */
         readonly gameObjectContext: Context<GameObject>;
         private _isFocused;
@@ -10663,6 +10666,14 @@ declare namespace paper {
          * TODO:
          */
         start(): void;
+        /**
+         * TODO
+         */
+        pause(): void;
+        /**
+         * TODO
+         */
+        resume(): void;
         /**
          * 显式更新
          *
@@ -12576,7 +12587,7 @@ declare namespace egret3d {
      * 引擎启动入口。
      * @param options
      */
-    function runEgret(options?: RunOptions): Promise<void>;
+    function runEgret(options?: RunOptions | null): Promise<void>;
 }
 interface Window {
     gltf: any;

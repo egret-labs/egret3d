@@ -146,25 +146,27 @@ namespace paper {
         /**
          * @internal
          */
+        public _start() {
+            const preSystems = this._preSystems;
+
+            if (preSystems.length > 0) {
+                preSystems.sort(this._sortPreSystem);
+
+                for (const pair of preSystems) {
+                    this.register.apply(this, pair);
+                }
+
+                preSystems.length = 0;
+            }
+
+            this._isStarted = true;
+        }
+        /**
+         * @internal
+         */
         public _startup() {
             const playerMode = Application.playerMode;
             const cacheSystems = this._cacheSystems;
-
-            if (!this._isStarted) {
-                const preSystems = this._preSystems;
-
-                if (preSystems.length > 0) {
-                    preSystems.sort(this._sortPreSystem);
-
-                    for (const pair of preSystems) {
-                        this.register.apply(this, pair);
-                    }
-
-                    preSystems.length = 0;
-                }
-
-                this._isStarted = true;
-            }
 
             if (cacheSystems.length > 0) {
                 for (const pair of cacheSystems) {
@@ -383,7 +385,7 @@ namespace paper {
             if (this._isStarted) { // 程序启动后，延时初始化系统。
                 this._cacheSystems.push([system, config]);
             }
-            else {
+            else { //
                 this._register(system, config);
             }
 
