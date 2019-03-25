@@ -5345,7 +5345,7 @@ declare namespace egret3d {
     abstract class CameraPostprocessing extends paper.BaseComponent {
         protected readonly _renderState: egret3d.RenderState;
         abstract onRender(camera: Camera): void;
-        protected renderPostprocessTarget(camera: Camera, material?: Material): void;
+        protected renderPostprocessTarget(camera: Camera, material?: Material, renderTarget?: RenderTexture): void;
         blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null, bufferMask?: gltf.BufferMask | null): void;
     }
 }
@@ -8611,6 +8611,9 @@ declare namespace egret3d {
 }
 declare namespace egret3d.postprocess {
     class FXAAPostprocess extends egret3d.CameraPostprocessing {
+        private _renderTexture;
+        initialize(): void;
+        uninitialize(): void;
         onRender(camera: egret3d.Camera): void;
     }
 }

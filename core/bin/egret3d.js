@@ -8726,8 +8726,8 @@ var egret3d;
             _this._renderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState);
             return _this;
         }
-        CameraPostprocessing.prototype.renderPostprocessTarget = function (camera, material) {
-            this._renderState.render(camera, material, camera.postprocessingRenderTarget);
+        CameraPostprocessing.prototype.renderPostprocessTarget = function (camera, material, renderTarget) {
+            this._renderState.render(camera, material, renderTarget ? renderTarget : camera.postprocessingRenderTarget);
         };
         CameraPostprocessing.prototype.blit = function (src, material, dest, bufferMask) {
             if (material === void 0) { material = null; }
@@ -18497,14 +18497,30 @@ var egret3d;
         var FXAAPostprocess = (function (_super) {
             __extends(FXAAPostprocess, _super);
             function FXAAPostprocess() {
-                return _super !== null && _super.apply(this, arguments) || this;
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._renderTexture = null; //TODO
+                return _this;
             }
+            FXAAPostprocess.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._renderTexture = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, format: 6407 /* RGB */ /*TODO*/ }).
+                    setLiner(1 /* Bilinear */).
+                    setRepeat(false).retain();
+            };
+            FXAAPostprocess.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                if (this._renderTexture) {
+                    this._renderTexture.release();
+                }
+                this._renderTexture = null;
+            };
             FXAAPostprocess.prototype.onRender = function (camera) {
-                egret3d.renderState.updateRenderTarget(camera.postprocessingRenderTarget);
+                var renderTexture = this._renderTexture;
+                egret3d.renderState.updateRenderTarget(renderTexture);
                 egret3d.renderState.clearBuffer(17664 /* All */, camera.backgroundColor);
-                this.renderPostprocessTarget(camera);
-                egret3d.DefaultMaterials.FXAA.setTexture(camera.postprocessingRenderTarget);
-                this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA);
+                this.renderPostprocessTarget(camera, undefined, renderTexture);
+                egret3d.DefaultMaterials.FXAA.setTexture(renderTexture);
+                this.blit(renderTexture, egret3d.DefaultMaterials.FXAA);
             };
             return FXAAPostprocess;
         }(egret3d.CameraPostprocessing));
@@ -18566,7 +18582,7 @@ var egret3d;
                 _this._finalSampleRenderTarget = egret3d.RenderTexture.create({
                     width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
                     minFilter: 9729 /* Linear */, magFilter: 9729 /* Linear */,
-                    format: 6408 /* RGBA */
+                    format: 6407 /* RGB */ //TODO
                 });
                 return _this;
             }
@@ -31244,9 +31260,9 @@ var egret3d;
                     this.webGLTexture = webgl.createTexture();
                 }
                 webgl.bindTexture(type, this.webGLTexture);
-                // webgl.pixelStorei(gltf.WebGL.UNPACK_ALIGNMENT, extension.unpackAlignment || gltf.TextureAlignment.Four);
-                // webgl.pixelStorei(gltf.WebGL.UNPACK_FLIP_Y_WEBGL, extension.flipY || 0);
-                // webgl.pixelStorei(gltf.WebGL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, extension.premultiplyAlpha || 0);
+                webgl.pixelStorei(3317 /* UNPACK_ALIGNMENT */, extension.unpackAlignment || 4 /* Four */);
+                webgl.pixelStorei(37440 /* UNPACK_FLIP_Y_WEBGL */, extension.flipY || 0);
+                webgl.pixelStorei(37441 /* UNPACK_PREMULTIPLY_ALPHA_WEBGL */, extension.premultiplyAlpha || 0);
                 webgl_7.setTexturexParameters(type, sampler, extension.anisotropy || 1);
                 webgl.texImage2D(type, 0, format, width, height, 0, format, dataType, null);
                 if (extension.layers === 0) {

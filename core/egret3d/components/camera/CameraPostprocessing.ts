@@ -7,8 +7,8 @@ namespace egret3d {
         protected readonly _renderState: egret3d.RenderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState)!;
         public abstract onRender(camera: Camera): void;
 
-        protected renderPostprocessTarget(camera: Camera, material?: Material) {
-            this._renderState.render(camera, material, camera.postprocessingRenderTarget);
+        protected renderPostprocessTarget(camera: Camera, material?: Material, renderTarget?: RenderTexture) {
+            this._renderState.render(camera, material, renderTarget ? renderTarget : camera.postprocessingRenderTarget);
         }
 
         public blit(src: BaseTexture, material: Material | null = null, dest: RenderTexture | null = null, bufferMask: gltf.BufferMask | null = null) {

@@ -50,7 +50,7 @@ namespace egret3d.postprocess {
             ({
                 width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
                 minFilter: gltf.TextureFilter.Linear, magFilter: gltf.TextureFilter.Linear,
-                format: gltf.TextureFormat.RGBA
+                format: gltf.TextureFormat.RGB//TODO
             });
         private _onStageResize(): void {
             const sampleRenderTarget = this._sampleRenderTarget;
@@ -106,7 +106,7 @@ namespace egret3d.postprocess {
                 this.blit(sampleRenderTarget, copyMaterial, finalSampleRenderTarget, gltf.BufferMask.None);
             }
 
-            
+
             this.blit(finalSampleRenderTarget);
 
             camera.subViewport.set(0, 0, 1, 1);
