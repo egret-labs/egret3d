@@ -180,6 +180,14 @@ namespace egret3d {
         const combineMesh = Mesh.create(combineInstance.verticesCount, combineInstance.primitiveIndices[0], combineAttributes);
         combineMesh.drawMode = gltf.DrawMode.Dynamic;
 
+        //
+        const primitiveIndices = combineInstance.primitiveIndices;
+        for (let i = 1, l = primitiveIndices.length; i < l; i++) {
+            const subLen = primitiveIndices[i];
+            //第一个submesh在构造函数中已经添加，需要手动添加后续的
+            combineMesh.addSubMesh(subLen, i);
+        }
+
         const combinePosition = combineMesh.getVertices() as Float32Array;
         const combineNormal = combineMesh.getNormals() as Float32Array;
         const combineUV0 = combineMesh.getUVs() as Float32Array;
@@ -187,10 +195,8 @@ namespace egret3d {
         const combineColor0 = combineMesh.getColors() as Float32Array;
         const combineJoint0 = combineMesh.getAttributes(gltf.AttributeSemantics.JOINTS_0) as Float32Array;
         const combineWeight0 = combineMesh.getAttributes(gltf.AttributeSemantics.WEIGHTS_0) as Float32Array;
-        const combineIndices = combineMesh.getIndices() as Uint16Array;
         //
         helpInverseMatrix.copy(root.transform.worldToLocalMatrix);
-        const subIndexBuffersCount: number[] = [];
         //
         let positonIndex = 0, normalIndex = 0, color0Index = 0, color1Index = 0, uv0Index = 0, uv1Index = 0, jointIndex = 0, weightIndex = 0, indexIndex = 0;
         let startIndex = 0;
@@ -303,28 +309,19 @@ namespace egret3d {
                         weightIndex += orginVertexCount * 4;
                     }
                 }
-
+                
+                const combineIndices = combineMesh.getIndices(i) as Uint16Array;
                 const indicesBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices!)) as Uint16Array;
                 for (let j = 0, l = indicesBuffer.length; j < l; j++) {
                     const index = indicesBuffer[j] + startIndex;
                     combineIndices[indexIndex++] = index;
                     endIndex = index > endIndex ? index : endIndex;
                 }
-                if (!subIndexBuffersCount[i]) {
-                    subIndexBuffersCount[i] = 0;
-                }
-                subIndexBuffersCount[i] += indicesBuffer.length;
             }
             startIndex = endIndex + 1;
 
             meshFilter.mesh = null;
-        }
-        //TODO submesh创建有问题
-        for (let i = 1, l = subIndexBuffersCount.length; i < l; i++) {
-            const subLen = subIndexBuffersCount[i];
-            //第一个submesh在构造函数中已经添加，需要手动添加后续的
-            combineMesh.addSubMesh(subLen, i);
-        }
+        }        
 
         return combineMesh;
     }
