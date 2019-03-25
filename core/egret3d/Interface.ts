@@ -368,7 +368,7 @@ namespace egret3d {
          * 渲染相机。
          * @param camera 
          */
-        render(camera: Camera, material: Material | null): void;
+        render(camera: Camera, material: Material | null, renderTarget: RenderTexture | null): void;
         /**
          * 绘制一个绘制信息。
          * @param camera 

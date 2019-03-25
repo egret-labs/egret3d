@@ -1,5 +1,5 @@
 namespace components {
-    export class ThermalVisionPostProcess2 extends egret3d.CameraPostprocessing {
+    export class ThermalVisionPostprocess2 extends egret3d.CameraPostprocessing {
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0, maximum: 5 })
         public hotLight: number = 3.0;
         private _material: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/thermalVision2/thermalVision2.shader.json"));
@@ -16,7 +16,7 @@ namespace components {
         }
 
         public onRender(camera: egret3d.Camera) {
-            
+            this.renderPostprocessTarget(camera);
             //
             this._rnd.set(Math.random(), Math.random());
             const material = this._material;

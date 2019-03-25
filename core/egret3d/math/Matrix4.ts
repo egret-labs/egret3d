@@ -469,7 +469,7 @@ namespace egret3d {
             const orthographicMatrix = _helpMatrix;
             matchFactor = 1.0 - matchFactor;
 
-            const offsetX = (viewport !== null ? viewport.x : 0.0) - 0.5;
+            const offsetX = (viewport !== null ? -viewport.x : 0.0) - 0.5;
             const offsetY = (viewport !== null ? viewport.y : 0.0) + 0.5;
             const scaleX = viewport !== null ? viewport.w : 1.0;
             const scaleY = viewport !== null ? viewport.h : 1.0;

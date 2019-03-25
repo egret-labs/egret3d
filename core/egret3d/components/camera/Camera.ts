@@ -121,6 +121,7 @@ namespace egret3d {
         private _size: float = 1.0;
         private readonly _viewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
         private readonly _pixelViewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
+        private readonly _subViewport: Rectangle = Rectangle.create(0.0, 0.0, 1.0, 1.0);
         private readonly _frustum: Frustum = Frustum.create();
         private readonly _viewportMatrix: Matrix4 = Matrix4.create();
         private readonly _cullingMatrix: Matrix4 = Matrix4.create();
@@ -557,6 +558,30 @@ namespace egret3d {
                 }
             }
         }
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.RECT, { step: 0.01 })
+        public get subViewport(): Readonly<Rectangle> {
+            return this._subViewport;
+        }
+        public set subViewport(value: Readonly<Rectangle>) {
+            const subViewport = this._subViewport;
+            if (subViewport !== value) {
+                subViewport.copy(value);
+            }
+
+            subViewport.w = subViewport.w || 1.0;
+            subViewport.h = subViewport.h || 1.0;
+
+            this._dirtyMask |= DirtyMask.PixelViewport;
+
+            if (!this._nativeProjection) {
+                this._dirtyMask |= DirtyMask.ProjectionAndClipMatrix;
+
+                if (!this._nativeCulling) {
+                    this._dirtyMask |= DirtyMask.Culling;
+                }
+            }
+        }
         /**
          * 该相机像素化的渲染视口。
          * - 单位为`像素`。
@@ -643,7 +668,8 @@ namespace egret3d {
                 viewportMatrix.fromProjection(
                     this._near, this._far,
                     this._fov, this._size,
-                    this._opvalue, this.aspect, stage.matchFactor
+                    this._opvalue, this.aspect, stage.matchFactor,
+                    this._subViewport
                 );
                 this._dirtyMask &= ~DirtyMask.ProjectionMatrix;
             }

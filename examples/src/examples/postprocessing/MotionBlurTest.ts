@@ -13,7 +13,7 @@ namespace examples.postprocessing {
             // Create camera.
             const camera = egret3d.Camera.main;
             camera.backgroundColor.copy(egret3d.Color.BLACK);
-            camera.gameObject.addComponent(components.MotionBlurPostProcess);
+            camera.gameObject.addComponent(components.MotionBlurPostprocess);
             camera.gameObject.addComponent(RotationScript);
 
             { // Create light.
