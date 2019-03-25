@@ -18587,10 +18587,14 @@ var egret3d;
                 return _this;
             }
             SSAAPostprocess.prototype._onStageResize = function () {
+                var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
                 var sampleRenderTarget = this._sampleRenderTarget;
                 if (sampleRenderTarget) {
-                    var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
                     sampleRenderTarget.uploadTexture(w, h);
+                }
+                var finalSampleRenderTarget = this._finalSampleRenderTarget;
+                if (finalSampleRenderTarget) {
+                    finalSampleRenderTarget.uploadTexture(w, h);
                 }
             };
             SSAAPostprocess.prototype.initialize = function () {
@@ -18638,7 +18642,7 @@ var egret3d;
                 camera.subViewport.set(0, 0, 1, 1);
             };
             __decorate([
-                paper.editor.property("UINT" /* UINT */, { minimum: 0, maximum: 5 })
+                paper.editor.property("UINT" /* UINT */, { minimum: 0, maximum: 5, step: 1 })
             ], SSAAPostprocess.prototype, "sampleLevel", void 0);
             __decorate([
                 paper.editor.property("CHECKBOX" /* CHECKBOX */)

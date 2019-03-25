@@ -33,7 +33,7 @@ namespace egret3d.postprocess {
     ];
     const roundingRange = 1 / 32;
     export class SSAAPostprocess extends egret3d.CameraPostprocessing {
-        @paper.editor.property(paper.editor.EditType.UINT, { minimum: 0, maximum: 5 })
+        @paper.editor.property(paper.editor.EditType.UINT, { minimum: 0, maximum: 5, step: 1 })
         public sampleLevel: number = 2;
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public unbiased: boolean = false;
@@ -53,10 +53,14 @@ namespace egret3d.postprocess {
                 format: gltf.TextureFormat.RGB//TODO
             });
         private _onStageResize(): void {
+            const { w, h } = egret3d.stage.viewport;
             const sampleRenderTarget = this._sampleRenderTarget;
             if (sampleRenderTarget) {
-                const { w, h } = egret3d.stage.viewport;
                 sampleRenderTarget.uploadTexture(w, h);
+            }
+            const finalSampleRenderTarget = this._finalSampleRenderTarget;
+            if (finalSampleRenderTarget) {
+                finalSampleRenderTarget.uploadTexture(w, h);
             }
         }
         public initialize(): void {
