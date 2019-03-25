@@ -11401,33 +11401,6 @@ declare namespace egret3d.ShaderLib {
         "extensionsRequired": string[];
         "extensionsUsed": string[];
     };
-    const fxaa1: {
-        "version": string;
-        "asset": {
-            "version": string;
-        };
-        "extensions": {
-            "KHR_techniques_webgl": {
-                "shaders": {
-                    "name": string;
-                    "type": number;
-                    "uri": string;
-                }[];
-                "techniques": {
-                    "name": string;
-                    "attributes": {};
-                    "uniforms": {
-                        "map": {
-                            "type": number;
-                        };
-                    };
-                }[];
-            };
-            "paper": {};
-        };
-        "extensionsRequired": string[];
-        "extensionsUsed": string[];
-    };
     const fxaa: {
         "version": string;
         "asset": {
