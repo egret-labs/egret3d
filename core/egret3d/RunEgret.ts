@@ -38,7 +38,6 @@ namespace egret3d {
                 .preRegister(Egret2DRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer)
                 .preRegister(CameraAndLightSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
 
-            paper.Application.registerSystems();
             paper.Application.start();
 
             await _entry(options);

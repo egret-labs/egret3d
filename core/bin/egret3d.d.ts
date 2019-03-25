@@ -4714,7 +4714,9 @@ declare namespace paper {
          * 程序系统管理器单例。
          */
         static getInstance(): SystemManager;
+        private _isStarted;
         private readonly _preSystems;
+        private readonly _cacheSystems;
         private readonly _systems;
         private readonly _startSystems;
         private readonly _reactiveSystems;
@@ -4723,20 +4725,18 @@ declare namespace paper {
         private readonly _tickSystems;
         private readonly _tickCleanupSystems;
         private constructor();
+        private _sortSystem(a, b);
         private _getSystemInsertIndex(systems, order);
+        private _register(system, config?);
         private _reactive(system);
-        /**
-         *
-         */
-        preRegisterSystems(): void;
         /**
          * 在程序启动之前预注册一个指定的系统。
          */
-        preRegister<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(systemClass: ISystemClass<TSystem, TEntity>, context: Context<TEntity>, order?: SystemOrder, config?: any): SystemManager;
+        preRegister<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(systemClass: ISystemClass<TSystem, TEntity>, context: Context<TEntity>, order?: SystemOrder, config?: any | null): SystemManager;
         /**
          * 为程序注册一个指定的系统。
          */
-        register<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(systemClass: ISystemClass<TSystem, TEntity>, context: Context<TEntity>, order?: SystemOrder, config?: any): TSystem;
+        register<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(systemClass: ISystemClass<TSystem, TEntity>, context: Context<TEntity>, order?: SystemOrder, config?: any | null): TSystem;
         /**
          * 从程序已注册的全部系统中获取一个指定的系统。
          */
@@ -10657,10 +10657,6 @@ declare namespace paper {
          * 初始化程序。
          */
         initialize(options: RunOptions): void;
-        /**
-         * 注册程序系统。
-         */
-        registerSystems(): void;
         /**
          * engine start
          *

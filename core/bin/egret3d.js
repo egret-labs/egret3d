@@ -6620,7 +6620,9 @@ var paper;
      */
     var SystemManager = (function () {
         function SystemManager() {
+            this._isStarted = false;
             this._preSystems = [];
+            this._cacheSystems = [];
             this._systems = [];
             this._startSystems = [];
             this._reactiveSystems = [];
@@ -6633,10 +6635,13 @@ var paper;
          * 程序系统管理器单例。
          */
         SystemManager.getInstance = function () {
-            if (!this._instance) {
+            if (this._instance === null) {
                 this._instance = new SystemManager();
             }
             return this._instance;
+        };
+        SystemManager.prototype._sortSystem = function (a, b) {
+            return a[2] - b[2];
         };
         SystemManager.prototype._getSystemInsertIndex = function (systems, order) {
             var index = -1;
@@ -6657,14 +6662,58 @@ var paper;
             }
             return index < 0 ? systems.length : index;
         };
+        SystemManager.prototype._register = function (system, config) {
+            if (config === void 0) { config = null; }
+            var order = system.order;
+            this._systems.splice(this._getSystemInsertIndex(this._systems, order), 0, system);
+            if (system.onStart) {
+                this._startSystems.splice(this._getSystemInsertIndex(this._startSystems, order), 0, system);
+            }
+            if (system.onEntityAdded || system.onComponentAdded || system.onComponentRemoved || system.onEntityRemoved) {
+                this._reactiveSystems.splice(this._getSystemInsertIndex(this._reactiveSystems, order), 0, system);
+            }
+            if (system.onTick) {
+                this._tickSystems.splice(this._getSystemInsertIndex(this._tickSystems, order), 0, system);
+            }
+            if (system.onTickCleanup) {
+                this._tickCleanupSystems.splice(this._getSystemInsertIndex(this._tickCleanupSystems, order), 0, system);
+            }
+            if (system.onFrame) {
+                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
+            }
+            if (system.onFrameCleanup) {
+                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
+            }
+            system.initialize(config);
+        };
         /**
          * @internal
          */
         SystemManager.prototype._startup = function () {
             var playerMode = paper.Application.playerMode;
-            for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
-                var system = _a[_i];
-                if (system.constructor.executeMode & playerMode) {
+            var cacheSystems = this._cacheSystems;
+            if (!this._isStarted) {
+                var preSystems = this._preSystems;
+                if (preSystems.length > 0) {
+                    preSystems.sort(this._sortSystem);
+                    for (var _i = 0, preSystems_1 = preSystems; _i < preSystems_1.length; _i++) {
+                        var pair = preSystems_1[_i];
+                        this.register.apply(this, pair);
+                    }
+                    preSystems.length = 0;
+                }
+                this._isStarted = true;
+            }
+            if (cacheSystems.length > 0) {
+                for (var _a = 0, cacheSystems_1 = cacheSystems; _a < cacheSystems_1.length; _a++) {
+                    var pair = cacheSystems_1[_a];
+                    this._register.apply(this, pair);
+                }
+                cacheSystems.length = 0;
+            }
+            for (var _b = 0, _c = this._systems; _b < _c.length; _b++) {
+                var system = _c[_b];
+                if ((system.constructor.executeMode & playerMode) !== 0) {
                     if (system._executeEnabled && !system.enabled) {
                         system.enabled = true;
                     }
@@ -6681,17 +6730,17 @@ var paper;
                     console.debug(egret.getQualifiedClassName(system), "enabled.");
                 }
                 if (system.onEntityAdded) {
-                    for (var _b = 0, _c = system.groups; _b < _c.length; _b++) {
-                        var group = _c[_b];
-                        for (var _d = 0, _e = group.entities; _d < _e.length; _d++) {
-                            var entity = _e[_d];
+                    for (var _d = 0, _e = system.groups; _d < _e.length; _d++) {
+                        var group = _e[_d];
+                        for (var _f = 0, _g = group.entities; _f < _g.length; _f++) {
+                            var entity = _g[_f];
                             system.onEntityAdded(entity, group);
                         }
                     }
                 }
             }
-            for (var _f = 0, _g = this._startSystems; _f < _g.length; _f++) {
-                var system = _g[_f];
+            for (var _h = 0, _j = this._startSystems; _h < _j.length; _h++) {
+                var system = _j[_h];
                 if (!system.enabled) {
                     continue;
                 }
@@ -6849,27 +6898,17 @@ var paper;
             }
         };
         /**
-         *
-         */
-        SystemManager.prototype.preRegisterSystems = function () {
-            var preSystems = this._preSystems;
-            preSystems.sort(function (a, b) { return a[2] - b[2]; });
-            for (var _i = 0, preSystems_1 = preSystems; _i < preSystems_1.length; _i++) {
-                var pair = preSystems_1[_i];
-                this.register.apply(this, pair);
-            }
-            preSystems.length = 0;
-        };
-        /**
          * 在程序启动之前预注册一个指定的系统。
          */
         SystemManager.prototype.preRegister = function (systemClass, context, order, config) {
             if (order === void 0) { order = 4000 /* Update */; }
+            if (config === void 0) { config = null; }
             if (this._systems.length > 0) {
                 this.register(systemClass, context, order, config);
-                return this;
             }
-            this._preSystems.push([systemClass, context, order, config]);
+            else {
+                this._preSystems.push([systemClass, context, order, config]);
+            }
             return this;
         };
         /**
@@ -6877,32 +6916,19 @@ var paper;
          */
         SystemManager.prototype.register = function (systemClass, context, order, config) {
             if (order === void 0) { order = 4000 /* Update */; }
+            if (config === void 0) { config = null; }
             var system = this.getSystem(systemClass);
-            if (system) {
+            if (system !== null) {
                 console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
                 return system;
             }
             system = paper.BaseSystem.create(systemClass, context, order);
-            this._systems.splice(this._getSystemInsertIndex(this._systems, order), 0, system);
-            if (system.onStart) {
-                this._startSystems.splice(this._getSystemInsertIndex(this._startSystems, order), 0, system);
+            if (this._isStarted) {
+                this._cacheSystems.push([system, config]);
             }
-            if (system.onEntityAdded || system.onComponentAdded || system.onComponentRemoved || system.onEntityRemoved) {
-                this._reactiveSystems.splice(this._getSystemInsertIndex(this._reactiveSystems, order), 0, system);
+            else {
+                this._register(system, config);
             }
-            if (system.onTick) {
-                this._tickSystems.splice(this._getSystemInsertIndex(this._tickSystems, order), 0, system);
-            }
-            if (system.onTickCleanup) {
-                this._tickCleanupSystems.splice(this._getSystemInsertIndex(this._tickCleanupSystems, order), 0, system);
-            }
-            if (system.onFrame) {
-                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
-            }
-            if (system.onFrameCleanup) {
-                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
-            }
-            system.initialize(config);
             return system;
         };
         /**
@@ -6911,7 +6937,7 @@ var paper;
         SystemManager.prototype.getSystem = function (systemClass) {
             for (var _i = 0, _a = this._systems; _i < _a.length; _i++) {
                 var system = _a[_i];
-                if (system && system.constructor === systemClass) {
+                if (system.constructor === systemClass) {
                     return system;
                 }
             }
@@ -27246,11 +27272,6 @@ var paper;
             console.info("Egret", this.version, "start.");
             this.options = options;
             this._playerMode = options.playerMode;
-        };
-        /**
-         * 注册程序系统。
-         */
-        ECS.prototype.registerSystems = function () {
             var _a = this, systemManager = _a.systemManager, gameObjectContext = _a.gameObjectContext;
             systemManager.register(paper.EnableSystem, gameObjectContext, 1000 /* Enable */, this.options);
             systemManager.register(paper.StartSystem, gameObjectContext, 2000 /* Start */);
@@ -27258,7 +27279,6 @@ var paper;
             systemManager.register(paper.UpdateSystem, gameObjectContext, 4000 /* Update */);
             systemManager.register(paper.LateUpdateSystem, gameObjectContext, 6000 /* LateUpdate */);
             systemManager.register(paper.DisableSystem, gameObjectContext, 9000 /* Disable */);
-            systemManager.preRegisterSystems();
         };
         /**
          * TODO
@@ -33014,7 +33034,6 @@ var egret3d;
                             .preRegister(egret3d.particle.ParticleSystem, gameObjectContext, 7000 /* BeforeRenderer */)
                             .preRegister(egret3d.Egret2DRendererSystem, gameObjectContext, 7000 /* BeforeRenderer */)
                             .preRegister(egret3d.CameraAndLightSystem, gameObjectContext, 7000 /* BeforeRenderer */);
-                        paper.Application.registerSystems();
                         paper.Application.start();
                         return [4 /*yield*/, _entry(options)];
                     case 3:

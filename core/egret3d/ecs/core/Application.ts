@@ -107,11 +107,7 @@ namespace paper {
 
             (this.options as RunOptions) = options;
             this._playerMode = options.playerMode!;
-        }
-        /**
-         * 注册程序系统。
-         */
-        public registerSystems(): void {
+
             const { systemManager, gameObjectContext } = this;
             systemManager.register(EnableSystem, gameObjectContext, SystemOrder.Enable, this.options);
             systemManager.register(StartSystem, gameObjectContext, SystemOrder.Start);
@@ -119,7 +115,6 @@ namespace paper {
             systemManager.register(UpdateSystem, gameObjectContext, SystemOrder.Update);
             systemManager.register(LateUpdateSystem, gameObjectContext, SystemOrder.LateUpdate);
             systemManager.register(DisableSystem, gameObjectContext, SystemOrder.Disable);
-            systemManager.preRegisterSystems();
         }
         /**
          * TODO
