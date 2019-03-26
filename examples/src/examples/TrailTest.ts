@@ -3,28 +3,35 @@ namespace examples {
     export class TrailTest implements Example {
 
         async start() {
-            // Load resource config.
+            // 加载默认资源
             await RES.loadConfig("default.res.json", "resource/");
-            const texture = await RES.getResAsync("threejs/textures/sprite0.jpg");
-
-            // create main camera
+            
+            // 创建主相机
             egret3d.Camera.main;
-
-            // create stage
+            
+            // 创建背景
             createGridRoom();
-
-            const trailObject = egret3d.creater.createGameObject();
+            
+            // 创建拖尾游戏对象
+            const trailObject = egret3d.creater.createGameObject("some-trail-object");
             const trailComponent = trailObject.addComponent(egret3d.trail.TrailComponent);
+            
+            // 设置渲染选项
             const meshRenderer = trailObject.addComponent(egret3d.MeshRenderer);
             if (meshRenderer) {
+                // 设置素材
+                const texture = await RES.getResAsync("threejs/textures/sprite0.jpg");
                 meshRenderer.material = egret3d.Material.create().setTexture(texture);
-                // meshRenderer.material.addDefine(egret3d.ShaderDefine.USE_COLOR);
+                // 设置双面渲染
                 meshRenderer.material.setCullFace(false);
             } else {
                 console.error('no MeshRenderer on Trail object');
                 return;
             }
-            trailComponent.play();
+
+            // 启动拖尾 trailComponent.play();
+            // 暂停拖尾 trailComponent.pause();
+            // 停止拖尾 trailComponent.stop();
         }
     }
 }

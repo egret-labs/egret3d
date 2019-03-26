@@ -3,15 +3,31 @@ namespace egret3d.trail {
      * 拖尾的朝向
      */
     export enum TrailAlignment {
-        View, // 始终面对摄像机
-        Local, // 使用自己的 Transform 设置
+        /**
+         * 始终面对摄像机
+         */
+        View = "View",
+        /**
+         * 使用自己的 Transform 设置
+         */
+        Local = "Local",
     }
     /**
      * 拖尾的材质模式
      */
     export enum TrailTextureMode {
-        Tiling, // 每个拖尾片段使用一个材质
-        Stretch, // 伸展到整个拖尾
+        /**
+         * 伸展到整个拖尾
+         */
+        Stretch = "Stretch",
+        /**
+         * 每个拖尾片段使用一个材质
+         */
+        PerSegment = "PerSegment",
+        /**
+         * 重复平铺
+         */
+        Tile = "Tile",
     }
     /**
      * 拖尾组件
@@ -35,12 +51,12 @@ namespace egret3d.trail {
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public width: number = 1.0;
-        /**
-         * 拖尾的颜色 (值 / 变化曲线) 
-         */
-        @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.COLOR)
-        public color: Color = Color.WHITE;
+        // /**
+        //  * 拖尾的颜色 (值 / 变化曲线) 
+        //  */
+        // @paper.serializedField
+        // @paper.editor.property(paper.editor.EditType.COLOR)
+        // public color: Color = Color.WHITE;
         /**
          * 生命期结束后是否自动销毁
          */
@@ -52,6 +68,7 @@ namespace egret3d.trail {
          * @see {TrailAlignment}
          */
         @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: TrailAlignment as any })
         public Alignment: TrailAlignment = TrailAlignment.View;
         /**
          * 拖尾的材质模式
@@ -62,7 +79,7 @@ namespace egret3d.trail {
         /**
          * @internal
          */
-        public _isPlaying: boolean = false;
+        public _isPlaying: boolean = true;
         /**
          * @internal
          */
@@ -71,6 +88,9 @@ namespace egret3d.trail {
         private _timeScale: number = 1.0;
         private readonly _batcher: TrailBatcher = new TrailBatcher();
 
+        /**
+         * @internal
+         */
         private _clean() {
             this._batcher.clean();
         }
@@ -136,12 +156,6 @@ namespace egret3d.trail {
          */
         public get isPaused() {
             return this._isPaused;
-        }
-        /**
-         * TODO: temp
-         */
-        public syncRenderer() {
-            this._batcher.connectRenderer();
         }
     }
 }
