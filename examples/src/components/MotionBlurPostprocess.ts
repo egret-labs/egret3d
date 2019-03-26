@@ -6,57 +6,66 @@ namespace components {
         private _resolution: egret3d.Vector2 = egret3d.Vector2.create(1.0, 1.0);
 
         private _depthRenderTarget: egret3d.RenderTexture | null = null;
+        private _depthMaterial: egret3d.Material | null = null;
+        private _material: egret3d.Material | null = null;
         private _preMatrix: egret3d.Matrix4 | null = null;
-        private readonly _depathMaterial: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/motionBlur/blurDepth.shader.json"));
-        private readonly _material: egret3d.Material = egret3d.Material.create(RES.getRes("shaders/motionBlur/motionBlur.shader.json"));
+
+        private _onStageResize(): void {
+            const { w, h } = egret3d.stage.viewport;
+            const renderTexture = this._depthRenderTarget;
+            if (renderTexture) {
+                renderTexture.uploadTexture(w, h);
+            }
+        }
 
         public initialize() {
             super.initialize();
 
             this._resolution.set(egret3d.stage.viewport.w, egret3d.stage.viewport.h);
-
-            this._depathMaterial.setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            this._depthRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, premultiplyAlpha: 1 }).setLiner(false).setRepeat(false).setMipmap(true).retain();
+            this._depthMaterial = egret3d.Material.create(RES.getRes("shaders/motionBlur/blurDepth.shader.json")).retain();
+            this._depthMaterial.setDepth(true, true).setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            this._material = egret3d.Material.create(RES.getRes("shaders/motionBlur/motionBlur.shader.json")).retain();
             this._material.setDepth(true, true).setCullFace(false).setFloat("velocityFactor", this._velocityFactor);
+
+            egret3d.stage.onScreenResize.add(this._onStageResize, this);
         }
 
         public uninitialize() {
             super.uninitialize();
 
+            egret3d.stage.onScreenResize.remove(this._onStageResize, this);
+
             if (this._depthRenderTarget) {
-                this._depthRenderTarget.dispose();
+                this._depthRenderTarget.release();
             }
 
-            if (this._depathMaterial) {
-                this._depathMaterial.dispose();
+            if (this._depthMaterial) {
+                this._depthMaterial.release();
             }
 
             if (this._material) {
-                this._material.dispose();
+                this._material.release();
             }
-
-            this._resolution.release();
 
             if (this._preMatrix) {
                 this._preMatrix.release();
             }
+
+            this._depthRenderTarget = null;
+            this._depthMaterial = null;
+            this._material = null;
+            this._preMatrix = null;
         }
 
         public onRender(camera: egret3d.Camera) {
             this.renderPostprocessTarget(camera);
-            const depthMaterial = this._depathMaterial;
-            const material = this._material;
+            const depthMaterial = this._depthMaterial!;
+            const material = this._material!;
             const renderState = this._renderState;
             const postProcessingRenderTarget = camera.postprocessingRenderTarget;
 
-            if (!this._depthRenderTarget) {
-                this._depthRenderTarget = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, premultiplyAlpha: 1 }).setLiner(false).setRepeat(false).setMipmap(true);
-            }
-
             depthMaterial.setFloat("mNear", camera.near).setFloat("mFar", camera.far);
-            // const preMatrix = egret3d.Matrix4.create().multiply(camera.projectionMatrix, camera.transform.worldToLocalMatrix).release();
-            // const preMatrix = camera.transform.worldToLocalMatrix.clone().multiply(camera.projectionMatrix).release();
-            // const currentMatrix = preMatrix.clone().inverse();
-
             if (!this._preMatrix) {
                 this._preMatrix = camera.worldToClipMatrix.clone();
             }
@@ -89,15 +98,16 @@ namespace components {
         public set velocityFactor(value: number) {
             if (this._velocityFactor !== value) {
                 this._velocityFactor = value;
-                this._material.setFloat("velocityFactor", value);
+                this._material!.setFloat("velocityFactor", value);
             }
         }
 
         public set samples(value: number) {
             if (this._samples !== value) {
-                this._material.removeDefine(`SAMPLE_NUM ${this._samples}`);
+                const material = this._material!;
+                material.removeDefine(`SAMPLE_NUM ${this._samples}`);
                 this._samples = value;
-                this._material.addDefine(`SAMPLE_NUM ${this._samples}`);
+                material.addDefine(`SAMPLE_NUM ${this._samples}`);
             }
         }
     }

@@ -4041,8 +4041,6 @@ declare namespace egret3d {
         commonDefines: string;
         vertexDefines: string;
         fragmentDefines: string;
-        readonly clearColor: Color;
-        readonly viewport: Rectangle;
         readonly defines: Defines;
         readonly defaultCustomShaderChunks: Readonly<{
             [key: string]: string;
@@ -4061,7 +4059,6 @@ declare namespace egret3d {
             clockBuffer: Float32Array;
             skyBoxTexture: BaseTexture | null;
         };
-        renderTarget: RenderTexture | null;
         customShaderChunks: {
             [key: string]: string;
         } | null;
@@ -4073,6 +4070,11 @@ declare namespace egret3d {
          *
          */
         draw: (drawCall: DrawCall, material?: Material | null) => void;
+        protected readonly _viewport: Rectangle;
+        protected readonly _clearColor: Readonly<Color>;
+        protected _clearDepth: number;
+        protected _clearStencil: number;
+        _renderTarget: RenderTexture | null;
         private _logarithmicDepthBuffer;
         private _gammaInput;
         private _gammaOutput;
@@ -4088,15 +4090,9 @@ declare namespace egret3d {
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding): string;
         protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding): string;
+        protected _setViewport(value: Readonly<Rectangle>): void;
+        protected _setRenderTarget(value: RenderTexture | null): void;
         initialize(): void;
-        /**
-         *
-         */
-        updateRenderTarget(renderTarget: RenderTexture | null): void;
-        /**
-         *
-         */
-        updateViewport(viewport: Rectangle): void;
         /**
          *
          */
@@ -4109,6 +4105,11 @@ declare namespace egret3d {
          *
          */
         clearState(): void;
+        viewport: Readonly<Rectangle>;
+        clearColor: Readonly<Color>;
+        clearDepth: number;
+        clearStencil: number;
+        renderTarget: RenderTexture | null;
         /**
          *
          */
@@ -4130,7 +4131,7 @@ declare namespace egret3d {
          */
         toneMapping: ToneMapping;
         /**
-         *
+         * 是否预乘
          */
         premultipliedAlpha: boolean;
         /**
@@ -4141,6 +4142,14 @@ declare namespace egret3d {
          *
          */
         toneMappingWhitePoint: float;
+        /**
+        * @deprecated
+        */
+        updateViewport(viewport: Rectangle): void;
+        /**
+         * @deprecated
+         */
+        updateRenderTarget(renderTarget: RenderTexture | null): void;
     }
     /**
      * 全局渲染状态组件实例。
@@ -6809,6 +6818,10 @@ declare namespace egret3d {
          */
         alpha?: boolean;
         /**
+         * 是否预乘
+         */
+        premultipliedAlpha?: boolean;
+        /**
          *
          */
         gammaInput?: boolean;
@@ -8612,6 +8625,7 @@ declare namespace egret3d {
 declare namespace egret3d.postprocess {
     class FXAAPostprocess extends egret3d.CameraPostprocessing {
         private _renderTexture;
+        private _onStageResize();
         initialize(): void;
         uninitialize(): void;
         onRender(camera: egret3d.Camera): void;

@@ -20,10 +20,11 @@ namespace egret3d {
             const saveCamera = camerasAndLights.currentCamera!; // TODO
             //
             const camera = cameraAndLightCollecter.postprocessingCamera;
-            renderState.updateRenderTarget(dest);
-            renderState.updateViewport(camera.viewport);
+            renderState.renderTarget = dest;
+            renderState.viewport = camera.viewport;
             if (bufferMask === null || bufferMask !== gltf.BufferMask.None) {
-                renderState.clearBuffer(bufferMask || saveCamera.bufferMask, saveCamera.backgroundColor);
+                renderState.clearColor = saveCamera.backgroundColor;
+                renderState.clearBuffer(bufferMask || saveCamera.bufferMask);
             }
             //
             camerasAndLights.currentCamera = camera; // TODO

@@ -585,9 +585,10 @@ namespace egret3d.webgl {
 
         private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
             const renderState = this._renderState;
-            renderState.updateRenderTarget(renderTarget);
-            renderState.updateViewport(camera.viewport);
-            renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
+            renderState.renderTarget = renderTarget;
+            renderState.viewport = camera.viewport;
+            renderState.clearColor = camera.backgroundColor;
+            renderState.clearBuffer(camera.bufferMask);
             // Skybox.
             const skyBox = camera.entity.getComponent(SkyBox);
             if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
@@ -623,7 +624,7 @@ namespace egret3d.webgl {
                 this.draw(drawCall, material);
             }
             //
-            if (renderState.renderTarget && renderState.renderTarget.generateMipmap()) {
+            if (renderTarget && renderTarget.generateMipmap()) {
                 renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
             }
             // Egret 2D.
@@ -661,8 +662,9 @@ namespace egret3d.webgl {
                 //generate depth map
                 const shadowMaterial = (isPoint) ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH_3201;
 
-                renderState.updateRenderTarget(shadow._renderTarget);
-                renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
+                renderState.renderTarget = shadow._renderTarget;
+                renderState.clearColor = Color.WHITE;
+                renderState.clearBuffer(gltf.BufferMask.DepthAndColor);
 
                 for (let i = 0, l = (isPoint ? 6 : 1); i < l; i++) {
                     //update shadowMatrix
@@ -741,7 +743,8 @@ namespace egret3d.webgl {
                 this._cacheProgram = null;//TODO
             }
             else { // Clear stage background to black.
-                this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.BLACK);
+                this._renderState.clearColor = Color.BLACK;
+                this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor);
             }
         }
 

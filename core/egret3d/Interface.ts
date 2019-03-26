@@ -397,6 +397,10 @@ namespace egret3d {
          */
         alpha?: boolean;
         /**
+         * 是否预乘
+         */
+        premultipliedAlpha?:boolean;
+        /**
          * 
          */
         gammaInput?: boolean;

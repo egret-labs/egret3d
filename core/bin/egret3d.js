@@ -4649,8 +4649,6 @@ var egret3d;
             _this.commonDefines = "";
             _this.vertexDefines = "";
             _this.fragmentDefines = "";
-            _this.clearColor = egret3d.Color.create();
-            _this.viewport = egret3d.Rectangle.create();
             _this.defines = new egret3d.Defines();
             _this.defaultCustomShaderChunks = {
                 custom_vertex: "",
@@ -4674,7 +4672,6 @@ var egret3d;
                 clockBuffer: new Float32Array(4),
                 skyBoxTexture: null,
             };
-            _this.renderTarget = null;
             _this.customShaderChunks = null;
             /**
              *
@@ -4684,6 +4681,11 @@ var egret3d;
              *
              */
             _this.draw = null; //开发者一般不会手动调用,通常是后期渲染调用
+            _this._viewport = egret3d.Rectangle.create();
+            _this._clearColor = egret3d.Color.create();
+            _this._clearDepth = 1;
+            _this._clearStencil = 1;
+            _this._renderTarget = null;
             _this._logarithmicDepthBuffer = false;
             _this._gammaInput = true; //
             _this._gammaOutput = true; //
@@ -4693,7 +4695,7 @@ var egret3d;
             _this._stateEnables = [3042 /* Blend */, 2884 /* CullFace */, 2929 /* DepthTest */];
             _this._cacheStateEnable = {};
             /**
-             *
+             * 是否预乘
              */
             _this.premultipliedAlpha = false;
             /**
@@ -4779,6 +4781,8 @@ var egret3d;
             var components = this._getEncodingComponents(finialEncoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         };
+        RenderState.prototype._setViewport = function (value) { };
+        RenderState.prototype._setRenderTarget = function (value) { };
         /**
          * @internal
          */
@@ -4955,14 +4959,6 @@ var egret3d;
         /**
          *
          */
-        RenderState.prototype.updateRenderTarget = function (renderTarget) { };
-        /**
-         *
-         */
-        RenderState.prototype.updateViewport = function (viewport) { };
-        /**
-         *
-         */
         RenderState.prototype.clearBuffer = function (bufferBit, clearColor) { };
         /**
          *
@@ -4977,8 +4973,81 @@ var egret3d;
             for (var key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
-            this.renderTarget = null;
+            this._renderTarget = null;
         };
+        Object.defineProperty(RenderState.prototype, "viewport", {
+            get: function () {
+                return this._viewport;
+            },
+            set: function (value) {
+                var currentViewport = this._viewport;
+                var renderTarget = this._renderTarget;
+                var w;
+                var h;
+                if (renderTarget) {
+                    w = renderTarget.width;
+                    h = renderTarget.height;
+                }
+                else {
+                    var stageViewport = egret3d.stage.viewport;
+                    w = stageViewport.w;
+                    h = stageViewport.h;
+                }
+                currentViewport.set(w * value.x, h * (1.0 - value.y - value.h), w * value.w, h * value.h); //TODO
+                this._setViewport(currentViewport);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "clearColor", {
+            get: function () {
+                return this._clearColor;
+            },
+            set: function (value) {
+                //TODO 2d,3d渲染状态不统一，这里先记录，统一后，可以做缓存
+                if (this.premultipliedAlpha) {
+                    this._clearColor.set(value.r * value.a, value.g * value.a, value.b * value.a, value.a);
+                }
+                else {
+                    this._clearColor.copy(value);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "clearDepth", {
+            get: function () {
+                return this._clearDepth;
+            },
+            set: function (value) {
+                this._clearDepth = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "clearStencil", {
+            get: function () {
+                return this._clearStencil;
+            },
+            set: function (value) {
+                this._clearStencil = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "renderTarget", {
+            get: function () {
+                return this._renderTarget;
+            },
+            set: function (value) {
+                if (this._renderTarget !== value) {
+                    this._renderTarget = value;
+                    this._setRenderTarget(value);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(RenderState.prototype, "logarithmicDepthBuffer", {
             /**
              *
@@ -5109,6 +5178,14 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        /**
+        * @deprecated
+        */
+        RenderState.prototype.updateViewport = function (viewport) { this.viewport = viewport; };
+        /**
+         * @deprecated
+         */
+        RenderState.prototype.updateRenderTarget = function (renderTarget) { this.renderTarget = renderTarget; };
         __decorate([
             paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], RenderState.prototype, "logarithmicDepthBuffer", null);
@@ -8741,10 +8818,11 @@ var egret3d;
             var saveCamera = camerasAndLights.currentCamera; // TODO
             //
             var camera = egret3d.cameraAndLightCollecter.postprocessingCamera;
-            egret3d.renderState.updateRenderTarget(dest);
-            egret3d.renderState.updateViewport(camera.viewport);
+            egret3d.renderState.renderTarget = dest;
+            egret3d.renderState.viewport = camera.viewport;
             if (bufferMask === null || bufferMask !== 0 /* None */) {
-                egret3d.renderState.clearBuffer(bufferMask || saveCamera.bufferMask, saveCamera.backgroundColor);
+                egret3d.renderState.clearColor = saveCamera.backgroundColor;
+                egret3d.renderState.clearBuffer(bufferMask || saveCamera.bufferMask);
             }
             //
             camerasAndLights.currentCamera = camera; // TODO
@@ -10839,6 +10917,19 @@ var egret3d;
             function WebGLRenderState() {
                 return _super !== null && _super.apply(this, arguments) || this;
             }
+            WebGLRenderState.prototype._setViewport = function (value) {
+                var webgl = WebGLRenderState.webgl;
+                webgl.viewport(value.x, value.y, value.w, value.h);
+            };
+            WebGLRenderState.prototype._setRenderTarget = function (value) {
+                if (value) {
+                    value.activateTexture();
+                }
+                else {
+                    var webgl_2 = WebGLRenderState.webgl;
+                    webgl_2.bindFramebuffer(36160 /* FrameBuffer */, null);
+                }
+            };
             WebGLRenderState.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
                 var options = paper.Application.options;
@@ -10887,52 +10978,18 @@ var egret3d;
                 console.info("Maximum GPU skinned bone count:", this.maxBoneCount);
                 console.info("Maximum anisotropy:", this.maxAnisotropy);
             };
-            WebGLRenderState.prototype.updateRenderTarget = function (renderTarget) {
-                if (this.renderTarget !== renderTarget) {
-                    this.renderTarget = renderTarget;
-                    if (renderTarget) {
-                        renderTarget.activateTexture();
-                    }
-                    else {
-                        var webgl_2 = WebGLRenderState.webgl;
-                        webgl_2.bindFramebuffer(36160 /* FrameBuffer */, null);
-                    }
-                }
-            };
-            WebGLRenderState.prototype.updateViewport = function (viewport) {
-                var webgl = WebGLRenderState.webgl;
-                var currentViewport = this.viewport;
-                var renderTarget = this.renderTarget;
-                var w;
-                var h;
-                if (renderTarget) {
-                    w = renderTarget.width;
-                    h = renderTarget.height;
-                }
-                else {
-                    var stageViewport = egret3d.stage.viewport;
-                    w = stageViewport.w;
-                    h = stageViewport.h;
-                }
-                currentViewport.set(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h); //TODO
-                webgl.viewport(currentViewport.x, currentViewport.y, currentViewport.w, currentViewport.h);
-            };
-            WebGLRenderState.prototype.clearBuffer = function (bufferBit, clearColor) {
+            WebGLRenderState.prototype.clearBuffer = function (bufferBit) {
                 var webgl = WebGLRenderState.webgl;
                 if (bufferBit & 256 /* Depth */) {
-                    webgl.depthMask(true);
-                    webgl.clearDepth(1.0);
+                    webgl.depthMask(true); //TODO
+                    webgl.clearDepth(this._clearDepth);
                 }
                 if (bufferBit & 1024 /* Stencil */) {
-                    webgl.clearStencil(1.0);
+                    webgl.clearStencil(this._clearStencil);
                 }
                 if (bufferBit & 16384 /* Color */) {
-                    if (this.premultipliedAlpha) {
-                        clearColor && webgl.clearColor(clearColor.r * clearColor.a, clearColor.g * clearColor.a, clearColor.b * clearColor.a, clearColor.a);
-                    }
-                    else {
-                        clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                    }
+                    var clearColor = this._clearColor;
+                    clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
                 }
                 webgl.clear(bufferBit);
             };
@@ -18501,14 +18558,23 @@ var egret3d;
                 _this._renderTexture = null; //TODO
                 return _this;
             }
+            FXAAPostprocess.prototype._onStageResize = function () {
+                var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
+                var renderTexture = this._renderTexture;
+                if (renderTexture) {
+                    renderTexture.uploadTexture(w, h);
+                }
+            };
             FXAAPostprocess.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
                 this._renderTexture = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, format: 6407 /* RGB */ /*TODO*/ }).
                     setLiner(1 /* Bilinear */).
                     setRepeat(false).retain();
+                egret3d.stage.onScreenResize.add(this._onStageResize, this);
             };
             FXAAPostprocess.prototype.uninitialize = function () {
                 _super.prototype.uninitialize.call(this);
+                egret3d.stage.onScreenResize.remove(this._onStageResize, this);
                 if (this._renderTexture) {
                     this._renderTexture.release();
                 }
@@ -18516,8 +18582,9 @@ var egret3d;
             };
             FXAAPostprocess.prototype.onRender = function (camera) {
                 var renderTexture = this._renderTexture;
-                egret3d.renderState.updateRenderTarget(renderTexture);
-                egret3d.renderState.clearBuffer(17664 /* All */, camera.backgroundColor);
+                egret3d.renderState.renderTarget = renderTexture;
+                egret3d.renderState.clearColor = camera.backgroundColor;
+                egret3d.renderState.clearBuffer(17664 /* All */);
                 this.renderPostprocessTarget(camera, undefined, renderTexture);
                 egret3d.DefaultMaterials.FXAA.setTexture(renderTexture);
                 this.blit(renderTexture, egret3d.DefaultMaterials.FXAA);
@@ -18628,12 +18695,14 @@ var egret3d;
                         var uniformCenteredDistribution = (-0.5 + (i + 0.5) / l);
                         sampleWeight += roundingRange * uniformCenteredDistribution;
                     }
-                    renderState.updateRenderTarget(sampleRenderTarget);
-                    renderState.clearBuffer(17664 /* All */, clearColor);
+                    renderState.renderTarget = sampleRenderTarget;
+                    renderState.clearColor = clearColor;
+                    renderState.clearBuffer(17664 /* All */);
                     renderState.render(camera, undefined, sampleRenderTarget);
-                    renderState.updateRenderTarget(finalSampleRenderTarget);
+                    renderState.renderTarget = finalSampleRenderTarget;
                     if (i === 0) {
-                        renderState.clearBuffer(17664 /* All */, clearColor);
+                        renderState.clearColor = clearColor;
+                        renderState.clearBuffer(17664 /* All */);
                     }
                     copyMaterial.setOpacity(sampleWeight);
                     this.blit(sampleRenderTarget, copyMaterial, finalSampleRenderTarget, 0 /* None */);
@@ -27480,7 +27549,7 @@ var egret3d;
                 var context = define.context;
                 if (context) {
                     // if (typeof context === "number") {
-                    if (!define.isCode) {
+                    if (!define.isCode && typeof context === "number") {
                         context = define.name + " " + context;
                     }
                 }
@@ -32132,9 +32201,10 @@ var egret3d;
             };
             WebGLRenderSystem.prototype._render = function (camera, renderTarget, material) {
                 var renderState = this._renderState;
-                renderState.updateRenderTarget(renderTarget);
-                renderState.updateViewport(camera.viewport);
-                renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
+                renderState.renderTarget = renderTarget;
+                renderState.viewport = camera.viewport;
+                renderState.clearColor = camera.backgroundColor;
+                renderState.clearBuffer(camera.bufferMask);
                 // Skybox.
                 var skyBox = camera.entity.getComponent(egret3d.SkyBox);
                 if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
@@ -32168,7 +32238,7 @@ var egret3d;
                     this.draw(drawCall, material);
                 }
                 //
-                if (renderState.renderTarget && renderState.renderTarget.generateMipmap()) {
+                if (renderTarget && renderTarget.generateMipmap()) {
                     renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
                 }
                 // Egret 2D.
@@ -32201,8 +32271,9 @@ var egret3d;
                     var isPoint = light.constructor === egret3d.PointLight;
                     //generate depth map
                     var shadowMaterial = (isPoint) ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH_3201;
-                    renderState_1.updateRenderTarget(shadow._renderTarget);
-                    renderState_1.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.WHITE);
+                    renderState_1.renderTarget = shadow._renderTarget;
+                    renderState_1.clearColor = egret3d.Color.WHITE;
+                    renderState_1.clearBuffer(16640 /* DepthAndColor */);
                     for (var i = 0, l = (isPoint ? 6 : 1); i < l; i++) {
                         //update shadowMatrix
                         shadow._onUpdate(i);
@@ -32268,7 +32339,8 @@ var egret3d;
                     this._cacheProgram = null; //TODO
                 }
                 else {
-                    this._renderState.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.BLACK);
+                    this._renderState.clearColor = egret3d.Color.BLACK;
+                    this._renderState.clearBuffer(16640 /* DepthAndColor */);
                 }
             };
             WebGLRenderSystem.prototype.onFrameCleanup = function () {
@@ -33112,6 +33184,9 @@ var egret3d;
         }
         if (options.alpha === undefined) {
             options.alpha = _parseBoolean(playerDiv, "data-alpha", false);
+        }
+        if (options.premultipliedAlpha === undefined) {
+            options.premultipliedAlpha = _parseBoolean(playerDiv, "data-premultipliedAlpha", false);
         }
         if (options.antialias === undefined) {
             options.antialias = _parseBoolean(playerDiv, "data-antialias", true);

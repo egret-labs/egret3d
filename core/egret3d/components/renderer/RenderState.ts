@@ -35,8 +35,6 @@ namespace egret3d {
         public commonDefines: string = "";
         public vertexDefines: string = "";
         public fragmentDefines: string = "";
-        public readonly clearColor: Color = Color.create();
-        public readonly viewport: Rectangle = Rectangle.create();
         public readonly defines: Defines = new Defines();
         public readonly defaultCustomShaderChunks: Readonly<{ [key: string]: string }> = {
             custom_vertex: "",
@@ -60,7 +58,6 @@ namespace egret3d {
             clockBuffer: new Float32Array(4),
             skyBoxTexture: null as (BaseTexture | null),
         };
-        public renderTarget: RenderTexture | null = null;
         public customShaderChunks: { [key: string]: string } | null = null;
         /**
          * 
@@ -70,6 +67,12 @@ namespace egret3d {
          * 
          */
         public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;//开发者一般不会手动调用,通常是后期渲染调用
+
+        protected readonly _viewport: Rectangle = Rectangle.create();
+        protected readonly _clearColor: Readonly<Color> = Color.create();
+        protected _clearDepth: number = 1;
+        protected _clearStencil: number = 1;
+        protected _renderTarget: RenderTexture | null = null;
 
         private _logarithmicDepthBuffer: boolean = false;
         private _gammaInput: boolean = true; //
@@ -171,6 +174,8 @@ namespace egret3d {
             const components = this._getEncodingComponents(finialEncoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         }
+        protected _setViewport(value: Readonly<Rectangle>) { }
+        protected _setRenderTarget(value: RenderTexture | null) { }
         /**
          * @internal
          */
@@ -365,14 +370,6 @@ namespace egret3d {
         /**
          * 
          */
-        public updateRenderTarget(renderTarget: RenderTexture | null): void { }
-        /**
-         * 
-         */
-        public updateViewport(viewport: Rectangle) { }
-        /**
-         * 
-         */
         public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
         /**
          * 
@@ -386,7 +383,61 @@ namespace egret3d {
                 delete this._cacheStateEnable[key];
             }
 
-            this.renderTarget = null;
+            this._renderTarget = null;
+        }
+        public get viewport(): Readonly<Rectangle> {
+            return this._viewport;
+        }
+        public set viewport(value: Readonly<Rectangle>) {
+            const currentViewport = this._viewport;
+            const renderTarget = this._renderTarget;
+            let w: number;
+            let h: number;
+            if (renderTarget) {
+                w = renderTarget.width;
+                h = renderTarget.height;
+            }
+            else {
+                const stageViewport = stage.viewport;
+                w = stageViewport.w;
+                h = stageViewport.h;
+            }
+
+            currentViewport.set(w * value.x, h * (1.0 - value.y - value.h), w * value.w, h * value.h);//TODO
+            this._setViewport(currentViewport);
+        }
+        public get clearColor(): Readonly<Color> {
+            return this._clearColor;
+        }
+        public set clearColor(value: Readonly<Color>) {
+            //TODO 2d,3d渲染状态不统一，这里先记录，统一后，可以做缓存
+            if (this.premultipliedAlpha) {
+                this._clearColor.set(value.r * value.a, value.g * value.a, value.b * value.a, value.a);
+            }
+            else {
+                this._clearColor.copy(value);
+            }
+        }
+        public get clearDepth(): number {
+            return this._clearDepth;
+        }
+        public set clearDepth(value: number) {
+            this._clearDepth = value;
+        }
+        public get clearStencil(): number {
+            return this._clearStencil;
+        }
+        public set clearStencil(value: number) {
+            this._clearStencil = value;
+        }
+        public get renderTarget(): RenderTexture | null {
+            return this._renderTarget;
+        }
+        public set renderTarget(value: RenderTexture | null) {
+            if (this._renderTarget !== value) {
+                this._renderTarget = value;
+                this._setRenderTarget(value);
+            }
         }
         /**
          * 
@@ -518,7 +569,7 @@ namespace egret3d {
             this._toneMapping = value;
         }
         /**
-         * 
+         * 是否预乘
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public premultipliedAlpha: boolean = false;
@@ -532,6 +583,14 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 10.0 })
         public toneMappingWhitePoint: float = 1.0;
+        /**
+        * @deprecated
+        */
+        public updateViewport(viewport: Rectangle) { this.viewport = viewport; }
+        /**
+         * @deprecated
+         */
+        public updateRenderTarget(renderTarget: RenderTexture | null): void { this.renderTarget = renderTarget; }
     }
     /**
      * 全局渲染状态组件实例。

@@ -98,13 +98,15 @@ namespace egret3d.postprocess {
                     sampleWeight += roundingRange * uniformCenteredDistribution;
                 }
 
-                renderState.updateRenderTarget(sampleRenderTarget);
-                renderState.clearBuffer(gltf.BufferMask.All, clearColor);
+                renderState.renderTarget = sampleRenderTarget;
+                renderState.clearColor = clearColor;
+                renderState.clearBuffer(gltf.BufferMask.All);
                 renderState.render(camera, undefined, sampleRenderTarget);
-                renderState.updateRenderTarget(finalSampleRenderTarget);
+                renderState.renderTarget = finalSampleRenderTarget;
 
                 if (i === 0) {
-                    renderState.clearBuffer(gltf.BufferMask.All, clearColor);
+                    renderState.clearColor = clearColor;
+                    renderState.clearBuffer(gltf.BufferMask.All);
                 }
                 copyMaterial.setOpacity(sampleWeight);
                 this.blit(sampleRenderTarget, copyMaterial, finalSampleRenderTarget, gltf.BufferMask.None);

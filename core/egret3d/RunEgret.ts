@@ -130,6 +130,10 @@ namespace egret3d {
             options.alpha = _parseBoolean(playerDiv, "data-alpha", false);
         }
 
+        if (options.premultipliedAlpha === undefined) {
+            options.premultipliedAlpha = _parseBoolean(playerDiv, "data-premultipliedAlpha", false);
+        }
+
         if (options.antialias === undefined) {
             options.antialias = _parseBoolean(playerDiv, "data-antialias", true);
         }
