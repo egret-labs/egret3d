@@ -165,10 +165,23 @@ namespace egret3d {
          * 
          */
         public updateAccessorTypeCount(): this {
-            const accessors = this.config.accessors;
-            if (accessors) {
+            const { accessors, meshes } = this.config;
+
+            if (accessors !== undefined) {
                 for (const accessor of accessors) {
                     accessor.typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
+                }
+            }
+
+            if (meshes !== undefined) {
+                for (const mesh of meshes) {
+                    const { primitives } = mesh;
+
+                    if (primitives.length > 1) {
+                        for (const primitive of primitives) {
+                            primitive.attributes = primitives[0].attributes;
+                        }
+                    }
                 }
             }
 
@@ -299,7 +312,8 @@ namespace egret3d {
          * 通过 Accessor 获取指定 BufferView。
          */
         public getBufferView(accessor: gltf.Accessor): gltf.BufferView {
-            return this.config.bufferViews![accessor.bufferView || 0];
+            const bufferIndex = accessor.bufferView;
+            return this.config.bufferViews![bufferIndex !== undefined ? bufferIndex : 0];
         }
         /**
          * 通过 Accessor 索引，获取指定 Accessor。

@@ -5,7 +5,7 @@ namespace egret3d {
     @paper.singleton
     export class DrawCallCollecter extends paper.BaseComponent {
         /**
-         * 
+         * 绘制次数。
          */
         public drawCallCount: uint = 0;
         /**

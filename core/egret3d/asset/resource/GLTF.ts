@@ -841,10 +841,6 @@ declare namespace gltf {
          */
         type: AccessorType;
         /**
-         * Specifies if the attribute is a scalar, vector, or matrix.
-         */
-        typeCount?: number; // Modified by egret.
-        /**
          * Maximum value of each component in this attribute.
          */
         max?: number[];
@@ -860,6 +856,12 @@ declare namespace gltf {
         extensions?: any;
         extras?: any;
         // [k: string]: any;
+        /**
+         * 缓存访问器属性的单位数量。
+         * - 加快属性数量的访问速度。
+         * - 数据存储移除，运行时必须生成。
+         */
+        typeCount?: number;
     }
     /**
      * The index of the node and TRS property that an animation channel targets.
@@ -882,7 +884,7 @@ declare namespace gltf {
      */
     export interface AnimationChannel {
         /**
-         * The index of a sampler in this animation used to compute the value for the target.
+         * The index of a sampler in this animation used to compute the value for the target. 
          */
         sampler: Index;
         /**
@@ -1489,7 +1491,7 @@ declare namespace gltf {
         semantic: string;
         extensions?: any;
         extras?: any;
-        [k: string]: any;
+        // [k: string]: any;
     }
     export type UniformValue = any;
     /**
@@ -1552,7 +1554,7 @@ declare namespace gltf {
         states?: States;
         extensions?: any;
         extras?: any;
-        [k: string]: any;
+        // [k: string]: any;
     }
     /**
      * A shader program, including its vertex and fragment shaders.
@@ -1573,7 +1575,7 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: any;
-        [k: string]: any;
+        // [k: string]: any;
     }
     export interface KhrTechniqueWebglGlTfExtension {
         /**
@@ -1597,15 +1599,18 @@ declare namespace gltf {
         /**
          * The index of the technique.
          */
-        // technique: Index; Modified by egret.
-        technique: string;
+        // technique: Index;
         /**
          * Dictionary object of uniform values.
          */
         values?: {
             [k: string]: UniformValue;
         };
-        [k: string]: any;
+        // [k: string]: any;
+        /**
+         * 
+         */
+        technique: string;
     }
     /**
     * The technique to use for a material and any additional uniform values.
@@ -1665,7 +1670,7 @@ declare namespace gltf {
         polygonOffset?: number[];
         extensions?: any;
         extras?: any;
-        [k: string]: any;
+        // [k: string]: any;
     }
     /**
      * Fixed-function rendering states.

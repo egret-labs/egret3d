@@ -68,6 +68,9 @@ namespace egret3d.webgl {
         private readonly _inverseModelViewMatrix: Matrix3 = Matrix3.create();
         //
         private _cacheProgram: WebGLProgramBinder | null = null;
+        private _cacheVAO: WebGLBuffer | null = null;
+        private _cacheVBO: WebGLBuffer | null = null;
+        private _cacheIBO: WebGLBuffer | null = null;
         private _cacheScene: paper.Scene | null = null;
         private _cacheCamera: Camera | null = null;
         //
@@ -534,19 +537,28 @@ namespace egret3d.webgl {
             }
         }
 
-        private _updateAttributes(program: WebGLProgramBinder, mesh: Mesh, subMeshIndex: number) {
+        private _updateAttributes(program: WebGLProgramBinder, mesh: Mesh, subMeshIndex: uint) {
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
             const attributes = mesh.glTFMesh.primitives[subMeshIndex].attributes;
             let attributeCount = 0;
-            //
-            if ((mesh as WebGLMesh).vbo) {
-                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, (mesh as WebGLMesh).vbo);
+
+            mesh.update(MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndicesBuffer);
+
+            const vbo = (mesh as WebGLMesh).vbo;
+            const ibo = (mesh as WebGLMesh).ibos[subMeshIndex];
+
+            if (this._cacheVBO !== vbo) {
+                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
+                this._cacheVBO = vbo;
             }
-            else {
-                (mesh as WebGLMesh).createBuffer();
+
+            if (this._cacheIBO !== ibo) {
+                webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
+                this._cacheIBO = ibo;
             }
-            // vbo.
+            // 激活或关闭有效属性。
+            // +++---...|xxx
             for (const attribute of program.attributes) {
                 const location = attribute.location;
                 const accessorIndex = attributes[attribute.semantic];
@@ -568,18 +580,14 @@ namespace egret3d.webgl {
 
                 attributeCount++;
             }
-            //
+            // 关闭无效属性，并缓存。
+            // xxx|---
             if (attributeCount !== renderState.caches.attributeCount) {
                 for (let i = attributeCount, l = renderState.caches.attributeCount; i < l; ++i) {
                     webgl.disableVertexAttribArray(i);
                 }
 
                 renderState.caches.attributeCount = attributeCount;
-            }
-            // ibo.
-            const ibo = (mesh as WebGLMesh).ibos[subMeshIndex];
-            if (ibo) {
-                webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
             }
         }
 
@@ -924,12 +932,20 @@ namespace egret3d.webgl {
                 if (program !== this._cacheProgram) {
                     webgl.useProgram(program.program);
                     this._cacheProgram = program;
+                    this._cacheVAO = null;
+                    this._cacheVBO = null;
+                    this._cacheIBO = null;
+
                     this._cacheScene = null;
                     this._cacheCamera = null;
                     this._cacheLight = null;
+
+                    this._cacheSubMeshIndex = -1;
                     this._cacheMesh = null;
-                    this._cacheMaterial = null;
+
                     this._cacheMaterialVersion = -1;
+                    this._cacheMaterial = null;
+
                     this._cacheLightmapIndex = -1;
                     forceUpdate = true;
                 }
@@ -965,7 +981,7 @@ namespace egret3d.webgl {
                 // Draw.
                 if (primitive.indices !== undefined) {
                     const indexAccessor = mesh.getAccessor(primitive.indices);
-                    webgl.drawElements(drawMode, drawCall.count || indexAccessor.count, indexAccessor.componentType, 0);//TODO 暂时不支持交错
+                    webgl.drawElements(drawMode, drawCall.count || indexAccessor.count, indexAccessor.componentType, 0); // TODO 暂时不支持交错
                 }
                 else {
                     webgl.drawArrays(drawMode, 0, vertexAccessor.count);
