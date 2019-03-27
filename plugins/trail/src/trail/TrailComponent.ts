@@ -32,6 +32,8 @@ namespace egret3d.trail {
     /**
      * 拖尾组件
      */
+    @paper.requireComponent(egret3d.MeshFilter)
+    @paper.requireComponent(egret3d.MeshRenderer)
     export class TrailComponent extends paper.BaseComponent {
         /**
          * 拖尾的存活时间 (秒)
@@ -68,7 +70,7 @@ namespace egret3d.trail {
          * @see {TrailAlignment}
          */
         @paper.serializedField
-        @paper.editor.property(paper.editor.EditType.LIST, { listItems: TrailAlignment as any })
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(egret3d.trail.TrailAlignment) })
         public Alignment: TrailAlignment = TrailAlignment.View;
         /**
          * 拖尾的材质模式

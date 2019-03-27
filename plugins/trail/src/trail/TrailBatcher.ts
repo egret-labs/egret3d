@@ -389,6 +389,15 @@ namespace egret3d.trail {
                 this._maxFragmentCount = this._points.length;
                 this._createMesh();
             }
+
+            // 把 mesh 传给 MeshFilter 组件
+            const meshFilter = this._comp.gameObject.getComponent(MeshFilter);
+            if (!meshFilter) {
+                console.warn(`no MeshFilter on Trail object(${this._comp.gameObject.name})`);
+                return;
+            }
+            meshFilter.mesh = this._mesh;
+
             let buff = this._mesh.getAttributes(gltf.AttributeSemantics.POSITION);
             if (buff) { buff.fill(0.0); }
             this._mesh.setAttributes(gltf.AttributeSemantics.POSITION, this._verticles);
@@ -413,15 +422,6 @@ namespace egret3d.trail {
          */
         private _createMesh() {
             this._mesh = Mesh.create(this._maxFragmentCount * 4, (this._maxFragmentCount - 1) * 6);
-
-            // 把生成的 mesh 传给 MeshFilter 组件
-            const meshFilter = this._comp.gameObject.getComponent(MeshFilter);
-            if (!meshFilter) {
-                console.warn(`no MeshFilter on Trail object(${this._comp.gameObject.name})`);
-                return;
-            }
-            meshFilter.mesh = this._mesh;
-
             // TODO: 设置使用颜色
             // const meshRenderer = this._comp.gameObject.getComponent(MeshRenderer);
             // meshRenderer.material.addDefine(egret3d.ShaderDefine.USE_COLOR);

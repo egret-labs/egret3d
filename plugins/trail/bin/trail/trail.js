@@ -371,6 +371,13 @@ var egret3d;
                     this._maxFragmentCount = this._points.length;
                     this._createMesh();
                 }
+                // 把 mesh 传给 MeshFilter 组件
+                var meshFilter = this._comp.gameObject.getComponent(egret3d.MeshFilter);
+                if (!meshFilter) {
+                    console.warn("no MeshFilter on Trail object(" + this._comp.gameObject.name + ")");
+                    return;
+                }
+                meshFilter.mesh = this._mesh;
                 var buff = this._mesh.getAttributes("POSITION" /* POSITION */);
                 if (buff) {
                     buff.fill(0.0);
@@ -397,13 +404,6 @@ var egret3d;
              */
             TrailBatcher.prototype._createMesh = function () {
                 this._mesh = egret3d.Mesh.create(this._maxFragmentCount * 4, (this._maxFragmentCount - 1) * 6);
-                // 把生成的 mesh 传给 MeshFilter 组件
-                var meshFilter = this._comp.gameObject.getComponent(egret3d.MeshFilter);
-                if (!meshFilter) {
-                    console.warn("no MeshFilter on Trail object(" + this._comp.gameObject.name + ")");
-                    return;
-                }
-                meshFilter.mesh = this._mesh;
                 // TODO: 设置使用颜色
                 // const meshRenderer = this._comp.gameObject.getComponent(MeshRenderer);
                 // meshRenderer.material.addDefine(egret3d.ShaderDefine.USE_COLOR);
@@ -599,11 +599,15 @@ var egret3d;
             ], TrailComponent.prototype, "autoDestruct", void 0);
             __decorate([
                 paper.serializedField,
-                paper.editor.property("LIST" /* LIST */, { listItems: TrailAlignment })
+                paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(egret3d.trail.TrailAlignment) })
             ], TrailComponent.prototype, "Alignment", void 0);
             __decorate([
                 paper.serializedField
             ], TrailComponent.prototype, "textureMode", void 0);
+            TrailComponent = __decorate([
+                paper.requireComponent(egret3d.MeshFilter),
+                paper.requireComponent(egret3d.MeshRenderer)
+            ], TrailComponent);
             return TrailComponent;
         }(paper.BaseComponent));
         trail.TrailComponent = TrailComponent;
