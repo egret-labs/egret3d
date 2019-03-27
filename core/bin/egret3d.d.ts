@@ -4071,10 +4071,12 @@ declare namespace egret3d {
          */
         draw: (drawCall: DrawCall, material?: Material | null) => void;
         protected readonly _viewport: Rectangle;
-        protected readonly _clearColor: Readonly<Color>;
+        protected readonly _clearColor: Color;
+        protected readonly _colorMask: [boolean, boolean, boolean, boolean];
         protected _clearDepth: number;
+        protected _depthMask: boolean;
         protected _clearStencil: number;
-        _renderTarget: RenderTexture | null;
+        protected _renderTarget: RenderTexture | null;
         private _logarithmicDepthBuffer;
         private _gammaInput;
         private _gammaOutput;
@@ -4092,23 +4094,44 @@ declare namespace egret3d {
         protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding): string;
         protected _setViewport(value: Readonly<Rectangle>): void;
         protected _setRenderTarget(value: RenderTexture | null): void;
+        protected _setColorMask(value: Readonly<[boolean, boolean, boolean, boolean]>): void;
         initialize(): void;
         /**
-         *
+         * 根据BufferMask清除缓存
          */
-        clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void;
+        clearBuffer(bufferBit: gltf.BufferMask): void;
         /**
-         *
+         * 将像素复制到2D纹理图像中
+         * TODO 微信上不可用
          */
         copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level?: uint): void;
         /**
          *
          */
         clearState(): void;
+        /**
+         * 设置视口
+         */
         viewport: Readonly<Rectangle>;
+        /**
+         * 指定清除的颜色值
+         */
         clearColor: Readonly<Color>;
+        /**
+         * 指定是否可以写入帧缓冲区中的各个颜色分量
+         */
+        colorMask: Readonly<[boolean, boolean, boolean, boolean]>;
+        /**
+         * 指定清除的深度值
+         */
         clearDepth: number;
+        /**
+         * 指定写入模板缓存区的清除值
+         */
         clearStencil: number;
+        /**
+         * 指定要绑定的渲染目标
+         */
         renderTarget: RenderTexture | null;
         /**
          *

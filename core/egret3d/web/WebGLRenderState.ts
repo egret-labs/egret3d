@@ -69,8 +69,21 @@ namespace egret3d.webgl {
         public static webgl: WebGLRenderingContext | null = null;
 
         protected _setViewport(value: Readonly<Rectangle>) {
+            const renderTarget = this._renderTarget;
+            let w: number;
+            let h: number;
+            if (renderTarget) {
+                w = renderTarget.width;
+                h = renderTarget.height;
+            }
+            else {
+                const stageViewport = stage.viewport;
+                w = stageViewport.w;
+                h = stageViewport.h;
+            }
+
             const webgl = WebGLRenderState.webgl!;
-            webgl.viewport(value.x, value.y, value.w, value.h);
+            webgl.viewport(w * value.x, h * (1.0 - value.y - value.h), w * value.w, h * value.h);
         }
         protected _setRenderTarget(value: RenderTexture | null) {
             if (value) {
@@ -80,6 +93,10 @@ namespace egret3d.webgl {
                 const webgl = WebGLRenderState.webgl!;
                 webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
             }
+        }
+        protected _setColorMask(value: Readonly<[boolean, boolean, boolean, boolean]>) {
+            const webgl = WebGLRenderState.webgl!;
+            webgl.colorMask(value[0], value[1], value[2], value[3]);
         }
 
         public initialize() {
@@ -139,16 +156,16 @@ namespace egret3d.webgl {
 
             if (bufferBit & gltf.BufferMask.Depth) {
                 webgl.depthMask(true);//TODO
-                webgl.clearDepth(this._clearDepth);
+                webgl.clearDepth(this._clearDepth);//TODO 2d,3d渲染状态统一后，放到每个调用函数中，可以做缓存
             }
 
             if (bufferBit & gltf.BufferMask.Stencil) {
-                webgl.clearStencil(this._clearStencil);
+                webgl.clearStencil(this._clearStencil);//TODO
             }
 
             if (bufferBit & gltf.BufferMask.Color) {
                 const clearColor = this._clearColor;
-                clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);//TODO
             }
 
             webgl.clear(bufferBit);
@@ -156,7 +173,6 @@ namespace egret3d.webgl {
 
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
             const webgl = WebGLRenderState.webgl!;
-
             target.bindTexture(0);
             webgl.copyTexImage2D(target.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
         }

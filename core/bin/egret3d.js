@@ -4683,7 +4683,9 @@ var egret3d;
             _this.draw = null; //开发者一般不会手动调用,通常是后期渲染调用
             _this._viewport = egret3d.Rectangle.create();
             _this._clearColor = egret3d.Color.create();
+            _this._colorMask = [true, true, true, true];
             _this._clearDepth = 1;
+            _this._depthMask = true;
             _this._clearStencil = 1;
             _this._renderTarget = null;
             _this._logarithmicDepthBuffer = false;
@@ -4783,6 +4785,7 @@ var egret3d;
         };
         RenderState.prototype._setViewport = function (value) { };
         RenderState.prototype._setRenderTarget = function (value) { };
+        RenderState.prototype._setColorMask = function (value) { };
         /**
          * @internal
          */
@@ -4957,11 +4960,12 @@ var egret3d;
             this.gammaOutput = false;
         };
         /**
-         *
+         * 根据BufferMask清除缓存
          */
-        RenderState.prototype.clearBuffer = function (bufferBit, clearColor) { };
+        RenderState.prototype.clearBuffer = function (bufferBit) { };
         /**
-         *
+         * 将像素复制到2D纹理图像中
+         * TODO 微信上不可用
          */
         RenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
             if (level === void 0) { level = 0; }
@@ -4976,30 +4980,23 @@ var egret3d;
             this._renderTarget = null;
         };
         Object.defineProperty(RenderState.prototype, "viewport", {
+            /**
+             * 设置视口
+             */
             get: function () {
                 return this._viewport;
             },
             set: function (value) {
-                var currentViewport = this._viewport;
-                var renderTarget = this._renderTarget;
-                var w;
-                var h;
-                if (renderTarget) {
-                    w = renderTarget.width;
-                    h = renderTarget.height;
-                }
-                else {
-                    var stageViewport = egret3d.stage.viewport;
-                    w = stageViewport.w;
-                    h = stageViewport.h;
-                }
-                currentViewport.set(w * value.x, h * (1.0 - value.y - value.h), w * value.w, h * value.h); //TODO
-                this._setViewport(currentViewport);
+                this._viewport.copy(value);
+                this._setViewport(value);
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(RenderState.prototype, "clearColor", {
+            /**
+             * 指定清除的颜色值
+             */
             get: function () {
                 return this._clearColor;
             },
@@ -5015,7 +5012,27 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        Object.defineProperty(RenderState.prototype, "colorMask", {
+            /**
+             * 指定是否可以写入帧缓冲区中的各个颜色分量
+             */
+            get: function () {
+                return this._colorMask;
+            },
+            set: function (value) {
+                this._colorMask[0] = value[0];
+                this._colorMask[1] = value[1];
+                this._colorMask[2] = value[2];
+                this._colorMask[3] = value[3];
+                this._setColorMask(value);
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(RenderState.prototype, "clearDepth", {
+            /**
+             * 指定清除的深度值
+             */
             get: function () {
                 return this._clearDepth;
             },
@@ -5026,6 +5043,9 @@ var egret3d;
             configurable: true
         });
         Object.defineProperty(RenderState.prototype, "clearStencil", {
+            /**
+             * 指定写入模板缓存区的清除值
+             */
             get: function () {
                 return this._clearStencil;
             },
@@ -5036,6 +5056,9 @@ var egret3d;
             configurable: true
         });
         Object.defineProperty(RenderState.prototype, "renderTarget", {
+            /**
+             * 指定要绑定的渲染目标
+             */
             get: function () {
                 return this._renderTarget;
             },
@@ -10918,8 +10941,20 @@ var egret3d;
                 return _super !== null && _super.apply(this, arguments) || this;
             }
             WebGLRenderState.prototype._setViewport = function (value) {
+                var renderTarget = this._renderTarget;
+                var w;
+                var h;
+                if (renderTarget) {
+                    w = renderTarget.width;
+                    h = renderTarget.height;
+                }
+                else {
+                    var stageViewport = egret3d.stage.viewport;
+                    w = stageViewport.w;
+                    h = stageViewport.h;
+                }
                 var webgl = WebGLRenderState.webgl;
-                webgl.viewport(value.x, value.y, value.w, value.h);
+                webgl.viewport(w * value.x, h * (1.0 - value.y - value.h), w * value.w, h * value.h);
             };
             WebGLRenderState.prototype._setRenderTarget = function (value) {
                 if (value) {
@@ -10929,6 +10964,10 @@ var egret3d;
                     var webgl_2 = WebGLRenderState.webgl;
                     webgl_2.bindFramebuffer(36160 /* FrameBuffer */, null);
                 }
+            };
+            WebGLRenderState.prototype._setColorMask = function (value) {
+                var webgl = WebGLRenderState.webgl;
+                webgl.colorMask(value[0], value[1], value[2], value[3]);
             };
             WebGLRenderState.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
@@ -10982,14 +11021,14 @@ var egret3d;
                 var webgl = WebGLRenderState.webgl;
                 if (bufferBit & 256 /* Depth */) {
                     webgl.depthMask(true); //TODO
-                    webgl.clearDepth(this._clearDepth);
+                    webgl.clearDepth(this._clearDepth); //TODO 2d,3d渲染状态统一后，放到每个调用函数中，可以做缓存
                 }
                 if (bufferBit & 1024 /* Stencil */) {
-                    webgl.clearStencil(this._clearStencil);
+                    webgl.clearStencil(this._clearStencil); //TODO
                 }
                 if (bufferBit & 16384 /* Color */) {
                     var clearColor = this._clearColor;
-                    clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
+                    clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a); //TODO
                 }
                 webgl.clear(bufferBit);
             };

@@ -69,8 +69,10 @@ namespace egret3d {
         public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;//开发者一般不会手动调用,通常是后期渲染调用
 
         protected readonly _viewport: Rectangle = Rectangle.create();
-        protected readonly _clearColor: Readonly<Color> = Color.create();
+        protected readonly _clearColor: Color = Color.create();
+        protected readonly _colorMask: [boolean, boolean, boolean, boolean] = [true, true, true, true];
         protected _clearDepth: number = 1;
+        protected _depthMask: boolean = true;
         protected _clearStencil: number = 1;
         protected _renderTarget: RenderTexture | null = null;
 
@@ -176,6 +178,7 @@ namespace egret3d {
         }
         protected _setViewport(value: Readonly<Rectangle>) { }
         protected _setRenderTarget(value: RenderTexture | null) { }
+        protected _setColorMask(value: Readonly<[boolean, boolean, boolean, boolean]>) { }
         /**
          * @internal
          */
@@ -368,11 +371,12 @@ namespace egret3d {
             this.gammaOutput = false;
         }
         /**
-         * 
+         * 根据BufferMask清除缓存
          */
-        public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
+        public clearBuffer(bufferBit: gltf.BufferMask): void { }
         /**
-         * 
+         * 将像素复制到2D纹理图像中
+         * TODO 微信上不可用
          */
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
         /**
@@ -385,27 +389,20 @@ namespace egret3d {
 
             this._renderTarget = null;
         }
+        /**
+         * 设置视口
+         */
         public get viewport(): Readonly<Rectangle> {
             return this._viewport;
         }
         public set viewport(value: Readonly<Rectangle>) {
-            const currentViewport = this._viewport;
-            const renderTarget = this._renderTarget;
-            let w: number;
-            let h: number;
-            if (renderTarget) {
-                w = renderTarget.width;
-                h = renderTarget.height;
-            }
-            else {
-                const stageViewport = stage.viewport;
-                w = stageViewport.w;
-                h = stageViewport.h;
-            }
+            this._viewport.copy(value);
 
-            currentViewport.set(w * value.x, h * (1.0 - value.y - value.h), w * value.w, h * value.h);//TODO
-            this._setViewport(currentViewport);
+            this._setViewport(value);
         }
+        /**
+         * 指定清除的颜色值
+         */
         public get clearColor(): Readonly<Color> {
             return this._clearColor;
         }
@@ -418,18 +415,41 @@ namespace egret3d {
                 this._clearColor.copy(value);
             }
         }
+        /**
+         * 指定是否可以写入帧缓冲区中的各个颜色分量
+         */
+        public get colorMask(): Readonly<[boolean, boolean, boolean, boolean]> {
+            return this._colorMask;
+        }
+        public set colorMask(value: Readonly<[boolean, boolean, boolean, boolean]>) {
+            this._colorMask[0] = value[0];
+            this._colorMask[1] = value[1];
+            this._colorMask[2] = value[2];
+            this._colorMask[3] = value[3];
+
+            this._setColorMask(value);
+        }
+        /**
+         * 指定清除的深度值
+         */
         public get clearDepth(): number {
             return this._clearDepth;
         }
         public set clearDepth(value: number) {
             this._clearDepth = value;
         }
+        /**
+         * 指定写入模板缓存区的清除值
+         */
         public get clearStencil(): number {
             return this._clearStencil;
         }
         public set clearStencil(value: number) {
             this._clearStencil = value;
         }
+        /**
+         * 指定要绑定的渲染目标
+         */
         public get renderTarget(): RenderTexture | null {
             return this._renderTarget;
         }
