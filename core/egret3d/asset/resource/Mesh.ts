@@ -181,7 +181,7 @@ namespace egret3d {
          * 缓存的 glTF 属性。
          * - 用于快速访问，并防止移除子网格后，没有属性数据源。
          */
-        protected _attributes: { [key: string]: gltf.Index | undefined } | null = null;
+        protected _attributes: { [key: string]: gltf.Index } | null = null;
         /**
          * 缓存的骨骼绑定逆矩阵。
          * - 仅在蒙皮网格中存在。
@@ -199,7 +199,7 @@ namespace egret3d {
             super.initialize(name, config, buffers);
 
             const glTFMesh = this._glTFMesh = this.config.meshes![0];
-            const asstibutes = this._attributes = glTFMesh.primitives[0].attributes;
+            const asstibutes = this._attributes = glTFMesh.primitives[0].attributes as { [key: string]: gltf.Index };
             this._vertexCount = this.getAccessor(asstibutes.POSITION !== undefined ? asstibutes.POSITION : 0).count;
 
             if (attributeTypes !== null) {
@@ -503,14 +503,27 @@ namespace egret3d {
 
                 if (primitive.indices !== undefined) {
                     const accessorIndex = primitive.indices;
-                    
-                    accessors!.splice(accessorIndex, 1);
+                    const accessor = accessors![accessorIndex];
                     const bufferView = this.getBufferView(accessor);
-                    buffers[];
-                    config.buffers![bufferIndex];
-                }
 
-                return true;
+                    if (bufferView.buffer !== 0) { // buffer 为 0， 意味着这是一个导入资源，导入的资源不可被删除。
+                        for (let i = subMeshIndex + 1; i < primitiveCount; ++i) {
+                            const primitive = primitives[i];
+                            const accessor = accessors![primitive.indices!];
+                            const bufferView = this.getBufferView(accessor);
+                            bufferView.buffer++;
+                            accessor.bufferView!++;
+                            primitive.indices!++;
+                        }
+
+                        const bufferViewIndex = accessor.bufferView!;
+                        config.bufferViews!.splice(bufferViewIndex, 1);
+                        buffers.splice(bufferViewIndex, 1);
+                        accessors!.splice(accessorIndex, 1);
+
+                        return true;
+                    }
+                }
             }
 
             return false;
@@ -786,8 +799,8 @@ namespace egret3d {
         /**
          * 该网格的全部顶点属性名称。
          */
-        public get attributeNames(): ReadonlyArray<string> {
-            return this._attributeNames;
+        public get attributes(): Readonly<{ [key: string]: gltf.Index }> {
+            return this._attributes!;
         }
         /**
          * 获取该网格的 glTF 网格数据。
