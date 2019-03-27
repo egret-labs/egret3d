@@ -125,6 +125,7 @@ declare namespace egret3d.trail {
          * 是否播放已经暂停
          */
         readonly isPaused: boolean;
+        setupRenderer(): void;
     }
 }
 declare namespace egret3d.trail {
@@ -133,6 +134,7 @@ declare namespace egret3d.trail {
      */
     class TrailSystem extends paper.BaseSystem<paper.GameObject> {
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
+        onEntityAdded(entity: paper.GameObject): void;
         onFrame(deltaTime: float): void;
     }
     function createTrail(name?: string): paper.GameObject;

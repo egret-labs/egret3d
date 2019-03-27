@@ -165,6 +165,21 @@ var egret3d;
                 this._composeMesh();
             };
             /**
+             * 在拖尾相关的组件初始化齐全后配置渲染相关的参数
+             */
+            TrailBatcher.prototype.setupRenderer = function () {
+                // 把 mesh 传给 MeshFilter 组件
+                var meshFilter = this._comp.gameObject.getComponent(egret3d.MeshFilter);
+                if (!meshFilter) {
+                    console.warn("no MeshFilter on Trail object(" + this._comp.gameObject.name + ")");
+                    return;
+                }
+                meshFilter.mesh = this._mesh;
+                // TODO: 设置使用颜色
+                // const meshRenderer = this._comp.gameObject.getComponent(MeshRenderer);
+                // meshRenderer.material.addDefine(egret3d.ShaderDefine.USE_COLOR);
+            };
+            /**
              * 更新片段数据
              * @param now 当前时间戳
              */
@@ -371,13 +386,6 @@ var egret3d;
                     this._maxFragmentCount = this._points.length;
                     this._createMesh();
                 }
-                // 把 mesh 传给 MeshFilter 组件
-                var meshFilter = this._comp.gameObject.getComponent(egret3d.MeshFilter);
-                if (!meshFilter) {
-                    console.warn("no MeshFilter on Trail object(" + this._comp.gameObject.name + ")");
-                    return;
-                }
-                meshFilter.mesh = this._mesh;
                 var buff = this._mesh.getAttributes("POSITION" /* POSITION */);
                 if (buff) {
                     buff.fill(0.0);
@@ -404,9 +412,6 @@ var egret3d;
              */
             TrailBatcher.prototype._createMesh = function () {
                 this._mesh = egret3d.Mesh.create(this._maxFragmentCount * 4, (this._maxFragmentCount - 1) * 6);
-                // TODO: 设置使用颜色
-                // const meshRenderer = this._comp.gameObject.getComponent(MeshRenderer);
-                // meshRenderer.material.addDefine(egret3d.ShaderDefine.USE_COLOR);
             };
             return TrailBatcher;
         }());
@@ -581,6 +586,9 @@ var egret3d;
                 enumerable: true,
                 configurable: true
             });
+            TrailComponent.prototype.setupRenderer = function () {
+                this._batcher.setupRenderer();
+            };
             __decorate([
                 paper.serializedField,
                 paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
@@ -630,6 +638,12 @@ var egret3d;
                 return [
                     paper.Matcher.create(egret3d.Transform, egret3d.MeshFilter, egret3d.MeshRenderer, trail_1.TrailComponent),
                 ];
+            };
+            TrailSystem.prototype.onEntityAdded = function (entity) {
+                var trail = entity.getComponent(trail_1.TrailComponent);
+                if (trail) {
+                    trail.setupRenderer();
+                }
             };
             TrailSystem.prototype.onFrame = function (deltaTime) {
                 for (var _i = 0, _a = this.groups[0].entities; _i < _a.length; _i++) {

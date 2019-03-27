@@ -13,7 +13,7 @@ namespace examples {
             createGridRoom();
             
             // 创建拖尾游戏对象
-            const trailObject = egret3d.creater.createGameObject("some-trail-object");
+            const trailObject = egret3d.creater.createGameObject("Trail-Object");
             const trailComponent = trailObject.addComponent(egret3d.trail.TrailComponent);
             
             // 设置渲染选项

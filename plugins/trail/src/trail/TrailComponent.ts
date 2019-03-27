@@ -159,5 +159,11 @@ namespace egret3d.trail {
         public get isPaused() {
             return this._isPaused;
         }
+        /**
+         * 依赖的组件都已添加完成时触发
+         */
+        public onDependenciesReady() {
+            this._batcher.setupRenderer();
+        }
     }
 }
