@@ -454,10 +454,10 @@ namespace egret3d {
             return this._renderTarget;
         }
         public set renderTarget(value: RenderTexture | null) {
-            if (this._renderTarget !== value) {
+            // if (this._renderTarget !== value) {  //TODO  防止2d污染3d
                 this._renderTarget = value;
                 this._setRenderTarget(value);
-            }
+            // }
         }
         /**
          * 

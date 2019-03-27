@@ -5063,10 +5063,10 @@ var egret3d;
                 return this._renderTarget;
             },
             set: function (value) {
-                if (this._renderTarget !== value) {
-                    this._renderTarget = value;
-                    this._setRenderTarget(value);
-                }
+                // if (this._renderTarget !== value) {  //TODO  防止2d污染3d
+                this._renderTarget = value;
+                this._setRenderTarget(value);
+                // }
             },
             enumerable: true,
             configurable: true

@@ -3,66 +3,85 @@ namespace egret3d.trail {
      * 拖尾的朝向
      */
     export enum TrailAlignment {
-        View, // 始终面对摄像机
-        Local, // 使用自己的 Transform 设置
+        /**
+         * 始终面对摄像机
+         */
+        View = "View",
+        /**
+         * 使用自己的 Transform 设置
+         */
+        Local = "Local",
     }
     /**
      * 拖尾的材质模式
      */
     export enum TrailTextureMode {
-        Tiling, // 每个拖尾片段使用一个材质
-        Stretch, // 伸展到整个拖尾
+        /**
+         * 伸展到整个拖尾
+         */
+        Stretch = "Stretch",
+        /**
+         * 每个拖尾片段使用一个材质
+         */
+        PerSegment = "PerSegment",
+        /**
+         * 重复平铺
+         */
+        Tile = "Tile",
     }
     /**
      * 拖尾组件
      */
+    @paper.requireComponent(egret3d.MeshFilter)
+    @paper.requireComponent(egret3d.MeshRenderer)
     export class TrailComponent extends paper.BaseComponent {
         /**
          * 拖尾的存活时间 (秒)
          */
         @paper.serializedField
-        public time: number = 1.0;
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        public time: number = 3.0;
         /**
          * 生成下一个拖尾片段的最小距离 
          */
         @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public minVertexDistance: number = 0.1;
         /**
          * 拖尾的宽度 (值 / 变化曲线) 
          */
         @paper.serializedField
-        public widths: number[] = [];
-        /**
-         * 拖尾的颜色 (值 / 变化曲线) 
-         */
-        @paper.serializedField
-        public colors: Color[] = [];
+        @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
+        public width: number = 1.0;
+        // /**
+        //  * 拖尾的颜色 (值 / 变化曲线) 
+        //  */
+        // @paper.serializedField
+        // @paper.editor.property(paper.editor.EditType.COLOR)
+        // public color: Color = Color.WHITE;
         /**
          * 生命期结束后是否自动销毁
          */
         @paper.serializedField
-        public autoDestruct: boolean = true;
-        /**
-         * 所用的材料
-         */
-        @paper.serializedField
-        public material: Material | undefined;
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public autoDestruct: boolean = false;
         /**
          * 拖尾的朝向是始终面对摄像机还是有自己的单独设置
          * @see {TrailAlignment}
          */
         @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(egret3d.trail.TrailAlignment) })
         public Alignment: TrailAlignment = TrailAlignment.View;
         /**
          * 拖尾的材质模式
          * @see {TrailTextureMode}
          */
         @paper.serializedField
-        public textureMode: TrailTextureMode = TrailTextureMode.Tiling;
+        public textureMode: TrailTextureMode = TrailTextureMode.Stretch;
         /**
          * @internal
          */
-        public _isPlaying: boolean = false;
+        public _isPlaying: boolean = true;
         /**
          * @internal
          */
@@ -71,24 +90,22 @@ namespace egret3d.trail {
         private _timeScale: number = 1.0;
         private readonly _batcher: TrailBatcher = new TrailBatcher();
 
+        /**
+         * @internal
+         */
         private _clean() {
             this._batcher.clean();
         }
 
         public initialize() {
             super.initialize();
+            this._batcher.init(this)
             this._clean();
         }
 
         public uninitialize() {
             super.uninitialize();
             this._clean();
-        }
-        /**
-         * @internal 
-         */
-        public initBatcher() {
-            this._batcher.init(this);
         }
         /**
          * @internal 

@@ -27,6 +27,13 @@ declare namespace egret3d {
     const enum UniformSemantics {
     }
 }
+/**
+ * TODO:
+ *
+ * * 目前并未支持颜色参数, 因为渲染器还无法正常工作
+ * * 支持除 `TrailTextureMode.stretch` 以外的 `TrailTextureMode`, 未完成
+ * * 支持宽度曲线和颜色渐变以及相应的取样算法
+ */
 declare namespace egret3d.trail {
 }
 declare namespace egret3d.trail {
@@ -34,15 +41,31 @@ declare namespace egret3d.trail {
      * 拖尾的朝向
      */
     enum TrailAlignment {
-        View = 0,
-        Local = 1,
+        /**
+         * 始终面对摄像机
+         */
+        View = "View",
+        /**
+         * 使用自己的 Transform 设置
+         */
+        Local = "Local",
     }
     /**
      * 拖尾的材质模式
      */
     enum TrailTextureMode {
-        Tiling = 0,
-        Stretch = 1,
+        /**
+         * 伸展到整个拖尾
+         */
+        Stretch = "Stretch",
+        /**
+         * 每个拖尾片段使用一个材质
+         */
+        PerSegment = "PerSegment",
+        /**
+         * 重复平铺
+         */
+        Tile = "Tile",
     }
     /**
      * 拖尾组件
@@ -59,19 +82,11 @@ declare namespace egret3d.trail {
         /**
          * 拖尾的宽度 (值 / 变化曲线)
          */
-        widths: number[];
-        /**
-         * 拖尾的颜色 (值 / 变化曲线)
-         */
-        colors: Color[];
+        width: number;
         /**
          * 生命期结束后是否自动销毁
          */
         autoDestruct: boolean;
-        /**
-         * 所用的材料
-         */
-        material: Material | undefined;
         /**
          * 拖尾的朝向是始终面对摄像机还是有自己的单独设置
          * @see {TrailAlignment}
@@ -84,7 +99,6 @@ declare namespace egret3d.trail {
         textureMode: TrailTextureMode;
         private _timeScale;
         private readonly _batcher;
-        private _clean();
         initialize(): void;
         uninitialize(): void;
         /**
@@ -121,4 +135,5 @@ declare namespace egret3d.trail {
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
         onFrame(deltaTime: float): void;
     }
+    function createTrail(name?: string): paper.GameObject;
 }
