@@ -4846,8 +4846,6 @@ var egret3d;
          * @internal
          */
         RenderState.prototype._updateTextureDefines = function (mapName, texture, defines) {
-            if (defines === void 0) { defines = null; }
-            defines = defines || this.defines;
             //
             var mapNameDefine = egret3d.ShaderTextureDefine[mapName]; //TODO
             if (mapNameDefine) {
@@ -5112,7 +5110,7 @@ var egret3d;
                     return;
                 }
                 this._gammaInput = value;
-                this._updateTextureDefines("envMap" /* EnvMap */, this.caches.skyBoxTexture);
+                this._updateTextureDefines("envMap" /* EnvMap */, this.caches.skyBoxTexture, this.defines);
                 this.onGammaInputChanged.dispatch();
             },
             enumerable: true,
@@ -18498,6 +18496,10 @@ var egret3d;
         __extends(SkyBox, _super);
         function SkyBox() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             * 是否开启反射 默认:True
+             */
+            _this.reflections = true;
             _this._materials = [];
             return _this;
         }
@@ -18577,6 +18579,10 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */),
+            paper.serializedField
+        ], SkyBox.prototype, "reflections", void 0);
         __decorate([
             paper.editor.property("MATERIAL_ARRAY" /* MATERIAL_ARRAY */),
             paper.serializedField
@@ -32251,8 +32257,8 @@ var egret3d;
                     var material_1 = skyBox.material;
                     var texture = (material_1.shader === egret3d.DefaultShaders.CUBE) ? material_1.getTexture("tCube" /* CubeMap */) :
                         ((material_1.shader === egret3d.DefaultShaders.EQUIRECT) ? material_1.getTexture("tEquirect" /* EquirectMap */) : material_1.getTexture());
-                    if (renderState.caches.skyBoxTexture !== texture) {
-                        renderState._updateTextureDefines("envMap" /* EnvMap */, texture);
+                    if (renderState.caches.skyBoxTexture !== texture && skyBox.reflections) {
+                        renderState._updateTextureDefines("envMap" /* EnvMap */, texture, renderState.defines);
                         renderState.caches.skyBoxTexture = texture;
                     }
                     if (!skyBoxDrawCall.mesh) {
@@ -32263,7 +32269,7 @@ var egret3d;
                     this.draw(skyBoxDrawCall, material_1);
                 }
                 else if (renderState.caches.skyBoxTexture) {
-                    renderState._updateTextureDefines("envMap" /* EnvMap */, null);
+                    renderState._updateTextureDefines("envMap" /* EnvMap */, null, renderState.defines);
                     renderState.caches.skyBoxTexture = null;
                 }
                 // Draw opaques.

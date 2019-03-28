@@ -8633,6 +8633,10 @@ declare namespace egret3d {
      * 天空盒组件。
      */
     class SkyBox extends paper.BaseComponent {
+        /**
+         * 是否开启反射 默认:True
+         */
+        reflections: boolean;
         protected readonly _materials: (Material | null)[];
         uninitialize(): void;
         /**

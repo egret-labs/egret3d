@@ -248,8 +248,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _updateTextureDefines(mapName: string, texture: BaseTexture | null, defines: Defines | null = null) {
-            defines = defines || this.defines;
+        public _updateTextureDefines(mapName: string, texture: BaseTexture | null, defines: Defines) {
             //
             const mapNameDefine = (egret3d as any).ShaderTextureDefine[mapName];//TODO
             if (mapNameDefine) {
@@ -501,7 +500,7 @@ namespace egret3d {
             }
 
             this._gammaInput = value;
-            this._updateTextureDefines(ShaderUniformName.EnvMap, this.caches.skyBoxTexture);
+            this._updateTextureDefines(ShaderUniformName.EnvMap, this.caches.skyBoxTexture, this.defines);
             this.onGammaInputChanged.dispatch();
         }
         /**

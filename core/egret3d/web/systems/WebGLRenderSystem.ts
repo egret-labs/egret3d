@@ -597,8 +597,8 @@ namespace egret3d.webgl {
                 const texture = (material.shader === egret3d.DefaultShaders.CUBE) ? material.getTexture(ShaderUniformName.CubeMap) :
                     ((material.shader === egret3d.DefaultShaders.EQUIRECT) ? material.getTexture(ShaderUniformName.EquirectMap) : material.getTexture());
 
-                if (renderState.caches.skyBoxTexture !== texture) {
-                    renderState._updateTextureDefines(ShaderUniformName.EnvMap, texture);
+                if (renderState.caches.skyBoxTexture !== texture && skyBox.reflections) {
+                    renderState._updateTextureDefines(ShaderUniformName.EnvMap, texture, renderState.defines);
                     renderState.caches.skyBoxTexture = texture;
                 }
 
@@ -612,7 +612,7 @@ namespace egret3d.webgl {
                 this.draw(skyBoxDrawCall, material);
             }
             else if (renderState.caches.skyBoxTexture) {
-                renderState._updateTextureDefines(ShaderUniformName.EnvMap, null);
+                renderState._updateTextureDefines(ShaderUniformName.EnvMap, null, renderState.defines);
                 renderState.caches.skyBoxTexture = null;
             }
             // Draw opaques.

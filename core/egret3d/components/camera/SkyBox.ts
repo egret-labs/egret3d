@@ -3,6 +3,12 @@ namespace egret3d {
      * 天空盒组件。
      */
     export class SkyBox extends paper.BaseComponent {
+        /**
+         * 是否开启反射 默认:True
+         */        
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        @paper.serializedField
+        public reflections:boolean = true;
         protected readonly _materials: (Material | null)[] = [];
 
         public uninitialize() {
