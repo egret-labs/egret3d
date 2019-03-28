@@ -8624,6 +8624,7 @@ declare namespace egret3d {
         private _shadowFrustumCulling();
         private _frustumCulling();
         private _updateLights();
+        private _combineInstance(sortDrawCalls);
     }
 }
 declare namespace egret3d {

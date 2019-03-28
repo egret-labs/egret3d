@@ -1,4 +1,6 @@
-namespace egret3d {
+namespace egret3d {    
+    //TODO 运行时DrawCall排序优化使用
+    let _hashCode: uint = 0;
     const _helpTriangleA = Triangle.create();
     const _helpTriangleB = Triangle.create();
     const _helpRaycastInfo = RaycastInfo.create();
@@ -137,6 +139,10 @@ namespace egret3d {
         protected _glTFMesh: gltf.Mesh = null!;
         protected _inverseBindMatrices: ArrayBufferView | null = null;
         protected _boneIndices: { [key: string]: uint } | null = null;
+        /**
+         * @internal
+         */
+        public readonly _id: uint = _hashCode++;
 
         public initialize(
             name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,

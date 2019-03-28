@@ -10215,6 +10215,8 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    //TODO 运行时DrawCall排序优化使用
+    var _hashCode = 0;
     var _helpTriangleA = egret3d.Triangle.create();
     var _helpTriangleB = egret3d.Triangle.create();
     var _helpRaycastInfo = egret3d.RaycastInfo.create();
@@ -10238,6 +10240,10 @@ var egret3d;
             _this._glTFMesh = null;
             _this._inverseBindMatrices = null;
             _this._boneIndices = null;
+            /**
+             * @internal
+             */
+            _this._id = _hashCode++;
             return _this;
         }
         Mesh.create = function (vertexCountOrName, indexCountOrConfig, attributeNamesOrBuffers, attributeTypes) {
@@ -16326,6 +16332,7 @@ var paper;
             var index = 0;
             for (var _i = 0, source_1 = source; _i < source_1.length; _i++) {
                 var component = source_1[_i];
+                console.log("component:" + component);
                 paper.registerClass(component); // TODO
                 if (target.indexOf(component) < 0) {
                     target[index++] = component;
@@ -18144,6 +18151,9 @@ var egret3d;
             else if (materialA._id !== materialB._id) {
                 return materialA._id - materialB._id;
             }
+            else if (a.mesh._id !== b.mesh._id) {
+                return a.mesh._id - b.mesh._id;
+            }
             else {
                 return a.zdist - b.zdist;
             }
@@ -18416,6 +18426,8 @@ var egret3d;
                 hemisphereLightBuffer[offset++] = groundColor.b * intensity;
                 light.castShadows = false; //TODO 不支持阴影，防止贴图报错
             }
+        };
+        CameraRenderContext.prototype._combineInstance = function (sortDrawCalls) {
         };
         /**
          * @internal
