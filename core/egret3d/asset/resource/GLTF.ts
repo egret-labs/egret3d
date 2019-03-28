@@ -251,10 +251,10 @@ namespace egret3d {
     export interface GLTFAnimationChannel extends gltf.AnimationChannel {
         extensions?: {
             paper: {
-                type: string,
-                property: string,
-                uri?: string,
-                needUpdate?: int,
+                type: string;
+                property: string;
+                uri?: string;
+                needUpdate?: int;
             }
         };
     }
@@ -774,7 +774,7 @@ declare namespace gltf {
         componentType: ComponentType.UnsignedByte | ComponentType.UnsignedShort | ComponentType.UnsignedInt;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * Array of size `accessor.sparse.count` times number of components storing the displaced accessor attributes pointed by `accessor.sparse.indices`.
@@ -790,7 +790,7 @@ declare namespace gltf {
         byteOffset?: number;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * Sparse storage of attributes that deviate from their initialization value.
@@ -810,7 +810,7 @@ declare namespace gltf {
         values: AccessorSparseValues;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A typed view into a bufferView.  A bufferView contains raw binary data.  An accessor provides a typed view into a bufferView or a subset of a bufferView similar to how WebGL's `vertexAttribPointer()` defines an attribute in a buffer.
@@ -854,14 +854,14 @@ declare namespace gltf {
         sparse?: AccessorSparse;
         name?: string;
         extensions?: any;
-        extras?: any;
-        
-        /**
-         * 缓存访问器属性的单位数量。
-         * - 加快属性数量的访问速度。
-         * - 数据存储移除，运行时必须生成。
-         */
-        typeCount?: number;
+        extras?: {
+            /**
+             * 缓存访问器属性的单位数量。
+             * - 加快属性数量的访问速度。
+             * - 数据存储移除，运行时必须生成。
+             */
+            typeCount: number;
+        };
     }
     /**
      * The index of the node and TRS property that an animation channel targets.
@@ -877,7 +877,7 @@ declare namespace gltf {
         path: "translation" | "rotation" | "scale" | "weights" | string;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * Targets an animation's sampler at a node's property.
@@ -893,7 +893,7 @@ declare namespace gltf {
         target: AnimationChannelTarget;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * Combines input and output accessors with an interpolation algorithm to define a keyframe graph (but not its target).
@@ -913,7 +913,7 @@ declare namespace gltf {
         output: Index;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A keyframe animation.
@@ -930,7 +930,7 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * Metadata about the glTF asset.
@@ -954,7 +954,7 @@ declare namespace gltf {
         minVersion?: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A buffer points to binary geometry, animation, or skins.
@@ -970,8 +970,10 @@ declare namespace gltf {
         byteLength: number;
         name?: string;
         extensions?: any;
-        extras?: any;
-        
+        extras?: {
+            data: ArrayBufferView;
+        };
+
     }
     /**
      * A view into a buffer generally representing a subset of the buffer.
@@ -1000,7 +1002,7 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * An orthographic camera containing properties to create an orthographic projection matrix.
@@ -1024,7 +1026,7 @@ declare namespace gltf {
         znear: number;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A perspective camera containing properties to create a perspective projection matrix.
@@ -1048,7 +1050,7 @@ declare namespace gltf {
         znear: number;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A camera's projection.  A node can reference a camera to apply a transform to place the camera in the scene.
@@ -1069,7 +1071,7 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * Image data used to create a texture. Image can be referenced by URI or `bufferView` index. `mimeType` is required in the latter case.
@@ -1078,19 +1080,21 @@ declare namespace gltf {
         /**
          * The uri of the image.
          */
-        uri?: string | ImageSource | ((string | ImageSource)[]);
+        uri?: string | string[];
         /**
          * The image's MIME type.
          */
-        mimeType?: "image/jpeg" | "image/png" | "image/ktx" | string;
+        mimeType?: "image/jpeg" | "image/png" | string;
         /**
          * The index of the bufferView that contains the image. Use this instead of the image's uri property.
          */
         bufferView?: Index | (Index[]);
         name?: string;
         extensions?: any;
-        extras?: any;
-        
+        extras?: {
+            data: ImageSource | ImageSource[]
+        };
+
     }
     /**
      * Reference to a texture.
@@ -1106,7 +1110,7 @@ declare namespace gltf {
         texCoord?: number;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A set of parameter values that are used to define the metallic-roughness material model from Physically-Based Rendering (PBR) methodology.
@@ -1134,7 +1138,7 @@ declare namespace gltf {
         metallicRoughnessTexture?: TextureInfo;
         extensions?: any;
         extras?: any;
-        
+
     }
 
     export interface MaterialNormalTextureInfo {
@@ -1146,7 +1150,7 @@ declare namespace gltf {
         scale?: number;
         extensions?: any;
         extras?: any;
-        
+
     }
 
     export interface MaterialOcclusionTextureInfo {
@@ -1158,7 +1162,7 @@ declare namespace gltf {
         strength?: number;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * The material appearance of a primitive.
@@ -1199,7 +1203,7 @@ declare namespace gltf {
          * Specifies whether the material is double sided.
          */
         doubleSided?: boolean;
-        
+
     }
     /**
      * Geometry to be rendered with the given material.
@@ -1240,7 +1244,7 @@ declare namespace gltf {
         }[];
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A set of primitives to be rendered.  A node can contain one mesh.  A node's transform places the mesh in the scene.
@@ -1257,7 +1261,7 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A node in the node hierarchy.  When the node contains `skin`, all `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.  A node can have either a `matrix` or any combination of `translation`/`rotation`/`scale` (TRS) properties. TRS properties are converted to matrices and postmultiplied in the `T * R * S` order to compose the transformation matrix; first the scale is applied to the vertices, then the rotation, and then the translation. If none are provided, the transform is the identity. When a node is targeted for animation (referenced by an animation.channel.target), only TRS properties may be present; `matrix` will not be present.
@@ -1302,7 +1306,7 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * Texture sampler properties for filtering and wrapping modes.
@@ -1331,7 +1335,7 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
     * The root nodes of a scene.
@@ -1478,8 +1482,10 @@ declare namespace gltf {
         bufferView?: Index;
         name?: string;
         extensions?: any;
-        extras?: any;
-        
+        extras?: {
+            data: string;
+        };
+
     }
     /**
      * An attribute input to a technique and the corresponding semantic.
@@ -1491,7 +1497,7 @@ declare namespace gltf {
         semantic: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     export type UniformValue = any;
     /**
@@ -1522,7 +1528,7 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A template for material appearances.
@@ -1554,7 +1560,7 @@ declare namespace gltf {
         states?: States;
         extensions?: any;
         extras?: any;
-        
+
     }
     /**
      * A shader program, including its vertex and fragment shaders.
@@ -1575,7 +1581,7 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: any;
-        
+
     }
     export interface KhrTechniqueWebglGlTfExtension {
         /**
@@ -1606,9 +1612,9 @@ declare namespace gltf {
         values?: {
             [k: string]: UniformValue;
         };
-        
+
         /**
-         * 
+         * The name of the technique.
          */
         technique: string;
     }
@@ -1670,7 +1676,8 @@ declare namespace gltf {
         polygonOffset?: number[];
         extensions?: any;
         extras?: any;
-        
+
+        [k: string]: any;
     }
     /**
      * Fixed-function rendering states.

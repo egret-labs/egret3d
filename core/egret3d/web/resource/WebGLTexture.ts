@@ -11,10 +11,9 @@ namespace egret3d.webgl {
         public webGLTexture: GlobalWeblGLTexture | null = null;
 
         private _uploadTexture(index: uint) {
-            const webgl = WebGLRenderState.webgl!;
-
             let textureType: gltf.TextureType;
             let uploadType: gltf.TextureType;
+            const webgl = WebGLRenderState.webgl!;
             const image = this._image;
             const sampler = this._sampler;
             const extension = this._gltfTexture!.extensions.paper!;
@@ -55,32 +54,36 @@ namespace egret3d.webgl {
             webgl.pixelStorei(gltf.WebGL.UNPACK_PREMULTIPLY_ALPHA_WEBGL, extension.premultiplyAlpha || 0);
             setTexturexParameters(textureType, sampler, extension.anisotropy || 1);
 
-            if (image.uri !== undefined) {
-                if (Array.isArray(image.uri)) {
+            if (image.extras !== undefined) {
+                if (Array.isArray(image.extras.data)) {
                     let index = 0;
 
-                    for (const uri of image.uri) {
-                        webgl.texImage2D(uploadType + (index++), 0, format, format, dataType, uri as gltf.ImageSource);
+                    for (const imageSource of image.extras.data) {
+                        webgl.texImage2D(uploadType + (index++), 0, format, format, dataType, imageSource);
                     }
                 }
                 else {
-                    webgl.texImage2D(uploadType, 0, format, format, dataType, image.uri as gltf.ImageSource);
+                    webgl.texImage2D(uploadType, 0, format, format, dataType, image.extras.data);
                 }
             }
             else if (image.bufferView !== undefined) {
                 const width = extension.width!;
                 const height = extension.height!;
-                const buffers = this.buffers;
+                const { buffers, bufferViews } = this.config;
 
                 if (Array.isArray(image.bufferView)) {
                     let index = 0;
 
-                    for (const bufferView of image.bufferView) {
-                        webgl.texImage2D(uploadType + (index++), 0, format, width, height, 0, format, dataType, buffers[bufferView]);
+                    for (const bufferViewIndex of image.bufferView) {
+                        const bufferView = bufferViews![bufferViewIndex];
+                        const buffer = buffers![bufferView.buffer];
+                        webgl.texImage2D(uploadType + (index++), 0, format, width, height, 0, format, dataType, buffer.extras!.data);
                     }
                 }
                 else {
-                    webgl.texImage2D(uploadType, 0, format, width, height, 0, format, dataType, buffers[image.bufferView]);
+                    const bufferView = bufferViews![image.bufferView];
+                    const buffer = buffers![bufferView.buffer];
+                    webgl.texImage2D(uploadType, 0, format, width, height, 0, format, dataType, buffer.extras!.data);
                 }
             }
 
@@ -88,34 +91,12 @@ namespace egret3d.webgl {
                 webgl.generateMipmap(textureType);
             }
 
-            if (image.uri && image.uri.hasOwnProperty("src")) {
-                (image.uri as HTMLImageElement).src = ""; // wx
-                delete image.uri;
-            }
+            this._disposeImageSource();
 
             return this;
         }
 
         public dispose() {
-            const image = this._image;
-            if (image && image.uri) {
-
-                if (Array.isArray(image.uri)) {
-                    for (const uri of image.uri) {
-                        if (uri.hasOwnProperty("src")) {
-                            (uri as HTMLImageElement).src = ""; // wx
-                        }
-                    }
-                }
-                else {
-                    if (image.uri.hasOwnProperty("src")) {
-                        (image.uri as HTMLImageElement).src = ""; // wx
-                    }
-                }
-
-                delete image.uri;
-            }
-
             if (!super.dispose()) {
                 return false;
             }

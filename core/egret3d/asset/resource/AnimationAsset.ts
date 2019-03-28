@@ -8,21 +8,9 @@ namespace egret3d {
          */
         public static create(name: string, config: GLTF, buffers: ArrayBufferView[]): AnimationAsset {
             const animationAsset = new AnimationAsset();
-            animationAsset.initialize(name, config);
-
-            for (const b of buffers) {
-                animationAsset.buffers.push(b);
-            }
+            animationAsset.initialize(name, config, buffers);
 
             return animationAsset;
-        }
-        /**
-         * @internal
-         */
-        public initialize(name: string, config: GLTF) {
-            super.initialize(name, config, null);
-
-            this.updateAccessorTypeCount();
         }
         /*
          * 获取动画剪辑。

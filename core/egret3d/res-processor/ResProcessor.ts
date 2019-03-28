@@ -133,38 +133,53 @@ namespace egret3d {
         onLoadStart(host, resource) {
             return host.load(resource, "json").then((data: ImageConfig | GLTF): any => {
                 if ("asset" in data) {
-                    const dataA = data as GLTF;
-                    const glTFImage = dataA.images![dataA.textures![0].source!];
+                    const glTFData = data as GLTF;
+                    const glTFImage = glTFData.images![glTFData.textures![0].source!];
 
-                    if (glTFImage.uri) {
+                    if (glTFImage.uri !== undefined) {
                         const subAssets: paper.ISerializedData = { assets: [] };
 
                         if (Array.isArray(glTFImage.uri)) {
-                            for (const uri of glTFImage.uri) {
-                                _onlyImages[uri as string] = true;
-                                subAssets.assets!.push(uri as string);
+                            if (glTFImage.uri.length > 0) {
+                                for (const uri of glTFImage.uri) {
+                                    _onlyImages[uri] = true;
+                                    subAssets.assets!.push(uri);
+                                }
+                            }
+                            else {
+                                if (DEBUG) {
+                                    console.error("Invalid image uri.");
+                                }
+
+                                // TODO 根据纹理类型填充 MISS 的数据。
                             }
                         }
-                        else {
-                            _onlyImages[glTFImage.uri as string] = true;
-                            subAssets.assets!.push(glTFImage.uri as string);
+                        else if (glTFImage.uri.length > 0) {
+                            _onlyImages[glTFImage.uri] = true;
+                            subAssets.assets!.push(glTFImage.uri);
+                        }
+                        else if (DEBUG) {
+                            console.error("Invalid image uri.");
+                            // TODO 根据纹理类型填充 MISS 的数据。
                         }
 
                         return loadSubAssets(subAssets, resource).then((images: gltf.ImageSource[]) => {
-                            for (let i = 0, l = subAssets.assets!.length; i < l; ++i) {
-                                const imageSource = images[i];
-                                if (Array.isArray(glTFImage.uri)) {
-                                    glTFImage.uri[i] = imageSource;
+                            if (Array.isArray(glTFImage.uri!)) {
+                                glTFImage.extras = { data: [] };
 
+                                for (let i = 0, l = subAssets.assets!.length; i < l; ++i) {
+                                    const imageSource = images[i];
+                                    (glTFImage.extras.data as gltf.ImageSource[])[i] = imageSource;
+                                    host.save((RES.host.resourceConfig as any)["getResource"](subAssets.assets![i]), imageSource);
                                 }
-                                else {
-                                    glTFImage.uri = imageSource;
-                                }
-
-                                host.save((RES.host.resourceConfig as any)["getResource"](subAssets.assets![i]), imageSource);
+                            }
+                            else {
+                                const imageSource = images[0];
+                                glTFImage.extras!.data = imageSource;
+                                host.save((RES.host.resourceConfig as any)["getResource"](subAssets.assets![0]), imageSource);
                             }
 
-                            const texture = Texture.create(resource.name, dataA);
+                            const texture = Texture.create(resource.name, glTFData, null);
                             paper.Asset.register(texture);
 
                             return texture;

@@ -127,39 +127,35 @@ namespace egret3d {
             return result;
         }
         /**
-         * Buffer 列表。
-         */
-        public readonly buffers: Array<ArrayBufferView> = [];
-        /**
          * 配置。
          */
-        public readonly config: GLTF = null!;
+        public readonly config: GLTF;
+
+        protected _clear() {
+            super._clear();
+
+            (this.config as GLTF) = null!;
+        }
 
         public initialize(
             name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
-            ...args: Array<any>
+            ...args: any[]
         ) {
             super.initialize();
 
             this.name = name;
             (this.config as GLTF) = config;
 
-            if (buffers) {
-                for (const buffer of buffers) {
-                    this.buffers.push(buffer);
+            if (buffers !== null) {
+                let index = 0;
+
+                for (const bufferData of buffers) {
+                    const buffer = config.buffers![index++];
+                    buffer.extras = { data: bufferData };
                 }
+
+                this.updateAccessorTypeCount();
             }
-        }
-
-        public dispose() {
-            if (!super.dispose()) {
-                return false;
-            }
-
-            this.buffers.length = 0;
-            (this.config as GLTF) = null!;
-
-            return true;
         }
         /**
          * 
@@ -169,7 +165,7 @@ namespace egret3d {
 
             if (accessors !== undefined) {
                 for (const accessor of accessors) {
-                    accessor.typeCount = GLTFAsset.getAccessorTypeCount(accessor.type);
+                    accessor.extras = { typeCount: GLTFAsset.getAccessorTypeCount(accessor.type) };
                 }
             }
 
@@ -191,7 +187,7 @@ namespace egret3d {
          * 根据指定 BufferView 创建二进制数组。
          */
         public createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): ArrayBufferView {
-            const buffer = this.buffers[bufferView.buffer];
+            const buffer = this.config.buffers![bufferView.buffer].extras!.data;
             const bufferOffset = buffer.byteOffset + (bufferView.byteOffset || 0);
             // assert.config.buffers[bufferView.buffer];
 
@@ -248,11 +244,10 @@ namespace egret3d {
                 count = accessor.count - offset;
             }
 
-            const typeCount = accessor.typeCount!;
+            const typeCount = accessor.extras!.typeCount;
             const bufferCount = typeCount * count;
             const bufferView = this.getBufferView(accessor);
-            const buffer = this.buffers[bufferView.buffer];
-            // assert.config.buffers[bufferView.buffer];
+            const buffer = this.config.buffers![bufferView.buffer].extras!.data;
             let bufferOffset = buffer.byteOffset + (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
 
             if (offset > 0) {
@@ -289,14 +284,13 @@ namespace egret3d {
          * 通过 Accessor 获取指定 BufferLength。
          */
         public getBufferLength(accessor: gltf.Accessor): uint {
-            return accessor.typeCount! * GLTFAsset.getComponentTypeCount(accessor.componentType) * accessor.count;
+            return accessor.extras!.typeCount * GLTFAsset.getComponentTypeCount(accessor.componentType) * accessor.count;
         }
         /**
          * 通过 Accessor 获取指定 BufferOffset。
          */
         public getBufferOffset(accessor: gltf.Accessor): uint {
             const bufferView = this.getBufferView(accessor);
-            // const buffer = this.buffers[bufferView.buffer];
 
             return (bufferView.byteOffset || 0) + (accessor.byteOffset || 0);
         }
@@ -305,8 +299,8 @@ namespace egret3d {
          */
         public getBuffer(accessor: gltf.Accessor): ArrayBufferView {
             const bufferView = this.getBufferView(accessor);
-            // this.config.buffers[bufferView.buffer];
-            return this.buffers[bufferView.buffer];
+
+            return this.config.buffers![bufferView.buffer].extras!.data;
         }
         /**
          * 通过 Accessor 获取指定 BufferView。

@@ -55,14 +55,22 @@ namespace paper {
         /**
          * 资源名称。
          */
-        public name: string = "";
+        public name: string;
 
-        protected _referenceCount: int = -1;
+        protected _referenceCount: int;
         /**
          * 请使用 `T.create()` 创建实例。
          */
         protected constructor() {
             super();
+
+            this._clear();
+        }
+
+        protected _clear() {
+            this.name = "";
+
+            this._referenceCount = -1;
         }
         /**
          * 该资源内部初始化。
@@ -126,8 +134,8 @@ namespace paper {
             if (this.name in assets) {
                 delete assets[this.name];
             }
-            //
-            this._referenceCount = -1;
+
+            this._clear();
 
             this.onReferenceCountChange && this.onReferenceCountChange(true);
 

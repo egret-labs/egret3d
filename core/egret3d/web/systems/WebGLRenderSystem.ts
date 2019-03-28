@@ -545,49 +545,61 @@ namespace egret3d.webgl {
 
             mesh.update(MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndicesBuffer);
 
-            const vbo = (mesh as WebGLMesh).vbo;
-            const ibo = (mesh as WebGLMesh).ibos[subMeshIndex];
+            const vertexArrayObjectEnabled = renderState.vertexArrayObject;
 
-            if (this._cacheVBO !== vbo) {
-                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
-                this._cacheVBO = vbo;
-            }
+            if (vertexArrayObjectEnabled !== null) {
+                const vao = (mesh as WebGLMesh).vao;
 
-            if (this._cacheIBO !== ibo) {
-                webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
-                this._cacheIBO = ibo;
-            }
-            // 激活或关闭有效属性。
-            // +++---...|xxx
-            for (const attribute of program.attributes) {
-                const location = attribute.location;
-                const accessorIndex = attributes[attribute.semantic];
-
-                if (accessorIndex !== undefined) {
-                    const accessor = mesh.getAccessor(accessorIndex);
-                    webgl.vertexAttribPointer(
-                        location,
-                        accessor.typeCount!,
-                        accessor.componentType,
-                        accessor.normalized !== undefined ? accessor.normalized : false,
-                        0, mesh.getBufferOffset(accessor)
-                    ); // TODO normalized应该来源于mesh，应该还没有
-                    webgl.enableVertexAttribArray(location);
+                if (this._cacheVAO !== vao) {
+                    vertexArrayObjectEnabled.bindVertexArrayOES(vao)
+                    this._cacheVAO = vao;
                 }
-                else {
-                    webgl.disableVertexAttribArray(location);
-                }
-
-                attributeCount++;
             }
-            // 关闭无效属性，并缓存。
-            // xxx|---
-            if (attributeCount !== renderState.caches.attributeCount) {
-                for (let i = attributeCount, l = renderState.caches.attributeCount; i < l; ++i) {
-                    webgl.disableVertexAttribArray(i);
+            else {
+                const vbo = (mesh as WebGLMesh).vbo;
+                const ibo = (mesh as WebGLMesh).ibos[subMeshIndex];
+    
+                if (this._cacheVBO !== vbo) {
+                    webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
+                    this._cacheVBO = vbo;
                 }
-
-                renderState.caches.attributeCount = attributeCount;
+    
+                if (this._cacheIBO !== ibo) {
+                    webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
+                    this._cacheIBO = ibo;
+                }
+                // 激活或关闭有效属性。
+                // +++---...|xxx
+                for (const attribute of program.attributes) {
+                    const location = attribute.location;
+                    const accessorIndex = attributes[attribute.semantic];
+    
+                    if (accessorIndex !== undefined) {
+                        const accessor = mesh.getAccessor(accessorIndex);
+                        webgl.vertexAttribPointer(
+                            location,
+                            accessor.extras!.typeCount,
+                            accessor.componentType,
+                            accessor.normalized !== undefined ? accessor.normalized : false,
+                            0, mesh.getBufferOffset(accessor)
+                        ); // TODO normalized应该来源于mesh，应该还没有
+                        webgl.enableVertexAttribArray(location);
+                    }
+                    else {
+                        webgl.disableVertexAttribArray(location);
+                    }
+    
+                    attributeCount++;
+                }
+                // 关闭无效属性，并缓存。
+                // xxx|---
+                if (attributeCount !== renderState.caches.attributeCount) {
+                    for (let i = attributeCount, l = renderState.caches.attributeCount; i < l; ++i) {
+                        webgl.disableVertexAttribArray(i);
+                    }
+    
+                    renderState.caches.attributeCount = attributeCount;
+                }
             }
         }
 

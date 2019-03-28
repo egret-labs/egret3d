@@ -9,7 +9,7 @@ namespace egret3d.webgl {
     function _getExtension(webgl: WebGLRenderingContext, name: string) {
         for (const prefixedName of _browserPrefixes) {
             const extension = webgl.getExtension(prefixedName + name);
-            if (extension) {
+            if (extension !== null) {
                 return extension;
             }
         }
@@ -58,6 +58,14 @@ namespace egret3d.webgl {
     /**
      * @internal
      */
+    export interface WebGLEXTRenderingContext {
+        createVertexArray(): any;
+        bindVertexArray(vao?: WebGLVertexArrayObject | null): void;
+        deleteVertexArray(vao: WebGLVertexArrayObject): void;
+    }
+    /**
+     * @internal
+     */
     export class WebGLRenderState extends RenderState {
         /**
          * @deprecated
@@ -66,7 +74,16 @@ namespace egret3d.webgl {
         /**
          * @deprecated
          */
-        public static webgl: WebGLRenderingContext | null = null;
+        public static webgl: (WebGLRenderingContext & WebGLEXTRenderingContext) | null = null;
+
+        private _bindWebGL() {
+            const webgl = WebGLRenderState.webgl!;
+            if (this.vertexArrayObject !== null) {
+                webgl.createVertexArray = this.vertexArrayObject.createVertexArrayOES.bind(this.vertexArrayObject);
+                webgl.bindVertexArray = this.vertexArrayObject.bindVertexArrayOES.bind(this.vertexArrayObject);
+                webgl.deleteVertexArray = this.vertexArrayObject.deleteVertexArrayOES.bind(this.vertexArrayObject);
+            }
+        }
 
         public initialize() {
             super.initialize();
@@ -84,6 +101,7 @@ namespace egret3d.webgl {
             this.version = webglVersions ? parseFloat(webglVersions[1]).toString() : "1";
             // use dfdx and dfdy must enable OES_standard_derivatives
             this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
+            this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
             this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
             this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
             this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
@@ -101,6 +119,7 @@ namespace egret3d.webgl {
             //
             this._getCommonExtensions();
             this._getCommonDefines();
+            this._bindWebGL();
             //
             console.info("WebGL version:", this.version);
             console.info("Standard derivatives enabled:", this.standardDerivativesEnabled);
@@ -122,15 +141,15 @@ namespace egret3d.webgl {
 
         public updateRenderTarget(renderTarget: RenderTexture | null) {
             // if (this.renderTarget !== renderTarget) {//TODO 2d节点污染次cache
-                this.renderTarget = renderTarget;
+            this.renderTarget = renderTarget;
 
-                if (renderTarget) {
-                    renderTarget.activateTexture();
-                }
-                else {
-                    const webgl = WebGLRenderState.webgl!;
-                    webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
-                }
+            if (renderTarget) {
+                renderTarget.activateTexture();
+            }
+            else {
+                const webgl = WebGLRenderState.webgl!;
+                webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
+            }
             // }
         }
 

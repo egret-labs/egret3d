@@ -4,15 +4,18 @@ namespace egret3d.webgl {
      */
     export class WebGLMesh extends Mesh {
         public readonly ibos: (WebGLBuffer | null)[] = [];
+        public vao: WebGLBuffer | null = null;
         public vbo: WebGLBuffer | null = null;
+        public program: WebGLProgramBinder | null = null;
 
         public onReferenceCountChange(isZero: boolean) {
-            if (isZero && this.vbo) {
-                if (this.config && this.config.skins) { // TODO
-                    return false;
+            if (isZero && this.vbo !== null) {
+                const webgl = WebGLRenderState.webgl!;
+
+                if (this.vao !== null) {
+                    renderState.vertexArrayObject!.deleteVertexArrayOES(this.vao);
                 }
 
-                const webgl = WebGLRenderState.webgl!;
                 webgl.deleteBuffer(this.vbo);
 
                 for (const ibo of this.ibos) {
@@ -20,7 +23,9 @@ namespace egret3d.webgl {
                 }
                 //
                 this.ibos.length = 0;
+                this.vao = null;
                 this.vbo = null;
+                this.program = null;
 
                 return true;
             }
@@ -30,14 +35,28 @@ namespace egret3d.webgl {
 
         public createBuffer() {
             const webgl = WebGLRenderState.webgl!;
-            const vbo = webgl.createBuffer();
-            const primitives = this._glTFMesh.primitives;
+            const primitives = this._glTFMesh!.primitives;
+            const vertexArrayObject = renderState.vertexArrayObject;
 
-            if (vbo) {
+            if (vertexArrayObject !== null) {
+                const vao = vertexArrayObject.createVertexArrayOES();
+
+                if (vao !== null) {
+                    this.vao = vao;
+                    vertexArrayObject.bindVertexArrayOES(vao);
+                }
+                else {
+                    console.error("Create webgl vertex array object error.");
+                }
+            }
+
+            const vbo = webgl.createBuffer();
+
+            if (vbo !== null) {
                 this.vbo = vbo;
 
                 const attributeNames: gltf.AttributeSemantics[] = [];
-                for (const k in primitives[0].attributes) {
+                for (const k in this._attributes!) {
                     attributeNames.push(k as gltf.AttributeSemantics);
                 }
 
@@ -54,13 +73,13 @@ namespace egret3d.webgl {
                         }
                         else {
                             this.ibos[subMeshIndex] = null;
-                            console.error("Create webgl element buffer error.");
+                            console.error("Create webgl array element buffer error.");
                         }
                     }
 
                     subMeshIndex++;
                 }
-                // 先提交 ElementArrayBuffer，后提交 ArrayBuffer。
+
                 const vertexBufferViewAccessor = this.getAccessor(this._glTFMesh!.primitives[0].attributes.POSITION || 0);
                 const vertexBuffer = this.createTypeArrayFromBufferView(this.getBufferView(vertexBufferViewAccessor), gltf.ComponentType.Float);
                 webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
@@ -68,41 +87,43 @@ namespace egret3d.webgl {
                 this.uploadVertexBuffer(attributeNames);
             }
             else {
-                console.error("Create webgl buffer error.");
+                console.error("Create webgl array buffer error.");
             }
         }
-        /**
-         * 更新该网格的顶点缓存。
-         * @param uploadAttributes 要更新的顶点属性名，可以为一个属性，或属性列表，或 `null` （更新所有属性）。
-         * @param offset 更新顶点的偏移。 [0: 不偏移，N: 从 N + 1 个顶点开始] （默认：0）
-         * @param count 更新顶点的总数。 [0: 所有顶点，N: N 个顶点] （默认：0）
-         */
-        public uploadVertexBuffer(uploadAttributes: gltf.AttributeSemantics | (gltf.AttributeSemantics[]) | null = null, offset: uint = 0, count: uint = 0) {
-            if (!this.vbo) {
+
+        public uploadVertexBuffer<T extends gltf.AttributeSemantics | string>(uploadAttributes: T | ReadonlyArray<T> | null = null, offset: uint = 0, count: uint = 0): void {
+            if (this.vbo === null) {
                 return;
             }
 
-            const { attributes } = this._glTFMesh!.primitives[0];
             const webgl = WebGLRenderState.webgl!;
+            const attributes = this._attributes!;
+
+            if (this.vao !== null) {
+                renderState.vertexArrayObject!.bindVertexArrayOES(this.vao);
+            }
+
             webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, this.vbo);
 
-            if (!uploadAttributes) {
+            if (uploadAttributes === null) {
                 uploadAttributes = [];
-                for (const k in this._glTFMesh!.primitives[0].attributes) {
-                    uploadAttributes.push(k as gltf.AttributeSemantics);
+
+                for (const k in this._attributes) {
+                    (uploadAttributes as T[]).push(k as T);
                 }
             }
 
             if (Array.isArray(uploadAttributes)) {
                 for (const attributeName of uploadAttributes) {
                     const accessorIndex = attributes[attributeName];
+
                     if (accessorIndex !== undefined) {
                         const accessor = this.getAccessor(accessorIndex);
                         let bufferOffset = this.getBufferOffset(accessor);
                         const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
 
                         if (offset > 0) {
-                            bufferOffset += offset * accessor.typeCount! * GLTFAsset.getComponentTypeCount(accessor.componentType);
+                            bufferOffset += offset * accessor.extras!.typeCount * GLTFAsset.getComponentTypeCount(accessor.componentType);
                         }
 
                         webgl.bufferSubData(gltf.BufferViewTarget.ArrayBuffer, bufferOffset, subVertexBuffer);
@@ -113,13 +134,14 @@ namespace egret3d.webgl {
                 }
             }
             else {
-                const accessorIndex = attributes[uploadAttributes];
+                const accessorIndex = attributes[uploadAttributes as string];
+
                 if (accessorIndex !== undefined) {
                     const accessor = this.getAccessor(accessorIndex);
                     let bufferOffset = this.getBufferOffset(accessor);
 
                     if (offset > 0) {
-                        bufferOffset += offset * accessor.typeCount! * GLTFAsset.getComponentTypeCount(accessor.componentType);
+                        bufferOffset += offset * accessor.extras!.typeCount * GLTFAsset.getComponentTypeCount(accessor.componentType);
                     }
 
                     const subVertexBuffer = this.createTypeArrayFromAccessor(accessor);
@@ -130,12 +152,9 @@ namespace egret3d.webgl {
                 }
             }
         }
-        /**
-         * 更新该网格的索引缓存。
-         * @param subMeshIndex 
-         */
-        public uploadSubIndexBuffer(subMeshIndex: number = 0, offset?: uint, count?: uint) {
-            if (!this.vbo) {
+
+        public uploadSubIndexBuffer(subMeshIndex: number = 0, offset: uint = 0, count: uint = 0) {
+            if (this.vbo === null) {
                 return;
             }
 
@@ -147,6 +166,11 @@ namespace egret3d.webgl {
                     const subIndexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
                     const ibo = this.ibos[subMeshIndex];
                     const webgl = WebGLRenderState.webgl!;
+
+                    if (this.vao !== null) {
+                        renderState.vertexArrayObject!.bindVertexArrayOES(this.vao);
+                    }
+
                     webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
                     webgl.bufferSubData(gltf.BufferViewTarget.ElementArrayBuffer, 0, subIndexBuffer);
                 }
