@@ -16332,7 +16332,6 @@ var paper;
             var index = 0;
             for (var _i = 0, source_1 = source; _i < source_1.length; _i++) {
                 var component = source_1[_i];
-                console.log("component:" + component);
                 paper.registerClass(component); // TODO
                 if (target.indexOf(component) < 0) {
                     target[index++] = component;
@@ -17100,6 +17099,10 @@ var egret3d;
              * 该相机的背景色。
              */
             _this.backgroundColor = egret3d.Color.create(0.15, 0.25, 0.5, 1.0);
+            /**
+             *
+             */
+            _this.overrideMaterial = null;
             /**
              * 该相机的渲染上下文。
              */
@@ -18426,8 +18429,6 @@ var egret3d;
                 hemisphereLightBuffer[offset++] = groundColor.b * intensity;
                 light.castShadows = false; //TODO 不支持阴影，防止贴图报错
             }
-        };
-        CameraRenderContext.prototype._combineInstance = function (sortDrawCalls) {
         };
         /**
          * @internal
@@ -32390,7 +32391,7 @@ var egret3d;
                         var renderTarget = camera.renderTarget || camera._previewRenderTarget;
                         if (renderTarget
                             || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
-                            this.render(camera, null, renderTarget);
+                            this.render(camera, camera.overrideMaterial, renderTarget);
                         }
                     }
                     this._cacheProgram = null; //TODO

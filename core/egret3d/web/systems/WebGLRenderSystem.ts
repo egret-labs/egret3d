@@ -736,7 +736,7 @@ namespace egret3d.webgl {
                         renderTarget
                         || (isPlayerMode ? scene !== editorScene : scene === editorScene)
                     ) {
-                        this.render(camera, null, renderTarget);
+                        this.render(camera, camera.overrideMaterial, renderTarget);
                     }
                 }
 

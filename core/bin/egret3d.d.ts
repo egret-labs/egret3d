@@ -8384,6 +8384,10 @@ declare namespace egret3d {
          */
         readonly backgroundColor: Color;
         /**
+         *
+         */
+        overrideMaterial: Material | null;
+        /**
          * 该相机的渲染上下文。
          */
         readonly context: CameraRenderContext;
@@ -8624,7 +8628,6 @@ declare namespace egret3d {
         private _shadowFrustumCulling();
         private _frustumCulling();
         private _updateLights();
-        private _combineInstance(sortDrawCalls);
     }
 }
 declare namespace egret3d {
