@@ -36,7 +36,7 @@ namespace egret3d {
         /**
          * 
          */
-        public static getAccessorTypeCount(type: gltf.AccessorType): uint {
+        public static getAccessorTypeCount(type: gltf.AccessorType | string): uint {
             switch (type) {
                 case gltf.AccessorType.SCALAR:
                     return 1;
@@ -59,6 +59,34 @@ namespace egret3d {
 
                 default:
                     throw new Error();
+            }
+        }
+        /**
+         * 
+         */
+        public static getMeshAttributeType(attributeName: gltf.AttributeSemantics | string, attributeTypes: Readonly<{ [key: string]: gltf.AccessorType | string }> | null = null): gltf.AccessorType | string {
+            if (attributeTypes !== null && attributeName in attributeTypes) {
+                return attributeTypes[attributeName];
+            }
+
+            switch (attributeName) {
+                case gltf.AttributeSemantics.POSITION:
+                case gltf.AttributeSemantics.NORMAL:
+                    return gltf.AccessorType.VEC3;
+
+                case gltf.AttributeSemantics.TEXCOORD_0:
+                case gltf.AttributeSemantics.TEXCOORD_1:
+                    return gltf.AccessorType.VEC2;
+
+                case gltf.AttributeSemantics.TANGENT:
+                case gltf.AttributeSemantics.COLOR_0:
+                case gltf.AttributeSemantics.COLOR_1:
+                case gltf.AttributeSemantics.JOINTS_0:
+                case gltf.AttributeSemantics.WEIGHTS_0:
+                    return gltf.AccessorType.VEC4;
+
+                default:
+                    return "";
             }
         }
         /**
@@ -158,26 +186,14 @@ namespace egret3d {
             }
         }
         /**
-         * 
+         * @internal
          */
         public updateAccessorTypeCount(): this {
-            const { accessors, meshes } = this.config;
+            const { accessors } = this.config;
 
             if (accessors !== undefined) {
                 for (const accessor of accessors) {
                     accessor.extras = { typeCount: GLTFAsset.getAccessorTypeCount(accessor.type) };
-                }
-            }
-
-            if (meshes !== undefined) {
-                for (const mesh of meshes) {
-                    const { primitives } = mesh;
-
-                    if (primitives.length > 1) {
-                        for (const primitive of primitives) {
-                            primitive.attributes = primitives[0].attributes;
-                        }
-                    }
                 }
             }
 
@@ -189,7 +205,6 @@ namespace egret3d {
         public createTypeArrayFromBufferView(bufferView: gltf.BufferView, componentType: gltf.ComponentType): ArrayBufferView {
             const buffer = this.config.buffers![bufferView.buffer].extras!.data;
             const bufferOffset = buffer.byteOffset + (bufferView.byteOffset || 0);
-            // assert.config.buffers[bufferView.buffer];
 
             switch (componentType) {
                 case gltf.ComponentType.Byte:
@@ -283,7 +298,7 @@ namespace egret3d {
         /**
          * 通过 Accessor 获取指定 BufferLength。
          */
-        public getBufferLength(accessor: gltf.Accessor): uint {
+        public getAccessorByteLength(accessor: gltf.Accessor): uint {
             return accessor.extras!.typeCount * GLTFAsset.getComponentTypeCount(accessor.componentType) * accessor.count;
         }
         /**

@@ -135,9 +135,9 @@ namespace paper {
                 delete assets[this.name];
             }
 
-            this._clear();
-
             this.onReferenceCountChange && this.onReferenceCountChange(true);
+
+            this._clear();
 
             return true;
         }

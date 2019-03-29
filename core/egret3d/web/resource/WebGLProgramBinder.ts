@@ -4,7 +4,6 @@
 type GlobalWeblGLShader = WebGLShader;
 
 namespace egret3d.webgl {
-    // 运行时 draw call 排序优化使用。
     let _hashCode: uint = 0;
     /**
      * @internal
@@ -51,92 +50,69 @@ namespace egret3d.webgl {
 
         public extract(technique: gltf.Technique): this {
             const webgl = WebGLRenderState.webgl!;
-            const webglProgram = this.program;
-            //
-            const attributes = this.attributes;
-            const totalAttributes = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_ATTRIBUTES);
+            const {
+                attributes,
+                globalUniforms, sceneUniforms, cameraUniforms, shadowUniforms, modelUniforms,
+                uniforms,
+                program
+            } = this;
+            // Link attributes.
+            const attributeCount = webgl.getProgramParameter(program, webgl.ACTIVE_ATTRIBUTES);
 
-            for (let i = 0; i < totalAttributes; i++) {
-                const webglActiveInfo = webgl.getActiveAttrib(webglProgram, i)!;
-                const name = webglActiveInfo.name;
-                const location = webgl.getAttribLocation(webglProgram, name);
+            for (let i = 0; i < attributeCount; ++i) {
+                const webGLActiveInfo = webgl.getActiveAttrib(program, i)!;
+                const { name, type } = webGLActiveInfo;
+                const location = webgl.getAttribLocation(program, name);
+
                 let semantic = "";
 
-                if (!technique.attributes[name]) {
-                    semantic = globalAttributeSemantics[name];
-                    if (!semantic) {
-                        console.error("未知Uniform定义：" + name);
+                if (name in technique.attributes) {
+                    if (!(name in globalAttributeSemantics)) {
+                        console.warn("Invalid attribute.", name);
                     }
                 }
                 else {
                     semantic = technique.attributes[name].semantic;
                 }
 
-                attributes.push({ name, type: webglActiveInfo.type, location, semantic });
+                attributes.push({ name, type, location, semantic });
             }
-            //
-            const globalUniforms = this.globalUniforms;
-            const sceneUniforms = this.sceneUniforms;
-            const cameraUniforms = this.cameraUniforms;
-            const shadowUniforms = this.shadowUniforms;
-            const modelUniforms = this.modelUniforms;
-            const uniforms = this.uniforms;
-            const totalUniforms = webgl.getProgramParameter(webglProgram, webgl.ACTIVE_UNIFORMS);
+            // Link uniforms.
+            const uniformCount = webgl.getProgramParameter(program, webgl.ACTIVE_UNIFORMS) as uint;
 
-            for (let i = 0; i < totalUniforms; i++) {
-                const webglActiveInfo = webgl.getActiveUniform(webglProgram, i)!;
-                const name = webglActiveInfo.name;
-                const location = webgl.getUniformLocation(webglProgram, name)!;
-                const gltfUniform = technique.uniforms[name];
+            for (let i = 0; i < uniformCount; ++i) {
+                const webGLActiveInfo = webgl.getActiveUniform(program, i)!;
+                const { name, type, size } = webGLActiveInfo;
+                const location = webgl.getUniformLocation(program, name)!;
 
-                if (!gltfUniform) {
-                    if (globalUniformSemantics[name]) {
-                        globalUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: globalUniformSemantics[name], location });
+                if (name in technique.uniforms) {
+                    if (name in globalUniformSemantics) {
+                        globalUniforms.push({ name, type, size, semantic: globalUniformSemantics[name], location });
                     }
-                    else if (sceneUniformSemantics[name]) {
-                        sceneUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: sceneUniformSemantics[name], location });
+                    else if (name in sceneUniformSemantics) {
+                        sceneUniforms.push({ name, type, size, semantic: sceneUniformSemantics[name], location });
                     }
-                    else if (cameraUniformSemantics[name]) {
-                        cameraUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: cameraUniformSemantics[name], location });
+                    else if (name in cameraUniformSemantics) {
+                        cameraUniforms.push({ name, type, size, semantic: cameraUniformSemantics[name], location });
                     }
-                    else if (shadowUniformSemantics[name]) {
-                        shadowUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: shadowUniformSemantics[name], location });
+                    else if (name in shadowUniformSemantics) {
+                        shadowUniforms.push({ name, type, size, semantic: shadowUniformSemantics[name], location });
                     }
-                    else if (modelUniformSemantics[name]) {
-                        modelUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: modelUniformSemantics[name], location });
+                    else if (name in modelUniformSemantics) {
+                        modelUniforms.push({ name, type, size, semantic: modelUniformSemantics[name], location });
                     }
                     else {
-                        //不在自定义中，也不在全局Uniform中
-                        console.error("未知Uniform定义：" + name);
+                        console.warn("Invalid uniform.", name);
                     }
                 }
                 else {
-                    uniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic: gltfUniform.semantic, location });
-                    if (DEBUG) {
-                        if (gltfUniform.semantic) {
-                            console.log("自定义Uniform语义:" + name);
-                        }
+                    const gltfUniform = technique.uniforms[name];
+                    uniforms.push({ name, type, size, semantic: gltfUniform.semantic, location });
+
+                    if (DEBUG && gltfUniform.semantic !== undefined) {
+                        console.debug("Custom uniform.", name);
                     }
                 }
-
-                // if (!gltfUniform) {
-                //     semantic = globalUniformSemantics[name];
-
-                //     if (!semantic) {
-                //         //不在自定义中，也不在全局Uniform中
-                //         console.error("未知Uniform定义：" + name);
-                //     }
-                // }
-                // else {
-                //     semantic = gltfUniform.semantic;
-                // }
-
-                // if (semantic) {
-                //     globalUniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, semantic, location });
-                // }
-                // else {
-                //     uniforms.push({ name, type: webglActiveInfo.type, size: webglActiveInfo.size, location });
-                // }
             }
             //
             const activeUniforms = globalUniforms.concat(sceneUniforms).concat(cameraUniforms).concat(shadowUniforms).concat(modelUniforms).concat(uniforms);

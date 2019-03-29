@@ -1243,7 +1243,22 @@ declare namespace gltf {
             [k: string]: Index;
         }[];
         extensions?: any;
-        extras?: any;
+        extras?: {
+            draw?: {
+                /**
+                 * 绘制偏移。
+                 */
+                offset: uint;
+                /**
+                 * 绘制数量。
+                 */
+                count: uint;
+            };
+            /**
+             * 
+             */
+            ibo: WebGLBuffer | null;
+        };
 
     }
     /**
@@ -1260,7 +1275,11 @@ declare namespace gltf {
         weights?: number[];
         name?: string;
         extensions?: any;
-        extras?: any;
+        extras?: {
+            program: any | null; // TODO
+            vao: WebGLBuffer | null;
+            vbo: WebGLBuffer | null;
+        };
 
     }
     /**
@@ -1482,9 +1501,7 @@ declare namespace gltf {
         bufferView?: Index;
         name?: string;
         extensions?: any;
-        extras?: {
-            data: string;
-        };
+        extras?: any;
 
     }
     /**

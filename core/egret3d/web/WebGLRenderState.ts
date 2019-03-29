@@ -197,6 +197,44 @@ namespace egret3d.webgl {
             webgl.clear(bufferBit);
         }
 
+        public updateVertexAttributes(mesh: Mesh) {
+            const webgl = WebGLRenderState.webgl!;
+            const attributes = mesh.attributes;
+
+            let attributeCount = 0;
+            // +++---...|xxx
+            for (const attribute of (mesh.glTFMesh.extras!.program as WebGLProgramBinder).attributes) {
+                const location = attribute.location;
+                const accessorIndex = attributes[attribute.semantic];
+
+                if (accessorIndex !== undefined) {
+                    const accessor = mesh.getAccessor(accessorIndex);
+                    // TODO normalized应该来源于mesh，应该还没有
+                    webgl.vertexAttribPointer(
+                        location,
+                        accessor.extras!.typeCount,
+                        accessor.componentType,
+                        accessor.normalized !== undefined ? accessor.normalized : false,
+                        0, mesh.getBufferOffset(accessor)
+                    );
+                    webgl.enableVertexAttribArray(location);
+                }
+                else {
+                    webgl.disableVertexAttribArray(location);
+                }
+
+                attributeCount++;
+            }
+            // xxx|---
+            if (attributeCount !== renderState.caches.attributeCount) {
+                for (let i = attributeCount, l = renderState.caches.attributeCount; i < l; ++i) {
+                    webgl.disableVertexAttribArray(i);
+                }
+
+                renderState.caches.attributeCount = attributeCount;
+            }
+        }
+
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
             const webgl = WebGLRenderState.webgl!;
 

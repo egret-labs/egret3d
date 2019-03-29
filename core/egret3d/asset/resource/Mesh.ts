@@ -5,8 +5,11 @@ namespace egret3d {
     export const enum MeshNeedUpdate {
         BoundingBox = 0b1,
         DrawMode = 0b10,
+        VertexArray = 0b100,
+        VertexBuffer = 0b1000,
+        IndexBuffer = 0b10000,
 
-        All = BoundingBox | DrawMode,
+        All = BoundingBox | DrawMode | VertexArray | VertexBuffer | IndexBuffer,
         None = 0,
     }
 
@@ -19,7 +22,7 @@ namespace egret3d {
     ];
     /**
      * 网格资源。
-     * - 最大支持 65536 个顶点。
+     * - 一个网格资源最大支持 65536 个顶点。
      * - 子网格顶点属性是共享的。
      * - 仅允许第一个 [gltf.MeshPrimitive](gltf.MeshPrimitive) 可以不使用顶点索引，即动态添加的 [gltf.MeshPrimitive](gltf.MeshPrimitive) 必须使用索引。
      * - 暂不支持交错。
@@ -34,7 +37,7 @@ namespace egret3d {
          */
         public static create(
             vertexCount: uint, indexCount: uint,
-            attributeNames?: ReadonlyArray<gltf.AttributeSemantics | string> | null, attributeTypes?: { [key: string]: gltf.AccessorType } | null
+            attributeNames?: ReadonlyArray<gltf.AttributeSemantics | string> | null, attributeTypes?: Readonly<{ [key: string]: gltf.AccessorType | string }> | null
         ): Mesh;
         /**
          * 加载一个网格。
@@ -44,109 +47,49 @@ namespace egret3d {
         public static create(
             vertexCountOrName: uint | string, indexCountOrConfig: uint | GLTF = 0,
             attributeNamesOrBuffers: ReadonlyArray<gltf.AttributeSemantics | string> | null | ReadonlyArray<ArrayBufferView> = null,
-            attributeTypes: Readonly<{ [key: string]: gltf.AccessorType }> | null = null
+            attributeTypes: Readonly<{ [key: string]: gltf.AccessorType | string }> | null = null
         ) {
-            let name: string;
-            let config: GLTF;
-            let buffers: ArrayBufferView[];
-            let mesh: Mesh;
-            let indexCount = 0;
-            //
-            if (typeof vertexCountOrName === "number") {
-                indexCount = indexCountOrConfig as uint;
-                //
-                name = "";
-                config = this._createConfig(
-                    vertexCountOrName as uint, indexCount,
-                    attributeNamesOrBuffers as any || _attributeNames, attributeTypes
-                );
-                buffers = [new Uint32Array(config.bufferViews![0].byteLength / Uint32Array.BYTES_PER_ELEMENT)];
-            }
-            else {
-                name = vertexCountOrName;
-                config = indexCountOrConfig as GLTF;
-                buffers = attributeNamesOrBuffers as ArrayBufferView[];
-            }
             // Retargeting.
-            mesh = new egret3d.Mesh();
-            mesh.initialize(name, config, buffers);
-            //
-            if (attributeTypes !== null) {
-                for (const k in attributeTypes) {
-                    mesh._attributeTypes[k] = attributeTypes[k];
+            const mesh = new egret3d.Mesh();
+
+            if (typeof vertexCountOrName === "number") { // 运行时创建的网格资源。
+                const indexCount = indexCountOrConfig as uint;
+                const attributeNames = attributeNamesOrBuffers !== null ? attributeNamesOrBuffers as ReadonlyArray<gltf.AttributeSemantics | string> : _attributeNames;
+                mesh._vertexCount = vertexCountOrName;
+                mesh.initialize("", this._createConfig(), null);
+                // Add attributes.
+                for (const attributeName of attributeNames) {
+                    const attributeType = GLTFAsset.getMeshAttributeType(attributeName, attributeTypes);
+
+                    if (attributeType.length > 0) {
+                        mesh.addAttribute(attributeName, attributeType);
+                    }
+                    else if (DEBUG) {
+                        console.warn("Invalid attribute type.", attributeName);
+                    }
+                }
+                // Add indices.
+                if (indexCount > 0) {
+                    mesh.addSubMesh(indexCount, 0);
                 }
             }
-            //
-            if (indexCount > 0) {
-                mesh.addSubMesh(indexCount, 0);
+            else {
+                mesh.initialize(vertexCountOrName, indexCountOrConfig as GLTF, attributeNamesOrBuffers as ArrayBufferView[]);
             }
 
             return mesh;
         }
 
-        private static _createConfig(vertexCount: uint, indexCount: uint, attributeNames: ReadonlyArray<gltf.AttributeSemantics | string>, attributeTypes: Readonly<{ [key: string]: gltf.AccessorType }> | null) {
-            // Create glTF mesh config.
+        private static _createConfig() {
             const config = this.createConfig();
-            // Buffer.
-            const [buffer] = config.buffers = [{ byteLength: 0 }];
-            // BufferView.
-            const [vertexBufferView] = config.bufferViews = [{ buffer: 0, byteOffset: 0, byteLength: 0, target: gltf.BufferViewTarget.ArrayBuffer }]; // VBO
-            // Accessor.
-            const accessors = config.accessors = [] as gltf.Accessor[];
-            // Mesh.
-            const meshes = config.meshes = [{
+            config.buffers = [];
+            config.bufferViews = [];
+            config.accessors = [];
+            config.meshes = [{
                 primitives: [{ attributes: {} }],
-                extensions: { paper: {} },
             }] as gltf.Mesh[];
-            // Primitive.
-            const [primitive] = meshes[0].primitives;
-            const { attributes } = primitive;
-            primitive.material = 0;
-            // Add accessor and attribute.
-            for (const attributeName of attributeNames) {
-                const attributeType = this._getMeshAttributeType(attributeName, attributeTypes);
-                const byteOffset = vertexBufferView.byteLength;
-                vertexBufferView.byteLength += vertexCount * GLTFAsset.getAccessorTypeCount(attributeType) * Float32Array.BYTES_PER_ELEMENT;
-                attributes[attributeName] = accessors.length;
-                accessors.push({
-                    bufferView: 0,
-                    byteOffset: byteOffset,
-                    count: vertexCount,
-                    normalized: attributeName === gltf.AttributeSemantics.NORMAL || attributeName === gltf.AttributeSemantics.TANGENT,
-                    componentType: gltf.ComponentType.Float,
-                    type: attributeType,
-                });
-            }
-
-            buffer.byteLength = vertexBufferView.byteLength;
 
             return config;
-        }
-
-        private static _getMeshAttributeType(attributeName: gltf.AttributeSemantics | string, attributeTypes: Readonly<{ [key: string]: gltf.AccessorType }> | null): gltf.AccessorType {
-            if (attributeTypes !== null && attributeName in attributeTypes) {
-                return attributeTypes[attributeName];
-            }
-
-            switch (attributeName) {
-                case gltf.AttributeSemantics.POSITION:
-                case gltf.AttributeSemantics.NORMAL:
-                    return gltf.AccessorType.VEC3;
-
-                case gltf.AttributeSemantics.TEXCOORD_0:
-                case gltf.AttributeSemantics.TEXCOORD_1:
-                    return gltf.AccessorType.VEC2;
-
-                case gltf.AttributeSemantics.TANGENT:
-                case gltf.AttributeSemantics.COLOR_0:
-                case gltf.AttributeSemantics.COLOR_1:
-                case gltf.AttributeSemantics.JOINTS_0:
-                case gltf.AttributeSemantics.WEIGHTS_0:
-                    return gltf.AccessorType.VEC4;
-
-                default:
-                    throw new Error();
-            }
         }
         /**
          * 缓存的更新标记。
@@ -177,7 +120,7 @@ namespace egret3d {
          * 缓存的自定义属性的类型。
          * - 为 clone 提供数据源。
          */
-        protected readonly _attributeTypes: { [key: string]: gltf.AccessorType } = {};
+        protected readonly _attributeTypes: { [key: string]: gltf.AccessorType | string } = {};
         /**
          * 缓存的 glTF 网格。
          * - 用于快速访问。
@@ -214,9 +157,19 @@ namespace egret3d {
         public initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null) {
             super.initialize(name, config, buffers);
 
-            const glTFMesh = this._glTFMesh = this.config.meshes![0];
+            const glTFMesh = this._glTFMesh = config.meshes![0];
             const asstibutes = this._attributes = glTFMesh.primitives[0].attributes as { [key: string]: gltf.Index };
-            this._vertexCount = this.getAccessor(asstibutes.POSITION !== undefined ? asstibutes.POSITION : 0).count;
+
+            if (this._vertexCount === 0) {
+                this._vertexCount = this.getAccessor(asstibutes.POSITION !== undefined ? asstibutes.POSITION : 0).count;
+            }
+
+            glTFMesh.extras = { program: null, vbo: null, vao: null };
+
+            for (const primitive of glTFMesh.primitives) {
+                primitive.extras = { ibo: null };
+                primitive.attributes = asstibutes;
+            }
         }
 
         public dispose() {
@@ -227,8 +180,6 @@ namespace egret3d {
 
                 this._boundingBox.clear();
 
-                this._clear();
-
                 return true;
             }
 
@@ -238,28 +189,27 @@ namespace egret3d {
          * 克隆该网格。
          */
         public clone(): Mesh {
-            const { primitives } = this._glTFMesh!;
             const attributeNames = [] as (gltf.AttributeSemantics | string)[];
 
             for (const k in this._attributes!) {
                 attributeNames.push(k);
             }
-
+            // Clone mesh.
             const value = Mesh.create(this._vertexCount, 0, attributeNames, this._attributeTypes);
             value._drawMode = this._drawMode;
             value._wireframeIndex = this._wireframeIndex;
-
-            for (const primitive of primitives) {
+            // Copy subMeshes.
+            for (const primitive of this._glTFMesh!.primitives) {
                 if (primitive.indices !== undefined) {
                     const accessor = this.getAccessor(primitive.indices);
                     value.addSubMesh(accessor.count, primitive.material, primitive.mode);
                 }
             }
             // Copy buffviews.
-            let index = 0;
+            let bufferViewIndex = 0;
 
             for (const bufferViewSource of this.config.bufferViews!) {
-                const bufferViewTarget = value.config.bufferViews![index++];
+                const bufferViewTarget = value.config.bufferViews![bufferViewIndex++];
                 const source = this.createTypeArrayFromBufferView(bufferViewSource, gltf.ComponentType.UnsignedInt) as Uint8Array;
                 const target = value.createTypeArrayFromBufferView(bufferViewTarget, gltf.ComponentType.UnsignedInt) as Uint8Array;
                 target.set(source);
@@ -276,7 +226,7 @@ namespace egret3d {
             if ((this._needUpdate & mask) !== 0) {
                 if ((mask & MeshNeedUpdate.BoundingBox) !== 0) {
                     const vertices = this.getVertices()!;
-                    const position = helpVector3A;
+                    const position = helpVector3E;
                     const boundingBox = this._boundingBox;
 
                     for (let i = 0, l = vertices.length; i < l; i += 3) {
@@ -472,156 +422,6 @@ namespace egret3d {
             return hit;
         }
         /**
-         * 为该网格添加一个子网格。
-         * @param indexCount - 索引的数量。
-         * @param materialIndex - 使用的材质索引。
-         * - 默认为 `0` ，材质列表中的第一个材质。
-         * @param randerMode - 渲染的模式。
-         * - 默认为 [gltf.MeshPrimitiveMode.Triangles](gltf.MeshPrimitiveMode.Triangles) 。
-         */
-        public addSubMesh(indexCount: uint, materialIndex: uint = 0, randerMode: gltf.MeshPrimitiveMode = gltf.MeshPrimitiveMode.Triangles): int {
-            if (indexCount <= 0) {
-                if (DEBUG) {
-                    console.warn("The index count is 0.");
-                }
-
-                return -1;
-            }
-
-            const { buffers, bufferViews, accessors } = this.config;
-            const bufferIndex = buffers!.length;
-            const byteLength = indexCount * Uint16Array.BYTES_PER_ELEMENT;
-            const primitives = this.config.meshes![0].primitives;
-            let subMeshIndex: uint;
-            let primitive: gltf.MeshPrimitive;
-
-            // 如果第一个子网格没使用顶点索引，则此次添加行为其实是设置第一个子网格。
-            if (primitives.length > 0 && primitives[0].indices === undefined) {
-                subMeshIndex = 0;
-                primitive = primitives[subMeshIndex];
-            }
-            else {
-                subMeshIndex = primitives.length;
-                primitive = primitives[subMeshIndex] = {
-                    attributes: this._attributes,
-                } as gltf.MeshPrimitive;
-            }
-
-            primitive.indices = accessors!.length;
-            primitive.material = materialIndex;
-            primitive.mode = randerMode;
-            // Add Buffer.
-            buffers![bufferIndex] = {
-                byteLength: byteLength,
-                extras: { data: new Uint16Array(byteLength / Uint16Array.BYTES_PER_ELEMENT) }
-            };
-            // Add BufferView.
-            bufferViews![bufferViews!.length] = {
-                buffer: bufferIndex,
-                byteOffset: 0,
-                byteLength: byteLength,
-                target: gltf.BufferViewTarget.ElementArrayBuffer,
-            };
-            // Add accessor.
-            accessors!.push({
-                bufferView: bufferIndex, byteOffset: 0,
-                componentType: gltf.ComponentType.UnsignedShort, type: gltf.AccessorType.SCALAR,
-                count: indexCount, extras: { typeCount: 1 },
-            });
-
-            return subMeshIndex;
-        }
-        /**
-         * 删除该网格的一个子网格。
-         * - 仅能删除动态添加的子网格。
-         * @param subMeshIndex 
-         */
-        public removeSubMesh(subMeshIndex: uint): boolean {
-            const primitives = this.config.meshes![0].primitives;
-            const primitiveCount = primitives.length;
-
-            if (subMeshIndex < primitiveCount) {
-                const { buffers, bufferViews, accessors } = this.config;
-                const primitive = primitives[subMeshIndex];
-
-                if (primitive.indices !== undefined) {
-                    const accessorIndex = primitive.indices;
-                    const accessor = accessors![accessorIndex];
-                    const bufferView = this.getBufferView(accessor);
-
-                    if (bufferView.buffer !== 0) { // buffer 为 0， 意味着这是一个导入资源，导入资源的子网格不可被删除。
-                        // Update GLTFIndex.
-                        for (let i = subMeshIndex + 1; i < primitiveCount; ++i) {
-                            const primitive = primitives[i];
-                            const accessor = accessors![primitive.indices!];
-                            const bufferView = this.getBufferView(accessor);
-                            bufferView.buffer++;
-                            accessor.bufferView!++;
-                            primitive.indices!++;
-                        }
-                        // Remove link.
-                        buffers!.splice(bufferView.buffer, 1);
-                        bufferViews!.splice(accessor.bufferView!, 1);
-                        accessors!.splice(accessorIndex, 1);
-
-                        // Update wireframe cache.
-                        if (this._wireframeIndex === subMeshIndex) {
-                            this._wireframeIndex = -1;
-                        }
-
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-        /**
-         * 为该网格添加线框子网格。
-         * @param materialIndex 
-         */
-        public addWireframeSubMesh(materialIndex: uint): this {
-            if (this._wireframeIndex < 0) {
-                let index = 0;
-                const wireframeIndices = [] as float[];
-
-                for (const primitive of this._glTFMesh!.primitives) {
-                    if (primitive.indices !== undefined) {
-                        const indices = this.getIndices(index)!;
-
-                        for (let i = 0, l = indices.length; i < l; i += 3) {
-                            const a = indices[i + 0];
-                            const b = indices[i + 1];
-                            const c = indices[i + 2];
-                            wireframeIndices.push(a, b, b, c, c, a);
-                        }
-                    }
-                    else {
-                        // TODO
-                    }
-
-                    index++;
-                }
-
-                if (wireframeIndices.length > 0) {
-                    this._wireframeIndex = this.addSubMesh(wireframeIndices.length, materialIndex, gltf.MeshPrimitiveMode.Lines);
-                    this.setIndices(wireframeIndices, this._wireframeIndex);
-                }
-            }
-
-            return this;
-        }
-        /**
-         * 删除该网格已添加的线框子网格。
-         */
-        public removeWireframeSubMesh(): this {
-            if (this._wireframeIndex >= 0) {
-                this.removeSubMesh(this._wireframeIndex);
-            }
-
-            return this;
-        }
-        /**
          * 
          */
         public normalizeNormals(): this {
@@ -698,65 +498,231 @@ namespace egret3d {
             return this;
         }
         /**
-         * 获取该网格顶点的位置属性数据。
-         * - x0, y0, z0, x1, y1, z1, ...
-         * @param offset 顶点偏移。（默认从第一个点开始）
-         * @param count 顶点数。（默认全部顶点）
+         * 
+         * @param attributeName 
+         * @param attributeType 
          */
-        public getVertices(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.AttributeSemantics.POSITION, offset, count);
+        public addAttribute(attributeName: gltf.AttributeSemantics | string, attributeType: gltf.AccessorType | string): boolean {
+            const attributes = this._attributes!;
+
+            if (!(attributeName in attributes)) {
+                const { buffers, bufferViews, accessors } = this.config;
+                const vertexCount = this._vertexCount;
+                const typeCount = GLTFAsset.getAccessorTypeCount(attributeType);
+                const viewLength = vertexCount * typeCount;
+                const byteLength = viewLength * Float32Array.BYTES_PER_ELEMENT;
+                const bufferIndex = buffers!.length;
+                const bufferViewIndex = bufferViews!.length;
+                const accessorIndex = accessors!.length;
+                buffers![bufferIndex] = { byteLength: byteLength, extras: { data: new Float32Array(viewLength) } };
+                bufferViews![bufferViewIndex] = { buffer: bufferIndex, byteLength: byteLength, target: gltf.BufferViewTarget.ArrayBuffer };
+                accessors![accessorIndex] = {
+                    bufferView: bufferViewIndex,
+                    count: vertexCount, componentType: gltf.ComponentType.Float, type: attributeType as gltf.AccessorType,
+                    normalized: attributeName === gltf.AttributeSemantics.NORMAL || attributeName === gltf.AttributeSemantics.TANGENT,
+                    extras: { typeCount }
+                };
+                attributes[attributeName] = accessorIndex;
+                // 收集自定义属性的类型。
+                if (GLTFAsset.getMeshAttributeType(attributeName) !== attributeType) {
+                    this._attributeTypes[attributeName] = attributeType;
+                }
+
+                return true;
+            }
+
+            return false;
         }
         /**
-         * 获取该网格顶点的 UV 属性数据。
-         * - u0, v0, u1, v1, ...
-         * @param offset 顶点偏移。（默认从第一个点开始）
-         * @param count 顶点数。（默认全部顶点）
+         * 
+         * @param attributeName 
          */
-        public getUVs(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.AttributeSemantics.TEXCOORD_0, offset, count);
+        public removeAttribute(attributeName: gltf.AttributeSemantics | string): boolean {
+
+            return false;
         }
         /**
-         * 获取该网格顶点的颜色属性数据。
-         * - r0, g0, b0, a0, r1, g1, b1, a1, ...
-         * @param offset 顶点偏移。（默认从第一个点开始）
-         * @param count 顶点数。（默认全部顶点）
+         * 为该网格添加一个子网格。
+         * @param indexCount - 索引的数量。
+         * @param materialIndex - 使用的材质索引。
+         * - 默认为 `0` ，材质列表中的第一个材质。
+         * @param randerMode - 渲染的模式。
+         * - 默认为 [gltf.MeshPrimitiveMode.Triangles](gltf.MeshPrimitiveMode.Triangles) 。
          */
-        public getColors(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.AttributeSemantics.COLOR_0, offset, count);
+        public addSubMesh(indexCount: uint, materialIndex: uint = 0, randerMode: gltf.MeshPrimitiveMode = gltf.MeshPrimitiveMode.Triangles): int {
+            if (indexCount <= 0) {
+                if (DEBUG) {
+                    console.warn("invalid index count.");
+                }
+
+                return -1;
+            }
+            //
+            const { buffers, bufferViews, accessors } = this.config;
+            const { primitives } = this._glTFMesh!;
+            const byteLength = indexCount * Uint16Array.BYTES_PER_ELEMENT;
+            const bufferIndex = buffers!.length;
+            const bufferViewIndex = bufferViews!.length;
+            const accessorIndex = accessors!.length;
+            buffers![bufferIndex] = { byteLength: byteLength, extras: { data: new Uint16Array(indexCount) } };
+            bufferViews![bufferViewIndex] = { buffer: bufferIndex, byteLength: byteLength, target: gltf.BufferViewTarget.ElementArrayBuffer };
+            accessors![accessorIndex] = {
+                bufferView: bufferIndex,
+                count: indexCount, componentType: gltf.ComponentType.UnsignedShort, type: gltf.AccessorType.SCALAR,
+                extras: { typeCount: 1 },
+            };
+            // 如果第一个子网格没使用顶点索引，则此次添加行为其实是设置第一个子网格。
+            let subMeshIndex: uint;
+            let primitive: gltf.MeshPrimitive;
+
+            if (primitives[0].indices === undefined) {
+                subMeshIndex = 0;
+                primitive = primitives[subMeshIndex];
+            }
+            else {
+                subMeshIndex = primitives.length;
+                primitive = primitives[subMeshIndex] = {
+                    attributes: this._attributes, extras: { ibo: null },
+                } as gltf.MeshPrimitive;
+            }
+
+            primitive.indices = accessorIndex;
+            primitive.material = materialIndex;
+            primitive.mode = randerMode;
+            //
+            this.needUpdate(MeshNeedUpdate.IndexBuffer);
+
+            return subMeshIndex;
         }
         /**
-         * 获取该网格顶点的法线属性数据。
-         * - x0, y0, z0, x1, y1, z1, ...
-         * @param offset 顶点偏移。（默认从第一个点开始）
-         * @param count 顶点数。（默认全部顶点）
+         * 删除该网格的一个子网格。
+         * - 仅能删除动态添加的子网格。
+         * @param subMeshIndex 子网格索引。
          */
-        public getNormals(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.AttributeSemantics.NORMAL, offset, count);
+        public removeSubMesh(subMeshIndex: uint): boolean {
+            const { primitives } = this._glTFMesh!;
+            const primitiveCount = primitives.length;
+
+            if (subMeshIndex < primitiveCount) {
+                const { buffers, bufferViews, accessors } = this.config;
+                const primitive = primitives[subMeshIndex];
+
+                if (primitive.indices !== undefined) {
+                    const accessorIndex = primitive.indices;
+                    const accessor = accessors![accessorIndex];
+                    const bufferView = this.getBufferView(accessor);
+
+                    if (bufferView.buffer !== 0) { // buffer 为 0， 意味着这是一个导入资源，导入资源的子网格不可被删除。
+                        // Update GLTFIndex.
+                        const attributes = this._attributes!;
+
+                        for (const k in attributes!) {
+                            if (attributes[k] > accessorIndex) {
+                                attributes[k]--;
+                            }
+                        }
+
+                        for (let i = subMeshIndex + 1; i < primitiveCount; ++i) {
+                            const primitive = primitives[i];
+                            const accessor = accessors![primitive.indices!];
+                            const bufferView = this.getBufferView(accessor);
+                            bufferView.buffer--;
+                            accessor.bufferView!--;
+                            primitive.indices!--;
+                        }
+                        // Remove link.
+                        buffers!.splice(bufferView.buffer, 1);
+                        bufferViews!.splice(accessor.bufferView!, 1);
+                        accessors!.splice(accessorIndex, 1);
+                        primitives!.splice(subMeshIndex, 1);
+                        // Update wireframe cache.
+                        if (this._wireframeIndex === subMeshIndex) {
+                            this._wireframeIndex = -1;
+                        }
+
+                        this.needUpdate(MeshNeedUpdate.IndexBuffer);
+
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
         /**
-         * 获取该网格顶点的切线属性数据。
-         * - x0, y0, z0, w0,  x1, y1, z1, w1, ...
-         * @param offset 顶点偏移。（默认从第一个点开始）
-         * @param count 顶点数。（默认全部顶点）
+         * 为该网格添加线框子网格。
+         * @param materialIndex 该子网格使用的材质索引。
          */
-        public getTangents(offset: uint = 0, count: uint = 0): Float32Array | null {
-            return this.getAttributes(gltf.AttributeSemantics.TANGENT, offset, count);
+        public addWireframeSubMesh(materialIndex: uint): this {
+            if (this._wireframeIndex < 0) {
+                let index = 0;
+                const wireframeIndices = [] as float[];
+
+                for (const primitive of this._glTFMesh!.primitives) {
+                    switch (primitive.mode) {
+                        case gltf.MeshPrimitiveMode.Triangles:
+                        default:
+                            if (primitive.indices !== undefined) {
+                                const indices = this.getIndices(index)!;
+
+                                for (let i = 0, l = indices.length; i < l; i += 3) {
+                                    const a = indices[i];
+                                    const b = indices[i + 1];
+                                    const c = indices[i + 2];
+                                    wireframeIndices.push(a, b, b, c, c, a);
+                                }
+                            }
+                            else {
+                                for (let i = 0; i < this._vertexCount; i += 3) {
+                                    const a = i;
+                                    const b = i + 1;
+                                    const c = i + 2;
+                                    wireframeIndices.push(a, b, b, c, c, a);
+                                }
+                            }
+                            break;
+
+                        case gltf.MeshPrimitiveMode.TrianglesStrip:
+                            // TODO
+                            break;
+
+                        case gltf.MeshPrimitiveMode.TrianglesFan:
+                            // TODO
+                            break;
+                    }
+
+                    index++;
+                }
+
+                if (wireframeIndices.length > 0) {
+                    this._wireframeIndex = this.addSubMesh(wireframeIndices.length, materialIndex, gltf.MeshPrimitiveMode.Lines);
+                    this.setIndices(wireframeIndices, this._wireframeIndex);
+                }
+            }
+
+            return this;
+        }
+        /**
+         * 删除该网格已添加的线框子网格。
+         */
+        public removeWireframeSubMesh(): this {
+            if (this._wireframeIndex >= 0) {
+                this.removeSubMesh(this._wireframeIndex);
+            }
+
+            return this;
         }
         /**
          * 获取该网格顶点的指定属性数据。
          * @param attributeName 属性名。
          * @param offset 顶点偏移。
-         * - [`0` ~ N]
          * - 默认为 `0` ， 从第一个点开始。
-         * @param count 顶点总数。
-         * - [`0` ~ N]
+         * @param count 顶点数量。
          * - 默认为 `0` ， 全部顶点。
          */
-        public getAttributes(attributeName: gltf.AttributeSemantics | string, offset: uint = 0, count: uint = 0): Float32Array | null {
-            const accessorIndex = this._attributes![attributeName];
-
-            if (accessorIndex !== undefined) {
-                return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex), offset, count) as Float32Array;
+        public getAttribute(attributeName: gltf.AttributeSemantics | string, offset: uint = 0, count: uint = 0): Float32Array | null {
+            if (attributeName in this._attributes!) {
+                return this.createTypeArrayFromAccessor(this.getAccessor(this._attributes![attributeName]), offset, count) as Float32Array;
             }
 
             return null;
@@ -767,10 +733,12 @@ namespace egret3d {
          * @param attributeName 属性名。
          * @param value 属性数据。
          * @param offset 顶点偏移。
-         * - 默认 `0`， 默认从第一个点开始。
+         * - 默认为 `0`， 从第一个点开始。
+         * @param count 顶点数量。
+         * - 默认为 `0` ， 全部顶点。
          */
-        public setAttributes(attributeName: gltf.AttributeSemantics | string, value: ReadonlyArray<float>, offset: uint = 0): Float32Array | null {
-            const target = this.getAttributes(attributeName);
+        public setAttribute(attributeName: gltf.AttributeSemantics | string, value: ReadonlyArray<float>, offset: uint = 0, count: uint = 0): Float32Array | null {
+            const target = this.getAttribute(attributeName, offset, count);
 
             if (target !== null) {
                 if (attributeName === gltf.AttributeSemantics.POSITION) {
@@ -825,6 +793,51 @@ namespace egret3d {
             return target;
         }
         /**
+         * 获取该网格顶点的位置属性数据。
+         * - x0, y0, z0, x1, y1, z1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
+         */
+        public getVertices(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttribute(gltf.AttributeSemantics.POSITION, offset, count);
+        }
+        /**
+         * 获取该网格顶点的 UV 属性数据。
+         * - u0, v0, u1, v1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
+         */
+        public getUVs(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttribute(gltf.AttributeSemantics.TEXCOORD_0, offset, count);
+        }
+        /**
+         * 获取该网格顶点的颜色属性数据。
+         * - r0, g0, b0, a0, r1, g1, b1, a1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
+         */
+        public getColors(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttribute(gltf.AttributeSemantics.COLOR_0, offset, count);
+        }
+        /**
+         * 获取该网格顶点的法线属性数据。
+         * - x0, y0, z0, x1, y1, z1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
+         */
+        public getNormals(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttribute(gltf.AttributeSemantics.NORMAL, offset, count);
+        }
+        /**
+         * 获取该网格顶点的切线属性数据。
+         * - x0, y0, z0, w0,  x1, y1, z1, w1, ...
+         * @param offset 顶点偏移。（默认从第一个点开始）
+         * @param count 顶点数。（默认全部顶点）
+         */
+        public getTangents(offset: uint = 0, count: uint = 0): Float32Array | null {
+            return this.getAttribute(gltf.AttributeSemantics.TANGENT, offset, count);
+        }
+        /**
          * 当修改该网格的顶点属性后，调用此方法来更新顶点属性的缓冲区。
          * @param uploadAttributes 
          * @param offset 顶点偏移。（默认不偏移）
@@ -844,6 +857,7 @@ namespace egret3d {
         }
         public set drawMode(value: gltf.DrawMode) {
             this._drawMode = value;
+            this.needUpdate(MeshNeedUpdate.DrawMode);
         }
         /**
          * 该网格的子网格总数。
@@ -884,7 +898,7 @@ namespace egret3d {
         public get boneIndices(): Readonly<{ [key: string]: uint }> | null {
             const config = this.config;
 
-            if (!this._boneIndices && config.skins) {
+            if (this._boneIndices === null && config.skins !== undefined) {
                 const nodeIndices = this._boneIndices = {} as { [key: string]: uint };
 
                 for (const joint of config.skins![0].joints) {
@@ -900,15 +914,28 @@ namespace egret3d {
          * @internal
          */
         public get inverseBindMatrices(): ArrayBufferView | null {
-            const config = this.config;
+            const { config } = this;
 
-            if (!this._inverseBindMatrices && config.skins) {
+            if (this._inverseBindMatrices === null && config.skins !== undefined) {
                 // Mast be skinned mesh if has skin.
                 // Skinned mesh mast has inverseBindMatrices.
                 this._inverseBindMatrices = this.createTypeArrayFromAccessor(this.getAccessor(config.skins![0].inverseBindMatrices!));
             }
 
             return this._inverseBindMatrices;
+        }
+
+        /**
+         * @deprecated
+         */
+        public getAttributes(): Float32Array | null {
+            return this.getAttribute.apply(this, arguments as any);
+        }
+        /**
+         * @deprecated
+         */
+        public setAttributes(): Float32Array | null {
+            return this.setAttribute.apply(this, arguments as any);
         }
     }
 }
