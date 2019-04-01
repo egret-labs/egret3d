@@ -21,7 +21,7 @@ namespace examples {
 
         public onAwake() {
             //
-            createGridRoom();
+            // createGridRoom();
 
             for (const transform of [
                 this._cubeLeft.transform.setLocalPosition(-2.0, 0.5, 1.0),

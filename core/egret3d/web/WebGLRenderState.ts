@@ -46,10 +46,10 @@ namespace egret3d.webgl {
     export function setTexturexParameters(type: gltf.TextureType, sampler: gltf.Sampler, anisotropy: number) {
         const webgl = WebGLRenderState.webgl!;
 
-        webgl.texParameteri(type, gltf.WebGL.TEXTURE_MAG_FILTER, sampler.magFilter!);
-        webgl.texParameteri(type, gltf.WebGL.TEXTURE_MIN_FILTER, sampler.minFilter!);
-        webgl.texParameteri(type, gltf.WebGL.TEXTURE_WRAP_S, sampler.wrapS!);
-        webgl.texParameteri(type, gltf.WebGL.TEXTURE_WRAP_T, sampler.wrapT!);
+        webgl.texParameteri(type, gltf.WebGL.TEXTURE_MAG_FILTER, sampler.magFilter || gltf.TextureFilter.Nearest);
+        webgl.texParameteri(type, gltf.WebGL.TEXTURE_MIN_FILTER, sampler.minFilter || gltf.TextureFilter.Nearest);
+        webgl.texParameteri(type, gltf.WebGL.TEXTURE_WRAP_S, sampler.wrapS || gltf.TextureWrappingMode.Repeat);
+        webgl.texParameteri(type, gltf.WebGL.TEXTURE_WRAP_T, sampler.wrapT || gltf.TextureWrappingMode.Repeat);
 
         if (renderState.textureFilterAnisotropic && anisotropy > 1) {
             webgl.texParameterf(type, renderState.textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(anisotropy, renderState.maxAnisotropy));
@@ -199,23 +199,24 @@ namespace egret3d.webgl {
 
         public updateVertexAttributes(mesh: Mesh) {
             const webgl = WebGLRenderState.webgl!;
+            const { caches } = this;
             const attributes = mesh.attributes;
+            const attributeOffsets = mesh.glTFMesh.extras!.attributeOffsets;
 
             let attributeCount = 0;
             // +++---...|xxx
             for (const attribute of (mesh.glTFMesh.extras!.program as WebGLProgramBinder).attributes) {
-                const location = attribute.location;
-                const accessorIndex = attributes[attribute.semantic];
+                const { location, semantic } = attribute;
 
-                if (accessorIndex !== undefined) {
-                    const accessor = mesh.getAccessor(accessorIndex);
+                if (semantic in attributes) {
+                    const accessor = mesh.getAccessor(attributes[semantic]);
                     // TODO normalized应该来源于mesh，应该还没有
                     webgl.vertexAttribPointer(
                         location,
                         accessor.extras!.typeCount,
                         accessor.componentType,
                         accessor.normalized !== undefined ? accessor.normalized : false,
-                        0, mesh.getBufferOffset(accessor)
+                        0, attributeOffsets[semantic]
                     );
                     webgl.enableVertexAttribArray(location);
                 }
@@ -226,12 +227,12 @@ namespace egret3d.webgl {
                 attributeCount++;
             }
             // xxx|---
-            if (attributeCount !== renderState.caches.attributeCount) {
-                for (let i = attributeCount, l = renderState.caches.attributeCount; i < l; ++i) {
+            if (attributeCount !== caches.attributeCount) {
+                for (let i = attributeCount, l = caches.attributeCount; i < l; ++i) {
                     webgl.disableVertexAttribArray(i);
                 }
 
-                renderState.caches.attributeCount = attributeCount;
+                caches.attributeCount = attributeCount;
             }
         }
 

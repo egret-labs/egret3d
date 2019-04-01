@@ -98,10 +98,10 @@ namespace egret3d {
             }
 
             if (this._light.constructor === PointLight) {
-                this._renderTarget.uploadTexture(value * 4.0, value * 2.0);
+                this._renderTarget.setSize(value * 4.0, value * 2.0);
             }
             else {
-                this._renderTarget.uploadTexture(value, value);
+                this._renderTarget.setSize(value, value);
             }
 
             this._mapSize = value;

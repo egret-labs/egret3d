@@ -9,20 +9,19 @@ namespace egret3d {
         private readonly _materialFilter: boolean[] = [];
 
         private _updateDrawCalls(entity: paper.GameObject, checkState: boolean) {
-            if (checkState && !this.groups[0].containsEntity(entity)) {
+            if (checkState && (!this.enabled || !this.groups[0].containsEntity(entity))) {
                 return;
             }
 
             const drawCallCollecter = this._drawCallCollecter;
-            const filter = entity.getComponent(MeshFilter)!;
+            const { mesh } = entity.getComponent(MeshFilter)!;
             const renderer = entity.getComponent(MeshRenderer)!;
-            const mesh = filter.mesh;
-            const materials = renderer.materials;
+            const { materials } = renderer;
             const materialCount = materials.length;
             // Clear drawCalls.
             drawCallCollecter.removeDrawCalls(entity);
 
-            if (!mesh || materialCount === 0) {
+            if (mesh === null || materialCount === 0) {
                 return;
             }
 
@@ -34,29 +33,26 @@ namespace egret3d {
             }
 
             const materialFilter = this._materialFilter;
-            const matrix = entity.getComponent(egret3d.Transform)!.localToWorldMatrix;
+            const { localToWorldMatrix } = entity.getComponent(Transform)!;
 
             if (materialFilter.length < materialCount) {
                 materialFilter.length = materialCount;
             }
 
             for (let i = 0; i < subMeshCount; ++i) { // Specified materials.
-                const materialIndex = primitives[i].material;
+                const materialIndex = primitives[i].material || 0;
                 let material: Material | null = null;
 
-                if (materialIndex === undefined) {
-                    material = DefaultMaterials.MESH_BASIC;
-                }
-                else if (materialIndex < materialCount) {
+                if (materialIndex < materialCount) {
                     material = materials[materialIndex];
                     materialFilter[materialIndex] = true;
                 }
 
-                if (material) {
+                if (material !== null) {
                     const drawCall = DrawCall.create();
                     drawCall.entity = entity;
                     drawCall.renderer = renderer;
-                    drawCall.matrix = matrix;
+                    drawCall.matrix = localToWorldMatrix;
                     drawCall.subMeshIndex = i;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
@@ -75,15 +71,13 @@ namespace egret3d {
                     const drawCall = DrawCall.create();
                     drawCall.entity = entity;
                     drawCall.renderer = renderer;
-                    drawCall.matrix = matrix;
+                    drawCall.matrix = localToWorldMatrix;
                     drawCall.subMeshIndex = j;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-
-            // materialFilter.length = 0;
         }
 
         protected getMatchers() {
@@ -97,12 +91,6 @@ namespace egret3d {
                 {
                     type: MeshFilter.onMeshChanged, listener: (component: paper.IComponent) => {
                         this._updateDrawCalls(component.entity as paper.GameObject, true);
-
-                        const renderer = component.entity.getComponent(MeshRenderer);
-
-                        if (renderer) {
-                            renderer._localBoundingBoxDirty = true;
-                        }
                     }
                 },
                 {

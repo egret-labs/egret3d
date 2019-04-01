@@ -14,11 +14,11 @@ namespace egret3d {
          * @internal
          */
         public uninitialize() {
-            super.uninitialize();
-
-            if (this._mesh) {
+            if (this._mesh !== null) {
                 this._mesh.release();
             }
+
+            super.uninitialize();
 
             this._mesh = null;
         }
@@ -35,11 +35,11 @@ namespace egret3d {
                 return;
             }
 
-            if (this._mesh) {
+            if (this._mesh !== null) {
                 this._mesh.release();
             }
 
-            if (value) {
+            if (value !== null) {
                 value.retain();
             }
 

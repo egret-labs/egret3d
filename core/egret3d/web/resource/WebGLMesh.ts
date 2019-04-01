@@ -18,7 +18,7 @@ namespace egret3d.webgl {
                 }
             }
 
-            if (glTFMeshExtras.vao) {
+            if (glTFMeshExtras.vao !== null) {
                 webgl.bindVertexArray(glTFMeshExtras.vao);
 
                 return true;
@@ -28,16 +28,16 @@ namespace egret3d.webgl {
         }
 
         public update(mask: MeshNeedUpdate) {
-            super.update(mask);
+            const needUpdate = this._needUpdate & mask;
 
-            if ((this._needUpdate & mask) !== 0) {
+            if (needUpdate !== 0) {
                 const webgl = WebGLRenderState.webgl!;
                 const glTFMesh = this._glTFMesh!;
                 const glTFMeshExtras = glTFMesh.extras!;
                 const attributes = this._attributes!;
                 let bindVAO = false;
 
-                if ((mask & MeshNeedUpdate.VertexBuffer) !== 0) {
+                if ((needUpdate & MeshNeedUpdate.VertexBuffer) !== 0) {
                     let createBuffer = false;
                     bindVAO = this._bindVAO();
 
@@ -64,7 +64,6 @@ namespace egret3d.webgl {
 
                         webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
                         webgl.bufferData(gltf.BufferViewTarget.ArrayBuffer, byteLength, this._drawMode);
-                        webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, null);
 
                         if (createBuffer) {
                             this.uploadVertexBuffer(attributeNames);
@@ -72,12 +71,12 @@ namespace egret3d.webgl {
                     }
                 }
 
-                if ((mask & MeshNeedUpdate.IndexBuffer) !== 0) {
+                if ((needUpdate & MeshNeedUpdate.IndexBuffer) !== 0) {
+                    let subMeshIndex = 0;
+
                     if (!bindVAO) {
                         bindVAO = this._bindVAO();
                     }
-
-                    let subMeshIndex = 0;
 
                     for (const primitive of glTFMesh!.primitives) {
                         if (primitive.indices !== undefined) {
@@ -98,7 +97,6 @@ namespace egret3d.webgl {
                             if (primitive.extras!.ibo !== null) {
                                 webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitive.extras!.ibo);
                                 webgl.bufferData(gltf.BufferViewTarget.ElementArrayBuffer, this.getAccessorByteLength(this.getAccessor(primitive.indices)), this._drawMode);
-                                webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, null);
 
                                 if (createBuffer) {
                                     this.uploadSubIndexBuffer(subMeshIndex);
@@ -110,22 +108,22 @@ namespace egret3d.webgl {
                     }
                 }
 
-                if ((mask & MeshNeedUpdate.VertexArray) !== 0) {
+                if ((needUpdate & MeshNeedUpdate.VertexArray) !== 0) {
                     if (!bindVAO) {
                         bindVAO = this._bindVAO();
                     }
 
-                    if (glTFMeshExtras.program !== null) {
-                        renderState.updateVertexAttributes(this);
+                    if (bindVAO) {
+                        if (glTFMeshExtras.program !== null) {
+                            renderState.updateVertexAttributes(this);
+                        }
+
+                        webgl.bindVertexArray(null);
                     }
                 }
-
-                if (bindVAO) {
-                    webgl.bindVertexArray(null);
-                }
-
-                this._needUpdate &= ~mask;
             }
+
+            super.update(mask);
         }
 
         public onReferenceCountChange(isZero: boolean) {
@@ -133,20 +131,26 @@ namespace egret3d.webgl {
                 const webgl = WebGLRenderState.webgl!;
                 const glTFMesh = this._glTFMesh!;
                 const { primitives, extras } = glTFMesh;
+                extras!.program = null;
 
                 if (extras!.vao !== null) {
                     webgl.deleteVertexArray(extras!.vao);
+                    extras!.vao = null;
                 }
 
                 if (extras!.vbo !== null) {
                     webgl.deleteBuffer(extras!.vbo);
+                    extras!.vbo = null;
                 }
 
                 for (const { extras } of primitives) {
                     if (extras!.ibo !== null) {
                         webgl.deleteBuffer(extras!.ibo);
+                        extras!.ibo = null;
                     }
                 }
+
+                this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer);
 
                 return true;
             }
@@ -157,58 +161,31 @@ namespace egret3d.webgl {
         public uploadVertexBuffer<T extends gltf.AttributeSemantics | string>(uploadAttributes: T | ReadonlyArray<T> | null = null, offset: uint = 0, count: uint = 0): void {
             const webgl = WebGLRenderState.webgl!;
             const attributes = this._attributes!;
+            const attributeOffsets = this._glTFMesh!.extras!.attributeOffsets;
             const vbo = this._glTFMesh!.extras!.vbo;
 
             if (vbo === null) {
                 return;
             }
 
+            if (uploadAttributes !== null && !Array.isArray(uploadAttributes)) {
+                uploadAttributes = [uploadAttributes as T];
+            }
+
             webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
 
-            if (uploadAttributes === null) {
-                uploadAttributes = [];
+            for (const attributeName in attributes) {
+                const accessor = this.getAccessor(attributes[attributeName]);
 
-                for (const k in attributes) {
-                    (uploadAttributes as T[]).push(k as T);
-                }
-            }
-
-            if (Array.isArray(uploadAttributes)) {
-                for (const attributeName of uploadAttributes) {
-                    const accessorIndex = attributes[attributeName];
-
-                    if (accessorIndex !== undefined) {
-                        const accessor = this.getAccessor(accessorIndex);
-                        let bufferOffset = this.getBufferOffset(accessor);
-                        const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
-
-                        if (offset > 0) {
-                            bufferOffset += offset * accessor.extras!.typeCount * GLTFAsset.getComponentTypeCount(accessor.componentType);
-                        }
-
-                        webgl.bufferSubData(gltf.BufferViewTarget.ArrayBuffer, bufferOffset, subVertexBuffer);
-                    }
-                    else {
-                        console.warn("Error arguments.");
-                    }
-                }
-            }
-            else { // TODO 废弃单属性更新。
-                const accessorIndex = attributes[uploadAttributes as string];
-
-                if (accessorIndex !== undefined) {
-                    const accessor = this.getAccessor(accessorIndex);
-                    let bufferOffset = this.getBufferOffset(accessor);
+                if (uploadAttributes === null || uploadAttributes.indexOf(attributeName as T) >= 0) {
+                    const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
+                    let bufferOffset = attributeOffsets[attributeName];
 
                     if (offset > 0) {
                         bufferOffset += offset * accessor.extras!.typeCount * GLTFAsset.getComponentTypeCount(accessor.componentType);
                     }
 
-                    const subVertexBuffer = this.createTypeArrayFromAccessor(accessor);
                     webgl.bufferSubData(gltf.BufferViewTarget.ArrayBuffer, bufferOffset, subVertexBuffer);
-                }
-                else {
-                    console.warn("Error arguments.");
                 }
             }
         }

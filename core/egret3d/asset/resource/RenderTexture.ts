@@ -4,15 +4,16 @@ namespace egret3d {
      */
     export class RenderTexture extends BaseTexture {
         /**
-         * 
+         * 创建一个渲染纹理。
          * @param parameters 
          */
         public static create(parameters: CreateTextureParameters): RenderTexture;
         /**
+         * 加载渲染纹理。
          * @private
          */
         public static create(name: string, config: GLTF): RenderTexture;
-        public static create(parametersOrName: CreateTextureParameters | string, config?: GLTF) {
+        public static create(parametersOrName: CreateTextureParameters | string, config: GLTF | null = null) {
             let name: string;
             let renderTexture: RenderTexture;
 
@@ -21,7 +22,7 @@ namespace egret3d {
             }
             else {
                 config = this._createConfig(parametersOrName as CreateTextureParameters);
-                name = (parametersOrName as CreateTextureParameters).name || "";
+                name = parametersOrName.name !== undefined ? parametersOrName.name : "";
             }
 
             // Retargeting.
@@ -31,31 +32,23 @@ namespace egret3d {
             return renderTexture;
         }
 
-        protected _bufferDirty: boolean = true;
         /**
-         * 
+         * @internal
          * @param index 
          */
-        public activateTexture(index?: uint): this {
+        public activateTexture(): this {
             return this;
         }
         /**
          * 
-         * @param source 
          */
-        public uploadTexture(width: uint, height: uint): this {
-            width = Math.min(width, renderState.maxTextureSize);
-            height = Math.min(height, renderState.maxTextureSize);
-
-            this._sourceDirty = true;
-            this._bufferDirty = true;
-            this._levels = 0;
-            this._gltfTexture.extensions.paper.width = width;
-            this._gltfTexture.extensions.paper.height = height;
+        public setSize(width: uint, height: uint): this {
+            const extension = this._glTFTexture!.extensions.paper;
+            extension.width = Math.min(width, renderState.maxTextureSize);
+            extension.height = Math.min(height, renderState.maxTextureSize);
+            this.needUpdate(TextureNeedUpdate.Image | TextureNeedUpdate.Buffer | TextureNeedUpdate.Levels);
 
             return this;
         }
-
-        public generateMipmap(): boolean { return false; }
     }
 }

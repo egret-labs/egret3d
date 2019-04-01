@@ -67,12 +67,15 @@ namespace egret3d.webgl {
                 let semantic = "";
 
                 if (name in technique.attributes) {
-                    if (!(name in globalAttributeSemantics)) {
-                        console.warn("Invalid attribute.", name);
-                    }
+                    semantic = technique.attributes[name].semantic;
                 }
                 else {
-                    semantic = technique.attributes[name].semantic;
+                    if (name in globalAttributeSemantics) {
+                        semantic = globalAttributeSemantics[name];
+                    }
+                    else {
+                        console.warn("Invalid attribute.", name);
+                    }
                 }
 
                 attributes.push({ name, type, location, semantic });
@@ -86,32 +89,30 @@ namespace egret3d.webgl {
                 const location = webgl.getUniformLocation(program, name)!;
 
                 if (name in technique.uniforms) {
-                    if (name in globalUniformSemantics) {
-                        globalUniforms.push({ name, type, size, semantic: globalUniformSemantics[name], location });
-                    }
-                    else if (name in sceneUniformSemantics) {
-                        sceneUniforms.push({ name, type, size, semantic: sceneUniformSemantics[name], location });
-                    }
-                    else if (name in cameraUniformSemantics) {
-                        cameraUniforms.push({ name, type, size, semantic: cameraUniformSemantics[name], location });
-                    }
-                    else if (name in shadowUniformSemantics) {
-                        shadowUniforms.push({ name, type, size, semantic: shadowUniformSemantics[name], location });
-                    }
-                    else if (name in modelUniformSemantics) {
-                        modelUniforms.push({ name, type, size, semantic: modelUniformSemantics[name], location });
-                    }
-                    else {
-                        console.warn("Invalid uniform.", name);
-                    }
-                }
-                else {
                     const gltfUniform = technique.uniforms[name];
                     uniforms.push({ name, type, size, semantic: gltfUniform.semantic, location });
 
                     if (DEBUG && gltfUniform.semantic !== undefined) {
                         console.debug("Custom uniform.", name);
                     }
+                }
+                else if (name in globalUniformSemantics) {
+                    globalUniforms.push({ name, type, size, semantic: globalUniformSemantics[name], location });
+                }
+                else if (name in sceneUniformSemantics) {
+                    sceneUniforms.push({ name, type, size, semantic: sceneUniformSemantics[name], location });
+                }
+                else if (name in cameraUniformSemantics) {
+                    cameraUniforms.push({ name, type, size, semantic: cameraUniformSemantics[name], location });
+                }
+                else if (name in shadowUniformSemantics) {
+                    shadowUniforms.push({ name, type, size, semantic: shadowUniformSemantics[name], location });
+                }
+                else if (name in modelUniformSemantics) {
+                    modelUniforms.push({ name, type, size, semantic: modelUniformSemantics[name], location });
+                }
+                else {
+                    console.warn("Invalid uniform.", name);
                 }
             }
             //

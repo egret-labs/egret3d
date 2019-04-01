@@ -11,45 +11,49 @@ namespace paper {
         /**
          * 该组件是否开启视锥剔除。
          */
-        @serializedField
         @editor.property(editor.EditType.CHECKBOX)
+        @serializedField
         public frustumCulled: boolean = true;
-        /**
-         * @internal
-         */
-        public _localBoundingBoxDirty: boolean = true;
+
         private _boundingSphereDirty: boolean = true;
+        @serializedField
+        protected _nativeLocalBoundingBox: boolean = false;
         @serializedField
         protected _receiveShadows: boolean = false;
         @serializedField
         protected _castShadows: boolean = false;
-        protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
+        @serializedField
         protected readonly _localBoundingBox: egret3d.Box = egret3d.Box.create();
+        protected readonly _boundingSphere: egret3d.Sphere = egret3d.Sphere.create();
         protected readonly _materials: (egret3d.Material | null)[] = [egret3d.DefaultMaterials.MESH_BASIC.retain()]; // TODO
 
+        protected abstract _getlocalBoundingBox(): Readonly<egret3d.Box> | null;
         protected _recalculateSphere() {
-            const localBoundingBox = this.localBoundingBox; // Update localBoundingBox.
-
-            const localToWorldMatrix = this.getBoundingTransform().localToWorldMatrix;
+            const localBoundingBox = this.localBoundingBox;
+            const { localToWorldMatrix } = this.getBoundingTransform();
             this._boundingSphere.set(localBoundingBox.center, localBoundingBox.boundingSphereRadius);
             this._boundingSphere.center.applyMatrix(localToWorldMatrix);
             this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         }
-
-        public initialize(): void {
+        /**
+         * @internal
+         */
+        public initialize() {
             super.initialize();
 
             this.getBoundingTransform().registerObserver(this);
         }
-
-        public uninitialize(): void {
-            super.uninitialize();
-
+        /**
+         * @internal
+         */
+        public uninitialize() {
             for (const material of this._materials) {
-                if (material) {
+                if (material !== null) {
                     material.release();
                 }
             }
+
+            super.uninitialize();
 
             this._materials.length = 0;
         }
@@ -59,23 +63,19 @@ namespace paper {
         public onTransformChange() {
             this._boundingSphereDirty = true;
         }
-        /**
-         * 重新计算 AABB。
-         */
-        public abstract recalculateLocalBox(): void;
 
         public abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo: egret3d.RaycastInfo | null): boolean;
         /**
-         * 
+         * 该组件的世界包围盒所使用的变换组件。
          */
         public getBoundingTransform(): egret3d.Transform {
-            return this.gameObject.transform;
+            return this.entity.getComponent(egret3d.Transform)!;
         }
         /**
          * 该组件是否接收投影。
          */
         @editor.property(editor.EditType.CHECKBOX)
-        public get receiveShadows() {
+        public get receiveShadows(): boolean {
             return this._receiveShadows;
         }
         public set receiveShadows(value: boolean) {
@@ -89,7 +89,7 @@ namespace paper {
          * 该组件是否产生投影。
          */
         @editor.property(editor.EditType.CHECKBOX)
-        public get castShadows() {
+        public get castShadows(): boolean {
             return this._castShadows;
         }
         public set castShadows(value: boolean) {
@@ -102,13 +102,24 @@ namespace paper {
         /**
          * 该组件的本地包围盒。
          */
+        @editor.property(editor.EditType.NESTED)
         public get localBoundingBox(): Readonly<egret3d.Box> {
-            if (this._localBoundingBoxDirty) {
-                this.recalculateLocalBox();
-                this._localBoundingBoxDirty = false;
+            const localBoundingBox = this._localBoundingBox;
+
+            if (!this._nativeLocalBoundingBox) {
+                const target = this._getlocalBoundingBox();
+
+                if (target !== null) {
+                    localBoundingBox.copy(target);
+                }
             }
 
-            return this._localBoundingBox;
+            return localBoundingBox;
+        }
+        public set localBoundingBox(value: Readonly<egret3d.Box>) {
+            this._boundingSphereDirty = true;
+            this._nativeLocalBoundingBox = true;
+            this._localBoundingBox.copy(value);
         }
         /**
          * 基于该组件本地包围盒生成的世界包围球，用于摄像机视锥剔除。
@@ -133,7 +144,7 @@ namespace paper {
             const materials = this._materials;
 
             for (const material of materials) {
-                if (material) {
+                if (material !== null) {
                     material.release();
                 }
             }
@@ -147,7 +158,7 @@ namespace paper {
             }
 
             for (const material of materials) {
-                if (material) {
+                if (material !== null) {
                     material.retain();
                 }
             }
@@ -165,24 +176,25 @@ namespace paper {
         public set material(value: egret3d.Material | null) {
             let dirty = false;
             const materials = this._materials;
-            let existingMaterial: egret3d.Material | null = null;
+            let existing: egret3d.Material | null = null;
 
             if (materials.length > 0) {
-                existingMaterial = materials[0];
-                if (existingMaterial !== value) {
+                existing = materials[0];
+
+                if (existing !== value) {
                     dirty = true;
                 }
             }
-            else if (value) {
+            else if (value !== null) {
                 dirty = true;
             }
 
             if (dirty) {
-                if (existingMaterial) {
-                    existingMaterial.release();
+                if (existing !== null) {
+                    existing.release();
                 }
 
-                if (value) {
+                if (value !== null) {
                     value.retain();
                 }
 

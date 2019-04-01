@@ -157,14 +157,10 @@ namespace egret3d {
         /**
          * 配置。
          */
-        public readonly config: GLTF;
-
-        protected _clear() {
-            super._clear();
-
-            (this.config as GLTF) = null!;
-        }
-
+        public readonly config: GLTF = null!;
+        /**
+         * @interfnal
+         */
         public initialize(
             name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
             ...args: any[]
@@ -184,6 +180,18 @@ namespace egret3d {
 
                 this.updateAccessorTypeCount();
             }
+        }
+        /**
+         * @interfnal
+         */
+        public dispose() {
+            if (super.dispose()) {
+                (this.config as GLTF) = null!;
+
+                return true;
+            }
+
+            return false;
         }
         /**
          * @internal

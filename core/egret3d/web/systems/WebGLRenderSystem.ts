@@ -68,9 +68,6 @@ namespace egret3d.webgl {
         private readonly _inverseModelViewMatrix: Matrix3 = Matrix3.create();
         //
         private _cacheProgram: WebGLProgramBinder | null = null;
-        private _cacheVAO: WebGLBuffer | null = null;
-        private _cacheVBO: WebGLBuffer | null = null;
-        private _cacheIBO: WebGLBuffer | null = null;
         private _cacheScene: paper.Scene | null = null;
         private _cacheCamera: Camera | null = null;
         //
@@ -169,9 +166,6 @@ namespace egret3d.webgl {
                 }
 
                 this._cacheProgram = program;
-                this._cacheVAO = null;
-                this._cacheVBO = null;
-                this._cacheIBO = null;
 
                 this._cacheScene = null;
                 this._cacheCamera = null;
@@ -198,28 +192,15 @@ namespace egret3d.webgl {
             mesh.update(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer);
 
             if (renderState.vertexArrayObject !== null) {
-                const vao = extras!.vao;
-
-                if (this._cacheVAO !== vao) {
-                    webgl.bindVertexArray(vao);
-                    this._cacheVAO = vao;
-                }
+                webgl.bindVertexArray(extras!.vao);
             }
             else {
                 const primitive = primitives[subMeshIndex];
                 const vbo = extras!.vbo;
                 const ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
 
-                if (this._cacheVBO !== vbo) {
-                    webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
-                    this._cacheVBO = vbo;
-                }
-
-                if (this._cacheIBO !== ibo) {
-                    webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
-                    this._cacheIBO = ibo;
-                }
-
+                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
+                webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
                 renderState.updateVertexAttributes(mesh);
             }
         }
@@ -681,17 +662,19 @@ namespace egret3d.webgl {
                 renderState._updateTextureDefines(ShaderUniformName.EnvMap, null);
                 renderState.caches.skyBoxTexture = null;
             }
+            //
+            const { opaqueCalls, transparentCalls } = camera.context;
             // Draw opaques.
-            for (const drawCall of camera.context.opaqueCalls) {
+            for (const drawCall of opaqueCalls) {
                 this.draw(drawCall, material);
             }
             // Draw transparents.
-            for (const drawCall of camera.context.transparentCalls) {
+            for (const drawCall of transparentCalls) {
                 this.draw(drawCall, material);
             }
             //
-            if (renderState.renderTarget && renderState.renderTarget.generateMipmap()) {
-                renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
+            if (renderTarget !== null && renderTarget.levels !== 1) { // Fixed there is no texture bound to the unit 0 error.
+                renderState.clearState();
             }
             // Egret 2D.
             const webgl = WebGLRenderState.webgl!;

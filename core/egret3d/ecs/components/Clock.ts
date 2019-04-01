@@ -67,10 +67,6 @@ namespace paper {
                 this.tickInterval = 1.0 / 60;
             }
 
-            if (this.frameInterval <= 0.0) {
-                this.frameInterval = 1.0 / 60;
-            }
-
             if (DEBUG && unscaledDeltaTime > 10.0 * this.tickInterval) { // 调试模式控制帧频。 TODO 开发者如何清除溢出的补偿。
                 this._needReset = true;
             }
@@ -104,7 +100,9 @@ namespace paper {
             }
 
             // TOFIX: 暂时保护性处理, 如果没产生逻辑帧, 那么也不产生渲染帧
-            if (returnValue.tickCount <= 0) { return returnValue; }
+            if (returnValue.tickCount <= 0) { 
+                return returnValue;
+             }
 
             // 判断渲染帧
             if (this.frameInterval > 0.0) { // 确保执行过一次逻辑帧之后再执行第一次渲染

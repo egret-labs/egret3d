@@ -164,6 +164,7 @@
         "egret3d/asset/resource/Shader.ts",
         "egret3d/asset/resource/Define.ts",
         "egret3d/asset/resource/Material.ts",
+        "egret3d/asset/resource/BaseTexture.ts",
         "egret3d/asset/resource/Texture.ts",
         "egret3d/asset/resource/RenderTexture.ts",
         "egret3d/asset/resource/Mesh.ts",

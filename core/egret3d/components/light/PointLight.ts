@@ -47,7 +47,7 @@ namespace egret3d {
             this.shadow._onUpdate = this._updateShadow.bind(this);
             // TODO
             const mapSize = this.shadow.mapSize;
-            this.shadow._renderTarget.uploadTexture(mapSize * 4.0, mapSize * 2.0);
+            this.shadow._renderTarget.setSize(mapSize * 4.0, mapSize * 2.0);
         }
 
         private _updateShadow(face: uint) {

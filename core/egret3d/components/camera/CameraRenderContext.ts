@@ -112,8 +112,8 @@ namespace egret3d {
             if (materialA._renderQueue !== materialB._renderQueue) {
                 return materialA._renderQueue - materialB._renderQueue;
             }
-            else if (materialA._technique.program !== materialB._technique.program) {
-                return materialA._technique.program! - materialB._technique.program!;
+            else if (materialA._technique!.program !== materialB._technique!.program) {
+                return materialA._technique!.program! - materialB._technique!.program!;
             }
             else if (materialA._id !== materialB._id) {
                 return materialA._id - materialB._id;
