@@ -55,7 +55,7 @@ namespace egret3d {
             if (typeof vertexCountOrName === "number") { // 运行时创建的网格资源。
                 const indexCount = indexCountOrConfig as uint;
                 const attributeNames = attributeNamesOrBuffers !== null ? attributeNamesOrBuffers as ReadonlyArray<gltf.AttributeSemantics | string> : _attributeNames;
-                mesh._vertexCount = vertexCountOrName;
+                mesh._vertexCount = vertexCountOrName; // TODO 完善标记为非加载资源。
                 mesh.initialize("", this._createConfig(), null);
                 // Add attributes.
                 for (const attributeName of attributeNames) {
@@ -182,7 +182,7 @@ namespace egret3d {
             const attributes = this._attributes = glTFMesh.primitives[0].attributes as { [key: string]: gltf.Index };
             glTFMesh.extras = { attributeOffsets: {}, program: null, vbo: null, vao: null };
 
-            if (this._vertexCount === 0) {
+            if (this._vertexCount === 0) { // 加载的资源。
                 this._vertexCount = this.getAccessor(attributes.POSITION !== undefined ? attributes.POSITION : 0).count;
 
                 const { attributeOffsets } = glTFMesh.extras;
@@ -195,8 +195,8 @@ namespace egret3d {
             }
 
             for (const primitive of glTFMesh.primitives) {
-                primitive.extras = { ibo: null };
                 primitive.attributes = attributes;
+                primitive.extras = { ibo: null };
             }
         }
         /**
