@@ -7314,6 +7314,10 @@ declare namespace egret3d {
         static LINE_Z: Mesh;
         static CIRCLE_LINE: Mesh;
         static CUBE_LINE: Mesh;
+        /**
+         *
+         */
+        static FULLSCREEN: Mesh;
         initialize(): void;
         /**
          * @deprecated
@@ -7433,6 +7437,10 @@ declare namespace egret3d {
          *
          */
         static FXAA: Shader;
+        /**
+         *
+         */
+        static BACKGROUND: Shader;
         /**
          *
          */
@@ -7562,6 +7570,10 @@ declare namespace egret3d {
          * - 注意请不要修改该值。
          */
         static MISSING: Material;
+        /**
+         * 用于天空盒纯背景使用的材质
+         */
+        static BACKGROUND: Material;
         /**
          * @deprecated
          */
@@ -8363,6 +8375,10 @@ declare namespace egret3d {
          */
         static current: Camera | null;
         /**
+         * 该相机下的对象都是用此材质渲染
+         */
+        overrideMaterial: Material | null;
+        /**
          * 该相机的绘制缓冲掩码。
          */
         bufferMask: gltf.BufferMask;
@@ -8383,10 +8399,6 @@ declare namespace egret3d {
          * 该相机的背景色。
          */
         readonly backgroundColor: Color;
-        /**
-         *
-         */
-        overrideMaterial: Material | null;
         /**
          * 该相机的渲染上下文。
          */
@@ -11252,6 +11264,37 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d.ShaderLib {
+    const background: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {};
+                    "uniforms": {
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+    };
     const copy: {
         "version": string;
         "asset": {

@@ -14469,14 +14469,20 @@ var egret3d;
             }
             {
                 var mesh = egret3d.MeshBuilder.createPlane(2.0, 2.0);
-                mesh.name = "builtin/fullscreen_quad.mesh.bin";
+                mesh.name = "builtin/postprocessing_quad.mesh.bin";
                 paper.Asset.register(mesh);
-                DefaultMeshes_1.FULLSCREEN_QUAD = mesh;
+                DefaultMeshes_1.POSTPROCESSING_QUAD = mesh;
                 // 后期渲染专用，UV 反转一下，这样 shader 中就不用反转。
                 var uvs = mesh.getUVs();
                 for (var i = 1, l = uvs.length; i < l; i += 2) {
                     uvs[i] = 1.0 - uvs[i];
                 }
+            }
+            {
+                var mesh = egret3d.MeshBuilder.createPlane(2.0, 2.0);
+                mesh.name = "builtin/fullscreen_quad.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes_1.FULLSCREEN = mesh;
             }
             {
                 var mesh = egret3d.MeshBuilder.createPlane(10.0, 10.0);
@@ -14762,6 +14768,8 @@ var egret3d;
             DefaultShaders_1.FXAA = this._createShader("builtin/fxaa.shader.json", egret3d.ShaderLib.fxaa, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(false);
             DefaultShaders_1.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle, 2000 /* Geometry */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
+            helpMaterial.clearStates().setDepth(false, false).setCullFace(true);
+            DefaultShaders_1.BACKGROUND = this._createShader("builtin/background.shader.json", egret3d.ShaderLib.background, 2000 /* Geometry */, helpStates);
             // deprecated
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders_1.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates);
@@ -14842,6 +14850,9 @@ var egret3d;
             DefaultMaterials_1.LINEDASHED = this._createMaterial("builtin/linedashed.mat.json", egret3d.DefaultShaders.LINEDASHED);
             DefaultMaterials_1.MISSING = this._createMaterial("builtin/missing.mat.json", egret3d.DefaultShaders.MESH_BASIC)
                 .setColor(egret3d.Color.PURPLE);
+            DefaultMaterials_1.BACKGROUND = this._createMaterial("builtin/background.mat.json", egret3d.DefaultShaders.BACKGROUND)
+                .setDepth(false, false)
+                .setCullFace(true);
             DefaultMaterials_1.SHADOW_DEPTH_3200 = this._createMaterial("builtin/shadow_depth_3200.mat.json", egret3d.DefaultShaders.DEPTH)
                 .setDepth(true, true)
                 .setCullFace(true, 2305 /* CCW */, 1029 /* Back */)
@@ -15218,7 +15229,7 @@ var egret3d;
             this.skyBox.subMeshIndex = 0;
             this.postprocessing.matrix = egret3d.Matrix4.IDENTITY;
             this.postprocessing.subMeshIndex = 0;
-            this.postprocessing.mesh = egret3d.DefaultMeshes.FULLSCREEN_QUAD;
+            this.postprocessing.mesh = egret3d.DefaultMeshes.POSTPROCESSING_QUAD;
         };
         /**
          * 添加绘制信息。
@@ -17079,6 +17090,10 @@ var egret3d;
         function Camera() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
+             * 该相机下的对象都是用此材质渲染
+             */
+            _this.overrideMaterial = null;
+            /**
              * 该相机的绘制缓冲掩码。
              */
             _this.bufferMask = 16640 /* DepthAndColor */;
@@ -17099,10 +17114,6 @@ var egret3d;
              * 该相机的背景色。
              */
             _this.backgroundColor = egret3d.Color.create(0.15, 0.25, 0.5, 1.0);
-            /**
-             *
-             */
-            _this.overrideMaterial = null;
             /**
              * 该相机的渲染上下文。
              */
@@ -30123,6 +30134,7 @@ var egret3d;
 (function (egret3d) {
     var ShaderLib;
     (function (ShaderLib) {
+        ShaderLib.background = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "background_vert", "type": 35633, "uri": "varying vec2 vUv;\nuniform mat3 uvTransform;\nvoid main() {\n\tvUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n\tgl_Position = vec4( position.xy, 1.0, 1.0 );\n}" }, { "name": "background_frag", "type": 35632, "uri": "uniform sampler2D map;\nvarying vec2 vUv;\nvoid main() {\n\tvec4 texColor = texture2D( map, vUv );\n\tgl_FragColor = mapTexelToLinear( texColor );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n}" }], "techniques": [{ "name": "background", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.copy = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "copy_vert", "type": 35633, "uri": "varying vec2 vUv;\nvoid main() {\n\tvUv = uv;\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}" }, { "name": "copy_frag", "type": 35632, "uri": "uniform float opacity;\nuniform sampler2D map;\nvarying vec2 vUv;\nvoid main() {\n\tvec4 texel = texture2D( map, vUv );\n\tgl_FragColor = opacity * texel;\n}" }], "techniques": [{ "name": "copy", "attributes": {}, "uniforms": { "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\tgl_Position.z = gl_Position.w;\n}\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\nuniform float tFlip;\nuniform float opacity;\nvarying vec3 vWorldPosition;\nvoid main() {\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\n\tgl_FragColor.a *= opacity;\n}\n" }], "techniques": [{ "name": "cube", "attributes": {}, "uniforms": { "tCube": { "type": 35680 }, "tFlip": { "type": 5126, "value": 1 }, "opacity": { "type": 5126, "value": 1 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n}\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\n\tuniform float opacity;\n#endif\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#if DEPTH_PACKING == 3200\n\t\tdiffuseColor.a = opacity;\n\t#endif\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <logdepthbuf_fragment>\n\t#if DEPTH_PACKING == 3200\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\n\t#elif DEPTH_PACKING == 3201\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\n\t#endif\n}\n" }], "techniques": [{ "name": "depth", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
@@ -32263,20 +32275,26 @@ var egret3d;
                 renderState.viewport = camera.viewport;
                 renderState.clearColor = camera.backgroundColor;
                 renderState.clearBuffer(camera.bufferMask);
+                //
                 // Skybox.
                 var skyBox = camera.entity.getComponent(egret3d.SkyBox);
                 if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                     var skyBoxDrawCall = this._drawCallCollecter.skyBox;
                     var material_1 = skyBox.material;
-                    var texture = (material_1.shader === egret3d.DefaultShaders.CUBE) ? material_1.getTexture("tCube" /* CubeMap */) :
-                        ((material_1.shader === egret3d.DefaultShaders.EQUIRECT) ? material_1.getTexture("tEquirect" /* EquirectMap */) : material_1.getTexture());
-                    if (renderState.caches.skyBoxTexture !== texture && skyBox.reflections) {
-                        renderState._updateTextureDefines("envMap" /* EnvMap */, texture, renderState.defines);
-                        renderState.caches.skyBoxTexture = texture;
-                    }
-                    if (!skyBoxDrawCall.mesh) {
+                    if (material_1.shader !== egret3d.DefaultShaders.BACKGROUND) {
+                        var texture = (material_1.shader === egret3d.DefaultShaders.CUBE) ? material_1.getTexture("tCube" /* CubeMap */) :
+                            ((material_1.shader === egret3d.DefaultShaders.EQUIRECT) ? material_1.getTexture("tEquirect" /* EquirectMap */) : material_1.getTexture());
+                        if (renderState.caches.skyBoxTexture !== texture && skyBox.reflections) {
+                            renderState._updateTextureDefines("envMap" /* EnvMap */, texture, renderState.defines);
+                            renderState.caches.skyBoxTexture = texture;
+                        }
+                        // if (!skyBoxDrawCall.mesh) {
                         // DefaultMeshes.SPHERE;
                         skyBoxDrawCall.mesh = egret3d.DefaultMeshes.CUBE;
+                        // }
+                    }
+                    else {
+                        skyBoxDrawCall.mesh = egret3d.DefaultMeshes.FULLSCREEN;
                     }
                     skyBoxDrawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
                     this.draw(skyBoxDrawCall, material_1);

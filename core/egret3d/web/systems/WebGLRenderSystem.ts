@@ -589,22 +589,28 @@ namespace egret3d.webgl {
             renderState.viewport = camera.viewport;
             renderState.clearColor = camera.backgroundColor;
             renderState.clearBuffer(camera.bufferMask);
+            //
             // Skybox.
             const skyBox = camera.entity.getComponent(SkyBox);
             if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                 const skyBoxDrawCall = this._drawCallCollecter.skyBox;
                 const material = skyBox.material;
-                const texture = (material.shader === egret3d.DefaultShaders.CUBE) ? material.getTexture(ShaderUniformName.CubeMap) :
-                    ((material.shader === egret3d.DefaultShaders.EQUIRECT) ? material.getTexture(ShaderUniformName.EquirectMap) : material.getTexture());
+                if (material.shader !== egret3d.DefaultShaders.BACKGROUND) {
+                    const texture = (material.shader === egret3d.DefaultShaders.CUBE) ? material.getTexture(ShaderUniformName.CubeMap) :
+                        ((material.shader === egret3d.DefaultShaders.EQUIRECT) ? material.getTexture(ShaderUniformName.EquirectMap) : material.getTexture());
 
-                if (renderState.caches.skyBoxTexture !== texture && skyBox.reflections) {
-                    renderState._updateTextureDefines(ShaderUniformName.EnvMap, texture, renderState.defines);
-                    renderState.caches.skyBoxTexture = texture;
-                }
+                    if (renderState.caches.skyBoxTexture !== texture && skyBox.reflections) {
+                        renderState._updateTextureDefines(ShaderUniformName.EnvMap, texture, renderState.defines);
+                        renderState.caches.skyBoxTexture = texture;
+                    }
 
-                if (!skyBoxDrawCall.mesh) {
+                    // if (!skyBoxDrawCall.mesh) {
                     // DefaultMeshes.SPHERE;
                     skyBoxDrawCall.mesh = DefaultMeshes.CUBE;
+                    // }
+                }
+                else {
+                    skyBoxDrawCall.mesh = DefaultMeshes.FULLSCREEN;
                 }
 
                 skyBoxDrawCall.matrix = camera.gameObject.transform.localToWorldMatrix;

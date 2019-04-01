@@ -86,6 +86,10 @@ namespace egret3d {
         /**
          * 
          */
+        public static BACKGROUND: Shader;
+        /**
+         * 
+         */
         public static PARTICLE: Shader;
         /**
          * @deprecated
@@ -244,6 +248,9 @@ namespace egret3d {
 
             helpMaterial.clearStates().setDepth(true, true).setCullFace(false);
             DefaultShaders.PARTICLE = this._createShader("builtin/particle.shader.json", ShaderLib.particle as any, RenderQueue.Geometry, helpStates, [ShaderDefine.USE_COLOR]);
+
+            helpMaterial.clearStates().setDepth(false, false).setCullFace(true);
+            DefaultShaders.BACKGROUND = this._createShader("builtin/background.shader.json", ShaderLib.background as any, RenderQueue.Geometry, helpStates);
 
             // deprecated
             helpMaterial.clearStates().setDepth(true, true);

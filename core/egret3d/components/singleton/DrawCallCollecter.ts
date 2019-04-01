@@ -35,7 +35,7 @@ namespace egret3d {
             this.skyBox.subMeshIndex = 0;
             this.postprocessing.matrix = Matrix4.IDENTITY;
             this.postprocessing.subMeshIndex = 0;
-            this.postprocessing.mesh = DefaultMeshes.FULLSCREEN_QUAD;
+            this.postprocessing.mesh = DefaultMeshes.POSTPROCESSING_QUAD;
         }
         /**
          * 添加绘制信息。

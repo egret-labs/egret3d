@@ -59,7 +59,11 @@ namespace egret3d {
          * 后期渲染使用的网格。
          * @internal
          */
-        public static FULLSCREEN_QUAD: Mesh;
+        public static POSTPROCESSING_QUAD: Mesh;
+        /**
+         * 
+         */
+        public static FULLSCREEN:Mesh;
 
         public initialize() {
             super.initialize();
@@ -106,17 +110,24 @@ namespace egret3d {
                 DefaultMeshes.SPRITE = mesh;
             }
 
-            { // FULLSCREEN_QUAD.
+            { // POSTPROCESSING_QUAD.
                 const mesh = MeshBuilder.createPlane(2.0, 2.0);
-                mesh.name = "builtin/fullscreen_quad.mesh.bin";
+                mesh.name = "builtin/postprocessing_quad.mesh.bin";
                 paper.Asset.register(mesh);
-                DefaultMeshes.FULLSCREEN_QUAD = mesh;
+                DefaultMeshes.POSTPROCESSING_QUAD = mesh;
 
                 // 后期渲染专用，UV 反转一下，这样 shader 中就不用反转。
                 const uvs = mesh.getUVs()!;
                 for (let i = 1, l = uvs.length; i < l; i += 2) {
                     uvs[i] = 1.0 - uvs[i];
                 }
+            }
+
+            { // FULLSCREEN_QUAD.
+                const mesh = MeshBuilder.createPlane(2.0, 2.0);
+                mesh.name = "builtin/fullscreen_quad.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes.FULLSCREEN = mesh;
             }
 
             { // PLANE.
