@@ -45,7 +45,7 @@ namespace egret3d {
          */
         public static createColorTexture(name: string, r: float, g: float, b: float): Texture {
             const texture = Texture.create({
-                name, source: new Uint8Array([r, g, b, 255, r, g, b, 255, r, g, b, 255, r, g, b, 255]), width: 2, height: 2,
+                name, source: new Uint8Array([r, g, b, 255]), width: 1, height: 1,
                 sampler: {
                     wrapS: gltf.TextureWrappingMode.ClampToEdge, wrapT: gltf.TextureWrappingMode.ClampToEdge,
                     magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.Linear

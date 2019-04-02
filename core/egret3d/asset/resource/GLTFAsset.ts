@@ -30,7 +30,7 @@ namespace egret3d {
                     return 4;
 
                 default:
-                    throw new Error();
+                    throw new Error("Invalid component type.");
             }
         }
         /**
@@ -58,17 +58,13 @@ namespace egret3d {
                     return 16;
 
                 default:
-                    throw new Error();
+                    throw new Error("Invalid accessor type.");
             }
         }
         /**
          * 
          */
-        public static getMeshAttributeType(attributeName: gltf.AttributeSemantics | string, attributeTypes: Readonly<{ [key: string]: gltf.AccessorType | string }> | null = null): gltf.AccessorType | string {
-            if (attributeTypes !== null && attributeName in attributeTypes) {
-                return attributeTypes[attributeName];
-            }
-
+        public static getMeshAttributeType(attributeName: gltf.AttributeSemantics | string): gltf.AccessorType {
             switch (attributeName) {
                 case gltf.AttributeSemantics.POSITION:
                 case gltf.AttributeSemantics.NORMAL:
@@ -86,7 +82,7 @@ namespace egret3d {
                     return gltf.AccessorType.VEC4;
 
                 default:
-                    return "";
+                    throw new Error("Invalid attribute type.");
             }
         }
         /**
@@ -320,16 +316,17 @@ namespace egret3d {
         /**
          * 通过 Accessor 获取指定 Buffer。
          */
-        public getBuffer(accessor: gltf.Accessor): ArrayBufferView {
+        public getBuffer(accessor: gltf.Accessor): gltf.Buffer {
             const bufferView = this.getBufferView(accessor);
 
-            return this.config.buffers![bufferView.buffer].extras!.data;
+            return this.config.buffers![bufferView.buffer];
         }
         /**
          * 通过 Accessor 获取指定 BufferView。
          */
         public getBufferView(accessor: gltf.Accessor): gltf.BufferView {
             const bufferIndex = accessor.bufferView;
+
             return this.config.bufferViews![bufferIndex !== undefined ? bufferIndex : 0];
         }
         /**

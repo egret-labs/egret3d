@@ -178,7 +178,7 @@ namespace egret3d.webgl {
                 const accessor = this.getAccessor(attributes[attributeName]);
 
                 if (uploadAttributes === null || uploadAttributes.indexOf(attributeName as T) >= 0) {
-                    const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
+                    const subVertexBuffer = this.getAttribute(attributeName, offset, count)!;
                     let bufferOffset = attributeOffsets[attributeName];
 
                     if (offset > 0) {
@@ -200,7 +200,7 @@ namespace egret3d.webgl {
                 if (primitive.extras!.ibo !== null) {
                     const webgl = WebGLRenderState.webgl!;
                     const accessor = this.getAccessor(primitive.indices!);
-                    const subIndexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
+                    const subIndexBuffer = this.getIndices(subMeshIndex, offset, count)!;
 
                     webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
                     webgl.bufferSubData(gltf.BufferViewTarget.ElementArrayBuffer, offset, subIndexBuffer);

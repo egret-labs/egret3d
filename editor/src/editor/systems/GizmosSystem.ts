@@ -92,7 +92,7 @@ namespace paper.editor {
             const top = EditorMeshHelper.createGameObject("Top", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
             const back = EditorMeshHelper.createGameObject("Back", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC);
             const forward = EditorMeshHelper.createGameObject("Forward", egret3d.DefaultMeshes.CONE, egret3d.DefaultMaterials.MESH_BASIC.clone());
-            
+
             cube.transform.setLocalScale(0.05);
             left.transform.setLocalPosition(-1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, -Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
             right.transform.setLocalPosition(1.5, 0.0, 0.0).setLocalEuler(0.0, 0.0, Math.PI * 0.5).setLocalScale(1.0, 2.0, 1.0).setParent(cube.transform);
@@ -374,9 +374,7 @@ namespace paper.editor {
                 //
                 const worldToLocalMatrix = skeletonDrawer.transform.worldToLocalMatrix;
 
-                for (let i = 0, l = vertices.length; i < l; ++i) {
-                    vertices[i] = 0.0;
-                }
+                vertices.fill(0.0);
 
                 for (const bone of bones) {
                     if (bone) {

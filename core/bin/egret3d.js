@@ -4483,7 +4483,7 @@ var egret3d;
                 case 5126 /* Float */:
                     return 4;
                 default:
-                    throw new Error();
+                    throw new Error("Invalid component type.");
             }
         };
         /**
@@ -4505,17 +4505,13 @@ var egret3d;
                 case "MAT4" /* MAT4 */:
                     return 16;
                 default:
-                    throw new Error();
+                    throw new Error("Invalid accessor type.");
             }
         };
         /**
          *
          */
-        GLTFAsset.getMeshAttributeType = function (attributeName, attributeTypes) {
-            if (attributeTypes === void 0) { attributeTypes = null; }
-            if (attributeTypes !== null && attributeName in attributeTypes) {
-                return attributeTypes[attributeName];
-            }
+        GLTFAsset.getMeshAttributeType = function (attributeName) {
             switch (attributeName) {
                 case "POSITION" /* POSITION */:
                 case "NORMAL" /* NORMAL */:
@@ -4530,7 +4526,7 @@ var egret3d;
                 case "WEIGHTS_0" /* WEIGHTS_0 */:
                     return "VEC4" /* VEC4 */;
                 default:
-                    return "";
+                    throw new Error("Invalid attribute type.");
             }
         };
         /**
@@ -10873,7 +10869,7 @@ var egret3d;
          */
         Texture.createColorTexture = function (name, r, g, b) {
             var texture = Texture.create({
-                name: name, source: new Uint8Array([r, g, b, 255, r, g, b, 255, r, g, b, 255, r, g, b, 255]), width: 2, height: 2,
+                name: name, source: new Uint8Array([r, g, b, 255]), width: 1, height: 1,
                 sampler: {
                     wrapS: 33071 /* ClampToEdge */, wrapT: 33071 /* ClampToEdge */,
                     magFilter: 9729 /* Linear */, minFilter: 9729 /* Linear */
@@ -11079,26 +11075,30 @@ var egret3d;
             _this._boneIndices = null;
             return _this;
         }
-        Mesh.create = function (vertexCountOrName, indexCountOrConfig, attributeNamesOrBuffers, attributeTypes) {
+        Mesh.create = function (vertexCountOrName, indexCountOrConfig, attributeNamesOrBuffers) {
             if (indexCountOrConfig === void 0) { indexCountOrConfig = 0; }
             if (attributeNamesOrBuffers === void 0) { attributeNamesOrBuffers = null; }
-            if (attributeTypes === void 0) { attributeTypes = null; }
             // Retargeting.
             var mesh = new egret3d.Mesh();
             if (typeof vertexCountOrName === "number") {
                 var indexCount = indexCountOrConfig;
-                var attributeNames = attributeNamesOrBuffers !== null ? attributeNamesOrBuffers : _attributeNames;
-                mesh._vertexCount = vertexCountOrName;
+                var attributes = attributeNamesOrBuffers !== null ? attributeNamesOrBuffers : _attributeNames;
+                mesh._vertexCount = vertexCountOrName; // TODO 完善标记为非加载资源。
                 mesh.initialize("", this._createConfig(), null);
                 // Add attributes.
-                for (var _i = 0, attributeNames_1 = attributeNames; _i < attributeNames_1.length; _i++) {
-                    var attributeName = attributeNames_1[_i];
-                    var attributeType = egret3d.GLTFAsset.getMeshAttributeType(attributeName, attributeTypes);
-                    if (attributeType.length > 0) {
-                        mesh.addAttribute(attributeName, attributeType);
+                if (Array.isArray(attributes)) {
+                    for (var _i = 0, attributes_1 = attributes; _i < attributes_1.length; _i++) {
+                        var attributeName = attributes_1[_i];
+                        mesh.addAttribute(attributeName, egret3d.GLTFAsset.getMeshAttributeType(attributeName));
                     }
-                    else if (true) {
-                        console.warn("Invalid attribute type.", attributeName);
+                }
+                else {
+                    for (var attributeName in attributes) {
+                        var attributeType = attributes[attributeName];
+                        if (attributeType.length === 0) {
+                            attributeType = egret3d.GLTFAsset.getMeshAttributeType(attributeName);
+                        }
+                        mesh.addAttribute(attributeName, attributeType);
                     }
                 }
                 // Add indices.
@@ -11168,8 +11168,8 @@ var egret3d;
             }
             for (var _i = 0, _a = glTFMesh.primitives; _i < _a.length; _i++) {
                 var primitive = _a[_i];
-                primitive.extras = { ibo: null };
                 primitive.attributes = attributes;
+                primitive.extras = { ibo: null };
             }
         };
         /**
@@ -11198,12 +11198,18 @@ var egret3d;
          * 克隆该网格。
          */
         Mesh.prototype.clone = function () {
-            var attributeNames = [];
+            var attributeTypes = this._attributeTypes;
+            var attributesNameAndTypes = {};
             for (var k in this._attributes) {
-                attributeNames.push(k);
+                if (k in attributeTypes) {
+                    attributesNameAndTypes[k] = attributeTypes[k];
+                }
+                else {
+                    attributesNameAndTypes[k] = "";
+                }
             }
             // Clone mesh.
-            var value = Mesh.create(this._vertexCount, 0, attributeNames, this._attributeTypes);
+            var value = Mesh.create(this._vertexCount, 0, attributesNameAndTypes);
             value._drawMode = this._drawMode;
             value._wireframeIndex = this._wireframeIndex;
             // Copy subMeshes.
@@ -20473,7 +20479,7 @@ var egret3d;
                     this.boneMatrices = new Float32Array((bones.length + 1) * 16);
                     this.boneTexture = egret3d.Texture.create({
                         source: this.boneMatrices,
-                        width: (bones.length + 1) * 4, height: 2,
+                        width: (bones.length + 1) * 4, height: 1,
                         type: 5126 /* Float */
                     }).retain();
                 }
@@ -31370,7 +31376,7 @@ var egret3d;
                             textureType = 34067 /* TextureCube */;
                             uploadType = 34069 /* TextureCubeStart */;
                         }
-                        else if (extension.height > 1) {
+                        else if (extension.height > 0) {
                             textureType = 3553 /* Texture2D */;
                             uploadType = textureType;
                         }
@@ -31500,7 +31506,7 @@ var egret3d;
                             textureType = 34067 /* TextureCube */;
                             uploadType = 34069 /* TextureCubeStart */;
                         }
-                        else if (extension.height > 1) {
+                        else if (extension.height > 0) {
                             textureType = 3553 /* Texture2D */;
                             uploadType = textureType;
                         }
