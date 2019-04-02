@@ -12,6 +12,7 @@ namespace egret3d.trail {
          */
         Local = "Local",
     }
+
     /**
      * 拖尾的材质模式
      */
@@ -24,11 +25,8 @@ namespace egret3d.trail {
          * 每个拖尾片段使用一个材质
          */
         PerSegment = "PerSegment",
-        /**
-         * 重复平铺
-         */
-        Tile = "Tile",
     }
+
     /**
      * 拖尾组件
      */
@@ -41,12 +39,14 @@ namespace egret3d.trail {
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public time: number = 3.0;
+
         /**
          * 生成下一个拖尾片段的最小距离 
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0 })
         public minVertexDistance: number = 0.1;
+
         /**
          * 拖尾的宽度 (值 / 变化曲线) 
          */
@@ -59,12 +59,21 @@ namespace egret3d.trail {
         // @paper.serializedField
         // @paper.editor.property(paper.editor.EditType.COLOR)
         // public color: Color = Color.WHITE;
+
         /**
          * 生命期结束后是否自动销毁
          */
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public autoDestruct: boolean = false;
+
+        /**
+         * 在移动突然反向时是否自动翻转, 避免出现尖角现象
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public autoFlip: boolean = false;
+
         /**
          * 拖尾的朝向是始终面对摄像机还是有自己的单独设置
          * @see {TrailAlignment}
@@ -72,98 +81,53 @@ namespace egret3d.trail {
         @paper.serializedField
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(egret3d.trail.TrailAlignment) })
         public Alignment: TrailAlignment = TrailAlignment.View;
+
         /**
          * 拖尾的材质模式
          * @see {TrailTextureMode}
          */
         @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum(egret3d.trail.TrailTextureMode) })
         public textureMode: TrailTextureMode = TrailTextureMode.Stretch;
-        /**
-         * @internal
-         */
-        public _isPlaying: boolean = true;
-        /**
-         * @internal
-         */
-        public _isPaused: boolean = false;
-
-        private _timeScale: number = 1.0;
-        private readonly _batcher: TrailBatcher = new TrailBatcher();
 
         /**
-         * @internal
+         * 发射状态发生改变时产生的信号
          */
-        private _clean() {
-            this._batcher.clean();
+        public readonly onEmittingChanged: signals.Signal = new signals.Signal();
+        /**
+         * 发射状态: 表示拖尾是否在不断的生成新的拖尾片段
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public get emitting(): boolean {
+            return this._emitting;
+        }
+        public set emitting(isPlaying: boolean) {
+            if (this._emitting === isPlaying) { return; }
+            this._emitting = isPlaying;
+            this.onEmittingChanged.dispatch(isPlaying);
+        }
+        private _emitting: boolean = true;
+
+        /**
+         * 暂停状态发生改变时产生的信号
+         */
+        public readonly onPausedChanged: signals.Signal = new signals.Signal();
+        /**
+         * 暂停状态
+         * 处于暂停状态的拖尾不生成新的片段, 已有的片段也不衰老消失, 就像时间暂停了
+         */
+        @paper.serializedField
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public get paused(): boolean {
+            return this._paused;
+        }
+        public set paused(isPaused: boolean) {
+            if (this._paused === isPaused) { return; }
+            this._paused = isPaused;
+            this.onPausedChanged.dispatch(isPaused);
         }
 
-        public initialize() {
-            super.initialize();
-            this._batcher.init(this)
-            this._clean();
-        }
-
-        public uninitialize() {
-            super.uninitialize();
-            this._clean();
-        }
-        /**
-         * @internal 
-         */
-        public update(elapsedTime: number) {
-            this._batcher.update(elapsedTime * this._timeScale);
-        }
-        /**
-         * 从头开始播放
-         */
-        public play() {
-            this._isPlaying = true;
-            this._isPaused = false;
-            this._batcher.clean();
-        }
-        /**
-         * (从暂停中)恢复播放, 如果未暂停, 就从头开始播放
-         */
-        public resume() {
-            if (this._isPaused) {
-                this._isPaused = false;
-                this._batcher.resume();
-            } else {
-                if (this._isPlaying) { return; }
-                this.play();
-            }
-        }
-        /**
-         * 暂停
-         */
-        public pause(): void {
-            if (!this._isPlaying) { return; }
-            this._isPaused = true;
-        }
-        /**
-         * 停止播放
-         */
-        public stop(): void {
-            this._isPlaying = false;
-            this._isPaused = false;
-        }
-        /**
-         * 是否正在播放
-         */
-        public get isPlaying() {
-            return this._isPlaying;
-        }
-        /**
-         * 是否播放已经暂停
-         */
-        public get isPaused() {
-            return this._isPaused;
-        }
-        /**
-         * 依赖的组件都已添加完成时触发
-         */
-        public onDependenciesReady() {
-            this._batcher.setupRenderer();
-        }
+        private _paused: boolean = false;
     }
 }

@@ -57,7 +57,11 @@ var egret3d;
          * @internal
          */
         var TrailBatcher = (function () {
-            function TrailBatcher() {
+            /**
+             * 初始化
+             * @param comp 对应的 Trail 组件
+             */
+            function TrailBatcher(gameObject, comp) {
                 // 设置数据
                 /**
                  * 最大片段数
@@ -98,6 +102,10 @@ var egret3d;
                  * 点和点之间的距离的总和
                  */
                 this._distanceSum = 0;
+                this._gameObject = gameObject;
+                this._comp = comp;
+                this._onPausedChanged = this._onPausedChanged.bind(this);
+                this._onEmittingChanged = this._onEmittingChanged.bind(this);
             }
             /**
              * 暂停
@@ -105,6 +113,26 @@ var egret3d;
             TrailBatcher.prototype.pause = function () {
                 this._pausedTime = paper.clock.timestamp();
             };
+            TrailBatcher.prototype.initialize = function () {
+                this._comp.onPausedChanged.add(this._onPausedChanged);
+                this._comp.onEmittingChanged.add(this._onEmittingChanged);
+                this._createMesh();
+            };
+            TrailBatcher.prototype.uninitialize = function () {
+                this._comp.onPausedChanged.remove(this._onPausedChanged);
+                this._comp.onEmittingChanged.remove(this._onEmittingChanged);
+                this._releaseMesh();
+            };
+            Object.defineProperty(TrailBatcher.prototype, "gameObject", {
+                /**
+                 * 对应的组件
+                 */
+                get: function () {
+                    return this._gameObject;
+                },
+                enumerable: true,
+                configurable: true
+            });
             /**
              * 恢复
              */
@@ -119,25 +147,6 @@ var egret3d;
                 }
             };
             /**
-             * 清理状态数据
-             */
-            TrailBatcher.prototype.clean = function () {
-                this._points.length = 0;
-                this._lastPosition = null;
-                this._pausedTime = -1;
-                this._distanceSum = 0;
-                this._pointDistances.length = 1;
-                this._resetMeshData();
-            };
-            /**
-             * 初始化
-             * @param comp 对应的 Trail 组件
-             */
-            TrailBatcher.prototype.init = function (comp) {
-                this._comp = comp;
-                this._createMesh();
-            };
-            /**
              * 每帧刷新
              * @param elapsedTime 此帧的时长(秒) (未使用此参数)
              */
@@ -147,15 +156,17 @@ var egret3d;
                 }
                 var comp = this._comp;
                 // 暂停情况下不更新
-                if (comp.isPaused) {
+                if (comp.paused) {
                     return;
                 }
                 // 自动销毁
-                if (!comp.isPlaying) {
+                if (!comp.emitting) {
                     if (comp.autoDestruct && this._points.length < 2) {
                         comp.gameObject.destroy();
+                        return;
                     }
                 }
+                // 当前时间戳
                 var now = paper.clock.timestamp();
                 // 更新片段数据
                 this._updateSegments(now);
@@ -165,19 +176,15 @@ var egret3d;
                 this._composeMesh();
             };
             /**
-             * 在拖尾相关的组件初始化齐全后配置渲染相关的参数
+             * 清理状态数据
              */
-            TrailBatcher.prototype.setupRenderer = function () {
-                // 把 mesh 传给 MeshFilter 组件
-                var meshFilter = this._comp.gameObject.getComponent(egret3d.MeshFilter);
-                if (!meshFilter) {
-                    console.warn("no MeshFilter on Trail object(" + this._comp.gameObject.name + ")");
-                    return;
-                }
-                meshFilter.mesh = this._mesh;
-                // TODO: 设置使用颜色
-                // const meshRenderer = this._comp.gameObject.getComponent(MeshRenderer);
-                // meshRenderer.material.addDefine(egret3d.ShaderDefine.USE_COLOR);
+            TrailBatcher.prototype._reset = function () {
+                this._points.length = 0;
+                this._lastPosition = null;
+                this._pausedTime = -1;
+                this._distanceSum = 0;
+                this._pointDistances.length = 1;
+                this._resetMeshData();
             };
             /**
              * 更新片段数据
@@ -185,16 +192,15 @@ var egret3d;
              */
             TrailBatcher.prototype._updateSegments = function (now) {
                 var comp = this._comp;
-                if (comp.isPaused) {
+                if (comp.paused) {
                     return;
                 }
                 var curPosition = comp.transform.position;
                 // 如果移动了足够远, 就生成新的点, 否则只是修正最后的点
                 var theDistance = this._lastPosition ? curPosition.getDistance(this._lastPosition) : -1;
                 var count = this._points.length;
-                var isPlaying = comp.isPlaying;
                 var prevLastPoint = this._points[count - 1];
-                if (isPlaying) {
+                if (comp.emitting) {
                     if (theDistance > comp.minVertexDistance || theDistance < 0) {
                         this._points.push({ position: egret3d.Vector3.create().copy(curPosition), timeCreated: now });
                         if (!this._lastPosition) {
@@ -263,6 +269,8 @@ var egret3d;
                 var comp = this._comp;
                 var ratioSum = 0.0;
                 var worldToLocalMatrix = comp.gameObject.transform.worldToLocalMatrix;
+                var flip = false;
+                var lastDirection = null;
                 for (var i = 0; i < count; ++i) {
                     var p = this._points[i];
                     // 根据片段生存的时间获取对应的宽度和颜色采样
@@ -279,51 +287,106 @@ var egret3d;
                         : comp.gameObject.transform.getForward(vec3());
                     // 以上两者的叉乘即为拖尾移动方向的垂直向量
                     var perpendicular = vec3Cross(lineDirection, vectorFacing).normalize();
+                    if (comp.autoFlip && i > 0 && lastDirection) {
+                        if (lastDirection.dot(lineDirection) < 0) {
+                            flip = !flip;
+                        }
+                    }
+                    lastDirection = lineDirection;
                     // 上述向量正反方向各走半个宽度值即为两个新的顶点值
-                    var vertex = void 0;
-                    vertex = vec3Add(p.position, vec3Mutiply(perpendicular, width * 0.5));
-                    vertex.applyMatrix(worldToLocalMatrix);
-                    this._verticles[i * 6 + 0] = vertex.x;
-                    this._verticles[i * 6 + 1] = vertex.y;
-                    this._verticles[i * 6 + 2] = vertex.z;
-                    vertex = vec3Add(p.position, vec3Mutiply(perpendicular, -width * 0.5));
-                    vertex.applyMatrix(worldToLocalMatrix);
-                    this._verticles[i * 6 + 3] = vertex.x;
-                    this._verticles[i * 6 + 4] = vertex.y;
-                    this._verticles[i * 6 + 5] = vertex.z;
-                    // 同样的颜色值
-                    // this._colors[i * 8 + 0] = color.r;
-                    // this._colors[i * 8 + 1] = color.g;
-                    // this._colors[i * 8 + 2] = color.b;
-                    // this._colors[i * 8 + 3] = color.a;
-                    // this._colors[i * 8 + 4] = color.r;
-                    // this._colors[i * 8 + 5] = color.g;
-                    // this._colors[i * 8 + 6] = color.b;
-                    // this._colors[i * 8 + 7] = color.a;
-                    // 两点的 uv 值
-                    if (comp.textureMode === trail.TrailTextureMode.Stretch) {
-                        var ratio = this._distanceSum ? this._pointDistances[i] / this._distanceSum : 0;
-                        ratioSum += ratio;
-                        this._uvs[i * 4 + 0] = ratioSum;
-                        this._uvs[i * 4 + 1] = 1;
-                        this._uvs[i * 4 + 2] = ratioSum;
-                        this._uvs[i * 4 + 3] = 0;
+                    var vertex1 = vec3Add(p.position, vec3Mutiply(perpendicular, width * 0.5)).applyMatrix(worldToLocalMatrix);
+                    var vertex2 = vec3Add(p.position, vec3Mutiply(perpendicular, -width * 0.5)).applyMatrix(worldToLocalMatrix);
+                    if (flip) {
+                        var temp = vertex1;
+                        vertex1 = vertex2;
+                        vertex2 = temp;
                     }
-                    else {
-                        // TODO: not finished
-                        this._uvs[i * 2 + 0] = 0;
-                        this._uvs[i * 2 + 1] = 1;
-                        this._uvs[i * 2 + 0] = 0;
-                        this._uvs[i * 2 + 1] = 0;
+                    switch (comp.textureMode) {
+                        case trail.TrailTextureMode.Stretch:
+                            ratioSum = this._buildMeshForTextureStretch(vertex1, vertex2, i, ratioSum);
+                            break;
+                        case trail.TrailTextureMode.PerSegment:
+                            this._buildMeshForTexturePerSegment(vertex1, vertex2, i);
+                            break;
+                        default: break;
                     }
-                    if (i > 0) {
-                        this._indices[(i - 1) * 6 + 0] = (i * 2) - 2;
-                        this._indices[(i - 1) * 6 + 1] = (i * 2) - 1;
-                        this._indices[(i - 1) * 6 + 2] = i * 2;
-                        this._indices[(i - 1) * 6 + 3] = (i * 2) + 1;
-                        this._indices[(i - 1) * 6 + 4] = i * 2;
-                        this._indices[(i - 1) * 6 + 5] = (i * 2) - 1;
+                }
+            };
+            TrailBatcher.prototype._buildMeshForTextureStretch = function (vertex1, vertex2, index, ratioSum) {
+                var i = index * 6;
+                this._verticles[i + 0] = vertex1.x;
+                this._verticles[i + 1] = vertex1.y;
+                this._verticles[i + 2] = vertex1.z;
+                this._verticles[i + 3] = vertex2.x;
+                this._verticles[i + 4] = vertex2.y;
+                this._verticles[i + 5] = vertex2.z;
+                // 同样的颜色值
+                // this._colors[i * 8 + 0] = color.r;
+                // this._colors[i * 8 + 1] = color.g;
+                // this._colors[i * 8 + 2] = color.b;
+                // this._colors[i * 8 + 3] = color.a;
+                // this._colors[i * 8 + 4] = color.r;
+                // this._colors[i * 8 + 5] = color.g;
+                // this._colors[i * 8 + 6] = color.b;
+                // this._colors[i * 8 + 7] = color.a;
+                // 两点的 uv 值
+                var ratio = this._distanceSum ? this._pointDistances[index] / this._distanceSum : 0;
+                ratioSum += ratio;
+                i = index * 4;
+                this._uvs[i + 0] = ratioSum;
+                this._uvs[i + 1] = 1;
+                this._uvs[i + 2] = ratioSum;
+                this._uvs[i + 3] = 0;
+                if (index > 0) {
+                    i = (index - 1) * 6;
+                    var i2 = index * 2;
+                    this._indices[i + 0] = i2 - 2;
+                    this._indices[i + 1] = i2 - 1;
+                    this._indices[i + 2] = i2;
+                    this._indices[i + 3] = i2 + 1;
+                    this._indices[i + 4] = i2;
+                    this._indices[i + 5] = i2 - 1;
+                }
+                return ratioSum;
+            };
+            TrailBatcher.prototype._buildMeshForTexturePerSegment = function (vertex1, vertex2, index) {
+                var vIndex = (index - 1) * 12 + 6;
+                this._verticles[vIndex + 0] = vertex1.x;
+                this._verticles[vIndex + 1] = vertex1.y;
+                this._verticles[vIndex + 2] = vertex1.z;
+                this._verticles[vIndex + 3] = vertex2.x;
+                this._verticles[vIndex + 4] = vertex2.y;
+                this._verticles[vIndex + 5] = vertex2.z;
+                var uvIndex = (index - 1) * 8 + 4;
+                var uv = index > 0 ? 1 : 0;
+                this._uvs[uvIndex + 0] = uv;
+                this._uvs[uvIndex + 1] = 1;
+                this._uvs[uvIndex + 2] = uv;
+                this._uvs[uvIndex + 3] = 0;
+                if (index > 0 && index < this._points.length) {
+                    if (index < this._points.length) {
+                        vIndex += 6;
+                        this._verticles[vIndex + 0] = vertex1.x;
+                        this._verticles[vIndex + 1] = vertex1.y;
+                        this._verticles[vIndex + 2] = vertex1.z;
+                        this._verticles[vIndex + 3] = vertex2.x;
+                        this._verticles[vIndex + 4] = vertex2.y;
+                        this._verticles[vIndex + 5] = vertex2.z;
+                        uvIndex += 4;
+                        uv = 0;
+                        this._uvs[uvIndex + 0] = uv;
+                        this._uvs[uvIndex + 1] = 1;
+                        this._uvs[uvIndex + 2] = uv;
+                        this._uvs[uvIndex + 3] = 0;
                     }
+                    var iIndex = (index - 1) * 6;
+                    var i = (index - 1) * 4 + 2;
+                    this._indices[iIndex + 0] = i - 2;
+                    this._indices[iIndex + 1] = i - 1;
+                    this._indices[iIndex + 2] = i - 0;
+                    this._indices[iIndex + 3] = i + 1;
+                    this._indices[iIndex + 4] = i - 0;
+                    this._indices[iIndex + 5] = i - 1;
                 }
             };
             // TODO: 支持颜色参数
@@ -386,6 +449,9 @@ var egret3d;
                     this._maxFragmentCount = this._points.length;
                     this._createMesh();
                 }
+                if (!this._mesh) {
+                    return;
+                }
                 var buff = this._mesh.getAttributes("POSITION" /* POSITION */);
                 if (buff) {
                     buff.fill(0.0);
@@ -411,7 +477,46 @@ var egret3d;
              * 生成 `Mesh` 对象
              */
             TrailBatcher.prototype._createMesh = function () {
-                this._mesh = egret3d.Mesh.create(this._maxFragmentCount * 4, (this._maxFragmentCount - 1) * 6);
+                this._mesh = egret3d.Mesh.create((this._maxFragmentCount - 1) * 4, (this._maxFragmentCount - 1) * 6);
+                // 把 mesh 传给 MeshFilter 组件
+                var meshFilter = this._comp.gameObject.getComponent(egret3d.MeshFilter);
+                if (!meshFilter) {
+                    console.warn("no MeshFilter on Trail object(" + this._comp.gameObject.name + ")");
+                    return;
+                }
+                meshFilter.mesh = this._mesh;
+                // TODO: 设置使用颜色
+                // const meshRenderer = this._comp.gameObject.getComponent(MeshRenderer);
+                // meshRenderer.material.addDefine(egret3d.ShaderDefine.USE_COLOR);
+            };
+            /**
+             * 销毁时释放 mesh
+             */
+            TrailBatcher.prototype._releaseMesh = function () {
+                var meshFilter = this._comp.gameObject.getComponent(egret3d.MeshFilter);
+                if (!meshFilter) {
+                    console.warn("no MeshFilter on Trail object(" + this._comp.gameObject.name + ")");
+                    return;
+                }
+                if (meshFilter.mesh === this._mesh) {
+                    meshFilter.mesh = null;
+                }
+                ;
+                this._mesh = null;
+            };
+            TrailBatcher.prototype._onPausedChanged = function () {
+                if (this._comp.paused) {
+                    this.pause();
+                }
+                else {
+                    this.resume();
+                }
+            };
+            TrailBatcher.prototype._onEmittingChanged = function () {
+                // 重新播放前重置状态
+                if (this._comp.emitting) {
+                    this._reset();
+                }
             };
             return TrailBatcher;
         }());
@@ -450,10 +555,6 @@ var egret3d;
              * 每个拖尾片段使用一个材质
              */
             TrailTextureMode["PerSegment"] = "PerSegment";
-            /**
-             * 重复平铺
-             */
-            TrailTextureMode["Tile"] = "Tile";
         })(TrailTextureMode = trail.TrailTextureMode || (trail.TrailTextureMode = {}));
         /**
          * 拖尾组件
@@ -485,6 +586,10 @@ var egret3d;
                  */
                 _this.autoDestruct = false;
                 /**
+                 * 在移动突然反向时是否自动翻转, 避免出现尖角现象
+                 */
+                _this.autoFlip = false;
+                /**
                  * 拖尾的朝向是始终面对摄像机还是有自己的单独设置
                  * @see {TrailAlignment}
                  */
@@ -495,100 +600,52 @@ var egret3d;
                  */
                 _this.textureMode = TrailTextureMode.Stretch;
                 /**
-                 * @internal
+                 * 发射状态发生改变时产生的信号
                  */
-                _this._isPlaying = true;
+                _this.onEmittingChanged = new signals.Signal();
+                _this._emitting = true;
                 /**
-                 * @internal
+                 * 暂停状态发生改变时产生的信号
                  */
-                _this._isPaused = false;
-                _this._timeScale = 1.0;
-                _this._batcher = new trail.TrailBatcher();
+                _this.onPausedChanged = new signals.Signal();
+                _this._paused = false;
                 return _this;
             }
-            /**
-             * @internal
-             */
-            TrailComponent.prototype._clean = function () {
-                this._batcher.clean();
-            };
-            TrailComponent.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-                this._batcher.init(this);
-                this._clean();
-            };
-            TrailComponent.prototype.uninitialize = function () {
-                _super.prototype.uninitialize.call(this);
-                this._clean();
-            };
-            /**
-             * @internal
-             */
-            TrailComponent.prototype.update = function (elapsedTime) {
-                this._batcher.update(elapsedTime * this._timeScale);
-            };
-            /**
-             * 从头开始播放
-             */
-            TrailComponent.prototype.play = function () {
-                this._isPlaying = true;
-                this._isPaused = false;
-                this._batcher.clean();
-            };
-            /**
-             * (从暂停中)恢复播放, 如果未暂停, 就从头开始播放
-             */
-            TrailComponent.prototype.resume = function () {
-                if (this._isPaused) {
-                    this._isPaused = false;
-                    this._batcher.resume();
-                }
-                else {
-                    if (this._isPlaying) {
+            Object.defineProperty(TrailComponent.prototype, "emitting", {
+                /**
+                 * 发射状态: 表示拖尾是否在不断的生成新的拖尾片段
+                 */
+                get: function () {
+                    return this._emitting;
+                },
+                set: function (isPlaying) {
+                    if (this._emitting === isPlaying) {
                         return;
                     }
-                    this.play();
-                }
-            };
-            /**
-             * 暂停
-             */
-            TrailComponent.prototype.pause = function () {
-                if (!this._isPlaying) {
-                    return;
-                }
-                this._isPaused = true;
-            };
-            /**
-             * 停止播放
-             */
-            TrailComponent.prototype.stop = function () {
-                this._isPlaying = false;
-                this._isPaused = false;
-            };
-            Object.defineProperty(TrailComponent.prototype, "isPlaying", {
-                /**
-                 * 是否正在播放
-                 */
-                get: function () {
-                    return this._isPlaying;
+                    this._emitting = isPlaying;
+                    this.onEmittingChanged.dispatch(isPlaying);
                 },
                 enumerable: true,
                 configurable: true
             });
-            Object.defineProperty(TrailComponent.prototype, "isPaused", {
+            Object.defineProperty(TrailComponent.prototype, "paused", {
                 /**
-                 * 是否播放已经暂停
+                 * 暂停状态
+                 * 处于暂停状态的拖尾不生成新的片段, 已有的片段也不衰老消失, 就像时间暂停了
                  */
                 get: function () {
-                    return this._isPaused;
+                    return this._paused;
+                },
+                set: function (isPaused) {
+                    if (this._paused === isPaused) {
+                        return;
+                    }
+                    this._paused = isPaused;
+                    this.onPausedChanged.dispatch(isPaused);
                 },
                 enumerable: true,
                 configurable: true
             });
-            TrailComponent.prototype.setupRenderer = function () {
-                this._batcher.setupRenderer();
-            };
             __decorate([
                 paper.serializedField,
                 paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
@@ -607,11 +664,24 @@ var egret3d;
             ], TrailComponent.prototype, "autoDestruct", void 0);
             __decorate([
                 paper.serializedField,
+                paper.editor.property("CHECKBOX" /* CHECKBOX */)
+            ], TrailComponent.prototype, "autoFlip", void 0);
+            __decorate([
+                paper.serializedField,
                 paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(egret3d.trail.TrailAlignment) })
             ], TrailComponent.prototype, "Alignment", void 0);
             __decorate([
-                paper.serializedField
+                paper.serializedField,
+                paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(egret3d.trail.TrailTextureMode) })
             ], TrailComponent.prototype, "textureMode", void 0);
+            __decorate([
+                paper.serializedField,
+                paper.editor.property("CHECKBOX" /* CHECKBOX */)
+            ], TrailComponent.prototype, "emitting", null);
+            __decorate([
+                paper.serializedField,
+                paper.editor.property("CHECKBOX" /* CHECKBOX */)
+            ], TrailComponent.prototype, "paused", null);
             TrailComponent = __decorate([
                 paper.requireComponent(egret3d.MeshFilter),
                 paper.requireComponent(egret3d.MeshRenderer)
@@ -632,40 +702,74 @@ var egret3d;
         var TrailSystem = (function (_super) {
             __extends(TrailSystem, _super);
             function TrailSystem() {
-                return _super !== null && _super.apply(this, arguments) || this;
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._batchers = [];
+                return _this;
             }
+            /**
+             * `GameObject` 的以下各个组件齐全时才会进入到此系统, 触发 `onEntityAdded()`
+             */
             TrailSystem.prototype.getMatchers = function () {
                 return [
                     paper.Matcher.create(egret3d.Transform, egret3d.MeshFilter, egret3d.MeshRenderer, trail_1.TrailComponent),
                 ];
             };
+            /**
+             * TrailComponent 需要依赖 MeshFilter 等组件
+             * , 在 `onEntityAdded()` 可以确保 TrailComponent 本身和它依赖的组件都添加完成了
+             *
+             * @param entity 进入系统的对象
+             */
             TrailSystem.prototype.onEntityAdded = function (entity) {
                 var trail = entity.getComponent(trail_1.TrailComponent);
-                if (trail) {
-                    trail.setupRenderer();
+                if (!trail) {
+                    return;
                 }
+                // 添加并初始化
+                var batcher = new trail_1.TrailBatcher(entity, trail);
+                batcher.initialize();
+                this._batchers.push(batcher);
             };
-            TrailSystem.prototype.onFrame = function (deltaTime) {
-                for (var _i = 0, _a = this.groups[0].entities; _i < _a.length; _i++) {
-                    var entity = _a[_i];
-                    var trail_2 = entity.getComponent(trail_1.TrailComponent);
-                    if (!trail_2) {
+            /**
+             *
+             * @param entity 离开系统的对象
+             */
+            TrailSystem.prototype.onEntityRemoved = function (entity) {
+                for (var i = 0; i < this._batchers.length; i++) {
+                    var batcher = this._batchers[i];
+                    if (batcher.gameObject !== entity) {
                         continue;
                     }
-                    trail_2.update(deltaTime);
+                    // 反初始化并移除
+                    batcher.uninitialize();
+                    this._batchers.splice(i, 1);
+                    return;
                 }
+            };
+            /**
+             * 渲染帧更新
+             * @param deltaTime 帧时长(秒)
+             */
+            TrailSystem.prototype.onFrame = function (deltaTime) {
+                this._batchers.map(function (batcher) { return batcher.update(deltaTime); });
             };
             return TrailSystem;
         }(paper.BaseSystem));
         trail_1.TrailSystem = TrailSystem;
         __reflect(TrailSystem.prototype, "egret3d.trail.TrailSystem");
+        /**
+         * 创建拖尾对象
+         * @param name 对象名称
+         */
         function createTrail(name) {
             var o = egret3d.creater.createGameObject(name);
+            // `MeshFilter` 和 `MeshRenderer` 两个组件会在 `createGameObject()` 里面创建
+            // , 所以这里只需要添加 `TrailComponent` 
             o.addComponent(egret3d.trail.TrailComponent);
             return o;
         }
         trail_1.createTrail = createTrail;
-        // 注册拖尾系统
+        // 注册拖尾系统, 因为依赖 MeshRenderSystem, 所以在每帧中应该在它之前执行
         paper.Application.systemManager.preRegister(TrailSystem, paper.Application.gameObjectContext, 7000 /* BeforeRenderer */ - 1);
     })(trail = egret3d.trail || (egret3d.trail = {}));
 })(egret3d || (egret3d = {}));

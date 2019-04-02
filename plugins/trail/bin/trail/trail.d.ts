@@ -62,10 +62,6 @@ declare namespace egret3d.trail {
          * 每个拖尾片段使用一个材质
          */
         PerSegment = "PerSegment",
-        /**
-         * 重复平铺
-         */
-        Tile = "Tile",
     }
     /**
      * 拖尾组件
@@ -88,6 +84,10 @@ declare namespace egret3d.trail {
          */
         autoDestruct: boolean;
         /**
+         * 在移动突然反向时是否自动翻转, 避免出现尖角现象
+         */
+        autoFlip: boolean;
+        /**
          * 拖尾的朝向是始终面对摄像机还是有自己的单独设置
          * @see {TrailAlignment}
          */
@@ -97,35 +97,25 @@ declare namespace egret3d.trail {
          * @see {TrailTextureMode}
          */
         textureMode: TrailTextureMode;
-        private _timeScale;
-        private readonly _batcher;
-        initialize(): void;
-        uninitialize(): void;
         /**
-         * 从头开始播放
+         * 发射状态发生改变时产生的信号
          */
-        play(): void;
+        readonly onEmittingChanged: signals.Signal;
         /**
-         * (从暂停中)恢复播放, 如果未暂停, 就从头开始播放
+         * 发射状态: 表示拖尾是否在不断的生成新的拖尾片段
          */
-        resume(): void;
+        emitting: boolean;
+        private _emitting;
         /**
-         * 暂停
+         * 暂停状态发生改变时产生的信号
          */
-        pause(): void;
+        readonly onPausedChanged: signals.Signal;
         /**
-         * 停止播放
+         * 暂停状态
+         * 处于暂停状态的拖尾不生成新的片段, 已有的片段也不衰老消失, 就像时间暂停了
          */
-        stop(): void;
-        /**
-         * 是否正在播放
-         */
-        readonly isPlaying: boolean;
-        /**
-         * 是否播放已经暂停
-         */
-        readonly isPaused: boolean;
-        setupRenderer(): void;
+        paused: boolean;
+        private _paused;
     }
 }
 declare namespace egret3d.trail {
@@ -133,9 +123,32 @@ declare namespace egret3d.trail {
      * 拖尾系统
      */
     class TrailSystem extends paper.BaseSystem<paper.GameObject> {
+        private _batchers;
+        /**
+         * `GameObject` 的以下各个组件齐全时才会进入到此系统, 触发 `onEntityAdded()`
+         */
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
+        /**
+         * TrailComponent 需要依赖 MeshFilter 等组件
+         * , 在 `onEntityAdded()` 可以确保 TrailComponent 本身和它依赖的组件都添加完成了
+         *
+         * @param entity 进入系统的对象
+         */
         onEntityAdded(entity: paper.GameObject): void;
+        /**
+         *
+         * @param entity 离开系统的对象
+         */
+        onEntityRemoved(entity: paper.GameObject): void;
+        /**
+         * 渲染帧更新
+         * @param deltaTime 帧时长(秒)
+         */
         onFrame(deltaTime: float): void;
     }
+    /**
+     * 创建拖尾对象
+     * @param name 对象名称
+     */
     function createTrail(name?: string): paper.GameObject;
 }
