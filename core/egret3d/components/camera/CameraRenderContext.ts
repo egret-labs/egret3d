@@ -459,13 +459,13 @@ namespace egret3d {
                 const count = calls.length;
                 const drawCall = calls[0];
                 const orginMesh = drawCall.mesh;
-                orginMesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL);
+                // orginMesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL);
                 orginMesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW);
-                const models = orginMesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL, gltf.AccessorType.MAT4, count, 1)!;
+                // const models = orginMesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL, gltf.AccessorType.MAT4, count, 1)!;
                 const modelViews = orginMesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW, gltf.AccessorType.MAT4, count, 1)!;
                 for (let i = 0; i < count; i++) {
                     const call = calls[i];
-                    models.set(call.matrix.rawData, i * 16);
+                    // models.set(call.matrix.rawData, i * 16);
                     modelViews.set(call.modelViewMatrix.rawData, i * 16);
                 }
 

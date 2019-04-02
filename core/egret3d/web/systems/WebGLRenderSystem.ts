@@ -961,10 +961,10 @@ namespace egret3d.webgl {
                     if (primitive.indices !== undefined) {
                         const indexAccessor = mesh.getAccessor(primitive.indices);
                         if (drawCall.instanced) {
-                            webgl.drawElementsInstanced(drawMode, offset, indexAccessor.componentType, count, drawCall.instanced);
+                            webgl.drawElementsInstanced(drawMode, count, indexAccessor.componentType, offset, drawCall.instanced);
                         }
                         else {
-                            webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                            webgl.drawElements(drawMode, count, indexAccessor.componentType, offset);
                         }
                     }
                     else {
@@ -979,10 +979,20 @@ namespace egret3d.webgl {
                 else {
                     if (primitive.indices !== undefined) {
                         const indexAccessor = mesh.getAccessor(primitive.indices);
-                        webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
+                        if (drawCall.instanced) {
+                            webgl.drawElementsInstanced(drawMode, indexAccessor.count, indexAccessor.componentType, 0, drawCall.instanced);
+                        }
+                        else {
+                            webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
+                        }
                     }
                     else {
-                        webgl.drawArrays(drawMode, 0, mesh.vertexCount);
+                        if (drawCall.instanced) {
+                            webgl.drawArraysInstanced(drawMode, 0, mesh.vertexCount, drawCall.instanced);
+                        }
+                        else {
+                            webgl.drawArrays(drawMode, 0, mesh.vertexCount);
+                        }
                     }
                 }
 

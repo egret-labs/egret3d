@@ -643,9 +643,10 @@ namespace egret3d {
                     }
 
                     delete attributes[attributeName];
+                    delete attributeOffsets[attributeName];
                     this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer);
 
-                    return this.getBuffer(removeAccessor).extras!.data as Float32Array;
+                    // return this.getBuffer(removeAccessor).extras!.data as Float32Array;
                 }
             }
 

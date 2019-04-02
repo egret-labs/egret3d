@@ -24,7 +24,7 @@ namespace egret3d {
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
         USE_SKINNING = "USE_SKINNING",
-        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",        
+        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
         USE_INSTANCED = "USE_INSTANCED",
         TOON = "TOON",
         STANDARD = "STANDARD",
@@ -279,6 +279,9 @@ namespace egret3d {
         "instanceColorEnd": gltf.AttributeSemantics._INSTANCE_COLOR_END,
         "instanceDistanceStart": gltf.AttributeSemantics._INSTANCE_DISTANCE_START,
         "instanceDistanceEnd": gltf.AttributeSemantics._INSTANCE_DISTANCE_END,
+
+        "modelMatrix": gltf.AttributeSemantics._INSTANCED_MODEL,
+        "modelViewMatrix": gltf.AttributeSemantics._INSTANCED_MODEL_VIEW,
     };
     /**
      * 内置提供的全局 Uniform。
@@ -400,7 +403,7 @@ namespace egret3d {
         /**
          * 是否预乘
          */
-        premultipliedAlpha?:boolean;
+        premultipliedAlpha?: boolean;
         /**
          * 
          */

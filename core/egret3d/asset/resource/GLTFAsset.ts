@@ -64,7 +64,7 @@ namespace egret3d {
         /**
          * 
          */
-        public static getMeshAttributeType(attributeName: gltf.AttributeSemantics | string): gltf.AccessorType {
+        public static getMeshAttributeType(attributeName: gltf.AttributeSemantics | string): gltf.AccessorType | "" {
             switch (attributeName) {
                 case gltf.AttributeSemantics.POSITION:
                 case gltf.AttributeSemantics.NORMAL:
@@ -82,7 +82,8 @@ namespace egret3d {
                     return gltf.AccessorType.VEC4;
 
                 default:
-                    throw new Error("Invalid attribute type.");
+                    return "";
+                    // throw new Error("Invalid attribute type.");
             }
         }
         /**
