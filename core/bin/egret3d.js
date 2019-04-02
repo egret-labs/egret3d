@@ -12101,6 +12101,11 @@ var egret3d;
                     webgl.bindVertexArray = this.vertexArrayObject.bindVertexArrayOES.bind(this.vertexArrayObject);
                     webgl.deleteVertexArray = this.vertexArrayObject.deleteVertexArrayOES.bind(this.vertexArrayObject);
                 }
+                if (this.instancedArrays !== null) {
+                    webgl.drawArraysInstanced = this.instancedArrays.drawArraysInstancedANGLE.bind(this.instancedArrays);
+                    webgl.drawElementsInstanced = this.instancedArrays.drawElementsInstancedANGLE.bind(this.instancedArrays);
+                    webgl.vertexAttribDivisor = this.instancedArrays.vertexAttribDivisorANGLE.bind(this.instancedArrays);
+                }
             };
             WebGLRenderState.prototype._setViewport = function (value) {
                 var renderTarget = this._renderTarget;
@@ -12149,6 +12154,7 @@ var egret3d;
                 this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
                 this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
                 this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
+                this.instancedArrays = _getExtension(webgl, "ANGLE_instanced_arrays");
                 //
                 this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
                 this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
@@ -12170,6 +12176,7 @@ var egret3d;
                 console.info("Frag depth enabled:", this.fragDepthEnabled);
                 console.info("Texture filter anisotropic:", this.textureFilterAnisotropic);
                 console.info("Shader texture LOD:", this.shaderTextureLOD);
+                console.info("ANGLE_instanced_arrays:", this.instancedArrays);
                 //
                 console.info("Maximum shader precision:", this.maxPrecision);
                 console.info("Maximum texture count:", this.maxTextures);
@@ -18308,6 +18315,7 @@ var egret3d;
                     (cullingMask & layer) !== 0 &&
                     // (camera.cullingMask & layer) !== 0 && TODO light cullingMask
                     (!renderer.frustumCulled || egret3d.math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))) {
+                    drawCall.modelViewMatrix.multiply(camera.worldToCameraMatrix, drawCall.matrix);
                     shadowCalls[shadowIndex++] = drawCall;
                 }
             }
@@ -18336,6 +18344,7 @@ var egret3d;
                     else {
                         opaqueCalls[opaqueIndex++] = drawCall;
                     }
+                    drawCall.modelViewMatrix.multiply(camera.worldToCameraMatrix, drawCall.matrix);
                     drawCall.zdist = egret3d.Vector3.create().fromMatrixPosition(drawCall.matrix).getSquaredDistance(cameraPosition);
                 }
             }
@@ -18548,7 +18557,6 @@ var egret3d;
             }
         };
         CameraRenderContext.prototype._combineInstanced = function (drawCalls) {
-            var camera = this._camera;
             // const combineDrawCalls: { [key: string]: egret3d.DrawCall[] } = {};TODO正常的动态合并
             var combineInstanced = {};
             //collect
@@ -18572,33 +18580,28 @@ var egret3d;
             for (var key in combineInstanced) {
                 var calls = combineInstanced[key];
                 //
+                var count = calls.length;
                 var drawCall = calls[0];
                 var orginMesh = drawCall.mesh;
-                var indice = orginMesh.getIndices(drawCall.subMeshIndex);
-                var attributeNames = [];
-                // if (attributeNames.indexOf(gltf.AttributeSemantics._INSTANCED_MODEL) < 0) {
-                //     attributeNames.push(gltf.AttributeSemantics._INSTANCED_MODEL);
-                //     attributeNames.push(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW);
-                // }
-                // const 
-                var mesh = egret3d.Mesh.create(orginMesh.vertexCount, indice ? indice.length : 0, attributeNames);
-                // mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes
-                var models = mesh.getAttributes("_INSTANCED_MODEL" /* _INSTANCED_MODEL */);
-                var modelViews = mesh.getAttributes("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */);
-                var _modelViewMatrix = egret3d.Matrix.create().release();
-                for (var i = 0, l = calls.length; i < l; i++) {
+                orginMesh.removeAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */);
+                orginMesh.removeAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */);
+                orginMesh.addAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */, "MAT4" /* MAT4 */, count);
+                orginMesh.addAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */, "MAT4" /* MAT4 */, count);
+                var models = orginMesh.getAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */);
+                var modelViews = orginMesh.getAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */);
+                for (var i = 0; i < count; i++) {
                     var call = calls[i];
-                    var matrix = call.matrix;
-                    _modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
                     models.set(call.matrix.rawData, i * 16);
-                    modelViews.set(_modelViewMatrix.rawData, i * 16);
+                    modelViews.set(call.modelViewMatrix.rawData, i * 16);
                 }
                 var newDrawCall = egret3d.DrawCall.create().release();
                 newDrawCall.entity = drawCall.entity;
                 newDrawCall.renderer = drawCall.renderer;
                 newDrawCall.material = drawCall.material;
-                newDrawCall.mesh = mesh;
+                newDrawCall.mesh = orginMesh;
                 newDrawCall.subMeshIndex = drawCall.subMeshIndex;
+                newDrawCall.matrix = drawCall.matrix;
+                newDrawCall.modelViewMatrix = drawCall.modelViewMatrix;
                 drawCalls.push(newDrawCall);
             }
         };
@@ -18612,6 +18615,7 @@ var egret3d;
             }
             else {
                 this._frustumCulling();
+                this._combineInstanced(this.opaqueCalls);
                 this._updateLights();
             }
         };
@@ -19430,6 +19434,7 @@ var egret3d;
              * 此次绘制的世界矩阵。
              */
             _this.matrix = null;
+            _this.modelViewMatrix = egret3d.Matrix4.IDENTITY.clone();
             /**
              * 此次绘制的子网格索引。
              */
@@ -32136,7 +32141,6 @@ var egret3d;
                 _this._cameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(egret3d.CameraAndLightCollecter);
                 _this._renderState = paper.Application.sceneManager.globalEntity.getComponent(egret3d.RenderState);
                 //
-                _this._modelViewMatrix = egret3d.Matrix4.create();
                 _this._modelViewPojectionMatrix = egret3d.Matrix4.create();
                 _this._inverseModelViewMatrix = egret3d.Matrix3.create();
                 //
@@ -32262,9 +32266,9 @@ var egret3d;
                 var modelUniforms = program.modelUniforms;
                 var context = camera.context;
                 var matrix = drawCall.matrix;
+                var modelViewMatrix = drawCall.modelViewMatrix;
                 var i = 0;
                 //
-                this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
                 this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
                 // Global.
                 if (forceUpdate) {
@@ -32408,13 +32412,13 @@ var egret3d;
                             webgl.uniformMatrix4fv(location_8, false, matrix.rawData);
                             break;
                         case "MODELVIEW" /* MODELVIEW */:
-                            webgl.uniformMatrix4fv(location_8, false, this._modelViewMatrix.rawData);
+                            webgl.uniformMatrix4fv(location_8, false, modelViewMatrix.rawData);
                             break;
                         case "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */:
                             webgl.uniformMatrix4fv(location_8, false, this._modelViewPojectionMatrix.rawData);
                             break;
                         case "MODELVIEWINVERSE" /* MODELVIEWINVERSE */:
-                            webgl.uniformMatrix3fv(location_8, false, this._inverseModelViewMatrix.getNormalMatrix(this._modelViewMatrix).rawData);
+                            webgl.uniformMatrix3fv(location_8, false, this._inverseModelViewMatrix.getNormalMatrix(modelViewMatrix).rawData);
                             break;
                         case "JOINTMATRIX" /* JOINTMATRIX */:
                             var skinnedMeshRenderer = renderer.source || renderer;

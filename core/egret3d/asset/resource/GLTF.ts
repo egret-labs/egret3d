@@ -128,6 +128,7 @@ namespace egret3d {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
                 renderQueue: RenderQueue | uint;
+                enableGPUInstancing: boolean;
                 /**
                  * 该值如果定义，则覆盖着色器中的值。
                  */

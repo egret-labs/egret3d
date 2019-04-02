@@ -62,6 +62,9 @@ namespace egret3d.webgl {
         createVertexArray(): any;
         bindVertexArray(vao?: WebGLVertexArrayObject | null): void;
         deleteVertexArray(vao: WebGLVertexArrayObject): void;
+        drawArraysInstanced(mode: GLenum, first: GLint, count: GLsizei, primcount: GLsizei): void;
+        drawElementsInstanced(mode: GLenum, count: GLsizei, type: GLenum, offset: GLintptr, primcount: GLsizei): void;
+        vertexAttribDivisor(index: GLuint, divisor: GLuint): void;
     }
     /**
      * @internal
@@ -82,6 +85,12 @@ namespace egret3d.webgl {
                 webgl.createVertexArray = this.vertexArrayObject.createVertexArrayOES.bind(this.vertexArrayObject);
                 webgl.bindVertexArray = this.vertexArrayObject.bindVertexArrayOES.bind(this.vertexArrayObject);
                 webgl.deleteVertexArray = this.vertexArrayObject.deleteVertexArrayOES.bind(this.vertexArrayObject);
+            }
+
+            if (this.instancedArrays !== null) {
+                webgl.drawArraysInstanced = this.instancedArrays.drawArraysInstancedANGLE.bind(this.instancedArrays);
+                webgl.drawElementsInstanced = this.instancedArrays.drawElementsInstancedANGLE.bind(this.instancedArrays);
+                webgl.vertexAttribDivisor = this.instancedArrays.vertexAttribDivisorANGLE.bind(this.instancedArrays);
             }
         }
 
@@ -137,6 +146,7 @@ namespace egret3d.webgl {
             this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
             this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
             this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
+            this.instancedArrays = _getExtension(webgl, "ANGLE_instanced_arrays");
             //
             this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
             this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
@@ -158,6 +168,7 @@ namespace egret3d.webgl {
             console.info("Frag depth enabled:", this.fragDepthEnabled);
             console.info("Texture filter anisotropic:", this.textureFilterAnisotropic);
             console.info("Shader texture LOD:", this.shaderTextureLOD);
+            console.info("ANGLE_instanced_arrays:", this.instancedArrays);
             //
             console.info("Maximum shader precision:", this.maxPrecision);
             console.info("Maximum texture count:", this.maxTextures);

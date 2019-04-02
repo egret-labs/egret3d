@@ -63,7 +63,6 @@ namespace egret3d.webgl {
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(CameraAndLightCollecter)!;
         private readonly _renderState: WebGLRenderState = paper.Application.sceneManager.globalEntity.getComponent(RenderState) as WebGLRenderState;
         //
-        private readonly _modelViewMatrix: Matrix4 = Matrix4.create();
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
         private readonly _inverseModelViewMatrix: Matrix3 = Matrix3.create();
         //
@@ -213,9 +212,9 @@ namespace egret3d.webgl {
             const modelUniforms = program.modelUniforms;
             const context = camera.context;
             const matrix = drawCall.matrix;
+            const modelViewMatrix = drawCall.modelViewMatrix;
             let i = 0;
             //
-            this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
             this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
             // Global.
             if (forceUpdate) {
@@ -391,7 +390,7 @@ namespace egret3d.webgl {
                         break;
 
                     case gltf.UniformSemantics.MODELVIEW:
-                        webgl.uniformMatrix4fv(location, false, this._modelViewMatrix.rawData);
+                        webgl.uniformMatrix4fv(location, false, modelViewMatrix.rawData);
                         break;
 
                     case gltf.UniformSemantics.MODELVIEWPROJECTION:
@@ -399,7 +398,7 @@ namespace egret3d.webgl {
                         break;
 
                     case gltf.UniformSemantics.MODELVIEWINVERSE:
-                        webgl.uniformMatrix3fv(location, false, this._inverseModelViewMatrix.getNormalMatrix(this._modelViewMatrix).rawData);
+                        webgl.uniformMatrix3fv(location, false, this._inverseModelViewMatrix.getNormalMatrix(modelViewMatrix).rawData);
                         break;
 
                     case gltf.UniformSemantics.JOINTMATRIX:

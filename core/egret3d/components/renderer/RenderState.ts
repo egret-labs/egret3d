@@ -19,6 +19,7 @@ namespace egret3d {
         public fragDepthEnabled: boolean;
         public textureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
         public shaderTextureLOD: any;
+        public instancedArrays: ANGLE_instanced_arrays | null;
 
         public maxTextures: uint;
         public maxVertexTextures: uint;
@@ -461,8 +462,8 @@ namespace egret3d {
         }
         public set renderTarget(value: RenderTexture | null) {
             // if (this._renderTarget !== value) {  //TODO  防止2d污染3d
-                this._renderTarget = value;
-                this._setRenderTarget(value);
+            this._renderTarget = value;
+            this._setRenderTarget(value);
             // }
         }
         /**
