@@ -187,21 +187,20 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
             const { primitives, extras } = mesh.glTFMesh;
-            const primitive = primitives[subMeshIndex];
+            const primitiveExtras = primitives[subMeshIndex].extras!;
 
-            mesh.update(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer);
-
-            const vbo = extras!.vbo;
-            const ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
+            mesh.update(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer, subMeshIndex);
 
             if (renderState.vertexArrayObject !== null) {
-                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
-                webgl.bindVertexArray(extras!.vao);
+                webgl.bindVertexArray(primitiveExtras.vao);
             }
             else {
+                const vbo = extras!.vbo;
+                const ibo = primitiveExtras.ibo;
+
                 webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
                 webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
-                renderState.updateVertexAttributes(mesh);
+                renderState.updateVertexAttributes(mesh, subMeshIndex);
             }
         }
 
@@ -928,9 +927,9 @@ namespace egret3d.webgl {
                 const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
                 // Update attributes.
                 if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
-                    if (program !== mesh.glTFMesh.extras!.program) {
+                    if (program !== primitive.extras!.program) {
                         mesh.needUpdate(MeshNeedUpdate.VertexArray);
-                        mesh.glTFMesh.extras!.program = program;
+                        primitive.extras!.program = program;
                     }
 
                     this._updateAttributes(mesh, subMeshIndex);

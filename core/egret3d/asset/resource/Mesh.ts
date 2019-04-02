@@ -202,7 +202,7 @@ namespace egret3d {
 
             const glTFMesh = this._glTFMesh = config.meshes![0];
             const attributes = this._attributes = glTFMesh.primitives[0].attributes as { [key: string]: gltf.Index };
-            glTFMesh.extras = { attributeOffsets: {}, program: null, vbo: null, vao: null };
+            glTFMesh.extras = { attributeOffsets: {}, vbo: null };
 
             if (this._vertexCount === 0) { // 加载的资源。
                 this._vertexCount = this.getAccessor(attributes.POSITION !== undefined ? attributes.POSITION : 0).count;
@@ -218,7 +218,7 @@ namespace egret3d {
 
             for (const primitive of glTFMesh.primitives) {
                 primitive.attributes = attributes;
-                primitive.extras = { ibo: null };
+                primitive.extras = { program: null, vao: null, ibo: null };
             }
         }
         /**
@@ -289,7 +289,7 @@ namespace egret3d {
             this._needUpdate |= mask;
         }
 
-        public update(mask: MeshNeedUpdate): void {
+        public update(mask: MeshNeedUpdate, subMeshIndex: uint = 0): void {
             const needUpdate = this._needUpdate & mask;
 
             if (needUpdate !== 0) {

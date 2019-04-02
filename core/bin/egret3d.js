@@ -1,436 +1,3 @@
-// "use strict"; TODO
-/*jslint onevar:true, undef:true, newcap:true, regexp:true, bitwise:true, maxerr:50, indent:4, white:false, nomen:false, plusplus:false */
-/*global define:false, require:false, exports:false, module:false, signals:false */
-
-/** @license
- * JS Signals <http://millermedeiros.github.com/js-signals/>
- * Released under the MIT license
- * Author: Miller Medeiros
- * Version: 1.0.0 - Build: 268 (2012/11/29 05:48 PM)
- */
-
-(function (global) {
-
-    // SignalBinding -------------------------------------------------
-    //================================================================
-
-    /**
-     * Object that represents a binding between a Signal and a listener function.
-     * <br />- <strong>This is an internal constructor and shouldn't be called by regular users.</strong>
-     * <br />- inspired by Joa Ebert AS3 SignalBinding and Robert Penner's Slot classes.
-     * @author Miller Medeiros
-     * @constructor
-     * @internal
-     * @name SignalBinding
-     * @param {Signal} signal Reference to Signal object that listener is currently bound to.
-     * @param {Function} listener Handler function bound to the signal.
-     * @param {boolean} isOnce If binding should be executed just once.
-     * @param {Object} [listenerContext] Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-     * @param {Number} [priority] The priority level of the event listener. (default = 0).
-     */
-    function SignalBinding(signal, listener, isOnce, listenerContext, priority) {
-
-        /**
-         * Handler function bound to the signal.
-         * @type Function
-         * @private
-         */
-        this._listener = listener;
-
-        /**
-         * If binding should be executed just once.
-         * @type boolean
-         * @private
-         */
-        this._isOnce = isOnce;
-
-        /**
-         * Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-         * @memberOf SignalBinding.prototype
-         * @name context
-         * @type Object|undefined|null
-         */
-        this.context = listenerContext;
-
-        /**
-         * Reference to Signal object that listener is currently bound to.
-         * @type Signal
-         * @private
-         */
-        this._signal = signal;
-
-        /**
-         * Listener priority
-         * @type Number
-         * @private
-         */
-        this._priority = priority || 0;
-    }
-
-    SignalBinding.prototype = {
-
-        /**
-         * If binding is active and should be executed.
-         * @type boolean
-         */
-        active: true,
-
-        /**
-         * Default parameters passed to listener during `Signal.dispatch` and `SignalBinding.execute`. (curried parameters)
-         * @type Array|null
-         */
-        params: null,
-
-        /**
-         * Call listener passing arbitrary parameters.
-         * <p>If binding was added using `Signal.addOnce()` it will be automatically removed from signal dispatch queue, this method is used internally for the signal dispatch.</p>
-         * @param {Array} [paramsArr] Array of parameters that should be passed to the listener
-         * @return {*} Value returned by the listener.
-         */
-        execute: function (paramsArr) {
-            var handlerReturn, params;
-            if (this.active && !!this._listener) {
-                params = this.params ? this.params.concat(paramsArr) : paramsArr;
-                handlerReturn = this._listener.apply(this.context, params);
-                if (this._isOnce) {
-                    this.detach();
-                }
-            }
-            return handlerReturn;
-        },
-
-        /**
-         * Detach binding from signal.
-         * - alias to: mySignal.remove(myBinding.getListener());
-         * @return {Function|null} Handler function bound to the signal or `null` if binding was previously detached.
-         */
-        detach: function () {
-            return this.isBound() ? this._signal.remove(this._listener, this.context) : null;
-        },
-
-        /**
-         * @return {Boolean} `true` if binding is still bound to the signal and have a listener.
-         */
-        isBound: function () {
-            return (!!this._signal && !!this._listener);
-        },
-
-        /**
-         * @return {boolean} If SignalBinding will only be executed once.
-         */
-        isOnce: function () {
-            return this._isOnce;
-        },
-
-        /**
-         * @return {Function} Handler function bound to the signal.
-         */
-        getListener: function () {
-            return this._listener;
-        },
-
-        /**
-         * @return {Signal} Signal that listener is currently bound to.
-         */
-        getSignal: function () {
-            return this._signal;
-        },
-
-        /**
-         * Delete instance properties
-         * @private
-         */
-        _destroy: function () {
-            delete this._signal;
-            delete this._listener;
-            delete this.context;
-        },
-
-        /**
-         * @return {string} String representation of the object.
-         */
-        toString: function () {
-            return '[SignalBinding isOnce:' + this._isOnce + ', isBound:' + this.isBound() + ', active:' + this.active + ']';
-        }
-
-    };
-
-
-    /*global SignalBinding:false*/
-
-    // Signal --------------------------------------------------------
-    //================================================================
-
-    function validateListener(listener, fnName) {
-        if (typeof listener !== 'function') {
-            throw new Error('listener is a required param of {fn}() and should be a Function.'.replace('{fn}', fnName));
-        }
-    }
-
-    /**
-     * Custom event broadcaster
-     * <br />- inspired by Robert Penner's AS3 Signals.
-     * @name Signal
-     * @author Miller Medeiros
-     * @constructor
-     */
-    function Signal() {
-        /**
-         * @type Array.<SignalBinding>
-         * @private
-         */
-        this._bindings = [];
-        this._prevParams = null;
-
-        // enforce dispatch to aways work on same context (#47)
-        var self = this;
-        this.dispatch = function () {
-            Signal.prototype.dispatch.apply(self, arguments);
-        };
-    }
-
-    Signal.prototype = {
-
-        /**
-         * Signals Version Number
-         * @type String
-         * @const
-         */
-        VERSION: '1.0.0',
-
-        /**
-         * If Signal should keep record of previously dispatched parameters and
-         * automatically execute listener during `add()`/`addOnce()` if Signal was
-         * already dispatched before.
-         * @type boolean
-         */
-        memorize: false,
-
-        /**
-         * @type boolean
-         * @private
-         */
-        _shouldPropagate: true,
-
-        /**
-         * If Signal is active and should broadcast events.
-         * <p><strong>IMPORTANT:</strong> Setting this property during a dispatch will only affect the next dispatch, if you want to stop the propagation of a signal use `halt()` instead.</p>
-         * @type boolean
-         */
-        active: true,
-
-        /**
-         * @param {Function} listener
-         * @param {boolean} isOnce
-         * @param {Object} [listenerContext]
-         * @param {Number} [priority]
-         * @return {SignalBinding}
-         * @private
-         */
-        _registerListener: function (listener, isOnce, listenerContext, priority) {
-
-            var prevIndex = this._indexOfListener(listener, listenerContext),
-                binding;
-
-            if (prevIndex !== -1) {
-                binding = this._bindings[prevIndex];
-                if (binding.isOnce() !== isOnce) {
-                    throw new Error('You cannot add' + (isOnce ? '' : 'Once') + '() then add' + (!isOnce ? '' : 'Once') + '() the same listener without removing the relationship first.');
-                }
-            } else {
-                binding = new SignalBinding(this, listener, isOnce, listenerContext, priority);
-                this._addBinding(binding);
-            }
-
-            if (this.memorize && this._prevParams) {
-                binding.execute(this._prevParams);
-            }
-
-            return binding;
-        },
-
-        /**
-         * @param {SignalBinding} binding
-         * @private
-         */
-        _addBinding: function (binding) {
-            //simplified insertion sort
-            var n = this._bindings.length;
-            do { --n; } while (this._bindings[n] && binding._priority <= this._bindings[n]._priority);
-            this._bindings.splice(n + 1, 0, binding);
-        },
-
-        /**
-         * @param {Function} listener
-         * @return {number}
-         * @private
-         */
-        _indexOfListener: function (listener, context) {
-            var n = this._bindings.length,
-                cur;
-            while (n--) {
-                cur = this._bindings[n];
-                if (cur._listener === listener && cur.context === context) {
-                    return n;
-                }
-            }
-            return -1;
-        },
-
-        /**
-         * Check if listener was attached to Signal.
-         * @param {Function} listener
-         * @param {Object} [context]
-         * @return {boolean} if Signal has the specified listener.
-         */
-        has: function (listener, context) {
-            return this._indexOfListener(listener, context) !== -1;
-        },
-
-        /**
-         * Add a listener to the signal.
-         * @param {Function} listener Signal handler function.
-         * @param {Object} [listenerContext] Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-         * @param {Number} [priority] The priority level of the event listener. Listeners with higher priority will be executed before listeners with lower priority. Listeners with same priority level will be executed at the same order as they were added. (default = 0)
-         * @return {SignalBinding} An Object representing the binding between the Signal and listener.
-         */
-        add: function (listener, listenerContext, priority) {
-            validateListener(listener, 'add');
-            return this._registerListener(listener, false, listenerContext, priority);
-        },
-
-        /**
-         * Add listener to the signal that should be removed after first execution (will be executed only once).
-         * @param {Function} listener Signal handler function.
-         * @param {Object} [listenerContext] Context on which listener will be executed (object that should represent the `this` variable inside listener function).
-         * @param {Number} [priority] The priority level of the event listener. Listeners with higher priority will be executed before listeners with lower priority. Listeners with same priority level will be executed at the same order as they were added. (default = 0)
-         * @return {SignalBinding} An Object representing the binding between the Signal and listener.
-         */
-        addOnce: function (listener, listenerContext, priority) {
-            validateListener(listener, 'addOnce');
-            return this._registerListener(listener, true, listenerContext, priority);
-        },
-
-        /**
-         * Remove a single listener from the dispatch queue.
-         * @param {Function} listener Handler function that should be removed.
-         * @param {Object} [context] Execution context (since you can add the same handler multiple times if executing in a different context).
-         * @return {Function} Listener handler function.
-         */
-        remove: function (listener, context) {
-            validateListener(listener, 'remove');
-
-            var i = this._indexOfListener(listener, context);
-            if (i !== -1) {
-                this._bindings[i]._destroy(); //no reason to a SignalBinding exist if it isn't attached to a signal
-                this._bindings.splice(i, 1);
-            }
-            return listener;
-        },
-
-        /**
-         * Remove all listeners from the Signal.
-         */
-        removeAll: function () {
-            var n = this._bindings.length;
-            while (n--) {
-                this._bindings[n]._destroy();
-            }
-            this._bindings.length = 0;
-        },
-
-        /**
-         * @return {number} Number of listeners attached to the Signal.
-         */
-        getNumListeners: function () {
-            return this._bindings.length;
-        },
-
-        /**
-         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
-         * <p><strong>IMPORTANT:</strong> should be called only during signal dispatch, calling it before/after dispatch won't affect signal broadcast.</p>
-         * @see Signal.prototype.disable
-         */
-        halt: function () {
-            this._shouldPropagate = false;
-        },
-
-        /**
-         * Dispatch/Broadcast Signal to all listeners added to the queue.
-         * @param {...*} [params] Parameters that should be passed to each handler.
-         */
-        dispatch: function (params) {
-            if (!this.active) {
-                return;
-            }
-
-            var paramsArr = Array.prototype.slice.call(arguments),
-                n = this._bindings.length,
-                bindings;
-
-            if (this.memorize) {
-                this._prevParams = paramsArr;
-            }
-
-            if (!n) {
-                //should come after memorize
-                return;
-            }
-
-            bindings = this._bindings.slice(); //clone array in case add/remove items during dispatch
-            this._shouldPropagate = true; //in case `halt` was called before dispatch or during the previous dispatch.
-
-            //execute all callbacks until end of the list or until a callback returns `false` or stops propagation
-            //reverse loop since listeners with higher priority will be added at the end of the list
-            do { n--; } while (bindings[n] && this._shouldPropagate && bindings[n].execute(paramsArr) !== false);
-        },
-
-        /**
-         * Forget memorized arguments.
-         * @see Signal.memorize
-         */
-        forget: function () {
-            this._prevParams = null;
-        },
-
-        /**
-         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
-         * <p><strong>IMPORTANT:</strong> calling any method on the signal instance after calling dispose will throw errors.</p>
-         */
-        dispose: function () {
-            this.removeAll();
-            delete this._bindings;
-            delete this._prevParams;
-        },
-
-        /**
-         * @return {string} String representation of the object.
-         */
-        toString: function () {
-            return '[Signal active:' + this.active + ' numListeners:' + this.getNumListeners() + ']';
-        }
-
-    };
-
-
-    // Namespace -----------------------------------------------------
-    //================================================================
-
-    /**
-     * Signals namespace
-     * @namespace
-     * @name signals
-     */
-    var signals = Signal;
-
-    /**
-     * Custom event broadcaster
-     * @see Signal
-     */
-    // alias for backwards compatibility (see #gh-44)
-    signals.Signal = Signal;
-    global['signals'] = signals
-}(window));
 "use strict";
 var __reflect = (this && this.__reflect) || function (p, c, t) {
     p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
@@ -11275,7 +10842,7 @@ var egret3d;
             _super.prototype.initialize.call(this, name, config, buffers);
             var glTFMesh = this._glTFMesh = config.meshes[0];
             var attributes = this._attributes = glTFMesh.primitives[0].attributes;
-            glTFMesh.extras = { attributeOffsets: {}, program: null, vbo: null, vao: null };
+            glTFMesh.extras = { attributeOffsets: {}, vbo: null };
             if (this._vertexCount === 0) {
                 this._vertexCount = this.getAccessor(attributes.POSITION !== undefined ? attributes.POSITION : 0).count;
                 var attributeOffsets = glTFMesh.extras.attributeOffsets;
@@ -11288,7 +10855,7 @@ var egret3d;
             for (var _i = 0, _a = glTFMesh.primitives; _i < _a.length; _i++) {
                 var primitive = _a[_i];
                 primitive.attributes = attributes;
-                primitive.extras = { ibo: null };
+                primitive.extras = { program: null, vao: null, ibo: null };
             }
         };
         /**
@@ -11353,7 +10920,8 @@ var egret3d;
         Mesh.prototype.needUpdate = function (mask) {
             this._needUpdate |= mask;
         };
-        Mesh.prototype.update = function (mask) {
+        Mesh.prototype.update = function (mask, subMeshIndex) {
+            if (subMeshIndex === void 0) { subMeshIndex = 0; }
             var needUpdate = this._needUpdate & mask;
             if (needUpdate !== 0) {
                 if ((needUpdate & 1 /* BoundingBox */) !== 0) {
@@ -12191,6 +11759,7 @@ var egret3d;
                 this.instancedArrays = _getExtension(webgl, "ANGLE_instanced_arrays");
                 //
                 this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
+                this.maxVertexAttributes = webgl.getParameter(webgl.MAX_VERTEX_ATTRIBS);
                 this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
                 this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
                 this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
@@ -12213,6 +11782,7 @@ var egret3d;
                 console.info("ANGLE_instanced_arrays:", this.instancedArrays);
                 //
                 console.info("Maximum shader precision:", this.maxPrecision);
+                console.info("Maximum vertex attribute count:", this.maxVertexAttributes);
                 console.info("Maximum texture count:", this.maxTextures);
                 console.info("Maximum vertex texture count:", this.maxVertexTextures);
                 console.info("Maximum texture size:", this.maxTextureSize);
@@ -12242,6 +11812,9 @@ var egret3d;
                 var caches = this.caches;
                 var attributes = mesh.attributes;
                 var attributeOffsets = mesh.glTFMesh.extras.attributeOffsets;
+                for (var i = 0; i < this.maxVertexAttributes; ++i) {
+                    webgl.disableVertexAttribArray(i);
+                }
                 var attributeCount = 0;
                 // +++---...|xxx
                 for (var _i = 0, _a = mesh.glTFMesh.extras.program.attributes; _i < _a.length; _i++) {
@@ -12257,18 +11830,18 @@ var egret3d;
                             webgl.vertexAttribDivisor(location_1, divisor);
                         }
                     }
-                    else {
-                        webgl.disableVertexAttribArray(location_1);
-                    }
+                    // else {
+                    //     webgl.disableVertexAttribArray(location);
+                    // }
                     attributeCount++;
                 }
-                // xxx|---
-                if (attributeCount !== caches.attributeCount) {
-                    for (var i = attributeCount, l = caches.attributeCount; i < l; ++i) {
-                        webgl.disableVertexAttribArray(i);
-                    }
-                    caches.attributeCount = attributeCount;
-                }
+                // // xxx|---
+                // if (attributeCount !== caches.attributeCount) {
+                //     for (let i = attributeCount, l = caches.attributeCount; i < l; ++i) {
+                //         webgl.disableVertexAttribArray(i);
+                //     }
+                //     caches.attributeCount = attributeCount;
+                // }
             };
             WebGLRenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
                 if (level === void 0) { level = 0; }
@@ -31866,40 +31439,41 @@ var egret3d;
             function WebGLMesh() {
                 return _super !== null && _super.apply(this, arguments) || this;
             }
-            WebGLMesh.prototype._bindVAO = function () {
+            WebGLMesh.prototype._bindVAO = function (primitive) {
                 var webgl = webgl_10.WebGLRenderState.webgl;
-                var glTFMeshExtras = this._glTFMesh.extras;
-                if (glTFMeshExtras.vao === null && egret3d.renderState.vertexArrayObject !== null) {
+                var primitiveExtras = primitive.extras;
+                if (primitiveExtras.vao === null && egret3d.renderState.vertexArrayObject !== null) {
                     var vao = webgl.createVertexArray();
                     if (vao !== null) {
-                        glTFMeshExtras.vao = vao;
+                        primitiveExtras.vao = vao;
                     }
                     else {
                         console.error("Create webgl vertex array error.");
                     }
                 }
-                if (glTFMeshExtras.vao !== null) {
-                    webgl.bindVertexArray(glTFMeshExtras.vao);
+                if (primitiveExtras.vao !== null) {
+                    webgl.bindVertexArray(primitiveExtras.vao);
                     return true;
                 }
                 return false;
             };
-            WebGLMesh.prototype.update = function (mask) {
+            WebGLMesh.prototype.update = function (mask, subMeshIndex) {
+                if (subMeshIndex === void 0) { subMeshIndex = 0; }
                 var needUpdate = this._needUpdate & mask;
                 if (needUpdate !== 0) {
                     var webgl_11 = webgl_10.WebGLRenderState.webgl;
                     var glTFMesh = this._glTFMesh;
                     var glTFMeshExtras = glTFMesh.extras;
+                    var primitive = glTFMesh.primitives[subMeshIndex];
+                    var primitiveExtras = primitive.extras;
                     var attributes = this._attributes;
                     var bindVAO = false;
                     if ((needUpdate & 8 /* VertexBuffer */) !== 0) {
-                        var createBuffer = false;
-                        bindVAO = this._bindVAO();
+                        bindVAO = this._bindVAO(primitive);
                         if (glTFMeshExtras.vbo === null) {
                             var vbo = webgl_11.createBuffer();
                             if (vbo !== null) {
                                 glTFMeshExtras.vbo = vbo;
-                                createBuffer = true;
                             }
                             else {
                                 console.error("Create webgl array buffer error.");
@@ -31914,71 +31488,60 @@ var egret3d;
                             }
                             webgl_11.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
                             webgl_11.bufferData(34962 /* ArrayBuffer */, byteLength, this._drawMode);
-                            if (createBuffer) {
-                                this.uploadVertexBuffer(attributeNames);
-                            }
+                            this.uploadVertexBuffer(attributeNames);
                         }
                     }
-                    if ((needUpdate & 16 /* IndexBuffer */) !== 0) {
-                        var subMeshIndex = 0;
+                    if ((needUpdate & 16 /* IndexBuffer */) !== 0 && primitive.indices !== undefined) {
                         if (!bindVAO) {
-                            bindVAO = this._bindVAO();
+                            bindVAO = this._bindVAO(primitive);
                         }
-                        for (var _i = 0, _a = glTFMesh.primitives; _i < _a.length; _i++) {
-                            var primitive = _a[_i];
-                            if (primitive.indices !== undefined) {
-                                var createBuffer = false;
-                                if (primitive.extras.ibo === null) {
-                                    var ibo = webgl_11.createBuffer();
-                                    if (ibo !== null) {
-                                        primitive.extras.ibo = ibo;
-                                        createBuffer = true;
-                                    }
-                                    else {
-                                        console.error("Create webgl array element buffer error.");
-                                    }
-                                }
-                                if (primitive.extras.ibo !== null) {
-                                    webgl_11.bindBuffer(34963 /* ElementArrayBuffer */, primitive.extras.ibo);
-                                    webgl_11.bufferData(34963 /* ElementArrayBuffer */, this.getAccessorByteLength(this.getAccessor(primitive.indices)), this._drawMode);
-                                    if (createBuffer) {
-                                        this.uploadSubIndexBuffer(subMeshIndex);
-                                    }
-                                }
+                        if (primitiveExtras.ibo === null) {
+                            var ibo = webgl_11.createBuffer();
+                            if (ibo !== null) {
+                                primitiveExtras.ibo = ibo;
                             }
-                            subMeshIndex++;
+                            else {
+                                console.error("Create webgl array element buffer error.");
+                            }
+                        }
+                        if (primitiveExtras.ibo !== null) {
+                            webgl_11.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
+                            webgl_11.bufferData(34963 /* ElementArrayBuffer */, this.getAccessorByteLength(this.getAccessor(primitive.indices)), this._drawMode);
+                            this.uploadSubIndexBuffer(subMeshIndex);
                         }
                     }
                     if ((needUpdate & 4 /* VertexArray */) !== 0) {
                         if (!bindVAO) {
-                            bindVAO = this._bindVAO();
+                            bindVAO = this._bindVAO(primitive);
                         }
                         if (bindVAO) {
-                            if (glTFMeshExtras.program !== null) {
+                            if (primitiveExtras.program !== null) {
+                                webgl_11.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
+                                webgl_11.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
                                 egret3d.renderState.updateVertexAttributes(this);
                             }
                             webgl_11.bindVertexArray(null);
                         }
                     }
                 }
-                _super.prototype.update.call(this, mask);
+                _super.prototype.update.call(this, mask, subMeshIndex);
             };
             WebGLMesh.prototype.onReferenceCountChange = function (isZero) {
                 if (isZero) {
                     var webgl_12 = webgl_10.WebGLRenderState.webgl;
                     var glTFMesh = this._glTFMesh;
                     var primitives = glTFMesh.primitives, extras = glTFMesh.extras;
-                    extras.program = null;
-                    if (extras.vao !== null) {
-                        webgl_12.deleteVertexArray(extras.vao);
-                        extras.vao = null;
-                    }
                     if (extras.vbo !== null) {
                         webgl_12.deleteBuffer(extras.vbo);
                         extras.vbo = null;
                     }
                     for (var _i = 0, primitives_2 = primitives; _i < primitives_2.length; _i++) {
                         var extras_1 = primitives_2[_i].extras;
+                        extras_1.program = null;
+                        if (extras_1.vao !== null) {
+                            webgl_12.deleteVertexArray(extras_1.vao);
+                            extras_1.vao = null;
+                        }
                         if (extras_1.ibo !== null) {
                             webgl_12.deleteBuffer(extras_1.ibo);
                             extras_1.ibo = null;
@@ -32308,7 +31871,6 @@ var egret3d;
                 var vbo = extras.vbo;
                 var ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
                 if (renderState.vertexArrayObject !== null) {
-                    webgl.bindBuffer(34962 /* ArrayBuffer */, vbo);
                     webgl.bindVertexArray(extras.vao);
                 }
                 else {

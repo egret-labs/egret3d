@@ -149,6 +149,7 @@ namespace egret3d.webgl {
             this.instancedArrays = _getExtension(webgl, "ANGLE_instanced_arrays");
             //
             this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
+            this.maxVertexAttributes = webgl.getParameter(webgl.MAX_VERTEX_ATTRIBS);
             this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
             this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
             this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
@@ -171,6 +172,7 @@ namespace egret3d.webgl {
             console.info("ANGLE_instanced_arrays:", this.instancedArrays);
             //
             console.info("Maximum shader precision:", this.maxPrecision);
+            console.info("Maximum vertex attribute count:", this.maxVertexAttributes);
             console.info("Maximum texture count:", this.maxTextures);
             console.info("Maximum vertex texture count:", this.maxVertexTextures);
             console.info("Maximum texture size:", this.maxTextureSize);
@@ -201,15 +203,19 @@ namespace egret3d.webgl {
             webgl.clear(bufferBit);
         }
 
-        public updateVertexAttributes(mesh: Mesh) {
+        public updateVertexAttributes(mesh: Mesh, subMeshIndex: uint) {
             const webgl = WebGLRenderState.webgl!;
             const { caches } = this;
             const attributes = mesh.attributes;
             const attributeOffsets = mesh.glTFMesh.extras!.attributeOffsets;
 
+            // for (var i = 0; i < this.maxVertexAttributes; ++i) {
+            //     webgl.disableVertexAttribArray(i);
+            // }
+
             let attributeCount = 0;
             // +++---...|xxx
-            for (const attribute of (mesh.glTFMesh.extras!.program as WebGLProgramBinder).attributes) {
+            for (const attribute of (mesh.glTFMesh.primitives[subMeshIndex].extras!.program as WebGLProgramBinder).attributes) {
                 const { location, semantic } = attribute;
 
                 if (semantic in attributes) {

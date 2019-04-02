@@ -1267,6 +1267,14 @@ declare namespace gltf {
             /**
              * 
              */
+            program: any | null; // TODO
+            /**
+             * 
+             */
+            vao: WebGLVertexArrayObject | null;
+            /**
+             * 
+             */
             ibo: WebGLBuffer | null;
         };
 
@@ -1286,9 +1294,13 @@ declare namespace gltf {
         name?: string;
         extensions?: any;
         extras?: {
+            /**
+             * 
+             */
             attributeOffsets: { [key: string]: number }; // TODO
-            program: any | null; // TODO
-            vao: WebGLVertexArrayObject | null;
+            /**
+             * 
+             */
             vbo: WebGLBuffer | null;
         };
 

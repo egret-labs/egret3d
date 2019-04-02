@@ -21,6 +21,7 @@ namespace egret3d {
         public shaderTextureLOD: EXT_shader_texture_lod | null;
         public instancedArrays: ANGLE_instanced_arrays | null;
 
+        public maxVertexAttributes: uint;
         public maxTextures: uint;
         public maxVertexTextures: uint;
         public maxTextureSize: uint;
