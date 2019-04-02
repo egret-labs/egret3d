@@ -209,7 +209,7 @@ namespace egret3d {
                     glTFMaterial = this._glTFMaterial = {
                         extensions: {
                             KHR_techniques_webgl: { technique: shaderOrConfig.name },
-                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : RenderQueue.Geometry }
+                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : RenderQueue.Geometry, enableGPUInstancing: false }
                         }
                     };
                     config.materials = [this._glTFMaterial];

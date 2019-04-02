@@ -4483,7 +4483,7 @@ var egret3d;
                 case 5126 /* Float */:
                     return 4;
                 default:
-                    throw new Error();
+                    throw new Error("Invalid component type.");
             }
         };
         /**
@@ -4505,17 +4505,13 @@ var egret3d;
                 case "MAT4" /* MAT4 */:
                     return 16;
                 default:
-                    throw new Error();
+                    throw new Error("Invalid accessor type.");
             }
         };
         /**
          *
          */
-        GLTFAsset.getMeshAttributeType = function (attributeName, attributeTypes) {
-            if (attributeTypes === void 0) { attributeTypes = null; }
-            if (attributeTypes !== null && attributeName in attributeTypes) {
-                return attributeTypes[attributeName];
-            }
+        GLTFAsset.getMeshAttributeType = function (attributeName) {
             switch (attributeName) {
                 case "POSITION" /* POSITION */:
                 case "NORMAL" /* NORMAL */:
@@ -4530,7 +4526,7 @@ var egret3d;
                 case "WEIGHTS_0" /* WEIGHTS_0 */:
                     return "VEC4" /* VEC4 */;
                 default:
-                    return "";
+                    throw new Error("Invalid attribute type.");
             }
         };
         /**
@@ -4726,7 +4722,7 @@ var egret3d;
          */
         GLTFAsset.prototype.getBuffer = function (accessor) {
             var bufferView = this.getBufferView(accessor);
-            return this.config.buffers[bufferView.buffer].extras.data;
+            return this.config.buffers[bufferView.buffer];
         };
         /**
          * 通过 Accessor 获取指定 BufferView。
@@ -10973,7 +10969,7 @@ var egret3d;
          */
         Texture.createColorTexture = function (name, r, g, b) {
             var texture = Texture.create({
-                name: name, source: new Uint8Array([r, g, b, 255, r, g, b, 255, r, g, b, 255, r, g, b, 255]), width: 2, height: 2,
+                name: name, source: new Uint8Array([r, g, b, 255]), width: 1, height: 1,
                 sampler: {
                     wrapS: 33071 /* ClampToEdge */, wrapT: 33071 /* ClampToEdge */,
                     magFilter: 9729 /* Linear */, minFilter: 9729 /* Linear */
@@ -11185,26 +11181,30 @@ var egret3d;
             _this._id = _hashCode++;
             return _this;
         }
-        Mesh.create = function (vertexCountOrName, indexCountOrConfig, attributeNamesOrBuffers, attributeTypes) {
+        Mesh.create = function (vertexCountOrName, indexCountOrConfig, attributeNamesOrBuffers) {
             if (indexCountOrConfig === void 0) { indexCountOrConfig = 0; }
             if (attributeNamesOrBuffers === void 0) { attributeNamesOrBuffers = null; }
-            if (attributeTypes === void 0) { attributeTypes = null; }
             // Retargeting.
             var mesh = new egret3d.Mesh();
             if (typeof vertexCountOrName === "number") {
                 var indexCount = indexCountOrConfig;
-                var attributeNames = attributeNamesOrBuffers !== null ? attributeNamesOrBuffers : _attributeNames;
+                var attributes = attributeNamesOrBuffers !== null ? attributeNamesOrBuffers : _attributeNames;
                 mesh._vertexCount = vertexCountOrName; // TODO 完善标记为非加载资源。
                 mesh.initialize("", this._createConfig(), null);
                 // Add attributes.
-                for (var _i = 0, attributeNames_1 = attributeNames; _i < attributeNames_1.length; _i++) {
-                    var attributeName = attributeNames_1[_i];
-                    var attributeType = egret3d.GLTFAsset.getMeshAttributeType(attributeName, attributeTypes);
-                    if (attributeType.length > 0) {
-                        mesh.addAttribute(attributeName, attributeType);
+                if (Array.isArray(attributes)) {
+                    for (var _i = 0, attributes_1 = attributes; _i < attributes_1.length; _i++) {
+                        var attributeName = attributes_1[_i];
+                        mesh.addAttribute(attributeName, egret3d.GLTFAsset.getMeshAttributeType(attributeName));
                     }
-                    else if (true) {
-                        console.warn("Invalid attribute type.", attributeName);
+                }
+                else {
+                    for (var attributeName in attributes) {
+                        var attributeType = attributes[attributeName];
+                        if (attributeType.length === 0) {
+                            attributeType = egret3d.GLTFAsset.getMeshAttributeType(attributeName);
+                        }
+                        mesh.addAttribute(attributeName, attributeType);
                     }
                 }
                 // Add indices.
@@ -11236,13 +11236,25 @@ var egret3d;
             if (bufferIndex !== 0) {
                 var accessor = accessors[accessorIndex];
                 // Update GLTFIndex.
+                for (var _i = 0, _b = bufferViews; _i < _b.length; _i++) {
+                    var bufferView = _b[_i];
+                    if (bufferView.buffer > bufferIndex) {
+                        bufferView.buffer--;
+                    }
+                }
+                for (var _c = 0, _d = accessors; _c < _d.length; _c++) {
+                    var accessor_1 = _d[_c];
+                    if (accessor_1.bufferView > bufferViewIndex) {
+                        accessor_1.bufferView--;
+                    }
+                }
                 for (var k in attributes) {
                     if (attributes[k] > accessorIndex) {
                         attributes[k]--;
                     }
                 }
-                for (var _i = 0, primitives_1 = primitives; _i < primitives_1.length; _i++) {
-                    var primitive = primitives_1[_i];
+                for (var _e = 0, primitives_1 = primitives; _e < primitives_1.length; _e++) {
+                    var primitive = primitives_1[_e];
                     if (primitive.indices !== undefined && primitive.indices > accessorIndex) {
                         primitive.indices--;
                     }
@@ -11304,12 +11316,18 @@ var egret3d;
          * 克隆该网格。
          */
         Mesh.prototype.clone = function () {
-            var attributeNames = [];
+            var attributeTypes = this._attributeTypes;
+            var attributesNameAndTypes = {};
             for (var k in this._attributes) {
-                attributeNames.push(k);
+                if (k in attributeTypes) {
+                    attributesNameAndTypes[k] = attributeTypes[k];
+                }
+                else {
+                    attributesNameAndTypes[k] = "";
+                }
             }
             // Clone mesh.
-            var value = Mesh.create(this._vertexCount, 0, attributeNames, this._attributeTypes);
+            var value = Mesh.create(this._vertexCount, 0, attributesNameAndTypes);
             value._drawMode = this._drawMode;
             value._wireframeIndex = this._wireframeIndex;
             // Copy subMeshes.
@@ -11583,7 +11601,8 @@ var egret3d;
                 var bufferIndex = buffers.length;
                 var bufferViewIndex = bufferViews.length;
                 var accessorIndex = accessors.length;
-                buffers[bufferIndex] = { byteLength: byteLength, extras: { data: new Float32Array(viewLength) } };
+                var buffer = new Float32Array(viewLength);
+                buffers[bufferIndex] = { byteLength: byteLength, extras: { data: buffer } };
                 bufferViews[bufferViewIndex] = { buffer: bufferIndex, byteLength: byteLength, target: 34962 /* ArrayBuffer */ };
                 accessors[accessorIndex] = {
                     bufferView: bufferViewIndex,
@@ -11604,9 +11623,9 @@ var egret3d;
                     this._attributeTypes[attributeName] = attributeType;
                 }
                 this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */);
-                return true;
+                return buffer;
             }
-            return false;
+            return null;
         };
         /**
          *
@@ -11630,10 +11649,10 @@ var egret3d;
                     }
                     delete attributes[attributeName];
                     this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */);
-                    return true;
+                    return this.getBuffer(removeAccessor).extras.data;
                 }
             }
-            return false;
+            return null;
         };
         /**
          * 为该网格添加一个子网格。
@@ -11777,7 +11796,11 @@ var egret3d;
             if (offset === void 0) { offset = 0; }
             if (count === void 0) { count = 0; }
             if (attributeName in this._attributes) {
-                return this.createTypeArrayFromAccessor(this.getAccessor(this._attributes[attributeName]), offset, count);
+                var accessor = this.getAccessor(this._attributes[attributeName]);
+                // if (offset === 0 && count === 0) {
+                //     return this.getBuffer(accessor).extras!.data as Float32Array;
+                // }
+                return this.createTypeArrayFromAccessor(accessor, offset, count);
             }
             return null;
         };
@@ -11799,7 +11822,7 @@ var egret3d;
                 if (attributeName === "POSITION" /* POSITION */) {
                     this.needUpdate(1 /* BoundingBox */);
                 }
-                target.set(value, offset);
+                target.set(value);
             }
             return target;
         };
@@ -11808,13 +11831,19 @@ var egret3d;
          * @param subMeshIndex 子网格索引。
          * - 默认为 `0` ，第一个子网格。
          */
-        Mesh.prototype.getIndices = function (subMeshIndex) {
+        Mesh.prototype.getIndices = function (subMeshIndex, offset, count) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
+            if (offset === void 0) { offset = 0; }
+            if (count === void 0) { count = 0; }
             var primitives = this._glTFMesh.primitives;
             if (0 <= subMeshIndex && subMeshIndex < primitives.length) {
                 var accessorIndex = primitives[subMeshIndex].indices;
                 if (accessorIndex !== undefined) {
-                    return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex));
+                    var accessor = this.getAccessor(accessorIndex);
+                    // if (offset === 0 && count === 0) {
+                    //     return this.getBuffer(accessor).extras!.data as Float32Array;
+                    // }
+                    return this.createTypeArrayFromAccessor(accessor, offset, count);
                 }
                 return null;
             }
@@ -11829,12 +11858,13 @@ var egret3d;
          * @param offset 索引偏移。
          * - 默认为 `0`，从第一个索引开始。
          */
-        Mesh.prototype.setIndices = function (value, subMeshIndex, offset) {
+        Mesh.prototype.setIndices = function (value, subMeshIndex, offset, count) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
             if (offset === void 0) { offset = 0; }
-            var target = this.getIndices(subMeshIndex);
+            if (count === void 0) { count = 0; }
+            var target = this.getIndices(subMeshIndex, offset, count);
             if (target !== null) {
-                target.set(value, offset);
+                target.set(value);
             }
             return target;
         };
@@ -12149,9 +12179,10 @@ var egret3d;
                 this.version = webglVersions ? parseFloat(webglVersions[1]).toString() : "1";
                 // use dfdx and dfdy must enable OES_standard_derivatives
                 this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
-                this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
                 this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
                 this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
+                this.vertexArrayObject = null;
+                // _getExtension(webgl, "OES_vertex_array_object");
                 this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
                 this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
                 this.instancedArrays = _getExtension(webgl, "ANGLE_instanced_arrays");
@@ -13928,6 +13959,7 @@ var egret3d;
         ShaderDefine["USE_SHADOWMAP"] = "USE_SHADOWMAP";
         ShaderDefine["USE_SKINNING"] = "USE_SKINNING";
         ShaderDefine["USE_SIZEATTENUATION"] = "USE_SIZEATTENUATION";
+        ShaderDefine["USE_INSTANCED"] = "USE_INSTANCED";
         ShaderDefine["TOON"] = "TOON";
         ShaderDefine["STANDARD"] = "STANDARD";
         //
@@ -18562,12 +18594,11 @@ var egret3d;
             //collect
             for (var i = drawCalls.length - 1; i >= 0; i--) {
                 var drawCall = drawCalls[i];
-                var renderer = drawCall.renderer;
-                if (!renderer) {
+                var material = drawCall.material;
+                if (!material.enableGPUInstancing) {
                     continue;
                 }
                 //TODO 考虑lightmap
-                var material = drawCall.material;
                 var mesh = drawCall.mesh;
                 var key = material.uuid + "_" + mesh.uuid + "_" + drawCall.subMeshIndex;
                 if (!combineInstanced[key]) {
@@ -18585,10 +18616,8 @@ var egret3d;
                 var orginMesh = drawCall.mesh;
                 orginMesh.removeAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */);
                 orginMesh.removeAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */);
-                orginMesh.addAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */, "MAT4" /* MAT4 */, count);
-                orginMesh.addAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */, "MAT4" /* MAT4 */, count);
-                var models = orginMesh.getAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */);
-                var modelViews = orginMesh.getAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */);
+                var models = orginMesh.addAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */, "MAT4" /* MAT4 */, count);
+                var modelViews = orginMesh.addAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */, "MAT4" /* MAT4 */, count);
                 for (var i = 0; i < count; i++) {
                     var call = calls[i];
                     models.set(call.matrix.rawData, i * 16);
@@ -18602,6 +18631,7 @@ var egret3d;
                 newDrawCall.subMeshIndex = drawCall.subMeshIndex;
                 newDrawCall.matrix = drawCall.matrix;
                 newDrawCall.modelViewMatrix = drawCall.modelViewMatrix;
+                newDrawCall.instanced = true;
                 drawCalls.push(newDrawCall);
             }
         };
@@ -19451,6 +19481,7 @@ var egret3d;
              *
              */
             _this.zdist = -1.0;
+            _this.instanced = false;
             return _this;
         }
         /**
@@ -20692,7 +20723,7 @@ var egret3d;
                     this.boneMatrices = new Float32Array((bones.length + 1) * 16);
                     this.boneTexture = egret3d.Texture.create({
                         source: this.boneMatrices,
-                        width: (bones.length + 1) * 4, height: 2,
+                        width: (bones.length + 1) * 4, height: 1,
                         type: 5126 /* Float */
                     }).retain();
                 }
@@ -23646,7 +23677,6 @@ var egret3d;
         * @internal
         */
         function createBatchMesh(renderer, maxParticleCount) {
-            var meshAttributes = [];
             var meshAttributesType = {};
             if (renderer.renderMode === 4 /* Mesh */) {
                 var mesh = renderer.mesh;
@@ -23654,12 +23684,11 @@ var egret3d;
                 var orginIndexBufferCount = orginIndexBuffer.length;
                 for (var _i = 0, MeshShaderAttributeFormat_1 = MeshShaderAttributeFormat; _i < MeshShaderAttributeFormat_1.length; _i++) {
                     var attribute = MeshShaderAttributeFormat_1[_i];
-                    meshAttributes.push(attribute.key);
                     meshAttributesType[attribute.key] = attribute.type;
                 }
                 var totalVertexCount = mesh.vertexCount * maxParticleCount;
                 var totalIndexCount = orginIndexBufferCount * maxParticleCount;
-                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributesType);
                 batchMesh.drawMode = 35048 /* Dynamic */;
                 //
                 var index = 0;
@@ -23709,13 +23738,12 @@ var egret3d;
                 var orginIndexBufferCount = orginIndexBuffer.length;
                 for (var _a = 0, BillboardShaderAttributeFormat_1 = BillboardShaderAttributeFormat; _a < BillboardShaderAttributeFormat_1.length; _a++) {
                     var attribute = BillboardShaderAttributeFormat_1[_a];
-                    meshAttributes.push(attribute.key);
                     meshAttributesType[attribute.key] = attribute.type;
                 }
                 var vertexStride = 4;
                 var totalVertexCount = vertexStride * maxParticleCount;
                 var totalIndexCount = orginIndexBufferCount * maxParticleCount;
-                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributesType);
                 batchMesh.drawMode = 35048 /* Dynamic */;
                 var cornerBuffer = batchMesh.getAttribute("_CORNER" /* _CORNER */);
                 var uvBuffer = batchMesh.getAttribute("TEXCOORD_0" /* TEXCOORD_0 */);
@@ -28078,7 +28106,7 @@ var egret3d;
                     glTFMaterial = this._glTFMaterial = {
                         extensions: {
                             KHR_techniques_webgl: { technique: shaderOrConfig.name },
-                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : 2000 /* Geometry */ }
+                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : 2000 /* Geometry */, enableGPUInstancing: false }
                         }
                     };
                     config.materials = [this._glTFMaterial];
@@ -28711,6 +28739,22 @@ var egret3d;
             },
             set: function (value) {
                 this.setFloat("opacity" /* Opacity */, value);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Material.prototype, "enableGPUInstancing", {
+            get: function () {
+                return this._glTFMaterial.extensions.paper.enableGPUInstancing;
+            },
+            set: function (value) {
+                if (egret3d.renderState.instancedArrays === null) {
+                    return;
+                }
+                if (this._glTFMaterial.extensions.paper.enableGPUInstancing !== value) {
+                    this._glTFMaterial.extensions.paper.enableGPUInstancing = value;
+                    value ? this.addDefine("USE_INSTANCED" /* USE_INSTANCED */) : this.removeDefine("USE_INSTANCED" /* USE_INSTANCED */);
+                }
             },
             enumerable: true,
             configurable: true
@@ -30511,7 +30555,7 @@ var egret3d;
         ShaderChunk.color_vertex = "#ifdef USE_COLOR\n\tvColor.xyz = color.xyz;\n#endif";
         ShaderChunk.common = "#define PI 3.14159265359\n#define PI2 6.28318530718\n#define PI_HALF 1.5707963267949\n#define RECIPROCAL_PI 0.31830988618\n#define RECIPROCAL_PI2 0.15915494\n#define LOG2 1.442695\n#define EPSILON 1e-6\n#define saturate(a) clamp( a, 0.0, 1.0 )\n#define whiteCompliment(a) ( 1.0 - saturate( a ) )\nfloat pow2( const in float x ) { return x*x; }\nfloat pow3( const in float x ) { return x*x*x; }\nfloat pow4( const in float x ) { float x2 = x*x; return x2*x2; }\nfloat average( const in vec3 color ) { return dot( color, vec3( 0.3333 ) ); }\nhighp float rand( const in vec2 uv ) {\n\tconst highp float a = 12.9898, b = 78.233, c = 43758.5453;\n\thighp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );\n\treturn fract(sin(sn) * c);\n}\nstruct IncidentLight {\n\tvec3 color;\n\tvec3 direction;\n\tbool visible;\n};\nstruct ReflectedLight {\n\tvec3 directDiffuse;\n\tvec3 directSpecular;\n\tvec3 indirectDiffuse;\n\tvec3 indirectSpecular;\n};\nstruct GeometricContext {\n\tvec3 position;\n\tvec3 normal;\n\tvec3 viewDir;\n};\nvec3 transformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( matrix * vec4( dir, 0.0 ) ).xyz );\n}\nvec3 inverseTransformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );\n}\nvec3 projectOnPlane(in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal ) {\n\tfloat distance = dot( planeNormal, point - pointOnPlane );\n\treturn - distance * planeNormal + point;\n}\nfloat sideOfPlane( in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal ) {\n\treturn sign( dot( point - pointOnPlane, planeNormal ) );\n}\nvec3 linePlaneIntersect( in vec3 pointOnLine, in vec3 lineDirection, in vec3 pointOnPlane, in vec3 planeNormal ) {\n\treturn lineDirection * ( dot( planeNormal, pointOnPlane - pointOnLine ) / dot( planeNormal, lineDirection ) ) + pointOnLine;\n}\nmat3 transposeMat3( const in mat3 m ) {\n\tmat3 tmp;\n\ttmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );\n\ttmp[ 1 ] = vec3( m[ 0 ].y, m[ 1 ].y, m[ 2 ].y );\n\ttmp[ 2 ] = vec3( m[ 0 ].z, m[ 1 ].z, m[ 2 ].z );\n\treturn tmp;\n}\nfloat linearToRelativeLuminance( const in vec3 color ) {\n\tvec3 weights = vec3( 0.2126, 0.7152, 0.0722 );\n\treturn dot( weights, color.rgb );\n}\n";
         ShaderChunk.common_frag_def = "uniform mat4 viewMatrix;\nuniform vec3 cameraPosition;";
-        ShaderChunk.common_vert_def = "uniform mat4 modelMatrix;\nuniform mat4 modelViewMatrix;\nuniform mat4 projectionMatrix;\nuniform mat4 viewMatrix;\nuniform mat3 normalMatrix;\nuniform vec3 cameraPosition;\nattribute vec3 position;\nattribute vec3 normal;\nattribute vec2 uv;\n#ifdef USE_COLOR\n\tattribute vec3 color;\n#endif\n#ifdef USE_MORPHTARGETS\n\tattribute vec3 morphTarget0;\n\tattribute vec3 morphTarget1;\n\tattribute vec3 morphTarget2;\n\tattribute vec3 morphTarget3;\n\t#ifdef USE_MORPHNORMALS\n\t\tattribute vec3 morphNormal0;\n\t\tattribute vec3 morphNormal1;\n\t\tattribute vec3 morphNormal2;\n\t\tattribute vec3 morphNormal3;\n\t#else\n\t\tattribute vec3 morphTarget4;\n\t\tattribute vec3 morphTarget5;\n\t\tattribute vec3 morphTarget6;\n\t\tattribute vec3 morphTarget7;\n\t#endif\n#endif\n#ifdef USE_SKINNING\n\tattribute vec4 skinIndex;\n\tattribute vec4 skinWeight;\n#endif";
+        ShaderChunk.common_vert_def = "\n#ifdef USE_INSTANCED\n\tattribute mat4 modelMatrix;\n\tattribute mat4 modelViewMatrix;\n#else\n\tuniform mat4 modelMatrix;\n\tuniform mat4 modelViewMatrix;\n#endif\nuniform mat4 projectionMatrix;\nuniform mat4 viewMatrix;\nuniform mat3 normalMatrix;\nuniform vec3 cameraPosition;\nattribute vec3 position;\nattribute vec3 normal;\nattribute vec2 uv;\n#ifdef USE_COLOR\n\tattribute vec3 color;\n#endif\n#ifdef USE_MORPHTARGETS\n\tattribute vec3 morphTarget0;\n\tattribute vec3 morphTarget1;\n\tattribute vec3 morphTarget2;\n\tattribute vec3 morphTarget3;\n\t#ifdef USE_MORPHNORMALS\n\t\tattribute vec3 morphNormal0;\n\t\tattribute vec3 morphNormal1;\n\t\tattribute vec3 morphNormal2;\n\t\tattribute vec3 morphNormal3;\n\t#else\n\t\tattribute vec3 morphTarget4;\n\t\tattribute vec3 morphTarget5;\n\t\tattribute vec3 morphTarget6;\n\t\tattribute vec3 morphTarget7;\n\t#endif\n#endif\n#ifdef USE_SKINNING\n\tattribute vec4 skinIndex;\n\tattribute vec4 skinWeight;\n#endif";
         ShaderChunk.cube_uv_reflection_fragment = "#ifdef ENVMAP_TYPE_CUBE_UV\n#define cubeUV_textureSize (1024.0)\nint getFaceFromDirection(vec3 direction) {\n\tvec3 absDirection = abs(direction);\n\tint face = -1;\n\tif( absDirection.x > absDirection.z ) {\n\t\tif(absDirection.x > absDirection.y )\n\t\t\tface = direction.x > 0.0 ? 0 : 3;\n\t\telse\n\t\t\tface = direction.y > 0.0 ? 1 : 4;\n\t}\n\telse {\n\t\tif(absDirection.z > absDirection.y )\n\t\t\tface = direction.z > 0.0 ? 2 : 5;\n\t\telse\n\t\t\tface = direction.y > 0.0 ? 1 : 4;\n\t}\n\treturn face;\n}\n#define cubeUV_maxLods1  (log2(cubeUV_textureSize*0.25) - 1.0)\n#define cubeUV_rangeClamp (exp2((6.0 - 1.0) * 2.0))\nvec2 MipLevelInfo( vec3 vec, float roughnessLevel, float roughness ) {\n\tfloat scale = exp2(cubeUV_maxLods1 - roughnessLevel);\n\tfloat dxRoughness = dFdx(roughness);\n\tfloat dyRoughness = dFdy(roughness);\n\tvec3 dx = dFdx( vec * scale * dxRoughness );\n\tvec3 dy = dFdy( vec * scale * dyRoughness );\n\tfloat d = max( dot( dx, dx ), dot( dy, dy ) );\n\td = clamp(d, 1.0, cubeUV_rangeClamp);\n\tfloat mipLevel = 0.5 * log2(d);\n\treturn vec2(floor(mipLevel), fract(mipLevel));\n}\n#define cubeUV_maxLods2 (log2(cubeUV_textureSize*0.25) - 2.0)\n#define cubeUV_rcpTextureSize (1.0 / cubeUV_textureSize)\nvec2 getCubeUV(vec3 direction, float roughnessLevel, float mipLevel) {\n\tmipLevel = roughnessLevel > cubeUV_maxLods2 - 3.0 ? 0.0 : mipLevel;\n\tfloat a = 16.0 * cubeUV_rcpTextureSize;\n\tvec2 exp2_packed = exp2( vec2( roughnessLevel, mipLevel ) );\n\tvec2 rcp_exp2_packed = vec2( 1.0 ) / exp2_packed;\n\tfloat powScale = exp2_packed.x * exp2_packed.y;\n\tfloat scale = rcp_exp2_packed.x * rcp_exp2_packed.y * 0.25;\n\tfloat mipOffset = 0.75*(1.0 - rcp_exp2_packed.y) * rcp_exp2_packed.x;\n\tbool bRes = mipLevel == 0.0;\n\tscale =  bRes && (scale < a) ? a : scale;\n\tvec3 r;\n\tvec2 offset;\n\tint face = getFaceFromDirection(direction);\n\tfloat rcpPowScale = 1.0 / powScale;\n\tif( face == 0) {\n\t\tr = vec3(direction.x, -direction.z, direction.y);\n\t\toffset = vec2(0.0+mipOffset,0.75 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? a : offset.y;\n\t}\n\telse if( face == 1) {\n\t\tr = vec3(direction.y, direction.x, direction.z);\n\t\toffset = vec2(scale+mipOffset, 0.75 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? a : offset.y;\n\t}\n\telse if( face == 2) {\n\t\tr = vec3(direction.z, direction.x, direction.y);\n\t\toffset = vec2(2.0*scale+mipOffset, 0.75 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? a : offset.y;\n\t}\n\telse if( face == 3) {\n\t\tr = vec3(direction.x, direction.z, direction.y);\n\t\toffset = vec2(0.0+mipOffset,0.5 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? 0.0 : offset.y;\n\t}\n\telse if( face == 4) {\n\t\tr = vec3(direction.y, direction.x, -direction.z);\n\t\toffset = vec2(scale+mipOffset, 0.5 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? 0.0 : offset.y;\n\t}\n\telse {\n\t\tr = vec3(direction.z, -direction.x, direction.y);\n\t\toffset = vec2(2.0*scale+mipOffset, 0.5 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? 0.0 : offset.y;\n\t}\n\tr = normalize(r);\n\tfloat texelOffset = 0.5 * cubeUV_rcpTextureSize;\n\tvec2 s = ( r.yz / abs( r.x ) + vec2( 1.0 ) ) * 0.5;\n\tvec2 base = offset + vec2( texelOffset );\n\treturn base + s * ( scale - 2.0 * texelOffset );\n}\n#define cubeUV_maxLods3 (log2(cubeUV_textureSize*0.25) - 3.0)\nvec4 textureCubeUV( sampler2D envMap, vec3 reflectedDirection, float roughness ) {\n\tfloat roughnessVal = roughness* cubeUV_maxLods3;\n\tfloat r1 = floor(roughnessVal);\n\tfloat r2 = r1 + 1.0;\n\tfloat t = fract(roughnessVal);\n\tvec2 mipInfo = MipLevelInfo(reflectedDirection, r1, roughness);\n\tfloat s = mipInfo.y;\n\tfloat level0 = mipInfo.x;\n\tfloat level1 = level0 + 1.0;\n\tlevel1 = level1 > 5.0 ? 5.0 : level1;\n\tlevel0 += min( floor( s + 0.5 ), 5.0 );\n\tvec2 uv_10 = getCubeUV(reflectedDirection, r1, level0);\n\tvec4 color10 = envMapTexelToLinear(texture2D(envMap, uv_10));\n\tvec2 uv_20 = getCubeUV(reflectedDirection, r2, level0);\n\tvec4 color20 = envMapTexelToLinear(texture2D(envMap, uv_20));\n\tvec4 result = mix(color10, color20, t);\n\treturn vec4(result.rgb, 1.0);\n}\n#endif\n";
         ShaderChunk.defaultnormal_vertex = "vec3 transformedNormal = normalMatrix * objectNormal;\n#ifdef FLIP_SIDED\n\ttransformedNormal = - transformedNormal;\n#endif\n";
         ShaderChunk.displacementmap_pars_vertex = "#ifdef USE_DISPLACEMENTMAP\n\tuniform sampler2D displacementMap;\n\tuniform float displacementScale;\n\tuniform float displacementBias;\n#endif\n";
@@ -31585,7 +31629,7 @@ var egret3d;
                             textureType = 34067 /* TextureCube */;
                             uploadType = 34069 /* TextureCubeStart */;
                         }
-                        else if (extension.height > 1) {
+                        else if (extension.height > 0) {
                             textureType = 3553 /* Texture2D */;
                             uploadType = textureType;
                         }
@@ -31715,7 +31759,7 @@ var egret3d;
                             textureType = 34067 /* TextureCube */;
                             uploadType = 34069 /* TextureCubeStart */;
                         }
-                        else if (extension.height > 1) {
+                        else if (extension.height > 0) {
                             textureType = 3553 /* Texture2D */;
                             uploadType = textureType;
                         }

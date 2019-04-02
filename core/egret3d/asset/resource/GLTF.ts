@@ -762,6 +762,10 @@ declare namespace gltf {
      */
     export type ImageSource = ImageBitmap | ImageData | HTMLImageElement | HTMLCanvasElement | HTMLVideoElement;
     /**
+     * 
+     */
+    export type AttributeAccessorTypes = { [key: string]: gltf.AccessorType | string };
+    /**
      * Indices of those attributes that deviate from their initialization value.
      */
     export interface AccessorSparseIndices {

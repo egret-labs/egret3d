@@ -59,7 +59,7 @@ namespace egret3d.webgl {
                         textureType = gltf.TextureType.TextureCube;
                         uploadType = gltf.TextureType.TextureCubeStart;
                     }
-                    else if (extension.height! > 1) {
+                    else if (extension.height! > 0) {
                         textureType = gltf.TextureType.Texture2D;
                         uploadType = textureType;
                     }

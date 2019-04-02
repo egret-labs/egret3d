@@ -38,7 +38,7 @@ namespace egret3d {
          */
         public static create(
             vertexCount: uint, indexCount: uint,
-            attributeNames?: ReadonlyArray<gltf.AttributeSemantics | string> | null, attributeTypes?: Readonly<{ [key: string]: gltf.AccessorType | string }> | null
+            attributeNames?: ReadonlyArray<gltf.AttributeSemantics | string> | Readonly<gltf.AttributeAccessorTypes> | null
         ): Mesh;
         /**
          * 加载一个网格。
@@ -47,26 +47,31 @@ namespace egret3d {
         public static create(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView>): Mesh;
         public static create(
             vertexCountOrName: uint | string, indexCountOrConfig: uint | GLTF = 0,
-            attributeNamesOrBuffers: ReadonlyArray<gltf.AttributeSemantics | string> | null | ReadonlyArray<ArrayBufferView> = null,
-            attributeTypes: Readonly<{ [key: string]: gltf.AccessorType | string }> | null = null
+            attributeNamesOrBuffers: ReadonlyArray<gltf.AttributeSemantics | string> | Readonly<gltf.AttributeAccessorTypes> | null | ReadonlyArray<ArrayBufferView> = null
         ) {
             // Retargeting.
             const mesh = new egret3d.Mesh();
 
             if (typeof vertexCountOrName === "number") { // 运行时创建的网格资源。
                 const indexCount = indexCountOrConfig as uint;
-                const attributeNames = attributeNamesOrBuffers !== null ? attributeNamesOrBuffers as ReadonlyArray<gltf.AttributeSemantics | string> : _attributeNames;
+                const attributes = attributeNamesOrBuffers !== null ? attributeNamesOrBuffers as ReadonlyArray<gltf.AttributeSemantics | string> | Readonly<gltf.AttributeAccessorTypes> : _attributeNames;
                 mesh._vertexCount = vertexCountOrName; // TODO 完善标记为非加载资源。
                 mesh.initialize("", this._createConfig(), null);
                 // Add attributes.
-                for (const attributeName of attributeNames) {
-                    const attributeType = GLTFAsset.getMeshAttributeType(attributeName, attributeTypes);
-
-                    if (attributeType.length > 0) {
-                        mesh.addAttribute(attributeName, attributeType);
+                if (Array.isArray(attributes)) {
+                    for (const attributeName of attributes) {
+                        mesh.addAttribute(attributeName, GLTFAsset.getMeshAttributeType(attributeName));
                     }
-                    else if (DEBUG) {
-                        console.warn("Invalid attribute type.", attributeName);
+                }
+                else {
+                    for (const attributeName in attributes) {
+                        let attributeType = (attributes as Readonly<gltf.AttributeAccessorTypes>)[attributeName];
+
+                        if (attributeType.length === 0) {
+                            attributeType = GLTFAsset.getMeshAttributeType(attributeName);
+                        }
+
+                        mesh.addAttribute(attributeName, attributeType);
                     }
                 }
                 // Add indices.
@@ -120,7 +125,7 @@ namespace egret3d {
          * 缓存的自定义属性的类型。
          * - 为 clone 提供数据源。
          */
-        protected readonly _attributeTypes: { [key: string]: gltf.AccessorType | string } = {};
+        protected readonly _attributeTypes: gltf.AttributeAccessorTypes = {};
         /**
          * 缓存的 glTF 网格。
          * - 用于快速访问。
@@ -154,8 +159,19 @@ namespace egret3d {
 
             if (bufferIndex !== 0) { // buffer 为 0， 意味着这是一个导入资源，导入资源的子网格不可被删除。
                 const accessor = accessors![accessorIndex];
-
                 // Update GLTFIndex.
+                for (const bufferView of bufferViews!) {
+                    if (bufferView.buffer > bufferIndex) {
+                        bufferView.buffer--;
+                    }
+                }
+
+                for (const accessor of accessors!) {
+                    if (accessor.bufferView! > bufferViewIndex) {
+                        accessor.bufferView!--;
+                    }
+                }
+
                 for (const k in attributes!) {
                     if (attributes[k] > accessorIndex) {
                         attributes[k]--;
@@ -167,6 +183,7 @@ namespace egret3d {
                         primitive.indices--;
                     }
                 }
+
                 // Remove link.
                 buffers!.splice(bufferIndex, 1);
                 bufferViews!.splice(bufferViewIndex, 1);
@@ -233,13 +250,19 @@ namespace egret3d {
          * 克隆该网格。
          */
         public clone(): Mesh {
-            const attributeNames = [] as (gltf.AttributeSemantics | string)[];
+            const attributeTypes = this._attributeTypes;
+            const attributesNameAndTypes = {} as gltf.AttributeAccessorTypes;
 
             for (const k in this._attributes!) {
-                attributeNames.push(k);
+                if (k in attributeTypes) {
+                    attributesNameAndTypes[k] = attributeTypes[k];
+                }
+                else {
+                    attributesNameAndTypes[k] = "";
+                }
             }
             // Clone mesh.
-            const value = Mesh.create(this._vertexCount, 0, attributeNames, this._attributeTypes);
+            const value = Mesh.create(this._vertexCount, 0, attributesNameAndTypes);
             value._drawMode = this._drawMode;
             value._wireframeIndex = this._wireframeIndex;
             // Copy subMeshes.
@@ -548,7 +571,7 @@ namespace egret3d {
          * @param attributeName 
          * @param attributeType 
          */
-        public addAttribute(attributeName: gltf.AttributeSemantics | string, attributeType: gltf.AccessorType | string, vertexCount: uint = 0): boolean {
+        public addAttribute(attributeName: gltf.AttributeSemantics | string, attributeType: gltf.AccessorType | string, vertexCount: uint = 0): Float32Array | null {
             if (vertexCount <= 0) {
                 vertexCount = this._vertexCount;
             }
@@ -563,7 +586,9 @@ namespace egret3d {
                 const bufferIndex = buffers!.length;
                 const bufferViewIndex = bufferViews!.length;
                 const accessorIndex = accessors!.length;
-                buffers![bufferIndex] = { byteLength: byteLength, extras: { data: new Float32Array(viewLength) } };
+                const buffer = new Float32Array(viewLength);
+
+                buffers![bufferIndex] = { byteLength: byteLength, extras: { data: buffer } };
                 bufferViews![bufferViewIndex] = { buffer: bufferIndex, byteLength: byteLength, target: gltf.BufferViewTarget.ArrayBuffer };
                 accessors![accessorIndex] = {
                     bufferView: bufferViewIndex,
@@ -588,16 +613,16 @@ namespace egret3d {
 
                 this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer);
 
-                return true;
+                return buffer;
             }
 
-            return false;
+            return null;
         }
         /**
          * 
          * @param attributeName 
          */
-        public removeAttribute(attributeName: gltf.AttributeSemantics | string): boolean {
+        public removeAttribute(attributeName: gltf.AttributeSemantics | string): Float32Array | null {
             const attributes = this._attributes!;
 
             if (attributeName in attributes) {
@@ -620,11 +645,11 @@ namespace egret3d {
                     delete attributes[attributeName];
                     this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer);
 
-                    return true;
+                    return this.getBuffer(removeAccessor).extras!.data as Float32Array;
                 }
             }
 
-            return false;
+            return null;
         }
         /**
          * 为该网格添加一个子网格。
@@ -781,7 +806,13 @@ namespace egret3d {
          */
         public getAttribute(attributeName: gltf.AttributeSemantics | string, offset: uint = 0, count: uint = 0): Float32Array | null {
             if (attributeName in this._attributes!) {
-                return this.createTypeArrayFromAccessor(this.getAccessor(this._attributes![attributeName]), offset, count) as Float32Array;
+                const accessor = this.getAccessor(this._attributes![attributeName]);
+
+                // if (offset === 0 && count === 0) {
+                //     return this.getBuffer(accessor).extras!.data as Float32Array;
+                // }
+
+                return this.createTypeArrayFromAccessor(accessor, offset, count) as Float32Array;
             }
 
             return null;
@@ -804,7 +835,7 @@ namespace egret3d {
                     this.needUpdate(MeshNeedUpdate.BoundingBox);
                 }
 
-                target.set(value, offset);
+                target.set(value);
             }
 
             return target;
@@ -814,14 +845,20 @@ namespace egret3d {
          * @param subMeshIndex 子网格索引。
          * - 默认为 `0` ，第一个子网格。
          */
-        public getIndices(subMeshIndex: uint = 0): Uint16Array | null { // TODO Uint32Array
+        public getIndices(subMeshIndex: uint = 0, offset: uint = 0, count: uint = 0): Uint16Array | null { // TODO Uint32Array
             const { primitives } = this._glTFMesh!;
 
             if (0 <= subMeshIndex && subMeshIndex < primitives.length) {
                 const accessorIndex = primitives[subMeshIndex].indices;
 
                 if (accessorIndex !== undefined) {
-                    return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex)) as Uint16Array;
+                    const accessor = this.getAccessor(accessorIndex);
+
+                    // if (offset === 0 && count === 0) {
+                    //     return this.getBuffer(accessor).extras!.data as Float32Array;
+                    // }
+
+                    return this.createTypeArrayFromAccessor(accessor, offset, count) as Uint16Array;
                 }
 
                 return null;
@@ -839,11 +876,11 @@ namespace egret3d {
          * @param offset 索引偏移。
          * - 默认为 `0`，从第一个索引开始。
          */
-        public setIndices(value: ReadonlyArray<uint>, subMeshIndex: uint = 0, offset: uint = 0): Uint16Array | null {
-            const target = this.getIndices(subMeshIndex);
+        public setIndices(value: ReadonlyArray<uint>, subMeshIndex: uint = 0, offset: uint = 0, count: uint = 0): Uint16Array | null {
+            const target = this.getIndices(subMeshIndex, offset, count);
 
             if (target !== null) {
-                target.set(value, offset);
+                target.set(value);
             }
 
             return target;

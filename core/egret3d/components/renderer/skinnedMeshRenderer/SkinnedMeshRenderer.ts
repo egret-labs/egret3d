@@ -182,7 +182,7 @@ namespace egret3d {
                     this.boneMatrices = new Float32Array((bones.length + 1) * 16);
                     this.boneTexture = Texture.create({
                         source: this.boneMatrices,
-                        width: (bones.length + 1) * 4, height: 2,
+                        width: (bones.length + 1) * 4, height: 1,
                         type: gltf.ComponentType.Float
                     }).retain();
                 }

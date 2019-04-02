@@ -58,6 +58,7 @@ namespace paper.editor {
 
             EditorAssets.SKELETON_MESH = egret3d.Mesh.create(1024, 0, [gltf.AttributeSemantics.POSITION]);
             EditorAssets.SKELETON_MESH.drawMode = gltf.DrawMode.Dynamic;
+            EditorAssets.SKELETON_MESH.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
 
             EditorAssets.CIRCLE_LINE_HALF = egret3d.MeshBuilder.createCircle(0.5, 0.5);
 

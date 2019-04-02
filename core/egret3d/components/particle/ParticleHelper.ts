@@ -41,20 +41,18 @@ namespace egret3d.particle {
     * @internal
     */
     export function createBatchMesh(renderer: ParticleRenderer, maxParticleCount: number) {
-        const meshAttributes: gltf.AttributeSemantics[] = [];
         const meshAttributesType: { [key: string]: gltf.AccessorType } = {};
         if (renderer.renderMode === ParticleRenderMode.Mesh) {
             const mesh = renderer.mesh!;
             const orginIndexBuffer = mesh.getIndices()!;
             const orginIndexBufferCount = orginIndexBuffer.length;
             for (const attribute of MeshShaderAttributeFormat) {
-                meshAttributes.push(attribute.key);
                 meshAttributesType[attribute.key] = attribute.type;
             }
 
             const totalVertexCount = mesh.vertexCount * maxParticleCount;
             const totalIndexCount = orginIndexBufferCount * maxParticleCount;
-            const batchMesh = Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+            const batchMesh = Mesh.create(totalVertexCount, totalIndexCount, meshAttributesType);
             batchMesh.drawMode = gltf.DrawMode.Dynamic;
             //
             let index = 0;
@@ -104,14 +102,13 @@ namespace egret3d.particle {
             const orginIndexBuffer = [0, 2, 1, 1, 2, 3];
             const orginIndexBufferCount = orginIndexBuffer.length;
             for (const attribute of BillboardShaderAttributeFormat) {
-                meshAttributes.push(attribute.key);
                 meshAttributesType[attribute.key] = attribute.type;
             }
 
             const vertexStride = 4;
             const totalVertexCount = vertexStride * maxParticleCount;
             const totalIndexCount = orginIndexBufferCount * maxParticleCount;
-            const batchMesh = Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+            const batchMesh = Mesh.create(totalVertexCount, totalIndexCount, meshAttributesType);
             batchMesh.drawMode = gltf.DrawMode.Dynamic;
 
             const cornerBuffer = batchMesh.getAttribute(gltf.AttributeSemantics._CORNER)!;

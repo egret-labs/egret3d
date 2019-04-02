@@ -58,7 +58,7 @@ namespace examples.animations {
             //
             egret3d.Camera.main.gameObject.addComponent(behaviors.LookAtTarget).target = gameObject;
             //
-            createGridRoom();
+            // createGridRoom();
             //
             selectGameObjectAndComponents(gameObject, behaviors.AnimationHelper);
         }
