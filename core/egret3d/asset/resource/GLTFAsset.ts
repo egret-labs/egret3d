@@ -257,7 +257,7 @@ namespace egret3d {
 
             if (count > accessor.count - offset) {
                 if (DEBUG) {
-                    console.warn("Overflow count.", "offset: ", offset, "count: ", count, "total count", accessor.count);
+                    // console.warn("Overflow count.", "offset: ", offset, "count: ", count, "total count", accessor.count);
                 }
 
                 count = accessor.count - offset;

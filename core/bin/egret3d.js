@@ -4673,7 +4673,7 @@ var egret3d;
             }
             if (count > accessor.count - offset) {
                 if (true) {
-                    console.warn("Overflow count.", "offset: ", offset, "count: ", count, "total count", accessor.count);
+                    // console.warn("Overflow count.", "offset: ", offset, "count: ", count, "total count", accessor.count);
                 }
                 count = accessor.count - offset;
             }
@@ -6262,8 +6262,8 @@ var egret3d;
             if (this.fragDepthEnabled) {
                 extensions += "#extension GL_EXT_frag_depth : enable \n";
             }
-            if (this.textureFloatEnabled) {
-                extensions += "#extension GL_EXT_frag_depth : enable \n";
+            if (this.shaderTextureLOD !== null) {
+                extensions += "#extension GL_EXT_shader_texture_lod : enable \n";
             }
             this.fragmentExtensions = extensions;
         };
@@ -10018,7 +10018,8 @@ var egret3d;
                 var transform = this.entity.getComponent(egret3d.Transform);
                 var worldToLocalMatrix = transform.worldToLocalMatrix;
                 var localRay = egret3d.helpRay.applyMatrix(worldToLocalMatrix, ray);
-                if (this.localBoundingBox.raycast(localRay) && mesh.raycast(localRay, raycastInfo)) {
+                if ((!this._nativeLocalBoundingBox || this.localBoundingBox.raycast(localRay)) &&
+                    mesh.raycast(localRay, raycastInfo)) {
                     if (raycastInfo !== null) {
                         var localToWorldMatrix = transform.localToWorldMatrix;
                         var normal = raycastInfo.normal;
@@ -11314,16 +11315,16 @@ var egret3d;
             if (raycastInfo === void 0) { raycastInfo = null; }
             if (vertices === void 0) { vertices = null; }
             if (vertices === null) {
+                if (!this.boundingBox.raycast(ray)) {
+                    return false;
+                }
                 vertices = this.getVertices();
             }
-            var hit = false;
-            var subMeshIndex = 0;
             var helpTriangleA = egret3d.helpTriangleC;
             var helpTriangleB = egret3d.helpTriangleD;
             var helpRaycastInfo = _helpRaycastInfo;
-            if (!this.boundingBox.raycast(ray)) {
-                return false;
-            }
+            var hit = false;
+            var subMeshIndex = 0;
             for (var _i = 0, _a = this._glTFMesh.primitives; _i < _a.length; _i++) {
                 var primitive = _a[_i];
                 var indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex) : null;
@@ -20347,10 +20348,6 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var _helpVector3A = egret3d.Vector3.create();
-    var _helpVector3B = egret3d.Vector3.create();
-    var _helpVector3C = egret3d.Vector3.create();
-    var _helpMatrix = egret3d.Matrix4.create();
     /**
      * 蒙皮网格渲染组件。
      */
@@ -20393,15 +20390,20 @@ var egret3d;
         SkinnedMeshRenderer_1 = SkinnedMeshRenderer;
         SkinnedMeshRenderer.prototype._getlocalBoundingBox = function () {
             var mesh = this._mesh;
-            return mesh !== null ? mesh.boundingBox : null;
+            if (mesh !== null) {
+                this._nativeLocalBoundingBox = true;
+                // TODO
+                return this._localBoundingBox.applyMatrix(this.getBoundingTransform().worldToLocalMatrix, mesh.boundingBox);
+            }
+            return null;
         };
         SkinnedMeshRenderer.prototype._skinning = function (vertexOffset, vertexCount) {
             if (this._skinnedDirty) {
                 var mesh = this._mesh;
                 var boneMatrices = this.boneMatrices;
-                var p0 = _helpVector3A;
-                var p1 = _helpVector3B;
-                var p2 = _helpVector3C;
+                var p0 = egret3d.helpVector3E;
+                var p1 = egret3d.helpVector3F;
+                var p2 = egret3d.helpVector3G;
                 var vertices = mesh.getVertices();
                 var indices = mesh.getIndices();
                 var joints = mesh.getAttribute("JOINTS_0" /* JOINTS_0 */);
@@ -20426,7 +20428,7 @@ var egret3d;
                         if (weight <= 0.01) {
                             continue;
                         }
-                        p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints[jointIndex + i_3] * 16), p0).multiplyScalar(weight));
+                        p1.add(p2.applyMatrix(egret3d.helpMatrixC.fromArray(boneMatrices, joints[jointIndex + i_3] * 16), p0).multiplyScalar(weight));
                     }
                     p1.toArray(this._skinnedVertices, vertexIndex);
                 }
@@ -20451,7 +20453,7 @@ var egret3d;
                     var offset = i * 16;
                     var bone = bones[i];
                     var matrix = bone !== null ? bone.localToWorldMatrix : egret3d.Matrix4.IDENTITY;
-                    _helpMatrix.fromArray(inverseBindMatrices, offset).premultiply(matrix).toArray(boneMatrices, offset);
+                    egret3d.helpMatrixC.fromArray(inverseBindMatrices, offset).premultiply(matrix).toArray(boneMatrices, offset);
                 }
                 if (this.boneTexture !== null) {
                     this.boneTexture.setSource(boneMatrices);
@@ -20567,15 +20569,15 @@ var egret3d;
         SkinnedMeshRenderer.prototype.raycast = function (ray, raycastInfo) {
             if (raycastInfo === void 0) { raycastInfo = null; }
             var mesh = this._mesh;
-            if (mesh === null || mesh.isDisposed || this.boneMatrices === null) {
-                return false;
-            }
-            var localRay = egret3d.helpRay.applyMatrix(this.getBoundingTransform().worldToLocalMatrix, ray);
-            if (this.localBoundingBox.raycast(localRay) && mesh.raycast(ray, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0))) {
-                if (raycastInfo !== null) {
-                    raycastInfo.transform = this.entity.getComponent(egret3d.Transform);
+            if (mesh !== null && !mesh.isDisposed && this.boneMatrices !== null) {
+                var localRay = egret3d.helpRay.applyMatrix(this.getBoundingTransform().worldToLocalMatrix, ray);
+                if (this.localBoundingBox.raycast(localRay) &&
+                    mesh.raycast(ray, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0))) {
+                    if (raycastInfo !== null) {
+                        raycastInfo.transform = this.entity.getComponent(egret3d.Transform);
+                    }
+                    return true;
                 }
-                return true;
             }
             return false;
         };
@@ -20640,7 +20642,6 @@ var egret3d;
                 }
                 if (value !== null) {
                     value.retain();
-                    this.localBoundingBox = value.boundingBox;
                 }
                 this._mesh = value;
                 SkinnedMeshRenderer_1.onMeshChanged.dispatch(this);
@@ -20655,6 +20656,9 @@ var egret3d;
         __decorate([
             paper.editor.property("UINT" /* UINT */, { readonly: true })
         ], SkinnedMeshRenderer.prototype, "boneCount", null);
+        __decorate([
+            paper.editor.property("COMPONENT" /* COMPONENT */, { componentClass: egret3d.Transform })
+        ], SkinnedMeshRenderer.prototype, "rootBone", null);
         __decorate([
             paper.editor.property("MESH" /* MESH */),
             paper.serializedField("_mesh")

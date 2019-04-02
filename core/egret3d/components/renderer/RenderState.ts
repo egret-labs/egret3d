@@ -92,8 +92,8 @@ namespace egret3d {
                 extensions += "#extension GL_EXT_frag_depth : enable \n";
             }
 
-            if (this.textureFloatEnabled) {
-                extensions += "#extension GL_EXT_frag_depth : enable \n";
+            if (this.shaderTextureLOD !== null) {
+                extensions += "#extension GL_EXT_shader_texture_lod : enable \n";
             }
 
             this.fragmentExtensions = extensions;

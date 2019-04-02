@@ -359,18 +359,18 @@ namespace egret3d {
 
         public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null, vertices: Float32Array | null = null) {
             if (vertices === null) {
+                if (!this.boundingBox.raycast(ray)) {
+                    return false;
+                }
+
                 vertices = this.getVertices()!;
             }
 
-            let hit = false;
-            let subMeshIndex = 0;
             const helpTriangleA = helpTriangleC;
             const helpTriangleB = helpTriangleD;
             const helpRaycastInfo = _helpRaycastInfo;
-
-            if (!this.boundingBox.raycast(ray)) {
-                return false;
-            }
+            let hit = false;
+            let subMeshIndex = 0;
 
             for (const primitive of this._glTFMesh!.primitives) {
                 const indices = primitive.indices !== undefined ? this.getIndices(subMeshIndex)! : null;

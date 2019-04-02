@@ -51,7 +51,10 @@ namespace egret3d {
                 const { worldToLocalMatrix } = transform;
                 const localRay = helpRay.applyMatrix(worldToLocalMatrix, ray);
 
-                if (this.localBoundingBox.raycast(localRay) && mesh.raycast(localRay, raycastInfo)) {
+                if (
+                    (!this._nativeLocalBoundingBox || this.localBoundingBox.raycast(localRay)) &&
+                    mesh.raycast(localRay, raycastInfo)
+                ) {
                     if (raycastInfo !== null) { // Update local raycast info to world.
                         const { localToWorldMatrix } = transform;
                         const { normal } = raycastInfo;
