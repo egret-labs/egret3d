@@ -17,7 +17,7 @@ namespace examples {
             const trailComponent = trailObject.addComponent(egret3d.trail.TrailComponent);
             
             // 设置渲染选项
-            const meshRenderer = trailObject.addComponent(egret3d.MeshRenderer);
+            const meshRenderer = trailObject.getOrAddComponent(egret3d.MeshRenderer);
             if (meshRenderer) {
                 // 设置素材
                 const texture = await RES.getResAsync("threejs/textures/sprite0.jpg");

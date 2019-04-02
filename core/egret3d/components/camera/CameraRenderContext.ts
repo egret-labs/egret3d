@@ -429,6 +429,65 @@ namespace egret3d {
                 light.castShadows = false;//TODO 不支持阴影，防止贴图报错
             }
         }
+        private _combineInstanced(drawCalls: DrawCall[]) {
+            const camera = this._camera;
+            // const combineDrawCalls: { [key: string]: egret3d.DrawCall[] } = {};TODO正常的动态合并
+            const combineInstanced: { [key: string]: egret3d.DrawCall[] } = {};
+            //collect
+            for (let i = drawCalls.length - 1; i >= 0; i--) {
+                const drawCall = drawCalls[i];
+                const renderer = drawCall.renderer;
+                if (!renderer) {
+                    continue;
+                }
+                //TODO 考虑lightmap
+                const material = drawCall.material;
+                const mesh = drawCall.mesh;
+                const key = material.uuid + "_" + mesh.uuid + "_" + drawCall.subMeshIndex;
+
+                if (!combineInstanced[key]) {
+                    combineInstanced[key] = [];
+                }
+
+                combineInstanced[key].unshift(drawCall);
+                drawCalls.splice(i, 1);
+            }
+            //combine
+            for (const key in combineInstanced) {
+                const calls = combineInstanced[key];
+
+                //
+                const drawCall = calls[0];
+                const orginMesh = drawCall.mesh;
+                const indice = orginMesh.getIndices(drawCall.subMeshIndex);
+                const attributeNames = orginMesh.attributeNames.concat();
+                if (attributeNames.indexOf(gltf.AttributeSemantics._INSTANCED_MODEL) < 0) {
+                    attributeNames.push(gltf.AttributeSemantics._INSTANCED_MODEL);
+                    attributeNames.push(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW);
+                }
+                // const 
+                const mesh = Mesh.create(orginMesh.vertexCount, indice ? indice.length : 0, attributeNames as gltf.AttributeSemantics[]);
+                // mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes
+                const models = mesh.getAttributes(gltf.AttributeSemantics._INSTANCED_MODEL)!;
+                const modelViews = mesh.getAttributes(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW)!;
+                const _modelViewMatrix = egret3d.Matrix.create().release();
+                for (let i = 0, l = calls.length; i < l; i++) {
+                    const call = calls[i];
+                    const matrix = call.matrix;
+                    _modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
+                    models.set(call.matrix.rawData, i * 16);
+                    modelViews.set(_modelViewMatrix.rawData, i * 16);
+                }
+
+                const newDrawCall = egret3d.DrawCall.create().release();
+                newDrawCall.entity = drawCall.entity;
+                newDrawCall.renderer = drawCall.renderer;
+                newDrawCall.material = drawCall.material;
+                newDrawCall.mesh = mesh;
+                newDrawCall.subMeshIndex = drawCall.subMeshIndex;
+                drawCalls.push(newDrawCall);
+            }
+        }
         /**
          * @internal
          */

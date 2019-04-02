@@ -1,4 +1,4 @@
-namespace egret3d {    
+namespace egret3d {
     //TODO 运行时DrawCall排序优化使用
     let _hashCode: uint = 0;
     const _helpTriangleA = Triangle.create();
@@ -125,6 +125,10 @@ namespace egret3d {
                 case gltf.AttributeSemantics.JOINTS_0:
                 case gltf.AttributeSemantics.WEIGHTS_0:
                     return gltf.AccessorType.VEC4;
+
+                case gltf.AttributeSemantics._INSTANCED_MODEL:
+                case gltf.AttributeSemantics._INSTANCED_MODEL_VIEW:
+                    return gltf.AccessorType.MAT4;
 
                 default:
                     throw new Error();

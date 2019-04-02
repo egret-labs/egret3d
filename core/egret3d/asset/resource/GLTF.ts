@@ -674,6 +674,10 @@ declare namespace gltf {
         _RANDOM1 = "_RANDOM1",
         _WORLD_POSITION = "_WORLD_POSITION",
         _WORLD_ROTATION = "_WORLD_ROTATION",
+
+        //Instanced
+        _INSTANCED_MODEL = "_INSTANCED_MODEL",
+        _INSTANCED_MODEL_VIEW = "_INSTANCED_MODEL_VIEW",
     }
 
     export const enum UniformSemantics {

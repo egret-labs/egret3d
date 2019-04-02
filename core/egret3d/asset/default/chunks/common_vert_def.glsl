@@ -1,5 +1,11 @@
-uniform mat4 modelMatrix;
-uniform mat4 modelViewMatrix;
+//modify by egret
+#ifdef USE_INSTANCED
+	attribute mat4 modelMatrix;
+	attribute mat4 modelViewMatrix;
+#else
+	uniform mat4 modelMatrix;
+	uniform mat4 modelViewMatrix;
+#endif
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
 uniform mat3 normalMatrix;
@@ -8,6 +14,8 @@ uniform vec3 cameraPosition;
 attribute vec3 position;
 attribute vec3 normal;
 attribute vec2 uv;
+
+
 
 #ifdef USE_COLOR
 
