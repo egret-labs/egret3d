@@ -1,4 +1,14 @@
 namespace paper {
+    type PreSystemPair = [
+        ISystemClass<ISystem<IEntity>, IEntity>,
+        Context<IEntity>,
+        SystemOrder,
+        any | null
+    ];
+    type CacheSystemPair = [
+        ISystem<IEntity>,
+        any | null
+    ];
     /**
      * 程序系统管理器。
      */
@@ -8,19 +18,24 @@ namespace paper {
          * 程序系统管理器单例。
          */
         public static getInstance() {
-            if (!this._instance) {
+            if (this._instance === null) {
                 this._instance = new SystemManager();
             }
 
             return this._instance;
         }
 
-        private readonly _preSystems: [
-            ISystemClass<ISystem<IEntity>, IEntity>,
-            Context<IEntity>,
-            int,
-            any
-        ][] = [];
+        private _isStarted: boolean = false;
+        /**
+         * 程序启动前缓存。
+         * - 系统不能直接实例化。
+         */
+        private readonly _preSystems: PreSystemPair[] = [];
+        /**
+         * 程序启动后缓存。
+         * - 系统需要直接实例化，但不能立即初始化。
+         */
+        private readonly _cacheSystems: CacheSystemPair[] = [];
         private readonly _systems: ISystem<IEntity>[] = [];
         private readonly _startSystems: ISystem<IEntity>[] = [];
         private readonly _reactiveSystems: ISystem<IEntity>[] = [];
@@ -30,6 +45,10 @@ namespace paper {
         private readonly _tickCleanupSystems: ISystem<IEntity>[] = [];
 
         private constructor() {
+        }
+
+        private _sortPreSystem(a: PreSystemPair, b: PreSystemPair) {
+            return a[2] - b[2];
         }
 
         private _getSystemInsertIndex(systems: ISystem<IEntity>[], order: SystemOrder) {
@@ -54,13 +73,111 @@ namespace paper {
 
             return index < 0 ? systems.length : index;
         }
+
+        private _register(system: ISystem<IEntity>, config: any | null = null) {
+            const order = system.order;
+
+            this._systems.splice(this._getSystemInsertIndex(this._systems, order), 0, system);
+
+            if (system.onStart) {
+                this._startSystems.splice(this._getSystemInsertIndex(this._startSystems, order), 0, system);
+            }
+
+            if (system.onEntityAdded || system.onComponentAdded || system.onComponentRemoved || system.onEntityRemoved) {
+                this._reactiveSystems.splice(this._getSystemInsertIndex(this._reactiveSystems, order), 0, system);
+            }
+
+            if (system.onTick) {
+                this._tickSystems.splice(this._getSystemInsertIndex(this._tickSystems, order), 0, system);
+            }
+
+            if (system.onTickCleanup) {
+                this._tickCleanupSystems.splice(this._getSystemInsertIndex(this._tickCleanupSystems, order), 0, system);
+            }
+
+            if (system.onFrame) {
+                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
+            }
+
+            if (system.onFrameCleanup) {
+                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
+            }
+
+            system.initialize(config);
+        }
+
+        private _reactive(system: ISystem<IEntity>) {
+            for (const collector of system.collectors) {
+                if (system.onComponentRemoved) {
+                    for (const component of collector.removedComponentes) {
+                        if (component !== null) {
+                            system.onComponentRemoved(component, collector.group);
+                        }
+                    }
+                }
+
+                if (system.onEntityRemoved) {
+                    for (const entity of collector.removedEntities) {
+                        if (entity !== null) {
+                            system.onEntityRemoved(entity, collector.group);
+                        }
+                    }
+                }
+
+                if (system.onEntityAdded) {
+                    for (const entity of collector.addedEntities) {
+                        if (entity !== null) {
+                            system.onEntityAdded(entity, collector.group);
+                        }
+                    }
+                }
+
+                if (system.onComponentAdded) {
+                    for (const component of collector.addedComponentes) {
+                        if (component !== null) {
+                            system.onComponentAdded(component, collector.group);
+                        }
+                    }
+                }
+
+                collector.clear();
+            }
+        }
+        /**
+         * @internal
+         */
+        public _start() {
+            const preSystems = this._preSystems;
+
+            if (preSystems.length > 0) {
+                preSystems.sort(this._sortPreSystem);
+
+                for (const pair of preSystems) {
+                    this.register.apply(this, pair);
+                }
+
+                preSystems.length = 0;
+            }
+
+            this._isStarted = true;
+        }
         /**
          * @internal
          */
         public _startup() {
             const playerMode = Application.playerMode;
+            const cacheSystems = this._cacheSystems;
+
+            if (cacheSystems.length > 0) {
+                for (const pair of cacheSystems) {
+                    this._register.apply(this, pair);
+                }
+
+                cacheSystems.length = 0;
+            }
+
             for (const system of this._systems) {
-                if ((system.constructor as ISystemClass<ISystem<IEntity>, IEntity>).executeMode & playerMode) {
+                if (((system.constructor as ISystemClass<ISystem<IEntity>, IEntity>).executeMode & playerMode) !== 0) {
                     if ((system as BaseSystem<IEntity>)._executeEnabled && !system.enabled) {
                         system.enabled = true;
                     }
@@ -100,44 +217,6 @@ namespace paper {
                 }
             }
         }
-
-        private _reactive(system: ISystem<IEntity>) {
-            for (const collector of system.collectors) {
-                if (system.onComponentRemoved) {
-                    for (const component of collector.removedComponentes) {
-                        if (component) {
-                            system.onComponentRemoved(component, collector.group);
-                        }
-                    }
-                }
-
-                if (system.onEntityRemoved) {
-                    for (const entity of collector.removedEntities) {
-                        if (entity) {
-                            system.onEntityRemoved(entity, collector.group);
-                        }
-                    }
-                }
-
-                if (system.onEntityAdded) {
-                    for (const entity of collector.addedEntities) {
-                        if (entity) {
-                            system.onEntityAdded(entity, collector.group);
-                        }
-                    }
-                }
-
-                if (system.onComponentAdded) {
-                    for (const component of collector.addedComponentes) {
-                        if (component) {
-                            system.onComponentAdded(component, collector.group);
-                        }
-                    }
-                }
-
-                collector.clear();
-            }
-        }
         /**
          * @internal
          */
@@ -156,7 +235,10 @@ namespace paper {
                         startTime = clock.timestamp();
                     }
 
-                    if (i === 0 && reactiveSystems.indexOf(system) >= 0) {
+                    if (
+                        i === 0 && // 第一帧响应。
+                        reactiveSystems.indexOf(system) >= 0
+                    ) {
                         this._reactive(system);
                     }
 
@@ -168,7 +250,7 @@ namespace paper {
                 }
             }
 
-            if (frameCount) {
+            if (frameCount > 0) {
                 for (const system of this._systems) { // this._frameSystems
                     if (!system.enabled) {
                         continue;
@@ -197,7 +279,7 @@ namespace paper {
             let startTime = 0;
             let i = 0;
 
-            if (frameCount) {
+            if (frameCount > 0) {
                 i = this._frameCleanupSystems.length;
 
                 while (i--) {
@@ -268,31 +350,18 @@ namespace paper {
             }
         }
         /**
-         * 
-         */
-        public preRegisterSystems(): void {
-            const preSystems = this._preSystems;
-            preSystems.sort((a, b) => { return a[2] - b[2]; });
-
-            for (const pair of preSystems) {
-                this.register.apply(this, pair);
-            }
-
-            preSystems.length = 0;
-        }
-        /**
          * 在程序启动之前预注册一个指定的系统。
          */
         public preRegister<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(
             systemClass: ISystemClass<TSystem, TEntity>,
-            context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any
+            context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config: any | null = null
         ): SystemManager {
-            if (this._systems.length > 0) {
+            if (this._isStarted) {
                 this.register(systemClass, context, order, config);
-                return this;
             }
-
-            this._preSystems.push([systemClass as any, context, order, config]);
+            else { // 程序启动前，延时实例化系统。
+                this._preSystems.push([systemClass, context, order, config]);
+            }
 
             return this;
         }
@@ -301,44 +370,24 @@ namespace paper {
          */
         public register<TEntity extends IEntity, TSystem extends ISystem<TEntity>>(
             systemClass: ISystemClass<TSystem, TEntity>,
-            context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config?: any
+            context: Context<TEntity>, order: SystemOrder = SystemOrder.Update, config: any | null = null
         ): TSystem {
             let system = this.getSystem(systemClass);
 
-            if (system) {
+            if (system !== null) {
                 console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
 
                 return system;
             }
 
             system = BaseSystem.create<TEntity, TSystem>(systemClass, context, order);
-            this._systems.splice(this._getSystemInsertIndex(this._systems, order), 0, system);
 
-            if (system.onStart) {
-                this._startSystems.splice(this._getSystemInsertIndex(this._startSystems, order), 0, system);
+            if (this._isStarted) { // 程序启动后，延时初始化系统。
+                this._cacheSystems.push([system, config]);
             }
-
-            if (system.onEntityAdded || system.onComponentAdded || system.onComponentRemoved || system.onEntityRemoved) {
-                this._reactiveSystems.splice(this._getSystemInsertIndex(this._reactiveSystems, order), 0, system);
+            else { //
+                this._register(system, config);
             }
-
-            if (system.onTick) {
-                this._tickSystems.splice(this._getSystemInsertIndex(this._tickSystems, order), 0, system);
-            }
-
-            if (system.onTickCleanup) {
-                this._tickCleanupSystems.splice(this._getSystemInsertIndex(this._tickCleanupSystems, order), 0, system);
-            }
-
-            if (system.onFrame) {
-                this._frameSystems.splice(this._getSystemInsertIndex(this._frameSystems, order), 0, system);
-            }
-
-            if (system.onFrameCleanup) {
-                this._frameCleanupSystems.splice(this._getSystemInsertIndex(this._frameCleanupSystems, order), 0, system);
-            }
-
-            system.initialize(config);
 
             return system;
         }
@@ -349,8 +398,8 @@ namespace paper {
             systemClass: ISystemClass<TSystem, TEntity>,
         ): TSystem | null {
             for (const system of this._systems) {
-                if (system && system.constructor === systemClass) {
-                    return <any>system as TSystem;
+                if (system.constructor === systemClass) {
+                    return system as TSystem;
                 }
             }
 

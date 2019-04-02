@@ -112,8 +112,8 @@ namespace egret3d {
             if (materialA._renderQueue !== materialB._renderQueue) {
                 return materialA._renderQueue - materialB._renderQueue;
             }
-            else if (materialA._technique.program !== materialB._technique.program) {//着色器不同，避免频繁切换
-                return materialA._technique.program! - materialB._technique.program!;
+            else if (materialA._technique!.program !== materialB._technique!.program) {//着色器不同，避免频繁切换
+                return materialA._technique!.program! - materialB._technique!.program!;
             }
             else if (materialA._id !== materialB._id) {
                 return materialA._id - materialB._id;
@@ -460,11 +460,11 @@ namespace egret3d {
                 const drawCall = calls[0];
                 const orginMesh = drawCall.mesh;
                 const indice = orginMesh.getIndices(drawCall.subMeshIndex);
-                const attributeNames = orginMesh.attributeNames.concat();
-                if (attributeNames.indexOf(gltf.AttributeSemantics._INSTANCED_MODEL) < 0) {
-                    attributeNames.push(gltf.AttributeSemantics._INSTANCED_MODEL);
-                    attributeNames.push(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW);
-                }
+                const attributeNames:gltf.AttributeSemantics[] = [];
+                // if (attributeNames.indexOf(gltf.AttributeSemantics._INSTANCED_MODEL) < 0) {
+                //     attributeNames.push(gltf.AttributeSemantics._INSTANCED_MODEL);
+                //     attributeNames.push(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW);
+                // }
                 // const 
                 const mesh = Mesh.create(orginMesh.vertexCount, indice ? indice.length : 0, attributeNames as gltf.AttributeSemantics[]);
                 // mesh.glTFMesh.primitives[drawCall.subMeshIndex].attributes

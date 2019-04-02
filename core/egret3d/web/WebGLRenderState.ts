@@ -9,7 +9,7 @@ namespace egret3d.webgl {
     function _getExtension(webgl: WebGLRenderingContext, name: string) {
         for (const prefixedName of _browserPrefixes) {
             const extension = webgl.getExtension(prefixedName + name);
-            if (extension) {
+            if (extension !== null) {
                 return extension;
             }
         }
@@ -46,14 +46,22 @@ namespace egret3d.webgl {
     export function setTexturexParameters(type: gltf.TextureType, sampler: gltf.Sampler, anisotropy: number) {
         const webgl = WebGLRenderState.webgl!;
 
-        webgl.texParameteri(type, gltf.WebGL.TEXTURE_MAG_FILTER, sampler.magFilter!);
-        webgl.texParameteri(type, gltf.WebGL.TEXTURE_MIN_FILTER, sampler.minFilter!);
-        webgl.texParameteri(type, gltf.WebGL.TEXTURE_WRAP_S, sampler.wrapS!);
-        webgl.texParameteri(type, gltf.WebGL.TEXTURE_WRAP_T, sampler.wrapT!);
+        webgl.texParameteri(type, gltf.WebGL.TEXTURE_MAG_FILTER, sampler.magFilter || gltf.TextureFilter.Nearest);
+        webgl.texParameteri(type, gltf.WebGL.TEXTURE_MIN_FILTER, sampler.minFilter || gltf.TextureFilter.Nearest);
+        webgl.texParameteri(type, gltf.WebGL.TEXTURE_WRAP_S, sampler.wrapS || gltf.TextureWrappingMode.Repeat);
+        webgl.texParameteri(type, gltf.WebGL.TEXTURE_WRAP_T, sampler.wrapT || gltf.TextureWrappingMode.Repeat);
 
         if (renderState.textureFilterAnisotropic && anisotropy > 1) {
             webgl.texParameterf(type, renderState.textureFilterAnisotropic.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(anisotropy, renderState.maxAnisotropy));
         }
+    }
+    /**
+     * @internal
+     */
+    export interface WebGLEXTRenderingContext {
+        createVertexArray(): any;
+        bindVertexArray(vao?: WebGLVertexArrayObject | null): void;
+        deleteVertexArray(vao: WebGLVertexArrayObject): void;
     }
     /**
      * @internal
@@ -66,7 +74,16 @@ namespace egret3d.webgl {
         /**
          * @deprecated
          */
-        public static webgl: WebGLRenderingContext | null = null;
+        public static webgl: (WebGLRenderingContext & WebGLEXTRenderingContext) | null = null;
+
+        private _bindWebGL() {
+            const webgl = WebGLRenderState.webgl!;
+            if (this.vertexArrayObject !== null) {
+                webgl.createVertexArray = this.vertexArrayObject.createVertexArrayOES.bind(this.vertexArrayObject);
+                webgl.bindVertexArray = this.vertexArrayObject.bindVertexArrayOES.bind(this.vertexArrayObject);
+                webgl.deleteVertexArray = this.vertexArrayObject.deleteVertexArrayOES.bind(this.vertexArrayObject);
+            }
+        }
 
         protected _setViewport(value: Readonly<Rectangle>) {
             const renderTarget = this._renderTarget;
@@ -115,6 +132,7 @@ namespace egret3d.webgl {
             this.version = webglVersions ? parseFloat(webglVersions[1]).toString() : "1";
             // use dfdx and dfdy must enable OES_standard_derivatives
             this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
+            this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
             this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
             this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
             this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
@@ -132,6 +150,7 @@ namespace egret3d.webgl {
             //
             this._getCommonExtensions();
             this._getCommonDefines();
+            this._bindWebGL();
             //
             console.info("WebGL version:", this.version);
             console.info("Standard derivatives enabled:", this.standardDerivativesEnabled);
@@ -169,6 +188,45 @@ namespace egret3d.webgl {
             }
 
             webgl.clear(bufferBit);
+        }
+
+        public updateVertexAttributes(mesh: Mesh) {
+            const webgl = WebGLRenderState.webgl!;
+            const { caches } = this;
+            const attributes = mesh.attributes;
+            const attributeOffsets = mesh.glTFMesh.extras!.attributeOffsets;
+
+            let attributeCount = 0;
+            // +++---...|xxx
+            for (const attribute of (mesh.glTFMesh.extras!.program as WebGLProgramBinder).attributes) {
+                const { location, semantic } = attribute;
+
+                if (semantic in attributes) {
+                    const accessor = mesh.getAccessor(attributes[semantic]);
+                    // TODO normalized应该来源于mesh，应该还没有
+                    webgl.vertexAttribPointer(
+                        location,
+                        accessor.extras!.typeCount,
+                        accessor.componentType,
+                        accessor.normalized !== undefined ? accessor.normalized : false,
+                        0, attributeOffsets[semantic]
+                    );
+                    webgl.enableVertexAttribArray(location);
+                }
+                else {
+                    webgl.disableVertexAttribArray(location);
+                }
+
+                attributeCount++;
+            }
+            // xxx|---
+            if (attributeCount !== caches.attributeCount) {
+                for (let i = attributeCount, l = caches.attributeCount; i < l; ++i) {
+                    webgl.disableVertexAttribArray(i);
+                }
+
+                caches.attributeCount = attributeCount;
+            }
         }
 
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {

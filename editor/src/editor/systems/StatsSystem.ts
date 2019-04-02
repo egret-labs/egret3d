@@ -5,14 +5,14 @@ namespace paper.editor {
     @executeMode(PlayerMode.Player | PlayerMode.DebugPlayer)
     export class StatsSystem extends BaseSystem<GameObject> {
         private _fpsIndex: uint = 0;
-        private readonly _guiComponent: GUIComponent = Application.sceneManager.globalEntity.getOrAddComponent(GUIComponent);
+        private readonly _inspectorComponent: InspectorComponent = Application.sceneManager.globalEntity.getOrAddComponent(InspectorComponent);
         private readonly _fpsShowQueue: boolean[] = [true, false, false, true];
 
         private _updateFPSShowState() {
-            if (this._guiComponent) {
-                const statsDOM = this._guiComponent.stats.dom;
+            if (this._inspectorComponent) {
+                const statsDOM = this._inspectorComponent.stats.dom;
 
-                if (this._guiComponent.showStates & ShowState.FPS) {
+                if (this._inspectorComponent.showStates & ShowState.FPS) {
                     statsDOM.style.display = "block";
                 }
                 else {
@@ -25,7 +25,7 @@ namespace paper.editor {
             const options = Application.options as egret3d.RunOptions;
 
             if (options.showStats!) {
-                this._guiComponent.showStates |= ShowState.FPS;
+                this._inspectorComponent.showStates |= ShowState.FPS;
                 this._fpsIndex = 0;
             }
             else {
@@ -43,10 +43,10 @@ namespace paper.editor {
                 }
 
                 if (this._fpsShowQueue[this._fpsIndex]) {
-                    this._guiComponent.showStates |= ShowState.FPS;
+                    this._inspectorComponent.showStates |= ShowState.FPS;
                 }
                 else {
-                    this._guiComponent.showStates &= ~ShowState.FPS;
+                    this._inspectorComponent.showStates &= ~ShowState.FPS;
                 }
 
                 this._updateFPSShowState();
@@ -54,18 +54,18 @@ namespace paper.editor {
 
             // TODO tc vc
 
-            const guiComponent = this._guiComponent!;
-            guiComponent.stats.update(); // TODO 每个面板独立
+            const inspectorComponent = this._inspectorComponent!;
+            inspectorComponent.stats.update(); // TODO 每个面板独立
         }
 
         public onFrame() {
-            const guiComponent = this._guiComponent!;
-            guiComponent.stats.onFrame();
-            guiComponent.renderPanel.update(
+            const inspectorComponent = this._inspectorComponent!;
+            inspectorComponent.stats.onFrame();
+            inspectorComponent.renderPanel.update(
                 paper.Application.systemManager.getSystem((egret3d as any)["webgl"]["WebGLRenderSystem"])!.deltaTime,
                 200
             );
-            guiComponent.drawCallPanel.update(
+            inspectorComponent.drawCallPanel.update(
                 egret3d.drawCallCollecter.drawCallCount,
                 500,
             );

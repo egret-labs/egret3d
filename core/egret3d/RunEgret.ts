@@ -4,8 +4,8 @@ namespace egret3d {
      * 引擎启动入口。
      * @param options 
      */
-    export async function runEgret(options?: RunOptions) {
-        if (!options) {
+    export async function runEgret(options: RunOptions | null = null) {
+        if (options === null) {
             options = {};
         }
 
@@ -17,7 +17,7 @@ namespace egret3d {
             (egret.Capabilities as any)["renderMode" + ""] = "webgl";
         }
 
-        if (!_runEditor && options.editorEntry) {
+        if (!_runEditor && options.editorEntry) { // 编辑器模式自定义初始化。
             _runEditor = true;
             await _editorEntry(options);
         }
@@ -38,7 +38,6 @@ namespace egret3d {
                 .preRegister(Egret2DRendererSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer)
                 .preRegister(CameraAndLightSystem, gameObjectContext, paper.SystemOrder.BeforeRenderer);
 
-            paper.Application.registerSystems();
             paper.Application.start();
 
             await _entry(options);
@@ -97,7 +96,7 @@ namespace egret3d {
         }
 
         if (options.tickRate === undefined) {
-            options.tickRate = _parseInt(playerDiv, "data-tick-rate", 0);
+            options.tickRate = _parseInt(playerDiv, "data-tick-rate", 60);
         }
 
         if (options.frameRate === undefined) {
@@ -209,10 +208,10 @@ namespace egret3d {
 
     async function _editorEntry(options: RunOptions) {
         if (options.editorEntry) {
-            const entry = global[options.editorEntry] || (window as any)[options.editorEntry] || null;
+            const editorEntry = global[options.editorEntry] || (window as any)[options.editorEntry] || null;
 
-            if (entry !== null) {
-                await entry();
+            if (editorEntry !== null) {
+                await editorEntry();
             }
         }
     }

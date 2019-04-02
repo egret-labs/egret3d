@@ -22,6 +22,7 @@
         "libs/signals/signals.d.ts",
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
+        "libs/webgl2.d.ts",
 
         "libs/paper/customenum.ts",
 
@@ -163,6 +164,7 @@
         "egret3d/asset/resource/Shader.ts",
         "egret3d/asset/resource/Define.ts",
         "egret3d/asset/resource/Material.ts",
+        "egret3d/asset/resource/BaseTexture.ts",
         "egret3d/asset/resource/Texture.ts",
         "egret3d/asset/resource/RenderTexture.ts",
         "egret3d/asset/resource/Mesh.ts",

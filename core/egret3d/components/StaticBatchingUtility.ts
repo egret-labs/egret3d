@@ -139,7 +139,7 @@ namespace egret3d {
             if (!combine.primitiveIndices[i]) {
                 combine.primitiveIndices[i] = 0;
             }
-            const indicesCount = meshData.getBufferLength(meshData.getAccessor(primitive.indices!)) / Uint16Array.BYTES_PER_ELEMENT;
+            const indicesCount = meshData.getAccessorByteLength(meshData.getAccessor(primitive.indices!)) / Uint16Array.BYTES_PER_ELEMENT;
             combine.primitiveIndices[i] += indicesCount;
             combine.indicesCount += indicesCount;
         }
@@ -191,7 +191,7 @@ namespace egret3d {
         const combinePosition = combineMesh.getVertices() as Float32Array;
         const combineNormal = combineMesh.getNormals() as Float32Array;
         const combineUV0 = combineMesh.getUVs() as Float32Array;
-        const combineUV1 = combineMesh.getAttributes(gltf.AttributeSemantics.TEXCOORD_1) as Float32Array;
+        const combineUV1 = combineMesh.getAttribute(gltf.AttributeSemantics.TEXCOORD_1) as Float32Array;
         const combineColor0 = combineMesh.getColors() as Float32Array;
         const combineJoint0 = combineMesh.getAttributes(gltf.AttributeSemantics.JOINTS_0) as Float32Array;
         const combineWeight0 = combineMesh.getAttributes(gltf.AttributeSemantics.WEIGHTS_0) as Float32Array;

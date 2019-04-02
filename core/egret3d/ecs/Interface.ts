@@ -249,6 +249,21 @@ namespace paper {
         deserialize(data: any, deserializer?: Deserializer): this | any;
     }
     /**
+     * 更新接口。
+     */
+    export interface INeedUpdate {
+        /**
+         * 标记更新。
+         * @param mask 标记的掩码。
+         */
+        needUpdate(mask: uint): void;
+        /**
+         * 更新。
+         * @param mask 更新的掩码。
+         */
+        update(mask: uint): void;
+    }
+    /**
      * 基础对象类接口。
      * - 仅用于约束基础对象的装饰器。
      */

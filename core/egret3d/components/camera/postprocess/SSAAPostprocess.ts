@@ -40,27 +40,29 @@ namespace egret3d.postprocess {
         private readonly _subViewport: egret3d.Rectangle = egret3d.Rectangle.create(0, 0, 1, 1);
         private readonly _copyMaterial: egret3d.Material = egret3d.Material.create(egret3d.DefaultShaders.COPY);
         private readonly _clearColor: egret3d.Color = egret3d.Color.create(0, 0, 0, 0);
-        private readonly _sampleRenderTarget: egret3d.RenderTexture = egret3d.RenderTexture.create
-            ({
-                width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
+        private readonly _sampleRenderTarget: egret3d.RenderTexture = egret3d.RenderTexture.create({
+            width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
+            format: gltf.TextureFormat.RGBA,
+            sampler: {
                 minFilter: gltf.TextureFilter.Linear, magFilter: gltf.TextureFilter.Linear,
-                format: gltf.TextureFormat.RGBA
-            });
-        private readonly _finalSampleRenderTarget: egret3d.RenderTexture = egret3d.RenderTexture.create
-            ({
-                width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
+            }
+        });
+        private readonly _finalSampleRenderTarget: egret3d.RenderTexture = egret3d.RenderTexture.create({
+            width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
+            format: gltf.TextureFormat.RGB,//TODO
+            sampler: {
                 minFilter: gltf.TextureFilter.Linear, magFilter: gltf.TextureFilter.Linear,
-                format: gltf.TextureFormat.RGB//TODO
-            });
+            }
+        });
         private _onStageResize(): void {
             const { w, h } = egret3d.stage.viewport;
             const sampleRenderTarget = this._sampleRenderTarget;
             if (sampleRenderTarget) {
-                sampleRenderTarget.uploadTexture(w, h);
+                sampleRenderTarget.setSize(w, h);
             }
             const finalSampleRenderTarget = this._finalSampleRenderTarget;
             if (finalSampleRenderTarget) {
-                finalSampleRenderTarget.uploadTexture(w, h);
+                finalSampleRenderTarget.setSize(w, h);
             }
         }
         public initialize(): void {

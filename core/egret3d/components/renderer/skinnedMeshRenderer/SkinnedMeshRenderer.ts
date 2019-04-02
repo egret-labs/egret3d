@@ -7,6 +7,7 @@ namespace egret3d {
     /**
      * 蒙皮网格渲染组件。
      */
+    @paper.requireComponent(Transform)
     export class SkinnedMeshRenderer extends MeshRenderer {
         /**
          * 当蒙皮网格渲染组件的网格资源改变时派发事件。
@@ -33,13 +34,22 @@ namespace egret3d {
 
         private _skinnedDirty: boolean = true;
         private readonly _bones: (Transform | null)[] = [];
+        /**
+         * 废弃该属性，改用 MeshFilter 。
+         */
+        private _mesh: Mesh | null = null;
         private _rootBone: Transform | null = null;
+        private _skinnedVertices: Float32Array | null = null;
         /**
          * @internal
          */
         public _retargetBoneNames: string[] | null = null;
-        private _mesh: Mesh | null = null;
-        private _skinnedVertices: Float32Array | null = null;
+
+        protected _getlocalBoundingBox(): Readonly<Box> | null {
+            const mesh = this._mesh;
+
+            return mesh !== null ? mesh.boundingBox : null;
+        }
 
         private _skinning(vertexOffset: uint, vertexCount: uint) {
             if (this._skinnedDirty) {
@@ -51,10 +61,10 @@ namespace egret3d {
                 const p2 = _helpVector3C;
                 const vertices = mesh.getVertices()!;
                 const indices = mesh.getIndices()!;
-                const joints = mesh.getAttributes(gltf.AttributeSemantics.JOINTS_0) as Float32Array;
-                const weights = mesh.getAttributes(gltf.AttributeSemantics.WEIGHTS_0) as Float32Array;
+                const joints = mesh.getAttribute(gltf.AttributeSemantics.JOINTS_0) as Float32Array;
+                const weights = mesh.getAttribute(gltf.AttributeSemantics.WEIGHTS_0) as Float32Array;
 
-                if (!this._skinnedVertices) {
+                if (this._skinnedVertices === null) {
                     this._skinnedVertices = new Float32Array(vertices.length);
                 }
 
@@ -98,7 +108,7 @@ namespace egret3d {
             const mesh = this._mesh;
             const boneMatrices = this.boneMatrices;
 
-            if (mesh && !mesh.isDisposed && boneMatrices) {
+            if (mesh !== null && !mesh.isDisposed && boneMatrices !== null) {
                 // TODO cache 剔除，脏标记。
                 // TODO bind to GPU
                 const bones = this._bones;
@@ -107,12 +117,12 @@ namespace egret3d {
                 for (let i = 0, l = bones.length; i < l; ++i) {
                     const offset = i * 16;
                     const bone = bones[i];
-                    const matrix = bone ? bone.localToWorldMatrix : Matrix4.IDENTITY;
+                    const matrix = bone !== null ? bone.localToWorldMatrix : Matrix4.IDENTITY;
                     _helpMatrix.fromArray(inverseBindMatrices as any, offset).premultiply(matrix).toArray(boneMatrices, offset);
                 }
 
-                if (this.boneTexture) {
-                    this.boneTexture.uploadTexture(boneMatrices); // TODO
+                if (this.boneTexture !== null) {
+                    this.boneTexture.setSource(boneMatrices);
                 }
 
                 if (this.forceCPUSkin) {
@@ -143,9 +153,9 @@ namespace egret3d {
             const parent = this.gameObject.transform.parent;
             const bones = this._bones;
 
-            if (mesh && parent) {
+            if (mesh !== null && parent !== null) {
                 const config = mesh.config;
-                const skin = config.skins![0];
+                const [skin] = config.skins!;
                 const children = parent.getChildren({}) as { [key: string]: Transform | (Transform[]) };
 
                 if (skin.skeleton !== undefined) {
@@ -169,23 +179,12 @@ namespace egret3d {
                 }
 
                 if (renderState.textureFloatEnabled) {
-                    // let size = Math.sqrt(bones.length * 4); // 4 pixels needed for 1 matrix
-                    // size = Math.max(math.ceilPowerOfTwo(size), 4);
-
-                    // this.boneMatrices = new Float32Array(size * size * 4); // 4 floats per RGBA pixel
-                    // this.boneTexture = Texture.create({
-                    //     source: this.boneMatrices,
-                    //     width: size, height: size,
-                    //     type: gltf.ComponentType.Float
-                    // });
-
                     this.boneMatrices = new Float32Array((bones.length + 1) * 16);
                     this.boneTexture = Texture.create({
                         source: this.boneMatrices,
-                        width: (bones.length + 1) * 4, height: 1,
+                        width: (bones.length + 1) * 4, height: 2,
                         type: gltf.ComponentType.Float
-                    });
-                    this.boneTexture.retain();
+                    }).retain();
                 }
                 else {
                     this.boneMatrices = new Float32Array(bones.length * 16);
@@ -203,89 +202,70 @@ namespace egret3d {
          * @internal
          */
         public uninitialize() {
-            if (this._mesh) {
+            if (this._mesh !== null) {
                 this._mesh.release();
             }
-            
-            if (this.boneTexture) {
+
+            if (this.boneTexture !== null) {
                 this.boneTexture.release();
                 this.boneTexture.dispose();
             }
-            //transform可能已经被删除
+
             const boundingTransform = this.getBoundingTransform();
-            if(boundingTransform){
+
+            if (boundingTransform !== null) {
                 boundingTransform.unregisterObserver(this);
             }
-            
+
             super.uninitialize();
 
             this.boneMatrices = null;
             this.boneTexture = null;
 
             this._bones.length = 0;
-            this._rootBone = null;
-            this._retargetBoneNames = null;
             this._mesh = null;
             this._skinnedVertices = null;
-        }
-
-        public recalculateLocalBox() {
-            // TODO 蒙皮网格的 aabb 需要能自定义，或者强制更新。
-            const mesh = this._mesh;
-            this._localBoundingBox.clear();
-
-            if (mesh && !mesh.isDisposed) {
-                this._skinning(0, 0);
-                const vertices = this._skinnedVertices!;
-                const position = helpVector3A;
-                const worldToLocalMatrix = this.getBoundingTransform().worldToLocalMatrix;
-
-                for (let i = 0, l = vertices.length; i < l; i += 3) {
-                    position.set(vertices[i], vertices[i + 1], vertices[i + 2]).applyMatrix(worldToLocalMatrix);
-                    this._localBoundingBox.add(position);
-                }
-            }
+            this._rootBone = null;
+            this._retargetBoneNames = null;
         }
         /**
          * @internal
          */
         public getBoundingTransform() {
-            return this._rootBone || this.gameObject.transform;
+            const rootBone = this._rootBone;
+
+            return rootBone !== null ? rootBone : super.getBoundingTransform();
         }
         /**
          * 实时获取网格资源的指定三角形顶点位置。
          * - 采用 CPU 蒙皮指定顶点。
          */
-        public getTriangle(triangleIndex: uint, out?: Triangle): Triangle {
-            if (!out) {
-                out = Triangle.create();
+        public getTriangle(triangleIndex: uint, output: Triangle | null = null): Triangle {
+            if (output === null) {
+                output = Triangle.create();
             }
 
             const mesh = this._mesh;
-            const boneMatrices = this.boneMatrices;
 
-            if (mesh && !mesh.isDisposed && boneMatrices) {
-                mesh.getTriangle(triangleIndex, out, this._skinning(triangleIndex * 3, 3));
+            if (mesh !== null && !mesh.isDisposed && this.boneMatrices !== null) {
+                mesh.getTriangle(triangleIndex, output, this._skinning(triangleIndex * 3, 3));
             }
 
-            return out;
+            return output;
         }
 
         public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const mesh = this._mesh;
-            const boneMatrices = this.boneMatrices;
-            if (!mesh || mesh.isDisposed || !boneMatrices) {
+
+            if (mesh === null || mesh.isDisposed || this.boneMatrices === null) {
                 return false;
             }
 
-            const transform = this.gameObject.transform;
-            const boundingTransform = this.getBoundingTransform();
-            const localRay = helpRay.applyMatrix(boundingTransform.worldToLocalMatrix, ray);
-            const localBoundingBox = this.localBoundingBox;
+            const localRay = helpRay.applyMatrix(this.getBoundingTransform().worldToLocalMatrix, ray);
 
-            if (localBoundingBox.raycast(localRay) && mesh.raycast(ray, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0)!)) {
-                if (raycastInfo) {
-                    raycastInfo.transform = transform;
+            if (this.localBoundingBox.raycast(localRay) && mesh.raycast(ray, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0)!)) {
+                if (raycastInfo !== null) {
+                    raycastInfo.transform = this.entity.getComponent(Transform);
                 }
 
                 return true;
@@ -294,20 +274,20 @@ namespace egret3d {
             return false;
         }
         /**
-         * 
+         * 该组件的骨骼数量。
          */
         @paper.editor.property(paper.editor.EditType.UINT, { readonly: true })
         public get boneCount(): uint {
             return this._bones.length;
         }
         /**
-         * 该渲染组件的骨骼列表。
+         * 该组件的骨骼列表。
          */
         public get bones(): ReadonlyArray<Transform | null> {
             return this._bones;
         }
         /**
-         * 该渲染组件的根骨骼。
+         * 该组件的根骨骼。
          */
         public get rootBone(): Transform | null {
             return this._rootBone;
@@ -322,7 +302,7 @@ namespace egret3d {
             this.getBoundingTransform().registerObserver(this);
         }
         /**
-         * 该渲染组件的网格资源。
+         * 该组件的网格资源。
          */
         @paper.editor.property(paper.editor.EditType.MESH)
         @paper.serializedField("_mesh")
@@ -330,7 +310,13 @@ namespace egret3d {
             return this._mesh;
         }
         public set mesh(value: Mesh | null) {
-            if (value && !value.config.scenes && !value.config.nodes && !value.config.skins) {
+            if (
+                value !== null &&
+                (
+                    // value.config.scenes === undefined || TODO
+                    value.config.nodes === undefined || value.config.skins === undefined
+                )
+            ) {
                 console.warn("Invalid skinned mesh.", value.name);
                 return;
             }
@@ -339,12 +325,14 @@ namespace egret3d {
                 return;
             }
 
-            if (this._mesh) {
+            if (this._mesh !== null) {
                 this._mesh.release();
             }
 
-            if (value) {
+            if (value !== null) {
                 value.retain();
+
+                this.localBoundingBox = value.boundingBox;
             }
 
             this._mesh = value;

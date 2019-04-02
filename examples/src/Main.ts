@@ -29,8 +29,8 @@ function exampleStart() {
     exampleObj.start();
 
     function createGUI(exampleString: string) {
-        const guiComponent = paper.Application.sceneManager.globalEntity.getComponent(paper.editor.GUIComponent);
-        if (!guiComponent) {
+        const inspectorComponent = paper.Application.sceneManager.globalEntity.getComponent(paper.editor.InspectorComponent);
+        if (!inspectorComponent) {
             return;
         }
 
@@ -52,7 +52,7 @@ function exampleStart() {
             }
         }
 
-        const gui = guiComponent.hierarchy.addFolder("Examples");
+        const gui = inspectorComponent.hierarchy.addFolder("Examples");
         const options = {
             example: exampleString
         };

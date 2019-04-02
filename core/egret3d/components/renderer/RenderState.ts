@@ -14,6 +14,7 @@ namespace egret3d {
 
         public version: string;
         public standardDerivativesEnabled: boolean;
+        public vertexArrayObject: OES_vertex_array_object | null;
         public textureFloatEnabled: boolean;
         public fragDepthEnabled: boolean;
         public textureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
@@ -189,7 +190,7 @@ namespace egret3d {
             const defines = this.defines;
             const caches = this.caches;
 
-            if (renderer) {
+            if (renderer !== null) {
                 useLightMap = renderer.constructor === MeshRenderer && (renderer as MeshRenderer).lightmapIndex >= 0;
                 receiveShadows = caches.castShadows && renderer.receiveShadows;
                 boneCount = renderer.constructor === SkinnedMeshRenderer ? Math.min(this.maxBoneCount, (renderer as SkinnedMeshRenderer).boneCount) : 0;
@@ -244,6 +245,8 @@ namespace egret3d {
 
                 caches.receiveShadows = receiveShadows;
             }
+
+            return defines;
         }
         /**
          * @internal
@@ -377,11 +380,15 @@ namespace egret3d {
          * 将像素复制到2D纹理图像中
          * TODO 微信上不可用
          */
+        public updateVertexAttributes(mesh: Mesh): void { }
+        /**
+         * 
+         */
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: uint = 0): void { }
         /**
          * 
          */
-        public clearState() {
+        public clearState(): void {
             for (const key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }

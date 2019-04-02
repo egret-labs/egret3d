@@ -50,10 +50,6 @@ namespace egret3d {
          * 
          */
         public zdist: float = -1.0;
-        /**
-         * TODO
-         */
-        public count?: number = 0;
 
         private constructor() {
             super();

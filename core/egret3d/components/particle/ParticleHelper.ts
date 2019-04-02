@@ -59,12 +59,12 @@ namespace egret3d.particle {
             //
             let index = 0;
             //提前填充
-            const orginPostionBuffer = mesh.getAttributes(gltf.AttributeSemantics.POSITION)!;
-            const orginUVBuffer = mesh.getAttributes(gltf.AttributeSemantics.TEXCOORD_0);
-            const orginColorBuffer = mesh.getAttributes(gltf.AttributeSemantics.COLOR_0);
-            const positionBuffer = batchMesh.getAttributes(gltf.AttributeSemantics.POSITION)!;
-            const colorBuffer = batchMesh.getAttributes(gltf.AttributeSemantics.COLOR_0)!;
-            const uvBuffer = batchMesh.getAttributes(gltf.AttributeSemantics.TEXCOORD_0)!;
+            const orginPostionBuffer = mesh.getAttribute(gltf.AttributeSemantics.POSITION)!;
+            const orginUVBuffer = mesh.getAttribute(gltf.AttributeSemantics.TEXCOORD_0);
+            const orginColorBuffer = mesh.getAttribute(gltf.AttributeSemantics.COLOR_0);
+            const positionBuffer = batchMesh.getAttribute(gltf.AttributeSemantics.POSITION)!;
+            const colorBuffer = batchMesh.getAttribute(gltf.AttributeSemantics.COLOR_0)!;
+            const uvBuffer = batchMesh.getAttribute(gltf.AttributeSemantics.TEXCOORD_0)!;
             for (let i = 0; i < totalVertexCount; i++) {
                 const vector2Offset = i * 2;
                 const vector3Offset = i * 3;
@@ -114,8 +114,8 @@ namespace egret3d.particle {
             const batchMesh = Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
             batchMesh.drawMode = gltf.DrawMode.Dynamic;
 
-            const cornerBuffer = batchMesh.getAttributes(gltf.AttributeSemantics._CORNER)!;
-            const uvBuffer = batchMesh.getAttributes(gltf.AttributeSemantics.TEXCOORD_0)!;
+            const cornerBuffer = batchMesh.getAttribute(gltf.AttributeSemantics._CORNER)!;
+            const uvBuffer = batchMesh.getAttribute(gltf.AttributeSemantics.TEXCOORD_0)!;
             for (let i = 0; i < totalVertexCount; i++) {
                 const orginVertexIndex = i % vertexStride;
                 const vector2Offset = i * 2;

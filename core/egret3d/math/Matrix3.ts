@@ -315,4 +315,16 @@ namespace egret3d {
      * @@interanl
      */
     export const helpMatrix3A = Matrix3.create();
+    /**
+     * @@interanl
+     */
+    export const helpMatrix3B = Matrix3.create();
+    /**
+     * @@interanl
+     */
+    export const helpMatrix3C = Matrix3.create();
+    /**
+     * @@interanl
+     */
+    export const helpMatrix3D = Matrix3.create();
 }

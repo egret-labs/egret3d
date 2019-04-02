@@ -30,6 +30,10 @@ namespace egret3d {
 
         public root: egret.DisplayObjectContainer;
 
+        protected _getlocalBoundingBox(): Readonly<Box> | null {
+            return null;
+        }
+
         public initialize() {
             super.initialize();
 

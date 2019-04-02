@@ -66,7 +66,7 @@ namespace paper {
         }
         /**
          * 该资源内部初始化。
-         * - 重写此方法时，必须调用 `super.initialize();`。
+         * - 重写此方法时，必须调用 `super.initialize()` 。
          */
         public initialize(...args: any[]): void {
             this._referenceCount = 0;
@@ -114,8 +114,9 @@ namespace paper {
         }
         /**
          * 释放该资源。
-         * - 重写此方法时，必须调用 `super.dispose();`。
-         * @returns 释放是否成功。（已经释放过的资源，无法再次释放）
+         * - 重写此方法时，必须调用 `super.dispose()` 。
+         * @returns 释放是否成功。
+         * - 已经释放过的资源，无法再次释放。
          */
         public dispose(): boolean {
             if (this._referenceCount === -1) {
@@ -127,9 +128,11 @@ namespace paper {
                 delete assets[this.name];
             }
             //
-            this._referenceCount = -1;
-
             this.onReferenceCountChange && this.onReferenceCountChange(true);
+            //
+            this.name = "";
+            //
+            this._referenceCount = -1;
 
             return true;
         }

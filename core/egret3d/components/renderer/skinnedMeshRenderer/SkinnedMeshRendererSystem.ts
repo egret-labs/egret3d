@@ -10,18 +10,19 @@ namespace egret3d {
         private readonly _materialFilter: boolean[] = [];
 
         private _updateDrawCalls(entity: paper.GameObject, checkState: boolean) {
-            if (checkState && !this.enabled || !this.groups[0].containsEntity(entity)) {
+            if (checkState && (!this.enabled || !this.groups[0].containsEntity(entity))) {
                 return;
             }
 
             const drawCallCollecter = this._drawCallCollecter;
             const renderer = entity.getComponent(SkinnedMeshRenderer)!;
-            const mesh = renderer.mesh;
-            const materials = renderer.materials;
+            const { mesh } = renderer;
+            const { materials } = renderer;
             const materialCount = materials.length;
             // Clear drawCalls.
             drawCallCollecter.removeDrawCalls(entity);
-            if (!mesh || materialCount === 0) {
+
+            if (mesh === null || materialCount === 0) {
                 return;
             }
 
@@ -37,18 +38,15 @@ namespace egret3d {
             materialFilter.length = materialCount;
 
             for (let i = 0; i < subMeshCount; ++i) { // Specified materials.
-                const materialIndex = primitives[i].material;
+                const materialIndex = primitives[i].material || 0;
                 let material: Material | null = null;
 
-                if (materialIndex === undefined) {
-                    material = DefaultMaterials.MESH_BASIC;
-                }
-                else if (materialIndex < materialCount) {
+                if (materialIndex < materialCount) {
                     material = materials[materialIndex];
                     materialFilter[materialIndex] = true;
                 }
 
-                if (material) {
+                if (material !== null) {
                     const drawCall = DrawCall.create();
                     drawCall.entity = entity;
                     drawCall.renderer = renderer;
@@ -91,14 +89,8 @@ namespace egret3d {
         protected getListeners() {
             return [
                 {
-                    type: SkinnedMeshRenderer.onMeshChanged, listener: (component: paper.IComponent) => {
+                    type: SkinnedMeshRenderer.onMeshChanged, listener: (component: SkinnedMeshRenderer) => {
                         this._updateDrawCalls(component.entity as paper.GameObject, true);
-
-                        const renderer = component.entity.getComponent(SkinnedMeshRenderer);
-
-                        if (renderer) {
-                            renderer._localBoundingBoxDirty = true;
-                        }
                     }
                 },
                 {
@@ -112,7 +104,7 @@ namespace egret3d {
         public onEntityAdded(entity: paper.GameObject) {
             const renderer = entity.getComponent(SkinnedMeshRenderer)!;
 
-            if (renderer.mesh && !renderer.source && !renderer.boneMatrices) { // TODO
+            if (renderer.mesh !== null && renderer.source === null && renderer.boneMatrices === null) { // TODO
                 renderer.initialize(true);
             }
 

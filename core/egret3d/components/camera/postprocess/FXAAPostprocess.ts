@@ -5,7 +5,7 @@ namespace egret3d.postprocess {
             const { w, h } = egret3d.stage.viewport;
             const renderTexture = this._renderTexture;
             if (renderTexture) {
-                renderTexture.uploadTexture(w, h);
+                renderTexture.setSize(w, h);
             }
         }
         public initialize() {

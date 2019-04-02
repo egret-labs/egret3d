@@ -139,9 +139,11 @@ namespace egret3d.particle {
          */
         public batchMaterial: Material;
 
-        public uninitialize() {
-            super.uninitialize();
+        protected _getlocalBoundingBox(): Readonly<Box> | null {
+            return null;
+        }
 
+        public uninitialize() {
             if (this._mesh) {
                 this._mesh.release();
             }
@@ -154,6 +156,9 @@ namespace egret3d.particle {
                 this.batchMaterial.release();
             }
 
+            super.uninitialize();
+
+            this._nativeLocalBoundingBox = true;
             this._renderMode = ParticleRenderMode.Billboard;
             this.velocityScale = 1.0;
             this.lengthScale = 1.0;
@@ -161,10 +166,6 @@ namespace egret3d.particle {
 
             this.batchMesh = null!;
             this.batchMaterial = null!;
-        }
-
-        public recalculateLocalBox() {
-            this._localBoundingBox.copy(Box.ONE);
         }
 
         public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {

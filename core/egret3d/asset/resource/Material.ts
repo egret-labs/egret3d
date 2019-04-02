@@ -58,25 +58,27 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _version: uint = 0;
+        public _version: uint;
         /**
          * @internal
          */
-        public _dirty: MaterialDirty = MaterialDirty.None;
+        public _dirty: MaterialDirty;
         /**
-         * 仅为更高的访问性能，该值存在于 config 中，是否有必要保留该值。
+         * 缓存的渲染排序。
          * @internal
          */
-        public _renderQueue: RenderQueue | uint = RenderQueue.Geometry;
+        public _renderQueue: RenderQueue | uint;
         private readonly _uvTransform: Array<number> = [0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0];
         /**
-         * @internal
+         * 缓存的材质引用。
          */
-        public _technique: gltf.Technique = null!;
+        private _glTFMaterial: GLTFMaterial | null;
         /**
+         * 缓存的技术引用。
          * @internal
          */
-        public _shader: Shader = null!;
+        public _technique: gltf.Technique | null;
+        private _shader: Shader | null;
 
         private _createTechnique(shader: Shader, glTFMaterial: GLTFMaterial) {
             const { attributes: sourceAttributes, uniforms: sourceUniforms } = shader.config.extensions.KHR_techniques_webgl!.techniques[0];
@@ -193,31 +195,31 @@ namespace egret3d {
         }
 
         private _reset(shaderOrConfig: Shader | GLTF) {
-            let glTFMaterial: GLTFMaterial;
             let shader: Shader | null = null;
+            let glTFMaterial: GLTFMaterial | null = null;
             //
             if (shaderOrConfig instanceof Shader) {
-                if (this.config) { // Change shader.
+                if (this.config !== null) { // Change shader.
                     this._retainOrReleaseTextures(false, false);
                     this._addOrRemoveTexturesDefine(false);
-                    glTFMaterial = this.config.materials![0] as GLTFMaterial;
+                    glTFMaterial = this._glTFMaterial = this.config.materials![0] as GLTFMaterial;
                 }
                 else { // Create.
                     const config = (this.config as GLTF) = Material.createConfig();
-                    glTFMaterial = {
+                    glTFMaterial = this._glTFMaterial = {
                         extensions: {
                             KHR_techniques_webgl: { technique: shaderOrConfig.name },
                             paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : RenderQueue.Geometry }
                         }
                     };
-                    config.materials = [glTFMaterial];
+                    config.materials = [this._glTFMaterial];
                 }
 
                 shader = shaderOrConfig;
             }
             else { // Load.
                 const config = (this.config as GLTF) = shaderOrConfig;
-                glTFMaterial = config.materials![0] as GLTFMaterial;
+                glTFMaterial = this._glTFMaterial = config.materials![0] as GLTFMaterial;
                 shader = paper.Asset.find<Shader>(glTFMaterial.extensions.KHR_techniques_webgl.technique) || DefaultShaders.MESH_BASIC;
             }
             //
@@ -229,7 +231,7 @@ namespace egret3d {
         }
 
         private _retainOrReleaseTextures(isRatain: boolean, isOnce: boolean) {
-            const uniforms = this._technique.uniforms;
+            const uniforms = this._technique!.uniforms;
             for (const k in uniforms) {
                 const uniform = uniforms[k];
                 if (
@@ -252,7 +254,7 @@ namespace egret3d {
         }
 
         private _addOrRemoveTexturesDefine(add: boolean = true) {
-            const uniforms = this._technique.uniforms;
+            const uniforms = this._technique!.uniforms;
             for (const k in uniforms) {
                 const uniform = uniforms[k];
                 if (uniform.value &&
@@ -272,16 +274,17 @@ namespace egret3d {
                 this._dirty &= ~MaterialDirty.UVTransform;
             }
         }
-
-        public initialize(
-            name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
-            ...args: Array<any>
-        ) {
-            super.initialize(name, config, buffers, args);
+        /**
+         * @internal
+         */
+        public initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null) {
+            super.initialize(name, config, buffers);
 
             renderState.onGammaInputChanged.add(this._addOrRemoveTexturesDefine, this);
         }
-
+        /**
+         * @internal
+         */
         public retain(): this {
             super.retain();
 
@@ -289,7 +292,9 @@ namespace egret3d {
 
             return this;
         }
-
+        /**
+         * @internal
+         */
         public release(): this {
             super.release();
 
@@ -299,20 +304,30 @@ namespace egret3d {
 
             return this;
         }
-
+        /**
+         * @interfnal
+         */
         public dispose() {
-            if (!super.dispose()) {
-                return false;
+            if (super.dispose()) {
+                renderState.onGammaInputChanged.remove(this._addOrRemoveTexturesDefine, this);
+
+                if (this._technique !== null) {
+                    this._retainOrReleaseTextures(false, false);
+                }
+
+                this.defines.clear();
+
+                this._version = 0;
+                this._dirty = MaterialDirty.None;
+                this._renderQueue = RenderQueue.Geometry;
+                this._glTFMaterial = null;
+                this._technique = null;
+                this._shader = null;
+
+                return true;
             }
 
-            renderState.onGammaInputChanged.remove(this._addOrRemoveTexturesDefine, this);
-            this._retainOrReleaseTextures(false, false);
-            //
-            this.defines.clear();
-            this._technique = null!;
-            this._shader = null!;
-
-            return true;
+            return false;
         }
         /**
          * 拷贝。
@@ -325,8 +340,8 @@ namespace egret3d {
             this._shader = value._shader;
             this.defines.copy(value.defines);
             // Copy uniforms.
-            const sourceUniforms = value._technique.uniforms;
-            const targetUniforms = this._technique.uniforms = {} as { [k: string]: gltf.Uniform };
+            const sourceUniforms = value._technique!.uniforms;
+            const targetUniforms = this._technique!.uniforms = {} as { [k: string]: gltf.Uniform };
 
             for (const k in sourceUniforms) {
                 const uniform = sourceUniforms[k];
@@ -339,8 +354,8 @@ namespace egret3d {
                 };
             }
             // Copy states and functions.
-            const sourceStates = value._technique.states!;
-            const targetStates = this._technique.states!;
+            const sourceStates = value._technique!.states!;
+            const targetStates = this._technique!.states!;
             targetStates.enable = sourceStates.enable!.concat();
 
             for (const k in sourceStates.functions!) {
@@ -356,7 +371,7 @@ namespace egret3d {
          * 克隆该材质。
          */
         public clone(): this {
-            return Material.create(this._shader).copy(this) as this;
+            return Material.create(this._shader!).copy(this) as this;
         }
 
         public readonly needUpdate = (dirty: MaterialDirty) => {
@@ -365,7 +380,7 @@ namespace egret3d {
         }
 
         setBoolean(id: string, value: boolean) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -378,7 +393,7 @@ namespace egret3d {
         }
 
         setInt(id: string, value: int) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -391,7 +406,7 @@ namespace egret3d {
         }
 
         setIntv(id: string, value: Float32Array | ReadonlyArray<int>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -404,7 +419,7 @@ namespace egret3d {
         }
 
         setFloat(id: string, value: number) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -417,7 +432,7 @@ namespace egret3d {
         }
 
         setFloatv(id: string, value: Float32Array | ReadonlyArray<number>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -430,7 +445,7 @@ namespace egret3d {
         }
 
         setVector2(id: string, value: Readonly<IVector2>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value[0] = value.x;
                 uniform.value[1] = value.y;
@@ -444,7 +459,7 @@ namespace egret3d {
         }
 
         setVector2v(id: string, value: Float32Array | ReadonlyArray<number>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -457,7 +472,7 @@ namespace egret3d {
         }
 
         setVector3(id: string, value: Readonly<IVector3>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value[0] = value.x;
                 uniform.value[1] = value.y;
@@ -472,7 +487,7 @@ namespace egret3d {
         }
 
         setVector3v(id: string, value: Float32Array | ReadonlyArray<number>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -485,7 +500,7 @@ namespace egret3d {
         }
 
         setVector4(id: string, value: Readonly<IVector4>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value[0] = value.x;
                 uniform.value[1] = value.y;
@@ -501,7 +516,7 @@ namespace egret3d {
         }
 
         setVector4v(id: string, value: Float32Array | ReadonlyArray<number>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -514,7 +529,7 @@ namespace egret3d {
         }
 
         setMatrix(id: string, value: Readonly<Matrix4>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value.rawData;
                 this._version++;
@@ -527,7 +542,7 @@ namespace egret3d {
         }
 
         setMatrixv(id: string, value: Float32Array | ReadonlyArray<number>) {
-            const uniform = this._technique.uniforms[id];
+            const uniform = this._technique!.uniforms[id];
             if (uniform !== undefined) {
                 uniform.value = value;
                 this._version++;
@@ -575,7 +590,7 @@ namespace egret3d {
          */
         public setBlend(blendEquations: gltf.BlendEquation[], blendFactors: gltf.BlendFactor[], renderQueue: RenderQueue, opacity?: number): this;
         public setBlend(p0: BlendMode | (gltf.BlendEquation[]), p1: RenderQueue | (gltf.BlendFactor[]), p2?: number | RenderQueue, p3?: number): this {
-            const { enable, functions } = this._technique.states!;
+            const { enable, functions } = this._technique!.states!;
             const blend = Array.isArray(p0) ? BlendMode.Custom : p0;
             let renderQueue: RenderQueue;
             let opacity: number | undefined = undefined;
@@ -672,7 +687,7 @@ namespace egret3d {
          * @param cullFace 剔除模式。
          */
         public setCullFace(cullEnabled: boolean, frontFace: gltf.FrontFace = gltf.FrontFace.CCW, cullFace: gltf.CullFace = gltf.CullFace.Back): this {
-            const { enable, functions } = this._technique.states!;
+            const { enable, functions } = this._technique!.states!;
             const index = enable!.indexOf(gltf.EnableState.CullFace);
 
             if (cullEnabled) {
@@ -709,7 +724,7 @@ namespace egret3d {
          * @param depthWrite 深度缓冲。
          */
         public setDepth(depthTest: boolean, depthWrite: boolean) {
-            const { enable, functions } = this._technique.states!;
+            const { enable, functions } = this._technique!.states!;
             const index = enable!.indexOf(gltf.EnableState.DepthTest);
 
             if (depthTest) {
@@ -736,7 +751,7 @@ namespace egret3d {
          * 
          */
         public setStencil(value: boolean): this {
-            const { enable } = this._technique.states!;
+            const { enable } = this._technique!.states!;
 
             const index = enable!.indexOf(gltf.EnableState.StencilTest);
 
@@ -756,7 +771,7 @@ namespace egret3d {
          * @private
          */
         public clearStates(): this {
-            const { enable, functions } = this._technique.states!;
+            const { enable, functions } = this._technique!.states!;
             enable!.length = 0;
 
             for (const k in functions!) {
@@ -794,7 +809,7 @@ namespace egret3d {
                 }
             }
 
-            const uniform = this._technique.uniforms[uniformName];
+            const uniform = this._technique!.uniforms[uniformName];
 
             if (uniform && uniform.value && Array.isArray(uniform.value)) {
                 p2.r = uniform.value[0];
@@ -843,7 +858,7 @@ namespace egret3d {
                 out = Matrix3.create();
             }
 
-            const uniform = this._technique.uniforms[ShaderUniformName.UVTransform];
+            const uniform = this._technique!.uniforms[ShaderUniformName.UVTransform];
             if (uniform && uniform.value && Array.isArray(uniform.value)) {
                 out.fromArray(uniform.value);
             }
@@ -858,7 +873,7 @@ namespace egret3d {
          * @param matrix 矩阵。
          */
         public setUVTransform(matrix: Readonly<Matrix3>): this {
-            const uniform = this._technique.uniforms[ShaderUniformName.UVTransform];
+            const uniform = this._technique!.uniforms[ShaderUniformName.UVTransform];
 
             if (uniform) {
                 const array = (uniform.value && Array.isArray(uniform.value)) ? uniform.value : new Array(9);
@@ -885,7 +900,7 @@ namespace egret3d {
                 uniformName = ShaderUniformName.Map;
             }
 
-            const uniform = this._technique.uniforms[uniformName];
+            const uniform = this._technique!.uniforms[uniformName];
             if (uniform) {
                 return uniform.value || null; // TODO
             }
@@ -916,7 +931,7 @@ namespace egret3d {
             //     p2 = DefaultTextures.WHITE;
             // }
 
-            const uniform = this._technique.uniforms[p1];
+            const uniform = this._technique!.uniforms[p1];
             if (uniform) {
                 if (uniform.value !== p2) {
 
@@ -961,7 +976,7 @@ namespace egret3d {
                 return;
             }
 
-            this.config.materials![0].extensions.paper.renderQueue = value;
+            this._glTFMaterial!.extensions.paper.renderQueue = value;
             this._renderQueue = value;
         }
         /**
@@ -969,7 +984,7 @@ namespace egret3d {
          */
         public get opacity(): number {
             const uniformName = ShaderUniformName.Opacity;
-            const uniform = this._technique.uniforms[uniformName];
+            const uniform = this._technique!.uniforms[uniformName];
             if (uniform) {
                 const value = uniform.value;
                 return (value !== value) ? 1.0 : value;
@@ -988,7 +1003,7 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.SHADER)
         public get shader(): Shader {
-            return this._shader;
+            return this._shader!;
         }
         public set shader(value: Shader) {
             if (!value) {
@@ -1006,7 +1021,7 @@ namespace egret3d {
          * 该材质的渲染技术。
          */
         public get technique(): gltf.Technique {
-            return this._technique;
+            return this._technique!;
         }
 
         /**

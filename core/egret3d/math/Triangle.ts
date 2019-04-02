@@ -308,4 +308,21 @@ namespace egret3d {
             return helpVector3A.cross(helpVector3B).length * 0.5;
         }
     }
+
+    /**
+     * @internal
+     */
+    export const helpTriangleA = Triangle.create();
+    /**
+     * @internal
+     */
+    export const helpTriangleB = Triangle.create();
+    /**
+     * @internal
+     */
+    export const helpTriangleC = Triangle.create();
+    /**
+     * @internal
+     */
+    export const helpTriangleD = Triangle.create();
 }

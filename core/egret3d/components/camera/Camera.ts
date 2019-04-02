@@ -165,11 +165,11 @@ namespace egret3d {
             const writeRenderTarget = this._writeRenderTarget;
 
             if (readRenderTarget) {
-                readRenderTarget.uploadTexture(w, h);
+                readRenderTarget.setSize(w, h);
             }
 
             if (writeRenderTarget) {
-                writeRenderTarget.uploadTexture(w, h);
+                writeRenderTarget.setSize(w, h);
             }
         }
 

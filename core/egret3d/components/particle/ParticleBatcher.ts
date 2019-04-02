@@ -293,16 +293,16 @@ namespace egret3d.particle {
             const mesh = renderer.batchMesh ? renderer.batchMesh : createBatchMesh(renderer, comp.main.maxParticles);//TODO .retain()
             this._vertexStride = renderer.renderMode === ParticleRenderMode.Mesh ? renderer.mesh!.vertexCount : 4;
 
-            this._startPositionBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_POSITION)!;
-            this._startVelocityBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_VELOCITY)!;
-            this._startColorBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_COLOR)!;
-            this._startSizeBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_SIZE)!;
-            this._startRotationBuffer = mesh.getAttributes(gltf.AttributeSemantics._START_ROTATION)!;
-            this._startTimeBuffer = mesh.getAttributes(gltf.AttributeSemantics._TIME)!;
-            this._random0Buffer = mesh.getAttributes(gltf.AttributeSemantics._RANDOM0)!;
-            this._random1Buffer = mesh.getAttributes(gltf.AttributeSemantics._RANDOM1)!;
-            this._worldPostionBuffer = mesh.getAttributes(gltf.AttributeSemantics._WORLD_POSITION)!;
-            this._worldRoationBuffer = mesh.getAttributes(gltf.AttributeSemantics._WORLD_ROTATION)!;
+            this._startPositionBuffer = mesh.getAttribute(gltf.AttributeSemantics._START_POSITION)!;
+            this._startVelocityBuffer = mesh.getAttribute(gltf.AttributeSemantics._START_VELOCITY)!;
+            this._startColorBuffer = mesh.getAttribute(gltf.AttributeSemantics._START_COLOR)!;
+            this._startSizeBuffer = mesh.getAttribute(gltf.AttributeSemantics._START_SIZE)!;
+            this._startRotationBuffer = mesh.getAttribute(gltf.AttributeSemantics._START_ROTATION)!;
+            this._startTimeBuffer = mesh.getAttribute(gltf.AttributeSemantics._TIME)!;
+            this._random0Buffer = mesh.getAttribute(gltf.AttributeSemantics._RANDOM0)!;
+            this._random1Buffer = mesh.getAttribute(gltf.AttributeSemantics._RANDOM1)!;
+            this._worldPostionBuffer = mesh.getAttribute(gltf.AttributeSemantics._WORLD_POSITION)!;
+            this._worldRoationBuffer = mesh.getAttribute(gltf.AttributeSemantics._WORLD_ROTATION)!;
 
             const primitive = mesh.glTFMesh.primitives[0];
             this._vertexAttributes = [];

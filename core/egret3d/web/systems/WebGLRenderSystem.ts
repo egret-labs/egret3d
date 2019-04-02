@@ -84,28 +84,125 @@ namespace egret3d.webgl {
         //
         private _backupCamera: Camera | null = null;
 
-        private _getWebGLShader(gltfShader: gltf.Shader, defines: string) {
+        private _compileShader(shader: gltf.Shader, defines: string) {
             const webgl = WebGLRenderState.webgl!;
-            const shader = webgl.createShader(gltfShader.type)!;
-            let shaderContent = _parseIncludes(gltfShader.uri!);
+            const webGLShader = webgl.createShader(shader.type)!;
+            let shaderContent = _parseIncludes(shader.uri!);
             shaderContent = _replaceShaderNums(shaderContent);
             shaderContent = defines + _unrollLoops(shaderContent);
-            webgl.shaderSource(shader, shaderContent);
-            webgl.compileShader(shader);
+            webgl.shaderSource(webGLShader, shaderContent);
+            webgl.compileShader(webGLShader);
 
-            const parameter = webgl.getShaderParameter(shader, gltf.WebGL.CompileStatus);
-            if (!parameter) {
-                console.error("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?");
-                // if (confirm("Shader compile:" + gltfShader.name + " error! ->" + webgl.getShaderInfoLog(shader) + "\n" + ". did you want see the code?")) {
-                //     alert(gltfShader.uri);
-                // }
+            const parameter = webgl.getShaderParameter(webGLShader, gltf.WebGL.CompileStatus);
 
-                webgl.deleteShader(shader);
-
-                return null;
+            if (parameter) {
+                return webGLShader;
             }
 
-            return shader;
+            console.error("Compile webgl shader error.", shader.name, "\n", webgl.getShaderInfoLog(webGLShader));
+            webgl.deleteShader(webGLShader);
+
+            return null;
+        }
+
+        private _updateProgram(scene: paper.Scene, renderer: paper.BaseRenderer | null, material: Material) {
+            const webgl = WebGLRenderState.webgl!;
+            const renderState = this._renderState;
+            const shader = material.shader as WebGLShader;
+            const programs = shader.programs;
+
+            let forceUpdate = false;
+            let program: WebGLProgramBinder | null = null;
+
+            const programKey = renderState._updateDrawDefines(renderer).definesMask +
+                material.defines.definesMask +
+                scene.defines.definesMask;
+
+            if (programKey in programs) {
+                program = programs[programKey];
+            }
+            else {
+                const extensions = shader.config.extensions!.KHR_techniques_webgl;
+                const defines = [
+                    renderState.defines,
+                    scene.defines,
+                    material.defines,
+                ];
+                renderState.customShaderChunks = shader.customs;
+                //
+                const vertexWebGLShader = this._compileShader(extensions!.shaders[0], renderState.getPrefixVertex(Defines.link(defines, DefineLocation.Vertex)))!; // TODO 顺序依赖
+                const fragmentWebGLShader = this._compileShader(extensions!.shaders[1], renderState.getPrefixFragment(Defines.link(defines, DefineLocation.Fragment)))!;  // TODO 顺序依赖
+
+                if (vertexWebGLShader !== null && fragmentWebGLShader !== null) {
+                    const webGLProgram = webgl.createProgram()!;
+                    webgl.attachShader(webGLProgram, vertexWebGLShader);
+                    webgl.attachShader(webGLProgram, fragmentWebGLShader);
+                    // TODO bindAttribLocation
+                    webgl.linkProgram(webGLProgram);
+
+                    const programLog = webgl.getProgramInfoLog(webGLProgram)!.trim();
+                    const vertexLog = webgl.getShaderInfoLog(vertexWebGLShader)!.trim();
+                    const fragmentLog = webgl.getShaderInfoLog(fragmentWebGLShader)!.trim();
+                    const parameter = webgl.getProgramParameter(webGLProgram, gltf.WebGL.LinkStatus);
+
+                    if (parameter) {
+                        program = new WebGLProgramBinder(webGLProgram).extract(material.technique);
+                    }
+                    else {
+                        console.error("Create webgl program error.", shader.name, programLog, vertexLog, fragmentLog);
+                        webgl.deleteProgram(webGLProgram);
+                    }
+
+                    webgl.deleteShader(vertexWebGLShader);
+                    webgl.deleteShader(fragmentWebGLShader);
+                }
+
+                programs[programKey] = program;
+            }
+            //
+            if (program !== this._cacheProgram) {
+                if (program !== null) {
+                    webgl.useProgram(program.program);
+                }
+
+                this._cacheProgram = program;
+
+                this._cacheScene = null;
+                this._cacheCamera = null;
+                this._cacheLight = null;
+
+                this._cacheSubMeshIndex = -1;
+                this._cacheMesh = null;
+
+                this._cacheMaterialVersion = -1;
+                this._cacheMaterial = null;
+
+                this._cacheLightmapIndex = -1;
+                forceUpdate = true;
+            }
+
+            return forceUpdate;
+        }
+
+        private _updateAttributes(mesh: Mesh, subMeshIndex: uint) {
+            const webgl = WebGLRenderState.webgl!;
+            const renderState = this._renderState;
+            const { primitives, extras } = mesh.glTFMesh;
+
+            mesh.update(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer);
+
+            if (renderState.vertexArrayObject !== null) {
+                webgl.bindVertexArray(extras!.vao);
+            }
+            else {
+                const primitive = primitives[subMeshIndex];
+                const vbo = extras!.vbo;
+                const ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
+
+                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
+                webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
+                renderState.updateVertexAttributes(mesh);
+            }
         }
 
         private _updateGlobalUniforms(program: WebGLProgramBinder, camera: Camera, drawCall: DrawCall, renderer: paper.BaseRenderer | null, currentScene: paper.Scene | null, forceUpdate: boolean) {
@@ -534,55 +631,6 @@ namespace egret3d.webgl {
             }
         }
 
-        private _updateAttributes(program: WebGLProgramBinder, mesh: Mesh, subMeshIndex: number) {
-            const webgl = WebGLRenderState.webgl!;
-            const renderState = this._renderState;
-            const attributes = mesh.glTFMesh.primitives[subMeshIndex].attributes;
-            let attributeCount = 0;
-            //
-            if ((mesh as WebGLMesh).vbo) {
-                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, (mesh as WebGLMesh).vbo);
-            }
-            else {
-                (mesh as WebGLMesh).createBuffer();
-            }
-            // vbo.
-            for (const attribute of program.attributes) {
-                const location = attribute.location;
-                const accessorIndex = attributes[attribute.semantic];
-
-                if (accessorIndex !== undefined) {
-                    const accessor = mesh.getAccessor(accessorIndex);
-                    webgl.vertexAttribPointer(
-                        location,
-                        accessor.typeCount!,
-                        accessor.componentType,
-                        accessor.normalized !== undefined ? accessor.normalized : false,
-                        0, mesh.getBufferOffset(accessor)
-                    ); // TODO normalized应该来源于mesh，应该还没有
-                    webgl.enableVertexAttribArray(location);
-                }
-                else {
-                    webgl.disableVertexAttribArray(location);
-                }
-
-                attributeCount++;
-            }
-            //
-            if (attributeCount !== renderState.caches.attributeCount) {
-                for (let i = attributeCount, l = renderState.caches.attributeCount; i < l; ++i) {
-                    webgl.disableVertexAttribArray(i);
-                }
-
-                renderState.caches.attributeCount = attributeCount;
-            }
-            // ibo.
-            const ibo = (mesh as WebGLMesh).ibos[subMeshIndex];
-            if (ibo) {
-                webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
-            }
-        }
-
         private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
             const renderState = this._renderState;
             renderState.renderTarget = renderTarget;
@@ -621,17 +669,19 @@ namespace egret3d.webgl {
                 renderState._updateTextureDefines(ShaderUniformName.EnvMap, null, renderState.defines);
                 renderState.caches.skyBoxTexture = null;
             }
+            //
+            const { opaqueCalls, transparentCalls } = camera.context;
             // Draw opaques.
-            for (const drawCall of camera.context.opaqueCalls) {
+            for (const drawCall of opaqueCalls) {
                 this.draw(drawCall, material);
             }
             // Draw transparents.
-            for (const drawCall of camera.context.transparentCalls) {
+            for (const drawCall of transparentCalls) {
                 this.draw(drawCall, material);
             }
             //
-            if (renderTarget && renderTarget.generateMipmap()) {
-                renderState.clearState(); // Fixed there is no texture bound to the unit 0 error.
+            if (renderTarget !== null && renderTarget.levels !== 1) { // Fixed there is no texture bound to the unit 0 error.
+                renderState.clearState();
             }
             // Egret 2D.
             const webgl = WebGLRenderState.webgl!;
@@ -821,8 +871,34 @@ namespace egret3d.webgl {
         }
 
         public draw(drawCall: DrawCall, material: Material | null = null) {
+            const webgl = WebGLRenderState.webgl!;
+            const camera = cameraAndLightCollecter.currentCamera!;
             const renderer = drawCall.renderer;
-            material = material || drawCall.material;
+            const activeScene = paper.Application.sceneManager.activeScene;
+            const currentScene = renderer ? renderer.gameObject.scene : null; // 后期渲染 renderer 为空。TODO，此处场景使用情况进一步确认。
+            const mesh = drawCall.mesh;
+
+            if (material === null) {
+                material = drawCall.material;
+            }
+
+            if (DEBUG) {
+                let flag = false;
+
+                if (mesh.isDisposed) {
+                    console.error("The mesh has been disposed.", renderer ? renderer.gameObject.path : mesh.name);
+                    flag = true;
+                }
+
+                if (material.isDisposed) {
+                    console.error("The material has been disposed.", renderer ? renderer.gameObject.path : material.name);
+                    flag = true;
+                }
+
+                if (flag) {
+                    return;
+                }
+            }
 
             if (renderer && renderer.gameObject._beforeRenderBehaviorCount > 0) {
                 let flag = false;
@@ -842,120 +918,27 @@ namespace egret3d.webgl {
                     return;
                 }
             }
-
-            const webgl = WebGLRenderState.webgl!;
-            const renderState = this._renderState;
-            const camera = cameraAndLightCollecter.currentCamera!;
-            const activeScene = paper.Application.sceneManager.activeScene;
-            const currentScene = renderer ? renderer.gameObject.scene : null; // 后期渲染 renderer 为空。
-            const mesh = drawCall.mesh;
-            const shader = material.shader as WebGLShader;
-            const programs = shader.programs;
-
-            renderState._updateDrawDefines(renderer);
-
-            const programKey = renderState.defines.definesMask
-                + material.defines.definesMask
-                + (currentScene || activeScene).defines.definesMask;
-            let program: WebGLProgramBinder | null = null;
-
-            if (DEBUG) {
-                let flag = false;
-
-                if (mesh.isDisposed) {
-                    console.error("The mesh has been disposed.", renderer ? renderer.gameObject.path : mesh.name);
-                    flag = true;
-                }
-
-                if (shader.isDisposed) {
-                    console.error("The shader has been disposed.", renderer ? renderer.gameObject.path : shader.name);
-                    flag = true;
-                }
-
-                if (material.isDisposed) {
-                    console.error("The material has been disposed.", renderer ? renderer.gameObject.path : material.name);
-                    flag = true;
-                }
-
-                if (flag) {
-                    return;
-                }
-            }
-
-            if (programKey in programs) {
-                program = programs[programKey];
-            }
-            else {
-                const extensions = shader.config.extensions!.KHR_techniques_webgl;
-                const defines = [
-                    renderState.defines,
-                    (currentScene || activeScene).defines,
-                    material.defines,
-                ];
-                renderState.customShaderChunks = shader.customs;
-                //
-                const vertexWebGLShader = this._getWebGLShader(extensions!.shaders[0], renderState.getPrefixVertex(Defines.link(defines, DefineLocation.Vertex)))!; // TODO 顺序依赖
-                const fragmentWebGLShader = this._getWebGLShader(extensions!.shaders[1], renderState.getPrefixFragment(Defines.link(defines, DefineLocation.Fragment)))!;  // TODO 顺序依赖
-
-                if (vertexWebGLShader && fragmentWebGLShader) {
-                    const webGLProgram = webgl.createProgram()!;
-                    webgl.attachShader(webGLProgram, vertexWebGLShader);
-                    webgl.attachShader(webGLProgram, fragmentWebGLShader);
-                    // TODO bindAttribLocation
-                    webgl.linkProgram(webGLProgram);
-
-                    const programLog = webgl.getProgramInfoLog(webGLProgram)!.trim();
-                    const vertexLog = webgl.getShaderInfoLog(vertexWebGLShader)!.trim();
-                    const fragmentLog = webgl.getShaderInfoLog(fragmentWebGLShader)!.trim();
-
-                    const parameter = webgl.getProgramParameter(webGLProgram, gltf.WebGL.LinkStatus);
-                    if (parameter) {
-                        program = new WebGLProgramBinder(webGLProgram).extract(material.technique);
-
-                        // if (programLog) {
-                        //     console.warn("getProgramInfoLog:", shader.name, programLog, vertexLog, fragmentLog);
-                        // }
-                    }
-                    else {
-                        console.error("getProgramInfoLog:", shader.name, programLog, vertexLog, fragmentLog);
-                        webgl.deleteProgram(webGLProgram);
-                    }
-
-                    webgl.deleteShader(vertexWebGLShader);
-                    webgl.deleteShader(fragmentWebGLShader);
-                }
-
-                programs[programKey] = program;
-            }
             //
-            if (program) {
-                let forceUpdate = false;
-                if (program !== this._cacheProgram) {
-                    webgl.useProgram(program.program);
-                    this._cacheProgram = program;
-                    this._cacheScene = null;
-                    this._cacheCamera = null;
-                    this._cacheLight = null;
-                    this._cacheMesh = null;
-                    this._cacheMaterial = null;
-                    this._cacheMaterialVersion = -1;
-                    this._cacheLightmapIndex = -1;
-                    forceUpdate = true;
-                }
-                //
-                const subMeshIndex = drawCall.subMeshIndex;
+            const forceUpdate = this._updateProgram(currentScene || activeScene, renderer, material);
+            const program = this._cacheProgram;
+            //
+            if (program !== null) {
+                const { subMeshIndex } = drawCall;
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
-                const vertexAccessor = mesh.getAccessor(primitive.attributes.POSITION || 0); //
-                const bufferOffset = mesh.getBufferOffset(vertexAccessor);
-                // Update global uniforms.
-                this._updateGlobalUniforms(program, camera, drawCall, renderer, currentScene, forceUpdate);
                 // Update attributes.
                 if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
-                    this._updateAttributes(program, mesh, subMeshIndex);
+                    if (program !== mesh.glTFMesh.extras!.program) {
+                        mesh.needUpdate(MeshNeedUpdate.VertexArray);
+                        mesh.glTFMesh.extras!.program = program;
+                    }
+
+                    this._updateAttributes(mesh, subMeshIndex);
                     this._cacheSubMeshIndex = subMeshIndex;
                     this._cacheMesh = mesh;
                 }
+                // Update global uniforms.
+                this._updateGlobalUniforms(program, camera, drawCall, renderer, currentScene, forceUpdate);
                 // Update uniforms.
                 if (this._cacheMaterial !== material || this._cacheMaterialVersion !== material._version) {
                     this._updateUniforms(program, material);
@@ -972,19 +955,33 @@ namespace egret3d.webgl {
                 //     }
                 // }
                 // Draw.
-                if (primitive.indices !== undefined) {
-                    const indexAccessor = mesh.getAccessor(primitive.indices);
-                    webgl.drawElements(drawMode, drawCall.count || indexAccessor.count, indexAccessor.componentType, 0);//TODO 暂时不支持交错
+                if (primitive.extras!.draw !== undefined) {
+                    // TODO 需要更友好的 API 以及防止 mesh cache 的方式。
+                    const { offset, count } = primitive.extras!.draw!;
+
+                    if (primitive.indices !== undefined) {
+                        const indexAccessor = mesh.getAccessor(primitive.indices);
+                        webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                    }
+                    else {
+                        webgl.drawArrays(drawMode, offset, count);
+                    }
                 }
                 else {
-                    webgl.drawArrays(drawMode, 0, vertexAccessor.count);
+                    if (primitive.indices !== undefined) {
+                        const indexAccessor = mesh.getAccessor(primitive.indices);
+                        webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
+                    }
+                    else {
+                        webgl.drawArrays(drawMode, 0, mesh.vertexCount);
+                    }
                 }
-
-                this._drawCallCollecter.drawCallCount++;
 
                 if (drawCall.drawCount >= 0) {
                     drawCall.drawCount++;
                 }
+
+                this._drawCallCollecter.drawCallCount++;
             }
         }
     }
