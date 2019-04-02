@@ -6189,6 +6189,7 @@ var egret3d;
              * @internal
              */
             _this.onGammaInputChanged = new signals.Signal();
+            _this.vertexArrayObject = null;
             _this.maxBoneCount = 24;
             _this.maxPrecision = "";
             _this.commonExtensions = "";
