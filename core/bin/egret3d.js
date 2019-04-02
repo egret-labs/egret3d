@@ -4722,7 +4722,7 @@ var egret3d;
          */
         GLTFAsset.prototype.getBuffer = function (accessor) {
             var bufferView = this.getBufferView(accessor);
-            return this.config.buffers[bufferView.buffer].extras.data;
+            return this.config.buffers[bufferView.buffer];
         };
         /**
          * 通过 Accessor 获取指定 BufferView。
@@ -11130,13 +11130,25 @@ var egret3d;
             if (bufferIndex !== 0) {
                 var accessor = accessors[accessorIndex];
                 // Update GLTFIndex.
+                for (var _i = 0, _b = bufferViews; _i < _b.length; _i++) {
+                    var bufferView = _b[_i];
+                    if (bufferView.buffer > bufferIndex) {
+                        bufferView.buffer--;
+                    }
+                }
+                for (var _c = 0, _d = accessors; _c < _d.length; _c++) {
+                    var accessor_1 = _d[_c];
+                    if (accessor_1.bufferView > bufferViewIndex) {
+                        accessor_1.bufferView--;
+                    }
+                }
                 for (var k in attributes) {
                     if (attributes[k] > accessorIndex) {
                         attributes[k]--;
                     }
                 }
-                for (var _i = 0, primitives_1 = primitives; _i < primitives_1.length; _i++) {
-                    var primitive = primitives_1[_i];
+                for (var _e = 0, primitives_1 = primitives; _e < primitives_1.length; _e++) {
+                    var primitive = primitives_1[_e];
                     if (primitive.indices !== undefined && primitive.indices > accessorIndex) {
                         primitive.indices--;
                     }
@@ -11483,7 +11495,8 @@ var egret3d;
                 var bufferIndex = buffers.length;
                 var bufferViewIndex = bufferViews.length;
                 var accessorIndex = accessors.length;
-                buffers[bufferIndex] = { byteLength: byteLength, extras: { data: new Float32Array(viewLength) } };
+                var buffer = new Float32Array(viewLength);
+                buffers[bufferIndex] = { byteLength: byteLength, extras: { data: buffer } };
                 bufferViews[bufferViewIndex] = { buffer: bufferIndex, byteLength: byteLength, target: 34962 /* ArrayBuffer */ };
                 accessors[accessorIndex] = {
                     bufferView: bufferViewIndex,
@@ -11504,9 +11517,9 @@ var egret3d;
                     this._attributeTypes[attributeName] = attributeType;
                 }
                 this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */);
-                return true;
+                return buffer;
             }
-            return false;
+            return null;
         };
         /**
          *
@@ -11530,10 +11543,10 @@ var egret3d;
                     }
                     delete attributes[attributeName];
                     this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */);
-                    return true;
+                    return this.getBuffer(removeAccessor).extras.data;
                 }
             }
-            return false;
+            return null;
         };
         /**
          * 为该网格添加一个子网格。
@@ -11677,7 +11690,11 @@ var egret3d;
             if (offset === void 0) { offset = 0; }
             if (count === void 0) { count = 0; }
             if (attributeName in this._attributes) {
-                return this.createTypeArrayFromAccessor(this.getAccessor(this._attributes[attributeName]), offset, count);
+                var accessor = this.getAccessor(this._attributes[attributeName]);
+                // if (offset === 0 && count === 0) {
+                //     return this.getBuffer(accessor).extras!.data as Float32Array;
+                // }
+                return this.createTypeArrayFromAccessor(accessor, offset, count);
             }
             return null;
         };
@@ -11699,7 +11716,7 @@ var egret3d;
                 if (attributeName === "POSITION" /* POSITION */) {
                     this.needUpdate(1 /* BoundingBox */);
                 }
-                target.set(value, offset);
+                target.set(value);
             }
             return target;
         };
@@ -11708,13 +11725,19 @@ var egret3d;
          * @param subMeshIndex 子网格索引。
          * - 默认为 `0` ，第一个子网格。
          */
-        Mesh.prototype.getIndices = function (subMeshIndex) {
+        Mesh.prototype.getIndices = function (subMeshIndex, offset, count) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
+            if (offset === void 0) { offset = 0; }
+            if (count === void 0) { count = 0; }
             var primitives = this._glTFMesh.primitives;
             if (0 <= subMeshIndex && subMeshIndex < primitives.length) {
                 var accessorIndex = primitives[subMeshIndex].indices;
                 if (accessorIndex !== undefined) {
-                    return this.createTypeArrayFromAccessor(this.getAccessor(accessorIndex));
+                    var accessor = this.getAccessor(accessorIndex);
+                    // if (offset === 0 && count === 0) {
+                    //     return this.getBuffer(accessor).extras!.data as Float32Array;
+                    // }
+                    return this.createTypeArrayFromAccessor(accessor, offset, count);
                 }
                 return null;
             }
@@ -11729,12 +11752,13 @@ var egret3d;
          * @param offset 索引偏移。
          * - 默认为 `0`，从第一个索引开始。
          */
-        Mesh.prototype.setIndices = function (value, subMeshIndex, offset) {
+        Mesh.prototype.setIndices = function (value, subMeshIndex, offset, count) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
             if (offset === void 0) { offset = 0; }
-            var target = this.getIndices(subMeshIndex);
+            if (count === void 0) { count = 0; }
+            var target = this.getIndices(subMeshIndex, offset, count);
             if (target !== null) {
-                target.set(value, offset);
+                target.set(value);
             }
             return target;
         };
@@ -12015,9 +12039,10 @@ var egret3d;
                 this.version = webglVersions ? parseFloat(webglVersions[1]).toString() : "1";
                 // use dfdx and dfdy must enable OES_standard_derivatives
                 this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
-                this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
                 this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
                 this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
+                this.vertexArrayObject = null;
+                // _getExtension(webgl, "OES_vertex_array_object");
                 this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
                 this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
                 //

@@ -101,9 +101,10 @@ namespace egret3d.webgl {
             this.version = webglVersions ? parseFloat(webglVersions[1]).toString() : "1";
             // use dfdx and dfdy must enable OES_standard_derivatives
             this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
-            this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
             this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
             this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
+            this.vertexArrayObject = null;
+            // _getExtension(webgl, "OES_vertex_array_object");
             this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
             this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
             //

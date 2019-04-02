@@ -154,8 +154,19 @@ namespace egret3d {
 
             if (bufferIndex !== 0) { // buffer 为 0， 意味着这是一个导入资源，导入资源的子网格不可被删除。
                 const accessor = accessors![accessorIndex];
-
                 // Update GLTFIndex.
+                for (const bufferView of bufferViews!) {
+                    if (bufferView.buffer > bufferIndex) {
+                        bufferView.buffer--;
+                    }
+                }
+
+                for (const accessor of accessors!) {
+                    if (accessor.bufferView! > bufferViewIndex) {
+                        accessor.bufferView!--;
+                    }
+                }
+
                 for (const k in attributes!) {
                     if (attributes[k] > accessorIndex) {
                         attributes[k]--;
@@ -167,6 +178,7 @@ namespace egret3d {
                         primitive.indices--;
                     }
                 }
+
                 // Remove link.
                 buffers!.splice(bufferIndex, 1);
                 bufferViews!.splice(bufferViewIndex, 1);
@@ -791,9 +803,9 @@ namespace egret3d {
             if (attributeName in this._attributes!) {
                 const accessor = this.getAccessor(this._attributes![attributeName]);
 
-                if (offset === 0 && count === 0) {
-                    return this.getBuffer(accessor).extras!.data as Float32Array;
-                }
+                // if (offset === 0 && count === 0) {
+                //     return this.getBuffer(accessor).extras!.data as Float32Array;
+                // }
 
                 return this.createTypeArrayFromAccessor(accessor, offset, count) as Float32Array;
             }
@@ -836,10 +848,10 @@ namespace egret3d {
 
                 if (accessorIndex !== undefined) {
                     const accessor = this.getAccessor(accessorIndex);
-    
-                    if (offset === 0 && count === 0) {
-                        return this.getBuffer(accessor).extras!.data as Float32Array;
-                    }
+
+                    // if (offset === 0 && count === 0) {
+                    //     return this.getBuffer(accessor).extras!.data as Float32Array;
+                    // }
 
                     return this.createTypeArrayFromAccessor(accessor, offset, count) as Uint16Array;
                 }

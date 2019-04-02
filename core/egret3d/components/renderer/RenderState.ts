@@ -14,11 +14,11 @@ namespace egret3d {
 
         public version: string;
         public standardDerivativesEnabled: boolean;
-        public vertexArrayObject: OES_vertex_array_object | null;
         public textureFloatEnabled: boolean;
         public fragDepthEnabled: boolean;
+        public vertexArrayObject: OES_vertex_array_object | null;
         public textureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
-        public shaderTextureLOD: any;
+        public shaderTextureLOD: EXT_shader_texture_lod | null;
 
         public maxTextures: uint;
         public maxVertexTextures: uint;
