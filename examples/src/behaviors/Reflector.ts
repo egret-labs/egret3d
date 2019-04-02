@@ -124,14 +124,13 @@ namespace behaviors {
 
             // Render
             const renderState = this._renderState;
-            const backupViewPort = _viewPort.copy(renderState.viewport);
+            // const backupViewPort = _viewPort.copy(renderState.viewport);
             const backupRenderTarget = renderState.renderTarget;
 
-            reflectorCamera.renderTarget = this._renderTarget;
             const saveCamera = egret3d.Camera.current!;
-            renderState.render(reflectorCamera);
-            renderState.updateRenderTarget(backupRenderTarget);
-            renderState.updateViewport(saveCamera.viewport);
+            renderState.render(reflectorCamera, undefined, this._renderTarget);
+            renderState.renderTarget = backupRenderTarget;
+            renderState.viewport = saveCamera.viewport;
             egret3d.Camera.current = saveCamera;
 
             const reflectorMaterial = this.gameObject.renderer!.material!;

@@ -41,6 +41,10 @@
     {
       "name": "inspector",
       "path": "../editor"
+    },
+    {
+      "name": "trail",
+      "path": "../plugins/trail"
     }
   ]
 }

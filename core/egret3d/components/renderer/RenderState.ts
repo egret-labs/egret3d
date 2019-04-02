@@ -19,6 +19,7 @@ namespace egret3d {
         public vertexArrayObject: OES_vertex_array_object | null;
         public textureFilterAnisotropic: EXT_texture_filter_anisotropic | null;
         public shaderTextureLOD: EXT_shader_texture_lod | null;
+        public instancedArrays: ANGLE_instanced_arrays | null;
 
         public maxTextures: uint;
         public maxVertexTextures: uint;
@@ -36,8 +37,6 @@ namespace egret3d {
         public commonDefines: string = "";
         public vertexDefines: string = "";
         public fragmentDefines: string = "";
-        public readonly clearColor: Color = Color.create();
-        public readonly viewport: Rectangle = Rectangle.create();
         public readonly defines: Defines = new Defines();
         public readonly defaultCustomShaderChunks: Readonly<{ [key: string]: string }> = {
             custom_vertex: "",
@@ -61,7 +60,6 @@ namespace egret3d {
             clockBuffer: new Float32Array(4),
             skyBoxTexture: null as (BaseTexture | null),
         };
-        public renderTarget: RenderTexture | null = null;
         public customShaderChunks: { [key: string]: string } | null = null;
         /**
          * 
@@ -71,6 +69,14 @@ namespace egret3d {
          * 
          */
         public draw: (drawCall: DrawCall, material?: Material | null) => void = null!;//开发者一般不会手动调用,通常是后期渲染调用
+
+        protected readonly _viewport: Rectangle = Rectangle.create();
+        protected readonly _clearColor: Color = Color.create();
+        protected readonly _colorMask: [boolean, boolean, boolean, boolean] = [true, true, true, true];
+        protected _clearDepth: number = 1;
+        protected _depthMask: boolean = true;
+        protected _clearStencil: number = 1;
+        protected _renderTarget: RenderTexture | null = null;
 
         private _logarithmicDepthBuffer: boolean = false;
         private _gammaInput: boolean = true; //
@@ -172,6 +178,9 @@ namespace egret3d {
             const components = this._getEncodingComponents(finialEncoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         }
+        protected _setViewport(value: Readonly<Rectangle>) { }
+        protected _setRenderTarget(value: RenderTexture | null) { }
+        protected _setColorMask(value: Readonly<[boolean, boolean, boolean, boolean]>) { }
         /**
          * @internal
          */
@@ -243,8 +252,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public _updateTextureDefines(mapName: string, texture: BaseTexture | null, defines: Defines | null = null) {
-            defines = defines || this.defines;
+        public _updateTextureDefines(mapName: string, texture: BaseTexture | null, defines: Defines) {
             //
             const mapNameDefine = (egret3d as any).ShaderTextureDefine[mapName];//TODO
             if (mapNameDefine) {
@@ -366,19 +374,12 @@ namespace egret3d {
             this.gammaOutput = false;
         }
         /**
-         * 
+         * 根据BufferMask清除缓存
          */
-        public updateRenderTarget(renderTarget: RenderTexture | null): void { }
+        public clearBuffer(bufferBit: gltf.BufferMask): void { }
         /**
-         * 
-         */
-        public updateViewport(viewport: Rectangle): void { }
-        /**
-         * 
-         */
-        public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void { }
-        /**
-         * 
+         * 将像素复制到2D纹理图像中
+         * TODO 微信上不可用
          */
         public updateVertexAttributes(mesh: Mesh): void { }
         /**
@@ -392,6 +393,78 @@ namespace egret3d {
             for (const key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
+
+            this._renderTarget = null;
+        }
+        /**
+         * 设置视口
+         */
+        public get viewport(): Readonly<Rectangle> {
+            return this._viewport;
+        }
+        public set viewport(value: Readonly<Rectangle>) {
+            this._viewport.copy(value);
+
+            this._setViewport(value);
+        }
+        /**
+         * 指定清除的颜色值
+         */
+        public get clearColor(): Readonly<Color> {
+            return this._clearColor;
+        }
+        public set clearColor(value: Readonly<Color>) {
+            //TODO 2d,3d渲染状态不统一，这里先记录，统一后，可以做缓存
+            if (this.premultipliedAlpha) {
+                this._clearColor.set(value.r * value.a, value.g * value.a, value.b * value.a, value.a);
+            }
+            else {
+                this._clearColor.copy(value);
+            }
+        }
+        /**
+         * 指定是否可以写入帧缓冲区中的各个颜色分量
+         */
+        public get colorMask(): Readonly<[boolean, boolean, boolean, boolean]> {
+            return this._colorMask;
+        }
+        public set colorMask(value: Readonly<[boolean, boolean, boolean, boolean]>) {
+            this._colorMask[0] = value[0];
+            this._colorMask[1] = value[1];
+            this._colorMask[2] = value[2];
+            this._colorMask[3] = value[3];
+
+            this._setColorMask(value);
+        }
+        /**
+         * 指定清除的深度值
+         */
+        public get clearDepth(): number {
+            return this._clearDepth;
+        }
+        public set clearDepth(value: number) {
+            this._clearDepth = value;
+        }
+        /**
+         * 指定写入模板缓存区的清除值
+         */
+        public get clearStencil(): number {
+            return this._clearStencil;
+        }
+        public set clearStencil(value: number) {
+            this._clearStencil = value;
+        }
+        /**
+         * 指定要绑定的渲染目标
+         */
+        public get renderTarget(): RenderTexture | null {
+            return this._renderTarget;
+        }
+        public set renderTarget(value: RenderTexture | null) {
+            // if (this._renderTarget !== value) {  //TODO  防止2d污染3d
+            this._renderTarget = value;
+            this._setRenderTarget(value);
+            // }
         }
         /**
          * 
@@ -435,7 +508,7 @@ namespace egret3d {
             }
 
             this._gammaInput = value;
-            this._updateTextureDefines(ShaderUniformName.EnvMap, this.caches.skyBoxTexture);
+            this._updateTextureDefines(ShaderUniformName.EnvMap, this.caches.skyBoxTexture, this.defines);
             this.onGammaInputChanged.dispatch();
         }
         /**
@@ -523,7 +596,7 @@ namespace egret3d {
             this._toneMapping = value;
         }
         /**
-         * 
+         * 是否预乘
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public premultipliedAlpha: boolean = false;
@@ -537,6 +610,14 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 10.0 })
         public toneMappingWhitePoint: float = 1.0;
+        /**
+        * @deprecated
+        */
+        public updateViewport(viewport: Rectangle) { this.viewport = viewport; }
+        /**
+         * @deprecated
+         */
+        public updateRenderTarget(renderTarget: RenderTexture | null): void { this.renderTarget = renderTarget; }
     }
     /**
      * 全局渲染状态组件实例。

@@ -209,7 +209,7 @@ namespace egret3d {
                     glTFMaterial = this._glTFMaterial = {
                         extensions: {
                             KHR_techniques_webgl: { technique: shaderOrConfig.name },
-                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : RenderQueue.Geometry }
+                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : RenderQueue.Geometry, enableGPUInstancing: false }
                         }
                     };
                     config.materials = [this._glTFMaterial];
@@ -998,6 +998,23 @@ namespace egret3d {
         public set opacity(value: number) {
             this.setFloat(ShaderUniformName.Opacity, value);
         }
+        /**
+         * 是否开启instancing
+         */
+        public get enableGPUInstancing(): boolean {
+            return this._glTFMaterial!.extensions.paper.enableGPUInstancing;
+        }
+        public set enableGPUInstancing(value: boolean) {
+            if (renderState.instancedArrays === null) {//TODO 不支持此扩展
+                return;
+            }
+            if (this._glTFMaterial!.extensions.paper.enableGPUInstancing !== value) {
+                this._glTFMaterial!.extensions.paper.enableGPUInstancing = value;
+
+                value ? this.addDefine(ShaderDefine.USE_INSTANCED) : this.removeDefine(ShaderDefine.USE_INSTANCED);
+            }
+        }
+        public test:string = "";
         /**
          * 该材质的 shader。
          */

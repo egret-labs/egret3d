@@ -177,7 +177,7 @@ namespace egret3d.webgl {
             for (const attributeName in attributes) {
                 const accessor = this.getAccessor(attributes[attributeName]);
 
-                if (uploadAttributes === null || uploadAttributes.indexOf(attributeName as T) >= 0) {
+                if (uploadAttributes === null || (uploadAttributes as T[]).indexOf(attributeName as T) >= 0) {
                     const subVertexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
                     let bufferOffset = attributeOffsets[attributeName];
 

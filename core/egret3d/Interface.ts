@@ -24,7 +24,8 @@ namespace egret3d {
         USE_LIGHTMAP = "USE_LIGHTMAP",
         USE_SHADOWMAP = "USE_SHADOWMAP",
         USE_SKINNING = "USE_SKINNING",
-        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",
+        USE_SIZEATTENUATION = "USE_SIZEATTENUATION",        
+        USE_INSTANCED = "USE_INSTANCED",
         TOON = "TOON",
         STANDARD = "STANDARD",
         //
@@ -396,6 +397,10 @@ namespace egret3d {
          * 是否与画布背景色混合，默认不混合。
          */
         alpha?: boolean;
+        /**
+         * 是否预乘
+         */
+        premultipliedAlpha?:boolean;
         /**
          * 
          */

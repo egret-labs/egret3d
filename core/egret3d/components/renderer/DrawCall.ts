@@ -34,6 +34,7 @@ namespace egret3d {
          * 此次绘制的世界矩阵。
          */
         public matrix: Matrix4 = null!;
+        public modelViewMatrix: Matrix4 = Matrix4.IDENTITY.clone();
         /**
          * 此次绘制的子网格索引。
          */
@@ -50,6 +51,8 @@ namespace egret3d {
          * 
          */
         public zdist: float = -1.0;
+
+        public instanced: uint = 0;
 
         private constructor() {
             super();

@@ -12,7 +12,8 @@ namespace egret3d {
         All = BoundingBox | DrawMode | VertexArray | VertexBuffer | IndexBuffer,
         None = 0,
     }
-
+    //TODO 运行时DrawCall排序优化使用
+    let _hashCode: uint = 0;
     const _helpRaycastInfo = RaycastInfo.create();
 
     const _attributeNames: gltf.AttributeSemantics[] = [
@@ -144,6 +145,10 @@ namespace egret3d {
          * TODO
          */
         protected _boneIndices: { [key: string]: uint } | null = null;
+        /**
+         * @internal
+         */
+        public readonly _id: uint = _hashCode++;
 
         private _removeBufferByAccessor(accessorIndex: uint) {
             const { buffers, bufferViews, accessors } = this.config;
@@ -566,7 +571,7 @@ namespace egret3d {
          * @param attributeName 
          * @param attributeType 
          */
-        public addAttribute(attributeName: gltf.AttributeSemantics | string, attributeType: gltf.AccessorType | string, vertexCount: uint = 0): Float32Array | null {
+        public addAttribute(attributeName: gltf.AttributeSemantics | string, attributeType: gltf.AccessorType | string, vertexCount: uint = 0, divisor: uint = 0): Float32Array | null {
             if (vertexCount <= 0) {
                 vertexCount = this._vertexCount;
             }
@@ -589,7 +594,7 @@ namespace egret3d {
                     bufferView: bufferViewIndex,
                     count: vertexCount, componentType: gltf.ComponentType.Float, type: attributeType as gltf.AccessorType,
                     normalized: attributeName === gltf.AttributeSemantics.NORMAL || attributeName === gltf.AttributeSemantics.TANGENT,
-                    extras: { typeCount }
+                    extras: { typeCount, divisor }
                 };
                 //
                 const { attributeOffsets } = this._glTFMesh!.extras!;
@@ -625,6 +630,7 @@ namespace egret3d {
                 const removeAccessor = this._removeBufferByAccessor(accessorIndex);
 
                 if (removeAccessor !== null) {
+                    const buffer = this.getBuffer(removeAccessor).extras!.data as Float32Array;
                     const { attributeOffsets } = this._glTFMesh!.extras!;
                     let bufferOffset = -1;
 
@@ -638,9 +644,10 @@ namespace egret3d {
                     }
 
                     delete attributes[attributeName];
+                    delete attributeOffsets[attributeName];
                     this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer);
 
-                    return this.getBuffer(removeAccessor).extras!.data as Float32Array;
+                    return buffer;
                 }
             }
 
@@ -673,7 +680,7 @@ namespace egret3d {
             accessors![accessorIndex] = {
                 bufferView: bufferIndex,
                 count: indexCount, componentType: gltf.ComponentType.UnsignedShort, type: gltf.AccessorType.SCALAR,
-                extras: { typeCount: 1 },
+                extras: { typeCount: 1, divisor: 0 },
             };
             // 如果第一个子网格没使用顶点索引，则此次添加行为其实是设置第一个子网格。
             const { primitives } = this._glTFMesh!;

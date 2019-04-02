@@ -6991,6 +6991,894 @@ declare namespace signals {
         removeAll(): void;
     }
 }
+// Type definitions for JS-Signals 1.0
+// Project: http://millermedeiros.github.io/js-signals/
+// Definitions by: Diullei Gomes <https://github.com/diullei>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
+
+declare var signals: signals.SignalWrapper;
+
+declare namespace signals {
+    interface SignalWrapper<T = any> {
+        Signal: Signal<T>;
+    }
+
+    interface SignalBinding<T = any> {
+        active: boolean;
+        context: any;
+        params: any;
+        detach(): Function;
+        execute(paramsArr?: any[]): any;
+        getListener(): (...params: T[]) => void;
+        getSignal(): Signal<T>;
+        isBound(): boolean;
+        isOnce(): boolean;
+    }
+
+    interface Signal<T = any> {
+        /**
+         * Custom event broadcaster
+         * <br />- inspired by Robert Penner's AS3 Signals.
+         * @author Miller Medeiros
+         */
+        new (): Signal<T>;
+
+        /**
+         * If Signal is active and should broadcast events.
+         */
+        active: boolean;
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and automatically
+         * execute listener during add()/addOnce() if Signal was already dispatched before.
+         */
+        memorize: boolean;
+
+        /**
+         * Signals Version Number
+         */
+        VERSION: string;
+
+        /**
+         * Add a listener to the signal.
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *        Listeners with higher priority will be executed before listeners with lower priority.
+         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *                 Listeners with higher priority will be executed before listeners with lower priority.
+         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         *
+         * @param params Parameters that should be passed to each handler.
+         */
+        dispatch(...params: T[]): void;
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         */
+        dispose(): void;
+
+        /**
+         * Forget memorized arguments.
+         */
+        forget(): void;
+
+        /**
+         * Returns a number of listeners attached to the Signal.
+         */
+        getNumListeners(): number;
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         */
+        halt(): void;
+
+        /**
+         * Check if listener was attached to Signal.
+         */
+        has(listener: (...params: T[]) => void, context?: any): boolean;
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         */
+        remove(listener: (...params: T[]) => void, context?: any): Function;
+
+        removeAll(): void;
+    }
+}
+// Type definitions for JS-Signals 1.0
+// Project: http://millermedeiros.github.io/js-signals/
+// Definitions by: Diullei Gomes <https://github.com/diullei>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
+
+declare var signals: signals.SignalWrapper;
+
+declare namespace signals {
+    interface SignalWrapper<T = any> {
+        Signal: Signal<T>;
+    }
+
+    interface SignalBinding<T = any> {
+        active: boolean;
+        context: any;
+        params: any;
+        detach(): Function;
+        execute(paramsArr?: any[]): any;
+        getListener(): (...params: T[]) => void;
+        getSignal(): Signal<T>;
+        isBound(): boolean;
+        isOnce(): boolean;
+    }
+
+    interface Signal<T = any> {
+        /**
+         * Custom event broadcaster
+         * <br />- inspired by Robert Penner's AS3 Signals.
+         * @author Miller Medeiros
+         */
+        new (): Signal<T>;
+
+        /**
+         * If Signal is active and should broadcast events.
+         */
+        active: boolean;
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and automatically
+         * execute listener during add()/addOnce() if Signal was already dispatched before.
+         */
+        memorize: boolean;
+
+        /**
+         * Signals Version Number
+         */
+        VERSION: string;
+
+        /**
+         * Add a listener to the signal.
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *        Listeners with higher priority will be executed before listeners with lower priority.
+         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *                 Listeners with higher priority will be executed before listeners with lower priority.
+         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         *
+         * @param params Parameters that should be passed to each handler.
+         */
+        dispatch(...params: T[]): void;
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         */
+        dispose(): void;
+
+        /**
+         * Forget memorized arguments.
+         */
+        forget(): void;
+
+        /**
+         * Returns a number of listeners attached to the Signal.
+         */
+        getNumListeners(): number;
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         */
+        halt(): void;
+
+        /**
+         * Check if listener was attached to Signal.
+         */
+        has(listener: (...params: T[]) => void, context?: any): boolean;
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         */
+        remove(listener: (...params: T[]) => void, context?: any): Function;
+
+        removeAll(): void;
+    }
+}
+// Type definitions for JS-Signals 1.0
+// Project: http://millermedeiros.github.io/js-signals/
+// Definitions by: Diullei Gomes <https://github.com/diullei>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
+
+declare var signals: signals.SignalWrapper;
+
+declare namespace signals {
+    interface SignalWrapper<T = any> {
+        Signal: Signal<T>;
+    }
+
+    interface SignalBinding<T = any> {
+        active: boolean;
+        context: any;
+        params: any;
+        detach(): Function;
+        execute(paramsArr?: any[]): any;
+        getListener(): (...params: T[]) => void;
+        getSignal(): Signal<T>;
+        isBound(): boolean;
+        isOnce(): boolean;
+    }
+
+    interface Signal<T = any> {
+        /**
+         * Custom event broadcaster
+         * <br />- inspired by Robert Penner's AS3 Signals.
+         * @author Miller Medeiros
+         */
+        new (): Signal<T>;
+
+        /**
+         * If Signal is active and should broadcast events.
+         */
+        active: boolean;
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and automatically
+         * execute listener during add()/addOnce() if Signal was already dispatched before.
+         */
+        memorize: boolean;
+
+        /**
+         * Signals Version Number
+         */
+        VERSION: string;
+
+        /**
+         * Add a listener to the signal.
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *        Listeners with higher priority will be executed before listeners with lower priority.
+         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *                 Listeners with higher priority will be executed before listeners with lower priority.
+         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         *
+         * @param params Parameters that should be passed to each handler.
+         */
+        dispatch(...params: T[]): void;
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         */
+        dispose(): void;
+
+        /**
+         * Forget memorized arguments.
+         */
+        forget(): void;
+
+        /**
+         * Returns a number of listeners attached to the Signal.
+         */
+        getNumListeners(): number;
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         */
+        halt(): void;
+
+        /**
+         * Check if listener was attached to Signal.
+         */
+        has(listener: (...params: T[]) => void, context?: any): boolean;
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         */
+        remove(listener: (...params: T[]) => void, context?: any): Function;
+
+        removeAll(): void;
+    }
+}
+// Type definitions for JS-Signals 1.0
+// Project: http://millermedeiros.github.io/js-signals/
+// Definitions by: Diullei Gomes <https://github.com/diullei>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
+
+declare var signals: signals.SignalWrapper;
+
+declare namespace signals {
+    interface SignalWrapper<T = any> {
+        Signal: Signal<T>;
+    }
+
+    interface SignalBinding<T = any> {
+        active: boolean;
+        context: any;
+        params: any;
+        detach(): Function;
+        execute(paramsArr?: any[]): any;
+        getListener(): (...params: T[]) => void;
+        getSignal(): Signal<T>;
+        isBound(): boolean;
+        isOnce(): boolean;
+    }
+
+    interface Signal<T = any> {
+        /**
+         * Custom event broadcaster
+         * <br />- inspired by Robert Penner's AS3 Signals.
+         * @author Miller Medeiros
+         */
+        new (): Signal<T>;
+
+        /**
+         * If Signal is active and should broadcast events.
+         */
+        active: boolean;
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and automatically
+         * execute listener during add()/addOnce() if Signal was already dispatched before.
+         */
+        memorize: boolean;
+
+        /**
+         * Signals Version Number
+         */
+        VERSION: string;
+
+        /**
+         * Add a listener to the signal.
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *        Listeners with higher priority will be executed before listeners with lower priority.
+         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *                 Listeners with higher priority will be executed before listeners with lower priority.
+         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         *
+         * @param params Parameters that should be passed to each handler.
+         */
+        dispatch(...params: T[]): void;
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         */
+        dispose(): void;
+
+        /**
+         * Forget memorized arguments.
+         */
+        forget(): void;
+
+        /**
+         * Returns a number of listeners attached to the Signal.
+         */
+        getNumListeners(): number;
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         */
+        halt(): void;
+
+        /**
+         * Check if listener was attached to Signal.
+         */
+        has(listener: (...params: T[]) => void, context?: any): boolean;
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         */
+        remove(listener: (...params: T[]) => void, context?: any): Function;
+
+        removeAll(): void;
+    }
+}
+// Type definitions for JS-Signals 1.0
+// Project: http://millermedeiros.github.io/js-signals/
+// Definitions by: Diullei Gomes <https://github.com/diullei>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
+
+declare var signals: signals.SignalWrapper;
+
+declare namespace signals {
+    interface SignalWrapper<T = any> {
+        Signal: Signal<T>;
+    }
+
+    interface SignalBinding<T = any> {
+        active: boolean;
+        context: any;
+        params: any;
+        detach(): Function;
+        execute(paramsArr?: any[]): any;
+        getListener(): (...params: T[]) => void;
+        getSignal(): Signal<T>;
+        isBound(): boolean;
+        isOnce(): boolean;
+    }
+
+    interface Signal<T = any> {
+        /**
+         * Custom event broadcaster
+         * <br />- inspired by Robert Penner's AS3 Signals.
+         * @author Miller Medeiros
+         */
+        new (): Signal<T>;
+
+        /**
+         * If Signal is active and should broadcast events.
+         */
+        active: boolean;
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and automatically
+         * execute listener during add()/addOnce() if Signal was already dispatched before.
+         */
+        memorize: boolean;
+
+        /**
+         * Signals Version Number
+         */
+        VERSION: string;
+
+        /**
+         * Add a listener to the signal.
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *        Listeners with higher priority will be executed before listeners with lower priority.
+         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *                 Listeners with higher priority will be executed before listeners with lower priority.
+         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         *
+         * @param params Parameters that should be passed to each handler.
+         */
+        dispatch(...params: T[]): void;
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         */
+        dispose(): void;
+
+        /**
+         * Forget memorized arguments.
+         */
+        forget(): void;
+
+        /**
+         * Returns a number of listeners attached to the Signal.
+         */
+        getNumListeners(): number;
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         */
+        halt(): void;
+
+        /**
+         * Check if listener was attached to Signal.
+         */
+        has(listener: (...params: T[]) => void, context?: any): boolean;
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         */
+        remove(listener: (...params: T[]) => void, context?: any): Function;
+
+        removeAll(): void;
+    }
+}
+// Type definitions for JS-Signals 1.0
+// Project: http://millermedeiros.github.io/js-signals/
+// Definitions by: Diullei Gomes <https://github.com/diullei>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
+
+declare var signals: signals.SignalWrapper;
+
+declare namespace signals {
+    interface SignalWrapper<T = any> {
+        Signal: Signal<T>;
+    }
+
+    interface SignalBinding<T = any> {
+        active: boolean;
+        context: any;
+        params: any;
+        detach(): Function;
+        execute(paramsArr?: any[]): any;
+        getListener(): (...params: T[]) => void;
+        getSignal(): Signal<T>;
+        isBound(): boolean;
+        isOnce(): boolean;
+    }
+
+    interface Signal<T = any> {
+        /**
+         * Custom event broadcaster
+         * <br />- inspired by Robert Penner's AS3 Signals.
+         * @author Miller Medeiros
+         */
+        new (): Signal<T>;
+
+        /**
+         * If Signal is active and should broadcast events.
+         */
+        active: boolean;
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and automatically
+         * execute listener during add()/addOnce() if Signal was already dispatched before.
+         */
+        memorize: boolean;
+
+        /**
+         * Signals Version Number
+         */
+        VERSION: string;
+
+        /**
+         * Add a listener to the signal.
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *        Listeners with higher priority will be executed before listeners with lower priority.
+         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *                 Listeners with higher priority will be executed before listeners with lower priority.
+         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         *
+         * @param params Parameters that should be passed to each handler.
+         */
+        dispatch(...params: T[]): void;
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         */
+        dispose(): void;
+
+        /**
+         * Forget memorized arguments.
+         */
+        forget(): void;
+
+        /**
+         * Returns a number of listeners attached to the Signal.
+         */
+        getNumListeners(): number;
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         */
+        halt(): void;
+
+        /**
+         * Check if listener was attached to Signal.
+         */
+        has(listener: (...params: T[]) => void, context?: any): boolean;
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         */
+        remove(listener: (...params: T[]) => void, context?: any): Function;
+
+        removeAll(): void;
+    }
+}
+// Type definitions for JS-Signals 1.0
+// Project: http://millermedeiros.github.io/js-signals/
+// Definitions by: Diullei Gomes <https://github.com/diullei>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
+
+declare var signals: signals.SignalWrapper;
+
+declare namespace signals {
+    interface SignalWrapper<T = any> {
+        Signal: Signal<T>;
+    }
+
+    interface SignalBinding<T = any> {
+        active: boolean;
+        context: any;
+        params: any;
+        detach(): Function;
+        execute(paramsArr?: any[]): any;
+        getListener(): (...params: T[]) => void;
+        getSignal(): Signal<T>;
+        isBound(): boolean;
+        isOnce(): boolean;
+    }
+
+    interface Signal<T = any> {
+        /**
+         * Custom event broadcaster
+         * <br />- inspired by Robert Penner's AS3 Signals.
+         * @author Miller Medeiros
+         */
+        new (): Signal<T>;
+
+        /**
+         * If Signal is active and should broadcast events.
+         */
+        active: boolean;
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and automatically
+         * execute listener during add()/addOnce() if Signal was already dispatched before.
+         */
+        memorize: boolean;
+
+        /**
+         * Signals Version Number
+         */
+        VERSION: string;
+
+        /**
+         * Add a listener to the signal.
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *        Listeners with higher priority will be executed before listeners with lower priority.
+         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *                 Listeners with higher priority will be executed before listeners with lower priority.
+         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         *
+         * @param params Parameters that should be passed to each handler.
+         */
+        dispatch(...params: T[]): void;
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         */
+        dispose(): void;
+
+        /**
+         * Forget memorized arguments.
+         */
+        forget(): void;
+
+        /**
+         * Returns a number of listeners attached to the Signal.
+         */
+        getNumListeners(): number;
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         */
+        halt(): void;
+
+        /**
+         * Check if listener was attached to Signal.
+         */
+        has(listener: (...params: T[]) => void, context?: any): boolean;
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         */
+        remove(listener: (...params: T[]) => void, context?: any): Function;
+
+        removeAll(): void;
+    }
+}
+// Type definitions for JS-Signals 1.0
+// Project: http://millermedeiros.github.io/js-signals/
+// Definitions by: Diullei Gomes <https://github.com/diullei>
+// Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// TypeScript Version: 2.3
+
+declare var signals: signals.SignalWrapper;
+
+declare namespace signals {
+    interface SignalWrapper<T = any> {
+        Signal: Signal<T>;
+    }
+
+    interface SignalBinding<T = any> {
+        active: boolean;
+        context: any;
+        params: any;
+        detach(): Function;
+        execute(paramsArr?: any[]): any;
+        getListener(): (...params: T[]) => void;
+        getSignal(): Signal<T>;
+        isBound(): boolean;
+        isOnce(): boolean;
+    }
+
+    interface Signal<T = any> {
+        /**
+         * Custom event broadcaster
+         * <br />- inspired by Robert Penner's AS3 Signals.
+         * @author Miller Medeiros
+         */
+        new (): Signal<T>;
+
+        /**
+         * If Signal is active and should broadcast events.
+         */
+        active: boolean;
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and automatically
+         * execute listener during add()/addOnce() if Signal was already dispatched before.
+         */
+        memorize: boolean;
+
+        /**
+         * Signals Version Number
+         */
+        VERSION: string;
+
+        /**
+         * Add a listener to the signal.
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *        Listeners with higher priority will be executed before listeners with lower priority.
+         *        Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        add(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         *
+         * @param listener Signal handler function.
+         * @param listenercontext Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param priority The priority level of the event listener.
+         *                 Listeners with higher priority will be executed before listeners with lower priority.
+         *                 Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         */
+        addOnce(listener: (...params: T[]) => void, listenerContext?: any, priority?: Number): SignalBinding<T>;
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         *
+         * @param params Parameters that should be passed to each handler.
+         */
+        dispatch(...params: T[]): void;
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         */
+        dispose(): void;
+
+        /**
+         * Forget memorized arguments.
+         */
+        forget(): void;
+
+        /**
+         * Returns a number of listeners attached to the Signal.
+         */
+        getNumListeners(): number;
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         */
+        halt(): void;
+
+        /**
+         * Check if listener was attached to Signal.
+         */
+        has(listener: (...params: T[]) => void, context?: any): boolean;
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         */
+        remove(listener: (...params: T[]) => void, context?: any): Function;
+
+        removeAll(): void;
+    }
+}
 declare type int = number;
 declare type uint = number;
 declare type float = number;
@@ -10923,8 +11811,6 @@ declare namespace egret3d {
         commonDefines: string;
         vertexDefines: string;
         fragmentDefines: string;
-        readonly clearColor: Color;
-        readonly viewport: Rectangle;
         readonly defines: Defines;
         readonly defaultCustomShaderChunks: Readonly<{
             [key: string]: string;
@@ -10943,7 +11829,6 @@ declare namespace egret3d {
             clockBuffer: Float32Array;
             skyBoxTexture: BaseTexture | null;
         };
-        renderTarget: RenderTexture | null;
         customShaderChunks: {
             [key: string]: string;
         } | null;
@@ -10955,6 +11840,13 @@ declare namespace egret3d {
          *
          */
         draw: (drawCall: DrawCall, material?: Material | null) => void;
+        protected readonly _viewport: Rectangle;
+        protected readonly _clearColor: Color;
+        protected readonly _colorMask: [boolean, boolean, boolean, boolean];
+        protected _clearDepth: number;
+        protected _depthMask: boolean;
+        protected _clearStencil: number;
+        protected _renderTarget: RenderTexture | null;
         private _logarithmicDepthBuffer;
         private _gammaInput;
         private _gammaOutput;
@@ -10970,27 +11862,47 @@ declare namespace egret3d {
         protected _getToneMappingFunction(toneMapping: ToneMapping): string;
         protected _getTexelEncodingFunction(functionName: string, encoding: TextureEncoding): string;
         protected _getTexelDecodingFunction(functionName: string, encoding: TextureEncoding): string;
+        protected _setViewport(value: Readonly<Rectangle>): void;
+        protected _setRenderTarget(value: RenderTexture | null): void;
+        protected _setColorMask(value: Readonly<[boolean, boolean, boolean, boolean]>): void;
         initialize(): void;
         /**
-         *
+         * 根据BufferMask清除缓存
          */
-        updateRenderTarget(renderTarget: RenderTexture | null): void;
+        clearBuffer(bufferBit: gltf.BufferMask): void;
         /**
-         *
-         */
-        updateViewport(viewport: Rectangle): void;
-        /**
-         *
-         */
-        clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>): void;
-        /**
-         *
+         * 将像素复制到2D纹理图像中
+         * TODO 微信上不可用
          */
         copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level?: uint): void;
         /**
          *
          */
         clearState(): void;
+        /**
+         * 设置视口
+         */
+        viewport: Readonly<Rectangle>;
+        /**
+         * 指定清除的颜色值
+         */
+        clearColor: Readonly<Color>;
+        /**
+         * 指定是否可以写入帧缓冲区中的各个颜色分量
+         */
+        colorMask: Readonly<[boolean, boolean, boolean, boolean]>;
+        /**
+         * 指定清除的深度值
+         */
+        clearDepth: number;
+        /**
+         * 指定写入模板缓存区的清除值
+         */
+        clearStencil: number;
+        /**
+         * 指定要绑定的渲染目标
+         */
+        renderTarget: RenderTexture | null;
         /**
          *
          */
@@ -11012,7 +11924,7 @@ declare namespace egret3d {
          */
         toneMapping: ToneMapping;
         /**
-         *
+         * 是否预乘
          */
         premultipliedAlpha: boolean;
         /**
@@ -11023,6 +11935,14 @@ declare namespace egret3d {
          *
          */
         toneMappingWhitePoint: float;
+        /**
+        * @deprecated
+        */
+        updateViewport(viewport: Rectangle): void;
+        /**
+         * @deprecated
+         */
+        updateRenderTarget(renderTarget: RenderTexture | null): void;
     }
     /**
      * 全局渲染状态组件实例。
@@ -12230,7 +13150,7 @@ declare namespace egret3d {
     abstract class CameraPostprocessing extends paper.BaseComponent {
         protected readonly _renderState: egret3d.RenderState;
         abstract onRender(camera: Camera): void;
-        protected renderPostprocessTarget(camera: Camera, material?: Material): void;
+        protected renderPostprocessTarget(camera: Camera, material?: Material, renderTarget?: RenderTexture): void;
         blit(src: BaseTexture, material?: Material | null, dest?: RenderTexture | null, bufferMask?: gltf.BufferMask | null): void;
     }
 }
@@ -13694,6 +14614,10 @@ declare namespace egret3d {
          */
         alpha?: boolean;
         /**
+         * 是否预乘
+         */
+        premultipliedAlpha?: boolean;
+        /**
          *
          */
         gammaInput?: boolean;
@@ -14163,6 +15087,10 @@ declare namespace egret3d {
         static LINE_Z: Mesh;
         static CIRCLE_LINE: Mesh;
         static CUBE_LINE: Mesh;
+        /**
+         *
+         */
+        static FULLSCREEN: Mesh;
         initialize(): void;
         /**
          * @deprecated
@@ -14282,6 +15210,10 @@ declare namespace egret3d {
          *
          */
         static FXAA: Shader;
+        /**
+         *
+         */
+        static BACKGROUND: Shader;
         /**
          *
          */
@@ -14411,6 +15343,10 @@ declare namespace egret3d {
          * - 注意请不要修改该值。
          */
         static MISSING: Material;
+        /**
+         * 用于天空盒纯背景使用的材质
+         */
+        static BACKGROUND: Material;
         /**
          * @deprecated
          */
@@ -15212,6 +16148,10 @@ declare namespace egret3d {
          */
         static current: Camera | null;
         /**
+         * 该相机下的对象都是用此材质渲染
+         */
+        overrideMaterial: Material | null;
+        /**
          * 该相机的绘制缓冲掩码。
          */
         bufferMask: gltf.BufferMask;
@@ -15482,6 +16422,10 @@ declare namespace egret3d {
      * 天空盒组件。
      */
     class SkyBox extends paper.BaseComponent {
+        /**
+         * 是否开启反射 默认:True
+         */
+        reflections: boolean;
         protected readonly _materials: (Material | null)[];
         uninitialize(): void;
         /**
@@ -15496,6 +16440,10 @@ declare namespace egret3d {
 }
 declare namespace egret3d.postprocess {
     class FXAAPostprocess extends egret3d.CameraPostprocessing {
+        private _renderTexture;
+        private _onStageResize();
+        initialize(): void;
+        uninitialize(): void;
         onRender(camera: egret3d.Camera): void;
     }
 }
@@ -18093,6 +19041,37 @@ declare namespace egret3d {
     }
 }
 declare namespace egret3d.ShaderLib {
+    const background: {
+        "version": string;
+        "asset": {
+            "version": string;
+        };
+        "extensions": {
+            "KHR_techniques_webgl": {
+                "shaders": {
+                    "name": string;
+                    "type": number;
+                    "uri": string;
+                }[];
+                "techniques": {
+                    "name": string;
+                    "attributes": {};
+                    "uniforms": {
+                        "uvTransform": {
+                            "type": number;
+                            "value": number[];
+                        };
+                        "map": {
+                            "type": number;
+                        };
+                    };
+                }[];
+            };
+            "paper": {};
+        };
+        "extensionsRequired": string[];
+        "extensionsUsed": string[];
+    };
     const copy: {
         "version": string;
         "asset": {
@@ -18280,33 +19259,6 @@ declare namespace egret3d.ShaderLib {
                     "attributes": {};
                     "uniforms": {
                         "tEquirect": {
-                            "type": number;
-                        };
-                    };
-                }[];
-            };
-            "paper": {};
-        };
-        "extensionsRequired": string[];
-        "extensionsUsed": string[];
-    };
-    const fxaa1: {
-        "version": string;
-        "asset": {
-            "version": string;
-        };
-        "extensions": {
-            "KHR_techniques_webgl": {
-                "shaders": {
-                    "name": string;
-                    "type": number;
-                    "uri": string;
-                }[];
-                "techniques": {
-                    "name": string;
-                    "attributes": {};
-                    "uniforms": {
-                        "map": {
                             "type": number;
                         };
                     };

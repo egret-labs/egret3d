@@ -4623,7 +4623,7 @@ var egret3d;
             if (accessors !== undefined) {
                 for (var _i = 0, accessors_1 = accessors; _i < accessors_1.length; _i++) {
                     var accessor = accessors_1[_i];
-                    accessor.extras = { typeCount: GLTFAsset.getAccessorTypeCount(accessor.type) };
+                    accessor.extras = { typeCount: GLTFAsset.getAccessorTypeCount(accessor.type), divisor: 0 };
                 }
             }
             return this;
@@ -6197,8 +6197,6 @@ var egret3d;
             _this.commonDefines = "";
             _this.vertexDefines = "";
             _this.fragmentDefines = "";
-            _this.clearColor = egret3d.Color.create();
-            _this.viewport = egret3d.Rectangle.create();
             _this.defines = new egret3d.Defines();
             _this.defaultCustomShaderChunks = {
                 custom_vertex: "",
@@ -6222,7 +6220,6 @@ var egret3d;
                 clockBuffer: new Float32Array(4),
                 skyBoxTexture: null,
             };
-            _this.renderTarget = null;
             _this.customShaderChunks = null;
             /**
              *
@@ -6232,6 +6229,13 @@ var egret3d;
              *
              */
             _this.draw = null; //开发者一般不会手动调用,通常是后期渲染调用
+            _this._viewport = egret3d.Rectangle.create();
+            _this._clearColor = egret3d.Color.create();
+            _this._colorMask = [true, true, true, true];
+            _this._clearDepth = 1;
+            _this._depthMask = true;
+            _this._clearStencil = 1;
+            _this._renderTarget = null;
             _this._logarithmicDepthBuffer = false;
             _this._gammaInput = true; //
             _this._gammaOutput = true; //
@@ -6241,7 +6245,7 @@ var egret3d;
             _this._stateEnables = [3042 /* Blend */, 2884 /* CullFace */, 2929 /* DepthTest */];
             _this._cacheStateEnable = {};
             /**
-             *
+             * 是否预乘
              */
             _this.premultipliedAlpha = false;
             /**
@@ -6327,6 +6331,9 @@ var egret3d;
             var components = this._getEncodingComponents(finialEncoding);
             return 'vec4 ' + functionName + '( vec4 value ) { return ' + components[0] + 'ToLinear' + components[1] + '; }';
         };
+        RenderState.prototype._setViewport = function (value) { };
+        RenderState.prototype._setRenderTarget = function (value) { };
+        RenderState.prototype._setColorMask = function (value) { };
         /**
          * @internal
          */
@@ -6388,8 +6395,6 @@ var egret3d;
          * @internal
          */
         RenderState.prototype._updateTextureDefines = function (mapName, texture, defines) {
-            if (defines === void 0) { defines = null; }
-            defines = defines || this.defines;
             //
             var mapNameDefine = egret3d.ShaderTextureDefine[mapName]; //TODO
             if (mapNameDefine) {
@@ -6502,19 +6507,12 @@ var egret3d;
             this.gammaOutput = false;
         };
         /**
-         *
+         * 根据BufferMask清除缓存
          */
-        RenderState.prototype.updateRenderTarget = function (renderTarget) { };
+        RenderState.prototype.clearBuffer = function (bufferBit) { };
         /**
-         *
-         */
-        RenderState.prototype.updateViewport = function (viewport) { };
-        /**
-         *
-         */
-        RenderState.prototype.clearBuffer = function (bufferBit, clearColor) { };
-        /**
-         *
+         * 将像素复制到2D纹理图像中
+         * TODO 微信上不可用
          */
         RenderState.prototype.updateVertexAttributes = function (mesh) { };
         /**
@@ -6530,7 +6528,100 @@ var egret3d;
             for (var key in this._cacheStateEnable) {
                 delete this._cacheStateEnable[key];
             }
+            this._renderTarget = null;
         };
+        Object.defineProperty(RenderState.prototype, "viewport", {
+            /**
+             * 设置视口
+             */
+            get: function () {
+                return this._viewport;
+            },
+            set: function (value) {
+                this._viewport.copy(value);
+                this._setViewport(value);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "clearColor", {
+            /**
+             * 指定清除的颜色值
+             */
+            get: function () {
+                return this._clearColor;
+            },
+            set: function (value) {
+                //TODO 2d,3d渲染状态不统一，这里先记录，统一后，可以做缓存
+                if (this.premultipliedAlpha) {
+                    this._clearColor.set(value.r * value.a, value.g * value.a, value.b * value.a, value.a);
+                }
+                else {
+                    this._clearColor.copy(value);
+                }
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "colorMask", {
+            /**
+             * 指定是否可以写入帧缓冲区中的各个颜色分量
+             */
+            get: function () {
+                return this._colorMask;
+            },
+            set: function (value) {
+                this._colorMask[0] = value[0];
+                this._colorMask[1] = value[1];
+                this._colorMask[2] = value[2];
+                this._colorMask[3] = value[3];
+                this._setColorMask(value);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "clearDepth", {
+            /**
+             * 指定清除的深度值
+             */
+            get: function () {
+                return this._clearDepth;
+            },
+            set: function (value) {
+                this._clearDepth = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "clearStencil", {
+            /**
+             * 指定写入模板缓存区的清除值
+             */
+            get: function () {
+                return this._clearStencil;
+            },
+            set: function (value) {
+                this._clearStencil = value;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(RenderState.prototype, "renderTarget", {
+            /**
+             * 指定要绑定的渲染目标
+             */
+            get: function () {
+                return this._renderTarget;
+            },
+            set: function (value) {
+                // if (this._renderTarget !== value) {  //TODO  防止2d污染3d
+                this._renderTarget = value;
+                this._setRenderTarget(value);
+                // }
+            },
+            enumerable: true,
+            configurable: true
+        });
         Object.defineProperty(RenderState.prototype, "logarithmicDepthBuffer", {
             /**
              *
@@ -6572,7 +6663,7 @@ var egret3d;
                     return;
                 }
                 this._gammaInput = value;
-                this._updateTextureDefines("envMap" /* EnvMap */, this.caches.skyBoxTexture);
+                this._updateTextureDefines("envMap" /* EnvMap */, this.caches.skyBoxTexture, this.defines);
                 this.onGammaInputChanged.dispatch();
             },
             enumerable: true,
@@ -6661,6 +6752,14 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
+        /**
+        * @deprecated
+        */
+        RenderState.prototype.updateViewport = function (viewport) { this.viewport = viewport; };
+        /**
+         * @deprecated
+         */
+        RenderState.prototype.updateRenderTarget = function (renderTarget) { this.renderTarget = renderTarget; };
         __decorate([
             paper.editor.property("CHECKBOX" /* CHECKBOX */)
         ], RenderState.prototype, "logarithmicDepthBuffer", null);
@@ -9528,8 +9627,8 @@ var egret3d;
             _this._renderState = paper.GameObject.globalGameObject.getComponent(egret3d.RenderState);
             return _this;
         }
-        CameraPostprocessing.prototype.renderPostprocessTarget = function (camera, material) {
-            this._renderState.render(camera, material, camera.postprocessingRenderTarget);
+        CameraPostprocessing.prototype.renderPostprocessTarget = function (camera, material, renderTarget) {
+            this._renderState.render(camera, material, renderTarget ? renderTarget : camera.postprocessingRenderTarget);
         };
         CameraPostprocessing.prototype.blit = function (src, material, dest, bufferMask) {
             if (material === void 0) { material = null; }
@@ -9543,10 +9642,11 @@ var egret3d;
             var saveCamera = camerasAndLights.currentCamera; // TODO
             //
             var camera = egret3d.cameraAndLightCollecter.postprocessingCamera;
-            egret3d.renderState.updateRenderTarget(dest);
-            egret3d.renderState.updateViewport(camera.viewport);
+            egret3d.renderState.renderTarget = dest;
+            egret3d.renderState.viewport = camera.viewport;
             if (bufferMask === null || bufferMask !== 0 /* None */) {
-                egret3d.renderState.clearBuffer(bufferMask || saveCamera.bufferMask, saveCamera.backgroundColor);
+                egret3d.renderState.clearColor = saveCamera.backgroundColor;
+                egret3d.renderState.clearBuffer(bufferMask || saveCamera.bufferMask);
             }
             //
             camerasAndLights.currentCamera = camera; // TODO
@@ -11009,6 +11109,8 @@ var egret3d;
         MeshNeedUpdate[MeshNeedUpdate["All"] = 31] = "All";
         MeshNeedUpdate[MeshNeedUpdate["None"] = 0] = "None";
     })(MeshNeedUpdate = egret3d.MeshNeedUpdate || (egret3d.MeshNeedUpdate = {}));
+    //TODO 运行时DrawCall排序优化使用
+    var _hashCode = 0;
     var _helpRaycastInfo = egret3d.RaycastInfo.create();
     var _attributeNames = [
         "POSITION" /* POSITION */,
@@ -11074,6 +11176,10 @@ var egret3d;
              * TODO
              */
             _this._boneIndices = null;
+            /**
+             * @internal
+             */
+            _this._id = _hashCode++;
             return _this;
         }
         Mesh.create = function (vertexCountOrName, indexCountOrConfig, attributeNamesOrBuffers) {
@@ -11482,8 +11588,9 @@ var egret3d;
          * @param attributeName
          * @param attributeType
          */
-        Mesh.prototype.addAttribute = function (attributeName, attributeType, vertexCount) {
+        Mesh.prototype.addAttribute = function (attributeName, attributeType, vertexCount, divisor) {
             if (vertexCount === void 0) { vertexCount = 0; }
+            if (divisor === void 0) { divisor = 0; }
             if (vertexCount <= 0) {
                 vertexCount = this._vertexCount;
             }
@@ -11503,7 +11610,7 @@ var egret3d;
                     bufferView: bufferViewIndex,
                     count: vertexCount, componentType: 5126 /* Float */, type: attributeType,
                     normalized: attributeName === "NORMAL" /* NORMAL */ || attributeName === "TANGENT" /* TANGENT */,
-                    extras: { typeCount: typeCount }
+                    extras: { typeCount: typeCount, divisor: divisor }
                 };
                 //
                 var attributeOffsets = this._glTFMesh.extras.attributeOffsets;
@@ -11532,6 +11639,7 @@ var egret3d;
                 var accessorIndex = attributes[attributeName];
                 var removeAccessor = this._removeBufferByAccessor(accessorIndex);
                 if (removeAccessor !== null) {
+                    var buffer = this.getBuffer(removeAccessor).extras.data;
                     var attributeOffsets = this._glTFMesh.extras.attributeOffsets;
                     var bufferOffset = -1;
                     for (var k in attributeOffsets) {
@@ -11543,8 +11651,9 @@ var egret3d;
                         }
                     }
                     delete attributes[attributeName];
+                    delete attributeOffsets[attributeName];
                     this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */);
-                    return this.getBuffer(removeAccessor).extras.data;
+                    return buffer;
                 }
             }
             return null;
@@ -11577,7 +11686,7 @@ var egret3d;
             accessors[accessorIndex] = {
                 bufferView: bufferIndex,
                 count: indexCount, componentType: 5123 /* UnsignedShort */, type: "SCALAR" /* SCALAR */,
-                extras: { typeCount: 1 },
+                extras: { typeCount: 1, divisor: 0 },
             };
             // 如果第一个子网格没使用顶点索引，则此次添加行为其实是设置第一个子网格。
             var primitives = this._glTFMesh.primitives;
@@ -12026,6 +12135,40 @@ var egret3d;
                     webgl.bindVertexArray = this.vertexArrayObject.bindVertexArrayOES.bind(this.vertexArrayObject);
                     webgl.deleteVertexArray = this.vertexArrayObject.deleteVertexArrayOES.bind(this.vertexArrayObject);
                 }
+                if (this.instancedArrays !== null) {
+                    webgl.drawArraysInstanced = this.instancedArrays.drawArraysInstancedANGLE.bind(this.instancedArrays);
+                    webgl.drawElementsInstanced = this.instancedArrays.drawElementsInstancedANGLE.bind(this.instancedArrays);
+                    webgl.vertexAttribDivisor = this.instancedArrays.vertexAttribDivisorANGLE.bind(this.instancedArrays);
+                }
+            };
+            WebGLRenderState.prototype._setViewport = function (value) {
+                var renderTarget = this._renderTarget;
+                var w;
+                var h;
+                if (renderTarget) {
+                    w = renderTarget.width;
+                    h = renderTarget.height;
+                }
+                else {
+                    var stageViewport = egret3d.stage.viewport;
+                    w = stageViewport.w;
+                    h = stageViewport.h;
+                }
+                var webgl = WebGLRenderState.webgl;
+                webgl.viewport(w * value.x, h * (1.0 - value.y - value.h), w * value.w, h * value.h);
+            };
+            WebGLRenderState.prototype._setRenderTarget = function (value) {
+                if (value) {
+                    value.activateTexture();
+                }
+                else {
+                    var webgl_2 = WebGLRenderState.webgl;
+                    webgl_2.bindFramebuffer(36160 /* FrameBuffer */, null);
+                }
+            };
+            WebGLRenderState.prototype._setColorMask = function (value) {
+                var webgl = WebGLRenderState.webgl;
+                webgl.colorMask(value[0], value[1], value[2], value[3]);
             };
             WebGLRenderState.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
@@ -12042,10 +12185,10 @@ var egret3d;
                 this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
                 this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
                 this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
-                this.vertexArrayObject = null;
-                // _getExtension(webgl, "OES_vertex_array_object");
+                this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
                 this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
                 this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
+                this.instancedArrays = _getExtension(webgl, "ANGLE_instanced_arrays");
                 //
                 this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
                 this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
@@ -12067,6 +12210,7 @@ var egret3d;
                 console.info("Frag depth enabled:", this.fragDepthEnabled);
                 console.info("Texture filter anisotropic:", this.textureFilterAnisotropic);
                 console.info("Shader texture LOD:", this.shaderTextureLOD);
+                console.info("ANGLE_instanced_arrays:", this.instancedArrays);
                 //
                 console.info("Maximum shader precision:", this.maxPrecision);
                 console.info("Maximum texture count:", this.maxTextures);
@@ -12078,52 +12222,18 @@ var egret3d;
                 console.info("Maximum GPU skinned bone count:", this.maxBoneCount);
                 console.info("Maximum anisotropy:", this.maxAnisotropy);
             };
-            WebGLRenderState.prototype.updateRenderTarget = function (renderTarget) {
-                // if (this.renderTarget !== renderTarget) {//TODO 2d节点污染次cache
-                this.renderTarget = renderTarget;
-                if (renderTarget) {
-                    renderTarget.activateTexture();
-                }
-                else {
-                    var webgl_2 = WebGLRenderState.webgl;
-                    webgl_2.bindFramebuffer(36160 /* FrameBuffer */, null);
-                }
-                // }
-            };
-            WebGLRenderState.prototype.updateViewport = function (viewport) {
-                var webgl = WebGLRenderState.webgl;
-                var currentViewport = this.viewport;
-                var renderTarget = this.renderTarget;
-                var w;
-                var h;
-                if (renderTarget) {
-                    w = renderTarget.width;
-                    h = renderTarget.height;
-                }
-                else {
-                    var stageViewport = egret3d.stage.viewport;
-                    w = stageViewport.w;
-                    h = stageViewport.h;
-                }
-                currentViewport.set(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h); //TODO
-                webgl.viewport(currentViewport.x, currentViewport.y, currentViewport.w, currentViewport.h);
-            };
-            WebGLRenderState.prototype.clearBuffer = function (bufferBit, clearColor) {
+            WebGLRenderState.prototype.clearBuffer = function (bufferBit) {
                 var webgl = WebGLRenderState.webgl;
                 if (bufferBit & 256 /* Depth */) {
-                    webgl.depthMask(true);
-                    webgl.clearDepth(1.0);
+                    webgl.depthMask(true); //TODO
+                    webgl.clearDepth(this._clearDepth); //TODO 2d,3d渲染状态统一后，放到每个调用函数中，可以做缓存
                 }
                 if (bufferBit & 1024 /* Stencil */) {
-                    webgl.clearStencil(1.0);
+                    webgl.clearStencil(this._clearStencil); //TODO
                 }
                 if (bufferBit & 16384 /* Color */) {
-                    if (this.premultipliedAlpha) {
-                        clearColor && webgl.clearColor(clearColor.r * clearColor.a, clearColor.g * clearColor.a, clearColor.b * clearColor.a, clearColor.a);
-                    }
-                    else {
-                        clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                    }
+                    var clearColor = this._clearColor;
+                    clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a); //TODO
                 }
                 webgl.clear(bufferBit);
             };
@@ -12139,9 +12249,13 @@ var egret3d;
                     var location_1 = attribute.location, semantic = attribute.semantic;
                     if (semantic in attributes) {
                         var accessor = mesh.getAccessor(attributes[semantic]);
+                        var _b = accessor.extras, typeCount = _b.typeCount, divisor = _b.divisor;
                         // TODO normalized应该来源于mesh，应该还没有
-                        webgl.vertexAttribPointer(location_1, accessor.extras.typeCount, accessor.componentType, accessor.normalized !== undefined ? accessor.normalized : false, 0, attributeOffsets[semantic]);
+                        webgl.vertexAttribPointer(location_1, typeCount, accessor.componentType, accessor.normalized !== undefined ? accessor.normalized : false, 0, attributeOffsets[semantic]);
                         webgl.enableVertexAttribArray(location_1);
+                        if (divisor) {
+                            webgl.vertexAttribDivisor(location_1, divisor);
+                        }
                     }
                     else {
                         webgl.disableVertexAttribArray(location_1);
@@ -13852,6 +13966,7 @@ var egret3d;
         ShaderDefine["USE_SHADOWMAP"] = "USE_SHADOWMAP";
         ShaderDefine["USE_SKINNING"] = "USE_SKINNING";
         ShaderDefine["USE_SIZEATTENUATION"] = "USE_SIZEATTENUATION";
+        ShaderDefine["USE_INSTANCED"] = "USE_INSTANCED";
         ShaderDefine["TOON"] = "TOON";
         ShaderDefine["STANDARD"] = "STANDARD";
         //
@@ -14483,14 +14598,20 @@ var egret3d;
             }
             {
                 var mesh = egret3d.MeshBuilder.createPlane(2.0, 2.0);
-                mesh.name = "builtin/fullscreen_quad.mesh.bin";
+                mesh.name = "builtin/postprocessing_quad.mesh.bin";
                 paper.Asset.register(mesh);
-                DefaultMeshes_1.FULLSCREEN_QUAD = mesh;
+                DefaultMeshes_1.POSTPROCESSING_QUAD = mesh;
                 // 后期渲染专用，UV 反转一下，这样 shader 中就不用反转。
                 var uvs = mesh.getUVs();
                 for (var i = 1, l = uvs.length; i < l; i += 2) {
                     uvs[i] = 1.0 - uvs[i];
                 }
+            }
+            {
+                var mesh = egret3d.MeshBuilder.createPlane(2.0, 2.0);
+                mesh.name = "builtin/fullscreen_quad.mesh.bin";
+                paper.Asset.register(mesh);
+                DefaultMeshes_1.FULLSCREEN = mesh;
             }
             {
                 var mesh = egret3d.MeshBuilder.createPlane(10.0, 10.0);
@@ -14776,6 +14897,8 @@ var egret3d;
             DefaultShaders_1.FXAA = this._createShader("builtin/fxaa.shader.json", egret3d.ShaderLib.fxaa, 2000 /* Geometry */, helpStates);
             helpMaterial.clearStates().setDepth(true, true).setCullFace(false);
             DefaultShaders_1.PARTICLE = this._createShader("builtin/particle.shader.json", egret3d.ShaderLib.particle, 2000 /* Geometry */, helpStates, ["USE_COLOR" /* USE_COLOR */]);
+            helpMaterial.clearStates().setDepth(false, false).setCullFace(true);
+            DefaultShaders_1.BACKGROUND = this._createShader("builtin/background.shader.json", egret3d.ShaderLib.background, 2000 /* Geometry */, helpStates);
             // deprecated
             helpMaterial.clearStates().setDepth(true, true);
             DefaultShaders_1.MATERIAL_COLOR = this._createShader("builtin/materialcolor.shader.json", egret3d.ShaderLib.meshbasic, 2000 /* Geometry */, helpStates);
@@ -14856,6 +14979,9 @@ var egret3d;
             DefaultMaterials_1.LINEDASHED = this._createMaterial("builtin/linedashed.mat.json", egret3d.DefaultShaders.LINEDASHED);
             DefaultMaterials_1.MISSING = this._createMaterial("builtin/missing.mat.json", egret3d.DefaultShaders.MESH_BASIC)
                 .setColor(egret3d.Color.PURPLE);
+            DefaultMaterials_1.BACKGROUND = this._createMaterial("builtin/background.mat.json", egret3d.DefaultShaders.BACKGROUND)
+                .setDepth(false, false)
+                .setCullFace(true);
             DefaultMaterials_1.SHADOW_DEPTH_3200 = this._createMaterial("builtin/shadow_depth_3200.mat.json", egret3d.DefaultShaders.DEPTH)
                 .setDepth(true, true)
                 .setCullFace(true, 2305 /* CCW */, 1029 /* Back */)
@@ -15232,7 +15358,7 @@ var egret3d;
             this.skyBox.subMeshIndex = 0;
             this.postprocessing.matrix = egret3d.Matrix4.IDENTITY;
             this.postprocessing.subMeshIndex = 0;
-            this.postprocessing.mesh = egret3d.DefaultMeshes.FULLSCREEN_QUAD;
+            this.postprocessing.mesh = egret3d.DefaultMeshes.POSTPROCESSING_QUAD;
         };
         /**
          * 添加绘制信息。
@@ -17116,6 +17242,10 @@ var egret3d;
         function Camera() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
+             * 该相机下的对象都是用此材质渲染
+             */
+            _this.overrideMaterial = null;
+            /**
              * 该相机的绘制缓冲掩码。
              */
             _this.bufferMask = 16640 /* DepthAndColor */;
@@ -18187,6 +18317,9 @@ var egret3d;
             else if (materialA._id !== materialB._id) {
                 return materialA._id - materialB._id;
             }
+            else if (a.mesh._id !== b.mesh._id) {
+                return a.mesh._id - b.mesh._id;
+            }
             else {
                 return a.zdist - b.zdist;
             }
@@ -18221,6 +18354,7 @@ var egret3d;
                     (cullingMask & layer) !== 0 &&
                     // (camera.cullingMask & layer) !== 0 && TODO light cullingMask
                     (!renderer.frustumCulled || egret3d.math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))) {
+                    drawCall.modelViewMatrix.multiply(camera.worldToCameraMatrix, drawCall.matrix);
                     shadowCalls[shadowIndex++] = drawCall;
                 }
             }
@@ -18249,6 +18383,7 @@ var egret3d;
                     else {
                         opaqueCalls[opaqueIndex++] = drawCall;
                     }
+                    drawCall.modelViewMatrix.multiply(camera.worldToCameraMatrix, drawCall.matrix);
                     drawCall.zdist = egret3d.Vector3.create().fromMatrixPosition(drawCall.matrix).getSquaredDistance(cameraPosition);
                 }
             }
@@ -18460,6 +18595,53 @@ var egret3d;
                 light.castShadows = false; //TODO 不支持阴影，防止贴图报错
             }
         };
+        CameraRenderContext.prototype._combineInstanced = function (drawCalls) {
+            // const combineDrawCalls: { [key: string]: egret3d.DrawCall[] } = {};TODO正常的动态合并
+            var combineInstanced = {};
+            //collect
+            for (var i = drawCalls.length - 1; i >= 0; i--) {
+                var drawCall = drawCalls[i];
+                var material = drawCall.material;
+                if (!material.enableGPUInstancing) {
+                    continue;
+                }
+                //TODO 考虑lightmap
+                var mesh = drawCall.mesh;
+                var key = material.uuid + "_" + mesh.uuid + "_" + drawCall.subMeshIndex;
+                if (!combineInstanced[key]) {
+                    combineInstanced[key] = [];
+                }
+                combineInstanced[key].unshift(drawCall);
+                drawCalls.splice(i, 1);
+            }
+            //combine
+            for (var key in combineInstanced) {
+                var calls = combineInstanced[key];
+                //
+                var count = calls.length;
+                var drawCall = calls[0];
+                var orginMesh = drawCall.mesh;
+                orginMesh.removeAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */);
+                orginMesh.removeAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */);
+                var models = orginMesh.addAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */, "MAT4" /* MAT4 */, count, 1);
+                var modelViews = orginMesh.addAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */, "MAT4" /* MAT4 */, count, 1);
+                for (var i = 0; i < count; i++) {
+                    var call = calls[i];
+                    models.set(call.matrix.rawData, i * 16);
+                    modelViews.set(call.modelViewMatrix.rawData, i * 16);
+                }
+                var newDrawCall = egret3d.DrawCall.create().release();
+                newDrawCall.entity = drawCall.entity;
+                newDrawCall.renderer = drawCall.renderer;
+                newDrawCall.material = drawCall.material;
+                newDrawCall.mesh = orginMesh;
+                newDrawCall.subMeshIndex = drawCall.subMeshIndex;
+                newDrawCall.matrix = drawCall.matrix;
+                newDrawCall.modelViewMatrix = drawCall.modelViewMatrix;
+                newDrawCall.instanced = count;
+                drawCalls.push(newDrawCall);
+            }
+        };
         /**
          * @internal
          */
@@ -18470,6 +18652,7 @@ var egret3d;
             }
             else {
                 this._frustumCulling();
+                this._combineInstanced(this.opaqueCalls);
                 this._updateLights();
             }
         };
@@ -18539,6 +18722,10 @@ var egret3d;
         __extends(SkyBox, _super);
         function SkyBox() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
+            /**
+             * 是否开启反射 默认:True
+             */
+            _this.reflections = true;
             _this._materials = [];
             return _this;
         }
@@ -18619,6 +18806,10 @@ var egret3d;
             configurable: true
         });
         __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */),
+            paper.serializedField
+        ], SkyBox.prototype, "reflections", void 0);
+        __decorate([
             paper.editor.property("MATERIAL_ARRAY" /* MATERIAL_ARRAY */),
             paper.serializedField
         ], SkyBox.prototype, "materials", null);
@@ -18634,14 +18825,40 @@ var egret3d;
         var FXAAPostprocess = (function (_super) {
             __extends(FXAAPostprocess, _super);
             function FXAAPostprocess() {
-                return _super !== null && _super.apply(this, arguments) || this;
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this._renderTexture = null; //TODO
+                return _this;
             }
+            FXAAPostprocess.prototype._onStageResize = function () {
+                var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
+                var renderTexture = this._renderTexture;
+                if (renderTexture) {
+                    renderTexture.setSize(w, h);
+                }
+            };
+            FXAAPostprocess.prototype.initialize = function () {
+                _super.prototype.initialize.call(this);
+                this._renderTexture = egret3d.RenderTexture.create({ width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h, format: 6407 /* RGB */ /*TODO*/ }).
+                    setLiner(1 /* Bilinear */).
+                    setRepeat(false).retain();
+                egret3d.stage.onScreenResize.add(this._onStageResize, this);
+            };
+            FXAAPostprocess.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                egret3d.stage.onScreenResize.remove(this._onStageResize, this);
+                if (this._renderTexture) {
+                    this._renderTexture.release();
+                }
+                this._renderTexture = null;
+            };
             FXAAPostprocess.prototype.onRender = function (camera) {
-                egret3d.renderState.updateRenderTarget(camera.postprocessingRenderTarget);
-                egret3d.renderState.clearBuffer(17664 /* All */, camera.backgroundColor);
-                this.renderPostprocessTarget(camera);
-                egret3d.DefaultMaterials.FXAA.setTexture(camera.postprocessingRenderTarget);
-                this.blit(camera.postprocessingRenderTarget, egret3d.DefaultMaterials.FXAA);
+                var renderTexture = this._renderTexture;
+                egret3d.renderState.renderTarget = renderTexture;
+                egret3d.renderState.clearColor = camera.backgroundColor;
+                egret3d.renderState.clearBuffer(17664 /* All */);
+                this.renderPostprocessTarget(camera, undefined, renderTexture);
+                egret3d.DefaultMaterials.FXAA.setTexture(renderTexture);
+                this.blit(renderTexture, egret3d.DefaultMaterials.FXAA);
             };
             return FXAAPostprocess;
         }(egret3d.CameraPostprocessing));
@@ -18704,7 +18921,7 @@ var egret3d;
                 });
                 _this._finalSampleRenderTarget = egret3d.RenderTexture.create({
                     width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
-                    format: 6408 /* RGBA */,
+                    format: 6407 /* RGB */,
                     sampler: {
                         minFilter: 9729 /* Linear */, magFilter: 9729 /* Linear */,
                     }
@@ -18712,10 +18929,14 @@ var egret3d;
                 return _this;
             }
             SSAAPostprocess.prototype._onStageResize = function () {
+                var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
                 var sampleRenderTarget = this._sampleRenderTarget;
                 if (sampleRenderTarget) {
-                    var _a = egret3d.stage.viewport, w = _a.w, h = _a.h;
                     sampleRenderTarget.setSize(w, h);
+                }
+                var finalSampleRenderTarget = this._finalSampleRenderTarget;
+                if (finalSampleRenderTarget) {
+                    finalSampleRenderTarget.setSize(w, h);
                 }
             };
             SSAAPostprocess.prototype.initialize = function () {
@@ -18749,12 +18970,14 @@ var egret3d;
                         var uniformCenteredDistribution = (-0.5 + (i + 0.5) / l);
                         sampleWeight += roundingRange * uniformCenteredDistribution;
                     }
-                    renderState.updateRenderTarget(sampleRenderTarget);
-                    renderState.clearBuffer(17664 /* All */, clearColor);
+                    renderState.renderTarget = sampleRenderTarget;
+                    renderState.clearColor = clearColor;
+                    renderState.clearBuffer(17664 /* All */);
                     renderState.render(camera, undefined, sampleRenderTarget);
-                    renderState.updateRenderTarget(finalSampleRenderTarget);
+                    renderState.renderTarget = finalSampleRenderTarget;
                     if (i === 0) {
-                        renderState.clearBuffer(17664 /* All */, clearColor);
+                        renderState.clearColor = clearColor;
+                        renderState.clearBuffer(17664 /* All */);
                     }
                     copyMaterial.setOpacity(sampleWeight);
                     this.blit(sampleRenderTarget, copyMaterial, finalSampleRenderTarget, 0 /* None */);
@@ -18763,7 +18986,7 @@ var egret3d;
                 camera.subViewport.set(0, 0, 1, 1);
             };
             __decorate([
-                paper.editor.property("UINT" /* UINT */, { minimum: 0, maximum: 5 })
+                paper.editor.property("UINT" /* UINT */, { minimum: 0, maximum: 5, step: 1 })
             ], SSAAPostprocess.prototype, "sampleLevel", void 0);
             __decorate([
                 paper.editor.property("CHECKBOX" /* CHECKBOX */)
@@ -19248,6 +19471,7 @@ var egret3d;
              * 此次绘制的世界矩阵。
              */
             _this.matrix = null;
+            _this.modelViewMatrix = egret3d.Matrix4.IDENTITY.clone();
             /**
              * 此次绘制的子网格索引。
              */
@@ -19264,6 +19488,7 @@ var egret3d;
              *
              */
             _this.zdist = -1.0;
+            _this.instanced = 0;
             return _this;
         }
         /**
@@ -23462,7 +23687,6 @@ var egret3d;
         * @internal
         */
         function createBatchMesh(renderer, maxParticleCount) {
-            var meshAttributes = [];
             var meshAttributesType = {};
             if (renderer.renderMode === 4 /* Mesh */) {
                 var mesh = renderer.mesh;
@@ -23470,12 +23694,11 @@ var egret3d;
                 var orginIndexBufferCount = orginIndexBuffer.length;
                 for (var _i = 0, MeshShaderAttributeFormat_1 = MeshShaderAttributeFormat; _i < MeshShaderAttributeFormat_1.length; _i++) {
                     var attribute = MeshShaderAttributeFormat_1[_i];
-                    meshAttributes.push(attribute.key);
                     meshAttributesType[attribute.key] = attribute.type;
                 }
                 var totalVertexCount = mesh.vertexCount * maxParticleCount;
                 var totalIndexCount = orginIndexBufferCount * maxParticleCount;
-                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributesType);
                 batchMesh.drawMode = 35048 /* Dynamic */;
                 //
                 var index = 0;
@@ -23525,13 +23748,12 @@ var egret3d;
                 var orginIndexBufferCount = orginIndexBuffer.length;
                 for (var _a = 0, BillboardShaderAttributeFormat_1 = BillboardShaderAttributeFormat; _a < BillboardShaderAttributeFormat_1.length; _a++) {
                     var attribute = BillboardShaderAttributeFormat_1[_a];
-                    meshAttributes.push(attribute.key);
                     meshAttributesType[attribute.key] = attribute.type;
                 }
                 var vertexStride = 4;
                 var totalVertexCount = vertexStride * maxParticleCount;
                 var totalIndexCount = orginIndexBufferCount * maxParticleCount;
-                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributes, meshAttributesType);
+                var batchMesh = egret3d.Mesh.create(totalVertexCount, totalIndexCount, meshAttributesType);
                 batchMesh.drawMode = 35048 /* Dynamic */;
                 var cornerBuffer = batchMesh.getAttribute("_CORNER" /* _CORNER */);
                 var uvBuffer = batchMesh.getAttribute("TEXCOORD_0" /* TEXCOORD_0 */);
@@ -26831,11 +27053,11 @@ var egret3d;
                 }
             }
             //
-            // if (!combine.primitiveIndices[i]) {
-            //     combine.primitiveIndices[i] = 0;
-            // }
+            if (!combine.primitiveIndices[i]) {
+                combine.primitiveIndices[i] = 0;
+            }
             var indicesCount = meshData.getAccessorByteLength(meshData.getAccessor(primitive.indices)) / Uint16Array.BYTES_PER_ELEMENT;
-            // combine.primitiveIndices[i] += indicesCount;
+            combine.primitiveIndices[i] += indicesCount;
             combine.indicesCount += indicesCount;
         }
         //
@@ -26870,19 +27092,24 @@ var egret3d;
             combineAttributes.push(key);
         }
         //
-        var combineMesh = egret3d.Mesh.create(combineInstance.verticesCount, combineInstance.primitiveIndices[0], combineAttributes);
+        var primitiveIndices = combineInstance.primitiveIndices;
+        var combineMesh = egret3d.Mesh.create(combineInstance.verticesCount, primitiveIndices[0], combineAttributes);
         combineMesh.drawMode = 35048 /* Dynamic */;
+        //
+        for (var i = 1, l = primitiveIndices.length; i < l; i++) {
+            var subLen = primitiveIndices[i];
+            //第一个submesh在构造函数中已经添加，需要手动添加后续的
+            combineMesh.addSubMesh(subLen, i);
+        }
         var combinePosition = combineMesh.getVertices();
         var combineNormal = combineMesh.getNormals();
         var combineUV0 = combineMesh.getUVs();
         var combineUV1 = combineMesh.getAttribute("TEXCOORD_1" /* TEXCOORD_1 */);
         var combineColor0 = combineMesh.getColors();
-        var combineJoint0 = combineMesh.getAttribute("JOINTS_0" /* JOINTS_0 */);
-        var combineWeight0 = combineMesh.getAttribute("WEIGHTS_0" /* WEIGHTS_0 */);
-        var combineIndices = combineMesh.getIndices();
+        var combineJoint0 = combineMesh.getAttributes("JOINTS_0" /* JOINTS_0 */);
+        var combineWeight0 = combineMesh.getAttributes("WEIGHTS_0" /* WEIGHTS_0 */);
         //
         helpInverseMatrix.copy(root.transform.worldToLocalMatrix);
-        var subIndexBuffersCount = [];
         //
         var positonIndex = 0, normalIndex = 0, color0Index = 0, color1Index = 0, uv0Index = 0, uv1Index = 0, jointIndex = 0, weightIndex = 0, indexIndex = 0;
         var startIndex = 0;
@@ -26997,25 +27224,16 @@ var egret3d;
                         weightIndex += orginVertexCount * 4;
                     }
                 }
+                var combineIndices = combineMesh.getIndices(i);
                 var indicesBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices));
                 for (var j = 0, l = indicesBuffer.length; j < l; j++) {
                     var index = indicesBuffer[j] + startIndex;
                     combineIndices[indexIndex++] = index;
                     endIndex = index > endIndex ? index : endIndex;
                 }
-                if (!subIndexBuffersCount[i]) {
-                    subIndexBuffersCount[i] = 0;
-                }
-                subIndexBuffersCount[i] += indicesBuffer.length;
             }
             startIndex = endIndex + 1;
             meshFilter.mesh = null;
-        }
-        //TODO submesh创建有问题
-        for (var i = 1, l = subIndexBuffersCount.length; i < l; i++) {
-            var subLen = subIndexBuffersCount[i];
-            //第一个submesh在构造函数中已经添加，需要手动添加后续的
-            combineMesh.addSubMesh(subLen, i);
         }
         return combineMesh;
     }
@@ -27604,7 +27822,7 @@ var egret3d;
                 var context = define.context;
                 if (context) {
                     // if (typeof context === "number") {
-                    if (!define.isCode) {
+                    if (!define.isCode && typeof context === "number") {
                         context = define.name + " " + context;
                     }
                 }
@@ -27757,6 +27975,7 @@ var egret3d;
                 _this._dirty |= dirty;
                 _this._version++;
             };
+            _this.test = "";
             return _this;
         }
         Material.create = function (shaderOrName, shaderOrConfig) {
@@ -27898,7 +28117,7 @@ var egret3d;
                     glTFMaterial = this._glTFMaterial = {
                         extensions: {
                             KHR_techniques_webgl: { technique: shaderOrConfig.name },
-                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : 2000 /* Geometry */ }
+                            paper: { renderQueue: shaderOrConfig._renderQueue ? shaderOrConfig._renderQueue : 2000 /* Geometry */, enableGPUInstancing: false }
                         }
                     };
                     config.materials = [this._glTFMaterial];
@@ -28531,6 +28750,25 @@ var egret3d;
             },
             set: function (value) {
                 this.setFloat("opacity" /* Opacity */, value);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Material.prototype, "enableGPUInstancing", {
+            /**
+             * 是否开启instancing
+             */
+            get: function () {
+                return this._glTFMaterial.extensions.paper.enableGPUInstancing;
+            },
+            set: function (value) {
+                if (egret3d.renderState.instancedArrays === null) {
+                    return;
+                }
+                if (this._glTFMaterial.extensions.paper.enableGPUInstancing !== value) {
+                    this._glTFMaterial.extensions.paper.enableGPUInstancing = value;
+                    value ? this.addDefine("USE_INSTANCED" /* USE_INSTANCED */) : this.removeDefine("USE_INSTANCED" /* USE_INSTANCED */);
+                }
             },
             enumerable: true,
             configurable: true
@@ -30287,12 +30525,12 @@ var egret3d;
 (function (egret3d) {
     var ShaderLib;
     (function (ShaderLib) {
+        ShaderLib.background = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "background_vert", "type": 35633, "uri": "varying vec2 vUv;\nuniform mat3 uvTransform;\nvoid main() {\n\tvUv = ( uvTransform * vec3( uv, 1 ) ).xy;\n\tgl_Position = vec4( position.xy, 1.0, 1.0 );\n}" }, { "name": "background_frag", "type": 35632, "uri": "uniform sampler2D map;\nvarying vec2 vUv;\nvoid main() {\n\tvec4 texColor = texture2D( map, vUv );\n\tgl_FragColor = mapTexelToLinear( texColor );\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n}" }], "techniques": [{ "name": "background", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.copy = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "copy_vert", "type": 35633, "uri": "varying vec2 vUv;\nvoid main() {\n\tvUv = uv;\n\tgl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}" }, { "name": "copy_frag", "type": 35632, "uri": "uniform float opacity;\nuniform sampler2D map;\nvarying vec2 vUv;\nvoid main() {\n\tvec4 texel = texture2D( map, vUv );\n\tgl_FragColor = opacity * texel;\n}" }], "techniques": [{ "name": "copy", "attributes": {}, "uniforms": { "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.cube = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "cube_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\tgl_Position.z = gl_Position.w;\n}\n" }, { "name": "cube_frag", "type": 35632, "uri": "uniform samplerCube tCube;\nuniform float tFlip;\nuniform float opacity;\nvarying vec3 vWorldPosition;\nvoid main() {\n\tgl_FragColor = textureCube( tCube, vec3( tFlip * vWorldPosition.x, vWorldPosition.yz ) );\n\tgl_FragColor.a *= opacity;\n}\n" }], "techniques": [{ "name": "cube", "attributes": {}, "uniforms": { "tCube": { "type": 35680 }, "tFlip": { "type": 5126, "value": 1 }, "opacity": { "type": 5126, "value": 1 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.depth = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "depth_vert", "type": 35633, "uri": "#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n}\n" }, { "name": "depth_frag", "type": 35632, "uri": "#if DEPTH_PACKING == 3200\n\tuniform float opacity;\n#endif\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#if DEPTH_PACKING == 3200\n\t\tdiffuseColor.a = opacity;\n\t#endif\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\t#include <logdepthbuf_fragment>\n\t#if DEPTH_PACKING == 3200\n\t\tgl_FragColor = vec4( vec3( 1.0 - gl_FragCoord.z ), opacity );\n\t#elif DEPTH_PACKING == 3201\n\t\tgl_FragColor = packDepthToRGBA( gl_FragCoord.z );\n\t#endif\n}\n" }], "techniques": [{ "name": "depth", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "opacity": { "type": 5126, "value": 1 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.distanceRGBA = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "distanceRGBA_vert", "type": 35633, "uri": "#define DISTANCE\nvarying vec3 vWorldPosition;\n#include <common>\n#include <uv_pars_vertex>\n#include <displacementmap_pars_vertex>\n#include <morphtarget_pars_vertex>\n#include <skinning_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <uv_vertex>\n\t#include <skinbase_vertex>\n\t#ifdef USE_DISPLACEMENTMAP\n\t\t#include <beginnormal_vertex>\n\t\t#include <morphnormal_vertex>\n\t\t#include <skinnormal_vertex>\n\t#endif\n\t#include <begin_vertex>\t\n\t#include <morphtarget_vertex>\n\t#include <skinning_vertex>\n\t#include <displacementmap_vertex>\n\t#include <project_vertex>\n\t#include <worldpos_vertex>\n\t#include <clipping_planes_vertex>\n\tgl_Position.x *= -1.0;\n\t\n\tvWorldPosition = worldPosition.xyz;\n}\n" }, { "name": "distanceRGBA_frag", "type": 35632, "uri": "#define DISTANCE\nuniform vec3 referencePosition;\nuniform float nearDistance;\nuniform float farDistance;\nvarying vec3 vWorldPosition;\n#include <common>\n#include <packing>\n#include <uv_pars_fragment>\n#include <map_pars_fragment>\n#include <alphamap_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main () {\n\t#include <clipping_planes_fragment>\n\tvec4 diffuseColor = vec4( 1.0 );\n\t#include <map_fragment>\n\t#include <alphamap_fragment>\n\t#include <alphatest_fragment>\n\tfloat dist = length( vWorldPosition - referencePosition );\n\tdist = ( dist - nearDistance ) / ( farDistance - nearDistance );\n\tdist = saturate( dist );\n\tgl_FragColor = packDepthToRGBA( dist );\n}\n" }], "techniques": [{ "name": "distanceRGBA", "attributes": {}, "uniforms": { "uvTransform": { "type": 35675, "value": [1, 0, 0, 0, 1, 0, 0, 0, 1] }, "displacementMap": { "type": 35678 }, "displacementScale": { "type": 5126, "value": 1 }, "displacementBias": { "type": 5126 }, "morphTargetInfluences[0]": { "type": 5126 }, "map": { "type": 35678 }, "alphaMap": { "type": 35678 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.equirect = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "equirect_vert", "type": 35633, "uri": "varying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvWorldPosition = transformDirection( position, modelMatrix );\n\t#include <begin_vertex>\n\t#include <project_vertex>\n\tgl_Position.z = gl_Position.w;\n}\n" }, { "name": "equirect_frag", "type": 35632, "uri": "uniform sampler2D tEquirect;\nvarying vec3 vWorldPosition;\n#include <common>\nvoid main() {\n\tvec3 direction = normalize( vWorldPosition );\n\tvec2 sampleUV;\n\tsampleUV.y = asin( clamp( direction.y, - 1.0, 1.0 ) ) * RECIPROCAL_PI + 0.5;\n\tsampleUV.y = 1.0 - sampleUV.y;\n\tsampleUV.x = atan( direction.z, direction.x ) * RECIPROCAL_PI2 + 0.5;\n\tgl_FragColor = texture2D( tEquirect, sampleUV );\n}\n" }], "techniques": [{ "name": "equirect", "attributes": {}, "uniforms": { "tEquirect": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
-        ShaderLib.fxaa1 = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "fxaa1_vert", "type": 35633, "uri": "varying vec2 vUv;\nvoid main(){\n    vUv=uv;\n    gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);\n}" }, { "name": "fxaa1_frag", "type": 35632, "uri": "precision highp float;\nuniform sampler2D map;\nuniform vec2 resolution;\nvarying vec2 vUv;\n#define FXAA_PC 1\n#define FXAA_GLSL_100 1\n#define FXAA_QUALITY_PRESET 12\n#define FXAA_GREEN_AS_LUMA 1\n#ifndef FXAA_PC_CONSOLE\n    #define FXAA_PC_CONSOLE 0\n#endif\n#ifndef FXAA_GLSL_120\n    #define FXAA_GLSL_120 0\n#endif\n#ifndef FXAA_GLSL_130\n    #define FXAA_GLSL_130 0\n#endif\n#ifndef FXAA_HLSL_3\n    #define FXAA_HLSL_3 0\n#endif\n#ifndef FXAA_HLSL_4\n    #define FXAA_HLSL_4 0\n#endif\n#ifndef FXAA_HLSL_5\n    #define FXAA_HLSL_5 0\n#endif\n#ifndef FXAA_GREEN_AS_LUMA\n    #define FXAA_GREEN_AS_LUMA 0\n#endif\n#ifndef FXAA_EARLY_EXIT\n    #define FXAA_EARLY_EXIT 1\n#endif\n#ifndef FXAA_DISCARD\n    #define FXAA_DISCARD 0\n#endif\n#ifndef FXAA_FAST_PIXEL_OFFSET\n    #ifdef GL_EXT_gpu_shader4\n        #define FXAA_FAST_PIXEL_OFFSET 1\n    #endif\n    #ifdef GL_NV_gpu_shader5\n        #define FXAA_FAST_PIXEL_OFFSET 1\n    #endif\n    #ifdef GL_ARB_gpu_shader5\n        #define FXAA_FAST_PIXEL_OFFSET 1\n    #endif\n    #ifndef FXAA_FAST_PIXEL_OFFSET\n        #define FXAA_FAST_PIXEL_OFFSET 0\n    #endif\n#endif\n#ifndef FXAA_GATHER4_ALPHA\n    #if (FXAA_HLSL_5 == 1)\n        #define FXAA_GATHER4_ALPHA 1\n    #endif\n    #ifdef GL_ARB_gpu_shader5\n        #define FXAA_GATHER4_ALPHA 1\n    #endif\n    #ifdef GL_NV_gpu_shader5\n        #define FXAA_GATHER4_ALPHA 1\n    #endif\n    #ifndef FXAA_GATHER4_ALPHA\n        #define FXAA_GATHER4_ALPHA 0\n    #endif\n#endif\n#ifndef FXAA_QUALITY_PRESET\n    #define FXAA_QUALITY_PRESET 12\n#endif\n#if (FXAA_QUALITY_PRESET == 10)\n    #define FXAA_QUALITY_PS 3\n    #define FXAA_QUALITY_P0 1.5\n    #define FXAA_QUALITY_P1 3.0\n    #define FXAA_QUALITY_P2 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 11)\n    #define FXAA_QUALITY_PS 4\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 3.0\n    #define FXAA_QUALITY_P3 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 12)\n    #define FXAA_QUALITY_PS 5\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 4.0\n    #define FXAA_QUALITY_P4 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 13)\n    #define FXAA_QUALITY_PS 6\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 4.0\n    #define FXAA_QUALITY_P5 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 14)\n    #define FXAA_QUALITY_PS 7\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 4.0\n    #define FXAA_QUALITY_P6 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 15)\n    #define FXAA_QUALITY_PS 8\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 4.0\n    #define FXAA_QUALITY_P7 12.0\n#endif\n#if (FXAA_QUALITY_PRESET == 20)\n    #define FXAA_QUALITY_PS 3\n    #define FXAA_QUALITY_P0 1.5\n    #define FXAA_QUALITY_P1 2.0\n    #define FXAA_QUALITY_P2 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 21)\n    #define FXAA_QUALITY_PS 4\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 22)\n    #define FXAA_QUALITY_PS 5\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 23)\n    #define FXAA_QUALITY_PS 6\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 24)\n    #define FXAA_QUALITY_PS 7\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 3.0\n    #define FXAA_QUALITY_P6 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 25)\n    #define FXAA_QUALITY_PS 8\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 4.0\n    #define FXAA_QUALITY_P7 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 26)\n    #define FXAA_QUALITY_PS 9\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 4.0\n    #define FXAA_QUALITY_P8 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 27)\n    #define FXAA_QUALITY_PS 10\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 2.0\n    #define FXAA_QUALITY_P8 4.0\n    #define FXAA_QUALITY_P9 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 28)\n    #define FXAA_QUALITY_PS 11\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 2.0\n    #define FXAA_QUALITY_P8 2.0\n    #define FXAA_QUALITY_P9 4.0\n    #define FXAA_QUALITY_P10 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 29)\n    #define FXAA_QUALITY_PS 12\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.5\n    #define FXAA_QUALITY_P2 2.0\n    #define FXAA_QUALITY_P3 2.0\n    #define FXAA_QUALITY_P4 2.0\n    #define FXAA_QUALITY_P5 2.0\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 2.0\n    #define FXAA_QUALITY_P8 2.0\n    #define FXAA_QUALITY_P9 2.0\n    #define FXAA_QUALITY_P10 4.0\n    #define FXAA_QUALITY_P11 8.0\n#endif\n#if (FXAA_QUALITY_PRESET == 39)\n    #define FXAA_QUALITY_PS 12\n    #define FXAA_QUALITY_P0 1.0\n    #define FXAA_QUALITY_P1 1.0\n    #define FXAA_QUALITY_P2 1.0\n    #define FXAA_QUALITY_P3 1.0\n    #define FXAA_QUALITY_P4 1.0\n    #define FXAA_QUALITY_P5 1.5\n    #define FXAA_QUALITY_P6 2.0\n    #define FXAA_QUALITY_P7 2.0\n    #define FXAA_QUALITY_P8 2.0\n    #define FXAA_QUALITY_P9 2.0\n    #define FXAA_QUALITY_P10 4.0\n    #define FXAA_QUALITY_P11 8.0\n#endif\n#if (FXAA_GLSL_100 == 1) || (FXAA_GLSL_120 == 1) || (FXAA_GLSL_130 == 1)\n    #define FxaaBool bool\n    #define FxaaDiscard discard\n    #define FxaaFloat float\n    #define FxaaFloat2 vec2\n    #define FxaaFloat3 vec3\n    #define FxaaFloat4 vec4\n    #define FxaaHalf float\n    #define FxaaHalf2 vec2\n    #define FxaaHalf3 vec3\n    #define FxaaHalf4 vec4\n    #define FxaaInt2 ivec2\n    #define FxaaSat(x) clamp(x, 0.0, 1.0)\n    #define FxaaTex sampler2D\n#else\n    #define FxaaBool bool\n    #define FxaaDiscard clip(-1)\n    #define FxaaFloat float\n    #define FxaaFloat2 float2\n    #define FxaaFloat3 float3\n    #define FxaaFloat4 float4\n    #define FxaaHalf half\n    #define FxaaHalf2 half2\n    #define FxaaHalf3 half3\n    #define FxaaHalf4 half4\n    #define FxaaSat(x) saturate(x)\n#endif\n#if (FXAA_GLSL_100 == 1)\n  #define FxaaTexTop(t, p) texture2D(t, p, 0.0)\n  #define FxaaTexOff(t, p, o, r) texture2D(t, p + (o * r), 0.0)\n#endif\n#if (FXAA_GLSL_120 == 1)\n    #define FxaaTexTop(t, p) texture2DLod(t, p, 0.0)\n    #if (FXAA_FAST_PIXEL_OFFSET == 1)\n        #define FxaaTexOff(t, p, o, r) texture2DLodOffset(t, p, 0.0, o)\n    #else\n        #define FxaaTexOff(t, p, o, r) texture2DLod(t, p + (o * r), 0.0)\n    #endif\n    #if (FXAA_GATHER4_ALPHA == 1)\n        #define FxaaTexAlpha4(t, p) textureGather(t, p, 3)\n        #define FxaaTexOffAlpha4(t, p, o) textureGatherOffset(t, p, o, 3)\n        #define FxaaTexGreen4(t, p) textureGather(t, p, 1)\n        #define FxaaTexOffGreen4(t, p, o) textureGatherOffset(t, p, o, 1)\n    #endif\n#endif\n#if (FXAA_GLSL_130 == 1)\n    #define FxaaTexTop(t, p) textureLod(t, p, 0.0)\n    #define FxaaTexOff(t, p, o, r) textureLodOffset(t, p, 0.0, o)\n    #if (FXAA_GATHER4_ALPHA == 1)\n        #define FxaaTexAlpha4(t, p) textureGather(t, p, 3)\n        #define FxaaTexOffAlpha4(t, p, o) textureGatherOffset(t, p, o, 3)\n        #define FxaaTexGreen4(t, p) textureGather(t, p, 1)\n        #define FxaaTexOffGreen4(t, p, o) textureGatherOffset(t, p, o, 1)\n    #endif\n#endif\n#if (FXAA_HLSL_3 == 1)\n    #define FxaaInt2 float2\n    #define FxaaTex sampler2D\n    #define FxaaTexTop(t, p) tex2Dlod(t, float4(p, 0.0, 0.0))\n    #define FxaaTexOff(t, p, o, r) tex2Dlod(t, float4(p + (o * r), 0, 0))\n#endif\n#if (FXAA_HLSL_4 == 1)\n    #define FxaaInt2 int2\n    struct FxaaTex { SamplerState smpl; Texture2D tex; };\n    #define FxaaTexTop(t, p) t.tex.SampleLevel(t.smpl, p, 0.0)\n    #define FxaaTexOff(t, p, o, r) t.tex.SampleLevel(t.smpl, p, 0.0, o)\n#endif\n#if (FXAA_HLSL_5 == 1)\n    #define FxaaInt2 int2\n    struct FxaaTex { SamplerState smpl; Texture2D tex; };\n    #define FxaaTexTop(t, p) t.tex.SampleLevel(t.smpl, p, 0.0)\n    #define FxaaTexOff(t, p, o, r) t.tex.SampleLevel(t.smpl, p, 0.0, o)\n    #define FxaaTexAlpha4(t, p) t.tex.GatherAlpha(t.smpl, p)\n    #define FxaaTexOffAlpha4(t, p, o) t.tex.GatherAlpha(t.smpl, p, o)\n    #define FxaaTexGreen4(t, p) t.tex.GatherGreen(t.smpl, p)\n    #define FxaaTexOffGreen4(t, p, o) t.tex.GatherGreen(t.smpl, p, o)\n#endif\n#if (FXAA_GREEN_AS_LUMA == 0)\n    FxaaFloat FxaaLuma(FxaaFloat4 rgba) { return rgba.w; }\n#else\n    FxaaFloat FxaaLuma(FxaaFloat4 rgba) { return rgba.y; }\n#endif\n#if (FXAA_PC == 1)\nFxaaFloat4 FxaaPixelShader(\n    FxaaFloat2 pos,\n    FxaaFloat4 fxaaConsolePosPos,\n    FxaaTex tex,\n    FxaaTex fxaaConsole360TexExpBiasNegOne,\n    FxaaTex fxaaConsole360TexExpBiasNegTwo,\n    FxaaFloat2 fxaaQualityRcpFrame,\n    FxaaFloat4 fxaaConsoleRcpFrameOpt,\n    FxaaFloat4 fxaaConsoleRcpFrameOpt2,\n    FxaaFloat4 fxaaConsole360RcpFrameOpt2,\n    FxaaFloat fxaaQualitySubpix,\n    FxaaFloat fxaaQualityEdgeThreshold,\n    FxaaFloat fxaaQualityEdgeThresholdMin,\n    FxaaFloat fxaaConsoleEdgeSharpness,\n    FxaaFloat fxaaConsoleEdgeThreshold,\n    FxaaFloat fxaaConsoleEdgeThresholdMin,\n    FxaaFloat4 fxaaConsole360ConstDir\n) {\n    FxaaFloat2 posM;\n    posM.x = pos.x;\n    posM.y = pos.y;\n    #if (FXAA_GATHER4_ALPHA == 1)\n        #if (FXAA_DISCARD == 0)\n            FxaaFloat4 rgbyM = FxaaTexTop(tex, posM);\n            #if (FXAA_GREEN_AS_LUMA == 0)\n                #define lumaM rgbyM.w\n            #else\n                #define lumaM rgbyM.y\n            #endif\n        #endif\n        #if (FXAA_GREEN_AS_LUMA == 0)\n            FxaaFloat4 luma4A = FxaaTexAlpha4(tex, posM);\n            FxaaFloat4 luma4B = FxaaTexOffAlpha4(tex, posM, FxaaInt2(-1, -1));\n        #else\n            FxaaFloat4 luma4A = FxaaTexGreen4(tex, posM);\n            FxaaFloat4 luma4B = FxaaTexOffGreen4(tex, posM, FxaaInt2(-1, -1));\n        #endif\n        #if (FXAA_DISCARD == 1)\n            #define lumaM luma4A.w\n        #endif\n        #define lumaE luma4A.z\n        #define lumaS luma4A.x\n        #define lumaSE luma4A.y\n        #define lumaNW luma4B.w\n        #define lumaN luma4B.z\n        #define lumaW luma4B.x\n    #else\n        FxaaFloat4 rgbyM = FxaaTexTop(tex, posM);\n        #if (FXAA_GREEN_AS_LUMA == 0)\n            #define lumaM rgbyM.w\n        #else\n            #define lumaM rgbyM.y\n        #endif\n        #if (FXAA_GLSL_100 == 1)\n          FxaaFloat lumaS = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 0.0, 1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaE = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 1.0, 0.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaN = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 0.0,-1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaW = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2(-1.0, 0.0), fxaaQualityRcpFrame.xy));\n        #else\n          FxaaFloat lumaS = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 0, 1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1, 0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaN = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 0,-1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 0), fxaaQualityRcpFrame.xy));\n        #endif\n    #endif\n    FxaaFloat maxSM = max(lumaS, lumaM);\n    FxaaFloat minSM = min(lumaS, lumaM);\n    FxaaFloat maxESM = max(lumaE, maxSM);\n    FxaaFloat minESM = min(lumaE, minSM);\n    FxaaFloat maxWN = max(lumaN, lumaW);\n    FxaaFloat minWN = min(lumaN, lumaW);\n    FxaaFloat rangeMax = max(maxWN, maxESM);\n    FxaaFloat rangeMin = min(minWN, minESM);\n    FxaaFloat rangeMaxScaled = rangeMax * fxaaQualityEdgeThreshold;\n    FxaaFloat range = rangeMax - rangeMin;\n    FxaaFloat rangeMaxClamped = max(fxaaQualityEdgeThresholdMin, rangeMaxScaled);\n    FxaaBool earlyExit = range < rangeMaxClamped;\n    if(earlyExit)\n        #if (FXAA_DISCARD == 1)\n            FxaaDiscard;\n        #else\n            return rgbyM;\n        #endif\n    #if (FXAA_GATHER4_ALPHA == 0)\n        #if (FXAA_GLSL_100 == 1)\n          FxaaFloat lumaNW = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2(-1.0,-1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaSE = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 1.0, 1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2( 1.0,-1.0), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaFloat2(-1.0, 1.0), fxaaQualityRcpFrame.xy));\n        #else\n          FxaaFloat lumaNW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1,-1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaSE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1, 1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2( 1,-1), fxaaQualityRcpFrame.xy));\n          FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 1), fxaaQualityRcpFrame.xy));\n        #endif\n    #else\n        FxaaFloat lumaNE = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(1, -1), fxaaQualityRcpFrame.xy));\n        FxaaFloat lumaSW = FxaaLuma(FxaaTexOff(tex, posM, FxaaInt2(-1, 1), fxaaQualityRcpFrame.xy));\n    #endif\n    FxaaFloat lumaNS = lumaN + lumaS;\n    FxaaFloat lumaWE = lumaW + lumaE;\n    FxaaFloat subpixRcpRange = 1.0/range;\n    FxaaFloat subpixNSWE = lumaNS + lumaWE;\n    FxaaFloat edgeHorz1 = (-2.0 * lumaM) + lumaNS;\n    FxaaFloat edgeVert1 = (-2.0 * lumaM) + lumaWE;\n    FxaaFloat lumaNESE = lumaNE + lumaSE;\n    FxaaFloat lumaNWNE = lumaNW + lumaNE;\n    FxaaFloat edgeHorz2 = (-2.0 * lumaE) + lumaNESE;\n    FxaaFloat edgeVert2 = (-2.0 * lumaN) + lumaNWNE;\n    FxaaFloat lumaNWSW = lumaNW + lumaSW;\n    FxaaFloat lumaSWSE = lumaSW + lumaSE;\n    FxaaFloat edgeHorz4 = (abs(edgeHorz1) * 2.0) + abs(edgeHorz2);\n    FxaaFloat edgeVert4 = (abs(edgeVert1) * 2.0) + abs(edgeVert2);\n    FxaaFloat edgeHorz3 = (-2.0 * lumaW) + lumaNWSW;\n    FxaaFloat edgeVert3 = (-2.0 * lumaS) + lumaSWSE;\n    FxaaFloat edgeHorz = abs(edgeHorz3) + edgeHorz4;\n    FxaaFloat edgeVert = abs(edgeVert3) + edgeVert4;\n    FxaaFloat subpixNWSWNESE = lumaNWSW + lumaNESE;\n    FxaaFloat lengthSign = fxaaQualityRcpFrame.x;\n    FxaaBool horzSpan = edgeHorz >= edgeVert;\n    FxaaFloat subpixA = subpixNSWE * 2.0 + subpixNWSWNESE;\n    if(!horzSpan) lumaN = lumaW;\n    if(!horzSpan) lumaS = lumaE;\n    if(horzSpan) lengthSign = fxaaQualityRcpFrame.y;\n    FxaaFloat subpixB = (subpixA * (1.0/12.0)) - lumaM;\n    FxaaFloat gradientN = lumaN - lumaM;\n    FxaaFloat gradientS = lumaS - lumaM;\n    FxaaFloat lumaNN = lumaN + lumaM;\n    FxaaFloat lumaSS = lumaS + lumaM;\n    FxaaBool pairN = abs(gradientN) >= abs(gradientS);\n    FxaaFloat gradient = max(abs(gradientN), abs(gradientS));\n    if(pairN) lengthSign = -lengthSign;\n    FxaaFloat subpixC = FxaaSat(abs(subpixB) * subpixRcpRange);\n    FxaaFloat2 posB;\n    posB.x = posM.x;\n    posB.y = posM.y;\n    FxaaFloat2 offNP;\n    offNP.x = (!horzSpan) ? 0.0 : fxaaQualityRcpFrame.x;\n    offNP.y = ( horzSpan) ? 0.0 : fxaaQualityRcpFrame.y;\n    if(!horzSpan) posB.x += lengthSign * 0.5;\n    if( horzSpan) posB.y += lengthSign * 0.5;\n    FxaaFloat2 posN;\n    posN.x = posB.x - offNP.x * FXAA_QUALITY_P0;\n    posN.y = posB.y - offNP.y * FXAA_QUALITY_P0;\n    FxaaFloat2 posP;\n    posP.x = posB.x + offNP.x * FXAA_QUALITY_P0;\n    posP.y = posB.y + offNP.y * FXAA_QUALITY_P0;\n    FxaaFloat subpixD = ((-2.0)*subpixC) + 3.0;\n    FxaaFloat lumaEndN = FxaaLuma(FxaaTexTop(tex, posN));\n    FxaaFloat subpixE = subpixC * subpixC;\n    FxaaFloat lumaEndP = FxaaLuma(FxaaTexTop(tex, posP));\n    if(!pairN) lumaNN = lumaSS;\n    FxaaFloat gradientScaled = gradient * 1.0/4.0;\n    FxaaFloat lumaMM = lumaM - lumaNN * 0.5;\n    FxaaFloat subpixF = subpixD * subpixE;\n    FxaaBool lumaMLTZero = lumaMM < 0.0;\n    lumaEndN -= lumaNN * 0.5;\n    lumaEndP -= lumaNN * 0.5;\n    FxaaBool doneN = abs(lumaEndN) >= gradientScaled;\n    FxaaBool doneP = abs(lumaEndP) >= gradientScaled;\n    if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P1;\n    if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P1;\n    FxaaBool doneNP = (!doneN) || (!doneP);\n    if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P1;\n    if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P1;\n    if(doneNP) {\n        if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n        if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n        if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n        if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n        doneN = abs(lumaEndN) >= gradientScaled;\n        doneP = abs(lumaEndP) >= gradientScaled;\n        if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P2;\n        if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P2;\n        doneNP = (!doneN) || (!doneP);\n        if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P2;\n        if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P2;\n        #if (FXAA_QUALITY_PS > 3)\n        if(doneNP) {\n            if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n            if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n            if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n            if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n            doneN = abs(lumaEndN) >= gradientScaled;\n            doneP = abs(lumaEndP) >= gradientScaled;\n            if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P3;\n            if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P3;\n            doneNP = (!doneN) || (!doneP);\n            if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P3;\n            if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P3;\n            #if (FXAA_QUALITY_PS > 4)\n            if(doneNP) {\n                if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                doneN = abs(lumaEndN) >= gradientScaled;\n                doneP = abs(lumaEndP) >= gradientScaled;\n                if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P4;\n                if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P4;\n                doneNP = (!doneN) || (!doneP);\n                if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P4;\n                if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P4;\n                #if (FXAA_QUALITY_PS > 5)\n                if(doneNP) {\n                    if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                    if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                    if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                    if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                    doneN = abs(lumaEndN) >= gradientScaled;\n                    doneP = abs(lumaEndP) >= gradientScaled;\n                    if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P5;\n                    if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P5;\n                    doneNP = (!doneN) || (!doneP);\n                    if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P5;\n                    if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P5;\n                    #if (FXAA_QUALITY_PS > 6)\n                    if(doneNP) {\n                        if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                        if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                        if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                        if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                        doneN = abs(lumaEndN) >= gradientScaled;\n                        doneP = abs(lumaEndP) >= gradientScaled;\n                        if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P6;\n                        if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P6;\n                        doneNP = (!doneN) || (!doneP);\n                        if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P6;\n                        if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P6;\n                        #if (FXAA_QUALITY_PS > 7)\n                        if(doneNP) {\n                            if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                            if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                            if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                            if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                            doneN = abs(lumaEndN) >= gradientScaled;\n                            doneP = abs(lumaEndP) >= gradientScaled;\n                            if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P7;\n                            if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P7;\n                            doneNP = (!doneN) || (!doneP);\n                            if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P7;\n                            if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P7;\n    #if (FXAA_QUALITY_PS > 8)\n    if(doneNP) {\n        if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n        if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n        if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n        if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n        doneN = abs(lumaEndN) >= gradientScaled;\n        doneP = abs(lumaEndP) >= gradientScaled;\n        if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P8;\n        if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P8;\n        doneNP = (!doneN) || (!doneP);\n        if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P8;\n        if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P8;\n        #if (FXAA_QUALITY_PS > 9)\n        if(doneNP) {\n            if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n            if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n            if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n            if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n            doneN = abs(lumaEndN) >= gradientScaled;\n            doneP = abs(lumaEndP) >= gradientScaled;\n            if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P9;\n            if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P9;\n            doneNP = (!doneN) || (!doneP);\n            if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P9;\n            if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P9;\n            #if (FXAA_QUALITY_PS > 10)\n            if(doneNP) {\n                if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                doneN = abs(lumaEndN) >= gradientScaled;\n                doneP = abs(lumaEndP) >= gradientScaled;\n                if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P10;\n                if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P10;\n                doneNP = (!doneN) || (!doneP);\n                if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P10;\n                if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P10;\n                #if (FXAA_QUALITY_PS > 11)\n                if(doneNP) {\n                    if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                    if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                    if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                    if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                    doneN = abs(lumaEndN) >= gradientScaled;\n                    doneP = abs(lumaEndP) >= gradientScaled;\n                    if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P11;\n                    if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P11;\n                    doneNP = (!doneN) || (!doneP);\n                    if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P11;\n                    if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P11;\n                    #if (FXAA_QUALITY_PS > 12)\n                    if(doneNP) {\n                        if(!doneN) lumaEndN = FxaaLuma(FxaaTexTop(tex, posN.xy));\n                        if(!doneP) lumaEndP = FxaaLuma(FxaaTexTop(tex, posP.xy));\n                        if(!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n                        if(!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n                        doneN = abs(lumaEndN) >= gradientScaled;\n                        doneP = abs(lumaEndP) >= gradientScaled;\n                        if(!doneN) posN.x -= offNP.x * FXAA_QUALITY_P12;\n                        if(!doneN) posN.y -= offNP.y * FXAA_QUALITY_P12;\n                        doneNP = (!doneN) || (!doneP);\n                        if(!doneP) posP.x += offNP.x * FXAA_QUALITY_P12;\n                        if(!doneP) posP.y += offNP.y * FXAA_QUALITY_P12;\n                    }\n                    #endif\n                }\n                #endif\n            }\n            #endif\n        }\n        #endif\n    }\n    #endif\n                        }\n                        #endif\n                    }\n                    #endif\n                }\n                #endif\n            }\n            #endif\n        }\n        #endif\n    }\n    FxaaFloat dstN = posM.x - posN.x;\n    FxaaFloat dstP = posP.x - posM.x;\n    if(!horzSpan) dstN = posM.y - posN.y;\n    if(!horzSpan) dstP = posP.y - posM.y;\n    FxaaBool goodSpanN = (lumaEndN < 0.0) != lumaMLTZero;\n    FxaaFloat spanLength = (dstP + dstN);\n    FxaaBool goodSpanP = (lumaEndP < 0.0) != lumaMLTZero;\n    FxaaFloat spanLengthRcp = 1.0/spanLength;\n    FxaaBool directionN = dstN < dstP;\n    FxaaFloat dst = min(dstN, dstP);\n    FxaaBool goodSpan = directionN ? goodSpanN : goodSpanP;\n    FxaaFloat subpixG = subpixF * subpixF;\n    FxaaFloat pixelOffset = (dst * (-spanLengthRcp)) + 0.5;\n    FxaaFloat subpixH = subpixG * fxaaQualitySubpix;\n    FxaaFloat pixelOffsetGood = goodSpan ? pixelOffset : 0.0;\n    FxaaFloat pixelOffsetSubpix = max(pixelOffsetGood, subpixH);\n    if(!horzSpan) posM.x += pixelOffsetSubpix * lengthSign;\n    if( horzSpan) posM.y += pixelOffsetSubpix * lengthSign;\n    #if (FXAA_DISCARD == 1)\n        return FxaaTexTop(tex, posM);\n    #else\n        return FxaaFloat4(FxaaTexTop(tex, posM).xyz, lumaM);\n    #endif\n}\n#endif\nvoid main() {\n  gl_FragColor = FxaaPixelShader(\n    vUv,\n    vec4(0.0),\n    map,\n    map,\n    map,\n    resolution,\n    vec4(0.0),\n    vec4(0.0),\n    vec4(0.0),\n    0.75,\n    0.166,\n    0.0833,\n    0.0,\n    0.0,\n    0.0,\n    vec4(0.0)\n  );\n  gl_FragColor.a = texture2D(map, vUv).a;\n}" }], "techniques": [{ "name": "fxaa1", "attributes": {}, "uniforms": { "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.fxaa = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "fxaa_vert", "type": 35633, "uri": "\nuniform vec2 resolution;\nvarying vec2 vUV;\nvarying vec2 sampleCoordS;\nvarying vec2 sampleCoordE;\nvarying vec2 sampleCoordN;\nvarying vec2 sampleCoordW;\nvarying vec2 sampleCoordNW;\nvarying vec2 sampleCoordSE;\nvarying vec2 sampleCoordNE;\nvarying vec2 sampleCoordSW;\nvoid main(void) {\t\n\tvUV = uv;\n\tsampleCoordS = vUV + vec2( 0.0, 1.0) * resolution;\n\tsampleCoordE = vUV + vec2( 1.0, 0.0) * resolution;\n\tsampleCoordN = vUV + vec2( 0.0,-1.0) * resolution;\n\tsampleCoordW = vUV + vec2(-1.0, 0.0) * resolution;\n\tsampleCoordNW = vUV + vec2(-1.0,-1.0) * resolution;\n\tsampleCoordSE = vUV + vec2( 1.0, 1.0) * resolution;\n\tsampleCoordNE = vUV + vec2( 1.0,-1.0) * resolution;\n\tsampleCoordSW = vUV + vec2(-1.0, 1.0) * resolution;\n\tgl_Position = vec4(position.x, position.y, 0.0, 1.0);\n}" }, { "name": "fxaa_frag", "type": 35632, "uri": "uniform sampler2D map;\nuniform vec2 resolution;\nvarying vec2 vUV;\nvarying vec2 sampleCoordS;\nvarying vec2 sampleCoordE;\nvarying vec2 sampleCoordN;\nvarying vec2 sampleCoordW;\nvarying vec2 sampleCoordNW;\nvarying vec2 sampleCoordSE;\nvarying vec2 sampleCoordNE;\nvarying vec2 sampleCoordSW;\nconst float fxaaQualitySubpix = 1.0;\nconst float fxaaQualityEdgeThreshold = 0.166;\nconst float fxaaQualityEdgeThresholdMin = 0.0833;\nconst vec3 kLumaCoefficients = vec3(0.2126, 0.7152, 0.0722);\n#define FxaaLuma(rgba) dot(rgba.rgb, kLumaCoefficients)\nvoid main(){\n\tvec2 posM;\n\tposM.x = vUV.x;\n\tposM.y = vUV.y;\n\tvec4 rgbyM = texture2D(map, vUV, 0.0);\n\tfloat lumaM = FxaaLuma(rgbyM);\n\tfloat lumaS = FxaaLuma(texture2D(map, sampleCoordS, 0.0));\n\tfloat lumaE = FxaaLuma(texture2D(map, sampleCoordE, 0.0));\n\tfloat lumaN = FxaaLuma(texture2D(map, sampleCoordN, 0.0));\n\tfloat lumaW = FxaaLuma(texture2D(map, sampleCoordW, 0.0));\n\tfloat maxSM = max(lumaS, lumaM);\n\tfloat minSM = min(lumaS, lumaM);\n\tfloat maxESM = max(lumaE, maxSM);\n\tfloat minESM = min(lumaE, minSM);\n\tfloat maxWN = max(lumaN, lumaW);\n\tfloat minWN = min(lumaN, lumaW);\n\tfloat rangeMax = max(maxWN, maxESM);\n\tfloat rangeMin = min(minWN, minESM);\n\tfloat rangeMaxScaled = rangeMax * fxaaQualityEdgeThreshold;\n\tfloat range = rangeMax - rangeMin;\n\tfloat rangeMaxClamped = max(fxaaQualityEdgeThresholdMin, rangeMaxScaled);\n#ifndef MALI\n\tif(range < rangeMaxClamped) \n\t{\n\t\tgl_FragColor = rgbyM;\n\t\treturn;\n\t}\n#endif\n\tfloat lumaNW = FxaaLuma(texture2D(map, sampleCoordNW, 0.0));\n\tfloat lumaSE = FxaaLuma(texture2D(map, sampleCoordSE, 0.0));\n\tfloat lumaNE = FxaaLuma(texture2D(map, sampleCoordNE, 0.0));\n\tfloat lumaSW = FxaaLuma(texture2D(map, sampleCoordSW, 0.0));\n\tfloat lumaNS = lumaN + lumaS;\n\tfloat lumaWE = lumaW + lumaE;\n\tfloat subpixRcpRange = 1.0 / range;\n\tfloat subpixNSWE = lumaNS + lumaWE;\n\tfloat edgeHorz1 = (-2.0 * lumaM) + lumaNS;\n\tfloat edgeVert1 = (-2.0 * lumaM) + lumaWE;\n\tfloat lumaNESE = lumaNE + lumaSE;\n\tfloat lumaNWNE = lumaNW + lumaNE;\n\tfloat edgeHorz2 = (-2.0 * lumaE) + lumaNESE;\n\tfloat edgeVert2 = (-2.0 * lumaN) + lumaNWNE;\n\tfloat lumaNWSW = lumaNW + lumaSW;\n\tfloat lumaSWSE = lumaSW + lumaSE;\n\tfloat edgeHorz4 = (abs(edgeHorz1) * 2.0) + abs(edgeHorz2);\n\tfloat edgeVert4 = (abs(edgeVert1) * 2.0) + abs(edgeVert2);\n\tfloat edgeHorz3 = (-2.0 * lumaW) + lumaNWSW;\n\tfloat edgeVert3 = (-2.0 * lumaS) + lumaSWSE;\n\tfloat edgeHorz = abs(edgeHorz3) + edgeHorz4;\n\tfloat edgeVert = abs(edgeVert3) + edgeVert4;\n\tfloat subpixNWSWNESE = lumaNWSW + lumaNESE;\n\tfloat lengthSign = resolution.x;\n\tbool horzSpan = edgeHorz >= edgeVert;\n\tfloat subpixA = subpixNSWE * 2.0 + subpixNWSWNESE;\n\tif (!horzSpan)\n\t{\n\t\tlumaN = lumaW;\n\t}\n\tif (!horzSpan) \n\t{\n\t\tlumaS = lumaE;\n\t}\n\tif (horzSpan) \n\t{\n\t\tlengthSign = resolution.y;\n\t}\n\tfloat subpixB = (subpixA * (1.0 / 12.0)) - lumaM;\n\tfloat gradientN = lumaN - lumaM;\n\tfloat gradientS = lumaS - lumaM;\n\tfloat lumaNN = lumaN + lumaM;\n\tfloat lumaSS = lumaS + lumaM;\n\tbool pairN = abs(gradientN) >= abs(gradientS);\n\tfloat gradient = max(abs(gradientN), abs(gradientS));\n\tif (pairN)\n\t{\n\t\tlengthSign = -lengthSign;\n\t}\n\tfloat subpixC = clamp(abs(subpixB) * subpixRcpRange, 0.0, 1.0);\n\tvec2 posB;\n\tposB.x = posM.x;\n\tposB.y = posM.y;\n\tvec2 offNP;\n\toffNP.x = (!horzSpan) ? 0.0 : resolution.x;\n\toffNP.y = (horzSpan) ? 0.0 : resolution.y;\n\tif (!horzSpan) \n\t{\n\t\tposB.x += lengthSign * 0.5;\n\t}\n\tif (horzSpan)\n\t{\n\t\tposB.y += lengthSign * 0.5;\n\t}\n\tvec2 posN;\n\tposN.x = posB.x - offNP.x * 1.5;\n\tposN.y = posB.y - offNP.y * 1.5;\n\tvec2 posP;\n\tposP.x = posB.x + offNP.x * 1.5;\n\tposP.y = posB.y + offNP.y * 1.5;\n\tfloat subpixD = ((-2.0) * subpixC) + 3.0;\n\tfloat lumaEndN = FxaaLuma(texture2D(map, posN, 0.0));\n\tfloat subpixE = subpixC * subpixC;\n\tfloat lumaEndP = FxaaLuma(texture2D(map, posP, 0.0));\n\tif (!pairN) \n\t{\n\t\tlumaNN = lumaSS;\n\t}\n\tfloat gradientScaled = gradient * 1.0 / 4.0;\n\tfloat lumaMM = lumaM - lumaNN * 0.5;\n\tfloat subpixF = subpixD * subpixE;\n\tbool lumaMLTZero = lumaMM < 0.0;\n\tlumaEndN -= lumaNN * 0.5;\n\tlumaEndP -= lumaNN * 0.5;\n\tbool doneN = abs(lumaEndN) >= gradientScaled;\n\tbool doneP = abs(lumaEndP) >= gradientScaled;\n\tif (!doneN) \n\t{\n\t\tposN.x -= offNP.x * 3.0;\n\t}\n\tif (!doneN) \n\t{\n\t\tposN.y -= offNP.y * 3.0;\n\t}\n\tbool doneNP = (!doneN) || (!doneP);\n\tif (!doneP) \n\t{\n\t\tposP.x += offNP.x * 3.0;\n\t}\n\tif (!doneP)\n\t{\n\t\tposP.y += offNP.y * 3.0;\n\t}\n\tif (doneNP)\n\t{\n\t\tif (!doneN) lumaEndN = FxaaLuma(texture2D(map, posN.xy, 0.0));\n\t\tif (!doneP) lumaEndP = FxaaLuma(texture2D(map, posP.xy, 0.0));\n\t\tif (!doneN) lumaEndN = lumaEndN - lumaNN * 0.5;\n\t\tif (!doneP) lumaEndP = lumaEndP - lumaNN * 0.5;\n\t\n\t\tdoneN = abs(lumaEndN) >= gradientScaled;\n\t\tdoneP = abs(lumaEndP) >= gradientScaled;\n\t\n\t\tif (!doneN) posN.x -= offNP.x * 12.0;\n\t\tif (!doneN) posN.y -= offNP.y * 12.0;\n\t\n\t\tdoneNP = (!doneN) || (!doneP);\n\t\n\t\tif (!doneP) posP.x += offNP.x * 12.0;\n\t\tif (!doneP) posP.y += offNP.y * 12.0;\n\t}\n\tfloat dstN = posM.x - posN.x;\n\tfloat dstP = posP.x - posM.x;\n\tif (!horzSpan)\n\t{\n\t\tdstN = posM.y - posN.y;\n\t}\n\tif (!horzSpan) \n\t{\n\t\tdstP = posP.y - posM.y;\n\t}\n\tbool goodSpanN = (lumaEndN < 0.0) != lumaMLTZero;\n\tfloat spanLength = (dstP + dstN);\n\tbool goodSpanP = (lumaEndP < 0.0) != lumaMLTZero;\n\tfloat spanLengthRcp = 1.0 / spanLength;\n\tbool directionN = dstN < dstP;\n\tfloat dst = min(dstN, dstP);\n\tbool goodSpan = directionN ? goodSpanN : goodSpanP;\n\tfloat subpixG = subpixF * subpixF;\n\tfloat pixelOffset = (dst * (-spanLengthRcp)) + 0.5;\n\tfloat subpixH = subpixG * fxaaQualitySubpix;\n\tfloat pixelOffsetGood = goodSpan ? pixelOffset : 0.0;\n\tfloat pixelOffsetSubpix = max(pixelOffsetGood, subpixH);\n\tif (!horzSpan)\n\t{\n\t\tposM.x += pixelOffsetSubpix * lengthSign;\n\t}\n\tif (horzSpan)\n\t{\n\t\tposM.y += pixelOffsetSubpix * lengthSign;\n\t}\n#ifdef MALI\n\tif(range < rangeMaxClamped) \n\t{\n\t\tgl_FragColor = rgbyM;\n\t}\n\telse\n\t{\n\t\tgl_FragColor = texture2D(map, posM, 0.0);\n\t}\n#else\n\tgl_FragColor = texture2D(map, posM, 0.0);\n#endif\n}" }], "techniques": [{ "name": "fxaa", "attributes": {}, "uniforms": { "map": { "type": 35678 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.linebasic = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linebasic_vert", "type": 35633, "uri": "#include <common>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nuniform float linewidth;\nuniform vec2 resolution;\nattribute vec3 instanceStart;\nattribute vec3 instanceEnd;\nattribute vec3 instanceColorStart;\nattribute vec3 instanceColorEnd;\nvarying vec2 vUv;\n#ifdef USE_DASH\n\tuniform float dashScale;\n\tattribute float instanceDistanceStart;\n\tattribute float instanceDistanceEnd;\n\tvarying float vLineDistance;\n#endif\nvoid trimSegment( const in vec4 start, inout vec4 end ) {\n\tfloat a = projectionMatrix[ 2 ][ 2 ];\n\tfloat b = projectionMatrix[ 3 ][ 2 ];\n\tfloat nearEstimate = - 0.5 * b / a;\n\tfloat alpha = ( nearEstimate - start.z ) / ( end.z - start.z );\n\tend.xyz = mix( start.xyz, end.xyz, alpha );\n}\nvoid main() {\n\t#ifdef USE_COLOR\n\t\tvColor.xyz = ( position.y < 0.5 ) ? instanceColorStart : instanceColorEnd;\n\t#endif\n\t#ifdef USE_DASH\n\t\tvLineDistance = ( position.y < 0.5 ) ? dashScale * instanceDistanceStart : dashScale * instanceDistanceEnd;\n\t#endif\n\tfloat aspect = resolution.x / resolution.y;\n\tvUv = uv;\n\tvec4 start = modelViewMatrix * vec4( instanceStart, 1.0 );\n\tvec4 end = modelViewMatrix * vec4( instanceEnd, 1.0 );\n\tbool perspective = ( projectionMatrix[ 2 ][ 3 ] == - 1.0 );\n\tif ( perspective ) {\n\t\tif ( start.z < 0.0 && end.z >= 0.0 ) {\n\t\t\ttrimSegment( start, end );\n\t\t} else if ( end.z < 0.0 && start.z >= 0.0 ) {\n\t\t\ttrimSegment( end, start );\n\t\t}\n\t}\n\tvec4 clipStart = projectionMatrix * start;\n\tvec4 clipEnd = projectionMatrix * end;\n\tvec2 ndcStart = clipStart.xy / clipStart.w;\n\tvec2 ndcEnd = clipEnd.xy / clipEnd.w;\n\tvec2 dir = ndcEnd - ndcStart;\n\tdir.x *= aspect;\n\tdir = normalize( dir );\n\tvec2 offset = vec2( dir.y, - dir.x );\n\tdir.x /= aspect;\n\toffset.x /= aspect;\n\tif ( position.x < 0.0 ) offset *= - 1.0;\n\tif ( position.y < 0.0 ) {\n\t\toffset += - dir;\n\t} else if ( position.y > 1.0 ) {\n\t\toffset += dir;\n\t}\n\toffset *= linewidth;\n\toffset /= resolution.y;\n\tvec4 clip = ( position.y < 0.5 ) ? clipStart : clipEnd;\n\toffset *= clip.w;\n\tclip.xy += offset;\n\tgl_Position = clip;\n\tvec4 mvPosition = ( position.y < 0.5 ) ? start : end;\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <fog_vertex>\n}" }, { "name": "linebasic_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform float opacity;\n#ifdef USE_DASH\n\tuniform float dashSize;\n\tuniform float gapSize;\n#endif\nvarying float vLineDistance;\n#include <common>\n#include <color_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvarying vec2 vUv;\nvoid main() {\n\t#include <clipping_planes_fragment>\n\t#ifdef USE_DASH\n\t\tif ( vUv.y < - 1.0 || vUv.y > 1.0 ) discard;\n\t\tif ( mod( vLineDistance, dashSize + gapSize ) > dashSize ) discard;\n\t#endif\n\tif ( abs( vUv.y ) > 1.0 ) {\n\t\tfloat a = vUv.x;\n\t\tfloat b = ( vUv.y > 0.0 ) ? vUv.y - 1.0 : vUv.y + 1.0;\n\t\tfloat len2 = a * a + b * b;\n\t\tif ( len2 > 1.0 ) discard;\n\t}\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <logdepthbuf_fragment>\n\t#include <color_fragment>\n\tgl_FragColor = vec4( diffuseColor.rgb, diffuseColor.a );\n\t#include <premultiplied_alpha_fragment>\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n}" }], "techniques": [{ "name": "linebasic", "attributes": {}, "uniforms": { "linewidth": { "type": 5126, "value": 1 }, "dashScale": { "type": 5126, "value": 1 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": 1 }, "gapSize": { "type": 5126, "value": 1 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
         ShaderLib.linedashed = { "version": "3", "asset": { "version": "2.0" }, "extensions": { "KHR_techniques_webgl": { "shaders": [{ "name": "linedashed_vert", "type": 35633, "uri": "uniform float scale;\nattribute float lineDistance;\nvarying float vLineDistance;\n#include <common>\n#include <color_pars_vertex>\n#include <fog_pars_vertex>\n#include <logdepthbuf_pars_vertex>\n#include <clipping_planes_pars_vertex>\nvoid main() {\n\t#include <color_vertex>\n\tvLineDistance = scale * lineDistance;\n\tvec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );\n\tgl_Position = projectionMatrix * mvPosition;\n\t#include <logdepthbuf_vertex>\n\t#include <clipping_planes_vertex>\n\t#include <fog_vertex>\n}\n" }, { "name": "linedashed_frag", "type": 35632, "uri": "uniform vec3 diffuse;\nuniform float opacity;\nuniform float dashSize;\nuniform float totalSize;\nvarying float vLineDistance;\n#include <common>\n#include <color_pars_fragment>\n#include <fog_pars_fragment>\n#include <logdepthbuf_pars_fragment>\n#include <clipping_planes_pars_fragment>\nvoid main() {\n\t#include <clipping_planes_fragment>\n\tif ( mod( vLineDistance, totalSize ) > dashSize ) {\n\t\tdiscard;\n\t}\n\tvec3 outgoingLight = vec3( 0.0 );\n\tvec4 diffuseColor = vec4( diffuse, opacity );\n\t#include <logdepthbuf_fragment>\n\t#include <color_fragment>\n\toutgoingLight = diffuseColor.rgb;\n\tgl_FragColor = vec4( outgoingLight, diffuseColor.a );\n\t#include <premultiplied_alpha_fragment>\n\t#include <tonemapping_fragment>\n\t#include <encodings_fragment>\n\t#include <fog_fragment>\n}\n" }], "techniques": [{ "name": "linedashed", "attributes": {}, "uniforms": { "scale": { "type": 5126, "value": 1 }, "diffuse": { "type": 35665, "value": [1, 1, 1] }, "opacity": { "type": 5126, "value": 1 }, "dashSize": { "type": 5126, "value": 1 }, "totalSize": { "type": 5126, "value": 1 }, "clippingPlanes[0]": { "type": 35666 } } }] }, "paper": {} }, "extensionsRequired": ["paper", "KHR_techniques_webgl"], "extensionsUsed": ["paper", "KHR_techniques_webgl"] };
@@ -30331,7 +30569,7 @@ var egret3d;
         ShaderChunk.color_vertex = "#ifdef USE_COLOR\n\tvColor.xyz = color.xyz;\n#endif";
         ShaderChunk.common = "#define PI 3.14159265359\n#define PI2 6.28318530718\n#define PI_HALF 1.5707963267949\n#define RECIPROCAL_PI 0.31830988618\n#define RECIPROCAL_PI2 0.15915494\n#define LOG2 1.442695\n#define EPSILON 1e-6\n#define saturate(a) clamp( a, 0.0, 1.0 )\n#define whiteCompliment(a) ( 1.0 - saturate( a ) )\nfloat pow2( const in float x ) { return x*x; }\nfloat pow3( const in float x ) { return x*x*x; }\nfloat pow4( const in float x ) { float x2 = x*x; return x2*x2; }\nfloat average( const in vec3 color ) { return dot( color, vec3( 0.3333 ) ); }\nhighp float rand( const in vec2 uv ) {\n\tconst highp float a = 12.9898, b = 78.233, c = 43758.5453;\n\thighp float dt = dot( uv.xy, vec2( a,b ) ), sn = mod( dt, PI );\n\treturn fract(sin(sn) * c);\n}\nstruct IncidentLight {\n\tvec3 color;\n\tvec3 direction;\n\tbool visible;\n};\nstruct ReflectedLight {\n\tvec3 directDiffuse;\n\tvec3 directSpecular;\n\tvec3 indirectDiffuse;\n\tvec3 indirectSpecular;\n};\nstruct GeometricContext {\n\tvec3 position;\n\tvec3 normal;\n\tvec3 viewDir;\n};\nvec3 transformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( matrix * vec4( dir, 0.0 ) ).xyz );\n}\nvec3 inverseTransformDirection( in vec3 dir, in mat4 matrix ) {\n\treturn normalize( ( vec4( dir, 0.0 ) * matrix ).xyz );\n}\nvec3 projectOnPlane(in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal ) {\n\tfloat distance = dot( planeNormal, point - pointOnPlane );\n\treturn - distance * planeNormal + point;\n}\nfloat sideOfPlane( in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal ) {\n\treturn sign( dot( point - pointOnPlane, planeNormal ) );\n}\nvec3 linePlaneIntersect( in vec3 pointOnLine, in vec3 lineDirection, in vec3 pointOnPlane, in vec3 planeNormal ) {\n\treturn lineDirection * ( dot( planeNormal, pointOnPlane - pointOnLine ) / dot( planeNormal, lineDirection ) ) + pointOnLine;\n}\nmat3 transposeMat3( const in mat3 m ) {\n\tmat3 tmp;\n\ttmp[ 0 ] = vec3( m[ 0 ].x, m[ 1 ].x, m[ 2 ].x );\n\ttmp[ 1 ] = vec3( m[ 0 ].y, m[ 1 ].y, m[ 2 ].y );\n\ttmp[ 2 ] = vec3( m[ 0 ].z, m[ 1 ].z, m[ 2 ].z );\n\treturn tmp;\n}\nfloat linearToRelativeLuminance( const in vec3 color ) {\n\tvec3 weights = vec3( 0.2126, 0.7152, 0.0722 );\n\treturn dot( weights, color.rgb );\n}\n";
         ShaderChunk.common_frag_def = "uniform mat4 viewMatrix;\nuniform vec3 cameraPosition;";
-        ShaderChunk.common_vert_def = "uniform mat4 modelMatrix;\nuniform mat4 modelViewMatrix;\nuniform mat4 projectionMatrix;\nuniform mat4 viewMatrix;\nuniform mat3 normalMatrix;\nuniform vec3 cameraPosition;\nattribute vec3 position;\nattribute vec3 normal;\nattribute vec2 uv;\n#ifdef USE_COLOR\n\tattribute vec3 color;\n#endif\n#ifdef USE_MORPHTARGETS\n\tattribute vec3 morphTarget0;\n\tattribute vec3 morphTarget1;\n\tattribute vec3 morphTarget2;\n\tattribute vec3 morphTarget3;\n\t#ifdef USE_MORPHNORMALS\n\t\tattribute vec3 morphNormal0;\n\t\tattribute vec3 morphNormal1;\n\t\tattribute vec3 morphNormal2;\n\t\tattribute vec3 morphNormal3;\n\t#else\n\t\tattribute vec3 morphTarget4;\n\t\tattribute vec3 morphTarget5;\n\t\tattribute vec3 morphTarget6;\n\t\tattribute vec3 morphTarget7;\n\t#endif\n#endif\n#ifdef USE_SKINNING\n\tattribute vec4 skinIndex;\n\tattribute vec4 skinWeight;\n#endif";
+        ShaderChunk.common_vert_def = "\n#ifdef USE_INSTANCED\n\tattribute mat4 modelMatrix;\n\tattribute mat4 modelViewMatrix;\n#else\n\tuniform mat4 modelMatrix;\n\tuniform mat4 modelViewMatrix;\n#endif\nuniform mat4 projectionMatrix;\nuniform mat4 viewMatrix;\nuniform mat3 normalMatrix;\nuniform vec3 cameraPosition;\nattribute vec3 position;\nattribute vec3 normal;\nattribute vec2 uv;\n#ifdef USE_COLOR\n\tattribute vec3 color;\n#endif\n#ifdef USE_MORPHTARGETS\n\tattribute vec3 morphTarget0;\n\tattribute vec3 morphTarget1;\n\tattribute vec3 morphTarget2;\n\tattribute vec3 morphTarget3;\n\t#ifdef USE_MORPHNORMALS\n\t\tattribute vec3 morphNormal0;\n\t\tattribute vec3 morphNormal1;\n\t\tattribute vec3 morphNormal2;\n\t\tattribute vec3 morphNormal3;\n\t#else\n\t\tattribute vec3 morphTarget4;\n\t\tattribute vec3 morphTarget5;\n\t\tattribute vec3 morphTarget6;\n\t\tattribute vec3 morphTarget7;\n\t#endif\n#endif\n#ifdef USE_SKINNING\n\tattribute vec4 skinIndex;\n\tattribute vec4 skinWeight;\n#endif";
         ShaderChunk.cube_uv_reflection_fragment = "#ifdef ENVMAP_TYPE_CUBE_UV\n#define cubeUV_textureSize (1024.0)\nint getFaceFromDirection(vec3 direction) {\n\tvec3 absDirection = abs(direction);\n\tint face = -1;\n\tif( absDirection.x > absDirection.z ) {\n\t\tif(absDirection.x > absDirection.y )\n\t\t\tface = direction.x > 0.0 ? 0 : 3;\n\t\telse\n\t\t\tface = direction.y > 0.0 ? 1 : 4;\n\t}\n\telse {\n\t\tif(absDirection.z > absDirection.y )\n\t\t\tface = direction.z > 0.0 ? 2 : 5;\n\t\telse\n\t\t\tface = direction.y > 0.0 ? 1 : 4;\n\t}\n\treturn face;\n}\n#define cubeUV_maxLods1  (log2(cubeUV_textureSize*0.25) - 1.0)\n#define cubeUV_rangeClamp (exp2((6.0 - 1.0) * 2.0))\nvec2 MipLevelInfo( vec3 vec, float roughnessLevel, float roughness ) {\n\tfloat scale = exp2(cubeUV_maxLods1 - roughnessLevel);\n\tfloat dxRoughness = dFdx(roughness);\n\tfloat dyRoughness = dFdy(roughness);\n\tvec3 dx = dFdx( vec * scale * dxRoughness );\n\tvec3 dy = dFdy( vec * scale * dyRoughness );\n\tfloat d = max( dot( dx, dx ), dot( dy, dy ) );\n\td = clamp(d, 1.0, cubeUV_rangeClamp);\n\tfloat mipLevel = 0.5 * log2(d);\n\treturn vec2(floor(mipLevel), fract(mipLevel));\n}\n#define cubeUV_maxLods2 (log2(cubeUV_textureSize*0.25) - 2.0)\n#define cubeUV_rcpTextureSize (1.0 / cubeUV_textureSize)\nvec2 getCubeUV(vec3 direction, float roughnessLevel, float mipLevel) {\n\tmipLevel = roughnessLevel > cubeUV_maxLods2 - 3.0 ? 0.0 : mipLevel;\n\tfloat a = 16.0 * cubeUV_rcpTextureSize;\n\tvec2 exp2_packed = exp2( vec2( roughnessLevel, mipLevel ) );\n\tvec2 rcp_exp2_packed = vec2( 1.0 ) / exp2_packed;\n\tfloat powScale = exp2_packed.x * exp2_packed.y;\n\tfloat scale = rcp_exp2_packed.x * rcp_exp2_packed.y * 0.25;\n\tfloat mipOffset = 0.75*(1.0 - rcp_exp2_packed.y) * rcp_exp2_packed.x;\n\tbool bRes = mipLevel == 0.0;\n\tscale =  bRes && (scale < a) ? a : scale;\n\tvec3 r;\n\tvec2 offset;\n\tint face = getFaceFromDirection(direction);\n\tfloat rcpPowScale = 1.0 / powScale;\n\tif( face == 0) {\n\t\tr = vec3(direction.x, -direction.z, direction.y);\n\t\toffset = vec2(0.0+mipOffset,0.75 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? a : offset.y;\n\t}\n\telse if( face == 1) {\n\t\tr = vec3(direction.y, direction.x, direction.z);\n\t\toffset = vec2(scale+mipOffset, 0.75 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? a : offset.y;\n\t}\n\telse if( face == 2) {\n\t\tr = vec3(direction.z, direction.x, direction.y);\n\t\toffset = vec2(2.0*scale+mipOffset, 0.75 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? a : offset.y;\n\t}\n\telse if( face == 3) {\n\t\tr = vec3(direction.x, direction.z, direction.y);\n\t\toffset = vec2(0.0+mipOffset,0.5 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? 0.0 : offset.y;\n\t}\n\telse if( face == 4) {\n\t\tr = vec3(direction.y, direction.x, -direction.z);\n\t\toffset = vec2(scale+mipOffset, 0.5 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? 0.0 : offset.y;\n\t}\n\telse {\n\t\tr = vec3(direction.z, -direction.x, direction.y);\n\t\toffset = vec2(2.0*scale+mipOffset, 0.5 * rcpPowScale);\n\t\toffset.y = bRes && (offset.y < 2.0*a) ? 0.0 : offset.y;\n\t}\n\tr = normalize(r);\n\tfloat texelOffset = 0.5 * cubeUV_rcpTextureSize;\n\tvec2 s = ( r.yz / abs( r.x ) + vec2( 1.0 ) ) * 0.5;\n\tvec2 base = offset + vec2( texelOffset );\n\treturn base + s * ( scale - 2.0 * texelOffset );\n}\n#define cubeUV_maxLods3 (log2(cubeUV_textureSize*0.25) - 3.0)\nvec4 textureCubeUV( sampler2D envMap, vec3 reflectedDirection, float roughness ) {\n\tfloat roughnessVal = roughness* cubeUV_maxLods3;\n\tfloat r1 = floor(roughnessVal);\n\tfloat r2 = r1 + 1.0;\n\tfloat t = fract(roughnessVal);\n\tvec2 mipInfo = MipLevelInfo(reflectedDirection, r1, roughness);\n\tfloat s = mipInfo.y;\n\tfloat level0 = mipInfo.x;\n\tfloat level1 = level0 + 1.0;\n\tlevel1 = level1 > 5.0 ? 5.0 : level1;\n\tlevel0 += min( floor( s + 0.5 ), 5.0 );\n\tvec2 uv_10 = getCubeUV(reflectedDirection, r1, level0);\n\tvec4 color10 = envMapTexelToLinear(texture2D(envMap, uv_10));\n\tvec2 uv_20 = getCubeUV(reflectedDirection, r2, level0);\n\tvec4 color20 = envMapTexelToLinear(texture2D(envMap, uv_20));\n\tvec4 result = mix(color10, color20, t);\n\treturn vec4(result.rgb, 1.0);\n}\n#endif\n";
         ShaderChunk.defaultnormal_vertex = "vec3 transformedNormal = normalMatrix * objectNormal;\n#ifdef FLIP_SIDED\n\ttransformedNormal = - transformedNormal;\n#endif\n";
         ShaderChunk.displacementmap_pars_vertex = "#ifdef USE_DISPLACEMENTMAP\n\tuniform sampler2D displacementMap;\n\tuniform float displacementScale;\n\tuniform float displacementBias;\n#endif\n";
@@ -31961,7 +32199,6 @@ var egret3d;
                 _this._cameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(egret3d.CameraAndLightCollecter);
                 _this._renderState = paper.Application.sceneManager.globalEntity.getComponent(egret3d.RenderState);
                 //
-                _this._modelViewMatrix = egret3d.Matrix4.create();
                 _this._modelViewPojectionMatrix = egret3d.Matrix4.create();
                 _this._inverseModelViewMatrix = egret3d.Matrix3.create();
                 //
@@ -32066,14 +32303,15 @@ var egret3d;
                 var webgl = webgl_14.WebGLRenderState.webgl;
                 var renderState = this._renderState;
                 var _a = mesh.glTFMesh, primitives = _a.primitives, extras = _a.extras;
+                var primitive = primitives[subMeshIndex];
                 mesh.update(4 /* VertexArray */ | 8 /* VertexBuffer */ | 16 /* IndexBuffer */);
+                var vbo = extras.vbo;
+                var ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
                 if (renderState.vertexArrayObject !== null) {
+                    webgl.bindBuffer(34962 /* ArrayBuffer */, vbo);
                     webgl.bindVertexArray(extras.vao);
                 }
                 else {
-                    var primitive = primitives[subMeshIndex];
-                    var vbo = extras.vbo;
-                    var ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
                     webgl.bindBuffer(34962 /* ArrayBuffer */, vbo);
                     webgl.bindBuffer(34963 /* ElementArrayBuffer */, ibo);
                     renderState.updateVertexAttributes(mesh);
@@ -32087,9 +32325,9 @@ var egret3d;
                 var modelUniforms = program.modelUniforms;
                 var context = camera.context;
                 var matrix = drawCall.matrix;
+                var modelViewMatrix = drawCall.modelViewMatrix;
                 var i = 0;
                 //
-                this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
                 this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
                 // Global.
                 if (forceUpdate) {
@@ -32233,13 +32471,13 @@ var egret3d;
                             webgl.uniformMatrix4fv(location_8, false, matrix.rawData);
                             break;
                         case "MODELVIEW" /* MODELVIEW */:
-                            webgl.uniformMatrix4fv(location_8, false, this._modelViewMatrix.rawData);
+                            webgl.uniformMatrix4fv(location_8, false, modelViewMatrix.rawData);
                             break;
                         case "MODELVIEWPROJECTION" /* MODELVIEWPROJECTION */:
                             webgl.uniformMatrix4fv(location_8, false, this._modelViewPojectionMatrix.rawData);
                             break;
                         case "MODELVIEWINVERSE" /* MODELVIEWINVERSE */:
-                            webgl.uniformMatrix3fv(location_8, false, this._inverseModelViewMatrix.getNormalMatrix(this._modelViewMatrix).rawData);
+                            webgl.uniformMatrix3fv(location_8, false, this._inverseModelViewMatrix.getNormalMatrix(modelViewMatrix).rawData);
                             break;
                         case "JOINTMATRIX" /* JOINTMATRIX */:
                             var skinnedMeshRenderer = renderer.source || renderer;
@@ -32441,29 +32679,36 @@ var egret3d;
             };
             WebGLRenderSystem.prototype._render = function (camera, renderTarget, material) {
                 var renderState = this._renderState;
-                renderState.updateRenderTarget(renderTarget);
-                renderState.updateViewport(camera.viewport);
-                renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
+                renderState.renderTarget = renderTarget;
+                renderState.viewport = camera.viewport;
+                renderState.clearColor = camera.backgroundColor;
+                renderState.clearBuffer(camera.bufferMask);
+                //
                 // Skybox.
                 var skyBox = camera.entity.getComponent(egret3d.SkyBox);
                 if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                     var skyBoxDrawCall = this._drawCallCollecter.skyBox;
                     var material_1 = skyBox.material;
-                    var texture = (material_1.shader === egret3d.DefaultShaders.CUBE) ? material_1.getTexture("tCube" /* CubeMap */) :
-                        ((material_1.shader === egret3d.DefaultShaders.EQUIRECT) ? material_1.getTexture("tEquirect" /* EquirectMap */) : material_1.getTexture());
-                    if (renderState.caches.skyBoxTexture !== texture) {
-                        renderState._updateTextureDefines("envMap" /* EnvMap */, texture);
-                        renderState.caches.skyBoxTexture = texture;
-                    }
-                    if (!skyBoxDrawCall.mesh) {
+                    if (material_1.shader !== egret3d.DefaultShaders.BACKGROUND) {
+                        var texture = (material_1.shader === egret3d.DefaultShaders.CUBE) ? material_1.getTexture("tCube" /* CubeMap */) :
+                            ((material_1.shader === egret3d.DefaultShaders.EQUIRECT) ? material_1.getTexture("tEquirect" /* EquirectMap */) : material_1.getTexture());
+                        if (renderState.caches.skyBoxTexture !== texture && skyBox.reflections) {
+                            renderState._updateTextureDefines("envMap" /* EnvMap */, texture, renderState.defines);
+                            renderState.caches.skyBoxTexture = texture;
+                        }
+                        // if (!skyBoxDrawCall.mesh) {
                         // DefaultMeshes.SPHERE;
                         skyBoxDrawCall.mesh = egret3d.DefaultMeshes.CUBE;
+                        // }
+                    }
+                    else {
+                        skyBoxDrawCall.mesh = egret3d.DefaultMeshes.FULLSCREEN;
                     }
                     skyBoxDrawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
                     this.draw(skyBoxDrawCall, material_1);
                 }
                 else if (renderState.caches.skyBoxTexture) {
-                    renderState._updateTextureDefines("envMap" /* EnvMap */, null);
+                    renderState._updateTextureDefines("envMap" /* EnvMap */, null, renderState.defines);
                     renderState.caches.skyBoxTexture = null;
                 }
                 //
@@ -32512,8 +32757,9 @@ var egret3d;
                     var isPoint = light.constructor === egret3d.PointLight;
                     //generate depth map
                     var shadowMaterial = (isPoint) ? egret3d.DefaultMaterials.SHADOW_DISTANCE : egret3d.DefaultMaterials.SHADOW_DEPTH_3201;
-                    renderState_1.updateRenderTarget(shadow._renderTarget);
-                    renderState_1.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.WHITE);
+                    renderState_1.renderTarget = shadow._renderTarget;
+                    renderState_1.clearColor = egret3d.Color.WHITE;
+                    renderState_1.clearBuffer(16640 /* DepthAndColor */);
                     for (var i = 0, l = (isPoint ? 6 : 1); i < l; i++) {
                         //update shadowMatrix
                         shadow._onUpdate(i);
@@ -32573,13 +32819,14 @@ var egret3d;
                         var renderTarget = camera.renderTarget || camera._previewRenderTarget;
                         if (renderTarget
                             || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
-                            this.render(camera, null, renderTarget);
+                            this.render(camera, camera.overrideMaterial, renderTarget);
                         }
                     }
                     this._cacheProgram = null; //TODO
                 }
                 else {
-                    this._renderState.clearBuffer(16640 /* DepthAndColor */, egret3d.Color.BLACK);
+                    this._renderState.clearColor = egret3d.Color.BLACK;
+                    this._renderState.clearBuffer(16640 /* DepthAndColor */);
                 }
             };
             WebGLRenderSystem.prototype.onFrameCleanup = function () {
@@ -32724,10 +32971,20 @@ var egret3d;
                         var _b = primitive.extras.draw, offset = _b.offset, count = _b.count;
                         if (primitive.indices !== undefined) {
                             var indexAccessor = mesh.getAccessor(primitive.indices);
-                            webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                            if (drawCall.instanced) {
+                                webgl.drawElementsInstanced(drawMode, offset, indexAccessor.componentType, count, drawCall.instanced);
+                            }
+                            else {
+                                webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                            }
                         }
                         else {
-                            webgl.drawArrays(drawMode, offset, count);
+                            if (drawCall.instanced) {
+                                webgl.drawArraysInstanced(drawMode, offset, count, drawCall.instanced);
+                            }
+                            else {
+                                webgl.drawArrays(drawMode, offset, count);
+                            }
                         }
                     }
                     else {
@@ -33497,6 +33754,9 @@ var egret3d;
         }
         if (options.alpha === undefined) {
             options.alpha = _parseBoolean(playerDiv, "data-alpha", false);
+        }
+        if (options.premultipliedAlpha === undefined) {
+            options.premultipliedAlpha = _parseBoolean(playerDiv, "data-premultipliedAlpha", false);
         }
         if (options.antialias === undefined) {
             options.antialias = _parseBoolean(playerDiv, "data-antialias", true);

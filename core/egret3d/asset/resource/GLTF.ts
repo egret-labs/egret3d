@@ -128,6 +128,7 @@ namespace egret3d {
             KHR_techniques_webgl: gltf.KhrTechniquesWebglMaterialExtension;
             paper: {
                 renderQueue: RenderQueue | uint;
+                enableGPUInstancing: boolean;
                 /**
                  * 该值如果定义，则覆盖着色器中的值。
                  */
@@ -674,6 +675,10 @@ declare namespace gltf {
         _RANDOM1 = "_RANDOM1",
         _WORLD_POSITION = "_WORLD_POSITION",
         _WORLD_ROTATION = "_WORLD_ROTATION",
+
+        //Instanced
+        _INSTANCED_MODEL = "_INSTANCED_MODEL",
+        _INSTANCED_MODEL_VIEW = "_INSTANCED_MODEL_VIEW",
     }
 
     export const enum UniformSemantics {
@@ -865,6 +870,7 @@ declare namespace gltf {
              * - 数据存储移除，运行时必须生成。
              */
             typeCount: number;
+            divisor: number;
         };
     }
     /**

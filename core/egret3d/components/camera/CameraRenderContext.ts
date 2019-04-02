@@ -112,11 +112,14 @@ namespace egret3d {
             if (materialA._renderQueue !== materialB._renderQueue) {
                 return materialA._renderQueue - materialB._renderQueue;
             }
-            else if (materialA._technique!.program !== materialB._technique!.program) {
+            else if (materialA._technique!.program !== materialB._technique!.program) {//着色器不同，避免频繁切换
                 return materialA._technique!.program! - materialB._technique!.program!;
             }
             else if (materialA._id !== materialB._id) {
                 return materialA._id - materialB._id;
+            }
+            else if (a.mesh._id !== b.mesh._id) {//为了实例化，这里mesh也排序下
+                return a.mesh._id - b.mesh._id;
             }
             else {
                 return a.zdist - b.zdist;
@@ -160,6 +163,7 @@ namespace egret3d {
                     // (camera.cullingMask & layer) !== 0 && TODO light cullingMask
                     (!renderer.frustumCulled || math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))
                 ) {
+                    drawCall.modelViewMatrix.multiply(camera.worldToCameraMatrix, drawCall.matrix);
                     shadowCalls[shadowIndex++] = drawCall!;
                 }
             }
@@ -195,6 +199,7 @@ namespace egret3d {
                         opaqueCalls[opaqueIndex++] = drawCall!;
                     }
 
+                    drawCall.modelViewMatrix.multiply(camera.worldToCameraMatrix, drawCall.matrix);
                     drawCall!.zdist = Vector3.create().fromMatrixPosition(drawCall!.matrix).getSquaredDistance(cameraPosition);
                 }
             }
@@ -426,6 +431,56 @@ namespace egret3d {
                 light.castShadows = false;//TODO 不支持阴影，防止贴图报错
             }
         }
+        private _combineInstanced(drawCalls: DrawCall[]) {
+            // const combineDrawCalls: { [key: string]: egret3d.DrawCall[] } = {};TODO正常的动态合并
+            const combineInstanced: { [key: string]: egret3d.DrawCall[] } = {};
+            //collect
+            for (let i = drawCalls.length - 1; i >= 0; i--) {
+                const drawCall = drawCalls[i];
+                const material = drawCall.material;
+                if (!material.enableGPUInstancing) {
+                    continue;
+                }
+                //TODO 考虑lightmap
+                const mesh = drawCall.mesh;
+                const key = material.uuid + "_" + mesh.uuid + "_" + drawCall.subMeshIndex;
+
+                if (!combineInstanced[key]) {
+                    combineInstanced[key] = [];
+                }
+
+                combineInstanced[key].unshift(drawCall);
+                drawCalls.splice(i, 1);
+            }
+            //combine
+            for (const key in combineInstanced) {
+                const calls = combineInstanced[key];
+                //
+                const count = calls.length;
+                const drawCall = calls[0];
+                const orginMesh = drawCall.mesh;
+                orginMesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL);
+                orginMesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW);
+                const models = orginMesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL, gltf.AccessorType.MAT4, count, 1)!;
+                const modelViews = orginMesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW, gltf.AccessorType.MAT4, count, 1)!;
+                for (let i = 0; i < count; i++) {
+                    const call = calls[i];
+                    models.set(call.matrix.rawData, i * 16);
+                    modelViews.set(call.modelViewMatrix.rawData, i * 16);
+                }
+
+                const newDrawCall = egret3d.DrawCall.create().release();
+                newDrawCall.entity = drawCall.entity;
+                newDrawCall.renderer = drawCall.renderer;
+                newDrawCall.material = drawCall.material;
+                newDrawCall.mesh = orginMesh;
+                newDrawCall.subMeshIndex = drawCall.subMeshIndex;
+                newDrawCall.matrix = drawCall.matrix;
+                newDrawCall.modelViewMatrix = drawCall.modelViewMatrix;
+                newDrawCall.instanced = count;
+                drawCalls.push(newDrawCall);
+            }
+        }
         /**
          * @internal
          */
@@ -437,6 +492,7 @@ namespace egret3d {
             }
             else {
                 this._frustumCulling();
+                this._combineInstanced(this.opaqueCalls);
                 this._updateLights();
             }
         }

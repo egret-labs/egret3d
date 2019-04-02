@@ -33,7 +33,7 @@ namespace egret3d.postprocess {
     ];
     const roundingRange = 1 / 32;
     export class SSAAPostprocess extends egret3d.CameraPostprocessing {
-        @paper.editor.property(paper.editor.EditType.UINT, { minimum: 0, maximum: 5 })
+        @paper.editor.property(paper.editor.EditType.UINT, { minimum: 0, maximum: 5, step: 1 })
         public sampleLevel: number = 2;
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public unbiased: boolean = false;
@@ -49,16 +49,20 @@ namespace egret3d.postprocess {
         });
         private readonly _finalSampleRenderTarget: egret3d.RenderTexture = egret3d.RenderTexture.create({
             width: egret3d.stage.viewport.w, height: egret3d.stage.viewport.h,
-            format: gltf.TextureFormat.RGBA,
+            format: gltf.TextureFormat.RGB,//TODO
             sampler: {
                 minFilter: gltf.TextureFilter.Linear, magFilter: gltf.TextureFilter.Linear,
             }
         });
         private _onStageResize(): void {
+            const { w, h } = egret3d.stage.viewport;
             const sampleRenderTarget = this._sampleRenderTarget;
             if (sampleRenderTarget) {
-                const { w, h } = egret3d.stage.viewport;
                 sampleRenderTarget.setSize(w, h);
+            }
+            const finalSampleRenderTarget = this._finalSampleRenderTarget;
+            if (finalSampleRenderTarget) {
+                finalSampleRenderTarget.setSize(w, h);
             }
         }
         public initialize(): void {
@@ -96,13 +100,15 @@ namespace egret3d.postprocess {
                     sampleWeight += roundingRange * uniformCenteredDistribution;
                 }
 
-                renderState.updateRenderTarget(sampleRenderTarget);
-                renderState.clearBuffer(gltf.BufferMask.All, clearColor);
+                renderState.renderTarget = sampleRenderTarget;
+                renderState.clearColor = clearColor;
+                renderState.clearBuffer(gltf.BufferMask.All);
                 renderState.render(camera, undefined, sampleRenderTarget);
-                renderState.updateRenderTarget(finalSampleRenderTarget);
+                renderState.renderTarget = finalSampleRenderTarget;
 
                 if (i === 0) {
-                    renderState.clearBuffer(gltf.BufferMask.All, clearColor);
+                    renderState.clearColor = clearColor;
+                    renderState.clearBuffer(gltf.BufferMask.All);
                 }
                 copyMaterial.setOpacity(sampleWeight);
                 this.blit(sampleRenderTarget, copyMaterial, finalSampleRenderTarget, gltf.BufferMask.None);

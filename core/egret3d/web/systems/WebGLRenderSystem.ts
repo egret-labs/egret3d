@@ -63,7 +63,6 @@ namespace egret3d.webgl {
         private readonly _cameraAndLightCollecter: CameraAndLightCollecter = paper.Application.sceneManager.globalEntity.getComponent(CameraAndLightCollecter)!;
         private readonly _renderState: WebGLRenderState = paper.Application.sceneManager.globalEntity.getComponent(RenderState) as WebGLRenderState;
         //
-        private readonly _modelViewMatrix: Matrix4 = Matrix4.create();
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
         private readonly _inverseModelViewMatrix: Matrix3 = Matrix3.create();
         //
@@ -188,17 +187,18 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
             const { primitives, extras } = mesh.glTFMesh;
+            const primitive = primitives[subMeshIndex];
 
             mesh.update(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer);
 
+            const vbo = extras!.vbo;
+            const ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
+
             if (renderState.vertexArrayObject !== null) {
+                webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
                 webgl.bindVertexArray(extras!.vao);
             }
             else {
-                const primitive = primitives[subMeshIndex];
-                const vbo = extras!.vbo;
-                const ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
-
                 webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
                 webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
                 renderState.updateVertexAttributes(mesh);
@@ -213,9 +213,9 @@ namespace egret3d.webgl {
             const modelUniforms = program.modelUniforms;
             const context = camera.context;
             const matrix = drawCall.matrix;
+            const modelViewMatrix = drawCall.modelViewMatrix;
             let i = 0;
             //
-            this._modelViewMatrix.multiply(camera.worldToCameraMatrix, matrix);
             this._modelViewPojectionMatrix.multiply(camera.worldToClipMatrix, matrix);
             // Global.
             if (forceUpdate) {
@@ -391,7 +391,7 @@ namespace egret3d.webgl {
                         break;
 
                     case gltf.UniformSemantics.MODELVIEW:
-                        webgl.uniformMatrix4fv(location, false, this._modelViewMatrix.rawData);
+                        webgl.uniformMatrix4fv(location, false, modelViewMatrix.rawData);
                         break;
 
                     case gltf.UniformSemantics.MODELVIEWPROJECTION:
@@ -399,7 +399,7 @@ namespace egret3d.webgl {
                         break;
 
                     case gltf.UniformSemantics.MODELVIEWINVERSE:
-                        webgl.uniformMatrix3fv(location, false, this._inverseModelViewMatrix.getNormalMatrix(this._modelViewMatrix).rawData);
+                        webgl.uniformMatrix3fv(location, false, this._inverseModelViewMatrix.getNormalMatrix(modelViewMatrix).rawData);
                         break;
 
                     case gltf.UniformSemantics.JOINTMATRIX:
@@ -633,25 +633,32 @@ namespace egret3d.webgl {
 
         private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
             const renderState = this._renderState;
-            renderState.updateRenderTarget(renderTarget);
-            renderState.updateViewport(camera.viewport);
-            renderState.clearBuffer(camera.bufferMask, camera.backgroundColor);
+            renderState.renderTarget = renderTarget;
+            renderState.viewport = camera.viewport;
+            renderState.clearColor = camera.backgroundColor;
+            renderState.clearBuffer(camera.bufferMask);
+            //
             // Skybox.
             const skyBox = camera.entity.getComponent(SkyBox);
             if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                 const skyBoxDrawCall = this._drawCallCollecter.skyBox;
                 const material = skyBox.material;
-                const texture = (material.shader === egret3d.DefaultShaders.CUBE) ? material.getTexture(ShaderUniformName.CubeMap) :
-                    ((material.shader === egret3d.DefaultShaders.EQUIRECT) ? material.getTexture(ShaderUniformName.EquirectMap) : material.getTexture());
+                if (material.shader !== egret3d.DefaultShaders.BACKGROUND) {
+                    const texture = (material.shader === egret3d.DefaultShaders.CUBE) ? material.getTexture(ShaderUniformName.CubeMap) :
+                        ((material.shader === egret3d.DefaultShaders.EQUIRECT) ? material.getTexture(ShaderUniformName.EquirectMap) : material.getTexture());
 
-                if (renderState.caches.skyBoxTexture !== texture) {
-                    renderState._updateTextureDefines(ShaderUniformName.EnvMap, texture);
-                    renderState.caches.skyBoxTexture = texture;
-                }
+                    if (renderState.caches.skyBoxTexture !== texture && skyBox.reflections) {
+                        renderState._updateTextureDefines(ShaderUniformName.EnvMap, texture, renderState.defines);
+                        renderState.caches.skyBoxTexture = texture;
+                    }
 
-                if (!skyBoxDrawCall.mesh) {
+                    // if (!skyBoxDrawCall.mesh) {
                     // DefaultMeshes.SPHERE;
                     skyBoxDrawCall.mesh = DefaultMeshes.CUBE;
+                    // }
+                }
+                else {
+                    skyBoxDrawCall.mesh = DefaultMeshes.FULLSCREEN;
                 }
 
                 skyBoxDrawCall.matrix = camera.gameObject.transform.localToWorldMatrix;
@@ -659,7 +666,7 @@ namespace egret3d.webgl {
                 this.draw(skyBoxDrawCall, material);
             }
             else if (renderState.caches.skyBoxTexture) {
-                renderState._updateTextureDefines(ShaderUniformName.EnvMap, null);
+                renderState._updateTextureDefines(ShaderUniformName.EnvMap, null, renderState.defines);
                 renderState.caches.skyBoxTexture = null;
             }
             //
@@ -711,8 +718,9 @@ namespace egret3d.webgl {
                 //generate depth map
                 const shadowMaterial = (isPoint) ? DefaultMaterials.SHADOW_DISTANCE : DefaultMaterials.SHADOW_DEPTH_3201;
 
-                renderState.updateRenderTarget(shadow._renderTarget);
-                renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.WHITE);
+                renderState.renderTarget = shadow._renderTarget;
+                renderState.clearColor = Color.WHITE;
+                renderState.clearBuffer(gltf.BufferMask.DepthAndColor);
 
                 for (let i = 0, l = (isPoint ? 6 : 1); i < l; i++) {
                     //update shadowMatrix
@@ -784,14 +792,15 @@ namespace egret3d.webgl {
                         renderTarget
                         || (isPlayerMode ? scene !== editorScene : scene === editorScene)
                     ) {
-                        this.render(camera, null, renderTarget);
+                        this.render(camera, camera.overrideMaterial, renderTarget);
                     }
                 }
 
                 this._cacheProgram = null;//TODO
             }
             else { // Clear stage background to black.
-                this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor, Color.BLACK);
+                this._renderState.clearColor = Color.BLACK;
+                this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor);
             }
         }
 
@@ -952,10 +961,20 @@ namespace egret3d.webgl {
 
                     if (primitive.indices !== undefined) {
                         const indexAccessor = mesh.getAccessor(primitive.indices);
-                        webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                        if (drawCall.instanced) {
+                            webgl.drawElementsInstanced(drawMode, offset, indexAccessor.componentType, count, drawCall.instanced);
+                        }
+                        else {
+                            webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                        }
                     }
                     else {
-                        webgl.drawArrays(drawMode, offset, count);
+                        if (drawCall.instanced) {
+                            webgl.drawArraysInstanced(drawMode, offset, count, drawCall.instanced);
+                        }
+                        else {
+                            webgl.drawArrays(drawMode, offset, count);
+                        }
                     }
                 }
                 else {

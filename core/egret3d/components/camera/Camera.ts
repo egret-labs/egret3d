@@ -77,6 +77,10 @@ namespace egret3d {
             cameraAndLightCollecter.currentCamera = value;
         }
         /**
+         * 该相机下的对象都是用此材质渲染
+         */
+        public overrideMaterial: Material | null = null;
+        /**
          * 该相机的绘制缓冲掩码。
          */
         @paper.editor.property(paper.editor.EditType.LIST, { listItems: paper.editor.getItemsFromEnum((gltf as any).BufferMask) }) // TODO
@@ -271,7 +275,7 @@ namespace egret3d {
          * @param stagePosition 舞台坐标。
          */
         public worldToStage(worldPosition: Readonly<IVector3>, stagePosition: Vector3 | null = null): Vector3 {
-            if (!stagePosition ) {
+            if (!stagePosition) {
                 stagePosition = Vector3.create();
             }
 

@@ -62,6 +62,9 @@ namespace egret3d.webgl {
         createVertexArray(): any;
         bindVertexArray(vao?: WebGLVertexArrayObject | null): void;
         deleteVertexArray(vao: WebGLVertexArrayObject): void;
+        drawArraysInstanced(mode: GLenum, first: GLint, count: GLsizei, primcount: GLsizei): void;
+        drawElementsInstanced(mode: GLenum, count: GLsizei, type: GLenum, offset: GLintptr, primcount: GLsizei): void;
+        vertexAttribDivisor(index: GLuint, divisor: GLuint): void;
     }
     /**
      * @internal
@@ -83,6 +86,43 @@ namespace egret3d.webgl {
                 webgl.bindVertexArray = this.vertexArrayObject.bindVertexArrayOES.bind(this.vertexArrayObject);
                 webgl.deleteVertexArray = this.vertexArrayObject.deleteVertexArrayOES.bind(this.vertexArrayObject);
             }
+
+            if (this.instancedArrays !== null) {
+                webgl.drawArraysInstanced = this.instancedArrays.drawArraysInstancedANGLE.bind(this.instancedArrays);
+                webgl.drawElementsInstanced = this.instancedArrays.drawElementsInstancedANGLE.bind(this.instancedArrays);
+                webgl.vertexAttribDivisor = this.instancedArrays.vertexAttribDivisorANGLE.bind(this.instancedArrays);
+            }
+        }
+
+        protected _setViewport(value: Readonly<Rectangle>) {
+            const renderTarget = this._renderTarget;
+            let w: number;
+            let h: number;
+            if (renderTarget) {
+                w = renderTarget.width;
+                h = renderTarget.height;
+            }
+            else {
+                const stageViewport = stage.viewport;
+                w = stageViewport.w;
+                h = stageViewport.h;
+            }
+
+            const webgl = WebGLRenderState.webgl!;
+            webgl.viewport(w * value.x, h * (1.0 - value.y - value.h), w * value.w, h * value.h);
+        }
+        protected _setRenderTarget(value: RenderTexture | null) {
+            if (value) {
+                value.activateTexture();
+            }
+            else {
+                const webgl = WebGLRenderState.webgl!;
+                webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
+            }
+        }
+        protected _setColorMask(value: Readonly<[boolean, boolean, boolean, boolean]>) {
+            const webgl = WebGLRenderState.webgl!;
+            webgl.colorMask(value[0], value[1], value[2], value[3]);
         }
 
         public initialize() {
@@ -103,10 +143,10 @@ namespace egret3d.webgl {
             this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
             this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
             this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
-            this.vertexArrayObject = null;
-            // _getExtension(webgl, "OES_vertex_array_object");
+            this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
             this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
             this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
+            this.instancedArrays = _getExtension(webgl, "ANGLE_instanced_arrays");
             //
             this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
             this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
@@ -128,6 +168,7 @@ namespace egret3d.webgl {
             console.info("Frag depth enabled:", this.fragDepthEnabled);
             console.info("Texture filter anisotropic:", this.textureFilterAnisotropic);
             console.info("Shader texture LOD:", this.shaderTextureLOD);
+            console.info("ANGLE_instanced_arrays:", this.instancedArrays);
             //
             console.info("Maximum shader precision:", this.maxPrecision);
             console.info("Maximum texture count:", this.maxTextures);
@@ -140,59 +181,21 @@ namespace egret3d.webgl {
             console.info("Maximum anisotropy:", this.maxAnisotropy);
         }
 
-        public updateRenderTarget(renderTarget: RenderTexture | null) {
-            // if (this.renderTarget !== renderTarget) {//TODO 2d节点污染次cache
-            this.renderTarget = renderTarget;
-
-            if (renderTarget) {
-                renderTarget.activateTexture();
-            }
-            else {
-                const webgl = WebGLRenderState.webgl!;
-                webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, null);
-            }
-            // }
-        }
-
-        public updateViewport(viewport: Rectangle) { // TODO
-            const webgl = WebGLRenderState.webgl!;
-            const currentViewport = this.viewport;
-            const renderTarget = this.renderTarget;
-            let w: number;
-            let h: number;
-            if (renderTarget) {
-                w = renderTarget.width;
-                h = renderTarget.height;
-            }
-            else {
-                const stageViewport = stage.viewport;
-                w = stageViewport.w;
-                h = stageViewport.h;
-            }
-
-            currentViewport.set(w * viewport.x, h * (1.0 - viewport.y - viewport.h), w * viewport.w, h * viewport.h);//TODO
-            webgl.viewport(currentViewport.x, currentViewport.y, currentViewport.w, currentViewport.h);
-        }
-
-        public clearBuffer(bufferBit: gltf.BufferMask, clearColor?: Readonly<IColor>) {
+        public clearBuffer(bufferBit: gltf.BufferMask) {
             const webgl = WebGLRenderState.webgl!;
 
             if (bufferBit & gltf.BufferMask.Depth) {
-                webgl.depthMask(true);
-                webgl.clearDepth(1.0);
+                webgl.depthMask(true);//TODO
+                webgl.clearDepth(this._clearDepth);//TODO 2d,3d渲染状态统一后，放到每个调用函数中，可以做缓存
             }
 
             if (bufferBit & gltf.BufferMask.Stencil) {
-                webgl.clearStencil(1.0);
+                webgl.clearStencil(this._clearStencil);//TODO
             }
 
             if (bufferBit & gltf.BufferMask.Color) {
-                if (this.premultipliedAlpha) {
-                    clearColor && webgl.clearColor(clearColor.r * clearColor.a, clearColor.g * clearColor.a, clearColor.b * clearColor.a, clearColor.a);
-                }
-                else {
-                    clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);
-                }
+                const clearColor = this._clearColor;
+                clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);//TODO
             }
 
             webgl.clear(bufferBit);
@@ -211,15 +214,19 @@ namespace egret3d.webgl {
 
                 if (semantic in attributes) {
                     const accessor = mesh.getAccessor(attributes[semantic]);
+                    const { typeCount, divisor } = accessor.extras!;
                     // TODO normalized应该来源于mesh，应该还没有
                     webgl.vertexAttribPointer(
                         location,
-                        accessor.extras!.typeCount,
+                        typeCount,
                         accessor.componentType,
                         accessor.normalized !== undefined ? accessor.normalized : false,
                         0, attributeOffsets[semantic]
                     );
                     webgl.enableVertexAttribArray(location);
+                    if (divisor) {
+                        webgl.vertexAttribDivisor(location, divisor);
+                    }
                 }
                 else {
                     webgl.disableVertexAttribArray(location);
@@ -239,7 +246,6 @@ namespace egret3d.webgl {
 
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
             const webgl = WebGLRenderState.webgl!;
-
             target.bindTexture(0);
             webgl.copyTexImage2D(target.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
         }
