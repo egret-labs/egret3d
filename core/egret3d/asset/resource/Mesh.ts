@@ -571,7 +571,7 @@ namespace egret3d {
          * @param attributeName 
          * @param attributeType 
          */
-        public addAttribute(attributeName: gltf.AttributeSemantics | string, attributeType: gltf.AccessorType | string, vertexCount: uint = 0): Float32Array | null {
+        public addAttribute(attributeName: gltf.AttributeSemantics | string, attributeType: gltf.AccessorType | string, vertexCount: uint = 0, divisor: uint = 0): Float32Array | null {
             if (vertexCount <= 0) {
                 vertexCount = this._vertexCount;
             }
@@ -594,7 +594,7 @@ namespace egret3d {
                     bufferView: bufferViewIndex,
                     count: vertexCount, componentType: gltf.ComponentType.Float, type: attributeType as gltf.AccessorType,
                     normalized: attributeName === gltf.AttributeSemantics.NORMAL || attributeName === gltf.AttributeSemantics.TANGENT,
-                    extras: { typeCount }
+                    extras: { typeCount, divisor }
                 };
                 //
                 const { attributeOffsets } = this._glTFMesh!.extras!;
@@ -678,7 +678,7 @@ namespace egret3d {
             accessors![accessorIndex] = {
                 bufferView: bufferIndex,
                 count: indexCount, componentType: gltf.ComponentType.UnsignedShort, type: gltf.AccessorType.SCALAR,
-                extras: { typeCount: 1 },
+                extras: { typeCount: 1, divisor: 0 },
             };
             // 如果第一个子网格没使用顶点索引，则此次添加行为其实是设置第一个子网格。
             const { primitives } = this._glTFMesh!;

@@ -215,15 +215,19 @@ namespace egret3d.webgl {
 
                 if (semantic in attributes) {
                     const accessor = mesh.getAccessor(attributes[semantic]);
+                    const { typeCount, divisor } = accessor.extras!;
                     // TODO normalized应该来源于mesh，应该还没有
                     webgl.vertexAttribPointer(
                         location,
-                        accessor.extras!.typeCount,
+                        typeCount,
                         accessor.componentType,
                         accessor.normalized !== undefined ? accessor.normalized : false,
                         0, attributeOffsets[semantic]
                     );
                     webgl.enableVertexAttribArray(location);
+                    if (divisor) {
+                        webgl.vertexAttribDivisor(location, divisor);
+                    }
                 }
                 else {
                     webgl.disableVertexAttribArray(location);

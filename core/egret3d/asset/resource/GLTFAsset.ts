@@ -197,7 +197,7 @@ namespace egret3d {
 
             if (accessors !== undefined) {
                 for (const accessor of accessors) {
-                    accessor.extras = { typeCount: GLTFAsset.getAccessorTypeCount(accessor.type) };
+                    accessor.extras = { typeCount: GLTFAsset.getAccessorTypeCount(accessor.type), divisor: 0 };
                 }
             }
 

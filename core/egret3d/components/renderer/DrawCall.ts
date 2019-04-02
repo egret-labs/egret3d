@@ -52,7 +52,7 @@ namespace egret3d {
          */
         public zdist: float = -1.0;
 
-        public instanced: boolean = false;
+        public instanced: uint = 0;
 
         private constructor() {
             super();

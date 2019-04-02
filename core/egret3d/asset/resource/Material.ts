@@ -998,6 +998,9 @@ namespace egret3d {
         public set opacity(value: number) {
             this.setFloat(ShaderUniformName.Opacity, value);
         }
+        /**
+         * 是否开启instancing
+         */
         public get enableGPUInstancing(): boolean {
             return this._glTFMaterial!.extensions.paper.enableGPUInstancing;
         }
@@ -1011,6 +1014,7 @@ namespace egret3d {
                 value ? this.addDefine(ShaderDefine.USE_INSTANCED) : this.removeDefine(ShaderDefine.USE_INSTANCED);
             }
         }
+        public test:string = "";
         /**
          * 该材质的 shader。
          */

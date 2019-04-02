@@ -4623,7 +4623,7 @@ var egret3d;
             if (accessors !== undefined) {
                 for (var _i = 0, accessors_1 = accessors; _i < accessors_1.length; _i++) {
                     var accessor = accessors_1[_i];
-                    accessor.extras = { typeCount: GLTFAsset.getAccessorTypeCount(accessor.type) };
+                    accessor.extras = { typeCount: GLTFAsset.getAccessorTypeCount(accessor.type), divisor: 0 };
                 }
             }
             return this;
@@ -11587,8 +11587,9 @@ var egret3d;
          * @param attributeName
          * @param attributeType
          */
-        Mesh.prototype.addAttribute = function (attributeName, attributeType, vertexCount) {
+        Mesh.prototype.addAttribute = function (attributeName, attributeType, vertexCount, divisor) {
             if (vertexCount === void 0) { vertexCount = 0; }
+            if (divisor === void 0) { divisor = 0; }
             if (vertexCount <= 0) {
                 vertexCount = this._vertexCount;
             }
@@ -11608,7 +11609,7 @@ var egret3d;
                     bufferView: bufferViewIndex,
                     count: vertexCount, componentType: 5126 /* Float */, type: attributeType,
                     normalized: attributeName === "NORMAL" /* NORMAL */ || attributeName === "TANGENT" /* TANGENT */,
-                    extras: { typeCount: typeCount }
+                    extras: { typeCount: typeCount, divisor: divisor }
                 };
                 //
                 var attributeOffsets = this._glTFMesh.extras.attributeOffsets;
@@ -11682,7 +11683,7 @@ var egret3d;
             accessors[accessorIndex] = {
                 bufferView: bufferIndex,
                 count: indexCount, componentType: 5123 /* UnsignedShort */, type: "SCALAR" /* SCALAR */,
-                extras: { typeCount: 1 },
+                extras: { typeCount: 1, divisor: 0 },
             };
             // 如果第一个子网格没使用顶点索引，则此次添加行为其实是设置第一个子网格。
             var primitives = this._glTFMesh.primitives;
@@ -12246,9 +12247,13 @@ var egret3d;
                     var location_1 = attribute.location, semantic = attribute.semantic;
                     if (semantic in attributes) {
                         var accessor = mesh.getAccessor(attributes[semantic]);
+                        var _b = accessor.extras, typeCount = _b.typeCount, divisor = _b.divisor;
                         // TODO normalized应该来源于mesh，应该还没有
-                        webgl.vertexAttribPointer(location_1, accessor.extras.typeCount, accessor.componentType, accessor.normalized !== undefined ? accessor.normalized : false, 0, attributeOffsets[semantic]);
+                        webgl.vertexAttribPointer(location_1, typeCount, accessor.componentType, accessor.normalized !== undefined ? accessor.normalized : false, 0, attributeOffsets[semantic]);
                         webgl.enableVertexAttribArray(location_1);
+                        if (divisor) {
+                            webgl.vertexAttribDivisor(location_1, divisor);
+                        }
                     }
                     else {
                         webgl.disableVertexAttribArray(location_1);
@@ -18616,8 +18621,8 @@ var egret3d;
                 var orginMesh = drawCall.mesh;
                 orginMesh.removeAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */);
                 orginMesh.removeAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */);
-                var models = orginMesh.addAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */, "MAT4" /* MAT4 */, count);
-                var modelViews = orginMesh.addAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */, "MAT4" /* MAT4 */, count);
+                var models = orginMesh.addAttribute("_INSTANCED_MODEL" /* _INSTANCED_MODEL */, "MAT4" /* MAT4 */, count, 1);
+                var modelViews = orginMesh.addAttribute("_INSTANCED_MODEL_VIEW" /* _INSTANCED_MODEL_VIEW */, "MAT4" /* MAT4 */, count, 1);
                 for (var i = 0; i < count; i++) {
                     var call = calls[i];
                     models.set(call.matrix.rawData, i * 16);
@@ -18631,7 +18636,7 @@ var egret3d;
                 newDrawCall.subMeshIndex = drawCall.subMeshIndex;
                 newDrawCall.matrix = drawCall.matrix;
                 newDrawCall.modelViewMatrix = drawCall.modelViewMatrix;
-                newDrawCall.instanced = true;
+                newDrawCall.instanced = count;
                 drawCalls.push(newDrawCall);
             }
         };
@@ -19481,7 +19486,7 @@ var egret3d;
              *
              */
             _this.zdist = -1.0;
-            _this.instanced = false;
+            _this.instanced = 0;
             return _this;
         }
         /**
@@ -27965,6 +27970,7 @@ var egret3d;
                 _this._dirty |= dirty;
                 _this._version++;
             };
+            _this.test = "";
             return _this;
         }
         Material.create = function (shaderOrName, shaderOrConfig) {
@@ -28744,6 +28750,9 @@ var egret3d;
             configurable: true
         });
         Object.defineProperty(Material.prototype, "enableGPUInstancing", {
+            /**
+             * 是否开启instancing
+             */
             get: function () {
                 return this._glTFMaterial.extensions.paper.enableGPUInstancing;
             },
@@ -32956,10 +32965,20 @@ var egret3d;
                         var _b = primitive.extras.draw, offset = _b.offset, count = _b.count;
                         if (primitive.indices !== undefined) {
                             var indexAccessor = mesh.getAccessor(primitive.indices);
-                            webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                            if (drawCall.instanced) {
+                                webgl.drawElementsInstanced(drawMode, offset, indexAccessor.componentType, count, drawCall.instanced);
+                            }
+                            else {
+                                webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                            }
                         }
                         else {
-                            webgl.drawArrays(drawMode, offset, count);
+                            if (drawCall.instanced) {
+                                webgl.drawArraysInstanced(drawMode, offset, count, drawCall.instanced);
+                            }
+                            else {
+                                webgl.drawArrays(drawMode, offset, count);
+                            }
                         }
                     }
                     else {

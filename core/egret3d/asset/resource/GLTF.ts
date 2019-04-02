@@ -870,6 +870,7 @@ declare namespace gltf {
              * - 数据存储移除，运行时必须生成。
              */
             typeCount: number;
+            divisor: number;
         };
     }
     /**

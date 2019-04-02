@@ -960,10 +960,20 @@ namespace egret3d.webgl {
 
                     if (primitive.indices !== undefined) {
                         const indexAccessor = mesh.getAccessor(primitive.indices);
-                        webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                        if (drawCall.instanced) {
+                            webgl.drawElementsInstanced(drawMode, offset, indexAccessor.componentType, count, drawCall.instanced);
+                        }
+                        else {
+                            webgl.drawElements(drawMode, offset, indexAccessor.componentType, count);
+                        }
                     }
                     else {
-                        webgl.drawArrays(drawMode, offset, count);
+                        if (drawCall.instanced) {
+                            webgl.drawArraysInstanced(drawMode, offset, count, drawCall.instanced);
+                        }
+                        else {
+                            webgl.drawArrays(drawMode, offset, count);
+                        }
                     }
                 }
                 else {

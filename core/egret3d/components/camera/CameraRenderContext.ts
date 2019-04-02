@@ -461,8 +461,8 @@ namespace egret3d {
                 const orginMesh = drawCall.mesh;
                 orginMesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL);
                 orginMesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW);
-                const models = orginMesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL, gltf.AccessorType.MAT4, count)!;
-                const modelViews = orginMesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW, gltf.AccessorType.MAT4, count)!;
+                const models = orginMesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL, gltf.AccessorType.MAT4, count, 1)!;
+                const modelViews = orginMesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW, gltf.AccessorType.MAT4, count, 1)!;
                 for (let i = 0; i < count; i++) {
                     const call = calls[i];
                     models.set(call.matrix.rawData, i * 16);
@@ -477,7 +477,7 @@ namespace egret3d {
                 newDrawCall.subMeshIndex = drawCall.subMeshIndex;
                 newDrawCall.matrix = drawCall.matrix;
                 newDrawCall.modelViewMatrix = drawCall.modelViewMatrix;
-                newDrawCall.instanced = true;
+                newDrawCall.instanced = count;
                 drawCalls.push(newDrawCall);
             }
         }
