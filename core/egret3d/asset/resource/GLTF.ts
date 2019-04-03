@@ -120,6 +120,37 @@ namespace egret3d {
         extensionsRequired: string[];
     }
     /**
+     * 
+     */
+    export interface GLTFMesh extends gltf.Mesh {
+        extras?: {
+            /**
+             * 
+             */
+            drawMode: gltf.DrawMode;
+            /**
+             * 
+             */
+            vertexCount: uint;
+            /**
+             * 
+             */
+            wireframeIndex: uint;
+            /**
+             * 
+             */
+            attributeTypes: gltf.AttributeAccessorTypes;
+            /**
+             * 
+             */
+            attributeOffsets: { [key: string]: uint }; // TODO
+            /**
+             * 
+             */
+            vbo: WebGLBuffer | null;
+        };
+    }
+    /**
      * 扩展 glTF 材质。
      * - 仅用于存储材质初始值。
      */
@@ -222,6 +253,16 @@ namespace egret3d {
     export interface GLTFTexture extends gltf.Texture {
         extensions: {
             paper: GLTFTextureExtension,
+        };
+        extras?: {
+            /**
+             * 
+             */
+            type: gltf.TextureType;
+            /**
+             * 当源 levels 为 0 时，需要计算真实的 levels 值。
+             */
+            levels: uint;
         };
     }
     /**
@@ -1264,7 +1305,26 @@ declare namespace gltf {
         }[];
         extensions?: any;
         extras?: {
-            draw?: {
+            /**
+             * 
+             */
+            needUpdate: uint;
+            /**
+             * 
+             */
+            program: any | null; // TODO
+            /**
+             * 
+             */
+            vao: WebGLVertexArrayObject | null;
+            /**
+             * 
+             */
+            ibo: WebGLBuffer | null;
+            /**
+             * 
+             */
+            draw: {
                 /**
                  * 绘制偏移。
                  */
@@ -1273,11 +1333,7 @@ declare namespace gltf {
                  * 绘制数量。
                  */
                 count: uint;
-            };
-            /**
-             * 
-             */
-            ibo: WebGLBuffer | null;
+            } | null;
         };
 
     }
@@ -1295,13 +1351,7 @@ declare namespace gltf {
         weights?: number[];
         name?: string;
         extensions?: any;
-        extras?: {
-            attributeOffsets: { [key: string]: number }; // TODO
-            program: any | null; // TODO
-            vao: WebGLVertexArrayObject | null;
-            vbo: WebGLBuffer | null;
-        };
-
+        extras?: any;
     }
     /**
      * A node in the node hierarchy.  When the node contains `skin`, all `mesh.primitives` must contain `JOINTS_0` and `WEIGHTS_0` attributes.  A node can have either a `matrix` or any combination of `translation`/`rotation`/`scale` (TRS) properties. TRS properties are converted to matrices and postmultiplied in the `T * R * S` order to compose the transformation matrix; first the scale is applied to the vertices, then the rotation, and then the translation. If none are provided, the transform is the identity. When a node is targeted for animation (referenced by an animation.channel.target), only TRS properties may be present; `matrix` will not be present.

@@ -4,12 +4,12 @@ namespace egret3d {
      */
     export class Texture extends BaseTexture {
         /**
-         * 
+         * 创建一个纹理资源。
          * @param parameters 
          */
         public static create(parameters: CreateTextureParameters): Texture;
         /**
-         * 加载纹理。
+         * 加载纹理资源。
          * @private
          */
         public static create(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null): Texture;
@@ -41,11 +41,11 @@ namespace egret3d {
             return texture;
         }
         /**
-         * 
+         * 创建一个纯色的纹理资源。
          */
-        public static createColorTexture(name: string, r: float, g: float, b: float): Texture {
+        public static createColorTexture(name: string, r: uint, g: uint, b: uint, a: uint = 255): Texture {
             const texture = Texture.create({
-                name, source: new Uint8Array([r, g, b, 255]), width: 1, height: 1,
+                name, source: new Uint8Array([r, g, b, a]), width: 1, height: 1,
                 sampler: {
                     wrapS: gltf.TextureWrappingMode.ClampToEdge, wrapT: gltf.TextureWrappingMode.ClampToEdge,
                     magFilter: gltf.TextureFilter.Linear, minFilter: gltf.TextureFilter.Linear
@@ -82,8 +82,8 @@ namespace egret3d {
             return texture;
         }
         /**
-         * 
-         * @param source 
+         * 重新设置该纹理资源的源数据。
+         * @param source 源数据。
          */
         public setSource(source: ArrayBufferView | gltf.ImageSource | null = null): this {
             const { config } = this;

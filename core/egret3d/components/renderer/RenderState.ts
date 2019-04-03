@@ -3,6 +3,13 @@ namespace egret3d {
         return string !== "";
     }
     /**
+     * @internal
+     */
+    export const enum RenderStateChangedType {
+        GammaInputChanged = 0,
+        EnableInstancingChanged = 1,
+    }
+    /**
      * 全局渲染状态组件。
      */
     @paper.singleton
@@ -10,7 +17,7 @@ namespace egret3d {
         /**
          * @internal
          */
-        public readonly onGammaInputChanged: signals.Signal = new signals.Signal();
+        public readonly onRenderStateChanged: signals.Signal<RenderStateChangedType> = new signals.Signal();
 
         public version: string;
         public standardDerivativesEnabled: boolean;
@@ -21,12 +28,13 @@ namespace egret3d {
         public shaderTextureLOD: EXT_shader_texture_lod | null;
         public instancedArrays: ANGLE_instanced_arrays | null;
 
-        public maxTextures: uint;
+        public maxVertexAttributes: uint;
+        public maxVertexUniformVectors: uint;
         public maxVertexTextures: uint;
+        public maxTextures: uint;
         public maxTextureSize: uint;
         public maxCubemapSize: uint;
         public maxRenderBufferize: uint;
-        public maxVertexUniformVectors: uint;
         public maxAnisotropy: uint;
         public maxBoneCount: uint = 24;
         public maxPrecision: string = "";
@@ -83,6 +91,7 @@ namespace egret3d {
         private _gammaOutput: boolean = true; //
         private _gammaFactor: float = 1.0;
         private _toneMapping: ToneMapping = ToneMapping.None;
+        private _enableGPUInstancing: boolean = false;
         // TODO move to caches
         protected readonly _stateEnables: ReadonlyArray<gltf.EnableState> = [gltf.EnableState.Blend, gltf.EnableState.CullFace, gltf.EnableState.DepthTest];
         protected readonly _cacheStateEnable: { [key: string]: boolean | undefined } = {};
@@ -98,8 +107,8 @@ namespace egret3d {
                 extensions += "#extension GL_EXT_frag_depth : enable \n";
             }
 
-            if (this.textureFloatEnabled) {
-                extensions += "#extension GL_EXT_frag_depth : enable \n";
+            if (this.shaderTextureLOD !== null) {
+                extensions += "#extension GL_EXT_shader_texture_lod : enable \n";
             }
 
             this.fragmentExtensions = extensions;
@@ -283,7 +292,7 @@ namespace egret3d {
                     }
                 }
                 else {
-                    defines.removeDefine(decodingFunName, true);
+                    defines.removeDefine(decodingFunName);
                 }
             }
             //
@@ -324,8 +333,8 @@ namespace egret3d {
                     }
                 }
                 else {
-                    defines.removeDefine(nameA, true);
-                    defines.removeDefine(nameB, true);
+                    defines.removeDefine(nameA);
+                    defines.removeDefine(nameB);
                 }
             }
         }
@@ -381,7 +390,7 @@ namespace egret3d {
          * 将像素复制到2D纹理图像中
          * TODO 微信上不可用
          */
-        public updateVertexAttributes(mesh: Mesh): void { }
+        public updateVertexAttributes(mesh: Mesh, subMeshIndex: uint): void { }
         /**
          * 
          */
@@ -509,7 +518,7 @@ namespace egret3d {
 
             this._gammaInput = value;
             this._updateTextureDefines(ShaderUniformName.EnvMap, this.caches.skyBoxTexture, this.defines);
-            this.onGammaInputChanged.dispatch();
+            this.onRenderStateChanged.dispatch(RenderStateChangedType.GammaInputChanged);
         }
         /**
          * 
@@ -596,6 +605,21 @@ namespace egret3d {
             this._toneMapping = value;
         }
         /**
+         * 
+         */
+        @paper.editor.property(paper.editor.EditType.CHECKBOX)
+        public get enableGPUInstancing(): boolean {
+            return this._enableGPUInstancing;
+        }
+        public set enableGPUInstancing(value: boolean) {
+            if (this._enableGPUInstancing === value) {
+                return;
+            }
+
+            this._enableGPUInstancing = value;
+            this.onRenderStateChanged.dispatch(RenderStateChangedType.EnableInstancingChanged);
+        }
+        /**
          * 是否预乘
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
@@ -610,6 +634,7 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 10.0 })
         public toneMappingWhitePoint: float = 1.0;
+
         /**
         * @deprecated
         */

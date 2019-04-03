@@ -66,6 +66,8 @@ namespace egret3d.webgl {
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
         private readonly _inverseModelViewMatrix: Matrix3 = Matrix3.create();
         //
+        private _cacheCurrentCamera: Camera | null = null;
+        //
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheScene: paper.Scene | null = null;
         private _cacheCamera: Camera | null = null;
@@ -79,9 +81,6 @@ namespace egret3d.webgl {
         private _cacheMaterialVersion: int = -1;
         //
         private _cacheLightmapIndex: int = -1;
-
-        //
-        private _backupCamera: Camera | null = null;
 
         private _compileShader(shader: gltf.Shader, defines: string) {
             const webgl = WebGLRenderState.webgl!;
@@ -187,20 +186,20 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const renderState = this._renderState;
             const { primitives, extras } = mesh.glTFMesh;
+            const primitiveExtras = primitives[subMeshIndex].extras!;
 
-            mesh.update(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer);
+            mesh.update(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer, subMeshIndex);
 
             if (renderState.vertexArrayObject !== null) {
-                webgl.bindVertexArray(extras!.vao);
+                webgl.bindVertexArray(primitiveExtras.vao);
             }
             else {
-                const primitive = primitives[subMeshIndex];
                 const vbo = extras!.vbo;
-                const ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
+                const ibo = primitiveExtras.ibo;
 
                 webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, vbo);
                 webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, ibo);
-                renderState.updateVertexAttributes(mesh);
+                renderState.updateVertexAttributes(mesh, subMeshIndex);
             }
         }
 
@@ -612,7 +611,7 @@ namespace egret3d.webgl {
                                     texture = renderState.caches.skyBoxTexture || DefaultTextures.WHITE; // TODO
                                 }
 
-                                material.setFloat(ShaderUniformName.FlipEnvMap, texture!.type === gltf.TextureType.TextureCube ? 1.0 : -1.0);
+                                material.setFloat(ShaderUniformName.FlipEnvMap, texture!.gltfTexture.extras!.type === gltf.TextureType.TextureCube ? 1.0 : -1.0);
                                 material.setFloat(ShaderUniformName.MaxMipLevel, texture!.levels);
                             }
                             else if (isInvalide) {
@@ -787,15 +786,13 @@ namespace egret3d.webgl {
                 for (const camera of cameras) {
                     const scene = camera.entity.scene;
                     const renderTarget = camera.renderTarget || camera._previewRenderTarget;
-                    if (
-                        renderTarget
-                        || (isPlayerMode ? scene !== editorScene : scene === editorScene)
-                    ) {
+                    if (renderTarget || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
                         this.render(camera, camera.overrideMaterial, renderTarget);
                     }
                 }
 
-                this._cacheProgram = null;//TODO
+                this._cacheCurrentCamera = null;
+                this._cacheProgram = null; //TODO
             }
             else { // Clear stage background to black.
                 this._renderState.clearColor = Color.BLACK;
@@ -847,15 +844,15 @@ namespace egret3d.webgl {
                 }
 
                 if (!isPostprocessing) {
-                    this._backupCamera = null;
+                    this._cacheCurrentCamera = null;
                     this._render(camera, renderTarget, material);
                 }
                 else {
                     for (const postprocessing of postprocessings) {
                         if (postprocessing.isActiveAndEnabled) {
-                            this._backupCamera = camera;
+                            this._cacheCurrentCamera = camera;
                             postprocessing.onRender(camera);
-                            this._backupCamera = null;
+                            this._cacheCurrentCamera = null;
                         }
                     }
 
@@ -866,7 +863,7 @@ namespace egret3d.webgl {
                 this._render(camera, renderTarget, material);
             }
             //
-            cameraAndLightCollecter.currentCamera = this._backupCamera;
+            cameraAndLightCollecter.currentCamera = this._cacheCurrentCamera;
         }
 
         public draw(drawCall: DrawCall, material: Material | null = null) {
@@ -927,9 +924,9 @@ namespace egret3d.webgl {
                 const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
                 // Update attributes.
                 if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
-                    if (program !== mesh.glTFMesh.extras!.program) {
-                        mesh.needUpdate(MeshNeedUpdate.VertexArray);
-                        mesh.glTFMesh.extras!.program = program;
+                    if (program !== primitive.extras!.program) {
+                        mesh.needUpdate(MeshNeedUpdate.VertexArray, subMeshIndex);
+                        primitive.extras!.program = program;
                     }
 
                     this._updateAttributes(mesh, subMeshIndex);
@@ -954,7 +951,7 @@ namespace egret3d.webgl {
                 //     }
                 // }
                 // Draw.
-                if (primitive.extras!.draw !== undefined) {
+                if (primitive.extras!.draw !== null) {
                     // TODO 需要更友好的 API 以及防止 mesh cache 的方式。
                     const { offset, count } = primitive.extras!.draw!;
 
@@ -995,12 +992,16 @@ namespace egret3d.webgl {
                         }
                     }
                 }
+                if (DEBUG) {
+                    //
+                    if (!drawCall.renderer || drawCall.renderer.gameObject.tag !== paper.DefaultTags.EditorOnly) {
+                        if (drawCall.drawCount >= 0) {
+                            drawCall.drawCount++;
+                        }
 
-                if (drawCall.drawCount >= 0) {
-                    drawCall.drawCount++;
+                        this._drawCallCollecter.drawCallCount++;
+                    }
                 }
-
-                this._drawCallCollecter.drawCallCount++;
             }
         }
     }

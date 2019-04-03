@@ -60,9 +60,13 @@ namespace egret3d {
                 }
             }
 
-            for (let i = 0; i < materialCount; ++i) { // No specified materials.
+            for (let i = 0, l = materialFilter.length; i < l; ++i) { // No specified materials.
                 if (materialFilter[i]) {
+                    materialFilter[i] = false;
                     continue;
+                }
+                else if (i >= materialCount) {
+                    break;
                 }
 
                 const material = materials[i]!;

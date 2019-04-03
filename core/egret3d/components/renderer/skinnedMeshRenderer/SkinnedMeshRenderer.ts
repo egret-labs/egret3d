@@ -1,9 +1,4 @@
 namespace egret3d {
-    const _helpVector3A = Vector3.create();
-    const _helpVector3B = Vector3.create();
-    const _helpVector3C = Vector3.create();
-    const _helpMatrix = Matrix4.create();
-
     /**
      * 蒙皮网格渲染组件。
      */
@@ -47,8 +42,14 @@ namespace egret3d {
 
         protected _getlocalBoundingBox(): Readonly<Box> | null {
             const mesh = this._mesh;
+            if (mesh !== null) {
+                this._nativeLocalBoundingBox = true;
+                // TODO
 
-            return mesh !== null ? mesh.boundingBox : null;
+                return this._localBoundingBox.applyMatrix(this.getBoundingTransform().worldToLocalMatrix, mesh.boundingBox);
+            }
+
+            return null;
         }
 
         private _skinning(vertexOffset: uint, vertexCount: uint) {
@@ -56,13 +57,13 @@ namespace egret3d {
                 const mesh = this._mesh!;
                 const boneMatrices = this.boneMatrices!;
 
-                const p0 = _helpVector3A;
-                const p1 = _helpVector3B;
-                const p2 = _helpVector3C;
+                const p0 = helpVector3E;
+                const p1 = helpVector3F;
+                const p2 = helpVector3G;
                 const vertices = mesh.getVertices()!;
                 const indices = mesh.getIndices()!;
-                const joints = mesh.getAttribute(gltf.AttributeSemantics.JOINTS_0) as Float32Array;
-                const weights = mesh.getAttribute(gltf.AttributeSemantics.WEIGHTS_0) as Float32Array;
+                const joints = mesh.getAttribute(gltf.AttributeSemantics.JOINTS_0)!;
+                const weights = mesh.getAttribute(gltf.AttributeSemantics.WEIGHTS_0)!;
 
                 if (this._skinnedVertices === null) {
                     this._skinnedVertices = new Float32Array(vertices.length);
@@ -88,7 +89,7 @@ namespace egret3d {
                             continue;
                         }
 
-                        p1.add(p2.applyMatrix(_helpMatrix.fromArray(boneMatrices, joints![jointIndex + i] * 16), p0).multiplyScalar(weight));
+                        p1.add(p2.applyMatrix(helpMatrixC.fromArray(boneMatrices, joints![jointIndex + i] * 16), p0).multiplyScalar(weight));
                     }
 
                     p1.toArray(this._skinnedVertices, vertexIndex);
@@ -118,7 +119,7 @@ namespace egret3d {
                     const offset = i * 16;
                     const bone = bones[i];
                     const matrix = bone !== null ? bone.localToWorldMatrix : Matrix4.IDENTITY;
-                    _helpMatrix.fromArray(inverseBindMatrices as any, offset).premultiply(matrix).toArray(boneMatrices, offset);
+                    helpMatrixC.fromArray(inverseBindMatrices as any, offset).premultiply(matrix).toArray(boneMatrices, offset);
                 }
 
                 if (this.boneTexture !== null) {
@@ -257,18 +258,19 @@ namespace egret3d {
         public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const mesh = this._mesh;
 
-            if (mesh === null || mesh.isDisposed || this.boneMatrices === null) {
-                return false;
-            }
+            if (mesh !== null && !mesh.isDisposed && this.boneMatrices !== null) {
+                const localRay = helpRay.applyMatrix(this.getBoundingTransform().worldToLocalMatrix, ray);
 
-            const localRay = helpRay.applyMatrix(this.getBoundingTransform().worldToLocalMatrix, ray);
+                if (
+                    this.localBoundingBox.raycast(localRay) &&
+                    mesh.raycast(ray, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0))
+                ) {
+                    if (raycastInfo !== null) {
+                        raycastInfo.transform = this.entity.getComponent(Transform);
+                    }
 
-            if (this.localBoundingBox.raycast(localRay) && mesh.raycast(ray, raycastInfo, this.forceCPUSkin ? null : this._skinning(0, 0)!)) {
-                if (raycastInfo !== null) {
-                    raycastInfo.transform = this.entity.getComponent(Transform);
+                    return true;
                 }
-
-                return true;
             }
 
             return false;
@@ -289,6 +291,7 @@ namespace egret3d {
         /**
          * 该组件的根骨骼。
          */
+        @paper.editor.property(paper.editor.EditType.COMPONENT, { componentClass: Transform })
         public get rootBone(): Transform | null {
             return this._rootBone;
         }
@@ -331,8 +334,6 @@ namespace egret3d {
 
             if (value !== null) {
                 value.retain();
-
-                this.localBoundingBox = value.boundingBox;
             }
 
             this._mesh = value;

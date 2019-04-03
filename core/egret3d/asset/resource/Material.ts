@@ -253,6 +253,15 @@ namespace egret3d {
             // isRatain ? this._shader.retain() : this._shader.release(); TODO
         }
 
+        private _renderStateChanged(type: RenderStateChangedType) {
+            if (type === RenderStateChangedType.GammaInputChanged) {
+                this._addOrRemoveTexturesDefine();
+            }
+            else if (type === RenderStateChangedType.EnableInstancingChanged) {
+                this._addOrRemoveInstancingDefine();
+            }
+        }
+
         private _addOrRemoveTexturesDefine(add: boolean = true) {
             const uniforms = this._technique!.uniforms;
             for (const k in uniforms) {
@@ -264,6 +273,11 @@ namespace egret3d {
                     renderState._updateTextureDefines(k, add ? texture : null, this.defines);
                 }
             }
+        }
+
+        private _addOrRemoveInstancingDefine() {
+            const b = this._glTFMaterial!.extensions.paper.enableGPUInstancing && renderState.enableGPUInstancing;
+            b ? this.addDefine(ShaderDefine.USE_INSTANCED) : this.removeDefine(ShaderDefine.USE_INSTANCED);
         }
         /**
          * @internal
@@ -280,7 +294,7 @@ namespace egret3d {
         public initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null) {
             super.initialize(name, config, buffers);
 
-            renderState.onGammaInputChanged.add(this._addOrRemoveTexturesDefine, this);
+            renderState.onRenderStateChanged.add(this._renderStateChanged, this);
         }
         /**
          * @internal
@@ -309,7 +323,7 @@ namespace egret3d {
          */
         public dispose() {
             if (super.dispose()) {
-                renderState.onGammaInputChanged.remove(this._addOrRemoveTexturesDefine, this);
+                renderState.onRenderStateChanged.remove(this._renderStateChanged, this);
 
                 if (this._technique !== null) {
                     this._retainOrReleaseTextures(false, false);
@@ -554,23 +568,21 @@ namespace egret3d {
             return this;
         }
         /**
-         * 为该材质添加指定的 define。
-         * @param defineString define 字符串。
+         * 为该材质添加指定的着色器宏定义。
+         * @param defineName 着色器宏定义名称。
+         * @param content 着色器宏定义值。
          */
-        public addDefine(defineString: string, value?: number | string): this {
-            this.defines.addDefine(defineString, value);
+        public addDefine(defineName: string, content: number | string = ""): this {
+            this.defines.addDefine(defineName, content);
 
             return this;
         }
         /**
-         * 从该材质移除指定的 define。
-         * @param defineString define 字符串。
+         * 从该材质移除指定的着色器宏定义。
+         * @param defineName 着色器宏定义名称。
          */
-        public removeDefine(defineString: string, value?: number | string): this {
-            // if (value !== undefined) {
-            //     defineString += " " + value;
-            // }
-            this.defines.removeDefine(defineString);
+        public removeDefine(defineName: string): this {
+            this.defines.removeDefine(defineName);
 
             return this;
         }
@@ -583,6 +595,7 @@ namespace egret3d {
          */
         public setBlend(blend: BlendMode, renderQueue: RenderQueue, opacity?: number): this;
         /**
+         * 设置该材质的自定义混合模式。
          * @param blendEquations BlendEquation。
          * @param blendFactors BlendFactor。
          * @param renderQueue 渲染顺序。
@@ -1011,10 +1024,10 @@ namespace egret3d {
             if (this._glTFMaterial!.extensions.paper.enableGPUInstancing !== value) {
                 this._glTFMaterial!.extensions.paper.enableGPUInstancing = value;
 
-                value ? this.addDefine(ShaderDefine.USE_INSTANCED) : this.removeDefine(ShaderDefine.USE_INSTANCED);
+                this._addOrRemoveInstancingDefine();
             }
         }
-        public test:string = "";
+        public test: string = "";
         /**
          * 该材质的 shader。
          */

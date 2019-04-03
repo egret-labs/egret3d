@@ -1,4 +1,5 @@
 namespace egret3d.webgl {
+    
     const _browserPrefixes = [
         "",
         "MOZ_",
@@ -60,8 +61,9 @@ namespace egret3d.webgl {
      */
     export interface WebGLEXTRenderingContext {
         createVertexArray(): any;
-        bindVertexArray(vao?: WebGLVertexArrayObject | null): void;
+        bindVertexArray(vao: WebGLVertexArrayObject | null): void;
         deleteVertexArray(vao: WebGLVertexArrayObject): void;
+
         drawArraysInstanced(mode: GLenum, first: GLint, count: GLsizei, primcount: GLsizei): void;
         drawElementsInstanced(mode: GLenum, count: GLsizei, type: GLenum, offset: GLintptr, primcount: GLsizei): void;
         vertexAttribDivisor(index: GLuint, divisor: GLuint): void;
@@ -144,18 +146,19 @@ namespace egret3d.webgl {
             this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
             this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
             this.vertexArrayObject = null;
-            // _getExtension(webgl, "OES_vertex_array_object");
+            // this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
             this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
             this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
             this.instancedArrays = _getExtension(webgl, "ANGLE_instanced_arrays");
             //
             this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
-            this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
+            this.maxVertexAttributes = webgl.getParameter(webgl.MAX_VERTEX_ATTRIBS);
+            this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
             this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+            this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
             this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
             this.maxCubemapSize = webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE);
             this.maxRenderBufferize = webgl.getParameter(webgl.MAX_RENDERBUFFER_SIZE);
-            this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
             this.maxBoneCount = this.textureFloatEnabled ? 1024 : Math.floor((this.maxVertexUniformVectors - 20) / 4);
             this.maxAnisotropy = (this.textureFilterAnisotropic !== null) ? webgl.getParameter(this.textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
             //
@@ -169,15 +172,16 @@ namespace egret3d.webgl {
             console.info("Frag depth enabled:", this.fragDepthEnabled);
             console.info("Texture filter anisotropic:", this.textureFilterAnisotropic);
             console.info("Shader texture LOD:", this.shaderTextureLOD);
-            console.info("ANGLE_instanced_arrays:", this.instancedArrays);
+            console.info("Instanced arrays:", this.instancedArrays);
             //
             console.info("Maximum shader precision:", this.maxPrecision);
-            console.info("Maximum texture count:", this.maxTextures);
+            console.info("Maximum vertex attribute count:", this.maxVertexAttributes);
+            console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
             console.info("Maximum vertex texture count:", this.maxVertexTextures);
+            console.info("Maximum texture count:", this.maxTextures);
             console.info("Maximum texture size:", this.maxTextureSize);
             console.info("Maximum cube map texture size:", this.maxCubemapSize);
             console.info("Maximum render buffer size:", this.maxRenderBufferize);
-            console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
             console.info("Maximum GPU skinned bone count:", this.maxBoneCount);
             console.info("Maximum anisotropy:", this.maxAnisotropy);
         }
@@ -196,21 +200,20 @@ namespace egret3d.webgl {
 
             if (bufferBit & gltf.BufferMask.Color) {
                 const clearColor = this._clearColor;
-                clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);//TODO
+                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);//TODO
             }
 
             webgl.clear(bufferBit);
         }
 
-        public updateVertexAttributes(mesh: Mesh) {
+        public updateVertexAttributes(mesh: Mesh, subMeshIndex: uint) {
             const webgl = WebGLRenderState.webgl!;
             const { caches } = this;
-            const attributes = mesh.attributes;
-            const attributeOffsets = mesh.glTFMesh.extras!.attributeOffsets;
-
+            const { glTFMesh, attributes } = mesh;
+            const attributeOffsets = glTFMesh.extras!.attributeOffsets;
             let attributeCount = 0;
             // +++---...|xxx
-            for (const attribute of (mesh.glTFMesh.extras!.program as WebGLProgramBinder).attributes) {
+            for (const attribute of (glTFMesh.primitives[subMeshIndex].extras!.program as WebGLProgramBinder).attributes) {
                 const { location, semantic } = attribute;
 
                 if (semantic in attributes) {
@@ -265,7 +268,7 @@ namespace egret3d.webgl {
         public copyFramebufferToTexture(screenPostion: Vector2, target: BaseTexture, level: number = 0) {
             const webgl = WebGLRenderState.webgl!;
             target.bindTexture(0);
-            webgl.copyTexImage2D(target.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
+            webgl.copyTexImage2D(target.gltfTexture.extras!.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
         }
 
         public updateState(state: gltf.States | null) {

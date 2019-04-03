@@ -18,9 +18,9 @@ namespace examples {
 
             const mesh = egret3d.DefaultMeshes.CUBE.clone();
             const material = egret3d.DefaultMaterials.MESH_BASIC.clone();
-            material.renderQueue;
+            // material.addDefine(egret3d.ShaderDefine.USE_COLOR);
             material.enableGPUInstancing = true;
-            for (let i = 0; i < 1; i++) {
+            for (let i = 0; i < 5; i++) {
                 const instance = egret3d.creater.createGameObject(`instance_${i}`, { mesh, material });
                 instance.transform.translate(Math.random() * 2 - 1, Math.random() * 2 - 1, Math.random() * 2 - 1);
             }

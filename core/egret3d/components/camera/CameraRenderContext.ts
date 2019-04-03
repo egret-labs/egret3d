@@ -652,7 +652,9 @@ namespace egret3d {
             }
             else {
                 this._frustumCulling();
-                this._combine(this.opaqueCalls);
+                if(renderState.enableGPUInstancing){
+                    this._combine(this.opaqueCalls);
+                }                
                 this._updateLights();
             }
         }

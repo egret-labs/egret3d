@@ -20,6 +20,7 @@
     },
     "files": [
         "libs/signals/signals.d.ts",
+        "libs/fixed.d.ts",
         "libs/egret.d.ts",
         "libs/resourcemanager.d.ts",
         "libs/webgl2.d.ts",

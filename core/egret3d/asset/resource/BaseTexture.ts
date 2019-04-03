@@ -132,14 +132,10 @@ namespace egret3d {
 
             return config;
         }
-
-        public type: gltf.TextureType = gltf.TextureType.Texture2D;
-
-        protected _needUpdate: uint = TextureNeedUpdate.All;
         /**
-         * 当源 levels 为 0 时，需要计算真实的 levels 值。
+         * 缓存的更新标记。
          */
-        protected _levels: uint = 0;
+        protected _needUpdate: uint = TextureNeedUpdate.All;
         /**
          * 缓存的 glTF Texture 。
          */
@@ -209,6 +205,8 @@ namespace egret3d {
             const gltfTexture = this._glTFTexture = this.config.textures![0] as GLTFTexture;
             this._image = this.config.images![gltfTexture.source!];
             this._sampler = this.config.samplers![gltfTexture.sampler!];
+            gltfTexture.extras = { type: gltf.TextureType.Texture2D, levels: 0 };
+
             this._formatLevelsAndSampler();
         }
         /**
@@ -216,10 +214,7 @@ namespace egret3d {
          */
         public dispose() {
             if (super.dispose()) {
-                this.type = gltf.TextureType.Texture2D;
-
                 this._needUpdate = TextureNeedUpdate.All;
-                this._levels = 0;
                 this._glTFTexture = null;
                 this._image = null;
                 this._sampler = null;
@@ -234,7 +229,7 @@ namespace egret3d {
             this._needUpdate |= mask;
 
             if ((mask & TextureNeedUpdate.Levels) !== 0) {
-                this._levels = 0;
+                this._glTFTexture!.extras!.levels = 0;
             }
         }
 
@@ -311,17 +306,19 @@ namespace egret3d {
          * 
          */
         public get levels(): uint {
-            if (this._levels > 0) {
-                return this._levels;
+            const { extensions, extras } = this._glTFTexture!;
+
+            if (extras!.levels > 0) {
+                return extras!.levels;
             }
 
-            const { levels, width, height } = this._glTFTexture!.extensions.paper;
+            const { levels, width, height } = extensions.paper;
 
             if (levels === undefined) {
                 return 1.0;
             }
             else if (levels === 0) {
-                return this._levels = Math.log(Math.max(width!, height!)) * Math.LOG2E;
+                return extras!.levels = Math.log(Math.max(width!, height!)) * Math.LOG2E;
             }
 
             return levels;
