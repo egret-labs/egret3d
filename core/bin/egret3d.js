@@ -1,3 +1,436 @@
+// "use strict"; TODO
+/*jslint onevar:true, undef:true, newcap:true, regexp:true, bitwise:true, maxerr:50, indent:4, white:false, nomen:false, plusplus:false */
+/*global define:false, require:false, exports:false, module:false, signals:false */
+
+/** @license
+ * JS Signals <http://millermedeiros.github.com/js-signals/>
+ * Released under the MIT license
+ * Author: Miller Medeiros
+ * Version: 1.0.0 - Build: 268 (2012/11/29 05:48 PM)
+ */
+
+(function (global) {
+
+    // SignalBinding -------------------------------------------------
+    //================================================================
+
+    /**
+     * Object that represents a binding between a Signal and a listener function.
+     * <br />- <strong>This is an internal constructor and shouldn't be called by regular users.</strong>
+     * <br />- inspired by Joa Ebert AS3 SignalBinding and Robert Penner's Slot classes.
+     * @author Miller Medeiros
+     * @constructor
+     * @internal
+     * @name SignalBinding
+     * @param {Signal} signal Reference to Signal object that listener is currently bound to.
+     * @param {Function} listener Handler function bound to the signal.
+     * @param {boolean} isOnce If binding should be executed just once.
+     * @param {Object} [listenerContext] Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+     * @param {Number} [priority] The priority level of the event listener. (default = 0).
+     */
+    function SignalBinding(signal, listener, isOnce, listenerContext, priority) {
+
+        /**
+         * Handler function bound to the signal.
+         * @type Function
+         * @private
+         */
+        this._listener = listener;
+
+        /**
+         * If binding should be executed just once.
+         * @type boolean
+         * @private
+         */
+        this._isOnce = isOnce;
+
+        /**
+         * Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @memberOf SignalBinding.prototype
+         * @name context
+         * @type Object|undefined|null
+         */
+        this.context = listenerContext;
+
+        /**
+         * Reference to Signal object that listener is currently bound to.
+         * @type Signal
+         * @private
+         */
+        this._signal = signal;
+
+        /**
+         * Listener priority
+         * @type Number
+         * @private
+         */
+        this._priority = priority || 0;
+    }
+
+    SignalBinding.prototype = {
+
+        /**
+         * If binding is active and should be executed.
+         * @type boolean
+         */
+        active: true,
+
+        /**
+         * Default parameters passed to listener during `Signal.dispatch` and `SignalBinding.execute`. (curried parameters)
+         * @type Array|null
+         */
+        params: null,
+
+        /**
+         * Call listener passing arbitrary parameters.
+         * <p>If binding was added using `Signal.addOnce()` it will be automatically removed from signal dispatch queue, this method is used internally for the signal dispatch.</p>
+         * @param {Array} [paramsArr] Array of parameters that should be passed to the listener
+         * @return {*} Value returned by the listener.
+         */
+        execute: function (paramsArr) {
+            var handlerReturn, params;
+            if (this.active && !!this._listener) {
+                params = this.params ? this.params.concat(paramsArr) : paramsArr;
+                handlerReturn = this._listener.apply(this.context, params);
+                if (this._isOnce) {
+                    this.detach();
+                }
+            }
+            return handlerReturn;
+        },
+
+        /**
+         * Detach binding from signal.
+         * - alias to: mySignal.remove(myBinding.getListener());
+         * @return {Function|null} Handler function bound to the signal or `null` if binding was previously detached.
+         */
+        detach: function () {
+            return this.isBound() ? this._signal.remove(this._listener, this.context) : null;
+        },
+
+        /**
+         * @return {Boolean} `true` if binding is still bound to the signal and have a listener.
+         */
+        isBound: function () {
+            return (!!this._signal && !!this._listener);
+        },
+
+        /**
+         * @return {boolean} If SignalBinding will only be executed once.
+         */
+        isOnce: function () {
+            return this._isOnce;
+        },
+
+        /**
+         * @return {Function} Handler function bound to the signal.
+         */
+        getListener: function () {
+            return this._listener;
+        },
+
+        /**
+         * @return {Signal} Signal that listener is currently bound to.
+         */
+        getSignal: function () {
+            return this._signal;
+        },
+
+        /**
+         * Delete instance properties
+         * @private
+         */
+        _destroy: function () {
+            delete this._signal;
+            delete this._listener;
+            delete this.context;
+        },
+
+        /**
+         * @return {string} String representation of the object.
+         */
+        toString: function () {
+            return '[SignalBinding isOnce:' + this._isOnce + ', isBound:' + this.isBound() + ', active:' + this.active + ']';
+        }
+
+    };
+
+
+    /*global SignalBinding:false*/
+
+    // Signal --------------------------------------------------------
+    //================================================================
+
+    function validateListener(listener, fnName) {
+        if (typeof listener !== 'function') {
+            throw new Error('listener is a required param of {fn}() and should be a Function.'.replace('{fn}', fnName));
+        }
+    }
+
+    /**
+     * Custom event broadcaster
+     * <br />- inspired by Robert Penner's AS3 Signals.
+     * @name Signal
+     * @author Miller Medeiros
+     * @constructor
+     */
+    function Signal() {
+        /**
+         * @type Array.<SignalBinding>
+         * @private
+         */
+        this._bindings = [];
+        this._prevParams = null;
+
+        // enforce dispatch to aways work on same context (#47)
+        var self = this;
+        this.dispatch = function () {
+            Signal.prototype.dispatch.apply(self, arguments);
+        };
+    }
+
+    Signal.prototype = {
+
+        /**
+         * Signals Version Number
+         * @type String
+         * @const
+         */
+        VERSION: '1.0.0',
+
+        /**
+         * If Signal should keep record of previously dispatched parameters and
+         * automatically execute listener during `add()`/`addOnce()` if Signal was
+         * already dispatched before.
+         * @type boolean
+         */
+        memorize: false,
+
+        /**
+         * @type boolean
+         * @private
+         */
+        _shouldPropagate: true,
+
+        /**
+         * If Signal is active and should broadcast events.
+         * <p><strong>IMPORTANT:</strong> Setting this property during a dispatch will only affect the next dispatch, if you want to stop the propagation of a signal use `halt()` instead.</p>
+         * @type boolean
+         */
+        active: true,
+
+        /**
+         * @param {Function} listener
+         * @param {boolean} isOnce
+         * @param {Object} [listenerContext]
+         * @param {Number} [priority]
+         * @return {SignalBinding}
+         * @private
+         */
+        _registerListener: function (listener, isOnce, listenerContext, priority) {
+
+            var prevIndex = this._indexOfListener(listener, listenerContext),
+                binding;
+
+            if (prevIndex !== -1) {
+                binding = this._bindings[prevIndex];
+                if (binding.isOnce() !== isOnce) {
+                    throw new Error('You cannot add' + (isOnce ? '' : 'Once') + '() then add' + (!isOnce ? '' : 'Once') + '() the same listener without removing the relationship first.');
+                }
+            } else {
+                binding = new SignalBinding(this, listener, isOnce, listenerContext, priority);
+                this._addBinding(binding);
+            }
+
+            if (this.memorize && this._prevParams) {
+                binding.execute(this._prevParams);
+            }
+
+            return binding;
+        },
+
+        /**
+         * @param {SignalBinding} binding
+         * @private
+         */
+        _addBinding: function (binding) {
+            //simplified insertion sort
+            var n = this._bindings.length;
+            do { --n; } while (this._bindings[n] && binding._priority <= this._bindings[n]._priority);
+            this._bindings.splice(n + 1, 0, binding);
+        },
+
+        /**
+         * @param {Function} listener
+         * @return {number}
+         * @private
+         */
+        _indexOfListener: function (listener, context) {
+            var n = this._bindings.length,
+                cur;
+            while (n--) {
+                cur = this._bindings[n];
+                if (cur._listener === listener && cur.context === context) {
+                    return n;
+                }
+            }
+            return -1;
+        },
+
+        /**
+         * Check if listener was attached to Signal.
+         * @param {Function} listener
+         * @param {Object} [context]
+         * @return {boolean} if Signal has the specified listener.
+         */
+        has: function (listener, context) {
+            return this._indexOfListener(listener, context) !== -1;
+        },
+
+        /**
+         * Add a listener to the signal.
+         * @param {Function} listener Signal handler function.
+         * @param {Object} [listenerContext] Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param {Number} [priority] The priority level of the event listener. Listeners with higher priority will be executed before listeners with lower priority. Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         * @return {SignalBinding} An Object representing the binding between the Signal and listener.
+         */
+        add: function (listener, listenerContext, priority) {
+            validateListener(listener, 'add');
+            return this._registerListener(listener, false, listenerContext, priority);
+        },
+
+        /**
+         * Add listener to the signal that should be removed after first execution (will be executed only once).
+         * @param {Function} listener Signal handler function.
+         * @param {Object} [listenerContext] Context on which listener will be executed (object that should represent the `this` variable inside listener function).
+         * @param {Number} [priority] The priority level of the event listener. Listeners with higher priority will be executed before listeners with lower priority. Listeners with same priority level will be executed at the same order as they were added. (default = 0)
+         * @return {SignalBinding} An Object representing the binding between the Signal and listener.
+         */
+        addOnce: function (listener, listenerContext, priority) {
+            validateListener(listener, 'addOnce');
+            return this._registerListener(listener, true, listenerContext, priority);
+        },
+
+        /**
+         * Remove a single listener from the dispatch queue.
+         * @param {Function} listener Handler function that should be removed.
+         * @param {Object} [context] Execution context (since you can add the same handler multiple times if executing in a different context).
+         * @return {Function} Listener handler function.
+         */
+        remove: function (listener, context) {
+            validateListener(listener, 'remove');
+
+            var i = this._indexOfListener(listener, context);
+            if (i !== -1) {
+                this._bindings[i]._destroy(); //no reason to a SignalBinding exist if it isn't attached to a signal
+                this._bindings.splice(i, 1);
+            }
+            return listener;
+        },
+
+        /**
+         * Remove all listeners from the Signal.
+         */
+        removeAll: function () {
+            var n = this._bindings.length;
+            while (n--) {
+                this._bindings[n]._destroy();
+            }
+            this._bindings.length = 0;
+        },
+
+        /**
+         * @return {number} Number of listeners attached to the Signal.
+         */
+        getNumListeners: function () {
+            return this._bindings.length;
+        },
+
+        /**
+         * Stop propagation of the event, blocking the dispatch to next listeners on the queue.
+         * <p><strong>IMPORTANT:</strong> should be called only during signal dispatch, calling it before/after dispatch won't affect signal broadcast.</p>
+         * @see Signal.prototype.disable
+         */
+        halt: function () {
+            this._shouldPropagate = false;
+        },
+
+        /**
+         * Dispatch/Broadcast Signal to all listeners added to the queue.
+         * @param {...*} [params] Parameters that should be passed to each handler.
+         */
+        dispatch: function (params) {
+            if (!this.active) {
+                return;
+            }
+
+            var paramsArr = Array.prototype.slice.call(arguments),
+                n = this._bindings.length,
+                bindings;
+
+            if (this.memorize) {
+                this._prevParams = paramsArr;
+            }
+
+            if (!n) {
+                //should come after memorize
+                return;
+            }
+
+            bindings = this._bindings.slice(); //clone array in case add/remove items during dispatch
+            this._shouldPropagate = true; //in case `halt` was called before dispatch or during the previous dispatch.
+
+            //execute all callbacks until end of the list or until a callback returns `false` or stops propagation
+            //reverse loop since listeners with higher priority will be added at the end of the list
+            do { n--; } while (bindings[n] && this._shouldPropagate && bindings[n].execute(paramsArr) !== false);
+        },
+
+        /**
+         * Forget memorized arguments.
+         * @see Signal.memorize
+         */
+        forget: function () {
+            this._prevParams = null;
+        },
+
+        /**
+         * Remove all bindings from signal and destroy any reference to external objects (destroy Signal object).
+         * <p><strong>IMPORTANT:</strong> calling any method on the signal instance after calling dispose will throw errors.</p>
+         */
+        dispose: function () {
+            this.removeAll();
+            delete this._bindings;
+            delete this._prevParams;
+        },
+
+        /**
+         * @return {string} String representation of the object.
+         */
+        toString: function () {
+            return '[Signal active:' + this.active + ' numListeners:' + this.getNumListeners() + ']';
+        }
+
+    };
+
+
+    // Namespace -----------------------------------------------------
+    //================================================================
+
+    /**
+     * Signals namespace
+     * @namespace
+     * @name signals
+     */
+    var signals = Signal;
+
+    /**
+     * Custom event broadcaster
+     * @see Signal
+     */
+    // alias for backwards compatibility (see #gh-44)
+    signals.Signal = Signal;
+    global['signals'] = signals
+}(window));
 "use strict";
 var __reflect = (this && this.__reflect) || function (p, c, t) {
     p.__class__ = c, t ? t.push(c) : t = [c], p.__types__ = p.__types__ ? t.concat(p.__types__) : t;
@@ -5991,7 +6424,7 @@ var egret3d;
                     }
                 }
                 else {
-                    defines.removeDefine(decodingFunName, true);
+                    defines.removeDefine(decodingFunName);
                 }
             }
             //
@@ -6028,8 +6461,8 @@ var egret3d;
                     }
                 }
                 else {
-                    defines.removeDefine(nameA, true);
-                    defines.removeDefine(nameB, true);
+                    defines.removeDefine(nameA);
+                    defines.removeDefine(nameB);
                 }
             }
         };
@@ -6081,7 +6514,7 @@ var egret3d;
          * 将像素复制到2D纹理图像中
          * TODO 微信上不可用
          */
-        RenderState.prototype.updateVertexAttributes = function (mesh) { };
+        RenderState.prototype.updateVertexAttributes = function (mesh, subMeshIndex) { };
         /**
          *
          */
@@ -7038,12 +7471,10 @@ var egret3d;
         __extends(BaseTexture, _super);
         function BaseTexture() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
-            _this.type = 3553 /* Texture2D */;
-            _this._needUpdate = 273 /* All */;
             /**
-             * 当源 levels 为 0 时，需要计算真实的 levels 值。
+             * 缓存的更新标记。
              */
-            _this._levels = 0;
+            _this._needUpdate = 273 /* All */;
             /**
              * 缓存的 glTF Texture 。
              */
@@ -7195,6 +7626,7 @@ var egret3d;
             var gltfTexture = this._glTFTexture = this.config.textures[0];
             this._image = this.config.images[gltfTexture.source];
             this._sampler = this.config.samplers[gltfTexture.sampler];
+            gltfTexture.extras = { type: 3553 /* Texture2D */, levels: 0 };
             this._formatLevelsAndSampler();
         };
         /**
@@ -7202,9 +7634,7 @@ var egret3d;
          */
         BaseTexture.prototype.dispose = function () {
             if (_super.prototype.dispose.call(this)) {
-                this.type = 3553 /* Texture2D */;
                 this._needUpdate = 273 /* All */;
-                this._levels = 0;
                 this._glTFTexture = null;
                 this._image = null;
                 this._sampler = null;
@@ -7215,7 +7645,7 @@ var egret3d;
         BaseTexture.prototype.needUpdate = function (mask) {
             this._needUpdate |= mask;
             if ((mask & 256 /* Levels */) !== 0) {
-                this._levels = 0;
+                this._glTFTexture.extras.levels = 0;
             }
         };
         BaseTexture.prototype.update = function (mask) {
@@ -7282,15 +7712,16 @@ var egret3d;
              *
              */
             get: function () {
-                if (this._levels > 0) {
-                    return this._levels;
+                var _a = this._glTFTexture, extensions = _a.extensions, extras = _a.extras;
+                if (extras.levels > 0) {
+                    return extras.levels;
                 }
-                var _a = this._glTFTexture.extensions.paper, levels = _a.levels, width = _a.width, height = _a.height;
+                var _b = extensions.paper, levels = _b.levels, width = _b.width, height = _b.height;
                 if (levels === undefined) {
                     return 1.0;
                 }
                 else if (levels === 0) {
-                    return this._levels = Math.log(Math.max(width, height)) * Math.LOG2E;
+                    return extras.levels = Math.log(Math.max(width, height)) * Math.LOG2E;
                 }
                 return levels;
             },
@@ -10533,11 +10964,12 @@ var egret3d;
             return texture;
         };
         /**
-         *
+         * 创建一个纯色的纹理资源。
          */
-        Texture.createColorTexture = function (name, r, g, b) {
+        Texture.createColorTexture = function (name, r, g, b, a) {
+            if (a === void 0) { a = 255; }
             var texture = Texture.create({
-                name: name, source: new Uint8Array([r, g, b, 255]), width: 1, height: 1,
+                name: name, source: new Uint8Array([r, g, b, a]), width: 1, height: 1,
                 sampler: {
                     wrapS: 33071 /* ClampToEdge */, wrapT: 33071 /* ClampToEdge */,
                     magFilter: 9729 /* Linear */, minFilter: 9729 /* Linear */
@@ -10570,8 +11002,8 @@ var egret3d;
             return texture;
         };
         /**
-         *
-         * @param source
+         * 重新设置该纹理资源的源数据。
+         * @param source 源数据。
          */
         Texture.prototype.setSource = function (source) {
             if (source === void 0) { source = null; }
@@ -10616,7 +11048,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 渲染纹理。
+     * 渲染纹理资源。
      */
     var RenderTexture = (function (_super) {
         __extends(RenderTexture, _super);
@@ -10640,14 +11072,13 @@ var egret3d;
             return renderTexture;
         };
         /**
-         * @internal
-         * @param index
+         * 激活该纹理资源。
          */
         RenderTexture.prototype.activateTexture = function () {
             return this;
         };
         /**
-         *
+         * 重新设置该纹理资源的尺寸。
          */
         RenderTexture.prototype.setSize = function (width, height) {
             var extension = this._glTFTexture.extensions.paper;
@@ -10676,7 +11107,7 @@ var egret3d;
         MeshNeedUpdate[MeshNeedUpdate["All"] = 31] = "All";
         MeshNeedUpdate[MeshNeedUpdate["None"] = 0] = "None";
     })(MeshNeedUpdate = egret3d.MeshNeedUpdate || (egret3d.MeshNeedUpdate = {}));
-    //TODO 运行时DrawCall排序优化使用
+    // TODO 运行时DrawCall排序优化使用
     var _hashCode = 0;
     var _helpRaycastInfo = egret3d.RaycastInfo.create();
     var _attributeNames = [
@@ -10700,30 +11131,9 @@ var egret3d;
              */
             _this._needUpdate = 31 /* All */;
             /**
-             * 缓存的绘制类型。
-             */
-            _this._drawMode = 35044 /* Static */;
-            /**
-             * 缓存的顶点数量。
-             * - 用于快速访问。
-             * - 如果没有顶点属性（全是自定义属性），则表示第一个自定义属性的数量。
-             */
-            _this._vertexCount = 0;
-            /**
-             * 缓存的线框索引。
-             * - `-1` 为未添加线框。
-             * - 仅允许添加一个线框。
-             */
-            _this._wireframeIndex = -1;
-            /**
              * 缓存的顶点包围盒。
              */
             _this._boundingBox = egret3d.Box.create();
-            /**
-             * 缓存的自定义属性的类型。
-             * - 为 clone 提供数据源。
-             */
-            _this._attributeTypes = {};
             /**
              * 缓存的 glTF 网格。
              * - 用于快速访问。
@@ -10749,6 +11159,16 @@ var egret3d;
             _this._id = _hashCode++;
             return _this;
         }
+        Mesh._createConfig = function () {
+            var config = this.createConfig();
+            config.buffers = [];
+            config.bufferViews = [];
+            config.accessors = [];
+            config.meshes = [{
+                    primitives: [{ attributes: {}, material: 0 }],
+                }];
+            return config;
+        };
         Mesh.create = function (vertexCountOrName, indexCountOrConfig, attributeNamesOrBuffers) {
             if (indexCountOrConfig === void 0) { indexCountOrConfig = 0; }
             if (attributeNamesOrBuffers === void 0) { attributeNamesOrBuffers = null; }
@@ -10757,8 +11177,7 @@ var egret3d;
             if (typeof vertexCountOrName === "number") {
                 var indexCount = indexCountOrConfig;
                 var attributes = attributeNamesOrBuffers !== null ? attributeNamesOrBuffers : _attributeNames;
-                mesh._vertexCount = vertexCountOrName; // TODO 完善标记为非加载资源。
-                mesh.initialize("", this._createConfig(), null);
+                mesh.initialize("", this._createConfig(), null, vertexCountOrName);
                 // Add attributes.
                 if (Array.isArray(attributes)) {
                     for (var _i = 0, attributes_1 = attributes; _i < attributes_1.length; _i++) {
@@ -10784,16 +11203,6 @@ var egret3d;
                 mesh.initialize(vertexCountOrName, indexCountOrConfig, attributeNamesOrBuffers);
             }
             return mesh;
-        };
-        Mesh._createConfig = function () {
-            var config = this.createConfig();
-            config.buffers = [];
-            config.bufferViews = [];
-            config.accessors = [];
-            config.meshes = [{
-                    primitives: [{ attributes: {}, material: 0 }],
-                }];
-            return config;
         };
         Mesh.prototype._removeBufferByAccessor = function (accessorIndex) {
             var _a = this.config, buffers = _a.buffers, bufferViews = _a.bufferViews, accessors = _a.accessors;
@@ -10838,17 +11247,24 @@ var egret3d;
         /**
          * @internal
          */
-        Mesh.prototype.initialize = function (name, config, buffers) {
+        Mesh.prototype.initialize = function (name, config, buffers, vertexCount) {
+            if (vertexCount === void 0) { vertexCount = 0; }
             _super.prototype.initialize.call(this, name, config, buffers);
             var glTFMesh = this._glTFMesh = config.meshes[0];
             var attributes = this._attributes = glTFMesh.primitives[0].attributes;
-            glTFMesh.extras = { attributeOffsets: {}, vbo: null };
-            if (this._vertexCount === 0) {
-                this._vertexCount = this.getAccessor(attributes.POSITION !== undefined ? attributes.POSITION : 0).count;
-                var attributeOffsets = glTFMesh.extras.attributeOffsets;
+            glTFMesh.extras = {
+                drawMode: 35044 /* Static */,
+                vertexCount: vertexCount,
+                wireframeIndex: -1,
+                attributeTypes: {},
+                attributeOffsets: {},
+                vbo: null
+            };
+            if (vertexCount === 0) {
+                glTFMesh.extras.vertexCount = this.getAccessor(attributes.POSITION !== undefined ? attributes.POSITION : 0).count;
                 var bufferOffset = 0;
                 for (var k in attributes) {
-                    attributeOffsets[k] = bufferOffset;
+                    glTFMesh.extras.attributeOffsets[k] = bufferOffset;
                     bufferOffset += this.getAccessorByteLength(this.getAccessor(attributes[k]));
                 }
             }
@@ -10863,15 +11279,8 @@ var egret3d;
          */
         Mesh.prototype.dispose = function () {
             if (_super.prototype.dispose.call(this)) {
-                for (var k in this._attributeTypes) {
-                    delete this._attributeTypes[k];
-                }
                 this._needUpdate = 31 /* All */;
-                this._drawMode = 35044 /* Static */;
-                this._vertexCount = 0;
-                this._wireframeIndex = -1;
                 this._boundingBox.clear();
-                this._attributeTypes;
                 this._glTFMesh = null;
                 this._attributes = null;
                 this._inverseBindMatrices = null;
@@ -10884,7 +11293,8 @@ var egret3d;
          * 克隆该网格。
          */
         Mesh.prototype.clone = function () {
-            var attributeTypes = this._attributeTypes;
+            var glTFMesh = this._glTFMesh;
+            var _a = glTFMesh.extras, wireframeIndex = _a.wireframeIndex, attributeTypes = _a.attributeTypes;
             var attributesNameAndTypes = {};
             for (var k in this._attributes) {
                 if (k in attributeTypes) {
@@ -10895,12 +11305,11 @@ var egret3d;
                 }
             }
             // Clone mesh.
-            var value = Mesh.create(this._vertexCount, 0, attributesNameAndTypes);
-            value._drawMode = this._drawMode;
-            value._wireframeIndex = this._wireframeIndex;
+            var value = Mesh.create(this.vertexCount, 0, attributesNameAndTypes);
+            value.glTFMesh.extras.wireframeIndex = wireframeIndex;
             // Copy subMeshes.
-            for (var _i = 0, _a = this._glTFMesh.primitives; _i < _a.length; _i++) {
-                var primitive = _a[_i];
+            for (var _i = 0, _b = glTFMesh.primitives; _i < _b.length; _i++) {
+                var primitive = _b[_i];
                 if (primitive.indices !== undefined) {
                     var accessor = this.getAccessor(primitive.indices);
                     value.addSubMesh(accessor.count, primitive.material, primitive.mode);
@@ -10908,8 +11317,8 @@ var egret3d;
             }
             // Copy buffviews.
             var bufferViewIndex = 0;
-            for (var _b = 0, _c = this.config.bufferViews; _b < _c.length; _b++) {
-                var bufferViewSource = _c[_b];
+            for (var _c = 0, _d = this.config.bufferViews; _c < _d.length; _c++) {
+                var bufferViewSource = _d[_c];
                 var bufferViewTarget = value.config.bufferViews[bufferViewIndex++];
                 var source = this.createTypeArrayFromBufferView(bufferViewSource, 5125 /* UnsignedInt */);
                 var target = value.createTypeArrayFromBufferView(bufferViewTarget, 5125 /* UnsignedInt */);
@@ -11156,17 +11565,18 @@ var egret3d;
          * @param attributeName
          * @param attributeType
          */
-        Mesh.prototype.addAttribute = function (attributeName, attributeType, vertexCount, divisor) {
-            if (vertexCount === void 0) { vertexCount = 0; }
+        Mesh.prototype.addAttribute = function (attributeName, attributeType, attributeVertexCount, divisor) {
+            if (attributeVertexCount === void 0) { attributeVertexCount = 0; }
             if (divisor === void 0) { divisor = 0; }
-            if (vertexCount <= 0) {
-                vertexCount = this._vertexCount;
-            }
             var attributes = this._attributes;
             if (!(attributeName in attributes)) {
-                var _a = this.config, buffers = _a.buffers, bufferViews = _a.bufferViews, accessors = _a.accessors;
+                var _a = this._glTFMesh.extras, vertexCount = _a.vertexCount, attributeTypes = _a.attributeTypes, attributeOffsets = _a.attributeOffsets;
+                if (attributeVertexCount <= 0) {
+                    attributeVertexCount = vertexCount;
+                }
+                var _b = this.config, buffers = _b.buffers, bufferViews = _b.bufferViews, accessors = _b.accessors;
                 var typeCount = egret3d.GLTFAsset.getAccessorTypeCount(attributeType);
-                var viewLength = vertexCount * typeCount;
+                var viewLength = attributeVertexCount * typeCount;
                 var byteLength = viewLength * Float32Array.BYTES_PER_ELEMENT;
                 var bufferIndex = buffers.length;
                 var bufferViewIndex = bufferViews.length;
@@ -11176,12 +11586,11 @@ var egret3d;
                 bufferViews[bufferViewIndex] = { buffer: bufferIndex, byteLength: byteLength, target: 34962 /* ArrayBuffer */ };
                 accessors[accessorIndex] = {
                     bufferView: bufferViewIndex,
-                    count: vertexCount, componentType: 5126 /* Float */, type: attributeType,
+                    count: attributeVertexCount, componentType: 5126 /* Float */, type: attributeType,
                     normalized: attributeName === "NORMAL" /* NORMAL */ || attributeName === "TANGENT" /* TANGENT */,
                     extras: { typeCount: typeCount, divisor: divisor }
                 };
                 //
-                var attributeOffsets = this._glTFMesh.extras.attributeOffsets;
                 var bufferOffset = 0;
                 for (var k in attributes) {
                     bufferOffset += this.getAccessorByteLength(this.getAccessor(attributes[k]));
@@ -11190,7 +11599,7 @@ var egret3d;
                 attributeOffsets[attributeName] = bufferOffset;
                 // 收集自定义属性的类型。
                 if (egret3d.GLTFAsset.getMeshAttributeType(attributeName) !== attributeType) {
-                    this._attributeTypes[attributeName] = attributeType;
+                    attributeTypes[attributeName] = attributeType;
                 }
                 this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */);
                 return buffer;
@@ -11282,7 +11691,7 @@ var egret3d;
          * @param subMeshIndex 子网格索引。
          */
         Mesh.prototype.removeSubMesh = function (subMeshIndex) {
-            var primitives = this._glTFMesh.primitives;
+            var _a = this._glTFMesh, primitives = _a.primitives, extras = _a.extras;
             var primitiveCount = primitives.length;
             if (subMeshIndex < primitiveCount) {
                 var primitive = primitives[subMeshIndex];
@@ -11291,8 +11700,8 @@ var egret3d;
                     if (removeAccessor !== null) {
                         primitives.splice(subMeshIndex, 1);
                         this.needUpdate(4 /* VertexArray */ | 16 /* IndexBuffer */);
-                        if (this._wireframeIndex === subMeshIndex) {
-                            this._wireframeIndex = -1;
+                        if (extras.wireframeIndex === subMeshIndex) {
+                            extras.wireframeIndex = -1;
                         }
                         return true;
                     }
@@ -11305,11 +11714,12 @@ var egret3d;
          * @param materialIndex 该子网格使用的材质索引。
          */
         Mesh.prototype.addWireframeSubMesh = function (materialIndex) {
-            if (this._wireframeIndex < 0) {
+            var _a = this._glTFMesh, primitives = _a.primitives, extras = _a.extras;
+            if (extras.wireframeIndex < 0) {
                 var index = 0;
                 var wireframeIndices = [];
-                for (var _i = 0, _a = this._glTFMesh.primitives; _i < _a.length; _i++) {
-                    var primitive = _a[_i];
+                for (var _i = 0, primitives_2 = primitives; _i < primitives_2.length; _i++) {
+                    var primitive = primitives_2[_i];
                     switch (primitive.mode) {
                         case 4 /* Triangles */:
                         default:
@@ -11323,7 +11733,7 @@ var egret3d;
                                 }
                             }
                             else {
-                                for (var i = 0; i < this._vertexCount; i += 3) {
+                                for (var i = 0; i < extras.vertexCount; i += 3) {
                                     var a = i;
                                     var b = i + 1;
                                     var c = i + 2;
@@ -11341,8 +11751,8 @@ var egret3d;
                     index++;
                 }
                 if (wireframeIndices.length > 0) {
-                    this._wireframeIndex = this.addSubMesh(wireframeIndices.length, materialIndex, 1 /* Lines */);
-                    this.setIndices(wireframeIndices, this._wireframeIndex);
+                    extras.wireframeIndex = this.addSubMesh(wireframeIndices.length, materialIndex, 1 /* Lines */);
+                    this.setIndices(wireframeIndices, extras.wireframeIndex);
                 }
             }
             return this;
@@ -11351,8 +11761,9 @@ var egret3d;
          * 删除该网格已添加的线框子网格。
          */
         Mesh.prototype.removeWireframeSubMesh = function () {
-            if (this._wireframeIndex >= 0) {
-                this.removeSubMesh(this._wireframeIndex);
+            var wireframeIndex = this._glTFMesh.extras.wireframeIndex;
+            if (wireframeIndex >= 0) {
+                this.removeSubMesh(wireframeIndex);
             }
             return this;
         };
@@ -11520,11 +11931,21 @@ var egret3d;
              * 该网格的渲染模式。
              */
             get: function () {
-                return this._drawMode;
+                return this._glTFMesh.extras.drawMode;
             },
             set: function (value) {
-                this._drawMode = value;
+                this._glTFMesh.extras.drawMode = value;
                 this.needUpdate(2 /* DrawMode */);
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Mesh.prototype, "vertexCount", {
+            /**
+             * 该网格的顶点总数。
+             */
+            get: function () {
+                return this._glTFMesh.extras.vertexCount;
             },
             enumerable: true,
             configurable: true
@@ -11535,16 +11956,6 @@ var egret3d;
              */
             get: function () {
                 return this._glTFMesh.primitives.length;
-            },
-            enumerable: true,
-            configurable: true
-        });
-        Object.defineProperty(Mesh.prototype, "vertexCount", {
-            /**
-             * 该网格的顶点总数。
-             */
-            get: function () {
-                return this._vertexCount;
             },
             enumerable: true,
             configurable: true
@@ -11560,22 +11971,22 @@ var egret3d;
             enumerable: true,
             configurable: true
         });
-        Object.defineProperty(Mesh.prototype, "attributes", {
-            /**
-             * 该网格的全部顶点属性名称。
-             */
-            get: function () {
-                return this._attributes;
-            },
-            enumerable: true,
-            configurable: true
-        });
         Object.defineProperty(Mesh.prototype, "glTFMesh", {
             /**
              * 获取该网格的 glTF 网格数据。
              */
             get: function () {
                 return this._glTFMesh;
+            },
+            enumerable: true,
+            configurable: true
+        });
+        Object.defineProperty(Mesh.prototype, "attributes", {
+            /**
+             * 该网格的全部顶点属性名称。
+             */
+            get: function () {
+                return this._attributes;
             },
             enumerable: true,
             configurable: true
@@ -11779,7 +12190,7 @@ var egret3d;
                 console.info("Frag depth enabled:", this.fragDepthEnabled);
                 console.info("Texture filter anisotropic:", this.textureFilterAnisotropic);
                 console.info("Shader texture LOD:", this.shaderTextureLOD);
-                console.info("ANGLE_instanced_arrays:", this.instancedArrays);
+                console.info("Instanced arrays:", this.instancedArrays);
                 //
                 console.info("Maximum shader precision:", this.maxPrecision);
                 console.info("Maximum vertex attribute count:", this.maxVertexAttributes);
@@ -11807,17 +12218,14 @@ var egret3d;
                 }
                 webgl.clear(bufferBit);
             };
-            WebGLRenderState.prototype.updateVertexAttributes = function (mesh) {
+            WebGLRenderState.prototype.updateVertexAttributes = function (mesh, subMeshIndex) {
                 var webgl = WebGLRenderState.webgl;
                 var caches = this.caches;
-                var attributes = mesh.attributes;
-                var attributeOffsets = mesh.glTFMesh.extras.attributeOffsets;
-                for (var i = 0; i < this.maxVertexAttributes; ++i) {
-                    webgl.disableVertexAttribArray(i);
-                }
+                var glTFMesh = mesh.glTFMesh, attributes = mesh.attributes;
+                var attributeOffsets = glTFMesh.extras.attributeOffsets;
                 var attributeCount = 0;
                 // +++---...|xxx
-                for (var _i = 0, _a = mesh.glTFMesh.extras.program.attributes; _i < _a.length; _i++) {
+                for (var _i = 0, _a = glTFMesh.primitives[subMeshIndex].extras.program.attributes; _i < _a.length; _i++) {
                     var attribute = _a[_i];
                     var location_1 = attribute.location, semantic = attribute.semantic;
                     if (semantic in attributes) {
@@ -11830,24 +12238,24 @@ var egret3d;
                             webgl.vertexAttribDivisor(location_1, divisor);
                         }
                     }
-                    // else {
-                    //     webgl.disableVertexAttribArray(location);
-                    // }
+                    else {
+                        webgl.disableVertexAttribArray(location_1);
+                    }
                     attributeCount++;
                 }
-                // // xxx|---
-                // if (attributeCount !== caches.attributeCount) {
-                //     for (let i = attributeCount, l = caches.attributeCount; i < l; ++i) {
-                //         webgl.disableVertexAttribArray(i);
-                //     }
-                //     caches.attributeCount = attributeCount;
-                // }
+                // xxx|---
+                if (attributeCount !== caches.attributeCount) {
+                    for (var i = attributeCount, l = caches.attributeCount; i < l; ++i) {
+                        webgl.disableVertexAttribArray(i);
+                    }
+                    caches.attributeCount = attributeCount;
+                }
             };
             WebGLRenderState.prototype.copyFramebufferToTexture = function (screenPostion, target, level) {
                 if (level === void 0) { level = 0; }
                 var webgl = WebGLRenderState.webgl;
                 target.bindTexture(0);
-                webgl.copyTexImage2D(target.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
+                webgl.copyTexImage2D(target.gltfTexture.extras.type, level, target.format, screenPostion.x, screenPostion.y, target.width, target.height, 0); //TODO
             };
             WebGLRenderState.prototype.updateState = function (state) {
                 var webgl = WebGLRenderState.webgl;
@@ -27308,83 +27716,116 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
-    var _index = 0;
-    var _mask = 0x80000000;
-    var _allDefines = {};
-    function _get(name, context, order) {
-        var key = context ? (typeof context === "number" ? name + " " + context : context) : name;
-        var defines = _allDefines;
-        var define = defines[key];
-        if (define) {
-            return define;
-        }
-        define = defines[key] = new Define(_index, _mask, name, context);
-        if (order) {
-            define.order = order;
-        }
-        _mask >>>= 1;
-        if (_mask === 0) {
-            _index++;
-            _mask = 0x80000000;
-        }
-        return define;
-    }
     /**
-     * @private
+     * 宏定义在着色器的位置。
      */
     var DefineLocation;
     (function (DefineLocation) {
-        DefineLocation[DefineLocation["None"] = 0] = "None";
-        DefineLocation[DefineLocation["All"] = 3] = "All";
+        /**
+         * 只添加到顶点着色器。
+         */
         DefineLocation[DefineLocation["Vertex"] = 1] = "Vertex";
+        /**
+         * 只添加到片段着色器。
+         */
         DefineLocation[DefineLocation["Fragment"] = 2] = "Fragment";
+        /**
+         * 同时添加到顶点和片段着色器。
+         */
+        DefineLocation[DefineLocation["All"] = 3] = "All";
+        /**
+         * 不添加到着色器中，仅用来标记着色器程序。
+         */
+        DefineLocation[DefineLocation["None"] = 0] = "None";
     })(DefineLocation = egret3d.DefineLocation || (egret3d.DefineLocation = {}));
     /**
-     * @private
+     * 着色器宏定义。
+     * - 用于动态改变着色器的功能定义。
      */
     var Define = (function () {
-        function Define(index, mask, name, context) {
+        /**
+         * @private
+         */
+        function Define(index, mask, name, content, order) {
+            /**
+             * 该宏定义是否为代码片段。
+             */
+            this.isCode = false;
+            /**
+             * 该宏定义的添加位置。
+             */
+            this.type = 3 /* All */;
             this.index = index;
             this.mask = mask;
             this.name = name;
-            this.context = context;
+            this.content = content;
+            this.order = order;
         }
         return Define;
     }());
     egret3d.Define = Define;
     __reflect(Define.prototype, "egret3d.Define");
     /**
-     * @private
+     * 着色器宏定义组。
+     * - 维护一组着色器宏定义，以便于快速编译着色器程序。
      */
     var Defines = (function () {
         function Defines() {
+            /**
+             * 该组的特征标识，用于标记唯一的着色器程序。
+             */
             this.definesMask = "";
-            // mask, string, array,
             this._defines = [];
             this._defineLinks = {};
         }
+        Defines._getDefine = function (name, content, order) {
+            var key = content !== "" ? (typeof content === "number" ? name + " " + content : content) : name;
+            var defines = this._allDefines;
+            if (key in defines) {
+                return defines[key];
+            }
+            var define = defines[key] = new Define(this._index, this._mask, name, content, order);
+            this._mask >>>= 1;
+            if (this._mask === 0) {
+                this._index++;
+                this._mask = 0x80000000;
+            }
+            return define;
+        };
+        Defines._sortDefine = function (a, b) {
+            if (a.order !== 0 && b.order !== 0) {
+                return a.order - b.order;
+            }
+            var d = a.index - b.index;
+            if (d === 0) {
+                d = b.mask - a.mask; // Define 顺序。
+            }
+            return d;
+        };
+        /**
+         * 链接多个着色器宏定义组到指定的着色器位置。
+         * @param definess 多个着色器宏定义组。
+         * @param location 一个着色器位置。
+         */
         Defines.link = function (definess, location) {
             var linked = [];
-            var linkedName = {};
+            var linkedIndices = {};
             for (var _i = 0, definess_1 = definess; _i < definess_1.length; _i++) {
                 var defines = definess_1[_i];
-                if (!defines) {
+                if (defines === null) {
                     continue;
                 }
                 for (var _a = 0, _b = defines._defines; _a < _b.length; _a++) {
                     var define = _b[_a];
-                    if (define.type === undefined || (define.type & location)) {
-                        var already = linkedName[define.name];
-                        if (!already) {
-                            linkedName[define.name] = define;
-                            linked.push(define);
-                        }
-                        else {
-                            var index = linked.indexOf(already);
-                            if (index >= 0) {
-                                linked[index] = define;
-                            }
-                        }
+                    if ((define.type & location) === 0) {
+                        continue;
+                    }
+                    if (define.name in linkedIndices) {
+                        linked[linkedIndices[define.name]] = define;
+                    }
+                    else {
+                        linkedIndices[define.name] = linked.length;
+                        linked.push(define);
                     }
                 }
             }
@@ -27392,40 +27833,27 @@ var egret3d;
             linked.sort(this._sortDefine);
             for (var _c = 0, linked_1 = linked; _c < linked_1.length; _c++) {
                 var define = linked_1[_c];
-                var context = define.context;
-                if (context) {
-                    // if (typeof context === "number") {
-                    if (!define.isCode && typeof context === "number") {
-                        context = define.name + " " + context;
-                    }
+                var content = define.content;
+                if (content === "") {
+                    content = define.name;
                 }
-                else {
-                    context = define.name;
+                else if (!define.isCode && typeof content === "number") {
+                    content = define.name + " " + content;
                 }
                 if (define.isCode) {
-                    definesString += context + " \n";
+                    definesString += content + " \n";
                 }
                 else {
-                    definesString += "#define " + context + " \n";
+                    definesString += "#define " + content + " \n";
                 }
             }
             return definesString;
         };
-        Defines._sortDefine = function (a, b) {
-            if (a.order && b.order) {
-                return a.order - b.order;
-            }
-            var d = a.index - b.index;
-            if (d === 0) {
-                d = (b.order || b.mask) - (a.order || a.mask); // Define 顺序。
-            }
-            return d;
-        };
         Defines.prototype._update = function () {
+            var defines = this._defines;
             var index = 0;
             var mask = 0;
             var definesMask = "";
-            var defines = this._defines;
             defines.sort(Defines._sortDefine);
             for (var _i = 0, defines_1 = defines; _i < defines_1.length; _i++) {
                 var define = defines_1[_i];
@@ -27448,7 +27876,7 @@ var egret3d;
             this.definesMask = definesMask;
         };
         /**
-         *
+         * 清除该组。
          */
         Defines.prototype.clear = function () {
             this.definesMask = "";
@@ -27458,34 +27886,42 @@ var egret3d;
             }
         };
         /**
-         *
+         * 从一个着色器宏定义组拷贝值。
+         * @param value 一个着色器宏定义组。
          */
         Defines.prototype.copy = function (value) {
+            if (value === this) {
+                return;
+            }
+            var defines = this._defines;
+            var defineLinks = this._defineLinks;
+            defines.length = 0;
+            for (var k in defineLinks) {
+                delete defineLinks[k];
+            }
             this.definesMask = value.definesMask;
-            this._defines.length = 0;
             for (var _i = 0, _a = value._defines; _i < _a.length; _i++) {
                 var define = _a[_i];
-                this._defines.push(define);
+                defines.push(define);
             }
             for (var k in value._defineLinks) {
-                this._defineLinks[k] = value._defineLinks[k];
+                defineLinks[k] = value._defineLinks[k];
             }
         };
-        /**
-         *
-         */
-        Defines.prototype.addDefine = function (name, context, order) {
-            var define = this._defineLinks[name];
-            if (define) {
-                if (define.context === context) {
-                    return define;
+        Defines.prototype.addDefine = function (name, content, order) {
+            if (content === void 0) { content = ""; }
+            if (order === void 0) { order = 0; }
+            var defineLinks = this._defineLinks;
+            if (name in defineLinks) {
+                var define_1 = defineLinks[name];
+                if (define_1.content === content) {
+                    return define_1;
                 }
                 else {
                     this.removeDefine(name, false);
                 }
             }
-            //
-            define = _get(name, context, order);
+            var define = Defines._getDefine(name, content, order);
             var defines = this._defines;
             if (defines.indexOf(define) < 0) {
                 defines.push(define);
@@ -27495,20 +27931,32 @@ var egret3d;
             }
             return null;
         };
+        /**
+         * 从该组移除一个着色器宏定义。
+         * @param name 宏定义的名称。
+         * @param needUpdate 是否立刻更新特征标识。
+         * - 默认为 `true` 。
+         */
         Defines.prototype.removeDefine = function (name, needUpdate) {
             if (needUpdate === void 0) { needUpdate = true; }
-            var define = this._defineLinks[name];
-            if (define) {
+            var defineLinks = this._defineLinks;
+            if (name in defineLinks) {
+                var define = defineLinks[name];
                 var index = this._defines.indexOf(define);
                 if (index >= 0) {
                     this._defines.splice(index, 1);
                 }
-                delete this._defineLinks[name];
-                //
-                needUpdate && this._update();
+                delete defineLinks[name];
+                if (needUpdate) {
+                    this._update();
+                }
+                return define;
             }
             return null;
         };
+        Defines._index = 0;
+        Defines._mask = 0x80000000;
+        Defines._allDefines = {};
         return Defines;
     }());
     egret3d.Defines = Defines;
@@ -27984,22 +28432,21 @@ var egret3d;
             return this;
         };
         /**
-         * 为该材质添加指定的 define。
-         * @param defineString define 字符串。
+         * 为该材质添加指定的着色器宏定义。
+         * @param defineName 着色器宏定义名称。
+         * @param content 着色器宏定义值。
          */
-        Material.prototype.addDefine = function (defineString, value) {
-            this.defines.addDefine(defineString, value);
+        Material.prototype.addDefine = function (defineName, content) {
+            if (content === void 0) { content = ""; }
+            this.defines.addDefine(defineName, content);
             return this;
         };
         /**
-         * 从该材质移除指定的 define。
-         * @param defineString define 字符串。
+         * 从该材质移除指定的着色器宏定义。
+         * @param defineName 着色器宏定义名称。
          */
-        Material.prototype.removeDefine = function (defineString, value) {
-            // if (value !== undefined) {
-            //     defineString += " " + value;
-            // }
-            this.defines.removeDefine(defineString);
+        Material.prototype.removeDefine = function (defineName) {
+            this.defines.removeDefine(defineName);
             return this;
         };
         Material.prototype.setBlend = function (p0, p1, p2, p3) {
@@ -31199,7 +31646,9 @@ var egret3d;
                 var needUpdate = this._needUpdate & mask;
                 if (needUpdate !== 0) {
                     var webgl_6 = webgl_4.WebGLRenderState.webgl;
-                    var extension = this._glTFTexture.extensions.paper;
+                    var glTFTexture = this._glTFTexture;
+                    var extension = glTFTexture.extensions.paper;
+                    var extras = glTFTexture.extras;
                     if ((needUpdate & 1 /* Image */) !== 0) {
                         var image = this._image;
                         var sampler = this._sampler;
@@ -31224,7 +31673,7 @@ var egret3d;
                             textureType = -1 /* Texture1D */;
                             uploadType = textureType;
                         }
-                        this.type = textureType;
+                        extras.type = textureType;
                         if (this.webGLTexture === null) {
                             this.webGLTexture = webgl_6.createTexture();
                         }
@@ -31267,7 +31716,7 @@ var egret3d;
                     }
                     if ((needUpdate & 256 /* Levels */) !== 0) {
                         if (extension.levels === 0) {
-                            webgl_6.generateMipmap(this.type);
+                            webgl_6.generateMipmap(extras.type);
                         }
                     }
                     this._disposeImageSource();
@@ -31278,7 +31727,7 @@ var egret3d;
                 var webgl = webgl_4.WebGLRenderState.webgl;
                 this.update(1 /* Image */ | 256 /* Levels */);
                 webgl.activeTexture(33984 /* Texture2DStart */ + index);
-                webgl.bindTexture(this.type, this.webGLTexture);
+                webgl.bindTexture(this._glTFTexture.extras.type, this.webGLTexture);
                 return this;
             };
             return WebGLTexture;
@@ -31317,7 +31766,6 @@ var egret3d;
                     if (this.renderBuffer !== null) {
                         webgl_8.deleteRenderbuffer(this.renderBuffer);
                     }
-                    this.type = 3553 /* Texture2D */;
                     this.webGLTexture = null;
                     this.frameBuffer = null;
                     this.renderBuffer = null;
@@ -31329,7 +31777,9 @@ var egret3d;
                 var needUpdate = this._needUpdate & mask;
                 if (needUpdate !== 0) {
                     var webgl_9 = webgl_7.WebGLRenderState.webgl;
-                    var extension = this._glTFTexture.extensions.paper;
+                    var glTFTexture = this._glTFTexture;
+                    var extension = glTFTexture.extensions.paper;
+                    var extras = glTFTexture.extras;
                     var width = extension.width;
                     var height = extension.height;
                     if ((needUpdate & 1 /* Image */) !== 0) {
@@ -31354,7 +31804,7 @@ var egret3d;
                             textureType = -1 /* Texture1D */;
                             uploadType = textureType;
                         }
-                        this.type = textureType;
+                        extras.type = textureType;
                         if (this.webGLTexture === null) {
                             this.webGLTexture = webgl_9.createTexture();
                         }
@@ -31367,7 +31817,7 @@ var egret3d;
                     }
                     if ((needUpdate & 256 /* Levels */) !== 0) {
                         if (extension.levels === 0) {
-                            webgl_9.generateMipmap(this.type);
+                            webgl_9.generateMipmap(extras.type);
                         }
                     }
                     if ((needUpdate & 16 /* Buffer */) !== 0) {
@@ -31376,9 +31826,9 @@ var egret3d;
                         if (this.frameBuffer === null) {
                             this.frameBuffer = webgl_9.createFramebuffer();
                         }
-                        webgl_9.bindTexture(this.type, this.webGLTexture);
+                        webgl_9.bindTexture(extras.type, this.webGLTexture);
                         webgl_9.bindFramebuffer(36160 /* FrameBuffer */, this.frameBuffer);
-                        webgl_9.framebufferTexture2D(36160 /* FrameBuffer */, 36064 /* COLOR_ATTACHMENT0 */, this.type, this.webGLTexture, 0);
+                        webgl_9.framebufferTexture2D(36160 /* FrameBuffer */, 36064 /* COLOR_ATTACHMENT0 */, extras.type, this.webGLTexture, 0);
                         if (depthBuffer || stencilBuffer) {
                             if (!this.renderBuffer) {
                                 this.renderBuffer = webgl_9.createRenderbuffer();
@@ -31407,7 +31857,7 @@ var egret3d;
                 var webgl = webgl_7.WebGLRenderState.webgl;
                 this.update(1 /* Image */ | 256 /* Levels */);
                 webgl.activeTexture(33984 /* Texture2DStart */ + index);
-                webgl.bindTexture(this.type, this.webGLTexture);
+                webgl.bindTexture(this._glTFTexture.extras.type, this.webGLTexture);
                 return this;
             };
             WebGLRenderTexture.prototype.activateTexture = function () {
@@ -31487,7 +31937,7 @@ var egret3d;
                                 attributeNames.push(k);
                             }
                             webgl_11.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
-                            webgl_11.bufferData(34962 /* ArrayBuffer */, byteLength, this._drawMode);
+                            webgl_11.bufferData(34962 /* ArrayBuffer */, byteLength, glTFMeshExtras.drawMode);
                             this.uploadVertexBuffer(attributeNames);
                         }
                     }
@@ -31506,7 +31956,7 @@ var egret3d;
                         }
                         if (primitiveExtras.ibo !== null) {
                             webgl_11.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
-                            webgl_11.bufferData(34963 /* ElementArrayBuffer */, this.getAccessorByteLength(this.getAccessor(primitive.indices)), this._drawMode);
+                            webgl_11.bufferData(34963 /* ElementArrayBuffer */, this.getAccessorByteLength(this.getAccessor(primitive.indices)), glTFMeshExtras.drawMode);
                             this.uploadSubIndexBuffer(subMeshIndex);
                         }
                     }
@@ -31518,7 +31968,7 @@ var egret3d;
                             if (primitiveExtras.program !== null) {
                                 webgl_11.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
                                 webgl_11.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
-                                egret3d.renderState.updateVertexAttributes(this);
+                                egret3d.renderState.updateVertexAttributes(this, subMeshIndex);
                             }
                             webgl_11.bindVertexArray(null);
                         }
@@ -31535,8 +31985,8 @@ var egret3d;
                         webgl_12.deleteBuffer(extras.vbo);
                         extras.vbo = null;
                     }
-                    for (var _i = 0, primitives_2 = primitives; _i < primitives_2.length; _i++) {
-                        var extras_1 = primitives_2[_i].extras;
+                    for (var _i = 0, primitives_3 = primitives; _i < primitives_3.length; _i++) {
+                        var extras_1 = primitives_3[_i].extras;
                         extras_1.program = null;
                         if (extras_1.vao !== null) {
                             webgl_12.deleteVertexArray(extras_1.vao);
@@ -31558,8 +32008,7 @@ var egret3d;
                 if (count === void 0) { count = 0; }
                 var webgl = webgl_10.WebGLRenderState.webgl;
                 var attributes = this._attributes;
-                var attributeOffsets = this._glTFMesh.extras.attributeOffsets;
-                var vbo = this._glTFMesh.extras.vbo;
+                var _a = this._glTFMesh.extras, attributeOffsets = _a.attributeOffsets, vbo = _a.vbo;
                 if (vbo === null) {
                     return;
                 }
@@ -31866,17 +32315,17 @@ var egret3d;
                 var webgl = webgl_14.WebGLRenderState.webgl;
                 var renderState = this._renderState;
                 var _a = mesh.glTFMesh, primitives = _a.primitives, extras = _a.extras;
-                var primitive = primitives[subMeshIndex];
-                mesh.update(4 /* VertexArray */ | 8 /* VertexBuffer */ | 16 /* IndexBuffer */);
-                var vbo = extras.vbo;
-                var ibo = primitive.extras !== undefined ? primitive.extras.ibo : null;
+                var primitiveExtras = primitives[subMeshIndex].extras;
+                mesh.update(4 /* VertexArray */ | 8 /* VertexBuffer */ | 16 /* IndexBuffer */, subMeshIndex);
                 if (renderState.vertexArrayObject !== null) {
-                    webgl.bindVertexArray(extras.vao);
+                    webgl.bindVertexArray(primitiveExtras.vao);
                 }
                 else {
+                    var vbo = extras.vbo;
+                    var ibo = primitiveExtras.ibo;
                     webgl.bindBuffer(34962 /* ArrayBuffer */, vbo);
                     webgl.bindBuffer(34963 /* ElementArrayBuffer */, ibo);
-                    renderState.updateVertexAttributes(mesh);
+                    renderState.updateVertexAttributes(mesh, subMeshIndex);
                 }
             };
             WebGLRenderSystem.prototype._updateGlobalUniforms = function (program, camera, drawCall, renderer, currentScene, forceUpdate) {
@@ -32223,7 +32672,7 @@ var egret3d;
                                     if (isInvalide) {
                                         texture = renderState.caches.skyBoxTexture || egret3d.DefaultTextures.WHITE; // TODO
                                     }
-                                    material.setFloat("flipEnvMap" /* FlipEnvMap */, texture.type === 34067 /* TextureCube */ ? 1.0 : -1.0);
+                                    material.setFloat("flipEnvMap" /* FlipEnvMap */, texture.gltfTexture.extras.type === 34067 /* TextureCube */ ? 1.0 : -1.0);
                                     material.setFloat("maxMipLevel" /* MaxMipLevel */, texture.levels);
                                 }
                                 else if (isInvalide) {
@@ -32502,9 +32951,9 @@ var egret3d;
                     var drawMode = primitive.mode === undefined ? 4 /* Triangles */ : primitive.mode;
                     // Update attributes.
                     if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
-                        if (program !== mesh.glTFMesh.extras.program) {
+                        if (program !== primitive.extras.program) {
                             mesh.needUpdate(4 /* VertexArray */);
-                            mesh.glTFMesh.extras.program = program;
+                            primitive.extras.program = program;
                         }
                         this._updateAttributes(mesh, subMeshIndex);
                         this._cacheSubMeshIndex = subMeshIndex;

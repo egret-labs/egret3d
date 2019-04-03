@@ -3,6 +3,7 @@ namespace egret3d.webgl {
      * @internal
      */
     export class WebGLMesh extends Mesh {
+
         private _bindVAO(primitive: gltf.MeshPrimitive) {
             const webgl = WebGLRenderState.webgl!;
             const primitiveExtras = primitive.extras!;
@@ -63,7 +64,7 @@ namespace egret3d.webgl {
                         }
 
                         webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
-                        webgl.bufferData(gltf.BufferViewTarget.ArrayBuffer, byteLength, this._drawMode);
+                        webgl.bufferData(gltf.BufferViewTarget.ArrayBuffer, byteLength, glTFMeshExtras.drawMode);
                         this.uploadVertexBuffer(attributeNames);
                     }
                 }
@@ -86,7 +87,7 @@ namespace egret3d.webgl {
 
                     if (primitiveExtras.ibo !== null) {
                         webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
-                        webgl.bufferData(gltf.BufferViewTarget.ElementArrayBuffer, this.getAccessorByteLength(this.getAccessor(primitive.indices)), this._drawMode);
+                        webgl.bufferData(gltf.BufferViewTarget.ElementArrayBuffer, this.getAccessorByteLength(this.getAccessor(primitive.indices)), glTFMeshExtras.drawMode);
                         this.uploadSubIndexBuffer(subMeshIndex);
                     }
                 }
@@ -100,7 +101,7 @@ namespace egret3d.webgl {
                         if (primitiveExtras.program !== null) {
                             webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
                             webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
-                            renderState.updateVertexAttributes(this);
+                            renderState.updateVertexAttributes(this, subMeshIndex);
                         }
 
                         webgl.bindVertexArray(null);
@@ -147,8 +148,7 @@ namespace egret3d.webgl {
         public uploadVertexBuffer<T extends gltf.AttributeSemantics | string>(uploadAttributes: T | ReadonlyArray<T> | null = null, offset: uint = 0, count: uint = 0): void {
             const webgl = WebGLRenderState.webgl!;
             const attributes = this._attributes!;
-            const attributeOffsets = this._glTFMesh!.extras!.attributeOffsets;
-            const vbo = this._glTFMesh!.extras!.vbo;
+            const { attributeOffsets, vbo } = this._glTFMesh!.extras!;
 
             if (vbo === null) {
                 return;
@@ -176,7 +176,7 @@ namespace egret3d.webgl {
             }
         }
 
-        public uploadSubIndexBuffer(subMeshIndex: number = 0, offset: uint = 0, count: uint = 0) {
+        public uploadSubIndexBuffer(subMeshIndex: uint = 0, offset: uint = 0, count: uint = 0) {
             const { primitives } = this._glTFMesh!;
 
             if (0 <= subMeshIndex && subMeshIndex < primitives.length) {

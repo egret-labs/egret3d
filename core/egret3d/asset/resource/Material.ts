@@ -554,23 +554,21 @@ namespace egret3d {
             return this;
         }
         /**
-         * 为该材质添加指定的 define。
-         * @param defineString define 字符串。
+         * 为该材质添加指定的着色器宏定义。
+         * @param defineName 着色器宏定义名称。
+         * @param content 着色器宏定义值。
          */
-        public addDefine(defineString: string, value?: number | string): this {
-            this.defines.addDefine(defineString, value);
+        public addDefine(defineName: string, content: number | string = ""): this {
+            this.defines.addDefine(defineName, content);
 
             return this;
         }
         /**
-         * 从该材质移除指定的 define。
-         * @param defineString define 字符串。
+         * 从该材质移除指定的着色器宏定义。
+         * @param defineName 着色器宏定义名称。
          */
-        public removeDefine(defineString: string, value?: number | string): this {
-            // if (value !== undefined) {
-            //     defineString += " " + value;
-            // }
-            this.defines.removeDefine(defineString);
+        public removeDefine(defineName: string): this {
+            this.defines.removeDefine(defineName);
 
             return this;
         }
@@ -583,6 +581,7 @@ namespace egret3d {
          */
         public setBlend(blend: BlendMode, renderQueue: RenderQueue, opacity?: number): this;
         /**
+         * 设置该材质的自定义混合模式。
          * @param blendEquations BlendEquation。
          * @param blendFactors BlendFactor。
          * @param renderQueue 渲染顺序。
@@ -1014,7 +1013,7 @@ namespace egret3d {
                 value ? this.addDefine(ShaderDefine.USE_INSTANCED) : this.removeDefine(ShaderDefine.USE_INSTANCED);
             }
         }
-        public test:string = "";
+        public test: string = "";
         /**
          * 该材质的 shader。
          */

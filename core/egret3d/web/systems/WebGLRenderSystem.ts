@@ -612,7 +612,7 @@ namespace egret3d.webgl {
                                     texture = renderState.caches.skyBoxTexture || DefaultTextures.WHITE; // TODO
                                 }
 
-                                material.setFloat(ShaderUniformName.FlipEnvMap, texture!.type === gltf.TextureType.TextureCube ? 1.0 : -1.0);
+                                material.setFloat(ShaderUniformName.FlipEnvMap, texture!.gltfTexture.extras!.type === gltf.TextureType.TextureCube ? 1.0 : -1.0);
                                 material.setFloat(ShaderUniformName.MaxMipLevel, texture!.levels);
                             }
                             else if (isInvalide) {

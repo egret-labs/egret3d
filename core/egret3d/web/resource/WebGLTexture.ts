@@ -30,7 +30,9 @@ namespace egret3d.webgl {
 
             if (needUpdate !== 0) {
                 const webgl = WebGLRenderState.webgl!;
-                const extension = this._glTFTexture!.extensions.paper!;
+                const glTFTexture = this._glTFTexture!;
+                const extension = glTFTexture.extensions.paper!;
+                const extras = glTFTexture.extras!;
 
                 if ((needUpdate & TextureNeedUpdate.Image) !== 0) {
                     const image = this._image!;
@@ -59,7 +61,7 @@ namespace egret3d.webgl {
                         uploadType = textureType;
                     }
 
-                    this.type = textureType;
+                    extras.type = textureType;
 
                     if (this.webGLTexture === null) {
                         this.webGLTexture = webgl.createTexture();
@@ -103,12 +105,11 @@ namespace egret3d.webgl {
                             webgl.texImage2D(uploadType, 0, format, width, height, 0, format, dataType, buffer.extras!.data);
                         }
                     }
-
                 }
 
                 if ((needUpdate & TextureNeedUpdate.Levels) !== 0) {
                     if (extension.levels === 0) {
-                        webgl.generateMipmap(this.type);
+                        webgl.generateMipmap(extras.type);
                     }
                 }
 
@@ -122,7 +123,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             this.update(TextureNeedUpdate.Image | TextureNeedUpdate.Levels);
             webgl.activeTexture(gltf.TextureType.Texture2DStart + index);
-            webgl.bindTexture(this.type, this.webGLTexture);
+            webgl.bindTexture(this._glTFTexture!.extras!.type, this.webGLTexture);
 
             return this;
         }

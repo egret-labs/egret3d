@@ -1,15 +1,15 @@
 namespace egret3d {
     /**
-     * 渲染纹理。
+     * 渲染纹理资源。
      */
     export class RenderTexture extends BaseTexture {
         /**
-         * 创建一个渲染纹理。
+         * 创建一个渲染纹理资源。
          * @param parameters 
          */
         public static create(parameters: CreateTextureParameters): RenderTexture;
         /**
-         * 加载渲染纹理。
+         * 加载渲染纹理资源。
          * @private
          */
         public static create(name: string, config: GLTF): RenderTexture;
@@ -31,16 +31,14 @@ namespace egret3d {
 
             return renderTexture;
         }
-
         /**
-         * @internal
-         * @param index 
+         * 激活该纹理资源。
          */
         public activateTexture(): this {
             return this;
         }
         /**
-         * 
+         * 重新设置该纹理资源的尺寸。
          */
         public setSize(width: uint, height: uint): this {
             const extension = this._glTFTexture!.extensions.paper;

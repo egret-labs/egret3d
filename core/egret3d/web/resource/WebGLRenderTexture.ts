@@ -23,8 +23,6 @@ namespace egret3d.webgl {
                     webgl.deleteRenderbuffer(this.renderBuffer);
                 }
 
-                this.type = gltf.TextureType.Texture2D;
-
                 this.webGLTexture = null;
                 this.frameBuffer = null;
                 this.renderBuffer = null;
@@ -40,7 +38,9 @@ namespace egret3d.webgl {
 
             if (needUpdate !== 0) {
                 const webgl = WebGLRenderState.webgl!;
-                const extension = this._glTFTexture!.extensions.paper!;
+                const glTFTexture = this._glTFTexture!;
+                const extension = glTFTexture.extensions.paper!;
+                const extras = glTFTexture.extras!;
                 const width = extension.width!;
                 const height = extension.height!;
 
@@ -68,7 +68,7 @@ namespace egret3d.webgl {
                         uploadType = textureType;
                     }
 
-                    this.type = textureType;
+                    extras.type = textureType;
 
                     if (this.webGLTexture === null) {
                         this.webGLTexture = webgl.createTexture()!;
@@ -84,7 +84,7 @@ namespace egret3d.webgl {
 
                 if ((needUpdate & TextureNeedUpdate.Levels) !== 0) {
                     if (extension.levels === 0) {
-                        webgl.generateMipmap(this.type);
+                        webgl.generateMipmap(extras.type);
                     }
                 }
 
@@ -96,9 +96,9 @@ namespace egret3d.webgl {
                         this.frameBuffer = webgl.createFramebuffer()!;
                     }
 
-                    webgl.bindTexture(this.type, this.webGLTexture);
+                    webgl.bindTexture(extras.type, this.webGLTexture);
                     webgl.bindFramebuffer(gltf.WebGL.FrameBuffer, this.frameBuffer);
-                    webgl.framebufferTexture2D(gltf.WebGL.FrameBuffer, gltf.WebGL.COLOR_ATTACHMENT0, this.type, this.webGLTexture, 0);
+                    webgl.framebufferTexture2D(gltf.WebGL.FrameBuffer, gltf.WebGL.COLOR_ATTACHMENT0, extras.type, this.webGLTexture, 0);
 
                     if (depthBuffer || stencilBuffer) {
                         if (!this.renderBuffer) {
@@ -133,7 +133,7 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             this.update(TextureNeedUpdate.Image | TextureNeedUpdate.Levels);
             webgl.activeTexture(gltf.TextureType.Texture2DStart + index);
-            webgl.bindTexture(this.type, this.webGLTexture);
+            webgl.bindTexture(this._glTFTexture!.extras!.type, this.webGLTexture);
 
             return this;
         }

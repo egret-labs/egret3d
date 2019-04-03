@@ -22,12 +22,12 @@ namespace egret3d {
         public instancedArrays: ANGLE_instanced_arrays | null;
 
         public maxVertexAttributes: uint;
-        public maxTextures: uint;
+        public maxVertexUniformVectors: uint;
         public maxVertexTextures: uint;
+        public maxTextures: uint;
         public maxTextureSize: uint;
         public maxCubemapSize: uint;
         public maxRenderBufferize: uint;
-        public maxVertexUniformVectors: uint;
         public maxAnisotropy: uint;
         public maxBoneCount: uint = 24;
         public maxPrecision: string = "";
@@ -284,7 +284,7 @@ namespace egret3d {
                     }
                 }
                 else {
-                    defines.removeDefine(decodingFunName, true);
+                    defines.removeDefine(decodingFunName);
                 }
             }
             //
@@ -325,8 +325,8 @@ namespace egret3d {
                     }
                 }
                 else {
-                    defines.removeDefine(nameA, true);
-                    defines.removeDefine(nameB, true);
+                    defines.removeDefine(nameA);
+                    defines.removeDefine(nameB);
                 }
             }
         }
@@ -382,7 +382,7 @@ namespace egret3d {
          * 将像素复制到2D纹理图像中
          * TODO 微信上不可用
          */
-        public updateVertexAttributes(mesh: Mesh): void { }
+        public updateVertexAttributes(mesh: Mesh, subMeshIndex: uint): void { }
         /**
          * 
          */
@@ -611,6 +611,7 @@ namespace egret3d {
          */
         @paper.editor.property(paper.editor.EditType.FLOAT, { minimum: 0.0, maximum: 10.0 })
         public toneMappingWhitePoint: float = 1.0;
+
         /**
         * @deprecated
         */
