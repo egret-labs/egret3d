@@ -66,6 +66,8 @@ namespace egret3d.webgl {
         private readonly _modelViewPojectionMatrix: Matrix4 = Matrix4.create();
         private readonly _inverseModelViewMatrix: Matrix3 = Matrix3.create();
         //
+        private _cacheCurrentCamera: Camera | null = null;
+        //
         private _cacheProgram: WebGLProgramBinder | null = null;
         private _cacheScene: paper.Scene | null = null;
         private _cacheCamera: Camera | null = null;
@@ -79,9 +81,6 @@ namespace egret3d.webgl {
         private _cacheMaterialVersion: int = -1;
         //
         private _cacheLightmapIndex: int = -1;
-
-        //
-        private _backupCamera: Camera | null = null;
 
         private _compileShader(shader: gltf.Shader, defines: string) {
             const webgl = WebGLRenderState.webgl!;
@@ -787,15 +786,13 @@ namespace egret3d.webgl {
                 for (const camera of cameras) {
                     const scene = camera.entity.scene;
                     const renderTarget = camera.renderTarget || camera._previewRenderTarget;
-                    if (
-                        renderTarget
-                        || (isPlayerMode ? scene !== editorScene : scene === editorScene)
-                    ) {
+                    if (renderTarget || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
                         this.render(camera, camera.overrideMaterial, renderTarget);
                     }
                 }
 
-                this._cacheProgram = null;//TODO
+                this._cacheCurrentCamera = null;
+                this._cacheProgram = null; //TODO
             }
             else { // Clear stage background to black.
                 this._renderState.clearColor = Color.BLACK;
@@ -847,15 +844,15 @@ namespace egret3d.webgl {
                 }
 
                 if (!isPostprocessing) {
-                    this._backupCamera = null;
+                    this._cacheCurrentCamera = null;
                     this._render(camera, renderTarget, material);
                 }
                 else {
                     for (const postprocessing of postprocessings) {
                         if (postprocessing.isActiveAndEnabled) {
-                            this._backupCamera = camera;
+                            this._cacheCurrentCamera = camera;
                             postprocessing.onRender(camera);
-                            this._backupCamera = null;
+                            this._cacheCurrentCamera = null;
                         }
                     }
 
@@ -866,7 +863,7 @@ namespace egret3d.webgl {
                 this._render(camera, renderTarget, material);
             }
             //
-            cameraAndLightCollecter.currentCamera = this._backupCamera;
+            cameraAndLightCollecter.currentCamera = this._cacheCurrentCamera;
         }
 
         public draw(drawCall: DrawCall, material: Material | null = null) {

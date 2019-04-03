@@ -20517,9 +20517,13 @@ var egret3d;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-            for (var i = 0; i < materialCount; ++i) {
+            for (var i = 0, l = materialFilter.length; i < l; ++i) {
                 if (materialFilter[i]) {
+                    materialFilter[i] = false;
                     continue;
+                }
+                else if (i >= materialCount) {
+                    break;
                 }
                 var material = materials[i];
                 for (var j = 0; j < subMeshCount; ++j) {
@@ -20927,7 +20931,9 @@ var egret3d;
             }
             var materialFilter = this._materialFilter;
             var matrix = egret3d.Matrix4.IDENTITY;
-            materialFilter.length = materialCount;
+            if (materialFilter.length < materialCount) {
+                materialFilter.length = materialCount;
+            }
             for (var i = 0; i < subMeshCount; ++i) {
                 var materialIndex = primitives[i].material || 0;
                 var material = null;
@@ -20946,9 +20952,13 @@ var egret3d;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-            for (var i = 0; i < materialCount; ++i) {
+            for (var i = 0, l = materialFilter.length; i < l; ++i) {
                 if (materialFilter[i]) {
+                    materialFilter[i] = false;
                     continue;
+                }
+                else if (i >= materialCount) {
+                    break;
                 }
                 var material = materials[i];
                 for (var j = 0; j < subMeshCount; ++j) {
@@ -20962,7 +20972,6 @@ var egret3d;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-            materialFilter.length = 0;
         };
         SkinnedMeshRendererSystem.prototype.getMatchers = function () {
             return [
@@ -32226,6 +32235,8 @@ var egret3d;
                 _this._modelViewPojectionMatrix = egret3d.Matrix4.create();
                 _this._inverseModelViewMatrix = egret3d.Matrix3.create();
                 //
+                _this._cacheCurrentCamera = null;
+                //
                 _this._cacheProgram = null;
                 _this._cacheScene = null;
                 _this._cacheCamera = null;
@@ -32239,8 +32250,6 @@ var egret3d;
                 _this._cacheMaterialVersion = -1;
                 //
                 _this._cacheLightmapIndex = -1;
-                //
-                _this._backupCamera = null;
                 return _this;
             }
             WebGLRenderSystem.prototype._compileShader = function (shader, defines) {
@@ -32840,11 +32849,11 @@ var egret3d;
                         var camera = cameras_1[_a];
                         var scene = camera.entity.scene;
                         var renderTarget = camera.renderTarget || camera._previewRenderTarget;
-                        if (renderTarget
-                            || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
+                        if (renderTarget || (isPlayerMode ? scene !== editorScene : scene === editorScene)) {
                             this.render(camera, camera.overrideMaterial, renderTarget);
                         }
                     }
+                    this._cacheCurrentCamera = null;
                     this._cacheProgram = null; //TODO
                 }
                 else {
@@ -32892,16 +32901,16 @@ var egret3d;
                         }
                     }
                     if (!isPostprocessing) {
-                        this._backupCamera = null;
+                        this._cacheCurrentCamera = null;
                         this._render(camera, renderTarget, material);
                     }
                     else {
                         for (var _c = 0, postprocessings_2 = postprocessings; _c < postprocessings_2.length; _c++) {
                             var postprocessing = postprocessings_2[_c];
                             if (postprocessing.isActiveAndEnabled) {
-                                this._backupCamera = camera;
+                                this._cacheCurrentCamera = camera;
                                 postprocessing.onRender(camera);
-                                this._backupCamera = null;
+                                this._cacheCurrentCamera = null;
                             }
                         }
                         camera.swapPostprocessingRenderTarget();
@@ -32911,7 +32920,7 @@ var egret3d;
                     this._render(camera, renderTarget, material);
                 }
                 //
-                cameraAndLightCollecter.currentCamera = this._backupCamera;
+                cameraAndLightCollecter.currentCamera = this._cacheCurrentCamera;
             };
             WebGLRenderSystem.prototype.draw = function (drawCall, material) {
                 if (material === void 0) { material = null; }
