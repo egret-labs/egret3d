@@ -10,7 +10,10 @@ uniform vec2 center;
 #include <clipping_planes_pars_vertex>
 
 void main() {
-
+	//modified by egret
+	#ifdef USE_INSTANCED
+		#include <instances_vert>
+	#endif
 	#include <uv_vertex>
 
 	vec4 mvPosition = modelViewMatrix * vec4( 0.0, 0.0, 0.0, 1.0 );

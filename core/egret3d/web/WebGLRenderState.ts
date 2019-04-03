@@ -216,18 +216,35 @@ namespace egret3d.webgl {
                 if (semantic in attributes) {
                     const accessor = mesh.getAccessor(attributes[semantic]);
                     const { typeCount, divisor } = accessor.extras!;
+                    const offset = attributeOffsets[semantic];
                     // TODO normalized应该来源于mesh，应该还没有
-                    webgl.vertexAttribPointer(
-                        location,
-                        typeCount,
-                        accessor.componentType,
-                        accessor.normalized !== undefined ? accessor.normalized : false,
-                        0, attributeOffsets[semantic]
-                    );
                     webgl.enableVertexAttribArray(location);
-                    if (divisor) {
-                        webgl.vertexAttribDivisor(location, divisor);
+                    if (typeCount <= 4) {
+                        webgl.vertexAttribPointer(
+                            location,
+                            typeCount,
+                            accessor.componentType,
+                            accessor.normalized !== undefined ? accessor.normalized : false,
+                            0, offset
+                        );
+                        if (divisor) {
+                            webgl.vertexAttribDivisor(location, divisor);
+                        }
                     }
+                    else if (typeCount === 16) {//MAT4
+                        webgl.vertexAttribPointer(location + 0, 4, accessor.componentType, false, 64, offset);
+                        webgl.vertexAttribPointer(location + 1, 4, accessor.componentType, false, 64, offset + 16);
+                        webgl.vertexAttribPointer(location + 2, 4, accessor.componentType, false, 64, offset + 32);
+                        webgl.vertexAttribPointer(location + 3, 4, accessor.componentType, false, 64, offset + 48);
+
+                        if (divisor) {
+                            webgl.vertexAttribDivisor(location + 0, divisor);
+                            webgl.vertexAttribDivisor(location + 1, divisor);
+                            webgl.vertexAttribDivisor(location + 2, divisor);
+                            webgl.vertexAttribDivisor(location + 3, divisor);
+                        }
+                    }
+
                 }
                 else {
                     webgl.disableVertexAttribArray(location);

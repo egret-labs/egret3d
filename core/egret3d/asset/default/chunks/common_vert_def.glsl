@@ -1,7 +1,13 @@
-//modify by egret
+//modified by egret
 #ifdef USE_INSTANCED
-	attribute mat4 modelMatrix;
-	attribute mat4 modelViewMatrix;
+	attribute vec4 modelMatrix0;
+	attribute vec4 modelMatrix1;
+	attribute vec4 modelMatrix2;
+	attribute vec4 modelMatrix3;
+	attribute vec4 modelViewMatrix0;	
+	attribute vec4 modelViewMatrix1;	
+	attribute vec4 modelViewMatrix2;	
+	attribute vec4 modelViewMatrix3;	
 #else
 	uniform mat4 modelMatrix;
 	uniform mat4 modelViewMatrix;

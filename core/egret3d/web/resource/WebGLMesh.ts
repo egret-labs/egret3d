@@ -65,9 +65,9 @@ namespace egret3d.webgl {
                         webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
                         webgl.bufferData(gltf.BufferViewTarget.ArrayBuffer, byteLength, this._drawMode);
 
-                        if (createBuffer) {
+                        // if (createBuffer) {
                             this.uploadVertexBuffer(attributeNames);
-                        }
+                        // }
                     }
                 }
 

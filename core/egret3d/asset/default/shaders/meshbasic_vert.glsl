@@ -8,10 +8,14 @@
 #include <skinning_pars_vertex>
 #include <logdepthbuf_pars_vertex>
 #include <clipping_planes_pars_vertex>
-#include <custom_vertex> // modified by egret
+// modified by egret
+#include <custom_vertex>
 
 void main() {
  	// modified by egret
+	#ifdef USE_INSTANCED
+		#include <instances_vert>
+	#endif
 	#include <custom_begin_vertex>
 
 	#include <uv_vertex>

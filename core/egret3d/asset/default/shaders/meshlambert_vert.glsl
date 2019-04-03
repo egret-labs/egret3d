@@ -25,6 +25,9 @@ varying vec3 vLightFront;
 void main() {
 
  	// modified by egret
+	#ifdef USE_INSTANCED
+		#include <instances_vert>
+	#endif
 	#include <custom_begin_vertex>
 
 	#include <uv_vertex>

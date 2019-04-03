@@ -280,8 +280,18 @@ namespace egret3d {
         "instanceDistanceStart": gltf.AttributeSemantics._INSTANCE_DISTANCE_START,
         "instanceDistanceEnd": gltf.AttributeSemantics._INSTANCE_DISTANCE_END,
 
-        "modelMatrix": gltf.AttributeSemantics._INSTANCED_MODEL,
-        "modelViewMatrix": gltf.AttributeSemantics._INSTANCED_MODEL_VIEW,
+        // "modelMatrix": gltf.AttributeSemantics._INSTANCED_MODEL,
+        // "modelViewMatrix": gltf.AttributeSemantics._INSTANCED_MODEL_VIEW,
+
+        "modelMatrix0": gltf.AttributeSemantics._INSTANCED_MODEL0,
+        "modelMatrix1": gltf.AttributeSemantics._INSTANCED_MODEL1,
+        "modelMatrix2": gltf.AttributeSemantics._INSTANCED_MODEL2,
+        "modelMatrix3": gltf.AttributeSemantics._INSTANCED_MODEL3,
+        
+        "modelViewMatrix0": gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0,
+        "modelViewMatrix1": gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1,
+        "modelViewMatrix2": gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2,
+        "modelViewMatrix3": gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3,
     };
     /**
      * 内置提供的全局 Uniform。
