@@ -1,5 +1,5 @@
 namespace egret3d.webgl {
-    
+
     const _browserPrefixes = [
         "",
         "MOZ_",

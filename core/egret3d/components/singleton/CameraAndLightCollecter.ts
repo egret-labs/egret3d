@@ -73,7 +73,7 @@ namespace egret3d {
             return aOrder - bOrder;
         }
         /**
-         * @internal
+         * @ignore
          */
         public initialize() {
             super.initialize();

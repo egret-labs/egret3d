@@ -32,7 +32,9 @@ namespace egret3d {
 
             this._observers.length > 0 && (this._observers.length = 0);
         }
-
+        /**
+         * @ignore
+         */
         public initialize(): void {
             super.initialize();
 

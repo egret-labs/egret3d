@@ -4606,7 +4606,7 @@ var egret3d;
             }
         };
         /**
-         * @interfnal
+         * @ignore
          */
         GLTFAsset.prototype.dispose = function () {
             if (_super.prototype.dispose.call(this)) {
@@ -4616,7 +4616,7 @@ var egret3d;
             return false;
         };
         /**
-         * @internal
+         * @ignore
          */
         GLTFAsset.prototype.updateAccessorTypeCount = function () {
             var accessors = this.config.accessors;
@@ -4779,14 +4779,14 @@ var paper;
             this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         };
         /**
-         * @internal
+         * @ignore
          */
         BaseRenderer.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             this.getBoundingTransform().registerObserver(this);
         };
         /**
-         * @internal
+         * @ignore
          */
         BaseRenderer.prototype.uninitialize = function () {
             for (var _i = 0, _a = this._materials; _i < _a.length; _i++) {
@@ -4799,7 +4799,7 @@ var paper;
             this._materials.length = 0;
         };
         /**
-         * @private
+         * @ignore
          */
         BaseRenderer.prototype.onTransformChange = function () {
             this._boundingSphereDirty = true;
@@ -5053,6 +5053,9 @@ var egret3d;
             _super.prototype._destroy.call(this);
             this._observers.length > 0 && (this._observers.length = 0);
         };
+        /**
+         * @ignore
+         */
         Transform.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             this._localPosition.onUpdateTarget = this._position.onUpdateTarget = this;
@@ -7619,7 +7622,7 @@ var egret3d;
             }
         };
         /**
-         * @internal
+         * @ignore
          */
         BaseTexture.prototype.initialize = function (name, config, buffers) {
             _super.prototype.initialize.call(this, name, config, buffers);
@@ -7630,7 +7633,7 @@ var egret3d;
             this._formatLevelsAndSampler();
         };
         /**
-         * @interfnal
+         * @ignore
          */
         BaseTexture.prototype.dispose = function () {
             if (_super.prototype.dispose.call(this)) {
@@ -7642,17 +7645,23 @@ var egret3d;
             }
             return false;
         };
+        /**
+         * @ignore
+         */
         BaseTexture.prototype.needUpdate = function (mask) {
             this._needUpdate |= mask;
             if ((mask & 256 /* Levels */) !== 0) {
                 this._glTFTexture.extras.levels = 0;
             }
         };
+        /**
+         * @ignore
+         */
         BaseTexture.prototype.update = function (mask) {
             this._needUpdate &= ~mask;
         };
         /**
-         * @internal
+         * @ignore
          */
         BaseTexture.prototype.bindTexture = function (index) {
             return this;
@@ -10789,6 +10798,9 @@ var egret3d;
                 }
             }
         };
+        /**
+         * @ignore
+         */
         Shader.prototype.initialize = function (name, config, buffers, parent) {
             _super.prototype.initialize.call(this, name, config, null);
             if (parent) {
@@ -11245,7 +11257,7 @@ var egret3d;
             return null;
         };
         /**
-         * @internal
+         * @ignore
          */
         Mesh.prototype.initialize = function (name, config, buffers, vertexCount) {
             if (vertexCount === void 0) { vertexCount = 0; }
@@ -11326,6 +11338,9 @@ var egret3d;
             }
             return value;
         };
+        /**
+         * @ignore
+         */
         Mesh.prototype.needUpdate = function (mask, subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = -1; }
             this._needUpdate |= mask;
@@ -11342,6 +11357,9 @@ var egret3d;
                 }
             }
         };
+        /**
+         * @ignore
+         */
         Mesh.prototype.update = function (mask, subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
             var needUpdate = this._needUpdate & mask;
@@ -11356,6 +11374,9 @@ var egret3d;
             this._needUpdate &= ~mask;
             this._glTFMesh.primitives[subMeshIndex].extras.needUpdate &= ~mask;
         };
+        /**
+         * @ignore
+         */
         Mesh.prototype.raycast = function (ray, raycastInfo, vertices) {
             if (raycastInfo === void 0) { raycastInfo = null; }
             if (vertices === void 0) { vertices = null; }
@@ -12006,8 +12027,7 @@ var egret3d;
         });
         Object.defineProperty(Mesh.prototype, "boneIndices", {
             /**
-             * TODO
-             * @internal
+             * @ignore
              */
             get: function () {
                 var config = this.config;
@@ -12026,8 +12046,7 @@ var egret3d;
         });
         Object.defineProperty(Mesh.prototype, "inverseBindMatrices", {
             /**
-             * TODO
-             * @internal
+             * @ignore
              */
             get: function () {
                 var config = this.config;
@@ -15092,7 +15111,7 @@ var egret3d;
             return aOrder - bOrder;
         };
         /**
-         * @internal
+         * @ignore
          */
         CameraAndLightCollecter.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
@@ -17385,6 +17404,9 @@ var egret3d;
                 this.pixelViewport = value;
             }
         };
+        /**
+         * @ignore
+         */
         Camera.prototype.initialize = function () {
             _super.prototype.initialize.call(this);
             this.transform.registerObserver(this);
@@ -17397,6 +17419,9 @@ var egret3d;
             this.cullingMask &= ~64 /* Editor */;
             this.cullingMask &= ~128 /* EditorUI */;
         };
+        /**
+         * @ignore
+         */
         Camera.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
             if (this._readRenderTarget) {
@@ -17414,6 +17439,9 @@ var egret3d;
             egret3d.stage.onScreenResize.remove(this._onStageResize, this);
             egret3d.stage.onResize.remove(this._onStageResize, this);
         };
+        /**
+         * @ignore
+         */
         Camera.prototype.onTransformChange = function () {
             if (!this._nativeTransform) {
                 this._dirtyMask |= 12 /* ClipMatrix */;
@@ -20538,11 +20566,17 @@ var egret3d;
                 }
             }
         };
+        /**
+         * @ignore
+         */
         MeshRendererSystem.prototype.getMatchers = function () {
             return [
                 paper.Matcher.create(egret3d.Transform, egret3d.MeshFilter, egret3d.MeshRenderer),
             ];
         };
+        /**
+         * @ignore
+         */
         MeshRendererSystem.prototype.getListeners = function () {
             var _this = this;
             return [
@@ -20558,9 +20592,15 @@ var egret3d;
                 }
             ];
         };
+        /**
+         * @ignore
+         */
         MeshRendererSystem.prototype.onEntityAdded = function (entity) {
             this._updateDrawCalls(entity, false);
         };
+        /**
+         * @ignore
+         */
         MeshRendererSystem.prototype.onEntityRemoved = function (entity) {
             this._drawCallCollecter.removeDrawCalls(entity);
         };
@@ -20973,11 +21013,17 @@ var egret3d;
                 }
             }
         };
+        /**
+         * @ignore
+         */
         SkinnedMeshRendererSystem.prototype.getMatchers = function () {
             return [
                 paper.Matcher.create(egret3d.Transform, egret3d.SkinnedMeshRenderer),
             ];
         };
+        /**
+         * @ignore
+         */
         SkinnedMeshRendererSystem.prototype.getListeners = function () {
             var _this = this;
             return [
@@ -20993,6 +21039,9 @@ var egret3d;
                 },
             ];
         };
+        /**
+         * @ignore
+         */
         SkinnedMeshRendererSystem.prototype.onEntityAdded = function (entity) {
             var renderer = entity.getComponent(egret3d.SkinnedMeshRenderer);
             if (renderer.mesh !== null && renderer.source === null && renderer.boneMatrices === null) {
@@ -21000,9 +21049,15 @@ var egret3d;
             }
             this._updateDrawCalls(entity, false);
         };
+        /**
+         * @ignore
+         */
         SkinnedMeshRendererSystem.prototype.onEntityRemoved = function (entity) {
             this._drawCallCollecter.removeDrawCalls(entity);
         };
+        /**
+         * @ignore
+         */
         SkinnedMeshRendererSystem.prototype.onFrame = function () {
             for (var _i = 0, _a = this.groups[0].entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
@@ -23565,11 +23620,17 @@ var egret3d;
                 }
             }
         };
+        /**
+         * @ignore
+         */
         AnimationSystem.prototype.getMatchers = function () {
             return [
                 paper.Matcher.create(egret3d.Transform, egret3d.Animation),
             ];
         };
+        /**
+         * @ignore
+         */
         AnimationSystem.prototype.onEntityAdded = function (entity) {
             var animation = entity.getComponent(egret3d.Animation);
             if ((paper.Application.playerMode & 4 /* Editor */) === 0 &&
@@ -23578,6 +23639,9 @@ var egret3d;
                 animation.play();
             }
         };
+        /**
+         * @ignore
+         */
         AnimationSystem.prototype.onFrame = function (deltaTime) {
             for (var _i = 0, _a = this.groups[0].entities; _i < _a.length; _i++) {
                 var entity = _a[_i];
@@ -23640,6 +23704,9 @@ var egret3d;
                 }
             }
         };
+        AnimationSystem = __decorate([
+            paper.executeMode(1 /* Player */ | 2 /* DebugPlayer */)
+        ], AnimationSystem);
         return AnimationSystem;
     }(paper.BaseSystem));
     egret3d.AnimationSystem = AnimationSystem;
@@ -28220,14 +28287,14 @@ var egret3d;
             }
         };
         /**
-         * @internal
+         * @ignore
          */
         Material.prototype.initialize = function (name, config, buffers) {
             _super.prototype.initialize.call(this, name, config, buffers);
             egret3d.renderState.onGammaInputChanged.add(this._addOrRemoveTexturesDefine, this);
         };
         /**
-         * @internal
+         * @ignore
          */
         Material.prototype.retain = function () {
             _super.prototype.retain.call(this);
@@ -28235,7 +28302,7 @@ var egret3d;
             return this;
         };
         /**
-         * @internal
+         * @ignore
          */
         Material.prototype.release = function () {
             _super.prototype.release.call(this);
@@ -28245,7 +28312,7 @@ var egret3d;
             return this;
         };
         /**
-         * @interfnal
+         * @ignore
          */
         Material.prototype.dispose = function () {
             if (_super.prototype.dispose.call(this)) {
@@ -30832,7 +30899,7 @@ var egret3d;
                             }
                             else {
                                 var imageSource = images[0];
-                                glTFImage_1.extras.data = imageSource;
+                                glTFImage_1.extras = { data: imageSource };
                                 host.save(RES.host.resourceConfig["getResource"](subAssets_1.assets[0]), imageSource);
                             }
                             var texture = egret3d.Texture.create(resource.name, glTFData_1, null);
@@ -33919,7 +33986,7 @@ var egret3d;
             return _this;
         }
         /**
-         * @internal
+         * @ignore
          */
         MeshCollider.prototype.uninitialize = function () {
             _super.prototype.uninitialize.call(this);
@@ -33928,6 +33995,9 @@ var egret3d;
             }
             this._mesh = null;
         };
+        /**
+         * @ignore
+         */
         MeshCollider.prototype.raycast = function (ray, raycastInfo) {
             if (raycastInfo === void 0) { raycastInfo = null; }
             var mesh = this._mesh;

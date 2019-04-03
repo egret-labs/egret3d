@@ -2880,6 +2880,28 @@ declare namespace gltf {
 }
 declare namespace gltf {
     /**
+     * @ignore
+     */
+    const enum WebGL {
+        UNPACK_ALIGNMENT = 3317,
+        UNPACK_FLIP_Y_WEBGL = 37440,
+        UNPACK_PREMULTIPLY_ALPHA_WEBGL = 37441,
+        DEPTH_STENCIL_ATTACHMENT = 33306,
+        DEPTH_STENCIL = 34041,
+        DEPTH_ATTACHMENT = 36096,
+        DEPTH_COMPONENT = 6402,
+        DEPTH_COMPONENT16 = 33189,
+        COLOR_ATTACHMENT0 = 36064,
+        TEXTURE_MAG_FILTER = 10240,
+        TEXTURE_MIN_FILTER = 10241,
+        TEXTURE_WRAP_S = 10242,
+        TEXTURE_WRAP_T = 10243,
+        FrameBuffer = 36160,
+        RenderBuffer = 36161,
+        CompileStatus = 35713,
+        LinkStatus = 35714,
+    }
+    /**
      * glTF index.
      */
     type Index = uint;
@@ -4249,9 +4271,13 @@ declare namespace egret3d {
          */
         initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, ...args: any[]): void;
         /**
-         * @interfnal
+         * @ignore
          */
         dispose(): boolean;
+        /**
+         * @ignore
+         */
+        updateAccessorTypeCount(): this;
         /**
          * 根据指定 BufferView 创建二进制数组。
          */
@@ -4312,7 +4338,15 @@ declare namespace paper {
         protected abstract _getlocalBoundingBox(): Readonly<egret3d.Box> | null;
         protected _recalculateSphere(): void;
         /**
-         * @private
+         * @ignore
+         */
+        initialize(): void;
+        /**
+         * @ignore
+         */
+        uninitialize(): void;
+        /**
+         * @ignore
          */
         onTransformChange(): void;
         abstract raycast(ray: Readonly<egret3d.Ray>, raycastInfo: egret3d.RaycastInfo | null): boolean;
@@ -4359,6 +4393,9 @@ declare namespace egret3d {
         private _localDirty;
         private _worldDirty;
         private readonly _observers;
+        /**
+         * @ignore
+         */
         initialize(): void;
         /**
          *
@@ -5102,11 +5139,25 @@ declare namespace egret3d {
         protected _disposeImageSource(): void;
         private _formatLevelsAndSampler();
         /**
-         * @interfnal
+         * @ignore
+         */
+        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null): void;
+        /**
+         * @ignore
          */
         dispose(): boolean;
+        /**
+         * @ignore
+         */
         needUpdate(mask: TextureNeedUpdate): void;
+        /**
+         * @ignore
+         */
         update(mask: TextureNeedUpdate): void;
+        /**
+         * @ignore
+         */
+        bindTexture(index: uint): this;
         /**
          *
          */
@@ -6130,6 +6181,9 @@ declare namespace egret3d {
         customs: {
             [key: string]: string;
         } | null;
+        /**
+         * @ignore
+         */
         initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, parent: Shader | null): void;
         /**
          * @private
@@ -6308,6 +6362,10 @@ declare namespace egret3d {
         } | null;
         private _removeBufferByAccessor(accessorIndex);
         /**
+         * @ignore
+         */
+        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, vertexCount?: uint): void;
+        /**
          * @interfnal
          */
         dispose(): boolean;
@@ -6315,8 +6373,17 @@ declare namespace egret3d {
          * @deprecated
          */
         clone(): this;
+        /**
+         * @ignore
+         */
         needUpdate(mask: MeshNeedUpdate, subMeshIndex?: int): void;
+        /**
+         * @ignore
+         */
         update(mask: MeshNeedUpdate, subMeshIndex?: uint): void;
+        /**
+         * @ignore
+         */
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null, vertices?: Float32Array | null): boolean;
         /**
          * 对该网格进行矩阵变换。
@@ -6484,6 +6551,16 @@ declare namespace egret3d {
         readonly attributes: Readonly<{
             [key: string]: gltf.Index;
         }>;
+        /**
+         * @ignore
+         */
+        readonly boneIndices: Readonly<{
+            [key: string]: uint;
+        }> | null;
+        /**
+         * @ignore
+         */
+        readonly inverseBindMatrices: ArrayBufferView | null;
         /**
          * @deprecated
          */
@@ -7776,6 +7853,10 @@ declare namespace egret3d {
         currentShadowLight: BaseLight | null;
         private _sortCameras(a, b);
         /**
+         * @ignore
+         */
+        initialize(): void;
+        /**
          * 更新相机。
          */
         updateCameras(entities: ReadonlyArray<paper.IEntity>): void;
@@ -8570,8 +8651,17 @@ declare namespace egret3d {
         _previewRenderTarget: RenderTexture | null;
         private _onStageResize();
         private _onViewportUpdate(value);
+        /**
+         * @ignore
+         */
         initialize(): void;
+        /**
+         * @ignore
+         */
         uninitialize(): void;
+        /**
+         * @ignore
+         */
         onTransformChange(): void;
         /**
          * 将舞台坐标基于该相机的视角转换为世界坐标。
@@ -9294,7 +9384,13 @@ declare namespace egret3d {
         private readonly _drawCallCollecter;
         private readonly _materialFilter;
         private _updateDrawCalls(entity, checkState);
+        /**
+         * @ignore
+         */
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
+        /**
+         * @ignore
+         */
         protected getListeners(): ({
             type: signals.Signal<MeshFilter>;
             listener: (component: paper.IComponent) => void;
@@ -9302,7 +9398,13 @@ declare namespace egret3d {
             type: signals.Signal<paper.BaseRenderer>;
             listener: (component: paper.IComponent) => void;
         })[];
+        /**
+         * @ignore
+         */
         onEntityAdded(entity: paper.GameObject): void;
+        /**
+         * @ignore
+         */
         onEntityRemoved(entity: paper.GameObject): void;
     }
 }
@@ -9377,13 +9479,28 @@ declare namespace egret3d {
         private readonly _drawCallCollecter;
         private readonly _materialFilter;
         private _updateDrawCalls(entity, checkState);
+        /**
+         * @ignore
+         */
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
+        /**
+         * @ignore
+         */
         protected getListeners(): {
             type: signals.Signal<paper.BaseRenderer>;
             listener: (component: paper.IComponent) => void;
         }[];
+        /**
+         * @ignore
+         */
         onEntityAdded(entity: paper.GameObject): void;
+        /**
+         * @ignore
+         */
         onEntityRemoved(entity: paper.GameObject): void;
+        /**
+         * @ignore
+         */
         onFrame(): void;
     }
 }
@@ -9909,8 +10026,17 @@ declare namespace egret3d {
         private _updateAnimationFadeState(animationFadeState, deltaTime);
         private _updateAnimationTreeState(animationFadeState, animationTreeState);
         private _updateAnimationState(animationFadeState, animationState, deltaTime, forceUpdate);
+        /**
+         * @ignore
+         */
         protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
+        /**
+         * @ignore
+         */
         onEntityAdded(entity: paper.GameObject): void;
+        /**
+         * @ignore
+         */
         onFrame(deltaTime: number): void;
     }
 }
@@ -11085,7 +11211,19 @@ declare namespace egret3d {
         private _retainOrReleaseTextures(isRatain, isOnce);
         private _addOrRemoveTexturesDefine(add?);
         /**
-         * @interfnal
+         * @ignore
+         */
+        initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null): void;
+        /**
+         * @ignore
+         */
+        retain(): this;
+        /**
+         * @ignore
+         */
+        release(): this;
+        /**
+         * @ignore
          */
         dispose(): boolean;
         /**
@@ -12977,6 +13115,13 @@ declare namespace egret3d {
         readonly colliderType: ColliderType;
         protected readonly _localBoundingBox: Box;
         private _mesh;
+        /**
+         * @ignore
+         */
+        uninitialize(): void;
+        /**
+         * @ignore
+         */
         raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
         /**
          * 该组件的网格资源。

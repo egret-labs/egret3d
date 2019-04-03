@@ -368,6 +368,7 @@ namespace egret3d {
     export interface StateMachineNode {
         name: string;
         /**
+         * TODO extras
          * @internal
          */
         _parent?: StateMachineNode;
@@ -389,6 +390,7 @@ namespace egret3d {
         mask?: string | AnimationMask | null;
         machine: StateMachine;
         /**
+         * TODO extras
          * @internal
          */
         _clipNames?: string[];
@@ -544,7 +546,7 @@ namespace gltf {
 
 declare namespace gltf {
     /**
-     * @internal
+     * @ignore
      */
     export const enum WebGL {
         UNPACK_ALIGNMENT = 3317,

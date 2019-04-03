@@ -197,7 +197,7 @@ namespace egret3d {
             }
         }
         /**
-         * @internal
+         * @ignore
          */
         public initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null) {
             super.initialize(name, config, buffers);
@@ -210,7 +210,7 @@ namespace egret3d {
             this._formatLevelsAndSampler();
         }
         /**
-         * @interfnal
+         * @ignore
          */
         public dispose() {
             if (super.dispose()) {
@@ -224,7 +224,9 @@ namespace egret3d {
 
             return false;
         }
-
+        /**
+         * @ignore
+         */
         public needUpdate(mask: TextureNeedUpdate): void {
             this._needUpdate |= mask;
 
@@ -232,12 +234,14 @@ namespace egret3d {
                 this._glTFTexture!.extras!.levels = 0;
             }
         }
-
+        /**
+         * @ignore
+         */
         public update(mask: TextureNeedUpdate): void {
             this._needUpdate &= ~mask;
         }
         /**
-         * @internal
+         * @ignore
          */
         public bindTexture(index: uint): this {
             return this;

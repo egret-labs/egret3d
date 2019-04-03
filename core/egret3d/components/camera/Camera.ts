@@ -181,7 +181,9 @@ namespace egret3d {
                 this.pixelViewport = value;
             }
         }
-
+        /**
+         * @ignore
+         */
         public initialize() {
             super.initialize();
 
@@ -197,7 +199,9 @@ namespace egret3d {
             this.cullingMask &= ~paper.Layer.Editor;
             this.cullingMask &= ~paper.Layer.EditorUI;
         }
-
+        /**
+         * @ignore
+         */
         public uninitialize() {
             super.uninitialize();
 
@@ -220,7 +224,9 @@ namespace egret3d {
             stage.onScreenResize.remove(this._onStageResize, this);
             stage.onResize.remove(this._onStageResize, this);
         }
-
+        /**
+         * @ignore
+         */
         public onTransformChange() {
             if (!this._nativeTransform) {
                 this._dirtyMask |= DirtyMask.ClipMatrix;

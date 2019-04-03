@@ -172,7 +172,7 @@ namespace egret3d {
             return null;
         }
         /**
-         * @internal
+         * @ignore
          */
         public initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null, vertexCount: uint = 0) {
             super.initialize(name, config, buffers);
@@ -259,7 +259,9 @@ namespace egret3d {
 
             return value;
         }
-
+        /**
+         * @ignore
+         */
         public needUpdate(mask: MeshNeedUpdate, subMeshIndex: int = -1): void {
             this._needUpdate |= mask;
 
@@ -276,7 +278,9 @@ namespace egret3d {
                 }
             }
         }
-
+        /**
+         * @ignore
+         */
         public update(mask: MeshNeedUpdate, subMeshIndex: uint = 0): void {
             const needUpdate = this._needUpdate & mask;
 
@@ -293,7 +297,9 @@ namespace egret3d {
             this._needUpdate &= ~mask;
             this._glTFMesh!.primitives[subMeshIndex].extras!.needUpdate &= ~mask;
         }
-
+        /**
+         * @ignore
+         */
         public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null, vertices: Float32Array | null = null) {
             if (vertices === null) {
                 if (!this.boundingBox.raycast(ray)) {
@@ -980,8 +986,7 @@ namespace egret3d {
             return this._attributes!;
         }
         /**
-         * TODO
-         * @internal
+         * @ignore
          */
         public get boneIndices(): Readonly<{ [key: string]: uint }> | null {
             const config = this.config;
@@ -998,8 +1003,7 @@ namespace egret3d {
             return this._boneIndices;
         }
         /**
-         * TODO
-         * @internal
+         * @ignore
          */
         public get inverseBindMatrices(): ArrayBufferView | null {
             const { config } = this;

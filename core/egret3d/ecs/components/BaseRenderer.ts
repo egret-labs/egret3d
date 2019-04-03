@@ -36,7 +36,7 @@ namespace paper {
             this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         }
         /**
-         * @internal
+         * @ignore
          */
         public initialize() {
             super.initialize();
@@ -44,7 +44,7 @@ namespace paper {
             this.getBoundingTransform().registerObserver(this);
         }
         /**
-         * @internal
+         * @ignore
          */
         public uninitialize() {
             for (const material of this._materials) {
@@ -58,7 +58,7 @@ namespace paper {
             this._materials.length = 0;
         }
         /**
-         * @private
+         * @ignore
          */
         public onTransformChange() {
             this._boundingSphereDirty = true;

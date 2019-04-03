@@ -2,6 +2,7 @@ namespace egret3d {
     /**
      * 动画系统。
      */
+    @paper.executeMode(paper.PlayerMode.Player | paper.PlayerMode.DebugPlayer)
     export class AnimationSystem extends paper.BaseSystem<paper.GameObject> {
 
         private _animation: Animation | null = null;
@@ -259,13 +260,17 @@ namespace egret3d {
                 }
             }
         }
-
+        /**
+         * @ignore
+         */
         protected getMatchers() {
             return [
                 paper.Matcher.create<paper.GameObject>(Transform, Animation),
             ];
         }
-
+        /**
+         * @ignore
+         */
         public onEntityAdded(entity: paper.GameObject) {
             const animation = entity.getComponent(Animation)!;
 
@@ -277,7 +282,9 @@ namespace egret3d {
                 animation.play();
             }
         }
-
+        /**
+         * @ignore
+         */
         public onFrame(deltaTime: number) {
             for (const entity of this.groups[0].entities) {
                 const animation = this._animation = entity.getComponent(Animation)!;

@@ -175,7 +175,7 @@ namespace egret3d {
                             }
                             else {
                                 const imageSource = images[0];
-                                glTFImage.extras!.data = imageSource;
+                                glTFImage.extras = { data: imageSource };
                                 host.save((RES.host.resourceConfig as any)["getResource"](subAssets.assets![0]), imageSource);
                             }
 
