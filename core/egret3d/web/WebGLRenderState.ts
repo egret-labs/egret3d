@@ -1,4 +1,5 @@
 namespace egret3d.webgl {
+    
     const _browserPrefixes = [
         "",
         "MOZ_",
@@ -198,7 +199,7 @@ namespace egret3d.webgl {
 
             if (bufferBit & gltf.BufferMask.Color) {
                 const clearColor = this._clearColor;
-                clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);//TODO
+                webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a);//TODO
             }
 
             webgl.clear(bufferBit);

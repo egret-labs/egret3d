@@ -14,7 +14,7 @@ namespace components {
             const { w, h } = egret3d.stage.viewport;
             const renderTexture = this._depthRenderTarget;
             if (renderTexture) {
-                renderTexture.uploadTexture(w, h);
+                renderTexture.setSize(w, h);
             }
         }
 

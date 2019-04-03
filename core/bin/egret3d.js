@@ -11271,7 +11271,7 @@ var egret3d;
             for (var _i = 0, _a = glTFMesh.primitives; _i < _a.length; _i++) {
                 var primitive = _a[_i];
                 primitive.attributes = attributes;
-                primitive.extras = { program: null, vao: null, ibo: null };
+                primitive.extras = { needUpdate: 31 /* All */, program: null, vao: null, ibo: null, draw: null };
             }
         };
         /**
@@ -11290,7 +11290,7 @@ var egret3d;
             return false;
         };
         /**
-         * 克隆该网格。
+         * @deprecated
          */
         Mesh.prototype.clone = function () {
             var glTFMesh = this._glTFMesh;
@@ -11326,73 +11326,35 @@ var egret3d;
             }
             return value;
         };
-        Mesh.prototype.needUpdate = function (mask) {
+        Mesh.prototype.needUpdate = function (mask, subMeshIndex) {
+            if (subMeshIndex === void 0) { subMeshIndex = -1; }
             this._needUpdate |= mask;
+            if ((mask & (4 /* VertexArray */ | 8 /* VertexBuffer */)) !== 0) {
+                var primitives = this._glTFMesh.primitives;
+                if (subMeshIndex < 0) {
+                    for (var _i = 0, primitives_2 = primitives; _i < primitives_2.length; _i++) {
+                        var primitive = primitives_2[_i];
+                        primitive.extras.needUpdate |= mask;
+                    }
+                }
+                else {
+                    primitives[subMeshIndex].extras.needUpdate |= mask;
+                }
+            }
         };
         Mesh.prototype.update = function (mask, subMeshIndex) {
             if (subMeshIndex === void 0) { subMeshIndex = 0; }
             var needUpdate = this._needUpdate & mask;
-            if (needUpdate !== 0) {
-                if ((needUpdate & 1 /* BoundingBox */) !== 0) {
-                    var vertices = this.getVertices();
-                    var position = egret3d.helpVector3E;
-                    var boundingBox = this._boundingBox;
-                    for (var i = 0, l = vertices.length; i < l; i += 3) {
-                        boundingBox.add(position.fromArray(vertices, i));
-                    }
-                }
-                this._needUpdate &= ~mask;
-            }
-        };
-        /**
-         * 对该网格进行矩阵变换。
-         * @param matrix 一个矩阵。
-         * @param offset
-         * @param count
-         */
-        Mesh.prototype.applyMatrix = function (matrix, offset, count) {
-            if (offset === void 0) { offset = 0; }
-            if (count === void 0) { count = 0; }
-            var helpVector3 = egret3d.helpVector3E;
-            var vertices = this.getVertices(offset, count);
-            var normals = this.getNormals(offset, count);
-            for (var i = 0, l = vertices.length; i < l; i += 3) {
-                helpVector3.fromArray(vertices, i).applyMatrix(matrix).toArray(vertices, i);
-            }
-            if (normals !== null) {
-                var normalMatrix = egret3d.helpMatrix3C.getNormalMatrix(matrix).release();
-                for (var i = 0, l = normals.length; i < l; i += 3) {
-                    helpVector3.fromArray(normals, i).applyMatrix3(normalMatrix).normalize().toArray(normals, i);
+            if ((needUpdate & 1 /* BoundingBox */) !== 0) {
+                var vertices = this.getVertices();
+                var position = egret3d.helpVector3E;
+                var boundingBox = this._boundingBox;
+                for (var i = 0, l = vertices.length; i < l; i += 3) {
+                    boundingBox.add(position.fromArray(vertices, i));
                 }
             }
-            this.needUpdate(1 /* BoundingBox */);
-            return this;
-        };
-        /**
-         * 获取该网格指定的三角形数据。
-         * @param triangleIndex 三角形索引。
-         * @param output 被写入数据的三角形。
-         * - 未设置则会创建一个。
-         * @param vertices
-         */
-        Mesh.prototype.getTriangle = function (triangleIndex, output, vertices) {
-            if (output === void 0) { output = null; }
-            if (vertices === void 0) { vertices = null; }
-            if (output === null) {
-                output = egret3d.Triangle.create();
-            }
-            if (vertices === null) {
-                vertices = this.getVertices();
-            }
-            var indices = this.getIndices();
-            if (indices !== null) {
-                var vertexOffset = triangleIndex * 3;
-                output.fromArray(vertices, indices[vertexOffset + 0] * 3, indices[vertexOffset + 1] * 3, indices[vertexOffset + 2] * 3);
-            }
-            else {
-                output.fromArray(vertices, triangleIndex * 9);
-            }
-            return output;
+            this._needUpdate &= ~mask;
+            this._glTFMesh.primitives[subMeshIndex].extras.needUpdate &= ~mask;
         };
         Mesh.prototype.raycast = function (ray, raycastInfo, vertices) {
             if (raycastInfo === void 0) { raycastInfo = null; }
@@ -11499,6 +11461,56 @@ var egret3d;
             return hit;
         };
         /**
+         * 对该网格进行矩阵变换。
+         * @param matrix 一个矩阵。
+         * @param offset
+         * @param count
+         */
+        Mesh.prototype.applyMatrix = function (matrix, offset, count) {
+            if (offset === void 0) { offset = 0; }
+            if (count === void 0) { count = 0; }
+            var helpVector3 = egret3d.helpVector3E;
+            var vertices = this.getVertices(offset, count);
+            var normals = this.getNormals(offset, count);
+            for (var i = 0, l = vertices.length; i < l; i += 3) {
+                helpVector3.fromArray(vertices, i).applyMatrix(matrix).toArray(vertices, i);
+            }
+            if (normals !== null) {
+                var normalMatrix = egret3d.helpMatrix3C.getNormalMatrix(matrix).release();
+                for (var i = 0, l = normals.length; i < l; i += 3) {
+                    helpVector3.fromArray(normals, i).applyMatrix3(normalMatrix).normalize().toArray(normals, i);
+                }
+            }
+            this.needUpdate(1 /* BoundingBox */);
+            return this;
+        };
+        /**
+         * 获取该网格指定的三角形数据。
+         * @param triangleIndex 三角形索引。
+         * @param output 被写入数据的三角形。
+         * - 未设置则会创建一个。
+         * @param vertices
+         */
+        Mesh.prototype.getTriangle = function (triangleIndex, output, vertices) {
+            if (output === void 0) { output = null; }
+            if (vertices === void 0) { vertices = null; }
+            if (output === null) {
+                output = egret3d.Triangle.create();
+            }
+            if (vertices === null) {
+                vertices = this.getVertices();
+            }
+            var indices = this.getIndices();
+            if (indices !== null) {
+                var vertexOffset = triangleIndex * 3;
+                output.fromArray(vertices, indices[vertexOffset + 0] * 3, indices[vertexOffset + 1] * 3, indices[vertexOffset + 2] * 3);
+            }
+            else {
+                output.fromArray(vertices, triangleIndex * 9);
+            }
+            return output;
+        };
+        /**
          *
          */
         Mesh.prototype.normalizeNormals = function () {
@@ -11561,9 +11573,9 @@ var egret3d;
             return this;
         };
         /**
-         *
-         * @param attributeName
-         * @param attributeType
+         * 为该网格添加一个新的顶点属性。
+         * @param attributeName 顶点属性的名称。
+         * @param attributeType 顶点属性的类型。
          */
         Mesh.prototype.addAttribute = function (attributeName, attributeType, attributeVertexCount, divisor) {
             if (attributeVertexCount === void 0) { attributeVertexCount = 0; }
@@ -11601,14 +11613,14 @@ var egret3d;
                 if (egret3d.GLTFAsset.getMeshAttributeType(attributeName) !== attributeType) {
                     attributeTypes[attributeName] = attributeType;
                 }
-                this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */);
+                this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */, -1);
                 return buffer;
             }
             return null;
         };
         /**
-         *
-         * @param attributeName
+         * 从该网格中移除一个顶点属性。
+         * @param attributeName 顶点属性的名称。
          */
         Mesh.prototype.removeAttribute = function (attributeName) {
             var attributes = this._attributes;
@@ -11629,7 +11641,7 @@ var egret3d;
                     }
                     delete attributes[attributeName];
                     delete attributeOffsets[attributeName];
-                    this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */);
+                    this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */, -1);
                     return buffer;
                 }
             }
@@ -11676,13 +11688,14 @@ var egret3d;
             else {
                 subMeshIndex = primitives.length;
                 primitive = primitives[subMeshIndex] = {
-                    attributes: this._attributes, extras: { ibo: null },
+                    attributes: this._attributes,
+                    extras: { needUpdate: 31 /* All */, program: null, vao: null, ibo: null, draw: null },
                 };
             }
             primitive.indices = accessorIndex;
             primitive.material = materialIndex;
             primitive.mode = randerMode;
-            this.needUpdate(4 /* VertexArray */ | 16 /* IndexBuffer */);
+            this.needUpdate(4 /* VertexArray */ | 16 /* IndexBuffer */, subMeshIndex);
             return subMeshIndex;
         };
         /**
@@ -11699,7 +11712,7 @@ var egret3d;
                     var removeAccessor = this._removeBufferByAccessor(primitive.indices);
                     if (removeAccessor !== null) {
                         primitives.splice(subMeshIndex, 1);
-                        this.needUpdate(4 /* VertexArray */ | 16 /* IndexBuffer */);
+                        this.needUpdate(4 /* VertexArray */ | 16 /* IndexBuffer */, subMeshIndex);
                         if (extras.wireframeIndex === subMeshIndex) {
                             extras.wireframeIndex = -1;
                         }
@@ -11718,8 +11731,8 @@ var egret3d;
             if (extras.wireframeIndex < 0) {
                 var index = 0;
                 var wireframeIndices = [];
-                for (var _i = 0, primitives_2 = primitives; _i < primitives_2.length; _i++) {
-                    var primitive = primitives_2[_i];
+                for (var _i = 0, primitives_3 = primitives; _i < primitives_3.length; _i++) {
+                    var primitive = primitives_3[_i];
                     switch (primitive.mode) {
                         case 4 /* Triangles */:
                         default:
@@ -12171,12 +12184,12 @@ var egret3d;
                 //
                 this.maxPrecision = _getMaxShaderPrecision(webgl, "highp");
                 this.maxVertexAttributes = webgl.getParameter(webgl.MAX_VERTEX_ATTRIBS);
-                this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
+                this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
                 this.maxVertexTextures = webgl.getParameter(webgl.MAX_VERTEX_TEXTURE_IMAGE_UNITS);
+                this.maxTextures = webgl.getParameter(webgl.MAX_TEXTURE_IMAGE_UNITS);
                 this.maxTextureSize = webgl.getParameter(webgl.MAX_TEXTURE_SIZE);
                 this.maxCubemapSize = webgl.getParameter(webgl.MAX_CUBE_MAP_TEXTURE_SIZE);
                 this.maxRenderBufferize = webgl.getParameter(webgl.MAX_RENDERBUFFER_SIZE);
-                this.maxVertexUniformVectors = webgl.getParameter(webgl.MAX_VERTEX_UNIFORM_VECTORS);
                 this.maxBoneCount = this.textureFloatEnabled ? 1024 : Math.floor((this.maxVertexUniformVectors - 20) / 4);
                 this.maxAnisotropy = (this.textureFilterAnisotropic !== null) ? webgl.getParameter(this.textureFilterAnisotropic.MAX_TEXTURE_MAX_ANISOTROPY_EXT) : 0;
                 //
@@ -12194,12 +12207,12 @@ var egret3d;
                 //
                 console.info("Maximum shader precision:", this.maxPrecision);
                 console.info("Maximum vertex attribute count:", this.maxVertexAttributes);
-                console.info("Maximum texture count:", this.maxTextures);
+                console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
                 console.info("Maximum vertex texture count:", this.maxVertexTextures);
+                console.info("Maximum texture count:", this.maxTextures);
                 console.info("Maximum texture size:", this.maxTextureSize);
                 console.info("Maximum cube map texture size:", this.maxCubemapSize);
                 console.info("Maximum render buffer size:", this.maxRenderBufferize);
-                console.info("Maximum vertex uniform vectors:", this.maxVertexUniformVectors);
                 console.info("Maximum GPU skinned bone count:", this.maxBoneCount);
                 console.info("Maximum anisotropy:", this.maxAnisotropy);
             };
@@ -12214,7 +12227,7 @@ var egret3d;
                 }
                 if (bufferBit & 16384 /* Color */) {
                     var clearColor = this._clearColor;
-                    clearColor && webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a); //TODO
+                    webgl.clearColor(clearColor.r, clearColor.g, clearColor.b, clearColor.a); //TODO
                 }
                 webgl.clear(bufferBit);
             };
@@ -31910,94 +31923,93 @@ var egret3d;
             WebGLMesh.prototype.update = function (mask, subMeshIndex) {
                 if (subMeshIndex === void 0) { subMeshIndex = 0; }
                 var needUpdate = this._needUpdate & mask;
-                if (needUpdate !== 0) {
-                    var webgl_11 = webgl_10.WebGLRenderState.webgl;
-                    var glTFMesh = this._glTFMesh;
-                    var glTFMeshExtras = glTFMesh.extras;
-                    var primitive = glTFMesh.primitives[subMeshIndex];
-                    var primitiveExtras = primitive.extras;
-                    var attributes = this._attributes;
-                    var bindVAO = false;
-                    if ((needUpdate & 8 /* VertexBuffer */) !== 0) {
+                var webgl = webgl_10.WebGLRenderState.webgl;
+                var glTFMesh = this._glTFMesh;
+                var glTFMeshExtras = glTFMesh.extras;
+                var primitive = glTFMesh.primitives[subMeshIndex];
+                var primitiveExtras = primitive.extras;
+                var bindVAO = false;
+                if ((needUpdate & 8 /* VertexBuffer */) !== 0) {
+                    bindVAO = this._bindVAO(primitive);
+                    if (glTFMeshExtras.vbo === null) {
+                        var vbo = webgl.createBuffer();
+                        if (vbo !== null) {
+                            glTFMeshExtras.vbo = vbo;
+                        }
+                        else {
+                            console.error("Create webgl array buffer error.");
+                        }
+                    }
+                    if (glTFMeshExtras.vbo !== null) {
+                        var attributes = this._attributes;
+                        var byteLength = 0;
+                        var attributeNames = [];
+                        for (var k in attributes) {
+                            byteLength += this.getAccessorByteLength(this.getAccessor(attributes[k]));
+                            attributeNames.push(k);
+                        }
+                        webgl.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
+                        webgl.bufferData(34962 /* ArrayBuffer */, byteLength, glTFMeshExtras.drawMode);
+                        this.uploadVertexBuffer(attributeNames);
+                    }
+                }
+                needUpdate = primitiveExtras.needUpdate;
+                if ((needUpdate & 16 /* IndexBuffer */) !== 0 && primitive.indices !== undefined) {
+                    if (!bindVAO) {
                         bindVAO = this._bindVAO(primitive);
-                        if (glTFMeshExtras.vbo === null) {
-                            var vbo = webgl_11.createBuffer();
-                            if (vbo !== null) {
-                                glTFMeshExtras.vbo = vbo;
-                            }
-                            else {
-                                console.error("Create webgl array buffer error.");
-                            }
+                    }
+                    if (primitiveExtras.ibo === null) {
+                        var ibo = webgl.createBuffer();
+                        if (ibo !== null) {
+                            primitiveExtras.ibo = ibo;
                         }
-                        if (glTFMeshExtras.vbo !== null) {
-                            var byteLength = 0;
-                            var attributeNames = [];
-                            for (var k in attributes) {
-                                byteLength += this.getAccessorByteLength(this.getAccessor(attributes[k]));
-                                attributeNames.push(k);
-                            }
-                            webgl_11.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
-                            webgl_11.bufferData(34962 /* ArrayBuffer */, byteLength, glTFMeshExtras.drawMode);
-                            this.uploadVertexBuffer(attributeNames);
+                        else {
+                            console.error("Create webgl array element buffer error.");
                         }
                     }
-                    if ((needUpdate & 16 /* IndexBuffer */) !== 0 && primitive.indices !== undefined) {
-                        if (!bindVAO) {
-                            bindVAO = this._bindVAO(primitive);
-                        }
-                        if (primitiveExtras.ibo === null) {
-                            var ibo = webgl_11.createBuffer();
-                            if (ibo !== null) {
-                                primitiveExtras.ibo = ibo;
-                            }
-                            else {
-                                console.error("Create webgl array element buffer error.");
-                            }
-                        }
-                        if (primitiveExtras.ibo !== null) {
-                            webgl_11.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
-                            webgl_11.bufferData(34963 /* ElementArrayBuffer */, this.getAccessorByteLength(this.getAccessor(primitive.indices)), glTFMeshExtras.drawMode);
-                            this.uploadSubIndexBuffer(subMeshIndex);
-                        }
+                    if (primitiveExtras.ibo !== null) {
+                        webgl.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
+                        webgl.bufferData(34963 /* ElementArrayBuffer */, this.getAccessorByteLength(this.getAccessor(primitive.indices)), glTFMeshExtras.drawMode);
+                        this.uploadSubIndexBuffer(subMeshIndex);
                     }
-                    if ((needUpdate & 4 /* VertexArray */) !== 0) {
-                        if (!bindVAO) {
-                            bindVAO = this._bindVAO(primitive);
+                }
+                if ((needUpdate & 4 /* VertexArray */) !== 0) {
+                    if (!bindVAO) {
+                        bindVAO = this._bindVAO(primitive);
+                    }
+                    if (bindVAO) {
+                        if (primitiveExtras.program !== null) {
+                            webgl.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
+                            webgl.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
+                            egret3d.renderState.updateVertexAttributes(this, subMeshIndex);
                         }
-                        if (bindVAO) {
-                            if (primitiveExtras.program !== null) {
-                                webgl_11.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
-                                webgl_11.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
-                                egret3d.renderState.updateVertexAttributes(this, subMeshIndex);
-                            }
-                            webgl_11.bindVertexArray(null);
-                        }
+                        webgl.bindVertexArray(null);
                     }
                 }
                 _super.prototype.update.call(this, mask, subMeshIndex);
             };
             WebGLMesh.prototype.onReferenceCountChange = function (isZero) {
                 if (isZero) {
-                    var webgl_12 = webgl_10.WebGLRenderState.webgl;
+                    var webgl_11 = webgl_10.WebGLRenderState.webgl;
                     var glTFMesh = this._glTFMesh;
                     var primitives = glTFMesh.primitives, extras = glTFMesh.extras;
                     if (extras.vbo !== null) {
-                        webgl_12.deleteBuffer(extras.vbo);
+                        webgl_11.deleteBuffer(extras.vbo);
                         extras.vbo = null;
                     }
-                    for (var _i = 0, primitives_3 = primitives; _i < primitives_3.length; _i++) {
-                        var extras_1 = primitives_3[_i].extras;
+                    for (var _i = 0, primitives_4 = primitives; _i < primitives_4.length; _i++) {
+                        var extras_1 = primitives_4[_i].extras;
                         extras_1.program = null;
                         if (extras_1.vao !== null) {
-                            webgl_12.deleteVertexArray(extras_1.vao);
+                            webgl_11.deleteVertexArray(extras_1.vao);
                             extras_1.vao = null;
                         }
                         if (extras_1.ibo !== null) {
-                            webgl_12.deleteBuffer(extras_1.ibo);
+                            webgl_11.deleteBuffer(extras_1.ibo);
                             extras_1.ibo = null;
                         }
                     }
-                    this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */ | 16 /* IndexBuffer */);
+                    this.needUpdate(4 /* VertexArray */ | 8 /* VertexBuffer */ | 16 /* IndexBuffer */, -1);
                     return true;
                 }
                 return false;
@@ -32037,11 +32049,11 @@ var egret3d;
                     var primitive = primitives[subMeshIndex];
                     var ibo = primitive.extras.ibo;
                     if (primitive.extras.ibo !== null) {
-                        var webgl_13 = webgl_10.WebGLRenderState.webgl;
+                        var webgl_12 = webgl_10.WebGLRenderState.webgl;
                         var accessor = this.getAccessor(primitive.indices);
                         var subIndexBuffer = this.createTypeArrayFromAccessor(accessor, offset, count);
-                        webgl_13.bindBuffer(34963 /* ElementArrayBuffer */, ibo);
-                        webgl_13.bufferSubData(34963 /* ElementArrayBuffer */, offset, subIndexBuffer);
+                        webgl_12.bindBuffer(34963 /* ElementArrayBuffer */, ibo);
+                        webgl_12.bufferSubData(34963 /* ElementArrayBuffer */, offset, subIndexBuffer);
                     }
                     else {
                         console.warn("Error arguments.");
@@ -32155,7 +32167,7 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     var webgl;
-    (function (webgl_14) {
+    (function (webgl_13) {
         var _patternInclude = /^[ \t]*#include +<([\w\d./]+)>/gm;
         var _patternLoop = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
         function _replace(match, include) {
@@ -32232,7 +32244,7 @@ var egret3d;
                 return _this;
             }
             WebGLRenderSystem.prototype._compileShader = function (shader, defines) {
-                var webgl = webgl_14.WebGLRenderState.webgl;
+                var webgl = webgl_13.WebGLRenderState.webgl;
                 var webGLShader = webgl.createShader(shader.type);
                 var shaderContent = _parseIncludes(shader.uri);
                 shaderContent = _replaceShaderNums(shaderContent);
@@ -32248,7 +32260,7 @@ var egret3d;
                 return null;
             };
             WebGLRenderSystem.prototype._updateProgram = function (scene, renderer, material) {
-                var webgl = webgl_14.WebGLRenderState.webgl;
+                var webgl = webgl_13.WebGLRenderState.webgl;
                 var renderState = this._renderState;
                 var shader = material.shader;
                 var programs = shader.programs;
@@ -32282,7 +32294,7 @@ var egret3d;
                         var fragmentLog = webgl.getShaderInfoLog(fragmentWebGLShader).trim();
                         var parameter = webgl.getProgramParameter(webGLProgram, 35714 /* LinkStatus */);
                         if (parameter) {
-                            program = new webgl_14.WebGLProgramBinder(webGLProgram).extract(material.technique);
+                            program = new webgl_13.WebGLProgramBinder(webGLProgram).extract(material.technique);
                         }
                         else {
                             console.error("Create webgl program error.", shader.name, programLog, vertexLog, fragmentLog);
@@ -32312,7 +32324,7 @@ var egret3d;
                 return forceUpdate;
             };
             WebGLRenderSystem.prototype._updateAttributes = function (mesh, subMeshIndex) {
-                var webgl = webgl_14.WebGLRenderState.webgl;
+                var webgl = webgl_13.WebGLRenderState.webgl;
                 var renderState = this._renderState;
                 var _a = mesh.glTFMesh, primitives = _a.primitives, extras = _a.extras;
                 var primitiveExtras = primitives[subMeshIndex].extras;
@@ -32329,7 +32341,7 @@ var egret3d;
                 }
             };
             WebGLRenderSystem.prototype._updateGlobalUniforms = function (program, camera, drawCall, renderer, currentScene, forceUpdate) {
-                var webgl = webgl_14.WebGLRenderState.webgl;
+                var webgl = webgl_13.WebGLRenderState.webgl;
                 var cameraAndLightCollecter = this._cameraAndLightCollecter;
                 var renderState = this._renderState;
                 var globalUniforms = program.globalUniforms;
@@ -32593,7 +32605,7 @@ var egret3d;
                 }
             };
             WebGLRenderSystem.prototype._updateUniforms = function (program, material) {
-                var webgl = webgl_14.WebGLRenderState.webgl;
+                var webgl = webgl_13.WebGLRenderState.webgl;
                 var technique = material.technique;
                 var techniqueState = technique.states || null;
                 var renderState = this._renderState;
@@ -32739,7 +32751,7 @@ var egret3d;
                     renderState.clearState();
                 }
                 // Egret 2D.
-                var webgl = webgl_14.WebGLRenderState.webgl;
+                var webgl = webgl_13.WebGLRenderState.webgl;
                 webgl.pixelStorei(webgl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, 1); // TODO 解决字体模糊。
                 for (var _c = 0, _d = this.groups[0].entities; _c < _d.length; _c++) {
                     var entity = _d[_c];
@@ -32758,7 +32770,7 @@ var egret3d;
                 var collecter = this._cameraAndLightCollecter;
                 if (collecter.currentShadowLight !== light) {
                     collecter.currentShadowLight = light;
-                    var webgl_15 = webgl_14.WebGLRenderState.webgl;
+                    var webgl_14 = webgl_13.WebGLRenderState.webgl;
                     var renderState_1 = this._renderState;
                     var shadow = light.shadow;
                     var shadowMapSize = shadow.mapSize;
@@ -32776,7 +32788,7 @@ var egret3d;
                         shadow._onUpdate(i);
                         //update draw call
                         camera._update();
-                        webgl_15.viewport(viewport.x * shadowMapSize, viewport.y * shadowMapSize, viewport.w * shadowMapSize, viewport.h * shadowMapSize);
+                        webgl_14.viewport(viewport.x * shadowMapSize, viewport.y * shadowMapSize, viewport.w * shadowMapSize, viewport.h * shadowMapSize);
                         for (var _i = 0, drawCalls_1 = drawCalls; _i < drawCalls_1.length; _i++) {
                             var drawCall = drawCalls_1[_i];
                             this.draw(drawCall, shadowMaterial);
@@ -32799,7 +32811,7 @@ var egret3d;
                 renderState.draw = this.draw.bind(this);
             };
             WebGLRenderSystem.prototype.onFrame = function () {
-                if (!webgl_14.WebGLRenderState.webgl) {
+                if (!webgl_13.WebGLRenderState.webgl) {
                     return;
                 }
                 var cameras = this._cameraAndLightCollecter.cameras;
@@ -32903,7 +32915,7 @@ var egret3d;
             };
             WebGLRenderSystem.prototype.draw = function (drawCall, material) {
                 if (material === void 0) { material = null; }
-                var webgl = webgl_14.WebGLRenderState.webgl;
+                var webgl = webgl_13.WebGLRenderState.webgl;
                 var camera = egret3d.cameraAndLightCollecter.currentCamera;
                 var renderer = drawCall.renderer;
                 var activeScene = paper.Application.sceneManager.activeScene;
@@ -32952,7 +32964,7 @@ var egret3d;
                     // Update attributes.
                     if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
                         if (program !== primitive.extras.program) {
-                            mesh.needUpdate(4 /* VertexArray */);
+                            mesh.needUpdate(4 /* VertexArray */, subMeshIndex);
                             primitive.extras.program = program;
                         }
                         this._updateAttributes(mesh, subMeshIndex);
@@ -32977,7 +32989,7 @@ var egret3d;
                     //     }
                     // }
                     // Draw.
-                    if (primitive.extras.draw !== undefined) {
+                    if (primitive.extras.draw !== null) {
                         // TODO 需要更友好的 API 以及防止 mesh cache 的方式。
                         var _b = primitive.extras.draw, offset = _b.offset, count = _b.count;
                         if (primitive.indices !== undefined) {
@@ -33015,7 +33027,7 @@ var egret3d;
             };
             return WebGLRenderSystem;
         }(paper.BaseSystem));
-        webgl_14.WebGLRenderSystem = WebGLRenderSystem;
+        webgl_13.WebGLRenderSystem = WebGLRenderSystem;
         __reflect(WebGLRenderSystem.prototype, "egret3d.webgl.WebGLRenderSystem", ["egret3d.IRenderSystem"]);
     })(webgl = egret3d.webgl || (egret3d.webgl = {}));
 })(egret3d || (egret3d = {}));

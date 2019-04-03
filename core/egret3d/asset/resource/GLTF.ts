@@ -1295,16 +1295,10 @@ declare namespace gltf {
         }[];
         extensions?: any;
         extras?: {
-            draw?: {
-                /**
-                 * 绘制偏移。
-                 */
-                offset: uint;
-                /**
-                 * 绘制数量。
-                 */
-                count: uint;
-            };
+            /**
+             * 
+             */
+            needUpdate: uint;
             /**
              * 
              */
@@ -1317,6 +1311,19 @@ declare namespace gltf {
              * 
              */
             ibo: WebGLBuffer | null;
+            /**
+             * 
+             */
+            draw: {
+                /**
+                 * 绘制偏移。
+                 */
+                offset: uint;
+                /**
+                 * 绘制数量。
+                 */
+                count: uint;
+            } | null;
         };
 
     }

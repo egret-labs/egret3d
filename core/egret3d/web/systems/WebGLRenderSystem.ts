@@ -928,7 +928,7 @@ namespace egret3d.webgl {
                 // Update attributes.
                 if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
                     if (program !== primitive.extras!.program) {
-                        mesh.needUpdate(MeshNeedUpdate.VertexArray);
+                        mesh.needUpdate(MeshNeedUpdate.VertexArray, subMeshIndex);
                         primitive.extras!.program = program;
                     }
 
@@ -954,7 +954,7 @@ namespace egret3d.webgl {
                 //     }
                 // }
                 // Draw.
-                if (primitive.extras!.draw !== undefined) {
+                if (primitive.extras!.draw !== null) {
                     // TODO 需要更友好的 API 以及防止 mesh cache 的方式。
                     const { offset, count } = primitive.extras!.draw!;
 

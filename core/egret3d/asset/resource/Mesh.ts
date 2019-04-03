@@ -98,7 +98,7 @@ namespace egret3d {
         /**
          * 缓存的更新标记。
          */
-        protected _needUpdate: uint = MeshNeedUpdate.All;
+        protected _needUpdate: MeshNeedUpdate = MeshNeedUpdate.All;
         /**
          * 缓存的顶点包围盒。
          */
@@ -201,7 +201,7 @@ namespace egret3d {
 
             for (const primitive of glTFMesh.primitives) {
                 primitive.attributes = attributes;
-                primitive.extras = { program: null, vao: null, ibo: null };
+                primitive.extras = { needUpdate: MeshNeedUpdate.All, program: null, vao: null, ibo: null, draw: null };
             }
         }
         /**
@@ -260,26 +260,38 @@ namespace egret3d {
             return value;
         }
 
-        public needUpdate(mask: MeshNeedUpdate): void {
+        public needUpdate(mask: MeshNeedUpdate, subMeshIndex: int = -1): void {
             this._needUpdate |= mask;
+
+            if ((mask & (MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer)) !== 0) {
+                const { primitives } = this._glTFMesh!;
+
+                if (subMeshIndex < 0) {
+                    for (const primitive of primitives) {
+                        primitive.extras!.needUpdate |= mask;
+                    }
+                }
+                else {
+                    primitives[subMeshIndex].extras!.needUpdate |= mask;
+                }
+            }
         }
 
         public update(mask: MeshNeedUpdate, subMeshIndex: uint = 0): void {
             const needUpdate = this._needUpdate & mask;
 
-            if (needUpdate !== 0) {
-                if ((needUpdate & MeshNeedUpdate.BoundingBox) !== 0) {
-                    const vertices = this.getVertices()!;
-                    const position = helpVector3E;
-                    const boundingBox = this._boundingBox;
+            if ((needUpdate & MeshNeedUpdate.BoundingBox) !== 0) {
+                const vertices = this.getVertices()!;
+                const position = helpVector3E;
+                const boundingBox = this._boundingBox;
 
-                    for (let i = 0, l = vertices.length; i < l; i += 3) {
-                        boundingBox.add(position.fromArray(vertices, i));
-                    }
+                for (let i = 0, l = vertices.length; i < l; i += 3) {
+                    boundingBox.add(position.fromArray(vertices, i));
                 }
-
-                this._needUpdate &= ~mask;
             }
+
+            this._needUpdate &= ~mask;
+            this._glTFMesh!.primitives[subMeshIndex].extras!.needUpdate &= ~mask;
         }
 
         public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null, vertices: Float32Array | null = null) {
@@ -587,7 +599,7 @@ namespace egret3d {
                     attributeTypes[attributeName] = attributeType;
                 }
 
-                this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer);
+                this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer, -1);
 
                 return buffer;
             }
@@ -621,7 +633,7 @@ namespace egret3d {
 
                     delete attributes[attributeName];
                     delete attributeOffsets[attributeName];
-                    this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer);
+                    this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer, -1);
 
                     return buffer;
                 }
@@ -670,14 +682,15 @@ namespace egret3d {
             else {
                 subMeshIndex = primitives.length;
                 primitive = primitives[subMeshIndex] = {
-                    attributes: this._attributes, extras: { ibo: null },
-                } as gltf.MeshPrimitive;
+                    attributes: this._attributes as any,
+                    extras: { needUpdate: MeshNeedUpdate.All, program: null, vao: null, ibo: null, draw: null },
+                };
             }
 
             primitive.indices = accessorIndex;
             primitive.material = materialIndex;
             primitive.mode = randerMode;
-            this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.IndexBuffer);
+            this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.IndexBuffer, subMeshIndex);
 
             return subMeshIndex;
         }
@@ -698,7 +711,7 @@ namespace egret3d {
 
                     if (removeAccessor !== null) {
                         primitives!.splice(subMeshIndex, 1);
-                        this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.IndexBuffer);
+                        this.needUpdate(MeshNeedUpdate.VertexArray | MeshNeedUpdate.IndexBuffer, subMeshIndex);
 
                         if (extras!.wireframeIndex === subMeshIndex) { // Update wireframe cache.
                             extras!.wireframeIndex = -1;
