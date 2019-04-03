@@ -13,7 +13,7 @@ namespace examples {
             // egret3d.Camera.main.gameObject.addComponent(behaviors.RotateAround);
             // //
             // createGridRoom();
-
+            egret3d.renderState.enableGPUInstancing = true;
             egret3d.Camera.main;
 
             const mesh = egret3d.DefaultMeshes.CUBE.clone();

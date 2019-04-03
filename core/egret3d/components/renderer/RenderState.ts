@@ -605,13 +605,17 @@ namespace egret3d {
             this._toneMapping = value;
         }
         /**
-         * 
+         * 是否开启实例化
          */
         @paper.editor.property(paper.editor.EditType.CHECKBOX)
         public get enableGPUInstancing(): boolean {
             return this._enableGPUInstancing;
         }
         public set enableGPUInstancing(value: boolean) {
+            if (this.instancedArrays === null) {
+                console.warn("不支持ANGLE_instanced_arrays扩展");
+                return;
+            }
             if (this._enableGPUInstancing === value) {
                 return;
             }

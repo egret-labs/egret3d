@@ -4954,7 +4954,7 @@ declare namespace egret3d {
          */
         toneMapping: ToneMapping;
         /**
-         *
+         * 全局开启实例化
          */
         enableGPUInstancing: boolean;
         /**

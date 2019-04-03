@@ -1,5 +1,5 @@
 namespace egret3d.webgl {
-    
+
     const _browserPrefixes = [
         "",
         "MOZ_",
@@ -145,8 +145,7 @@ namespace egret3d.webgl {
             this.standardDerivativesEnabled = !!_getExtension(webgl, "OES_standard_derivatives");
             this.textureFloatEnabled = !!_getExtension(webgl, "OES_texture_float");
             this.fragDepthEnabled = !!_getExtension(webgl, "EXT_frag_depth");
-            this.vertexArrayObject = null;
-            // this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
+            this.vertexArrayObject = _getExtension(webgl, "OES_vertex_array_object");
             this.textureFilterAnisotropic = _getExtension(webgl, "EXT_texture_filter_anisotropic");
             this.shaderTextureLOD = _getExtension(webgl, "EXT_shader_texture_lod");
             this.instancedArrays = _getExtension(webgl, "ANGLE_instanced_arrays");
@@ -211,6 +210,7 @@ namespace egret3d.webgl {
             const { caches } = this;
             const { glTFMesh, attributes } = mesh;
             const attributeOffsets = glTFMesh.extras!.attributeOffsets;
+            const enableInstancedArrays = renderState.instancedArrays !== null;
             let attributeCount = 0;
             // +++---...|xxx
             for (const attribute of (glTFMesh.primitives[subMeshIndex].extras!.program as WebGLProgramBinder).attributes) {
@@ -220,34 +220,18 @@ namespace egret3d.webgl {
                     const accessor = mesh.getAccessor(attributes[semantic]);
                     const { typeCount, divisor } = accessor.extras!;
                     const offset = attributeOffsets[semantic];
-                    // TODO normalized应该来源于mesh，应该还没有
+                    // TODO normalized应该来源于mesh，应该还没有, 暂时不支持矩阵
                     webgl.enableVertexAttribArray(location);
-                    if (typeCount <= 4) {
-                        webgl.vertexAttribPointer(
-                            location,
-                            typeCount,
-                            accessor.componentType,
-                            accessor.normalized !== undefined ? accessor.normalized : false,
-                            0, offset
-                        );
-                        if (divisor) {
-                            webgl.vertexAttribDivisor(location, divisor);
-                        }
-                    }
-                    else if (typeCount === 16) {//MAT4
-                        webgl.vertexAttribPointer(location + 0, 4, accessor.componentType, false, 64, offset);
-                        webgl.vertexAttribPointer(location + 1, 4, accessor.componentType, false, 64, offset + 16);
-                        webgl.vertexAttribPointer(location + 2, 4, accessor.componentType, false, 64, offset + 32);
-                        webgl.vertexAttribPointer(location + 3, 4, accessor.componentType, false, 64, offset + 48);
-
-                        if (divisor) {
-                            webgl.vertexAttribDivisor(location + 0, divisor);
-                            webgl.vertexAttribDivisor(location + 1, divisor);
-                            webgl.vertexAttribDivisor(location + 2, divisor);
-                            webgl.vertexAttribDivisor(location + 3, divisor);
-                        }
-                    }
-
+                    webgl.vertexAttribPointer(
+                        location,
+                        typeCount,
+                        accessor.componentType,
+                        accessor.normalized !== undefined ? accessor.normalized : false,
+                        0, offset
+                    );
+                    if(enableInstancedArrays){
+                        webgl.vertexAttribDivisor(location, divisor);
+                    }                    
                 }
                 else {
                     webgl.disableVertexAttribArray(location);

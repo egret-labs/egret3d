@@ -951,22 +951,23 @@ namespace egret3d.webgl {
                 //     }
                 // }
                 // Draw.
+                const instanced = renderState.instancedArrays !== null ? drawCall.instanced : 0;
                 if (primitive.extras!.draw !== null) {
                     // TODO 需要更友好的 API 以及防止 mesh cache 的方式。
                     const { offset, count } = primitive.extras!.draw!;
 
                     if (primitive.indices !== undefined) {
                         const indexAccessor = mesh.getAccessor(primitive.indices);
-                        if (drawCall.instanced) {
-                            webgl.drawElementsInstanced(drawMode, count, indexAccessor.componentType, offset, drawCall.instanced);
+                        if (instanced) {
+                            webgl.drawElementsInstanced(drawMode, count, indexAccessor.componentType, offset, instanced);
                         }
                         else {
                             webgl.drawElements(drawMode, count, indexAccessor.componentType, offset);
                         }
                     }
                     else {
-                        if (drawCall.instanced) {
-                            webgl.drawArraysInstanced(drawMode, offset, count, drawCall.instanced);
+                        if (instanced) {
+                            webgl.drawArraysInstanced(drawMode, offset, count, instanced);
                         }
                         else {
                             webgl.drawArrays(drawMode, offset, count);
@@ -976,16 +977,16 @@ namespace egret3d.webgl {
                 else {
                     if (primitive.indices !== undefined) {
                         const indexAccessor = mesh.getAccessor(primitive.indices);
-                        if (drawCall.instanced) {
-                            webgl.drawElementsInstanced(drawMode, indexAccessor.count, indexAccessor.componentType, 0, drawCall.instanced);
+                        if (instanced) {
+                            webgl.drawElementsInstanced(drawMode, indexAccessor.count, indexAccessor.componentType, 0, instanced);
                         }
                         else {
                             webgl.drawElements(drawMode, indexAccessor.count, indexAccessor.componentType, 0);
                         }
                     }
                     else {
-                        if (drawCall.instanced) {
-                            webgl.drawArraysInstanced(drawMode, 0, mesh.vertexCount, drawCall.instanced);
+                        if (instanced) {
+                            webgl.drawArraysInstanced(drawMode, 0, mesh.vertexCount, instanced);
                         }
                         else {
                             webgl.drawArrays(drawMode, 0, mesh.vertexCount);

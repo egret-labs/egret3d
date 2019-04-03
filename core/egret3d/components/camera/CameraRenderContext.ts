@@ -166,7 +166,8 @@ namespace egret3d {
                     (!renderer.frustumCulled || math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))
                 ) {
                     drawCall.modelViewMatrix.multiply(camera.worldToCameraMatrix, drawCall.matrix);
-                    shadowCalls[shadowIndex++] = drawCall!;
+                    drawCall.instanced = 0;
+                    shadowCalls[shadowIndex++] = drawCall;
                 }
             }
 
@@ -202,7 +203,8 @@ namespace egret3d {
                     }
 
                     drawCall.modelViewMatrix.multiply(camera.worldToCameraMatrix, drawCall.matrix);
-                    drawCall!.zdist = Vector3.create().fromMatrixPosition(drawCall!.matrix).getSquaredDistance(cameraPosition);
+                    drawCall.zdist = Vector3.create().fromMatrixPosition(drawCall!.matrix).getSquaredDistance(cameraPosition);
+                    drawCall.instanced = 0;
                 }
             }
 
