@@ -127,7 +127,6 @@ namespace egret3d.trail {
             this._paused = isPaused;
             this.onPausedChanged.dispatch(isPaused);
         }
-
         private _paused: boolean = false;
     }
 }

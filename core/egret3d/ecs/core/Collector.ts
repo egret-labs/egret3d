@@ -28,6 +28,9 @@ namespace paper {
             Group.onComponentDisabled.add(this._onComponentDisabled, this);
         }
 
+        /**
+         * @internal
+         */
         private _onEntityAdded([group, entity]: [Group<IEntity>, IEntity]) {
             if (this._group !== group) {
                 return;
@@ -41,6 +44,9 @@ namespace paper {
             this.addedEntities.push(entity as TEntity);
         }
 
+        /**
+         * @internal
+         */
         private _onEntityRemoved([group, entity]: [Group<IEntity>, IEntity]) {
             if (this._group !== group) {
                 return;
@@ -54,6 +60,9 @@ namespace paper {
             this.removedEntities.push(entity as TEntity);
         }
 
+        /**
+         * @internal
+         */
         private _onComponentEnabled([group, component]: [Group<IEntity>, IComponent]) {
             if (this._group !== group) {
                 return;
@@ -67,6 +76,9 @@ namespace paper {
             this.addedComponentes.push(component);
         }
 
+         /**
+         * @internal
+         */
         private _onComponentDisabled([group, component]: [Group<IEntity>, IComponent]) {
             if (this._group !== group) {
                 return;

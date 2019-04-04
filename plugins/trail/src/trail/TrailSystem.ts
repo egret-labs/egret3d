@@ -1,6 +1,7 @@
 namespace egret3d.trail {
     /**
      * 拖尾系统
+     * @internal
      */
     export class TrailSystem extends paper.BaseSystem<paper.GameObject> {
 

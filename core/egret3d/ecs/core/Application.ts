@@ -88,6 +88,8 @@ namespace paper {
         }
         /**
          * including calculating, status updating, rerendering and logical updating
+         * 
+         * @internal
          */
         private _update({ tickCount, frameCount }: ClockUpdateFlags = { tickCount: 1, frameCount: 1 }) {
             // TOFIX: 只有逻辑帧不为零的时候, systemManager 的以下部分才做才有意义

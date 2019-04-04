@@ -24,6 +24,9 @@ namespace paper {
             Component.onComponentDestroyed.add(this._onComponentDestroyed, this);
         }
 
+        /**
+         * @internal
+         */
         private _onComponentCreated([entity, component]: [IEntity, IComponent]) {
             if (entity.constructor !== this._entityClass) {
                 return;
@@ -39,6 +42,9 @@ namespace paper {
             }
         }
 
+        /**
+         * @internal
+         */
         private _onComponentEnabled([entity, component]: [IEntity, IComponent]) {
             if (entity.constructor !== this._entityClass) {
                 return;
@@ -62,6 +68,9 @@ namespace paper {
             }
         }
 
+        /**
+         * @internal
+         */
         private _onComponentDisabled([entity, component]: [IEntity, IComponent]) {
             if (entity.constructor !== this._entityClass) {
                 return;
@@ -85,6 +94,9 @@ namespace paper {
             }
         }
 
+        /**
+         * @internal
+         */
         private _onComponentDestroyed([entity, component]: [IEntity, IComponent]) {
             if (entity.constructor !== this._entityClass) {
                 return;

@@ -65,8 +65,10 @@ namespace egret3d {
             }
         }
 
-        public initialize({ size, screenSize }: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
+        public initialize(sizes: { size: Readonly<ISize>, screenSize: Readonly<ISize> }) {
             super.initialize();
+
+            const { size, screenSize } = sizes;
 
             (stage as Stage) = this;
             this._size.w = size.w > 1.0 ? size.w : 1.0;

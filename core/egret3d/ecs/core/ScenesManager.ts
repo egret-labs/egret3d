@@ -28,6 +28,9 @@ namespace paper {
             Scene.onSceneDestroyed.add(this._removeScene, this);
         }
 
+        /**
+         * @internal
+         */
         private _addScene([scene, isActive]: [Scene, boolean]) {
             const scenes = this._scenes;
 

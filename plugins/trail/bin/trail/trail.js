@@ -698,6 +698,7 @@ var egret3d;
     (function (trail_1) {
         /**
          * 拖尾系统
+         * @internal
          */
         var TrailSystem = (function (_super) {
             __extends(TrailSystem, _super);

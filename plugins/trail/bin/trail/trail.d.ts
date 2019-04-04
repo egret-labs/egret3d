@@ -120,33 +120,6 @@ declare namespace egret3d.trail {
 }
 declare namespace egret3d.trail {
     /**
-     * 拖尾系统
-     */
-    class TrailSystem extends paper.BaseSystem<paper.GameObject> {
-        private _batchers;
-        /**
-         * `GameObject` 的以下各个组件齐全时才会进入到此系统, 触发 `onEntityAdded()`
-         */
-        protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
-        /**
-         * TrailComponent 需要依赖 MeshFilter 等组件
-         * , 在 `onEntityAdded()` 可以确保 TrailComponent 本身和它依赖的组件都添加完成了
-         *
-         * @param entity 进入系统的对象
-         */
-        onEntityAdded(entity: paper.GameObject): void;
-        /**
-         *
-         * @param entity 离开系统的对象
-         */
-        onEntityRemoved(entity: paper.GameObject): void;
-        /**
-         * 渲染帧更新
-         * @param deltaTime 帧时长(秒)
-         */
-        onFrame(deltaTime: float): void;
-    }
-    /**
      * 创建拖尾对象
      * @param name 对象名称
      */
