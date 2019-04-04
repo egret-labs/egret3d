@@ -4260,6 +4260,7 @@ var paper;
                 _super.prototype.initialize.call(this);
                 EditorAssets_1.SKELETON_MESH = egret3d.Mesh.create(1024, 0, ["POSITION" /* POSITION */]);
                 EditorAssets_1.SKELETON_MESH.drawMode = 35048 /* Dynamic */;
+                EditorAssets_1.SKELETON_MESH.glTFMesh.primitives[0].mode = 1 /* Lines */;
                 EditorAssets_1.CIRCLE_LINE_HALF = egret3d.MeshBuilder.createCircle(0.5, 0.5);
                 {
                     var mesh = EditorAssets_1.JOINT_MESH = egret3d.Mesh.create(2, 2, ["POSITION" /* POSITION */]);

@@ -111,8 +111,7 @@ namespace egret3d {
             for (const define of linked) {
                 let context = define.context;
                 if (context) {
-                    // if (typeof context === "number") {
-                    if (!define.isCode) {
+                    if (!define.isCode && typeof context === "number") {
                         context = define.name + " " + context;
                     }
                 }

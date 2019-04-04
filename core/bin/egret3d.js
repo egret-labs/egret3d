@@ -11297,6 +11297,9 @@ var paper;
          */
         Clock.prototype.update = function (now) {
             now = now * 0.001;
+            if (this.tickInterval <= 0.0) {
+                this.tickInterval = 1.0 / 60;
+            }
             if (this._beginTime < 0) {
                 this._beginTime = now;
             }
@@ -20109,48 +20112,48 @@ var egret3d;
                 throw new Error();
             }
             var materialFilter = this._materialFilter;
-            var matrix = entity.getComponent(egret3d.Transform).localToWorldMatrix;
+            var localToWorldMatrix = entity.getComponent(egret3d.Transform).localToWorldMatrix;
             if (materialFilter.length < materialCount) {
                 materialFilter.length = materialCount;
             }
             for (var i = 0; i < subMeshCount; ++i) {
-                var materialIndex = primitives[i].material;
+                var materialIndex = primitives[i].material || 0;
                 var material = null;
-                if (materialIndex === undefined) {
-                    material = egret3d.DefaultMaterials.MESH_BASIC;
-                }
-                else if (materialIndex < materialCount) {
+                if (materialIndex < materialCount) {
                     material = materials[materialIndex];
                     materialFilter[materialIndex] = true;
                 }
-                if (material) {
+                if (material !== null) {
                     var drawCall = egret3d.DrawCall.create();
                     drawCall.entity = entity;
                     drawCall.renderer = renderer;
-                    drawCall.matrix = matrix;
+                    drawCall.matrix = localToWorldMatrix;
                     drawCall.subMeshIndex = i;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-            for (var i = 0; i < materialCount; ++i) {
+            for (var i = 0, l = materialFilter.length; i < l; ++i) {
                 if (materialFilter[i]) {
+                    materialFilter[i] = false;
                     continue;
+                }
+                else if (i >= materialCount) {
+                    break;
                 }
                 var material = materials[i];
                 for (var j = 0; j < subMeshCount; ++j) {
                     var drawCall = egret3d.DrawCall.create();
                     drawCall.entity = entity;
                     drawCall.renderer = renderer;
-                    drawCall.matrix = matrix;
+                    drawCall.matrix = localToWorldMatrix;
                     drawCall.subMeshIndex = j;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-            // materialFilter.length = 0;
         };
         MeshRendererSystem.prototype.getMatchers = function () {
             return [
@@ -20558,18 +20561,17 @@ var egret3d;
             }
             var materialFilter = this._materialFilter;
             var matrix = egret3d.Matrix4.IDENTITY;
-            materialFilter.length = materialCount;
+            if (materialFilter.length < materialCount) {
+                materialFilter.length = materialCount;
+            }
             for (var i = 0; i < subMeshCount; ++i) {
-                var materialIndex = primitives[i].material;
+                var materialIndex = primitives[i].material || 0;
                 var material = null;
-                if (materialIndex === undefined) {
-                    material = egret3d.DefaultMaterials.MESH_BASIC;
-                }
-                else if (materialIndex < materialCount) {
+                if (materialIndex < materialCount) {
                     material = materials[materialIndex];
                     materialFilter[materialIndex] = true;
                 }
-                if (material) {
+                if (material !== null) {
                     var drawCall = egret3d.DrawCall.create();
                     drawCall.entity = entity;
                     drawCall.renderer = renderer;
@@ -20580,9 +20582,13 @@ var egret3d;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-            for (var i = 0; i < materialCount; ++i) {
+            for (var i = 0, l = materialFilter.length; i < l; ++i) {
                 if (materialFilter[i]) {
+                    materialFilter[i] = false;
                     continue;
+                }
+                else if (i >= materialCount) {
+                    break;
                 }
                 var material = materials[i];
                 for (var j = 0; j < subMeshCount; ++j) {
@@ -20596,7 +20602,6 @@ var egret3d;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-            materialFilter.length = 0;
         };
         SkinnedMeshRendererSystem.prototype.getMatchers = function () {
             return [
@@ -27459,8 +27464,7 @@ var egret3d;
                 var define = linked_1[_c];
                 var context = define.context;
                 if (context) {
-                    // if (typeof context === "number") {
-                    if (!define.isCode) {
+                    if (!define.isCode && typeof context === "number") {
                         context = define.name + " " + context;
                     }
                 }
