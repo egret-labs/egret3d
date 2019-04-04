@@ -201,7 +201,7 @@ namespace egret3d {
 
             for (const primitive of glTFMesh.primitives) {
                 primitive.attributes = attributes;
-                primitive.extras = { needUpdate: MeshNeedUpdate.All, program: null, vao: null, ibo: null, draw: null };
+                primitive.extras = { needUpdate: MeshNeedUpdate.All, program: null, vaos: null, ibo: null, draw: null };
             }
         }
         /**
@@ -689,7 +689,7 @@ namespace egret3d {
                 subMeshIndex = primitives.length;
                 primitive = primitives[subMeshIndex] = {
                     attributes: this._attributes as any,
-                    extras: { needUpdate: MeshNeedUpdate.All, program: null, vao: null, ibo: null, draw: null },
+                    extras: { needUpdate: MeshNeedUpdate.All, program: null, vaos: null, ibo: null, draw: null },
                 };
             }
 

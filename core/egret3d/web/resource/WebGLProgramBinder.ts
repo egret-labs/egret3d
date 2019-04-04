@@ -1,10 +1,12 @@
-/**
- * @internal
- */
-type GlobalWeblGLShader = WebGLShader;
-
 namespace egret3d.webgl {
-    let _hashCode: uint = 0;
+    /**
+     * Index creater.
+     */
+    let _count: uint = 0;
+    /**
+     * 
+     */
+    const _attributes: string[] = [];
     /**
      * @internal
      */
@@ -22,14 +24,15 @@ namespace egret3d.webgl {
         size: uint;
         type: uint;
         location: WebGLUniformLocation;
-        semantic?: string;
-        textureUnits?: uint[];
+        semantic: string;
+        textureUnits: uint[] | null;
     }
     /**
      * @internal
      */
     export class WebGLProgramBinder {
-        public readonly id: uint = _hashCode++;
+        public readonly index: uint = _count++;
+        public readonly attributesMask: uint;
         public readonly attributes: WebGLActiveAttribute[] = [];
         public readonly globalUniforms: WebGLActiveUniform[] = [];
         public readonly sceneUniforms: WebGLActiveUniform[] = [];
@@ -57,11 +60,10 @@ namespace egret3d.webgl {
                 program
             } = this;
             // Link attributes.
-            const attributeCount = webgl.getProgramParameter(program, webgl.ACTIVE_ATTRIBUTES);
+            const attributeCount = webgl.getProgramParameter(program, webgl.ACTIVE_ATTRIBUTES) as uint;
 
             for (let i = 0; i < attributeCount; ++i) {
-                const webGLActiveInfo = webgl.getActiveAttrib(program, i)!;
-                const { name, type } = webGLActiveInfo;
+                const { name, type } = webgl.getActiveAttrib(program, i)!;
                 const location = webgl.getAttribLocation(program, name);
 
                 let semantic = "";
@@ -69,14 +71,18 @@ namespace egret3d.webgl {
                 if (name in technique.attributes) {
                     semantic = technique.attributes[name].semantic;
                 }
-                else {
-                    if (name in globalAttributeSemantics) {
-                        semantic = globalAttributeSemantics[name];
-                    }
-                    else {
-                        console.warn("Invalid attribute.", name);
-                    }
+                else if (name in globalAttributeSemantics) {
+                    semantic = globalAttributeSemantics[name];
                 }
+                else if (DEBUG) {
+                    console.warn("Invalid attribute.", name);
+                }
+
+                if (_attributes.indexOf(semantic) < 0) {
+                    _attributes.push(semantic);
+                }
+
+                (this.attributesMask as uint) |= (_attributes.indexOf(semantic) + 1);
 
                 attributes.push({ name, type, location, semantic });
             }
@@ -84,35 +90,47 @@ namespace egret3d.webgl {
             const uniformCount = webgl.getProgramParameter(program, webgl.ACTIVE_UNIFORMS) as uint;
 
             for (let i = 0; i < uniformCount; ++i) {
-                const webGLActiveInfo = webgl.getActiveUniform(program, i)!;
-                const { name, type, size } = webGLActiveInfo;
+                const { name, type, size } = webgl.getActiveUniform(program, i)!;
                 const location = webgl.getUniformLocation(program, name)!;
+
+                let semantic = "";
+                let targetUniforms: WebGLActiveUniform[] | null = null;
 
                 if (name in technique.uniforms) {
                     const gltfUniform = technique.uniforms[name];
-                    uniforms.push({ name, type, size, semantic: gltfUniform.semantic, location });
+                    semantic = gltfUniform.semantic || ""; //
+                    targetUniforms = uniforms;
 
-                    if (DEBUG && gltfUniform.semantic !== undefined) {
-                        console.debug("Custom uniform.", name);
+                    if (DEBUG && semantic !== "") {
+                        console.debug("Custom uniform.", name, semantic);
                     }
                 }
                 else if (name in globalUniformSemantics) {
-                    globalUniforms.push({ name, type, size, semantic: globalUniformSemantics[name], location });
+                    semantic = globalUniformSemantics[name];
+                    targetUniforms = globalUniforms;
                 }
                 else if (name in sceneUniformSemantics) {
-                    sceneUniforms.push({ name, type, size, semantic: sceneUniformSemantics[name], location });
+                    semantic = sceneUniformSemantics[name];
+                    targetUniforms = sceneUniforms;
                 }
                 else if (name in cameraUniformSemantics) {
-                    cameraUniforms.push({ name, type, size, semantic: cameraUniformSemantics[name], location });
+                    semantic = cameraUniformSemantics[name];
+                    targetUniforms = cameraUniforms;
                 }
                 else if (name in shadowUniformSemantics) {
-                    shadowUniforms.push({ name, type, size, semantic: shadowUniformSemantics[name], location });
+                    semantic = shadowUniformSemantics[name];
+                    targetUniforms = shadowUniforms;
                 }
                 else if (name in modelUniformSemantics) {
-                    modelUniforms.push({ name, type, size, semantic: modelUniformSemantics[name], location });
+                    semantic = modelUniformSemantics[name];
+                    targetUniforms = modelUniforms;
                 }
-                else {
+                else if (DEBUG) {
                     console.warn("Invalid uniform.", name);
+                }
+
+                if (targetUniforms !== null) {
+                    targetUniforms.push({ name, type, size, semantic, location, textureUnits: null });
                 }
             }
             //
@@ -132,8 +150,8 @@ namespace egret3d.webgl {
                 }
             }
             //
-            let textureUint = 0;
             const allNames = samplerNames.concat(samplerArrayNames);
+            let textureUint = 0;
 
             for (const uniform of activeUniforms) {
                 if (allNames.indexOf(uniform.name) < 0) {
@@ -142,7 +160,7 @@ namespace egret3d.webgl {
 
                 let textureUnits = uniform.textureUnits;
 
-                if (!textureUnits) {
+                if (textureUnits === null) {
                     textureUnits = uniform.textureUnits = [];
                 }
 

@@ -60,7 +60,7 @@ namespace egret3d.webgl {
      * @internal
      */
     export interface WebGLEXTRenderingContext {
-        createVertexArray(): any;
+        createVertexArray(): WebGLVertexArrayObject | null;
         bindVertexArray(vao: WebGLVertexArrayObject | null): void;
         deleteVertexArray(vao: WebGLVertexArrayObject): void;
 

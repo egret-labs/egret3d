@@ -191,7 +191,7 @@ namespace egret3d.webgl {
             mesh.update(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer, subMeshIndex);
 
             if (renderState.vertexArrayObject !== null) {
-                webgl.bindVertexArray(primitiveExtras.vao);
+                webgl.bindVertexArray(primitiveExtras.vaos![(primitiveExtras.program as WebGLProgramBinder).attributesMask]);
             }
             else {
                 const vbo = extras!.vbo;
@@ -527,8 +527,8 @@ namespace egret3d.webgl {
                 material._update();
             }
             // 
-            if (technique.program !== program.id) {
-                technique.program = program.id;
+            if (technique.program !== program.index) {
+                technique.program = program.index;
             }
             // Update states.
             renderState.updateState(techniqueState);
@@ -924,7 +924,9 @@ namespace egret3d.webgl {
                 const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
                 // Update attributes.
                 if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
-                    if (program !== primitive.extras!.program) {
+                    const meshCacheProgram = primitive.extras!.program as WebGLProgramBinder;
+
+                    if (meshCacheProgram === null || program.attributesMask !== meshCacheProgram.attributesMask) {
                         mesh.needUpdate(MeshNeedUpdate.VertexArray, subMeshIndex);
                         primitive.extras!.program = program;
                     }

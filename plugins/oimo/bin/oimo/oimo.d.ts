@@ -7556,46 +7556,6 @@ declare namespace egret3d.oimo {
 }
 declare namespace egret3d.oimo {
     /**
-     * 基础碰撞组件。
-     * - 全部碰撞组件的基类。
-     */
-    abstract class BaseCollider extends paper.BaseComponent implements egret3d.ICollider {
-        protected static readonly _config: OIMO.ShapeConfig;
-        readonly colliderType: egret3d.ColliderType;
-        /**
-         * [CollisionMask, Friction, Restitution, Density];
-         */
-        protected readonly _values: Float32Array;
-        protected _oimoShape: OIMO.Shape | null;
-        protected abstract _createShape(): OIMO.Shape;
-        protected _updateConfig(): OIMO.ShapeConfig;
-        initialize(): void;
-        uninitialize(): void;
-        /**
-         * 该碰撞体的碰撞掩码。
-         */
-        collisionMask: paper.Layer;
-        /**
-         * 该碰撞体的摩擦力。
-         */
-        friction: float;
-        /**
-         * 该碰撞体的恢复系数。
-         */
-        restitution: float;
-        /**
-         * 该碰撞体的密度。
-         * - 单位为`千克/立方米`。
-         */
-        density: float;
-        /**
-         * 该碰撞体的 OIMO 碰撞体。
-         */
-        readonly oimoShape: OIMO.Shape;
-    }
-}
-declare namespace egret3d.oimo {
-    /**
      * 基础关节组件。
      * - 全部关节组件的基类。
      */
@@ -7658,13 +7618,42 @@ declare namespace egret3d.oimo {
 }
 declare namespace egret3d.oimo {
     /**
-     * 球体碰撞组件。
+     * 基础碰撞组件。
+     * - 全部碰撞组件的基类。
      */
-    class SphereCollider extends BaseCollider implements ISphereCollider {
-        readonly colliderType: ColliderType;
-        readonly sphere: Sphere;
-        protected _createShape(): OIMO.Shape;
+    abstract class BaseCollider extends paper.BaseComponent implements egret3d.ICollider {
+        protected static readonly _config: OIMO.ShapeConfig;
+        readonly colliderType: egret3d.ColliderType;
+        /**
+         * [CollisionMask, Friction, Restitution, Density];
+         */
+        protected readonly _values: Float32Array;
+        protected _oimoShape: OIMO.Shape | null;
+        protected abstract _createShape(): OIMO.Shape;
+        protected _updateConfig(): OIMO.ShapeConfig;
         initialize(): void;
+        uninitialize(): void;
+        /**
+         * 该碰撞体的碰撞掩码。
+         */
+        collisionMask: paper.Layer;
+        /**
+         * 该碰撞体的摩擦力。
+         */
+        friction: float;
+        /**
+         * 该碰撞体的恢复系数。
+         */
+        restitution: float;
+        /**
+         * 该碰撞体的密度。
+         * - 单位为`千克/立方米`。
+         */
+        density: float;
+        /**
+         * 该碰撞体的 OIMO 碰撞体。
+         */
+        readonly oimoShape: OIMO.Shape;
     }
 }
 declare namespace egret3d.oimo {
@@ -7703,7 +7692,6 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly box: Box;
         protected _createShape(): OIMO.Shape;
-        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7715,7 +7703,6 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly capsule: Capsule;
         protected _createShape(): OIMO.Shape;
-        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7727,7 +7714,6 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly cylinder: Cylinder;
         protected _createShape(): OIMO.Shape;
-        initialize(): void;
     }
 }
 declare namespace egret3d.oimo {
@@ -7739,7 +7725,16 @@ declare namespace egret3d.oimo {
         readonly colliderType: ColliderType;
         readonly cylinder: Cylinder;
         protected _createShape(): OIMO.Shape;
-        initialize(): void;
+    }
+}
+declare namespace egret3d.oimo {
+    /**
+     * 球体碰撞组件。
+     */
+    class SphereCollider extends BaseCollider implements ISphereCollider {
+        readonly colliderType: ColliderType;
+        readonly sphere: Sphere;
+        protected _createShape(): OIMO.Shape;
     }
 }
 declare namespace paper {

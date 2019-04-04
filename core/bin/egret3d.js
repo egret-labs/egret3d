@@ -1111,6 +1111,10 @@ var paper;
         var EditType;
         (function (EditType) {
             /**
+             * 按钮。
+             */
+            EditType["BUTTON"] = "BUTTON";
+            /**
              * 选中框。
              */
             EditType["CHECKBOX"] = "CHECKBOX";
@@ -1167,6 +1171,28 @@ var paper;
              */
             EditType["COLOR"] = "COLOR";
             /**
+             * 3x3 矩阵。
+             */
+            EditType["MAT3"] = "MAT3";
+            /**
+             * 实体。
+             */
+            EditType["GAMEOBJECT"] = "GAMEOBJECT";
+            /**
+             * 组件。
+             */
+            EditType["COMPONENT"] = "COMPONENT";
+            /**
+             * 资源。
+             */
+            EditType["ASSET"] = "ASSET";
+            /**
+             * 内嵌的。
+             */
+            EditType["NESTED"] = "NESTED";
+            /**变换 TODO remove*/
+            EditType["TRANSFROM"] = "TRANSFROM";
+            /**
              * 着色器。
              */
             EditType["SHADER"] = "SHADER";
@@ -1187,31 +1213,9 @@ var paper;
              */
             EditType["MESH"] = "MESH";
             /**
-             * 实体。
-             */
-            EditType["GAMEOBJECT"] = "GAMEOBJECT";
-            /**
-             * 组件。
-             */
-            EditType["COMPONENT"] = "COMPONENT";
-            /**
              * 声音。
              */
             EditType["SOUND"] = "SOUND";
-            /**
-             * 按钮。
-             */
-            EditType["BUTTON"] = "BUTTON";
-            /**
-             * 3x3 矩阵。
-             */
-            EditType["MAT3"] = "MAT3";
-            /**
-             * 内嵌的。
-             */
-            EditType["NESTED"] = "NESTED";
-            /**变换 TODO remove*/
-            EditType["TRANSFROM"] = "TRANSFROM";
         })(EditType = editor.EditType || (editor.EditType = {}));
         /**
          * 自定义装饰器。
@@ -4887,24 +4891,27 @@ var paper;
             },
             set: function (value) {
                 var materials = this._materials;
-                for (var _i = 0, materials_1 = materials; _i < materials_1.length; _i++) {
-                    var material = materials_1[_i];
-                    if (material !== null) {
-                        material.release();
-                    }
-                }
                 if (value !== materials) {
+                    for (var _i = 0, materials_1 = materials; _i < materials_1.length; _i++) {
+                        var material = materials_1[_i];
+                        if (material !== null) {
+                            material.release();
+                        }
+                    }
                     materials.length = 0;
                     for (var _a = 0, value_1 = value; _a < value_1.length; _a++) {
                         var material = value_1[_a];
                         materials.push(material);
                     }
-                }
-                for (var _b = 0, materials_2 = materials; _b < materials_2.length; _b++) {
-                    var material = materials_2[_b];
-                    if (material !== null) {
-                        material.retain();
+                    for (var _b = 0, materials_2 = materials; _b < materials_2.length; _b++) {
+                        var material = materials_2[_b];
+                        if (material !== null) {
+                            material.retain();
+                        }
                     }
+                }
+                else if (true) {
+                    console.warn("Potentially risky operation.");
                 }
                 BaseRenderer_1.onMaterialsChanged.dispatch(this);
             },
@@ -11283,7 +11290,7 @@ var egret3d;
             for (var _i = 0, _a = glTFMesh.primitives; _i < _a.length; _i++) {
                 var primitive = _a[_i];
                 primitive.attributes = attributes;
-                primitive.extras = { needUpdate: 31 /* All */, program: null, vao: null, ibo: null, draw: null };
+                primitive.extras = { needUpdate: 31 /* All */, program: null, vaos: null, ibo: null, draw: null };
             }
         };
         /**
@@ -11710,7 +11717,7 @@ var egret3d;
                 subMeshIndex = primitives.length;
                 primitive = primitives[subMeshIndex] = {
                     attributes: this._attributes,
-                    extras: { needUpdate: 31 /* All */, program: null, vao: null, ibo: null, draw: null },
+                    extras: { needUpdate: 31 /* All */, program: null, vaos: null, ibo: null, draw: null },
                 };
             }
             primitive.indices = accessorIndex;
@@ -12083,6 +12090,55 @@ var egret3d;
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
+    /**
+     * 动画资源。
+     */
+    var AnimationAsset = (function (_super) {
+        __extends(AnimationAsset, _super);
+        function AnimationAsset() {
+            return _super !== null && _super.apply(this, arguments) || this;
+        }
+        /**
+         * @private
+         */
+        AnimationAsset.create = function (name, config, buffers) {
+            var animationAsset = new AnimationAsset();
+            animationAsset.initialize(name, config, buffers);
+            return animationAsset;
+        };
+        /*
+         * 获取动画剪辑。
+         */
+        AnimationAsset.prototype.getAnimationClip = function (name) {
+            if (!this.config.animations ||
+                this.config.animations.length === 0) {
+                return null;
+            }
+            var animation = this.config.animations[0];
+            if (animation.extensions.paper.clips.length === 0) {
+                return null;
+            }
+            if (!name) {
+                return animation.extensions.paper.clips[0];
+            }
+            for (var _i = 0, _a = this.config.animations; _i < _a.length; _i++) {
+                var animation_1 = _a[_i];
+                for (var _b = 0, _c = animation_1.extensions.paper.clips; _b < _c.length; _b++) {
+                    var animationClip = _c[_b];
+                    if (animationClip.name === name) {
+                        return animationClip;
+                    }
+                }
+            }
+            return null;
+        };
+        return AnimationAsset;
+    }(egret3d.GLTFAsset));
+    egret3d.AnimationAsset = AnimationAsset;
+    __reflect(AnimationAsset.prototype, "egret3d.AnimationAsset");
+})(egret3d || (egret3d = {}));
+var egret3d;
+(function (egret3d) {
     var webgl;
     (function (webgl_1) {
         var _browserPrefixes = [
@@ -12328,77 +12384,6 @@ var egret3d;
         egret3d.RenderState = WebGLRenderState;
     })(webgl = egret3d.webgl || (egret3d.webgl = {}));
 })(egret3d || (egret3d = {}));
-var paper;
-(function (paper) {
-    /**
-     * 脚本组件。
-     * - 为了开发的便捷，允许使用脚本组件实现组件生命周期。
-     * - 生命周期的顺序如下：
-     * - onAwake();
-     * - onReset();
-     * - onEnable();
-     * - onStart();
-     * - onFixedUpdate();
-     * - onUpdate();
-     * - onAnimationEvent();
-     * - onLateUpdate();
-     * - onBeforeRender();
-     * - onDisable();
-     * - onDestroy();
-     */
-    var Behaviour = (function (_super) {
-        __extends(Behaviour, _super);
-        function Behaviour() {
-            return _super !== null && _super.apply(this, arguments) || this;
-        }
-        /**
-         * @internal
-         */
-        Behaviour.prototype._destroy = function () {
-            if (paper.Application.playerMode !== 4 /* Editor */ || this.constructor.executeInEditMode) {
-                if (this._lifeStates & 2 /* Awaked */) {
-                    this.onDestroy && this.onDestroy();
-                }
-            }
-            _super.prototype._destroy.call(this);
-        };
-        Behaviour.prototype.initialize = function (config) {
-            if (paper.Application.playerMode !== 4 /* Editor */ || this.constructor.executeInEditMode) {
-                this.gameObject = this.entity; //
-                if (this.isActiveAndEnabled) {
-                    this.onAwake && this.onAwake(config);
-                    this._lifeStates |= 2 /* Awaked */;
-                }
-            }
-            _super.prototype.initialize.call(this, config);
-        };
-        Behaviour.prototype.dispatchEnabledEvent = function (enabled) {
-            if (paper.Application.playerMode !== 4 /* Editor */ || this.constructor.executeInEditMode) {
-                if (enabled) {
-                    if ((this._lifeStates & 2 /* Awaked */) === 0) {
-                        this.onAwake && this.onAwake();
-                        this._lifeStates |= 2 /* Awaked */;
-                    }
-                    this.onEnable && this.onEnable();
-                }
-                else {
-                    this.onDisable && this.onDisable();
-                }
-            }
-            _super.prototype.dispatchEnabledEvent.call(this, enabled);
-        };
-        /**
-         * @internal
-         */
-        Behaviour.isBehaviour = true;
-        Behaviour = __decorate([
-            paper.abstract
-        ], Behaviour);
-        return Behaviour;
-    }(paper.BaseComponent));
-    paper.Behaviour = Behaviour;
-    __reflect(Behaviour.prototype, "paper.Behaviour");
-})(paper || (paper = {}));
 var paper;
 (function (paper) {
     /**
@@ -21995,7 +21980,7 @@ var egret3d;
         function Animation() {
             var _this = _super !== null && _super.apply(this, arguments) || this;
             /**
-             * @private
+             * 该动画组件是否自动播放。
              */
             _this.autoPlay = false;
             /**
@@ -22030,11 +22015,13 @@ var egret3d;
             }
             return blendLayers[name];
         };
+        /**
+         * @internal
+         */
         Animation.prototype.uninitialize = function () {
-            _super.prototype.uninitialize.call(this);
             for (var _i = 0, _a = this._animations; _i < _a.length; _i++) {
                 var animation = _a[_i];
-                if (animation) {
+                if (animation !== null) {
                     animation.release();
                 }
             }
@@ -22051,9 +22038,10 @@ var egret3d;
                 binders[k].release();
                 delete binders[k];
             }
-            if (this._animationController) {
+            if (this._animationController !== null) {
                 this._animationController.release();
             }
+            _super.prototype.uninitialize.call(this);
             this._animations.length = 0;
             this._fadeStates.length = 0;
             // this._binders;
@@ -22166,9 +22154,9 @@ var egret3d;
          * @param playTimes 播放次数。（-1：采用动画数据配置，0：循环播放，N：循环播放 N 次）
          */
         Animation.prototype.play = function (animationClipNameOrNames, playTimes) {
-            if (animationClipNameOrNames === void 0) { animationClipNameOrNames = null; }
+            if (animationClipNameOrNames === void 0) { animationClipNameOrNames = ""; }
             if (playTimes === void 0) { playTimes = -1; }
-            if (!this._animationController) {
+            if (this._animationController === null) {
                 this._animationController = egret3d.AnimationController.create("Default" /* Default */).retain();
             }
             var animationController = this._animationController;
@@ -22191,16 +22179,13 @@ var egret3d;
                     animationClipNameOrNames = "";
                 }
             }
-            else if (!animationClipNameOrNames) {
-                animationClipNameOrNames = "";
-            }
             var animationState = null;
-            if (animationClipNameOrNames) {
+            if (animationClipNameOrNames !== "") {
                 animationState = this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
             }
             else {
                 var lastAnimationState = this.lastAnimationState;
-                if (lastAnimationState) {
+                if (lastAnimationState !== null) {
                     if (!lastAnimationState.isPlaying && !lastAnimationState.isCompleted) {
                         animationState = lastAnimationState;
                         lastAnimationState.play();
@@ -22213,7 +22198,7 @@ var egret3d;
                     var animations = this._animations;
                     if (animations.length > 0) {
                         var defaultAnimationAsset = animations[0];
-                        if (defaultAnimationAsset) {
+                        if (defaultAnimationAsset !== null) {
                             animationClipNameOrNames = defaultAnimationAsset.config.animations[0].extensions.paper.clips[0].name;
                             animationState = this.fadeIn(animationClipNameOrNames, 0.0, playTimes);
                         }
@@ -22223,14 +22208,18 @@ var egret3d;
             return animationState;
         };
         /**
-         *
+         * 停止该组件正在指定的动画层播放的指定动画状态。
+         * @param animationName 动画状态的名称。
+         * - 默认为 `""` ，停止所有动画状态。
+         * @param layerIndex 动画层索引。
+         * - 默认为 `0` 。
          */
         Animation.prototype.stop = function (animationName, layerIndex) {
-            if (animationName === void 0) { animationName = null; }
+            if (animationName === void 0) { animationName = ""; }
             if (layerIndex === void 0) { layerIndex = 0; }
             if (animationName) {
                 var animationState = this.getState(animationName, layerIndex);
-                if (animationState && animationState.constructor === egret3d.AnimationState) {
+                if (animationState !== null && animationState.constructor === egret3d.AnimationState) {
                     animationState.stop();
                 }
             }
@@ -22251,7 +22240,10 @@ var egret3d;
             }
         };
         /**
-         *
+         * 获取该组件正在指定的动画层播放的指定动画状态。
+         * @param animationName 动画状态的名称。
+         * @param layerIndex 动画层索引。
+         * - 默认为 `0` 。
          */
         Animation.prototype.getState = function (animationName, layerIndex) {
             if (layerIndex === void 0) { layerIndex = 0; }
@@ -22272,16 +22264,17 @@ var egret3d;
             return null;
         };
         /**
-         *
+         * 该动画组件是否包含指定名称的动画剪辑。
+         * @param animationClipName 动画剪辑的名称。
          */
         Animation.prototype.hasAnimation = function (animationClipName) {
             for (var _i = 0, _a = this._animations; _i < _a.length; _i++) {
                 var animationAsset = _a[_i];
-                if (!animationAsset) {
+                if (animationAsset === null) {
                     continue;
                 }
                 var animationClip = animationAsset.getAnimationClip(animationClipName);
-                if (animationClip) {
+                if (animationClip !== null) {
                     return true;
                 }
             }
@@ -22289,42 +22282,46 @@ var egret3d;
         };
         Object.defineProperty(Animation.prototype, "lastAnimationnName", {
             /**
-             *
+             * 该组件最后一个正在播放的动画状态的名称。
+             * - 没有正在播放的动画状态则返回 `""` 。
              */
             get: function () {
                 var lastAnimationState = this.lastAnimationState;
-                return lastAnimationState ? lastAnimationState.name : "";
+                return lastAnimationState !== null ? lastAnimationState.name : "";
             },
             enumerable: true,
             configurable: true
         });
         Object.defineProperty(Animation.prototype, "animations", {
             /**
-             * 动画数据列表。
+             * 该组件的动画资源列表。
              */
             get: function () {
                 return this._animations;
             },
             set: function (value) {
                 var animations = this._animations;
-                for (var _i = 0, animations_1 = animations; _i < animations_1.length; _i++) {
-                    var animation = animations_1[_i];
-                    if (animation) {
-                        animation.release();
-                    }
-                }
                 if (value !== animations) {
+                    for (var _i = 0, animations_1 = animations; _i < animations_1.length; _i++) {
+                        var animation = animations_1[_i];
+                        if (animation !== null) {
+                            animation.release();
+                        }
+                    }
                     animations.length = 0;
                     for (var _a = 0, value_4 = value; _a < value_4.length; _a++) {
                         var animation = value_4[_a];
                         animations.push(animation);
                     }
-                }
-                for (var _b = 0, animations_2 = animations; _b < animations_2.length; _b++) {
-                    var animation = animations_2[_b];
-                    if (animation) {
-                        animation.retain();
+                    for (var _b = 0, animations_2 = animations; _b < animations_2.length; _b++) {
+                        var animation = animations_2[_b];
+                        if (animation !== null) {
+                            animation.retain();
+                        }
                     }
+                }
+                else if (true) {
+                    console.warn("Potentially risky operation.");
                 }
             },
             enumerable: true,
@@ -22332,10 +22329,10 @@ var egret3d;
         });
         Object.defineProperty(Animation.prototype, "animationController", {
             /**
-             *
+             * 该组件的动画控制器。
              */
             get: function () {
-                if (!this._animationController) {
+                if (this._animationController === null) {
                     this._animationController = egret3d.AnimationController.create("Default" /* Default */).retain();
                 }
                 return this._animationController;
@@ -22345,12 +22342,12 @@ var egret3d;
         });
         Object.defineProperty(Animation.prototype, "lastAnimationState", {
             /**
-             *
+             * 该组件最后一个正在播放的动画状态。
              */
             get: function () {
                 var animationController = this._animationController;
                 var lastAnimationLayer = this._lastAnimationLayer;
-                if (animationController && lastAnimationLayer) {
+                if (animationController !== null && lastAnimationLayer !== null) {
                     var layerIndex = animationController.layers.indexOf(lastAnimationLayer);
                     var fadeStatess = this._fadeStates;
                     if (fadeStatess.length > layerIndex) {
@@ -22370,6 +22367,7 @@ var egret3d;
             configurable: true
         });
         __decorate([
+            paper.editor.property("CHECKBOX" /* CHECKBOX */),
             paper.serializedField
         ], Animation.prototype, "autoPlay", void 0);
         __decorate([
@@ -22380,6 +22378,7 @@ var egret3d;
             paper.editor.property("FLOAT" /* FLOAT */)
         ], Animation.prototype, "timeScale", void 0);
         __decorate([
+            paper.editor.property("ARRAY" /* ARRAY */, { type: "ASSET" /* ASSET */, clazz: egret3d.AnimationAsset }),
             paper.serializedField("_animations")
         ], Animation.prototype, "animations", null);
         return Animation;
@@ -23449,7 +23448,7 @@ var egret3d;
         AnimationSystem.prototype._updateAnimationTreeState = function (animationFadeState, animationTreeState) {
             var animationLayer = animationTreeState.animationLayer;
             var weight = animationLayer.weight * animationTreeState.weight;
-            if (animationTreeState._parent) {
+            if (animationTreeState._parent !== null) {
                 weight *= animationTreeState._parent._globalWeight;
             }
             else {
@@ -23463,7 +23462,7 @@ var egret3d;
             var animationLayer = animationState.animationLayer;
             // const animationNode = animationState.animationNode;
             var weight = animationLayer.weight * animationState.weight;
-            if (animationState._parent) {
+            if (animationState._parent !== null) {
                 weight *= animationState._parent._globalWeight;
             }
             else {
@@ -23519,8 +23518,8 @@ var egret3d;
                     var nodes = animationState.animationAsset.config.nodes;
                     for (var _i = 0, _a = animationState.channels; _i < _a.length; _i++) {
                         var channel = _a[_i];
-                        if (jointNames && jointNames.length > 0) {
-                            var jointIndex = channel.glTFChannel.target.node;
+                        if (jointNames.length > 0) {
+                            var jointIndex = channel.glTFChannel.target.node; // TODO remove undefined
                             channel.enabled = jointIndex === undefined || jointNames.indexOf(nodes[jointIndex].name) >= 0;
                         }
                         else {
@@ -23530,7 +23529,7 @@ var egret3d;
                 }
                 for (var _b = 0, _c = animationState.channels; _b < _c.length; _b++) {
                     var channel = _c[_b];
-                    if (!channel.updateTarget || !channel.enabled) {
+                    if (channel.updateTarget === null || !channel.enabled) {
                         continue;
                     }
                     var binder = channel.binder;
@@ -23610,7 +23609,7 @@ var egret3d;
                     gameObject.sendMessage("onAnimationEvent", egret3d.AnimationEvent.create(1 /* LoopComplete */, animationState), false);
                 }
                 if (animationState._playState === 1) {
-                    var clipNames = animationLayer._clipNames;
+                    var clipNames = animationLayer._clipNames; // TODO
                     if (clipNames && clipNames.length > 0) {
                         animation.play(clipNames.shift());
                     }
@@ -23621,7 +23620,7 @@ var egret3d;
             }
         };
         /**
-         * @ignore
+         * @internal
          */
         AnimationSystem.prototype.getMatchers = function () {
             return [
@@ -23629,7 +23628,7 @@ var egret3d;
             ];
         };
         /**
-         * @ignore
+         * @internal
          */
         AnimationSystem.prototype.onEntityAdded = function (entity) {
             var animation = entity.getComponent(egret3d.Animation);
@@ -23640,7 +23639,7 @@ var egret3d;
             }
         };
         /**
-         * @ignore
+         * @internal
          */
         AnimationSystem.prototype.onFrame = function (deltaTime) {
             for (var _i = 0, _a = this.groups[0].entities; _i < _a.length; _i++) {
@@ -29467,51 +29466,160 @@ var egret3d;
 var egret3d;
 (function (egret3d) {
     /**
-     * 动画资源。
+     * 几何平面。
      */
-    var AnimationAsset = (function (_super) {
-        __extends(AnimationAsset, _super);
-        function AnimationAsset() {
-            return _super !== null && _super.apply(this, arguments) || this;
+    var Plane = (function (_super) {
+        __extends(Plane, _super);
+        /**
+         * 请使用 `egret3d.Plane.create()` 创建实例。
+         * @see egret3d.Plane.create()
+         */
+        function Plane() {
+            var _this = _super.call(this) || this;
+            /**
+             * 二维平面到原点的距离。
+             */
+            _this.constant = 0.0;
+            /**
+             * 平面的法线。
+             */
+            _this.normal = egret3d.Vector3.create();
+            return _this;
         }
         /**
-         * @private
+         * 创建一个几何平面。
+         * @param normal 法线。
+         * @param constant 二维平面离原点的距离。
          */
-        AnimationAsset.create = function (name, config, buffers) {
-            var animationAsset = new AnimationAsset();
-            animationAsset.initialize(name, config, buffers);
-            return animationAsset;
+        Plane.create = function (normal, constant) {
+            if (normal === void 0) { normal = egret3d.Vector3.ZERO; }
+            if (constant === void 0) { constant = 0.0; }
+            if (this._instances.length > 0) {
+                var instance = this._instances.pop().set(normal, constant);
+                instance._released = false;
+                return instance;
+            }
+            return new Plane().set(normal, constant);
         };
-        /*
-         * 获取动画剪辑。
-         */
-        AnimationAsset.prototype.getAnimationClip = function (name) {
-            if (!this.config.animations ||
-                this.config.animations.length === 0) {
-                return null;
+        Plane.prototype.serialize = function () {
+            return this.toArray();
+        };
+        Plane.prototype.deserialize = function (value) {
+            this.normal.fromArray(value);
+            this.constant = value[3];
+            return this;
+        };
+        Plane.prototype.clone = function () {
+            return Plane.create(this.normal, this.constant);
+        };
+        Plane.prototype.copy = function (value) {
+            return this.set(value.normal, value.constant);
+        };
+        Plane.prototype.set = function (normal, constant) {
+            if (constant === void 0) { constant = 0.0; }
+            this.constant = constant;
+            this.normal.copy(normal);
+            return this;
+        };
+        Plane.prototype.fromArray = function (array, offset) {
+            if (offset === void 0) { offset = 0; }
+            this.normal.fromArray(array, offset);
+            this.constant = array[offset + 3];
+            return this;
+        };
+        Plane.prototype.fromPoint = function (point, normal) {
+            if (normal === void 0) { normal = egret3d.Vector3.UP; }
+            this.constant = -normal.dot(point);
+            this.normal.copy(normal);
+            return this;
+        };
+        Plane.prototype.fromPoints = function (valueA, valueB, valueC) {
+            var normal = egret3d.helpVector3A.subtract(valueC, valueB).cross(egret3d.helpVector3B.subtract(valueA, valueB)).normalize();
+            this.fromPoint(valueA, normal);
+            return this;
+        };
+        Plane.prototype.normalize = function (input) {
+            if (!input) {
+                input = this;
             }
-            var animation = this.config.animations[0];
-            if (animation.extensions.paper.clips.length === 0) {
-                return null;
+            var inverseNormalLength = 1.0 / input.normal.length;
+            this.constant = input.constant * inverseNormalLength;
+            this.normal.multiplyScalar(inverseNormalLength, input.normal);
+            return this;
+        };
+        Plane.prototype.negate = function (input) {
+            if (!input) {
+                input = this;
             }
-            if (!name) {
-                return animation.extensions.paper.clips[0];
+            this.constant = -input.constant;
+            this.normal.negate(input.normal);
+            return this;
+        };
+        Plane.prototype.applyMatrix = function (matrix, normalMatrix) {
+            if (!normalMatrix) {
+                normalMatrix = egret3d.helpMatrix3A.getNormalMatrix(matrix);
             }
-            for (var _i = 0, _a = this.config.animations; _i < _a.length; _i++) {
-                var animation_1 = _a[_i];
-                for (var _b = 0, _c = animation_1.extensions.paper.clips; _b < _c.length; _b++) {
-                    var animationClip = _c[_b];
-                    if (animationClip.name === name) {
-                        return animationClip;
+            var referencePoint = this.getCoplanarPoint(egret3d.helpVector3A).applyMatrix(matrix);
+            var normal = this.normal.applyMatrix3(normalMatrix).normalize();
+            this.constant = -referencePoint.dot(normal);
+            return this;
+        };
+        Plane.prototype.getDistance = function (point) {
+            return this.normal.dot(point) + this.constant;
+        };
+        Plane.prototype.getProjectionPoint = function (point, output) {
+            if (!output) {
+                output = egret3d.Vector3.create();
+            }
+            return output.multiplyScalar(-this.getDistance(point), this.normal).add(point);
+        };
+        Plane.prototype.getCoplanarPoint = function (output) {
+            if (!output) {
+                output = egret3d.Vector3.create();
+            }
+            return output.copy(this.normal).multiplyScalar(-this.constant);
+        };
+        Plane.prototype.raycast = function (ray, raycastInfo) {
+            if (raycastInfo === void 0) { raycastInfo = null; }
+            var t = ray.getDistanceToPlane(this);
+            if (t > 0.0) {
+                if (raycastInfo) {
+                    var normal = raycastInfo.normal;
+                    raycastInfo.distance = t;
+                    ray.getPointAt(t, raycastInfo.position);
+                    if (normal) {
+                        // TODO
+                        normal.copy(this.normal);
                     }
                 }
+                return true;
             }
-            return null;
+            return false;
         };
-        return AnimationAsset;
-    }(egret3d.GLTFAsset));
-    egret3d.AnimationAsset = AnimationAsset;
-    __reflect(AnimationAsset.prototype, "egret3d.AnimationAsset");
+        Plane.prototype.toArray = function (array, offset) {
+            if (offset === void 0) { offset = 0; }
+            if (!array) {
+                array = [];
+            }
+            this.normal.toArray(array, offset);
+            array[offset + 3] = this.constant;
+            return array;
+        };
+        Plane.UP = new Plane().set(egret3d.Vector3.UP, 0.0);
+        Plane.DOWN = new Plane().set(egret3d.Vector3.DOWN, 0.0);
+        Plane.LEFT = new Plane().set(egret3d.Vector3.BACK, 0.0);
+        Plane.RIGHT = new Plane().set(egret3d.Vector3.BACK, 0.0);
+        Plane.FORWARD = new Plane().set(egret3d.Vector3.FORWARD, 0.0);
+        Plane.BACK = new Plane().set(egret3d.Vector3.BACK, 0.0);
+        Plane._instances = [];
+        return Plane;
+    }(paper.BaseRelease));
+    egret3d.Plane = Plane;
+    __reflect(Plane.prototype, "egret3d.Plane", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
+    /**
+     * @internal
+     */
+    var helpPlane = Plane.create();
 })(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
@@ -31553,13 +31661,20 @@ var egret3d;
 (function (egret3d) {
     var webgl;
     (function (webgl_3) {
-        var _hashCode = 0;
+        /**
+         * Index creater.
+         */
+        var _count = 0;
+        /**
+         *
+         */
+        var _attributes = [];
         /**
          * @internal
          */
         var WebGLProgramBinder = (function () {
             function WebGLProgramBinder(program) {
-                this.id = _hashCode++;
+                this.index = _count++;
                 this.attributes = [];
                 this.globalUniforms = [];
                 this.sceneUniforms = [];
@@ -31579,53 +31694,64 @@ var egret3d;
                 // Link attributes.
                 var attributeCount = webgl.getProgramParameter(program, webgl.ACTIVE_ATTRIBUTES);
                 for (var i = 0; i < attributeCount; ++i) {
-                    var webGLActiveInfo = webgl.getActiveAttrib(program, i);
-                    var name_3 = webGLActiveInfo.name, type = webGLActiveInfo.type;
+                    var _b = webgl.getActiveAttrib(program, i), name_3 = _b.name, type = _b.type;
                     var location_2 = webgl.getAttribLocation(program, name_3);
                     var semantic = "";
                     if (name_3 in technique.attributes) {
                         semantic = technique.attributes[name_3].semantic;
                     }
-                    else {
-                        if (name_3 in egret3d.globalAttributeSemantics) {
-                            semantic = egret3d.globalAttributeSemantics[name_3];
-                        }
-                        else {
-                            console.warn("Invalid attribute.", name_3);
-                        }
+                    else if (name_3 in egret3d.globalAttributeSemantics) {
+                        semantic = egret3d.globalAttributeSemantics[name_3];
                     }
+                    else if (true) {
+                        console.warn("Invalid attribute.", name_3);
+                    }
+                    if (_attributes.indexOf(semantic) < 0) {
+                        _attributes.push(semantic);
+                    }
+                    this.attributesMask |= (_attributes.indexOf(semantic) + 1);
                     attributes.push({ name: name_3, type: type, location: location_2, semantic: semantic });
                 }
                 // Link uniforms.
                 var uniformCount = webgl.getProgramParameter(program, webgl.ACTIVE_UNIFORMS);
                 for (var i = 0; i < uniformCount; ++i) {
-                    var webGLActiveInfo = webgl.getActiveUniform(program, i);
-                    var name_4 = webGLActiveInfo.name, type = webGLActiveInfo.type, size = webGLActiveInfo.size;
+                    var _c = webgl.getActiveUniform(program, i), name_4 = _c.name, type = _c.type, size = _c.size;
                     var location_3 = webgl.getUniformLocation(program, name_4);
+                    var semantic = "";
+                    var targetUniforms = null;
                     if (name_4 in technique.uniforms) {
                         var gltfUniform = technique.uniforms[name_4];
-                        uniforms.push({ name: name_4, type: type, size: size, semantic: gltfUniform.semantic, location: location_3 });
-                        if (true && gltfUniform.semantic !== undefined) {
-                            console.debug("Custom uniform.", name_4);
+                        semantic = gltfUniform.semantic || ""; //
+                        targetUniforms = uniforms;
+                        if (true && semantic !== "") {
+                            console.debug("Custom uniform.", name_4, semantic);
                         }
                     }
                     else if (name_4 in egret3d.globalUniformSemantics) {
-                        globalUniforms.push({ name: name_4, type: type, size: size, semantic: egret3d.globalUniformSemantics[name_4], location: location_3 });
+                        semantic = egret3d.globalUniformSemantics[name_4];
+                        targetUniforms = globalUniforms;
                     }
                     else if (name_4 in egret3d.sceneUniformSemantics) {
-                        sceneUniforms.push({ name: name_4, type: type, size: size, semantic: egret3d.sceneUniformSemantics[name_4], location: location_3 });
+                        semantic = egret3d.sceneUniformSemantics[name_4];
+                        targetUniforms = sceneUniforms;
                     }
                     else if (name_4 in egret3d.cameraUniformSemantics) {
-                        cameraUniforms.push({ name: name_4, type: type, size: size, semantic: egret3d.cameraUniformSemantics[name_4], location: location_3 });
+                        semantic = egret3d.cameraUniformSemantics[name_4];
+                        targetUniforms = cameraUniforms;
                     }
                     else if (name_4 in egret3d.shadowUniformSemantics) {
-                        shadowUniforms.push({ name: name_4, type: type, size: size, semantic: egret3d.shadowUniformSemantics[name_4], location: location_3 });
+                        semantic = egret3d.shadowUniformSemantics[name_4];
+                        targetUniforms = shadowUniforms;
                     }
                     else if (name_4 in egret3d.modelUniformSemantics) {
-                        modelUniforms.push({ name: name_4, type: type, size: size, semantic: egret3d.modelUniformSemantics[name_4], location: location_3 });
+                        semantic = egret3d.modelUniformSemantics[name_4];
+                        targetUniforms = modelUniforms;
                     }
-                    else {
+                    else if (true) {
                         console.warn("Invalid uniform.", name_4);
+                    }
+                    if (targetUniforms !== null) {
+                        targetUniforms.push({ name: name_4, type: type, size: size, semantic: semantic, location: location_3, textureUnits: null });
                     }
                 }
                 //
@@ -31646,15 +31772,15 @@ var egret3d;
                     }
                 }
                 //
-                var textureUint = 0;
                 var allNames = samplerNames.concat(samplerArrayNames);
-                for (var _b = 0, activeUniforms_2 = activeUniforms; _b < activeUniforms_2.length; _b++) {
-                    var uniform = activeUniforms_2[_b];
+                var textureUint = 0;
+                for (var _d = 0, activeUniforms_2 = activeUniforms; _d < activeUniforms_2.length; _d++) {
+                    var uniform = activeUniforms_2[_d];
                     if (allNames.indexOf(uniform.name) < 0) {
                         continue;
                     }
                     var textureUnits = uniform.textureUnits;
-                    if (!textureUnits) {
+                    if (textureUnits === null) {
                         textureUnits = uniform.textureUnits = [];
                     }
                     textureUnits.length = uniform.size;
@@ -31685,18 +31811,18 @@ var egret3d;
                 return _this;
             }
             WebGLShader.prototype.dispose = function () {
-                if (!_super.prototype.dispose.call(this)) {
-                    return false;
-                }
-                for (var k in this.programs) {
-                    var program = this.programs[k];
-                    if (program) {
-                        program.dispose();
+                if (_super.prototype.dispose.call(this)) {
+                    var programs = this.programs;
+                    for (var k in programs) {
+                        var program = programs[k];
+                        if (program !== null) {
+                            program.dispose();
+                        }
+                        delete programs[k];
                     }
-                    delete this.programs[k];
+                    return true;
                 }
-                // this.programs;
-                return true;
+                return false;
             };
             return WebGLShader;
         }(egret3d.Shader));
@@ -31981,20 +32107,29 @@ var egret3d;
             WebGLMesh.prototype._bindVAO = function (primitive) {
                 var webgl = webgl_10.WebGLRenderState.webgl;
                 var primitiveExtras = primitive.extras;
-                if (primitiveExtras.vao === null && egret3d.renderState.vertexArrayObject !== null) {
-                    var vao = webgl.createVertexArray();
-                    if (vao !== null) {
-                        primitiveExtras.vao = vao;
+                if (egret3d.renderState.vertexArrayObject !== null) {
+                    if (primitiveExtras.vaos === null) {
+                        primitiveExtras.vaos = {};
+                    }
+                    var program = primitiveExtras.program, vaos = primitiveExtras.vaos;
+                    var attributesMask = program.attributesMask;
+                    if (attributesMask in vaos) {
+                        return 1;
                     }
                     else {
-                        console.error("Create webgl vertex array error.");
+                        var vao = webgl.createVertexArray();
+                        if (vao !== null) {
+                            vaos[attributesMask] = vao;
+                            webgl.bindVertexArray(vao);
+                            return -1;
+                        }
+                        else if (true) {
+                            console.error("Create webgl vertex array error.");
+                        }
+                        return 0;
                     }
                 }
-                if (primitiveExtras.vao !== null) {
-                    webgl.bindVertexArray(primitiveExtras.vao);
-                    return true;
-                }
-                return false;
+                return 0;
             };
             WebGLMesh.prototype.update = function (mask, subMeshIndex) {
                 if (subMeshIndex === void 0) { subMeshIndex = 0; }
@@ -32004,7 +32139,7 @@ var egret3d;
                 var glTFMeshExtras = glTFMesh.extras;
                 var primitive = glTFMesh.primitives[subMeshIndex];
                 var primitiveExtras = primitive.extras;
-                var bindVAO = false;
+                var bindVAO = 0;
                 if ((needUpdate & 8 /* VertexBuffer */) !== 0) {
                     bindVAO = this._bindVAO(primitive);
                     if (glTFMeshExtras.vbo === null) {
@@ -32029,9 +32164,9 @@ var egret3d;
                         this.uploadVertexBuffer(attributeNames);
                     }
                 }
-                needUpdate = primitiveExtras.needUpdate;
+                needUpdate = primitiveExtras.needUpdate & mask;
                 if ((needUpdate & 16 /* IndexBuffer */) !== 0 && primitive.indices !== undefined) {
-                    if (!bindVAO) {
+                    if (bindVAO === 0) {
                         bindVAO = this._bindVAO(primitive);
                     }
                     if (primitiveExtras.ibo === null) {
@@ -32050,20 +32185,24 @@ var egret3d;
                     }
                 }
                 if ((needUpdate & 4 /* VertexArray */) !== 0) {
-                    if (!bindVAO) {
+                    if (bindVAO === 0) {
                         bindVAO = this._bindVAO(primitive);
                     }
-                    if (bindVAO) {
-                        if (primitiveExtras.program !== null) {
-                            webgl.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
-                            webgl.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
-                            egret3d.renderState.updateVertexAttributes(this, subMeshIndex);
-                        }
+                    if (bindVAO === -1) {
+                        webgl.bindBuffer(34962 /* ArrayBuffer */, glTFMeshExtras.vbo);
+                        webgl.bindBuffer(34963 /* ElementArrayBuffer */, primitiveExtras.ibo);
+                        egret3d.renderState.updateVertexAttributes(this, subMeshIndex);
                         webgl.bindVertexArray(null);
+                        webgl.bindBuffer(34962 /* ArrayBuffer */, null);
+                        webgl.bindBuffer(34963 /* ElementArrayBuffer */, null);
                     }
                 }
                 _super.prototype.update.call(this, mask, subMeshIndex);
             };
+            /**
+             * 解决因为开发者没有良好的释放习惯可能造成的显存泄漏问题。
+             * - 带来的问题是，可能在某些情况会频繁的申请显存。
+             */
             WebGLMesh.prototype.onReferenceCountChange = function (isZero) {
                 if (isZero) {
                     var webgl_11 = webgl_10.WebGLRenderState.webgl;
@@ -32076,9 +32215,12 @@ var egret3d;
                     for (var _i = 0, primitives_4 = primitives; _i < primitives_4.length; _i++) {
                         var extras_1 = primitives_4[_i].extras;
                         extras_1.program = null;
-                        if (extras_1.vao !== null) {
-                            webgl_11.deleteVertexArray(extras_1.vao);
-                            extras_1.vao = null;
+                        var vaos = extras_1.vaos;
+                        if (vaos !== null) {
+                            for (var k in vaos) {
+                                webgl_11.deleteVertexArray(vaos[k]);
+                                delete vaos[k];
+                            }
                         }
                         if (extras_1.ibo !== null) {
                             webgl_11.deleteBuffer(extras_1.ibo);
@@ -32406,7 +32548,7 @@ var egret3d;
                 var primitiveExtras = primitives[subMeshIndex].extras;
                 mesh.update(4 /* VertexArray */ | 8 /* VertexBuffer */ | 16 /* IndexBuffer */, subMeshIndex);
                 if (renderState.vertexArrayObject !== null) {
-                    webgl.bindVertexArray(primitiveExtras.vao);
+                    webgl.bindVertexArray(primitiveExtras.vaos[primitiveExtras.program.attributesMask]);
                 }
                 else {
                     var vbo = extras.vbo;
@@ -32690,8 +32832,8 @@ var egret3d;
                     material._update();
                 }
                 // 
-                if (technique.program !== program.id) {
-                    technique.program = program.id;
+                if (technique.program !== program.index) {
+                    technique.program = program.index;
                 }
                 // Update states.
                 renderState.updateState(techniqueState);
@@ -33039,7 +33181,8 @@ var egret3d;
                     var drawMode = primitive.mode === undefined ? 4 /* Triangles */ : primitive.mode;
                     // Update attributes.
                     if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
-                        if (program !== primitive.extras.program) {
+                        var meshCacheProgram = primitive.extras.program;
+                        if (meshCacheProgram === null || program.attributesMask !== meshCacheProgram.attributesMask) {
                             mesh.needUpdate(4 /* VertexArray */, subMeshIndex);
                             primitive.extras.program = program;
                         }
@@ -33571,164 +33714,77 @@ var egret3d;
         __reflect(InputSystem.prototype, "egret3d.webgl.InputSystem");
     })(webgl = egret3d.webgl || (egret3d.webgl = {}));
 })(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
+var paper;
+(function (paper) {
     /**
-     * 几何平面。
+     * 脚本组件。
+     * - 为了开发的便捷，允许使用脚本组件实现组件生命周期。
+     * - 生命周期的顺序如下：
+     * - onAwake();
+     * - onReset();
+     * - onEnable();
+     * - onStart();
+     * - onFixedUpdate();
+     * - onUpdate();
+     * - onAnimationEvent();
+     * - onLateUpdate();
+     * - onBeforeRender();
+     * - onDisable();
+     * - onDestroy();
      */
-    var Plane = (function (_super) {
-        __extends(Plane, _super);
-        /**
-         * 请使用 `egret3d.Plane.create()` 创建实例。
-         * @see egret3d.Plane.create()
-         */
-        function Plane() {
-            var _this = _super.call(this) || this;
-            /**
-             * 二维平面到原点的距离。
-             */
-            _this.constant = 0.0;
-            /**
-             * 平面的法线。
-             */
-            _this.normal = egret3d.Vector3.create();
-            return _this;
+    var Behaviour = (function (_super) {
+        __extends(Behaviour, _super);
+        function Behaviour() {
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         /**
-         * 创建一个几何平面。
-         * @param normal 法线。
-         * @param constant 二维平面离原点的距离。
+         * @internal
          */
-        Plane.create = function (normal, constant) {
-            if (normal === void 0) { normal = egret3d.Vector3.ZERO; }
-            if (constant === void 0) { constant = 0.0; }
-            if (this._instances.length > 0) {
-                var instance = this._instances.pop().set(normal, constant);
-                instance._released = false;
-                return instance;
-            }
-            return new Plane().set(normal, constant);
-        };
-        Plane.prototype.serialize = function () {
-            return this.toArray();
-        };
-        Plane.prototype.deserialize = function (value) {
-            this.normal.fromArray(value);
-            this.constant = value[3];
-            return this;
-        };
-        Plane.prototype.clone = function () {
-            return Plane.create(this.normal, this.constant);
-        };
-        Plane.prototype.copy = function (value) {
-            return this.set(value.normal, value.constant);
-        };
-        Plane.prototype.set = function (normal, constant) {
-            if (constant === void 0) { constant = 0.0; }
-            this.constant = constant;
-            this.normal.copy(normal);
-            return this;
-        };
-        Plane.prototype.fromArray = function (array, offset) {
-            if (offset === void 0) { offset = 0; }
-            this.normal.fromArray(array, offset);
-            this.constant = array[offset + 3];
-            return this;
-        };
-        Plane.prototype.fromPoint = function (point, normal) {
-            if (normal === void 0) { normal = egret3d.Vector3.UP; }
-            this.constant = -normal.dot(point);
-            this.normal.copy(normal);
-            return this;
-        };
-        Plane.prototype.fromPoints = function (valueA, valueB, valueC) {
-            var normal = egret3d.helpVector3A.subtract(valueC, valueB).cross(egret3d.helpVector3B.subtract(valueA, valueB)).normalize();
-            this.fromPoint(valueA, normal);
-            return this;
-        };
-        Plane.prototype.normalize = function (input) {
-            if (!input) {
-                input = this;
-            }
-            var inverseNormalLength = 1.0 / input.normal.length;
-            this.constant = input.constant * inverseNormalLength;
-            this.normal.multiplyScalar(inverseNormalLength, input.normal);
-            return this;
-        };
-        Plane.prototype.negate = function (input) {
-            if (!input) {
-                input = this;
-            }
-            this.constant = -input.constant;
-            this.normal.negate(input.normal);
-            return this;
-        };
-        Plane.prototype.applyMatrix = function (matrix, normalMatrix) {
-            if (!normalMatrix) {
-                normalMatrix = egret3d.helpMatrix3A.getNormalMatrix(matrix);
-            }
-            var referencePoint = this.getCoplanarPoint(egret3d.helpVector3A).applyMatrix(matrix);
-            var normal = this.normal.applyMatrix3(normalMatrix).normalize();
-            this.constant = -referencePoint.dot(normal);
-            return this;
-        };
-        Plane.prototype.getDistance = function (point) {
-            return this.normal.dot(point) + this.constant;
-        };
-        Plane.prototype.getProjectionPoint = function (point, output) {
-            if (!output) {
-                output = egret3d.Vector3.create();
-            }
-            return output.multiplyScalar(-this.getDistance(point), this.normal).add(point);
-        };
-        Plane.prototype.getCoplanarPoint = function (output) {
-            if (!output) {
-                output = egret3d.Vector3.create();
-            }
-            return output.copy(this.normal).multiplyScalar(-this.constant);
-        };
-        Plane.prototype.raycast = function (ray, raycastInfo) {
-            if (raycastInfo === void 0) { raycastInfo = null; }
-            var t = ray.getDistanceToPlane(this);
-            if (t > 0.0) {
-                if (raycastInfo) {
-                    var normal = raycastInfo.normal;
-                    raycastInfo.distance = t;
-                    ray.getPointAt(t, raycastInfo.position);
-                    if (normal) {
-                        // TODO
-                        normal.copy(this.normal);
-                    }
+        Behaviour.prototype._destroy = function () {
+            if (paper.Application.playerMode !== 4 /* Editor */ || this.constructor.executeInEditMode) {
+                if (this._lifeStates & 2 /* Awaked */) {
+                    this.onDestroy && this.onDestroy();
                 }
-                return true;
             }
-            return false;
+            _super.prototype._destroy.call(this);
         };
-        Plane.prototype.toArray = function (array, offset) {
-            if (offset === void 0) { offset = 0; }
-            if (!array) {
-                array = [];
+        Behaviour.prototype.initialize = function (config) {
+            if (paper.Application.playerMode !== 4 /* Editor */ || this.constructor.executeInEditMode) {
+                this.gameObject = this.entity; //
+                if (this.isActiveAndEnabled) {
+                    this.onAwake && this.onAwake(config);
+                    this._lifeStates |= 2 /* Awaked */;
+                }
             }
-            this.normal.toArray(array, offset);
-            array[offset + 3] = this.constant;
-            return array;
+            _super.prototype.initialize.call(this, config);
         };
-        Plane.UP = new Plane().set(egret3d.Vector3.UP, 0.0);
-        Plane.DOWN = new Plane().set(egret3d.Vector3.DOWN, 0.0);
-        Plane.LEFT = new Plane().set(egret3d.Vector3.BACK, 0.0);
-        Plane.RIGHT = new Plane().set(egret3d.Vector3.BACK, 0.0);
-        Plane.FORWARD = new Plane().set(egret3d.Vector3.FORWARD, 0.0);
-        Plane.BACK = new Plane().set(egret3d.Vector3.BACK, 0.0);
-        Plane._instances = [];
-        return Plane;
-    }(paper.BaseRelease));
-    egret3d.Plane = Plane;
-    __reflect(Plane.prototype, "egret3d.Plane", ["paper.ICCS", "paper.ISerializable", "egret3d.IRaycast"]);
-    /**
-     * @internal
-     */
-    var helpPlane = Plane.create();
-})(egret3d || (egret3d = {}));
+        Behaviour.prototype.dispatchEnabledEvent = function (enabled) {
+            if (paper.Application.playerMode !== 4 /* Editor */ || this.constructor.executeInEditMode) {
+                if (enabled) {
+                    if ((this._lifeStates & 2 /* Awaked */) === 0) {
+                        this.onAwake && this.onAwake();
+                        this._lifeStates |= 2 /* Awaked */;
+                    }
+                    this.onEnable && this.onEnable();
+                }
+                else {
+                    this.onDisable && this.onDisable();
+                }
+            }
+            _super.prototype.dispatchEnabledEvent.call(this, enabled);
+        };
+        /**
+         * @internal
+         */
+        Behaviour.isBehaviour = true;
+        Behaviour = __decorate([
+            paper.abstract
+        ], Behaviour);
+        return Behaviour;
+    }(paper.BaseComponent));
+    paper.Behaviour = Behaviour;
+    __reflect(Behaviour.prototype, "paper.Behaviour");
+})(paper || (paper = {}));
 var egret3d;
 (function (egret3d) {
     var _runEditor = false;

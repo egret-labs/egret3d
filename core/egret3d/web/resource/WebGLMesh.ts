@@ -8,24 +8,35 @@ namespace egret3d.webgl {
             const webgl = WebGLRenderState.webgl!;
             const primitiveExtras = primitive.extras!;
 
-            if (primitiveExtras.vao === null && renderState.vertexArrayObject !== null) {
-                const vao = webgl.createVertexArray();
+            if (renderState.vertexArrayObject !== null) {
+                if (primitiveExtras.vaos === null) {
+                    primitiveExtras.vaos = {};
+                }
 
-                if (vao !== null) {
-                    primitiveExtras.vao = vao;
+                const { program, vaos } = primitiveExtras;
+                const attributesMask = (program as WebGLProgramBinder).attributesMask;
+
+                if (attributesMask in vaos!) {
+                    return 2; // Created.
                 }
                 else {
-                    console.error("Create webgl vertex array error.");
+                    const vao = webgl.createVertexArray();
+
+                    if (vao !== null) {
+                        vaos![attributesMask] = vao;
+                        webgl.bindVertexArray(vao);
+
+                        return 1; // Create.
+                    }
+                    else if (DEBUG) {
+                        console.error("Create webgl vertex array error.");
+                    }
+
+                    return -1; // Error.
                 }
             }
 
-            if (primitiveExtras.vao !== null) {
-                webgl.bindVertexArray(primitiveExtras.vao);
-
-                return true;
-            }
-
-            return false;
+            return 0; // Nonsupport
         }
 
         public update(mask: MeshNeedUpdate, subMeshIndex: uint = 0) {
@@ -35,7 +46,7 @@ namespace egret3d.webgl {
             const glTFMeshExtras = glTFMesh.extras!;
             const primitive = glTFMesh!.primitives[subMeshIndex];
             const primitiveExtras = primitive.extras!;
-            let bindVAO = false;
+            let bindVAO: -1 | 0 | 1 | 2 = 0;
 
             if ((needUpdate & MeshNeedUpdate.VertexBuffer) !== 0) {
                 bindVAO = this._bindVAO(primitive);
@@ -68,10 +79,10 @@ namespace egret3d.webgl {
                 }
             }
 
-            needUpdate = primitiveExtras.needUpdate;
+            needUpdate = primitiveExtras.needUpdate & mask;
 
             if ((needUpdate & MeshNeedUpdate.IndexBuffer) !== 0 && primitive.indices !== undefined) {
-                if (!bindVAO) {
+                if (bindVAO === 0) {
                     bindVAO = this._bindVAO(primitive);
                 }
 
@@ -94,24 +105,26 @@ namespace egret3d.webgl {
             }
 
             if ((needUpdate & MeshNeedUpdate.VertexArray) !== 0) {
-                if (!bindVAO) {
+                if (bindVAO === 0) {
                     bindVAO = this._bindVAO(primitive);
                 }
 
-                if (bindVAO) {
-                    if (primitiveExtras.program !== null) {
-                        webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
-                        webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
-                        renderState.updateVertexAttributes(this, subMeshIndex);
-                    }
-
+                if (bindVAO === 1) {
+                    webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
+                    webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
+                    renderState.updateVertexAttributes(this, subMeshIndex);
                     webgl.bindVertexArray(null);
+                    webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, null);
+                    webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, null);
                 }
             }
 
             super.update(mask, subMeshIndex);
         }
-
+        /**
+         * 解决因为开发者没有良好的释放习惯可能造成的显存泄漏问题。
+         * - 带来的问题是，可能在某些情况会频繁的申请显存。
+         */
         public onReferenceCountChange(isZero: boolean) {
             if (isZero) {
                 const webgl = WebGLRenderState.webgl!;
@@ -126,9 +139,13 @@ namespace egret3d.webgl {
                 for (const { extras } of primitives) {
                     extras!.program = null;
 
-                    if (extras!.vao !== null) {
-                        webgl.deleteVertexArray(extras!.vao!);
-                        extras!.vao = null;
+                    const vaos = extras!.vaos;
+
+                    if (vaos !== null) {
+                        for (const k in vaos) {
+                            webgl.deleteVertexArray(vaos[k]);
+                            delete vaos[k];
+                        }
                     }
 
                     if (extras!.ibo !== null) {

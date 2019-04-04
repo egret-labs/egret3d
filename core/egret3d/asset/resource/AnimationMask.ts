@@ -128,6 +128,7 @@ namespace egret3d {
 
         public get jointNames(): ReadonlyArray<string> {
             const jointNames = this._jointNames;
+
             if (this._jointNamesDirty) {
                 const nodes = this.config.nodes!;
                 const joints = this.config.extensions!.paper!.animationMasks![0].joints;

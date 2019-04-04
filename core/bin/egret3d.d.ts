@@ -1165,6 +1165,13 @@ declare namespace paper.editor {
      * 属性配置。
      */
     type PropertyOption = {
+        /**
+         *
+         */
+        type?: EditType;
+        /**
+         *
+         */
         readonly?: boolean;
         /**
          * UINT, INT, FLOAT 类型的最小值。
@@ -1191,6 +1198,10 @@ declare namespace paper.editor {
          */
         componentClass?: IComponentClass<IComponent> | string;
         /**
+         *
+         */
+        clazz?: any;
+        /**
          * 下拉项。
          */
         listItems?: ListItem[] | string | ((value: any) => ListItem[]);
@@ -1199,6 +1210,10 @@ declare namespace paper.editor {
      * 编辑类型。
      */
     const enum EditType {
+        /**
+         * 按钮。
+         */
+        BUTTON = "BUTTON",
         /**
          * 选中框。
          */
@@ -1256,6 +1271,28 @@ declare namespace paper.editor {
          */
         COLOR = "COLOR",
         /**
+         * 3x3 矩阵。
+         */
+        MAT3 = "MAT3",
+        /**
+         * 实体。
+         */
+        GAMEOBJECT = "GAMEOBJECT",
+        /**
+         * 组件。
+         */
+        COMPONENT = "COMPONENT",
+        /**
+         * 资源。
+         */
+        ASSET = "ASSET",
+        /**
+         * 内嵌的。
+         */
+        NESTED = "NESTED",
+        /**变换 TODO remove*/
+        TRANSFROM = "TRANSFROM",
+        /**
          * 着色器。
          */
         SHADER = "SHADER",
@@ -1276,31 +1313,9 @@ declare namespace paper.editor {
          */
         MESH = "MESH",
         /**
-         * 实体。
-         */
-        GAMEOBJECT = "GAMEOBJECT",
-        /**
-         * 组件。
-         */
-        COMPONENT = "COMPONENT",
-        /**
          * 声音。
          */
         SOUND = "SOUND",
-        /**
-         * 按钮。
-         */
-        BUTTON = "BUTTON",
-        /**
-         * 3x3 矩阵。
-         */
-        MAT3 = "MAT3",
-        /**
-         * 内嵌的。
-         */
-        NESTED = "NESTED",
-        /**变换 TODO remove*/
-        TRANSFROM = "TRANSFROM",
     }
     /**
      * 自定义装饰器。
@@ -3588,7 +3603,9 @@ declare namespace gltf {
             /**
              *
              */
-            vao: WebGLVertexArrayObject | null;
+            vaos: {
+                [key: number]: WebGLVertexArrayObject;
+            } | null;
             /**
              *
              */
@@ -6571,113 +6588,19 @@ declare namespace egret3d {
         setAttributes(attributeName: gltf.AttributeSemantics | string, value: ReadonlyArray<float>, offset?: uint, count?: uint): Float32Array | null;
     }
 }
-declare namespace egret3d.webgl {
-}
-declare namespace paper {
+declare namespace egret3d {
     /**
-     * 脚本组件。
-     * - 为了开发的便捷，允许使用脚本组件实现组件生命周期。
-     * - 生命周期的顺序如下：
-     * - onAwake();
-     * - onReset();
-     * - onEnable();
-     * - onStart();
-     * - onFixedUpdate();
-     * - onUpdate();
-     * - onAnimationEvent();
-     * - onLateUpdate();
-     * - onBeforeRender();
-     * - onDisable();
-     * - onDestroy();
+     * 动画资源。
      */
-    abstract class Behaviour extends BaseComponent {
-        initialize(config?: any): void;
-        dispatchEnabledEvent(enabled: boolean): void;
+    class AnimationAsset extends GLTFAsset {
         /**
-         * 该组件被初始化时执行。
-         * - 在该组件的整个生命周期中只执行一次。
-         * @param config 该组件被添加时可以传递的初始化数据。
-         * @see paper.GameObject#addComponent()
+         * @private
          */
-        onAwake?(config?: any): void;
-        /**
-         * TODO
-         */
-        onReset?(): void;
-        /**
-         * 该组件或所属的实体被激活时调用。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onEnable?(): void;
-        /**
-         * 该组件开始运行时执行。
-         * - 在该组件的整个生命周期中只执行一次。
-         */
-        onStart?(): void;
-        /**
-         * 程序运行时以固定间隔被执行。
-         * @param delta 本帧距离上一帧的时长。
-         * @see paper.Clock
-         */
-        onFixedUpdate?(delta?: number): void;
-        /**
-         *
-         */
-        onTriggerEnter?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerStay?(collider: any): void;
-        /**
-         *
-         */
-        onTriggerExit?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionEnter?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionStay?(collider: any): void;
-        /**
-         *
-         */
-        onCollisionExit?(collider: any): void;
-        /**
-         * 程序运行时每帧执行。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        onUpdate?(deltaTime: number): void;
-        /**
-         *
-         */
-        onAnimationEvent?(animationEvent: egret3d.AnimationEvent): void;
-        /**
-         * 程序运行时每帧执行。
-         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
-         */
-        onLateUpdate?(deltaTime: number): void;
-        /**
-         * 该组件的实体拥有的渲染组件被渲染时执行。
-         * - 不能在该周期更改渲染组件的材质或其他可能引起绘制信息改变的操作。
-         */
-        onBeforeRender?(): boolean;
-        /**
-         * 该组件或所属的实体被禁用时执行。
-         * @see paper.BaseComponent#enabled
-         * @see paper.GameObject#activeSelf
-         */
-        onDisable?(): void;
-        /**
-         * 该组件或所属的实体被销毁时执行。
-         * - 在该组件的整个生命周期中只执行一次。
-         * @see paper.GameObject#removeComponent()
-         * @see paper.GameObject#destroy()
-         */
-        onDestroy?(): void;
+        static create(name: string, config: GLTF, buffers: ArrayBufferView[]): AnimationAsset;
+        getAnimationClip(name: string): GLTFAnimationClip | null;
     }
+}
+declare namespace egret3d.webgl {
 }
 declare namespace paper {
     interface ClockUpdateFlags {
@@ -9761,7 +9684,7 @@ declare namespace egret3d {
      */
     class Animation extends paper.BaseComponent {
         /**
-         * @private
+         * 该动画组件是否自动播放。
          */
         autoPlay: boolean;
         /**
@@ -9775,7 +9698,6 @@ declare namespace egret3d {
         private readonly _animations;
         private _animationController;
         private _lastAnimationLayer;
-        uninitialize(): void;
         /**
          * 融合播放一个指定的动画。
          * @param animationClipName 动画剪辑的名称。
@@ -9790,33 +9712,42 @@ declare namespace egret3d {
          * @param animationClipNameOrNames
          * @param playTimes 播放次数。（-1：采用动画数据配置，0：循环播放，N：循环播放 N 次）
          */
-        play(animationClipNameOrNames?: string | (string[]) | null, playTimes?: int): AnimationState | null;
+        play(animationClipNameOrNames?: string | (string[]), playTimes?: int): AnimationState | null;
         /**
-         *
+         * 停止该组件正在指定的动画层播放的指定动画状态。
+         * @param animationName 动画状态的名称。
+         * - 默认为 `""` ，停止所有动画状态。
+         * @param layerIndex 动画层索引。
+         * - 默认为 `0` 。
          */
-        stop(animationName?: string | null, layerIndex?: uint): void;
+        stop(animationName?: string, layerIndex?: uint): void;
         /**
-         *
+         * 获取该组件正在指定的动画层播放的指定动画状态。
+         * @param animationName 动画状态的名称。
+         * @param layerIndex 动画层索引。
+         * - 默认为 `0` 。
          */
         getState(animationName: string, layerIndex?: uint): AnimationBaseState | null;
         /**
-         *
+         * 该动画组件是否包含指定名称的动画剪辑。
+         * @param animationClipName 动画剪辑的名称。
          */
         hasAnimation(animationClipName: string): boolean;
         /**
-         *
+         * 该组件最后一个正在播放的动画状态的名称。
+         * - 没有正在播放的动画状态则返回 `""` 。
          */
         readonly lastAnimationnName: string;
         /**
-         * 动画数据列表。
+         * 该组件的动画资源列表。
          */
         animations: ReadonlyArray<AnimationAsset | null>;
         /**
-         *
+         * 该组件的动画控制器。
          */
         readonly animationController: AnimationController | null;
         /**
-         *
+         * 该组件最后一个正在播放的动画状态。
          */
         readonly lastAnimationState: AnimationState | null;
     }
@@ -10026,18 +9957,6 @@ declare namespace egret3d {
         private _updateAnimationFadeState(animationFadeState, deltaTime);
         private _updateAnimationTreeState(animationFadeState, animationTreeState);
         private _updateAnimationState(animationFadeState, animationState, deltaTime, forceUpdate);
-        /**
-         * @ignore
-         */
-        protected getMatchers(): paper.IAllOfMatcher<paper.GameObject>[];
-        /**
-         * @ignore
-         */
-        onEntityAdded(entity: paper.GameObject): void;
-        /**
-         * @ignore
-         */
-        onFrame(deltaTime: number): void;
     }
 }
 declare namespace egret3d.particle {
@@ -11527,14 +11446,51 @@ declare namespace egret3d {
 }
 declare namespace egret3d {
     /**
-     * 动画资源。
+     * 几何平面。
      */
-    class AnimationAsset extends GLTFAsset {
+    class Plane extends paper.BaseRelease<Plane> implements paper.ICCS<Plane>, paper.ISerializable, IRaycast {
+        static UP: Readonly<Plane>;
+        static DOWN: Readonly<Plane>;
+        static LEFT: Readonly<Plane>;
+        static RIGHT: Readonly<Plane>;
+        static FORWARD: Readonly<Plane>;
+        static BACK: Readonly<Plane>;
+        private static readonly _instances;
         /**
-         * @private
+         * 创建一个几何平面。
+         * @param normal 法线。
+         * @param constant 二维平面离原点的距离。
          */
-        static create(name: string, config: GLTF, buffers: ArrayBufferView[]): AnimationAsset;
-        getAnimationClip(name: string): GLTFAnimationClip | null;
+        static create(normal?: Readonly<IVector3>, constant?: number): Plane;
+        /**
+         * 二维平面到原点的距离。
+         */
+        constant: number;
+        /**
+         * 平面的法线。
+         */
+        readonly normal: Vector3;
+        /**
+         * 请使用 `egret3d.Plane.create()` 创建实例。
+         * @see egret3d.Plane.create()
+         */
+        private constructor();
+        serialize(): number[] | Float32Array;
+        deserialize(value: Readonly<[number, number, number, number]>): this;
+        clone(): Plane;
+        copy(value: Readonly<Plane>): this;
+        set(normal: Readonly<IVector3>, constant?: number): this;
+        fromArray(array: ArrayLike<number>, offset?: uint): this;
+        fromPoint(point: Readonly<IVector3>, normal?: Vector3): this;
+        fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
+        normalize(input?: Readonly<Plane>): this;
+        negate(input?: Readonly<Plane>): this;
+        applyMatrix(matrix: Readonly<Matrix4>, normalMatrix?: Readonly<Matrix3>): this;
+        getDistance(point: Readonly<IVector3>): number;
+        getProjectionPoint(point: Readonly<IVector3>, output?: Vector3): Vector3;
+        getCoplanarPoint(output?: Vector3): Vector3;
+        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
+        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
     }
 }
 declare namespace egret3d {
@@ -13045,53 +13001,110 @@ declare namespace egret3d.webgl {
 }
 declare namespace egret3d.webgl {
 }
-declare namespace egret3d {
+declare namespace paper {
     /**
-     * 几何平面。
+     * 脚本组件。
+     * - 为了开发的便捷，允许使用脚本组件实现组件生命周期。
+     * - 生命周期的顺序如下：
+     * - onAwake();
+     * - onReset();
+     * - onEnable();
+     * - onStart();
+     * - onFixedUpdate();
+     * - onUpdate();
+     * - onAnimationEvent();
+     * - onLateUpdate();
+     * - onBeforeRender();
+     * - onDisable();
+     * - onDestroy();
      */
-    class Plane extends paper.BaseRelease<Plane> implements paper.ICCS<Plane>, paper.ISerializable, IRaycast {
-        static UP: Readonly<Plane>;
-        static DOWN: Readonly<Plane>;
-        static LEFT: Readonly<Plane>;
-        static RIGHT: Readonly<Plane>;
-        static FORWARD: Readonly<Plane>;
-        static BACK: Readonly<Plane>;
-        private static readonly _instances;
+    abstract class Behaviour extends BaseComponent {
+        initialize(config?: any): void;
+        dispatchEnabledEvent(enabled: boolean): void;
         /**
-         * 创建一个几何平面。
-         * @param normal 法线。
-         * @param constant 二维平面离原点的距离。
+         * 该组件被初始化时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         * @param config 该组件被添加时可以传递的初始化数据。
+         * @see paper.GameObject#addComponent()
          */
-        static create(normal?: Readonly<IVector3>, constant?: number): Plane;
+        onAwake?(config?: any): void;
         /**
-         * 二维平面到原点的距离。
+         * TODO
          */
-        constant: number;
+        onReset?(): void;
         /**
-         * 平面的法线。
+         * 该组件或所属的实体被激活时调用。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
          */
-        readonly normal: Vector3;
+        onEnable?(): void;
         /**
-         * 请使用 `egret3d.Plane.create()` 创建实例。
-         * @see egret3d.Plane.create()
+         * 该组件开始运行时执行。
+         * - 在该组件的整个生命周期中只执行一次。
          */
-        private constructor();
-        serialize(): number[] | Float32Array;
-        deserialize(value: Readonly<[number, number, number, number]>): this;
-        clone(): Plane;
-        copy(value: Readonly<Plane>): this;
-        set(normal: Readonly<IVector3>, constant?: number): this;
-        fromArray(array: ArrayLike<number>, offset?: uint): this;
-        fromPoint(point: Readonly<IVector3>, normal?: Vector3): this;
-        fromPoints(valueA: Readonly<IVector3>, valueB: Readonly<IVector3>, valueC: Readonly<IVector3>): this;
-        normalize(input?: Readonly<Plane>): this;
-        negate(input?: Readonly<Plane>): this;
-        applyMatrix(matrix: Readonly<Matrix4>, normalMatrix?: Readonly<Matrix3>): this;
-        getDistance(point: Readonly<IVector3>): number;
-        getProjectionPoint(point: Readonly<IVector3>, output?: Vector3): Vector3;
-        getCoplanarPoint(output?: Vector3): Vector3;
-        raycast(ray: Readonly<Ray>, raycastInfo?: RaycastInfo | null): boolean;
-        toArray(array?: number[] | Float32Array, offset?: number): number[] | Float32Array;
+        onStart?(): void;
+        /**
+         * 程序运行时以固定间隔被执行。
+         * @param delta 本帧距离上一帧的时长。
+         * @see paper.Clock
+         */
+        onFixedUpdate?(delta?: number): void;
+        /**
+         *
+         */
+        onTriggerEnter?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerStay?(collider: any): void;
+        /**
+         *
+         */
+        onTriggerExit?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionEnter?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionStay?(collider: any): void;
+        /**
+         *
+         */
+        onCollisionExit?(collider: any): void;
+        /**
+         * 程序运行时每帧执行。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onUpdate?(deltaTime: number): void;
+        /**
+         *
+         */
+        onAnimationEvent?(animationEvent: egret3d.AnimationEvent): void;
+        /**
+         * 程序运行时每帧执行。
+         * @param deltaTime 上一帧到此帧流逝的时间。（以秒为单位）
+         */
+        onLateUpdate?(deltaTime: number): void;
+        /**
+         * 该组件的实体拥有的渲染组件被渲染时执行。
+         * - 不能在该周期更改渲染组件的材质或其他可能引起绘制信息改变的操作。
+         */
+        onBeforeRender?(): boolean;
+        /**
+         * 该组件或所属的实体被禁用时执行。
+         * @see paper.BaseComponent#enabled
+         * @see paper.GameObject#activeSelf
+         */
+        onDisable?(): void;
+        /**
+         * 该组件或所属的实体被销毁时执行。
+         * - 在该组件的整个生命周期中只执行一次。
+         * @see paper.GameObject#removeComponent()
+         * @see paper.GameObject#destroy()
+         */
+        onDestroy?(): void;
     }
 }
 declare namespace egret3d {

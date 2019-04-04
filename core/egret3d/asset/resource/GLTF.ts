@@ -143,13 +143,14 @@ namespace egret3d {
             /**
              * 
              */
-            attributeOffsets: { [key: string]: uint }; // TODO
+            attributeOffsets: { [key: string]: uint };
             /**
              * 
              */
-            vbo: WebGLBuffer | null;
+            vbo: WebGLBuffer | null; // TODO vbos
         };
     }
+    // TODO GLTFMeshPrimitive
     /**
      * 扩展 glTF 材质。
      * - 仅用于存储材质初始值。
@@ -1308,7 +1309,7 @@ declare namespace gltf {
             /**
              * 
              */
-            vao: WebGLVertexArrayObject | null;
+            vaos: { [key: number]: WebGLVertexArrayObject } | null;
             /**
              * 
              */
