@@ -56,7 +56,11 @@ namespace paper {
          */
         public update(now: number): ClockUpdateFlags {
             now = now * 0.001;
-            
+
+            if (this.tickInterval <= 0.0) {
+                this.tickInterval = 1.0 / 60;
+            }
+
             if (this._beginTime < 0) { this._beginTime = now; }
 
             if (this._needReset) { // 刚刚恢复, 需要重置间隔

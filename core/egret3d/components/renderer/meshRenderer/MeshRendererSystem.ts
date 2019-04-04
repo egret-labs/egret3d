@@ -34,29 +34,26 @@ namespace egret3d {
             }
 
             const materialFilter = this._materialFilter;
-            const matrix = entity.getComponent(egret3d.Transform)!.localToWorldMatrix;
+            const localToWorldMatrix = entity.getComponent(egret3d.Transform)!.localToWorldMatrix;
 
             if (materialFilter.length < materialCount) {
                 materialFilter.length = materialCount;
             }
 
             for (let i = 0; i < subMeshCount; ++i) { // Specified materials.
-                const materialIndex = primitives[i].material;
+                const materialIndex = primitives[i].material || 0;
                 let material: Material | null = null;
 
-                if (materialIndex === undefined) {
-                    material = DefaultMaterials.MESH_BASIC;
-                }
-                else if (materialIndex < materialCount) {
+                if (materialIndex < materialCount) {
                     material = materials[materialIndex];
                     materialFilter[materialIndex] = true;
                 }
 
-                if (material) {
+                if (material !== null) {
                     const drawCall = DrawCall.create();
                     drawCall.entity = entity;
                     drawCall.renderer = renderer;
-                    drawCall.matrix = matrix;
+                    drawCall.matrix = localToWorldMatrix;
                     drawCall.subMeshIndex = i;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
@@ -64,9 +61,13 @@ namespace egret3d {
                 }
             }
 
-            for (let i = 0; i < materialCount; ++i) { // No specified materials.
+            for (let i = 0, l = materialFilter.length; i < l; ++i) { // No specified materials.
                 if (materialFilter[i]) {
+                    materialFilter[i] = false;
                     continue;
+                }
+                else if (i >= materialCount) {
+                    break;
                 }
 
                 const material = materials[i]!;
@@ -75,15 +76,13 @@ namespace egret3d {
                     const drawCall = DrawCall.create();
                     drawCall.entity = entity;
                     drawCall.renderer = renderer;
-                    drawCall.matrix = matrix;
+                    drawCall.matrix = localToWorldMatrix;
                     drawCall.subMeshIndex = j;
                     drawCall.mesh = mesh;
                     drawCall.material = material;
                     drawCallCollecter.addDrawCall(drawCall);
                 }
             }
-
-            // materialFilter.length = 0;
         }
 
         protected getMatchers() {
