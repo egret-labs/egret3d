@@ -46,7 +46,7 @@ namespace egret3d.webgl {
             const glTFMeshExtras = glTFMesh.extras!;
             const primitive = glTFMesh!.primitives[subMeshIndex];
             const primitiveExtras = primitive.extras!;
-            let bindVAO: -1 | 0 | 1 | 2 = 0;
+            let bindVAO: -2 | -1 | 0 | 1 | 2 = -2;
 
             if ((needUpdate & MeshNeedUpdate.VertexBuffer) !== 0) {
                 bindVAO = this._bindVAO(primitive);
@@ -82,7 +82,7 @@ namespace egret3d.webgl {
             needUpdate = primitiveExtras.needUpdate & mask;
 
             if ((needUpdate & MeshNeedUpdate.IndexBuffer) !== 0 && primitive.indices !== undefined) {
-                if (bindVAO === 0) {
+                if (bindVAO === -2) {
                     bindVAO = this._bindVAO(primitive);
                 }
 
@@ -105,7 +105,7 @@ namespace egret3d.webgl {
             }
 
             if ((needUpdate & MeshNeedUpdate.VertexArray) !== 0) {
-                if (bindVAO === 0) {
+                if (bindVAO === -2) {
                     bindVAO = this._bindVAO(primitive);
                 }
 
@@ -114,8 +114,6 @@ namespace egret3d.webgl {
                     webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
                     renderState.updateVertexAttributes(this, subMeshIndex);
                     webgl.bindVertexArray(null);
-                    webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, null);
-                    webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, null);
                 }
             }
 

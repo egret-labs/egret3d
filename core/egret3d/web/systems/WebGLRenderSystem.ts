@@ -922,6 +922,17 @@ namespace egret3d.webgl {
                 const { subMeshIndex } = drawCall;
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
+                // Update global uniforms.
+                this._updateGlobalUniforms(program, camera, drawCall, renderer, currentScene, forceUpdate);
+                // Update uniforms.
+                if (this._cacheMaterial !== material || this._cacheMaterialVersion !== material._version) {
+                    this._updateUniforms(program, material);
+                    this._cacheMaterialVersion = material._version;
+                    this._cacheMaterial = material;
+
+                    this._cacheMesh = null;
+                    this._cacheSubMeshIndex = -1;
+                }
                 // Update attributes.
                 if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
                     const meshCacheProgram = primitive.extras!.program as WebGLProgramBinder;
@@ -934,14 +945,6 @@ namespace egret3d.webgl {
                     this._updateAttributes(mesh, subMeshIndex);
                     this._cacheSubMeshIndex = subMeshIndex;
                     this._cacheMesh = mesh;
-                }
-                // Update global uniforms.
-                this._updateGlobalUniforms(program, camera, drawCall, renderer, currentScene, forceUpdate);
-                // Update uniforms.
-                if (this._cacheMaterial !== material || this._cacheMaterialVersion !== material._version) {
-                    this._updateUniforms(program, material);
-                    this._cacheMaterialVersion = material._version;
-                    this._cacheMaterial = material;
                 }
                 //  TODO
                 // if (techniqueState && renderer.transform._worldMatrixDeterminant < 0) {

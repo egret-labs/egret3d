@@ -118,8 +118,8 @@ namespace egret3d {
             else if (materialA._id !== materialB._id) {
                 return materialA._id - materialB._id;
             }
-            else if (a.mesh._id !== b.mesh._id) { // 为了实例化，这里mesh也排序下
-                return a.mesh._id - b.mesh._id;
+            else if (a.mesh.index !== b.mesh.index) { // 为了实例化，这里mesh也排序下
+                return a.mesh.index - b.mesh.index;
             }
             else {
                 return a.zdist - b.zdist;
