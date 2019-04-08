@@ -81,9 +81,8 @@ namespace egret3d.webgl {
                 if (_attributes.indexOf(semantic) < 0) {
                     _attributes.push(semantic);
                 }
-
-                (this.attributesMask as uint) |= (_attributes.indexOf(semantic) + 1);
-
+                
+                (this.attributesMask as uint) |= 1 << (_attributes.indexOf(semantic));
                 attributes.push({ name, type, location, semantic });
             }
             // Link uniforms.

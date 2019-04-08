@@ -228,6 +228,7 @@ namespace egret3d {
             this._shader = shader;
             this._retainOrReleaseTextures(true, false);
             this._addOrRemoveTexturesDefine(true);
+            this._addOrRemoveInstancingDefine();
         }
 
         private _retainOrReleaseTextures(isRatain: boolean, isOnce: boolean) {
@@ -1012,7 +1013,7 @@ namespace egret3d {
             this.setFloat(ShaderUniformName.Opacity, value);
         }
         /**
-         * 是否开启instancing
+         * 是否开启instancing, （开启了lightmap的材质，不要勾选instancing，否则显示会有问题）
          */
         public get enableGPUInstancing(): boolean {
             return this._glTFMaterial!.extensions.paper.enableGPUInstancing;

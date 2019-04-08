@@ -2,6 +2,9 @@ namespace egret3d.webgl {
     const _patternInclude = /^[ \t]*#include +<([\w\d./]+)>/gm;
     const _patternLoop = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
 
+    const combineModelMats: Matrix4[] = [];
+    const combineModelViewMats: Matrix4[] = [];
+
     function _replace(match: string, include: string): string {
         let flag = true;
         let chunk = "";
@@ -629,14 +632,7 @@ namespace egret3d.webgl {
             }
         }
 
-        private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
-            const renderState = this._renderState;
-            renderState.renderTarget = renderTarget;
-            renderState.viewport = camera.viewport;
-            renderState.clearColor = camera.backgroundColor;
-            renderState.clearBuffer(camera.bufferMask);
-            //
-            // Skybox.
+        private _drawSkybox(camera: Camera) {
             const skyBox = camera.entity.getComponent(SkyBox);
             if (skyBox && skyBox.material && skyBox.isActiveAndEnabled) {
                 const skyBoxDrawCall = this._drawCallCollecter.skyBox;
@@ -667,15 +663,130 @@ namespace egret3d.webgl {
                 renderState._updateTextureDefines(ShaderUniformName.EnvMap, null, renderState.defines);
                 renderState.caches.skyBoxTexture = null;
             }
-            //
-            const { opaqueCalls, transparentCalls } = camera.context;
-            // Draw opaques.
-            for (const drawCall of opaqueCalls) {
+        }
+
+        private _combineDraw(drawCalls: DrawCall[]) {
+            const modelMats = combineModelMats;
+            const modelViewMats = combineModelViewMats;
+            let combineCount: number = 0;
+            for (let i = 0, l = drawCalls.length; i < l; i++) {
+                const isFinal = i === l - 1;
+                const drawCall = drawCalls[i];
+                const nextDrawCall = isFinal ? drawCalls[i] : drawCalls[i + 1];
+                const { material, mesh } = drawCall;
+                const { material: nextMaterial, mesh: nextMesh } = nextDrawCall;
+
+                if (material.enableGPUInstancing) {
+                    modelMats[combineCount] = drawCall.matrix;
+                    modelViewMats[combineCount] = drawCall.modelViewMatrix;
+                    const l0 = drawCall.renderer instanceof MeshRenderer ? drawCall.renderer.lightmapIndex : -1;
+                    const l1 = nextDrawCall.renderer instanceof MeshRenderer ? nextDrawCall.renderer.lightmapIndex : -1;
+                    combineCount++;
+                    if (!isFinal &&
+                        material === nextMaterial &&
+                        mesh === nextMesh &&
+                        l0 === l1) {
+                        continue;
+                    }
+                }
+                //
+                if (mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0) !== null) {
+                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0);
+                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL1);
+                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL2);
+                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL3);
+                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0);
+                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1);
+                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2);
+                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3);
+                }
+
+                //被打断，合并
+                if (combineCount > 0) {
+                    const model0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    const model1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL1, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    const model2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL2, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    const model3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL3, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    const modelViews0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    const modelViews1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    const modelViews2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    const modelViews3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    for (let j = 0; j < combineCount; j++) {
+                        const modelData = modelMats[j].rawData;
+                        model0[j * 4 + 0] = modelData[0];
+                        model0[j * 4 + 1] = modelData[1];
+                        model0[j * 4 + 2] = modelData[2];
+                        model0[j * 4 + 3] = modelData[3];
+
+                        model1[j * 4 + 0] = modelData[4];
+                        model1[j * 4 + 1] = modelData[5];
+                        model1[j * 4 + 2] = modelData[6];
+                        model1[j * 4 + 3] = modelData[7];
+
+                        model2[j * 4 + 0] = modelData[8];
+                        model2[j * 4 + 1] = modelData[9];
+                        model2[j * 4 + 2] = modelData[10];
+                        model2[j * 4 + 3] = modelData[11];
+
+                        model3[j * 4 + 0] = modelData[12];
+                        model3[j * 4 + 1] = modelData[13];
+                        model3[j * 4 + 2] = modelData[14];
+                        model3[j * 4 + 3] = modelData[15];
+
+                        const modelViewData = modelViewMats[j].rawData;
+                        modelViews0[j * 4 + 0] = modelViewData[0];
+                        modelViews0[j * 4 + 1] = modelViewData[1];
+                        modelViews0[j * 4 + 2] = modelViewData[2];
+                        modelViews0[j * 4 + 3] = modelViewData[3];
+
+                        modelViews1[j * 4 + 0] = modelViewData[4];
+                        modelViews1[j * 4 + 1] = modelViewData[5];
+                        modelViews1[j * 4 + 2] = modelViewData[6];
+                        modelViews1[j * 4 + 3] = modelViewData[7];
+
+                        modelViews2[j * 4 + 0] = modelViewData[8];
+                        modelViews2[j * 4 + 1] = modelViewData[9];
+                        modelViews2[j * 4 + 2] = modelViewData[10];
+                        modelViews2[j * 4 + 3] = modelViewData[11];
+
+                        modelViews3[j * 4 + 0] = modelViewData[12];
+                        modelViews3[j * 4 + 1] = modelViewData[13];
+                        modelViews3[j * 4 + 2] = modelViewData[14];
+                        modelViews3[j * 4 + 3] = modelViewData[15];
+                    }
+                    drawCall.instanced = combineCount;
+                    combineCount = 0;
+                }
+
                 this.draw(drawCall, material);
             }
-            // Draw transparents.
-            for (const drawCall of transparentCalls) {
-                this.draw(drawCall, material);
+        }
+
+        private _render(camera: Camera, renderTarget: RenderTexture | null, material: Material | null) {
+            const renderState = this._renderState;
+            renderState.renderTarget = renderTarget;
+            renderState.viewport = camera.viewport;
+            renderState.clearColor = camera.backgroundColor;
+            renderState.clearBuffer(camera.bufferMask);
+            //
+            // Skybox.
+            this._drawSkybox(camera);
+
+            //
+            const { opaqueCalls, transparentCalls } = camera.context;
+            if (renderState.enableGPUInstancing) {
+                this._combineDraw(opaqueCalls);
+                this._combineDraw(transparentCalls);
+            }
+            else {
+                // Draw opaques.
+                for (const drawCall of opaqueCalls) {
+                    this.draw(drawCall, material);
+                }
+                // Draw transparents.
+                for (const drawCall of transparentCalls) {
+                    this.draw(drawCall, material);
+                }
             }
             //
             if (renderTarget !== null && renderTarget.levels !== 1) { // Fixed there is no texture bound to the unit 0 error.

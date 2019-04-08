@@ -42,7 +42,7 @@ namespace egret3d {
         combine(scene.gameObjects);
     }
     /**
-     * 尝试合并静态对象列表。
+     * 尝试合并静态对象列表。（开启了instancing的材质，不参与静态合并）
      * @param instances 
      * @param root 
      */
@@ -101,9 +101,14 @@ namespace egret3d {
         const materials = meshRenderer.materials;
         const meshData = meshFilter.mesh;
 
+        //开启了instancing的材质，不参与静态合并
+        let enableInstancing = false;
         //合并筛选的条件:层级_光照贴图索引_材质0_材质1... ：256_0_234_532...
         let key: string = target.layer + "_" + meshRenderer.lightmapIndex + "_";
-        materials.forEach(e => { key = key + "_" + e!.uuid; });
+        materials.forEach(e => { key = key + "_" + e!.uuid; enableInstancing = e!.enableGPUInstancing || enableInstancing; });
+        if (enableInstancing) {
+            return;
+        }
 
         if (!out[key]) {
             out[key] = [];
@@ -309,7 +314,7 @@ namespace egret3d {
                         weightIndex += orginVertexCount * 4;
                     }
                 }
-                
+
                 const combineIndices = combineMesh.getIndices(i) as Uint16Array;
                 const indicesBuffer = mesh.createTypeArrayFromAccessor(mesh.getAccessor(primitive.indices!)) as Uint16Array;
                 for (let j = 0, l = indicesBuffer.length; j < l; j++) {
@@ -321,7 +326,7 @@ namespace egret3d {
             startIndex = endIndex + 1;
 
             meshFilter.mesh = null;
-        }        
+        }
 
         return combineMesh;
     }

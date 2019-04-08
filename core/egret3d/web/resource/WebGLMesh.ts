@@ -17,6 +17,7 @@ namespace egret3d.webgl {
                 const attributesMask = (program as WebGLProgramBinder).attributesMask;
 
                 if (attributesMask in vaos!) {
+                    webgl.bindVertexArray(vaos![attributesMask]);
                     return 2; // Created.
                 }
                 else {
@@ -49,7 +50,7 @@ namespace egret3d.webgl {
             let bindVAO: -2 | -1 | 0 | 1 | 2 = -2;
 
             if ((needUpdate & MeshNeedUpdate.VertexBuffer) !== 0) {
-                bindVAO = this._bindVAO(primitive);
+                bindVAO = this._bindVAO(primitive);//TODO 
 
                 if (glTFMeshExtras.vbo === null) {
                     const vbo = webgl.createBuffer();
@@ -109,7 +110,7 @@ namespace egret3d.webgl {
                     bindVAO = this._bindVAO(primitive);
                 }
 
-                if (bindVAO === 1) {
+                if (bindVAO === 1 || bindVAO === 2) {
                     webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
                     webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
                     renderState.updateVertexAttributes(this, subMeshIndex);
