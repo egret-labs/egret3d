@@ -122,7 +122,9 @@ namespace egret3d {
          * @internal
          */
         public _states?: gltf.States;
-
+        /**
+         * @ignore
+         */
         public initialize(
             name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null,
             parent: Shader | null

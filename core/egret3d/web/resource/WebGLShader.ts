@@ -6,22 +6,23 @@ namespace egret3d.webgl {
         public readonly programs: { [key: string]: WebGLProgramBinder | null } = {};
 
         public dispose() {
-            if (!super.dispose()) {
-                return false;
-            }
+            if (super.dispose()) {
+                const { programs } = this;
 
-            for (const k in this.programs) {
-                const program = this.programs[k];
-                if (program) {
-                    program.dispose();
+                for (const k in programs) {
+                    const program = programs[k];
+
+                    if (program !== null) {
+                        program.dispose();
+                    }
+
+                    delete programs[k];
                 }
 
-                delete this.programs[k];
+                return true;
             }
 
-            // this.programs;
-
-            return true;
+            return false;
         }
     }
     // Retargeting.

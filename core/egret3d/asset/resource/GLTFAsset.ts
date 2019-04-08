@@ -179,7 +179,7 @@ namespace egret3d {
             }
         }
         /**
-         * @interfnal
+         * @ignore
          */
         public dispose() {
             if (super.dispose()) {
@@ -191,7 +191,7 @@ namespace egret3d {
             return false;
         }
         /**
-         * @internal
+         * @ignore
          */
         public updateAccessorTypeCount(): this {
             const { accessors } = this.config;

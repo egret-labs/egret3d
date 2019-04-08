@@ -84,13 +84,17 @@ namespace egret3d {
                 }
             }
         }
-
+        /**
+         * @ignore
+         */
         protected getMatchers() {
             return [
                 paper.Matcher.create<paper.GameObject>(Transform, SkinnedMeshRenderer),
             ];
         }
-
+        /**
+         * @ignore
+         */
         protected getListeners() {
             return [
                 {
@@ -105,7 +109,9 @@ namespace egret3d {
                 },
             ];
         }
-
+        /**
+         * @ignore
+         */
         public onEntityAdded(entity: paper.GameObject) {
             const renderer = entity.getComponent(SkinnedMeshRenderer)!;
 
@@ -115,11 +121,15 @@ namespace egret3d {
 
             this._updateDrawCalls(entity, false);
         }
-
+        /**
+         * @ignore
+         */
         public onEntityRemoved(entity: paper.GameObject) {
             this._drawCallCollecter.removeDrawCalls(entity);
         }
-
+        /**
+         * @ignore
+         */
         public onFrame() {
             for (const entity of this.groups[0].entities) {
                 entity.getComponent(SkinnedMeshRenderer)!._update();

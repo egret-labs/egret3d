@@ -36,12 +36,14 @@ namespace paper.editor {
         public initialize() {
             super.initialize();
 
-            (this.hierarchy as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
-            (this.property as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
-            (this.stats as Stats) = new Stats();
-            (this.renderPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
-            (this.drawCallPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
-            this.stats.showPanel(0);
+            if ((Application.playerMode & PlayerMode.Editor) === 0) {
+                (this.hierarchy as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
+                (this.property as dat.GUI) = new dat.GUI({ closeOnTop: true, width: 300 });
+                (this.stats as Stats) = new Stats();
+                (this.renderPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
+                (this.drawCallPanel as Stats.Panel) = this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
+                this.stats.showPanel(0);
+            }
         }
     }
 }

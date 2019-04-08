@@ -143,13 +143,14 @@ namespace egret3d {
             /**
              * 
              */
-            attributeOffsets: { [key: string]: uint }; // TODO
+            attributeOffsets: { [key: string]: uint };
             /**
              * 
              */
-            vbo: WebGLBuffer | null;
+            vbo: WebGLBuffer | null; // TODO vbos
         };
     }
+    // TODO GLTFMeshPrimitive
     /**
      * 扩展 glTF 材质。
      * - 仅用于存储材质初始值。
@@ -368,6 +369,7 @@ namespace egret3d {
     export interface StateMachineNode {
         name: string;
         /**
+         * TODO extras
          * @internal
          */
         _parent?: StateMachineNode;
@@ -389,6 +391,7 @@ namespace egret3d {
         mask?: string | AnimationMask | null;
         machine: StateMachine;
         /**
+         * TODO extras
          * @internal
          */
         _clipNames?: string[];
@@ -544,7 +547,7 @@ namespace gltf {
 
 declare namespace gltf {
     /**
-     * @internal
+     * @ignore
      */
     export const enum WebGL {
         UNPACK_ALIGNMENT = 3317,
@@ -1316,7 +1319,7 @@ declare namespace gltf {
             /**
              * 
              */
-            vao: WebGLVertexArrayObject | null;
+            vaos: { [key: number]: WebGLVertexArrayObject } | null;
             /**
              * 
              */

@@ -9,22 +9,17 @@ namespace egret3d.oimo {
 
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
-        public readonly capsule: Capsule = Capsule.create();
+        public readonly capsule: Capsule = Capsule.create().set(Vector3.ZERO, 0.25, 0.5);
 
         protected _createShape() {
             const config = this._updateConfig();
+            config.position = this.capsule.center as any;
             config.geometry = new OIMO.CapsuleGeometry(this.capsule.radius, this.capsule.height * 0.5);
 
             const shape = new OIMO.Shape(config);
             shape.userData = this;
 
             return shape;
-        }
-
-        public initialize() {
-            super.initialize();
-
-            this.capsule.set(Vector3.ZERO, 0.25, 0.5);
         }
     }
 }

@@ -8,7 +8,7 @@ namespace egret3d.oimo {
 
         @paper.editor.property(paper.editor.EditType.NESTED)
         @paper.serializedField
-        public readonly sphere: Sphere = Sphere.create();
+        public readonly sphere: Sphere = Sphere.create().set(Vector3.ZERO, 0.5);
 
         protected _createShape() {
             const config = this._updateConfig();
@@ -19,12 +19,6 @@ namespace egret3d.oimo {
             shape.userData = this;
 
             return shape;
-        }
-
-        public initialize() {
-            super.initialize();
-
-            this.sphere.set(Vector3.ZERO, 0.5);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace egret3d {
         protected readonly _localBoundingBox: Box = Box.create();
         private _mesh: Mesh | null = null;
         /**
-         * @internal
+         * @ignore
          */
         public uninitialize() {
             super.uninitialize();
@@ -21,7 +21,9 @@ namespace egret3d {
 
             this._mesh = null;
         }
-
+        /**
+         * @ignore
+         */
         public raycast(ray: Readonly<Ray>, raycastInfo: RaycastInfo | null = null) {
             const mesh = this._mesh;
 

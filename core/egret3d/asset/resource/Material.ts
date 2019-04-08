@@ -289,7 +289,7 @@ namespace egret3d {
             }
         }
         /**
-         * @internal
+         * @ignore
          */
         public initialize(name: string, config: GLTF, buffers: ReadonlyArray<ArrayBufferView> | null) {
             super.initialize(name, config, buffers);
@@ -297,7 +297,7 @@ namespace egret3d {
             renderState.onRenderStateChanged.add(this._renderStateChanged, this);
         }
         /**
-         * @internal
+         * @ignore
          */
         public retain(): this {
             super.retain();
@@ -307,7 +307,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * @internal
+         * @ignore
          */
         public release(): this {
             super.release();
@@ -319,7 +319,7 @@ namespace egret3d {
             return this;
         }
         /**
-         * @interfnal
+         * @ignore
          */
         public dispose() {
             if (super.dispose()) {

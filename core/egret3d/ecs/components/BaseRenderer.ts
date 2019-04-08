@@ -36,7 +36,7 @@ namespace paper {
             this._boundingSphere.radius *= localToWorldMatrix.maxScaleOnAxis;
         }
         /**
-         * @internal
+         * @ignore
          */
         public initialize() {
             super.initialize();
@@ -44,7 +44,7 @@ namespace paper {
             this.getBoundingTransform().registerObserver(this);
         }
         /**
-         * @internal
+         * @ignore
          */
         public uninitialize() {
             for (const material of this._materials) {
@@ -58,7 +58,7 @@ namespace paper {
             this._materials.length = 0;
         }
         /**
-         * @private
+         * @ignore
          */
         public onTransformChange() {
             this._boundingSphereDirty = true;
@@ -143,24 +143,27 @@ namespace paper {
         public set materials(value: ReadonlyArray<egret3d.Material | null>) {
             const materials = this._materials;
 
-            for (const material of materials) {
-                if (material !== null) {
-                    material.release();
-                }
-            }
-
             if (value !== materials) {
+                for (const material of materials) {
+                    if (material !== null) {
+                        material.release();
+                    }
+                }
+
                 materials.length = 0;
 
                 for (const material of value) {
                     materials.push(material);
                 }
-            }
 
-            for (const material of materials) {
-                if (material !== null) {
-                    material.retain();
+                for (const material of materials) {
+                    if (material !== null) {
+                        material.retain();
+                    }
                 }
+            }
+            else if (DEBUG) {
+                console.warn("Potentially risky operation.");
             }
 
             BaseRenderer.onMaterialsChanged.dispatch(this);

@@ -173,6 +173,14 @@ namespace egret3d.oimo {
             return this._connectedBody;
         }
         public set connectedRigidbody(value: Rigidbody | null) {
+            if (this._connectedBody === this._rigidbody) {
+                if (DEBUG) {
+                    console.warn("Cannot set the connected rigidbody same as the rigibody.");
+                }
+
+                this._connectedBody = null;
+            }
+
             if (this._connectedBody === value) {
                 return;
             }

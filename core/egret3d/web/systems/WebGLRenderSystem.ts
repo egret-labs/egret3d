@@ -191,7 +191,7 @@ namespace egret3d.webgl {
             mesh.update(MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer, subMeshIndex);
 
             if (renderState.vertexArrayObject !== null) {
-                webgl.bindVertexArray(primitiveExtras.vao);
+                webgl.bindVertexArray(primitiveExtras.vaos![(primitiveExtras.program as WebGLProgramBinder).attributesMask]);
             }
             else {
                 const vbo = extras!.vbo;
@@ -527,8 +527,8 @@ namespace egret3d.webgl {
                 material._update();
             }
             // 
-            if (technique.program !== program.id) {
-                technique.program = program.id;
+            if (technique.program !== program.index) {
+                technique.program = program.index;
             }
             // Update states.
             renderState.updateState(techniqueState);
@@ -922,17 +922,6 @@ namespace egret3d.webgl {
                 const { subMeshIndex } = drawCall;
                 const primitive = mesh.glTFMesh.primitives[subMeshIndex];
                 const drawMode = primitive.mode === undefined ? gltf.MeshPrimitiveMode.Triangles : primitive.mode;
-                // Update attributes.
-                if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
-                    if (program !== primitive.extras!.program) {
-                        mesh.needUpdate(MeshNeedUpdate.VertexArray, subMeshIndex);
-                        primitive.extras!.program = program;
-                    }
-
-                    this._updateAttributes(mesh, subMeshIndex);
-                    this._cacheSubMeshIndex = subMeshIndex;
-                    this._cacheMesh = mesh;
-                }
                 // Update global uniforms.
                 this._updateGlobalUniforms(program, camera, drawCall, renderer, currentScene, forceUpdate);
                 // Update uniforms.
@@ -940,6 +929,22 @@ namespace egret3d.webgl {
                     this._updateUniforms(program, material);
                     this._cacheMaterialVersion = material._version;
                     this._cacheMaterial = material;
+
+                    this._cacheMesh = null;
+                    this._cacheSubMeshIndex = -1;
+                }
+                // Update attributes.
+                if (this._cacheMesh !== mesh || this._cacheSubMeshIndex !== subMeshIndex) {
+                    const meshCacheProgram = primitive.extras!.program as WebGLProgramBinder;
+
+                    if (meshCacheProgram === null || program.attributesMask !== meshCacheProgram.attributesMask) {
+                        mesh.needUpdate(MeshNeedUpdate.VertexArray, subMeshIndex);
+                        primitive.extras!.program = program;
+                    }
+
+                    this._updateAttributes(mesh, subMeshIndex);
+                    this._cacheSubMeshIndex = subMeshIndex;
+                    this._cacheMesh = mesh;
                 }
                 //  TODO
                 // if (techniqueState && renderer.transform._worldMatrixDeterminant < 0) {

@@ -114,14 +114,14 @@ namespace egret3d {
             if (materialA._renderQueue !== materialB._renderQueue) {
                 return materialA._renderQueue - materialB._renderQueue;
             }
-            else if (materialA._technique!.program !== materialB._technique!.program) {//着色器不同，避免频繁切换
+            else if (materialA._technique!.program !== materialB._technique!.program) { // 避免在不同的着色器程序之间频繁切换。
                 return materialA._technique!.program! - materialB._technique!.program!;
             }
             else if (materialA._id !== materialB._id) {
                 return materialA._id - materialB._id;
             }
-            else if (a.mesh._id !== b.mesh._id) {//为了实例化，这里mesh也排序下
-                return a.mesh._id - b.mesh._id;
+            else if (a.mesh.index !== b.mesh.index) { // 为了实例化，这里mesh也排序下
+                return a.mesh.index - b.mesh.index;
             }
             else {
                 return a.zdist - b.zdist;

@@ -4521,12 +4521,14 @@ var paper;
             }
             InspectorComponent.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
-                this.hierarchy = new dat.GUI({ closeOnTop: true, width: 300 });
-                this.property = new dat.GUI({ closeOnTop: true, width: 300 });
-                this.stats = new Stats();
-                this.renderPanel = this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
-                this.drawCallPanel = this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
-                this.stats.showPanel(0);
+                if ((paper.Application.playerMode & 4 /* Editor */) === 0) {
+                    this.hierarchy = new dat.GUI({ closeOnTop: true, width: 300 });
+                    this.property = new dat.GUI({ closeOnTop: true, width: 300 });
+                    this.stats = new Stats();
+                    this.renderPanel = this.stats.addPanel(new Stats.Panel("MS(R)", "#ff8", "#221"));
+                    this.drawCallPanel = this.stats.addPanel(new Stats.Panel("DC", "#ff8", "#221"));
+                    this.stats.showPanel(0);
+                }
             };
             InspectorComponent = __decorate([
                 paper.singleton

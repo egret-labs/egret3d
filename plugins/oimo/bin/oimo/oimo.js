@@ -41975,170 +41975,6 @@ var egret3d;
     (function (oimo) {
         var ValueType;
         (function (ValueType) {
-            ValueType[ValueType["CollisionMask"] = 0] = "CollisionMask";
-            ValueType[ValueType["Friction"] = 1] = "Friction";
-            ValueType[ValueType["Restitution"] = 2] = "Restitution";
-            ValueType[ValueType["Density"] = 3] = "Density";
-        })(ValueType || (ValueType = {}));
-        /**
-         * 基础碰撞组件。
-         * - 全部碰撞组件的基类。
-         */
-        var BaseCollider = (function (_super) {
-            __extends(BaseCollider, _super);
-            function BaseCollider() {
-                var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = -1;
-                /**
-                 * [CollisionMask, Friction, Restitution, Density];
-                 */
-                _this._values = new Float32Array(4);
-                _this._oimoShape = null;
-                return _this;
-            }
-            BaseCollider_1 = BaseCollider;
-            BaseCollider.prototype._updateConfig = function () {
-                var config = BaseCollider_1._config;
-                config.collisionGroup = this.gameObject.layer; // TODO 动态改变
-                config.collisionMask = this.collisionMask;
-                config.friction = this.friction;
-                config.restitution = this.restitution;
-                config.density = this.density;
-                return config;
-            };
-            BaseCollider.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-                this._values[0 /* CollisionMask */] = 1 /* Default */;
-                this._values[1 /* Friction */] = OIMO.Setting.defaultFriction;
-                this._values[2 /* Restitution */] = OIMO.Setting.defaultRestitution;
-                this._values[3 /* Density */] = OIMO.Setting.defaultDensity;
-            };
-            BaseCollider.prototype.uninitialize = function () {
-                _super.prototype.uninitialize.call(this);
-                this._oimoShape = null;
-            };
-            Object.defineProperty(BaseCollider.prototype, "collisionMask", {
-                /**
-                 * 该碰撞体的碰撞掩码。
-                 */
-                get: function () {
-                    return this._values[0 /* CollisionMask */];
-                },
-                set: function (value) {
-                    if (this._values[0 /* CollisionMask */] === value) {
-                        return;
-                    }
-                    this._values[0 /* CollisionMask */] = value;
-                    if (this._oimoShape !== null) {
-                        this._oimoShape.setCollisionMask(value);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(BaseCollider.prototype, "friction", {
-                /**
-                 * 该碰撞体的摩擦力。
-                 */
-                get: function () {
-                    return this._values[1 /* Friction */];
-                },
-                set: function (value) {
-                    if (this._values[1 /* Friction */] === value) {
-                        return;
-                    }
-                    this._values[1 /* Friction */] = value;
-                    if (this._oimoShape !== null) {
-                        this._oimoShape.setFriction(value);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(BaseCollider.prototype, "restitution", {
-                /**
-                 * 该碰撞体的恢复系数。
-                 */
-                get: function () {
-                    return this._values[2 /* Restitution */];
-                },
-                set: function (value) {
-                    if (this._values[2 /* Restitution */] === value) {
-                        return;
-                    }
-                    this._values[2 /* Restitution */] = value;
-                    if (this._oimoShape !== null) {
-                        this._oimoShape.setRestitution(value);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(BaseCollider.prototype, "density", {
-                /**
-                 * 该碰撞体的密度。
-                 * - 单位为`千克/立方米`。
-                 */
-                get: function () {
-                    return this._values[3 /* Density */];
-                },
-                set: function (value) {
-                    if (this._values[3 /* Density */] === value) {
-                        return;
-                    }
-                    this._values[3 /* Density */] = value;
-                    if (this._oimoShape !== null) {
-                        this._oimoShape.setDensity(value);
-                    }
-                },
-                enumerable: true,
-                configurable: true
-            });
-            Object.defineProperty(BaseCollider.prototype, "oimoShape", {
-                /**
-                 * 该碰撞体的 OIMO 碰撞体。
-                 */
-                get: function () {
-                    if (this._oimoShape === null) {
-                        this._oimoShape = this._createShape();
-                    }
-                    return this._oimoShape;
-                },
-                enumerable: true,
-                configurable: true
-            });
-            BaseCollider._config = new OIMO.ShapeConfig();
-            __decorate([
-                paper.serializedField
-            ], BaseCollider.prototype, "_values", void 0);
-            __decorate([
-                paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) }) // TODO
-            ], BaseCollider.prototype, "collisionMask", null);
-            __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-            ], BaseCollider.prototype, "friction", null);
-            __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 1.0 })
-            ], BaseCollider.prototype, "restitution", null);
-            __decorate([
-                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
-            ], BaseCollider.prototype, "density", null);
-            BaseCollider = BaseCollider_1 = __decorate([
-                paper.abstract
-            ], BaseCollider);
-            return BaseCollider;
-            var BaseCollider_1;
-        }(paper.BaseComponent));
-        oimo.BaseCollider = BaseCollider;
-        __reflect(BaseCollider.prototype, "egret3d.oimo.BaseCollider", ["egret3d.ICollider"]);
-    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
-})(egret3d || (egret3d = {}));
-var egret3d;
-(function (egret3d) {
-    var oimo;
-    (function (oimo) {
-        var ValueType;
-        (function (ValueType) {
             ValueType[ValueType["CollisionEnabled"] = 0] = "CollisionEnabled";
             ValueType[ValueType["UseWorldAnchor"] = 1] = "UseWorldAnchor";
             ValueType[ValueType["BreakForce"] = 2] = "BreakForce";
@@ -42308,6 +42144,12 @@ var egret3d;
                     return this._connectedBody;
                 },
                 set: function (value) {
+                    if (this._connectedBody === this._rigidbody) {
+                        if (true) {
+                            console.warn("Cannot set the connected rigidbody same as the rigibody.");
+                        }
+                        this._connectedBody = null;
+                    }
                     if (this._connectedBody === value) {
                         return;
                     }
@@ -42366,40 +42208,164 @@ var egret3d;
 (function (egret3d) {
     var oimo;
     (function (oimo) {
+        var ValueType;
+        (function (ValueType) {
+            ValueType[ValueType["CollisionMask"] = 0] = "CollisionMask";
+            ValueType[ValueType["Friction"] = 1] = "Friction";
+            ValueType[ValueType["Restitution"] = 2] = "Restitution";
+            ValueType[ValueType["Density"] = 3] = "Density";
+        })(ValueType || (ValueType = {}));
         /**
-         * 球体碰撞组件。
+         * 基础碰撞组件。
+         * - 全部碰撞组件的基类。
          */
-        var SphereCollider = (function (_super) {
-            __extends(SphereCollider, _super);
-            function SphereCollider() {
+        var BaseCollider = (function (_super) {
+            __extends(BaseCollider, _super);
+            function BaseCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
-                _this.colliderType = egret3d.ColliderType.Sphere;
-                _this.sphere = egret3d.Sphere.create();
+                _this.colliderType = -1;
+                /**
+                 * [CollisionMask, Friction, Restitution, Density];
+                 */
+                _this._values = new Float32Array(4);
+                _this._oimoShape = null;
                 return _this;
             }
-            SphereCollider.prototype._createShape = function () {
-                var config = this._updateConfig();
-                config.position = this.sphere.center;
-                config.geometry = new OIMO.SphereGeometry(this.sphere.radius);
-                var shape = new OIMO.Shape(config);
-                shape.userData = this;
-                return shape;
+            BaseCollider_1 = BaseCollider;
+            BaseCollider.prototype._updateConfig = function () {
+                var config = BaseCollider_1._config;
+                config.collisionGroup = this.gameObject.layer; // TODO 动态改变
+                config.collisionMask = this.collisionMask;
+                config.friction = this.friction;
+                config.restitution = this.restitution;
+                config.density = this.density;
+                return config;
             };
-            SphereCollider.prototype.initialize = function () {
+            BaseCollider.prototype.initialize = function () {
                 _super.prototype.initialize.call(this);
-                this.sphere.set(egret3d.Vector3.ZERO, 0.5);
+                this._values[0 /* CollisionMask */] = 1 /* Default */;
+                this._values[1 /* Friction */] = OIMO.Setting.defaultFriction;
+                this._values[2 /* Restitution */] = OIMO.Setting.defaultRestitution;
+                this._values[3 /* Density */] = OIMO.Setting.defaultDensity;
             };
+            BaseCollider.prototype.uninitialize = function () {
+                _super.prototype.uninitialize.call(this);
+                this._oimoShape = null;
+            };
+            Object.defineProperty(BaseCollider.prototype, "collisionMask", {
+                /**
+                 * 该碰撞体的碰撞掩码。
+                 */
+                get: function () {
+                    return this._values[0 /* CollisionMask */];
+                },
+                set: function (value) {
+                    if (this._values[0 /* CollisionMask */] === value) {
+                        return;
+                    }
+                    this._values[0 /* CollisionMask */] = value;
+                    if (this._oimoShape !== null) {
+                        this._oimoShape.setCollisionMask(value);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(BaseCollider.prototype, "friction", {
+                /**
+                 * 该碰撞体的摩擦力。
+                 */
+                get: function () {
+                    return this._values[1 /* Friction */];
+                },
+                set: function (value) {
+                    if (this._values[1 /* Friction */] === value) {
+                        return;
+                    }
+                    this._values[1 /* Friction */] = value;
+                    if (this._oimoShape !== null) {
+                        this._oimoShape.setFriction(value);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(BaseCollider.prototype, "restitution", {
+                /**
+                 * 该碰撞体的恢复系数。
+                 */
+                get: function () {
+                    return this._values[2 /* Restitution */];
+                },
+                set: function (value) {
+                    if (this._values[2 /* Restitution */] === value) {
+                        return;
+                    }
+                    this._values[2 /* Restitution */] = value;
+                    if (this._oimoShape !== null) {
+                        this._oimoShape.setRestitution(value);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(BaseCollider.prototype, "density", {
+                /**
+                 * 该碰撞体的密度。
+                 * - 单位为`千克/立方米`。
+                 */
+                get: function () {
+                    return this._values[3 /* Density */];
+                },
+                set: function (value) {
+                    if (this._values[3 /* Density */] === value) {
+                        return;
+                    }
+                    this._values[3 /* Density */] = value;
+                    if (this._oimoShape !== null) {
+                        this._oimoShape.setDensity(value);
+                    }
+                },
+                enumerable: true,
+                configurable: true
+            });
+            Object.defineProperty(BaseCollider.prototype, "oimoShape", {
+                /**
+                 * 该碰撞体的 OIMO 碰撞体。
+                 */
+                get: function () {
+                    if (this._oimoShape === null) {
+                        this._oimoShape = this._createShape();
+                    }
+                    return this._oimoShape;
+                },
+                enumerable: true,
+                configurable: true
+            });
+            BaseCollider._config = new OIMO.ShapeConfig();
             __decorate([
-                paper.editor.property("NESTED" /* NESTED */),
                 paper.serializedField
-            ], SphereCollider.prototype, "sphere", void 0);
-            SphereCollider = __decorate([
-                paper.requireComponent(oimo.Rigidbody)
-            ], SphereCollider);
-            return SphereCollider;
-        }(oimo.BaseCollider));
-        oimo.SphereCollider = SphereCollider;
-        __reflect(SphereCollider.prototype, "egret3d.oimo.SphereCollider", ["egret3d.ISphereCollider"]);
+            ], BaseCollider.prototype, "_values", void 0);
+            __decorate([
+                paper.editor.property("LIST" /* LIST */, { listItems: paper.editor.getItemsFromEnum(paper.Layer) }) // TODO
+            ], BaseCollider.prototype, "collisionMask", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            ], BaseCollider.prototype, "friction", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0, maximum: 1.0 })
+            ], BaseCollider.prototype, "restitution", null);
+            __decorate([
+                paper.editor.property("FLOAT" /* FLOAT */, { minimum: 0.0 })
+            ], BaseCollider.prototype, "density", null);
+            BaseCollider = BaseCollider_1 = __decorate([
+                paper.abstract
+            ], BaseCollider);
+            return BaseCollider;
+            var BaseCollider_1;
+        }(paper.BaseComponent));
+        oimo.BaseCollider = BaseCollider;
+        __reflect(BaseCollider.prototype, "egret3d.oimo.BaseCollider", ["egret3d.ICollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
 var egret3d;
@@ -42658,7 +42624,7 @@ var egret3d;
             function BoxCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Box;
-                _this.box = egret3d.Box.create();
+                _this.box = egret3d.Box.create().copy(egret3d.Box.ONE);
                 return _this;
             }
             BoxCollider.prototype._createShape = function () {
@@ -42668,10 +42634,6 @@ var egret3d;
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
-            };
-            BoxCollider.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-                this.box.copy(egret3d.Box.ONE);
             };
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
@@ -42699,19 +42661,16 @@ var egret3d;
             function CapsuleCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Capsule;
-                _this.capsule = egret3d.Capsule.create();
+                _this.capsule = egret3d.Capsule.create().set(egret3d.Vector3.ZERO, 0.25, 0.5);
                 return _this;
             }
             CapsuleCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
+                config.position = this.capsule.center;
                 config.geometry = new OIMO.CapsuleGeometry(this.capsule.radius, this.capsule.height * 0.5);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
-            };
-            CapsuleCollider.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-                this.capsule.set(egret3d.Vector3.ZERO, 0.25, 0.5);
             };
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
@@ -42739,19 +42698,16 @@ var egret3d;
             function ConeCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Cone;
-                _this.cylinder = egret3d.Cylinder.create();
+                _this.cylinder = egret3d.Cylinder.create().set(egret3d.Vector3.ZERO, 0.0, 0.5, 1.0);
                 return _this;
             }
             ConeCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
+                config.position = this.cylinder.center;
                 config.geometry = new OIMO.ConeGeometry(this.cylinder.bottomRadius, this.cylinder.height * 0.5);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
-            };
-            ConeCollider.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-                this.cylinder.set(egret3d.Vector3.ZERO, 0.0, 0.5, 1.0);
             };
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
@@ -42779,19 +42735,16 @@ var egret3d;
             function CylinderCollider() {
                 var _this = _super !== null && _super.apply(this, arguments) || this;
                 _this.colliderType = egret3d.ColliderType.Cylinder;
-                _this.cylinder = egret3d.Cylinder.create();
+                _this.cylinder = egret3d.Cylinder.create().set(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
                 return _this;
             }
             CylinderCollider.prototype._createShape = function () {
                 var config = this._updateConfig();
+                config.position = this.cylinder.center;
                 config.geometry = new OIMO.CylinderGeometry(this.cylinder.bottomRadius, this.cylinder.height * 0.5);
                 var shape = new OIMO.Shape(config);
                 shape.userData = this;
                 return shape;
-            };
-            CylinderCollider.prototype.initialize = function () {
-                _super.prototype.initialize.call(this);
-                this.cylinder.set(egret3d.Vector3.ZERO, 0.5, 0.5, 1.0);
             };
             __decorate([
                 paper.editor.property("NESTED" /* NESTED */),
@@ -42806,108 +42759,42 @@ var egret3d;
         __reflect(CylinderCollider.prototype, "egret3d.oimo.CylinderCollider", ["egret3d.ICylinderCollider"]);
     })(oimo = egret3d.oimo || (egret3d.oimo = {}));
 })(egret3d || (egret3d = {}));
-// namespace egret3d.oimo {
-//     let _material: Material = null!;
-//     /**
-//      * 
-//      */
-//     export class RayTester extends paper.Behaviour {
-//         @paper.serializedField
-//         public distance: number = 10.0;
-//         @paper.serializedField
-//         public collisionMask: paper.Layer = paper.Layer.Everything;
-//         private _hitted: boolean = false;
-//         private _mesh: Mesh = null!;
-//         public onStart() {
-//             const meshFilter = this.gameObject.getOrAddComponent(MeshFilter);
-//             const meshRender = this.gameObject.getOrAddComponent(MeshRenderer);
-//             this._mesh = Mesh.create(4, 0, [
-//                 gltf.AttributeSemantics.POSITION,
-//                 gltf.AttributeSemantics.COLOR_0,
-//             ]);
-//             const vertices = this._mesh.getVertices()!;
-//             const colors = this._mesh.getColors()!;
-//             vertices[0] = 0.0;
-//             vertices[1] = 0.0;
-//             vertices[2] = 0.0;
-//             vertices[3] = 0.0;
-//             vertices[4] = 0.0;
-//             vertices[5] = this.distance;
-//             vertices[6] = 0.0;
-//             vertices[7] = 0.0;
-//             vertices[8] = this.distance;
-//             vertices[9] = 0.0;
-//             vertices[10] = 0.0;
-//             vertices[11] = this.distance;
-//             for (let i = 0, l = colors.length; i < l; i += 4) {
-//                 colors[i + 0] = 0.0;
-//                 colors[i + 1] = 1.0;
-//                 colors[i + 2] = 0.0;
-//                 colors[i + 3] = 0.7;
-//             }
-//             this._mesh.glTFMesh.primitives[0].mode = gltf.MeshPrimitiveMode.Lines;
-//             if (!_material) {
-//                 _material = Material.create(DefaultShaders.LINEDASHED);
-//             }
-//             meshRender.materials = [_material];
-//             meshFilter.mesh = this._mesh;
-//         }
-//         public onUpdate() {
-//             const physicsSystem = paper.Application.systemManager.getSystem(PhysicsSystem)!;
-//             const transform = this.gameObject.transform;
-//             const matrix = transform.getWorldMatrix();
-//             const from = transform.getPosition();
-//             const to = matrix.transformVector3(Vector3.create(this.distance, 0.0, 0.0).release());
-//             const raycastInfo = physicsSystem.raycast(from, to, this.collisionMask);
-//             if (raycastInfo) {
-//                 this._hitted = true;
-//                 const inverseMatrix = matrix.clone().inverse();
-//                 const v = raycastInfo.normal!.applyMatrix(inverseMatrix).multiplyScalar(1.0);
-//                 const vertices = this._mesh.getVertices()!;
-//                 const colors = this._mesh.getColors()!;
-//                 inverseMatrix.release();
-//                 vertices[3] = raycastInfo.distance;
-//                 vertices[4] = 0.0;
-//                 vertices[5] = 0.0;
-//                 vertices[6] = raycastInfo.distance;
-//                 vertices[7] = 0.0;
-//                 vertices[8] = 0.0;
-//                 vertices[9] = v.x + raycastInfo.distance;
-//                 vertices[10] = v.y;
-//                 vertices[11] = v.z;
-//                 for (let i = 2 * 4, l = colors.length; i < l; i += 4) {
-//                     colors[i + 0] = 1.0;
-//                     colors[i + 1] = 0.0;
-//                     colors[i + 2] = 0.0;
-//                     colors[i + 3] = 0.7;
-//                 }
-//                 this._mesh.uploadVertexBuffer();
-//                 raycastInfo.release();
-//             }
-//             else if (this._hitted) {
-//                 this._hitted = false;
-//                 const vertices = this._mesh.getVertices()!;
-//                 const colors = this._mesh.getColors()!;
-//                 vertices[3] = 0.0;
-//                 vertices[4] = 0.0;
-//                 vertices[5] = this.distance;
-//                 vertices[6] = 0.0;
-//                 vertices[7] = 0.0;
-//                 vertices[8] = this.distance;
-//                 vertices[9] = 0.0;
-//                 vertices[10] = 0.0;
-//                 vertices[11] = this.distance;
-//                 for (let i = 2 * 4, l = colors.length; i < l; i += 4) {
-//                     colors[i + 0] = 0.0;
-//                     colors[i + 1] = 1.0;
-//                     colors[i + 2] = 0.0;
-//                     colors[i + 3] = 0.7;
-//                 }
-//                 this._mesh.uploadVertexBuffer();
-//             }
-//         }
-//     }
-// } 
+var egret3d;
+(function (egret3d) {
+    var oimo;
+    (function (oimo) {
+        /**
+         * 球体碰撞组件。
+         */
+        var SphereCollider = (function (_super) {
+            __extends(SphereCollider, _super);
+            function SphereCollider() {
+                var _this = _super !== null && _super.apply(this, arguments) || this;
+                _this.colliderType = egret3d.ColliderType.Sphere;
+                _this.sphere = egret3d.Sphere.create().set(egret3d.Vector3.ZERO, 0.5);
+                return _this;
+            }
+            SphereCollider.prototype._createShape = function () {
+                var config = this._updateConfig();
+                config.position = this.sphere.center;
+                config.geometry = new OIMO.SphereGeometry(this.sphere.radius);
+                var shape = new OIMO.Shape(config);
+                shape.userData = this;
+                return shape;
+            };
+            __decorate([
+                paper.editor.property("NESTED" /* NESTED */),
+                paper.serializedField
+            ], SphereCollider.prototype, "sphere", void 0);
+            SphereCollider = __decorate([
+                paper.requireComponent(oimo.Rigidbody)
+            ], SphereCollider);
+            return SphereCollider;
+        }(oimo.BaseCollider));
+        oimo.SphereCollider = SphereCollider;
+        __reflect(SphereCollider.prototype, "egret3d.oimo.SphereCollider", ["egret3d.ISphereCollider"]);
+    })(oimo = egret3d.oimo || (egret3d.oimo = {}));
+})(egret3d || (egret3d = {}));
 var egret3d;
 (function (egret3d) {
     var oimo;

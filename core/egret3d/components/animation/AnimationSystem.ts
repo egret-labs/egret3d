@@ -2,6 +2,7 @@ namespace egret3d {
     /**
      * 动画系统。
      */
+    @paper.executeMode(paper.PlayerMode.Player | paper.PlayerMode.DebugPlayer)
     export class AnimationSystem extends paper.BaseSystem<paper.GameObject> {
 
         private _animation: Animation | null = null;
@@ -42,7 +43,8 @@ namespace egret3d {
             const animationLayer = animationTreeState.animationLayer;
 
             let weight = animationLayer.weight * animationTreeState.weight;
-            if (animationTreeState._parent) {
+
+            if (animationTreeState._parent !== null) {
                 weight *= animationTreeState._parent._globalWeight;
             }
             else {
@@ -60,7 +62,7 @@ namespace egret3d {
 
             let weight = animationLayer.weight * animationState.weight;
 
-            if (animationState._parent) {
+            if (animationState._parent !== null) {
                 weight *= animationState._parent._globalWeight;
             }
             else {
@@ -127,8 +129,8 @@ namespace egret3d {
                     const nodes = animationState.animationAsset.config.nodes!;
 
                     for (const channel of animationState.channels) {
-                        if (jointNames && jointNames.length > 0) {
-                            const jointIndex = channel.glTFChannel.target.node;
+                        if (jointNames.length > 0) {
+                            const jointIndex = channel.glTFChannel.target.node; // TODO remove undefined
                             channel.enabled = jointIndex === undefined || jointNames.indexOf(nodes[jointIndex].name!) >= 0;
                         }
                         else {
@@ -138,11 +140,12 @@ namespace egret3d {
                 }
 
                 for (const channel of animationState.channels) {
-                    if (!channel.updateTarget || !channel.enabled) {
+                    if (channel.updateTarget === null || !channel.enabled) {
                         continue;
                     }
 
                     const binder = channel.binder;
+
                     if (binder.constructor === AnimationBinder) {
                         if ((binder as AnimationBinder).updateBlend(animationLayer, animationState)) {
                             channel.updateTarget(animationLayer, animationState);
@@ -249,7 +252,8 @@ namespace egret3d {
                 }
 
                 if (animationState._playState === 1) {
-                    const clipNames = animationLayer._clipNames;
+                    const clipNames = animationLayer._clipNames; // TODO
+
                     if (clipNames && clipNames.length > 0) {
                         animation.play(clipNames.shift()!);
                     }
@@ -259,13 +263,17 @@ namespace egret3d {
                 }
             }
         }
-
+        /**
+         * @internal
+         */
         protected getMatchers() {
             return [
                 paper.Matcher.create<paper.GameObject>(Transform, Animation),
             ];
         }
-
+        /**
+         * @internal
+         */
         public onEntityAdded(entity: paper.GameObject) {
             const animation = entity.getComponent(Animation)!;
 
@@ -277,7 +285,9 @@ namespace egret3d {
                 animation.play();
             }
         }
-
+        /**
+         * @internal
+         */
         public onFrame(deltaTime: number) {
             for (const entity of this.groups[0].entities) {
                 const animation = this._animation = entity.getComponent(Animation)!;

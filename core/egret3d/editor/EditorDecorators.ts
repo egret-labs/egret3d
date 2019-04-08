@@ -34,6 +34,13 @@ namespace paper.editor {
      * 属性配置。
      */
     export type PropertyOption = {
+        /**
+         * 
+         */
+        type?: EditType;
+        /**
+         * 
+         */
         readonly?: boolean;
         /**
          * UINT, INT, FLOAT 类型的最小值。
@@ -60,6 +67,10 @@ namespace paper.editor {
          */
         componentClass?: IComponentClass<IComponent> | string;
         /**
+         * 
+         */
+        clazz?: any;
+        /**
          * 下拉项。
          */
         listItems?: ListItem[] | string | ((value: any) => ListItem[]);
@@ -68,6 +79,10 @@ namespace paper.editor {
      * 编辑类型。
      */
     export const enum EditType {
+        /**
+         * 按钮。
+         */
+        BUTTON = "BUTTON",
         /**
          * 选中框。
          */
@@ -125,6 +140,29 @@ namespace paper.editor {
          */
         COLOR = "COLOR",
         /**
+         * 3x3 矩阵。
+         */
+        MAT3 = "MAT3",
+        /**
+         * 实体。
+         */
+        GAMEOBJECT = "GAMEOBJECT",
+        /**
+         * 组件。
+         */
+        COMPONENT = "COMPONENT",
+        /**
+         * 资源。
+         */
+        ASSET = "ASSET",
+        /**
+         * 内嵌的。
+         */
+        NESTED = "NESTED",
+
+        /**变换 TODO remove*/
+        TRANSFROM = "TRANSFROM",
+        /**
          * 着色器。
          */
         SHADER = "SHADER",
@@ -145,32 +183,9 @@ namespace paper.editor {
          */
         MESH = "MESH",
         /**
-         * 实体。
-         */
-        GAMEOBJECT = "GAMEOBJECT",
-        /**
-         * 组件。
-         */
-        COMPONENT = "COMPONENT",
-        /**
          * 声音。
          */
         SOUND = "SOUND",
-        /**
-         * 按钮。
-         */
-        BUTTON = "BUTTON",
-        /**
-         * 3x3 矩阵。
-         */
-        MAT3 = "MAT3",
-        /**
-         * 内嵌的。
-         */
-        NESTED = "NESTED",
-
-        /**变换 TODO remove*/
-        TRANSFROM = "TRANSFROM",
     }
     /**
      * 自定义装饰器。
