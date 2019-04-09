@@ -679,13 +679,10 @@ namespace egret3d.webgl {
                 if (material.enableGPUInstancing) {
                     modelMats[combineCount] = drawCall.matrix;
                     modelViewMats[combineCount] = drawCall.modelViewMatrix;
-                    const l0 = drawCall.renderer instanceof MeshRenderer ? drawCall.renderer.lightmapIndex : -1;
-                    const l1 = nextDrawCall.renderer instanceof MeshRenderer ? nextDrawCall.renderer.lightmapIndex : -1;
                     combineCount++;
                     if (!isFinal &&
                         material === nextMaterial &&
-                        mesh === nextMesh &&
-                        l0 === l1) {
+                        mesh === nextMesh) {
                         continue;
                     }
                 }
@@ -909,6 +906,9 @@ namespace egret3d.webgl {
                 this._renderState.clearColor = Color.BLACK;
                 this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor);
             }
+            //
+            combineModelMats.length = 0;
+            combineModelViewMats.length = 0;
         }
 
         public onFrameCleanup() {
