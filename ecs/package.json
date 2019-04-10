@@ -1,0 +1,19 @@
+{
+  "name": "@egret/ecs",
+  "version": "1.6.0",
+  "description": "egret 3d lib",
+  "main": "bin/index.js",
+  "scripts": {
+    "build": "egret build && node script/build.js",
+    "build-report": "egret build && node script/build.js && node script/report.js",
+    "build-examples": "egret build && node script/build.js && cd .. && cd examples && egret clean && cd .. && cd core",
+    "build-shader": "node script/ShaderGenerate.js",
+    "build-test": "node script/ShaderGenerate.js && egret build && node script/build.js && cd .. && cd examples && egret clean && cd .. && cd core",
+    "docs": "typedoc --out docs/test --tsconfig tsconfig.json --json api.json"
+  },
+  "author": "egret",
+  "license": "ISC",
+  "dependencies": {
+    "@types/signals": "^1.0.1"
+  }
+}

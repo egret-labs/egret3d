@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "declaration": true,
+        "stripInternal": true,
+        "skipLibCheck": true,
+        "experimentalDecorators": true,
+        "preserveConstEnums": true,
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "strictPropertyInitialization": true,
+        "target": "es5",
+        "lib": [
+            "es5",
+            "dom",
+            "es2015.promise"
+        ],
+        "module": "amd",
+        "newLine": "LF",
+        "outFile": "bin/egret3d.js"
+    },
+    "includes": [
+        "src",
+    ]
+}
