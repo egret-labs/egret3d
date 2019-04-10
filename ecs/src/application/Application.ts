@@ -1,6 +1,6 @@
 import { DefaultNames, ISceneClass, IApplication, } from "../types";
 import Entity from "../core/Entity";
-import Scene from "../core/Scene";
+import Scene from "./Scene";
 import SystemManager from "./SystemManager";
 import SceneManager from "./SceneManager";
 /**

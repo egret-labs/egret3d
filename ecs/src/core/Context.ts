@@ -5,7 +5,6 @@ import Entity from "./Entity";
 import Component from "./Component";
 import Matcher from "./Matcher";
 import Group from "./Group";
-import Scene from "./Scene";
 import Application from "../application/Application";
 /**
  * 实体上下文。
@@ -145,18 +144,13 @@ export default class Context<TEntity extends Entity> implements IContext<TEntity
      * @param scene 实体被添加到的场景。
      * - 未设置则使用应用程序的激活场景。
      */
-    public createEntity(scene: Scene | null = null): TEntity {
-        if (scene === null) {
-            scene = this.application.sceneManager.activeScene;
-        }
-
+    public createEntity(): TEntity {
         const entities = this._entities;
         const entity = new this.entityClass();
         entity.initialize(this);
         entities[entities.length] = entity;
         this._entityCount++;
         this._entitiesDirty = true;
-        entity.scene = scene;
 
         return entity;
     }

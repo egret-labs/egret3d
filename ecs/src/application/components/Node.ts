@@ -1,11 +1,13 @@
 import { component } from "../../Decorators";
-import Component from "../Component";
 import { serializeField, deserializeIgnore } from "../../serialize/Decorators";
+import Component from "../../core/Component";
 /**
  * 节点组件。
  */
 @component()
 export class Node extends Component {
+    public name: string = "";
+    public tag: string = "";
 
     private _globalEnabledDirty: boolean = true;
     private _globalEnabled: boolean = false;
@@ -75,22 +77,20 @@ export class Node extends Component {
         super.dispatchEnabledEvent(enabled);
     }
     /**
-     * 更改该组件的父级变换组件。
-     * @param parent 父级变换组件。
-     * @param worldTransformStays 是否保留当前世界空间变换。
+     * 
      */
     public setParent(parent: this | null, worldTransformStays: boolean = false) {
-        if (this === parent || (parent && this.contains(parent))) {
-            console.error("Set the parent error.");
+        const scene = this.entity.scene;
+
+        if (this.entity === scene.application.sceneManager.globalEntity) {
+            console.warn("Cannot changed the parent of a node on the global entity.");
+
             return this;
         }
 
-        if (parent && this.entity.scene !== parent.entity.scene) {
-            console.error("Cannot change the parent to a different scene.");
-            return this;
-        }
+        if (this === parent || (parent !== null && this.contains(parent))) {
+            console.warn("Set the parent of the node error.");
 
-        if (this.entity === Application.sceneManager._globalEntity) {
             return this;
         }
 
@@ -127,7 +127,7 @@ export class Node extends Component {
         return this;
     }
     /**
-     * 销毁该组件所有子（孙）级变换组件和其实体。
+     * 
      */
     public destroyChildren(): void {
         const children = this._children;
@@ -136,41 +136,24 @@ export class Node extends Component {
         while (i--) {
             children[i].entity.destroy();
         }
-
-        children.length > 0 && (children.length = 0);
     }
     /**
      * 
      */
-    public getChildren(out: this[] | { [key: string]: BaseTransform | (BaseTransform[]) } = [], depth: uint = 0) {
+    public getChildren(output: this[] | null = null, depth: uint = 0): this[] {
+        if (output === null) {
+            output = [];
+        }
+
         for (const child of this._children) {
-            if (Array.isArray(out)) {
-                out.push(child);
-            }
-            else {
-                const childName = child.entity.name;
-
-                if (childName in out) {
-                    const transformOrTransforms = out[childName];
-
-                    if (Array.isArray(transformOrTransforms)) {
-                        transformOrTransforms.push(child as any);
-                    }
-                    else {
-                        out[childName] = [transformOrTransforms, child as any];
-                    }
-                }
-                else {
-                    out[childName] = child as any;
-                }
-            }
+            output.push(child);
 
             if (depth !== 1) {
-                child.getChildren(out, depth > 0 ? depth - 1 : 0);
+                child.getChildren(output, depth > 0 ? depth - 1 : 0);
             }
         }
 
-        return out;
+        return output;
     }
     /**
      * 
@@ -185,17 +168,20 @@ export class Node extends Component {
     /**
      * 
      */
-    public setChildIndex(value: this, index: uint): boolean {
-        if (value._parent === this) {
+    public setChildIndex(child: this, index: uint): boolean {
+        if (child._parent === this) {
             const children = this._children;
-            const prevIndex = children.indexOf(value);
+            const prevIndex = children.indexOf(child);
 
             if (prevIndex !== index) {
                 children.splice(prevIndex, 1);
-                children.splice(index, 0, value);
+                children.splice(index, 0, child);
 
                 return true;
             }
+        }
+        else if (DEBUG) {
+            console.warn("Set child index error.");
         }
 
         return false;
@@ -209,15 +195,16 @@ export class Node extends Component {
         return 0 <= index && index < children.length ? children[index] : null;
     }
     /**
-     * 通过指定的名称或路径获取该组件的子（孙）级变换组件。
+     * 通过指定的名称或路径获取该节点的子（孙）级节点。
      * @param nameOrPath 名称或路径。
+     * - `"xxx"` 或 `"xxx/xxx"` 。
      */
     public find(nameOrPath: string): this | null {
         const names = nameOrPath.split("/");
         let ancestor = this;
 
         for (const name of names) {
-            if (!name) {
+            if (name === "") {
                 return ancestor;
             }
 
@@ -238,7 +225,8 @@ export class Node extends Component {
         return ancestor;
     }
     /**
-     * 该组件是否包含某个子（孙）级变换组件。
+     * 该节点是否包含指定的子（孙）级节点。
+     * @param child 一个节点。
      */
     public contains(child: this): boolean {
         if (child === this) {
@@ -247,20 +235,20 @@ export class Node extends Component {
 
         let ancestor: this | null = child;
 
-        while (ancestor !== this && ancestor) {
+        while (ancestor !== this && ancestor !== null) {
             ancestor = ancestor._parent;
         }
 
         return ancestor === this;
     }
     /**
-     * 
+     * @internal
      */
     public get isActiveAndEnabled(): boolean {
         if (this._globalEnabledDirty) {
             const parent = this._parent;
 
-            if (!parent || parent.isActiveAndEnabled) {
+            if (parent === null || parent.isActiveAndEnabled) {
                 this._globalEnabled = this._enabled && this.entity.enabled;
             }
             else {
@@ -273,13 +261,15 @@ export class Node extends Component {
         return this._globalEnabled;
     }
     /**
-     * 
+     * 该节点的全部子级节点数量。
+     * - 不包含孙级节点。
      */
     public get childCount(): uint {
         return this._children.length;
     }
     /**
-     * 
+     * 该节点的全部子级节点。
+     * - 不包含孙级节点。
      */
     @serializeField
     @deserializeIgnore
@@ -287,7 +277,7 @@ export class Node extends Component {
         return this._children;
     }
     /**
-     * 该节点组件的父级变换组件。
+     * 该节点的父级节点。
      */
     public get parent(): this | null {
         return this._parent;

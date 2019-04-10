@@ -1,8 +1,8 @@
 import { ISceneClass, IScene } from "../types";
 import { serializable, serializeField, deserializeIgnore } from "../serialize/Decorators";
 import Serializable from "../serialize/Serializable";
-import Entity from "./Entity";
-import Application from "../application/Application";
+import Entity from "../core/Entity";
+import Application from "./Application";
 import { filterArray } from "../Utility";
 /**
  * 基础场景。

@@ -1,7 +1,7 @@
 import { DefaultNames, ISceneClass } from "../types";
 import * as signals from "signals";
 import Entity from "../core/Entity";
-import Scene from "../core/Scene";
+import Scene from "./Scene";
 import Application from "./Application";
 /**
  * 应用程序的场景管理器。

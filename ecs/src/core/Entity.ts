@@ -3,8 +3,7 @@ import { serializable, serializeField, deserializeIgnore } from "../serialize/De
 import Serializable from "../serialize/Serializable";
 import Component from "./Component";
 import Context from "./Context";
-import Scene from "./Scene";
-import GroupComponent from "./components/GroupComponent";
+import { component } from "../Decorators";
 /**
  * 基础实体。
  */
@@ -15,20 +14,6 @@ export default class Entity extends Serializable<any> implements IEntity {
      * @internal
      */
     public static createDefaultEnabled: boolean = true;
-    // /**
-    //  * 创建一个基础实体。
-    //  */
-    // public static create(scene: Scene | null = null): Entity {
-    //     // TODO pool
-    //     const { systemManager } = Application.current;
-    //     let context = systemManager.getContext(this);
-
-    //     if (context === null) {
-    //         context = systemManager.registerContext(this);
-    //     }
-
-    //     return context.createEntity(scene);
-    // }
     /**
      * 该实体是否已被销毁。
      */
@@ -43,7 +28,6 @@ export default class Entity extends Serializable<any> implements IEntity {
      * @internal
      */
     public readonly _removedComponents: (Component | undefined)[] = [];
-    protected _scene: Scene | null = null;
     /**
      * 禁止实例化实体。
      * @protected
@@ -69,10 +53,6 @@ export default class Entity extends Serializable<any> implements IEntity {
                 component.dispatchEnabledEvent(value);
             }
         }
-    }
-
-    protected _setScene(value: Scene) {
-        value.addEntity(this);
     }
 
     protected _removeComponent(component: Component, groupComponent: GroupComponent | null): void {
@@ -130,7 +110,6 @@ export default class Entity extends Serializable<any> implements IEntity {
         this._components.length = 0;
         this._cachedComponents.length = 0;
         this._removedComponents.length = 0;
-        this._scene = null;
     }
 
     public destroy(): boolean {
@@ -142,7 +121,7 @@ export default class Entity extends Serializable<any> implements IEntity {
             return false;
         }
 
-        if (this === this._scene!.application.sceneManager.globalEntity) {
+        if (this === this.context!.application.sceneManager.globalEntity) {
             if (DEBUG) {
                 console.warn("Cannot destroy global entity.");
             }
@@ -154,7 +133,6 @@ export default class Entity extends Serializable<any> implements IEntity {
         context.onEntityDestroy.dispatch(this);
         this.removeAllComponent();
         (this.isDestroyed as boolean) = true;
-        this._scene!.removeEntity(this);
         context!.removeEntity(this);
         context.onEntityDestroyed.dispatch(this);
 
@@ -173,7 +151,7 @@ export default class Entity extends Serializable<any> implements IEntity {
         const { isSingleton, allowMultiple, componentIndex, requireComponents } = componentClass;
 
         if (isSingleton) { // Singleton component.
-            const { globalEntity } = this._scene!.application.sceneManager;
+            const { globalEntity } = this.context!.application.sceneManager;
 
             if (this !== globalEntity) {
                 return globalEntity.getOrAddComponent(componentClass);
@@ -329,7 +307,7 @@ export default class Entity extends Serializable<any> implements IEntity {
         }
 
         if (componentClass.isSingleton) {
-            const { globalEntity } = this._scene!.application.sceneManager;
+            const { globalEntity } = this.context!.application.sceneManager;
 
             if (this !== globalEntity) {
                 return globalEntity.getComponent(componentClass);
@@ -450,27 +428,6 @@ export default class Entity extends Serializable<any> implements IEntity {
         return false;
     }
 
-    public get dontDestroy(): boolean {
-        return this._scene === this._scene!.application.sceneManager.globalScene;
-    }
-    public set dontDestroy(value: boolean) {
-        if (this.isDestroyed) {
-            if (DEBUG) {
-                throw new Error("The entity has been destroyed.");
-            }
-
-            return;
-        }
-
-        const { sceneManager } = this._scene!.application;
-
-        if (this.dontDestroy === value || this === sceneManager.globalEntity) {
-            return;
-        }
-
-        this.scene = value ? sceneManager.globalScene : sceneManager.activeScene;
-    }
-
     @serializeField("_activeSelf")
     public get enabled(): boolean {
         return this._enabled;
@@ -530,25 +487,46 @@ export default class Entity extends Serializable<any> implements IEntity {
 
         return cachedComponents;
     }
+}
 
-    public get scene(): Scene {
-        return this._scene!;
+@component()
+class GroupComponent extends Component {
+    public componentIndex: int = -1;
+    public readonly components: Component[] = [];
+
+    public uninitialize(): void {
+        super.uninitialize();
+
+        this.componentIndex = -1;
+        this.components.length = 0;
     }
-    public set scene(value: Scene) {
-        if (this.isDestroyed) {
-            if (DEBUG) {
-                throw new Error("The entity has been destroyed.");
-            }
 
-            return;
+    public addComponent(component: Component): boolean {
+        const { components } = this;
+        if (components.indexOf(component) < 0) {
+            this.components.push(component);
+
+            return true;
+        }
+        else if (DEBUG) {
+            console.error("The component has been added to the group.");
         }
 
-        if (this._scene === value) {
-            return;
+        return false;
+    }
+
+    public removeComponent(component: Component): boolean {
+        const index = this.components.indexOf(component);
+
+        if (index >= 0) {
+            this.components.splice(index, 1);
+
+            return true;
+        }
+        else if (DEBUG) {
+            console.error("The component has been removed from the group.");
         }
 
-        this._scene = value;
-        this._setScene(value);
-        this.context.onEntityAddedToScene.dispatch(this);
+        return false;
     }
 }

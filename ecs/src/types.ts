@@ -18,18 +18,6 @@ export const enum SystemOrder {
 /**
  * 
  */
-export const enum DefaultNames {
-    NoName = "NoName",
-    Default = "Default",
-    Global = "Global",
-    MainCamera = "Main Camera",
-    EditorCamera = "Editor Camera",
-    Editor = "Editor",
-    MissingPrefab = "Missing Prefab",
-}
-/**
- * 
- */
 export interface IPoolClass<TReleasable extends IReleasable> {
     readonly instances: ReadonlyArray<TReleasable>;
 }
@@ -120,16 +108,6 @@ export interface ISystemClass<TSystem extends ISystem<IEntity>> {
     new(): TSystem;
 }
 /**
- * 场景类接口。
- */
-export interface ISceneClass<TScene extends IScene> extends ISerializableClass {
-    /**
-     * 禁止实例化场景。
-     * @protected
-     */
-    new(): TScene;
-}
-/**
  * 实体接口。
  */
 export interface IEntity {
@@ -137,10 +115,6 @@ export interface IEntity {
      * 该实体所属的上下文。
      */
     readonly context: IContext<IEntity>;
-    /**
-     * 该实体所属的场景。
-     */
-    scene: IScene;
 }
 /**
  * 组件接口。
@@ -300,28 +274,6 @@ export interface IContext<TEntity extends IEntity> {
      * @param entity 一个实体。
      */
     containsEntity(entity: TEntity): boolean;
-}
-/**
- * 场景接口。
- */
-export interface IScene {
-    /**
-     * 该场景的实体数量。
-     */
-    readonly entityCount: uint;
-    /**
-     * 该场景的全部实体。
-     */
-    readonly entities: ReadonlyArray<IEntity>;
-    /**
-     * 该场景所属的应用程序。
-     */
-    readonly application: IApplication;
-    /**
-     * 该场景是否包含指定的实体。
-     * @param entity 一个实体。
-     */
-    containsEntity(entity: IEntity): boolean;
 }
 /**
  * 应用程序接口。
