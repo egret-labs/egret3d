@@ -20,7 +20,10 @@
 #include <logdepthbuf_pars_vertex>
 
 void main() {
-
+	// modified by egret
+	#ifdef USE_INSTANCED
+		#include <instances_vert>
+	#endif
 	#include <uv_vertex>
 
 	#include <beginnormal_vertex>

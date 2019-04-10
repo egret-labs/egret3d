@@ -1013,7 +1013,13 @@ namespace egret3d {
             this.setFloat(ShaderUniformName.Opacity, value);
         }
         /**
-         * 是否开启instancing, （开启了lightmap的材质，不要勾选instancing，否则显示会有问题）
+         * 是否开启instancing。
+         * 
+         * 下列情况不应该开启instancing：
+         * 
+         * 1.开启了lightmap的材质，不要勾选instancing，否则显示会有问题
+         * 
+         * 2.法线贴图使用局部空间，开启instancing，着色器编译会有报错
          */
         public get enableGPUInstancing(): boolean {
             return this._glTFMaterial!.extensions.paper.enableGPUInstancing;

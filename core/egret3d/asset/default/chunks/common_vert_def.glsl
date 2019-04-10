@@ -14,7 +14,9 @@
 #endif
 uniform mat4 projectionMatrix;
 uniform mat4 viewMatrix;
-uniform mat3 normalMatrix;
+#ifndef USE_INSTANCED
+	uniform mat3 normalMatrix;
+#endif
 uniform vec3 cameraPosition;
 
 attribute vec3 position;

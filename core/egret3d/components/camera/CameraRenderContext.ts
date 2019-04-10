@@ -105,6 +105,19 @@ namespace egret3d {
             this._camera = camera;
         }
         /**
+         * 
+         * @param a 用于阴影排序
+         * @param b 
+         */
+        private _sortShadow(a: DrawCall, b: DrawCall) {
+            if (a.mesh.index !== b.mesh.index) { // 为了实例化，这里mesh也排序下
+                return a.mesh.index - b.mesh.index;
+            }
+            else {
+                return a.zdist - b.zdist;
+            }
+        }
+        /**
          * 所有非透明的, 按照从近到远排序
          */
         private _sortOpaque(a: DrawCall, b: DrawCall) {
@@ -165,6 +178,9 @@ namespace egret3d {
                     // (camera.cullingMask & layer) !== 0 && TODO light cullingMask
                     (!renderer.frustumCulled || math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))
                 ) {
+                    if (!renderer.frustumCulled) {
+                        renderer.transform.localToWorldMatrix;//修复如果剔除关闭，transform没有主动调用localToWorldMatrix,drawCall.matrix数值没有变化的bug;
+                    }
                     drawCall.modelViewMatrix.multiply(camera.worldToCameraMatrix, drawCall.matrix);
                     drawCall.instanced = 0;
                     shadowCalls[shadowIndex++] = drawCall;
@@ -175,7 +191,7 @@ namespace egret3d {
                 shadowCalls.length = shadowIndex;
             }
 
-            shadowCalls.sort(this._sortFromFarToNear);
+            shadowCalls.sort(this._sortShadow);
         }
 
         private _frustumCulling() {
@@ -194,6 +210,9 @@ namespace egret3d {
                     (camera.cullingMask & renderer.gameObject.layer) !== 0 &&
                     (!renderer.frustumCulled || math.frustumIntersectsSphere(cameraFrustum, renderer.boundingSphere))
                 ) {
+                    if (!renderer.frustumCulled) {
+                        renderer.transform.localToWorldMatrix;//修复如果剔除关闭，transform没有主动调用localToWorldMatrix,drawCall.matrix数值没有变化的bug;
+                    }
                     // if (drawCall.material.renderQueue >= paper.RenderQueue.Transparent && drawCall.material.renderQueue <= paper.RenderQueue.Overlay) {
                     if (drawCall!.material!._renderQueue >= RenderQueue.Mask) {
                         transparentCalls[transparentIndex++] = drawCall!;

@@ -665,16 +665,29 @@ namespace egret3d.webgl {
             }
         }
 
-        private _combineDraw(drawCalls: DrawCall[]) {
+        private _combineDraw(drawCalls: DrawCall[], overrideMaterial: Material | null = null) {
             const modelMats = combineModelMats;
             const modelViewMats = combineModelViewMats;
             let combineCount: number = 0;
+            let isSameCount: boolean = true;
+            let model0: Float32Array;
+            let model1: Float32Array;
+            let model2: Float32Array;
+            let model3: Float32Array;
+            let modelViews0: Float32Array;
+            let modelViews1: Float32Array;
+            let modelViews2: Float32Array;
+            let modelViews3: Float32Array;
             for (let i = 0, l = drawCalls.length; i < l; i++) {
                 const isFinal = i === l - 1;
                 const drawCall = drawCalls[i];
                 const nextDrawCall = isFinal ? drawCalls[i] : drawCalls[i + 1];
-                const { material, mesh } = drawCall;
-                const { material: nextMaterial, mesh: nextMesh } = nextDrawCall;
+                const material = overrideMaterial !== null ? overrideMaterial : drawCall.material;
+                const mesh = drawCall.mesh;
+                const nextMaterial = overrideMaterial !== null ? overrideMaterial : nextDrawCall.material;
+                const nextMesh = nextDrawCall.mesh;
+                // const { material, mesh } = drawCall;
+                // const { material: nextMaterial, mesh: nextMesh } = nextDrawCall;
 
                 if (material.enableGPUInstancing) {
                     modelMats[combineCount] = drawCall.matrix;
@@ -687,27 +700,54 @@ namespace egret3d.webgl {
                     }
                 }
                 //
-                if (mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0) !== null) {
-                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0);
-                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL1);
-                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL2);
-                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL3);
-                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0);
-                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1);
-                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2);
-                    mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3);
+                const temp = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0);
+                if (temp !== null) {
+                    isSameCount = (temp.length / 4 === combineCount);
+                    if (!isSameCount) {
+                        mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0);
+                        mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL1);
+                        mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL2);
+                        mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL3);
+                        mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0);
+                        mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1);
+                        mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2);
+                        mesh.removeAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3);
+                    }
+                }
+                else {
+                    isSameCount = false;
                 }
 
                 //被打断，合并
                 if (combineCount > 0) {
-                    const model0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    const model1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL1, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    const model2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL2, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    const model3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL3, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    const modelViews0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    const modelViews1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    const modelViews2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    const modelViews3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    if (isSameCount) {
+                        model0 = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0)!;
+                        model1 = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL1)!;
+                        model2 = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL2)!;
+                        model3 = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL3)!;
+                        modelViews0 = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0)!;
+                        modelViews1 = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1)!;
+                        modelViews2 = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2)!;
+                        modelViews3 = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3)!;
+                    }
+                    else {
+                        model0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0, gltf.AccessorType.VEC4, combineCount, 1)!;
+                        model1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL1, gltf.AccessorType.VEC4, combineCount, 1)!;
+                        model2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL2, gltf.AccessorType.VEC4, combineCount, 1)!;
+                        model3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL3, gltf.AccessorType.VEC4, combineCount, 1)!;
+                        modelViews0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0, gltf.AccessorType.VEC4, combineCount, 1)!;
+                        modelViews1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1, gltf.AccessorType.VEC4, combineCount, 1)!;
+                        modelViews2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2, gltf.AccessorType.VEC4, combineCount, 1)!;
+                        modelViews3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    }
+                    // const model0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    // const model1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL1, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    // const model2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL2, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    // const model3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL3, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    // const modelViews0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    // const modelViews1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    // const modelViews2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2, gltf.AccessorType.VEC4, combineCount, 1)!;
+                    // const modelViews3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3, gltf.AccessorType.VEC4, combineCount, 1)!;
                     for (let j = 0; j < combineCount; j++) {
                         const modelData = modelMats[j].rawData;
                         model0[j * 4 + 0] = modelData[0];
@@ -753,6 +793,16 @@ namespace egret3d.webgl {
                     }
                     drawCall.instanced = combineCount;
                     combineCount = 0;
+                    if (isSameCount) {
+                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL0);
+                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL1);
+                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL2);
+                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL3);
+                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0);
+                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1);
+                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2);
+                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3);
+                    }
                 }
 
                 this.draw(drawCall, material);
@@ -835,9 +885,15 @@ namespace egret3d.webgl {
                     camera._update();
                     webgl.viewport(viewport.x * shadowMapSize, viewport.y * shadowMapSize, viewport.w * shadowMapSize, viewport.h * shadowMapSize);
 
-                    for (const drawCall of drawCalls) {
-                        this.draw(drawCall, shadowMaterial);
+                    if (renderState.enableGPUInstancing) {
+                        this._combineDraw(drawCalls, shadowMaterial);
                     }
+                    else {
+                        for (const drawCall of drawCalls) {
+                            this.draw(drawCall, shadowMaterial);
+                        }
+                    }
+
                     //防止点光源camera因为缓存没有更新 TODO
                     this._cacheCamera = null;
                 }

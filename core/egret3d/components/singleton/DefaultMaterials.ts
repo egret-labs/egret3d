@@ -121,16 +121,19 @@ namespace egret3d {
                 .setDepth(true, true)
                 .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back)
                 .addDefine(ShaderDefine.DEPTH_PACKING_3200);
+            DefaultMaterials.SHADOW_DEPTH_3200.enableGPUInstancing = true;
 
             DefaultMaterials.SHADOW_DEPTH_3201 = this._createMaterial("builtin/shadow_depth_3201.mat.json", DefaultShaders.DEPTH)
                 .setDepth(true, true)
                 .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back)
                 .addDefine(ShaderDefine.DEPTH_PACKING_3201);
+            DefaultMaterials.SHADOW_DEPTH_3201.enableGPUInstancing = true;
 
             DefaultMaterials.SHADOW_DISTANCE = this._createMaterial("builtin/shadow_distance.mat.json", DefaultShaders.DISTANCE_RGBA)
                 .setDepth(true, true)
                 .addDefine(ShaderDefine.FLIP_SIDED).addDefine(ShaderDefine.USE_SHADOWMAP)
                 .setCullFace(true, gltf.FrontFace.CCW, gltf.CullFace.Back);
+            DefaultMaterials.SHADOW_DISTANCE.enableGPUInstancing = true;
 
             DefaultMaterials.COPY = this._createMaterial("builtin/copy.mat.json", DefaultShaders.COPY)
                 .setBlend(BlendMode.Normal, RenderQueue.Transparent)
