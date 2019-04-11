@@ -757,7 +757,7 @@ namespace egret3d {
             primitive.indices = accessorIndex;
             primitive.material = materialIndex;
             primitive.mode = randerMode;
-            this.needUpdate(MeshNeedUpdate.BoundingBox | MeshNeedUpdate.VertexArray | MeshNeedUpdate.IndexBuffer, subMeshIndex);
+            this.needUpdate(MeshNeedUpdate.BoundingBox | MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer, subMeshIndex);
 
             return subMeshIndex;
         }
@@ -778,7 +778,7 @@ namespace egret3d {
 
                     if (removeAccessor !== null) {
                         primitives!.splice(subMeshIndex, 1);
-                        this.needUpdate(MeshNeedUpdate.BoundingBox | MeshNeedUpdate.VertexArray | MeshNeedUpdate.IndexBuffer, subMeshIndex);
+                        this.needUpdate(MeshNeedUpdate.BoundingBox | MeshNeedUpdate.VertexArray | MeshNeedUpdate.VertexBuffer | MeshNeedUpdate.IndexBuffer, subMeshIndex);
 
                         if (extras!.wireframeIndex === subMeshIndex) { // Update wireframe cache.
                             extras!.wireframeIndex = -1;

@@ -116,6 +116,33 @@ namespace egret3d.webgl {
                     renderState.updateVertexAttributes(this, subMeshIndex);
                     webgl.bindVertexArray(null);
                 }
+
+                // if (renderState.vertexArrayObject !== null) {
+                //     if (primitiveExtras.vaos === null) {
+                //         primitiveExtras.vaos = {};
+                //     }
+
+                //     const { program, vaos } = primitiveExtras;
+                //     const attributesMask = (program as WebGLProgramBinder).attributesMask;
+
+                //     let vao: WebGLVertexArrayObject | null = vaos![attributesMask];
+                //     if (!vao) {
+                //         vao = webgl.createVertexArray();
+                //         if (vao) {
+                //             vaos![attributesMask] = vao;
+                //         }
+                //         else if (DEBUG) {
+                //             console.error("Create webgl vertex array error.");
+                //         }
+                //     }
+                //     if (vao) {
+                //         webgl.bindVertexArray(vao);
+                //         webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
+                //         renderState.updateVertexAttributes(this, subMeshIndex);
+                //         webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
+                //         webgl.bindVertexArray(null);
+                //     }
+                // }
             }
 
             super.update(mask, subMeshIndex);
