@@ -1,54 +1,51 @@
-import { DefaultNames, ISceneClass, IApplication, } from "../types";
+import { SystemOrder } from "../core/types";
 import Entity from "../core/Entity";
-import Scene from "./Scene";
+import { ISceneClass } from "./types";
 import SystemManager from "./SystemManager";
 import SceneManager from "./SceneManager";
+import { Clock } from "./components/Clock";
+import { Scene } from "./components/Scene";
 /**
  * 基础应用程序。
  * - 应用程序的基类。
  */
-export default abstract class Application implements IApplication {
+export default class Application<TScene extends Scene> {
     /**
      * 
      */
-    public static readonly current: Application = null!;
+    public static current: Application<Scene> = null!;
+
+    public readonly globalEntity: Entity = null!;
+    public readonly clock: Clock = null!;
     /**
      * 该应用程序的系统管理器。
      */
-    public readonly systemManager: SystemManager = SystemManager.create(this);
+    public readonly systemManager: SystemManager = SystemManager.create();
     /**
      * 该应用程序的场景管理器。
      */
-    public readonly sceneManager: SceneManager = SceneManager.create(this.getSceneClass(), this);
+    public readonly sceneManager: SceneManager<TScene> = null!;
     /**
      * 获取该应用程序的场景实现。
      */
-    protected abstract getSceneClass(): ISceneClass<Scene>;
+    protected getSceneClass(): ISceneClass<TScene> {
+        return Scene as ISceneClass<TScene>;
+    }
     /**
      * 初始化该应用程序。
      */
     public initialize(): void {
-        const { systemManager, sceneManager } = this;
-        const context = systemManager.registerContext(Entity);
-        (sceneManager.editorScene as Scene) = sceneManager.createScene(DefaultNames.Editor, false);
-        (sceneManager.globalScene as Scene) = sceneManager.createScene(DefaultNames.Global, false);
-        (sceneManager.globalEntity as Entity) = context.createEntity(sceneManager.globalScene);
+        Application.current = this;
+        const { systemManager } = this;
+        (this.sceneManager as SceneManager<TScene>) = systemManager.registerSystem<SceneManager<TScene>>(SceneManager, Entity, SystemOrder.Enable);
+        (this.globalEntity as Entity) = systemManager.getContext(Entity)!.createEntity();
+        (this.clock as Clock) = this.globalEntity.addComponent(Clock);
     }
     /**
      * 启动该应用程序。
      */
     public start(): void {
+        Application.current = this as any;
         this.systemManager.start();
-    }
-
-    public update(): void {
-        const { systemManager, sceneManager } = this;
-        (Application.current as Application) = this;
-
-        systemManager.startup();
-        systemManager.execute();
-        systemManager.cleanup();
-        systemManager.teardown();
-        sceneManager.cleanup();
     }
 }

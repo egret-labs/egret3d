@@ -1,24 +1,28 @@
-import { IComponentClass, IEntity } from "../types"; 1
-import { serializable, serializeField, deserializeIgnore } from "../serialize/Decorators";
-import Serializable from "../serialize/Serializable";
+import { uuid } from "../uuid/Decorators";
+import UUID from "../uuid/UUID";
+import { IComponentClass, IEntity } from "./types";
 import Component from "./Component";
 import Context from "./Context";
-import { component } from "../Decorators";
+import { component } from "./Decorators";
 /**
  * 基础实体。
  */
-@serializable
-export default class Entity extends Serializable<any> implements IEntity {
+@uuid
+export default class Entity extends UUID implements IEntity {
     /**
      * 反序列化设置默认激活。
      * @internal
      */
     public static createDefaultEnabled: boolean = true;
     /**
+     * @internal
+     */
+    public static reactiveRemoveEnabled: boolean = false;
+    /**
      * 该实体是否已被销毁。
      */
     public readonly isDestroyed: boolean = true;
-    public readonly context: Context<Entity> = null!;
+    public readonly context: Context<this> = null!;
 
     protected _componentsDirty: boolean = false;
     protected _enabled: boolean = false;
@@ -88,7 +92,6 @@ export default class Entity extends Serializable<any> implements IEntity {
 
                 if (requireComponents!.indexOf(componentClass) >= 0) {
                     // TODO
-                    // console.warn(`Cannot remove the ${egret.getQualifiedClassName(value)} component from the game object (${this.path}), because it is required from the ${egret.getQualifiedClassName(component)} component.`);
                     return true;
                 }
             }
@@ -97,9 +100,9 @@ export default class Entity extends Serializable<any> implements IEntity {
         return false;
     }
 
-    public initialize(context: Context<Entity>): void {
+    public initialize(context: Context<this>): void {
         (this.isDestroyed as boolean) = false;
-        (this.context as Context<Entity>) = context;
+        (this.context as Context<this>) = context;
 
         this._enabled = Entity.createDefaultEnabled;
     }
@@ -116,14 +119,6 @@ export default class Entity extends Serializable<any> implements IEntity {
         if (this.isDestroyed) {
             if (DEBUG) {
                 console.warn("The entity has been destroyed.");
-            }
-
-            return false;
-        }
-
-        if (this === this.context!.application.sceneManager.globalEntity) {
-            if (DEBUG) {
-                console.warn("Cannot destroy global entity.");
             }
 
             return false;
@@ -148,23 +143,14 @@ export default class Entity extends Serializable<any> implements IEntity {
             throw new Error("The entity has been destroyed.");
         }
 
-        const { isSingleton, allowMultiple, componentIndex, requireComponents } = componentClass;
-
-        if (isSingleton) { // Singleton component.
-            const { globalEntity } = this.context!.application.sceneManager;
-
-            if (this !== globalEntity) {
-                return globalEntity.getOrAddComponent(componentClass);
-            }
-        }
-
+        const { allowMultiple, componentIndex, requireComponents } = componentClass;
         const components = this._components;
         const existedComponent = components[componentIndex] || null;
 
         // Check multiple component.
         if (!allowMultiple && existedComponent !== null) {
             if (DEBUG) {
-                console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the entity again.`, this.uuid);
+                // console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the entity again.`, this.uuid);
             }
 
             return existedComponent as T;
@@ -306,14 +292,6 @@ export default class Entity extends Serializable<any> implements IEntity {
             return null;
         }
 
-        if (componentClass.isSingleton) {
-            const { globalEntity } = this.context!.application.sceneManager;
-
-            if (this !== globalEntity) {
-                return globalEntity.getComponent(componentClass);
-            }
-        }
-
         const component = this._components[componentClass.componentIndex] || null;
 
         if (component !== null) {
@@ -321,6 +299,17 @@ export default class Entity extends Serializable<any> implements IEntity {
                 return (component as GroupComponent).components[0] as T;
             }
 
+            return component as T;
+        }
+
+        return null;
+    }
+
+    public getRemovedComponent<T extends Component>(componentClass: IComponentClass<T>): T | null {
+        const componentIndex = componentClass.componentIndex;
+        const component = this._removedComponents[componentIndex] || null;
+
+        if (component !== null) {
             return component as T;
         }
 
@@ -428,7 +417,6 @@ export default class Entity extends Serializable<any> implements IEntity {
         return false;
     }
 
-    @serializeField("_activeSelf")
     public get enabled(): boolean {
         return this._enabled;
     }
@@ -449,8 +437,6 @@ export default class Entity extends Serializable<any> implements IEntity {
         this._setEnabled(value);
     }
 
-    @serializeField
-    @deserializeIgnore
     public get components(): ReadonlyArray<Component> {
         const cachedComponents = this._cachedComponents;
 

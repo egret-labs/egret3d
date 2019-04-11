@@ -1,10 +1,5 @@
-import {
-    IComponentClass,
-    IAllOfMatcher,
-    IAnyOfMatcher,
-    INoneOfMatcher,
-} from "../types";
 import Releasable from "../Releasable";
+import { IComponentClass, IAllOfMatcher, IAnyOfMatcher, INoneOfMatcher } from "./types";
 import Entity from "./Entity";
 import Component from "./Component";
 

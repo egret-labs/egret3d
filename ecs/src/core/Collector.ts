@@ -1,5 +1,5 @@
 
-import { ICollector } from "../types";
+import { ICollector } from "./types";
 import Entity from "./Entity";
 import Component from "./Component";
 import Group from "./Group";

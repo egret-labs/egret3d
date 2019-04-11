@@ -1,11 +1,10 @@
 import * as signals from "signals";
-import { IEntityClass, IComponentClass, IContext } from "../types";
-import { filterArray } from "../Utility";
+import { filterArray } from "../uuid/Utility";
+import { IEntityClass, IComponentClass, IContext } from "./types";
 import Entity from "./Entity";
 import Component from "./Component";
 import Matcher from "./Matcher";
 import Group from "./Group";
-import Application from "../application/Application";
 /**
  * 实体上下文。
  */
@@ -13,13 +12,13 @@ export default class Context<TEntity extends Entity> implements IContext<TEntity
     /**
      * @internal
      */
-    public static create<TEntity extends Entity>(entityClass: IEntityClass<TEntity>, application: Application): Context<TEntity> {
-        return new Context(entityClass, application);
+    public static create<TEntity extends Entity>(entityClass: IEntityClass<TEntity>): Context<TEntity> {
+        return new Context(entityClass);
     }
     /**
-     * 当该上下文的实体添加到场景时派发事件。
+     * 当该上下文的实体被创建时派发事件。
      */
-    public readonly onEntityAddedToScene: signals.Signal<Entity> = new signals.Signal();
+    public readonly onEntityCreated: signals.Signal<Entity> = new signals.Signal();
     /**
      * 当该上下文的实体即将被销毁时派发事件。
      */
@@ -29,28 +28,27 @@ export default class Context<TEntity extends Entity> implements IContext<TEntity
      */
     public readonly onEntityDestroyed: signals.Signal<Entity> = new signals.Signal();
     /**
-     * 当该上下文的实体添加组件时派发事件。
+     * 当该上下文的实体组件被创建时派发事件。
      */
     public readonly onComponentCreated: signals.Signal<[TEntity, Component]> = new signals.Signal();
     /**
-     * 当该上下文的实体的组件被激活时派发事件。
+     * 当该上下文的实体组件被激活时派发事件。
      */
     public readonly onComponentEnabled: signals.Signal<[TEntity, Component]> = new signals.Signal();
     /**
-     * 当该上下文的实体的组件被禁用时派发事件。
+     * 当该上下文的实体组件被禁用时派发事件。
      */
     public readonly onComponentDisabled: signals.Signal<[TEntity, Component]> = new signals.Signal();
     /**
-     * 当该上下文的实体的组件即将被销毁时派发事件。
+     * 当该上下文的实体组件即将被销毁时派发事件。
      */
     public readonly onComponentDestroy: signals.Signal<[TEntity, Component]> = new signals.Signal();
     /**
-     * 当该上下文的实体的组件已经被销毁时派发事件。
+     * 当该上下文的实体组件已经被销毁时派发事件。
      */
     public readonly onComponentDestroyed: signals.Signal<[TEntity, Component]> = new signals.Signal();
 
     public readonly entityClass: IEntityClass<TEntity>;
-    public readonly application: Application;
 
     private _entitiesDirty: boolean = false;
     private _entityCount: uint = 0;
@@ -59,9 +57,8 @@ export default class Context<TEntity extends Entity> implements IContext<TEntity
     private readonly _componentsGroupsB: Group<TEntity>[][] = [];
     private readonly _groups: { [key: string]: Group<TEntity> } = {};
 
-    private constructor(entityClass: IEntityClass<TEntity>, application: Application) {
+    private constructor(entityClass: IEntityClass<TEntity>) {
         this.entityClass = entityClass;
-        this.application = application;
 
         this.onComponentCreated.add(this._onComponentCreated, this);
         this.onComponentEnabled.add(this._onComponentEnabled, this);
@@ -149,8 +146,9 @@ export default class Context<TEntity extends Entity> implements IContext<TEntity
         const entity = new this.entityClass();
         entity.initialize(this);
         entities[entities.length] = entity;
-        this._entityCount++;
         this._entitiesDirty = true;
+        this._entityCount++;
+        this.onEntityCreated.dispatch(entity);
 
         return entity;
     }
@@ -169,8 +167,8 @@ export default class Context<TEntity extends Entity> implements IContext<TEntity
                 entity.destroy();
             }
 
-            this._entityCount--;
             this._entitiesDirty = true;
+            this._entityCount--;
 
             return true;
         }

@@ -1,6 +1,6 @@
-import { IComponentClass, IGroup } from "../types";
 import * as signals from "signals";
-import { filterArray } from "../Utility";
+import { IComponentClass, IGroup } from "./types";
+import { filterArray } from "../uuid/Utility";
 import Entity from "./Entity";
 import Component from "./Component";
 import Matcher from "./Matcher";

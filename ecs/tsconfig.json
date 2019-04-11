@@ -15,11 +15,9 @@
             "dom",
             "es2015.promise"
         ],
-        "module": "amd",
-        "newLine": "LF",
-        "outFile": "bin/egret3d.js"
+        "module": "commonjs"
     },
     "includes": [
-        "src",
+        "src"
     ]
 }

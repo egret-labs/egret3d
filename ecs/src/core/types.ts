@@ -1,20 +1,5 @@
-import { ISerializableClass } from "./serialize/types";
-/**
- * 系统排序。
- */
-export const enum SystemOrder {
-    Begin = 0,
-    Enable = 1000,
-    Start = 2000,
-    FixedUpdate = 3000,
-    Update = 4000,
-    Animation = 5000,
-    LateUpdate = 6000,
-    BeforeRenderer = 7000,
-    Renderer = 8000,
-    Disable = 9000,
-    End = 10000,
-}
+import { IUUIDClass } from "../uuid/types";
+
 /**
  * 
  */
@@ -46,10 +31,26 @@ export interface IReleasable extends IPoolInstance {
     release(): this;
 }
 /**
+ * 系统排序。
+ */
+export const enum SystemOrder {
+    Begin = 0,
+    Enable = 1000,
+    Start = 2000,
+    FixedUpdate = 3000,
+    Update = 4000,
+    Animation = 5000,
+    LateUpdate = 6000,
+    BeforeRenderer = 7000,
+    Renderer = 8000,
+    Disable = 9000,
+    End = 10000,
+}
+/**
  * 实体类接口。
  * - 仅用于约束实体类传递。
  */
-export interface IEntityClass<TEntity extends IEntity> extends ISerializableClass {
+export interface IEntityClass<TEntity extends IEntity> extends IUUIDClass {
     /**
      * 禁止实例化实体。
      * @protected
@@ -60,15 +61,11 @@ export interface IEntityClass<TEntity extends IEntity> extends ISerializableClas
  * 组件类接口。
  * - 仅用于约束组件类传递。
  */
-export interface IAbstractComponentClass extends ISerializableClass {
+export interface IAbstractComponentClass extends IUUIDClass {
     /**
      * 该组件是否为抽象组件。
      */
     readonly isAbstract: IAbstractComponentClass | null;
-    /**
-     * 该组件是否为单例组件。
-     */
-    readonly isSingleton: boolean;
     /**
      * 是否允许在同一实体上添加多个该组件。
      */
@@ -130,6 +127,10 @@ export interface IComponent {
  */
 export interface ISystem<TEntity extends IEntity> {
     /**
+     * 
+     */
+    readonly context: IContext<TEntity>;
+    /**
      * 该系统关心的实体组。
      */
     readonly groups: ReadonlyArray<IGroup<TEntity>>;
@@ -146,11 +147,6 @@ export interface IMatcher {
      * 该匹配器的全部组件。
      */
     readonly components: ReadonlyArray<IComponentClass<IComponent>>;
-}
-/**
- * 
- */
-export interface ICompoundMatcher extends IMatcher {
     /**
      * 必须包含的全部组件。
      */
@@ -171,7 +167,7 @@ export interface ICompoundMatcher extends IMatcher {
 /**
  * 不能包含任一组件的匹配器接口。
  */
-export interface INoneOfMatcher extends ICompoundMatcher {
+export interface INoneOfMatcher extends IMatcher {
     /**
      * 设置可以包含的任一组件。
      * @param componentClasses 可以包含的任一组件。
@@ -266,17 +262,8 @@ export interface IContext<TEntity extends IEntity> {
      */
     readonly entityClass: IEntityClass<TEntity>;
     /**
-     * 该上下文所属的应用程序。
-     */
-    readonly application: IApplication;
-    /**
      * 该上下文是否包含指定的实体。
      * @param entity 一个实体。
      */
     containsEntity(entity: TEntity): boolean;
-}
-/**
- * 应用程序接口。
- */
-export interface IApplication {
 }

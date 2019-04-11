@@ -1,4 +1,4 @@
-import { SystemOrder, ISystemClass, ISystem } from "../types";
+import { SystemOrder, ISystemClass, ISystem, IMatcher } from "./types";
 import Entity from "./Entity";
 import Component from "./Component";
 import Matcher from "./Matcher";
@@ -33,6 +33,7 @@ export default abstract class System<TEntity extends Entity> implements ISystem<
      * 
      */
     public readonly deltaTime: uint = 0;
+    public readonly context: Context<TEntity> = null!;
     public readonly groups: ReadonlyArray<Group<TEntity>> = [];
     public readonly collectors: ReadonlyArray<Collector<TEntity>> = [];
     /**
@@ -52,7 +53,7 @@ export default abstract class System<TEntity extends Entity> implements ISystem<
     /**
      * 获取该系统需要响应的组件匹配器。
      */
-    protected getMatchers(): ReadonlyArray<Matcher> | null {
+    protected getMatchers(): ReadonlyArray<IMatcher> | null {
         return null;
     }
     /**
@@ -64,13 +65,13 @@ export default abstract class System<TEntity extends Entity> implements ISystem<
 
     public initialize(order: SystemOrder, context: Context<TEntity>): void {
         (this.order as SystemOrder) = order;
-
+        (this.context as Context<TEntity>) = context;
         const matchers = this.getMatchers();
         const listeners = this.getListeners();
 
         if (matchers !== null) {
             for (const matcher of matchers) {
-                const group = context.getGroup(matcher);
+                const group = context.getGroup(matcher as Matcher);
                 const collector = Collector.create(group);
                 (this.groups as Group<TEntity>[]).push(group);
                 (this.collectors as Collector<TEntity>[]).push(collector);

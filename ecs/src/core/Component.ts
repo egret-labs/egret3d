@@ -1,39 +1,27 @@
-import {
-    IAbstractComponentClass,
-    IComponentClass,
-    IComponent,
-} from "../types";
-import { component } from "../Decorators";
-import Serializable from "../serialize/Serializable";
+import UUID from "../uuid/UUID";
+import { IAbstractComponentClass, IComponentClass, IComponent } from "./types";
+import { component } from "./Decorators";
 import Entity from "./Entity";
+
+let _componentClassCount = 0;
 /**
  * 基础组件。
  * - 所有组件的基类。
  */
 @component({ isAbstract: true })
-export default abstract class Component extends Serializable<any> implements IComponent {
+export default abstract class Component extends UUID implements IComponent {
     public static readonly isAbstract: IAbstractComponentClass | null = null;
-    public static readonly isSingleton: boolean = false;
     public static readonly allowMultiple: boolean = false;
     public static readonly componentIndex: int = -1;
     public static readonly requireComponents: ReadonlyArray<IComponentClass<Component>> | null = null;
     /**
+     * 反序列化设置默认激活。
      * @internal
      */
     public static createDefaultEnabled: boolean = true;
-    /**
-     * 所有已注册的单例组件类。
-     * TOFIX: 污染静态域。
-     */
-    private static readonly _allSingletonComponents: IAbstractComponentClass[] = [];
-    /**
-     * 所有已注册的组件类。
-     * TOFIX: 污染静态域。
-     */
-    private static readonly _allComponents: IAbstractComponentClass[] = [];
 
-    public static onRegister(): boolean {
-        if (!Serializable.onRegister.call(this)) { // Super.
+    public static register(): boolean {
+        if (!UUID.register.call(this)) { // Super.
             return false;
         }
 
@@ -41,14 +29,7 @@ export default abstract class Component extends Serializable<any> implements ICo
             return false;
         }
 
-        if (this.isSingleton) {
-            (this.componentIndex as int) = this._allSingletonComponents.length + 256; // This means that a maximum of 256 non-singleton components can be added.
-            this._allSingletonComponents.push(this);
-        }
-        else {
-            (this.componentIndex as int) = this._allComponents.length;
-            this._allComponents.push(this);
-        }
+        (this.componentIndex as int) = _componentClassCount++;
 
         if (this.requireComponents !== null) { // Inherited parent class require components.
             (this.requireComponents as IComponentClass<Component>[] | null) = this.requireComponents.concat();
@@ -84,6 +65,10 @@ export default abstract class Component extends Serializable<any> implements ICo
         super();
     }
 
+    protected _destroy() {
+        (this.isDestroyed as boolean) = true;
+    }
+
     protected _setEnabled(value: boolean) {
         this.dispatchEnabledEvent(value);
     }
@@ -112,18 +97,17 @@ export default abstract class Component extends Serializable<any> implements ICo
             return false;
         }
 
-        // TODO move to entity.
         const { entity } = this;
         const { context } = entity;
         this.enabled = false;
         context.onComponentDestroy.dispatch([entity, this]);
-        (this.isDestroyed as boolean) = true;
+        this._destroy();
         entity.removeComponent(this);
         context.onComponentDestroyed.dispatch([entity, this]);
 
         return true;
     }
-    // TODO move to entity.
+
     public dispatchEnabledEvent(enabled: boolean): void {
         const { context } = this.entity;
 

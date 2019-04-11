@@ -2,7 +2,7 @@
   "name": "@egret/ecs",
   "version": "1.6.0",
   "description": "egret 3d lib",
-  "main": "bin/index.js",
+  "private": true,
   "scripts": {
     "build": "egret build && node script/build.js",
     "build-report": "egret build && node script/build.js && node script/report.js",
@@ -15,5 +15,10 @@
   "license": "ISC",
   "dependencies": {
     "@types/signals": "^1.0.1"
+  },
+  "devDependencies": {
+    "ts-loader": "^5.3.3",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0"
   }
 }

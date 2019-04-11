@@ -1,7 +1,8 @@
-import { SystemOrder, IEntityClass, ISystemClass } from "../types";
+import { SystemOrder, IEntityClass, ISystemClass } from "../core/types";
 import Entity from "../core/Entity";
 import System from "../core/System";
 import Context from "../core/Context";
+import { Clock } from "./components/Clock";
 import Application from "./Application";
 
 type PreSystemPair = [
@@ -16,8 +17,8 @@ export default class SystemManager {
     /**
      * @internal
      */
-    public static create(application: Application): SystemManager {
-        return new SystemManager(application);
+    public static create(): SystemManager {
+        return new SystemManager();
     }
 
     private _isStarted: boolean = false;
@@ -39,10 +40,9 @@ export default class SystemManager {
     private readonly _frameSystems: System<Entity>[] = [];
     private readonly _frameCleanupSystems: System<Entity>[] = [];
     private readonly _tickCleanupSystems: System<Entity>[] = [];
-    private _application: Application | null = null;
+    private _clock: Clock | null = null;
 
-    private constructor(application: Application) {
-        this._application = application;
+    private constructor() {
     }
 
     private _sortPreSystem(a: PreSystemPair, b: PreSystemPair) {
@@ -166,6 +166,7 @@ export default class SystemManager {
         }
 
         this._isStarted = true;
+        this._clock = Application.current.globalEntity.getComponent(Clock);
     }
     /**
      * @internal
@@ -201,7 +202,7 @@ export default class SystemManager {
             system.onEnable && system.onEnable();
 
             if (DEBUG) {
-                console.debug(egret.getQualifiedClassName(system), "enabled.");
+                // console.debug(egret.getQualifiedClassName(system), "enabled.");
             }
 
             if (system.onEntityAdded) {
@@ -229,6 +230,7 @@ export default class SystemManager {
      */
     public execute(tickCount: uint, frameCount: uint): void {
         const reactiveSystems = this._reactiveSystems;
+        const clock = this._clock!;
         let startTime = 0;
 
         for (let i = 0; i < tickCount; ++i) {
@@ -280,6 +282,7 @@ export default class SystemManager {
      * @internal
      */
     public cleanup(frameCount: uint): void {
+        const clock = this._clock!;
         let startTime = 0;
         let i = 0;
 
@@ -354,7 +357,7 @@ export default class SystemManager {
             system.onDisable && system.onDisable();
 
             if (DEBUG) {
-                console.debug(egret.getQualifiedClassName(system), "disabled.");
+                // console.debug(egret.getQualifiedClassName(system), "disabled.");
             }
         }
     }
@@ -367,13 +370,13 @@ export default class SystemManager {
 
         if (context !== null) {
             if (DEBUG) {
-                console.warn("The context has been registered.", egret.getQualifiedClassName(entityClass));
+                // console.warn("The context has been registered.", egret.getQualifiedClassName(entityClass));
             }
 
             return context as TContext;
         }
 
-        context = Context.create(entityClass, this._application!);
+        context = Context.create(entityClass);
 
         this._contexts.push(context);
 
@@ -423,7 +426,7 @@ export default class SystemManager {
 
         if (system !== null) {
             if (DEBUG) {
-                console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
+                // console.warn("The system has been registered.", egret.getQualifiedClassName(systemClass));
             }
 
             return system;

@@ -1,60 +1,80 @@
-import { DefaultNames, ISceneClass } from "../types";
 import * as signals from "signals";
+import { DefaultNames, ISceneClass } from "./types";
 import Entity from "../core/Entity";
-import Scene from "./Scene";
-import Application from "./Application";
+import System from "../core/System";
+import { Scene } from "./components/Scene";
+import { Node } from "./components/Node";
+import Matcher from "../core/Matcher";
+import Group from "../core/Group";
+import { SystemOrder } from "../core/types";
+import Context from "../core/Context";
 /**
  * 应用程序的场景管理器。
  */
-export default class SceneManager {
-    /**
-     * @internal
-     */
-    public static create(sceneClasss: ISceneClass<Scene>, application: Application): SceneManager {
-        return new SceneManager(sceneClasss, application);
-    }
-    /**
-     * 当该应用程序创建场景时派发事件。
-     */
-    public readonly onSceneCreated: signals.Signal<Scene> = new signals.Signal();
-    /**
-     * 当该应用程序的场景即将被移除时派发事件。
-     */
-    public readonly onSceneDestroy: signals.Signal<Scene> = new signals.Signal();
-    /**
-     * 当该应用程序的场景已经被移除时派发事件。
-     */
-    public readonly onSceneDestroyed: signals.Signal<Scene> = new signals.Signal();
+export default class SceneManager<TScene extends Scene> extends System<Entity> {
+    public readonly onNodeSceneChanged: signals.Signal<[Node, TScene, TScene]> = new signals.Signal();
+    public readonly onNodeParentChanged: signals.Signal<[Node, Node | null, Node | null]> = new signals.Signal();
     /**
      * 该应用程序的全部场景。
      */
-    public readonly scenes: ReadonlyArray<Scene> = [];
-    /**
-     * 该应用程序的全局实例。
-     */
-    public readonly globalEntity: Entity = null!;
+    public readonly scenes: ReadonlyArray<TScene> = [];
     /**
      * 该应用程序的全局场景。
      */
-    public readonly globalScene: Scene = null!;
+    public readonly globalScene: TScene = null!;
     /**
      * 该应用程序的全局编辑场景。
      */
-    public readonly editorScene: Scene = null!;
+    public readonly editorScene: TScene = null!;
+    /**
+     * 该应用程序的全局编辑场景。
+     */
+    public sceneClass: ISceneClass<TScene> | null = null;
 
-    private _sceneClass: ISceneClass<Scene> | null = null;
-    private _application: Application | null = null;
+    protected getMatchers() {
+        return [
+            Matcher.create(false, Scene),
+            Matcher.create(false, Node),
+        ];
+    }
 
-    private constructor(sceneClasss: ISceneClass<Scene>, application: Application) {
-        this._sceneClass = sceneClasss;
-        this._application = application;
+    public initialize(order: SystemOrder, context: Context<Entity>) {
+        super.initialize(order, context);
+
+        (this.editorScene as TScene) = this.createScene(DefaultNames.Editor, false);
+        (this.globalScene as TScene) = this.createScene(DefaultNames.Global, false);
+        (this.scenes as TScene[]).length = 0;
+    }
+
+    public onEntityRemoved(entity: Entity, group: Group<Entity>) {
+        const { groups } = this;
+
+        if (group === groups[0]) {
+        }
+        else {
+            const node = entity.getRemovedComponent(Node)!;
+
+            if (node.parent === null) {
+                this.activeScene.removeChild(node);
+            }
+        }
+    }
+
+    public onEntityAdded(entity: Entity, group: Group<Entity>) {
+        const { groups } = this;
+
+        if (group === groups[0]) {
+        }
+        else {
+            this.activeScene.addChild(entity.getComponent(Node)!);
+        }
     }
     /**
      * @internal
      */
-    public cleanup(): void {
+    public onTickCleanup() {
         for (const scene of this.scenes) {
-            scene.entities; // Remove cache.
+            scene.children; // Remove cache.
         }
     }
     /**
@@ -62,19 +82,18 @@ export default class SceneManager {
      * @param name 场景名称。
      * @param isActive 是否激活场景。
      */
-    public createScene(name: string, isActive: boolean = true): Scene {
+    public createScene(name: string, isActive: boolean = true): TScene {
         const { scenes } = this;
-        const scene = Scene.create(this._sceneClass!, name, this._application!);
+        const scene = this.context.createEntity().addComponent(this.sceneClass!);
+        scene.name = name;
 
         if (scenes.indexOf(scene) < 0) {
             if (isActive) {
-                (scenes as Scene[]).unshift(scene);
+                (scenes as TScene[]).unshift(scene);
             }
             else {
-                (scenes as Scene[]).push(scene);
+                (scenes as TScene[]).push(scene);
             }
-
-            this.onSceneCreated.dispatch(scene);
         }
         else if (DEBUG) {
             console.error("Create scene error.");
@@ -86,10 +105,10 @@ export default class SceneManager {
      * 从该应用程序中移除一个场景。
      * @param scene 要移除的场景。
      */
-    public removeScene(scene: Scene): boolean {
+    public removeScene(scene: TScene): boolean {
         if (scene === this.globalScene || scene === this.editorScene) {
             if (DEBUG) {
-                console.warn("Can not remove global scene.");
+                console.warn("Cannot remove the global scene.");
             }
 
             return false;
@@ -99,7 +118,7 @@ export default class SceneManager {
         const index = scenes.indexOf(scene);
 
         if (index >= 0) {
-            (scenes as Scene[]).splice(index, 1);
+            (scenes as TScene[]).splice(index, 1);
 
             if (!scene.isDestroyed) {
                 scene.destroy();
@@ -125,10 +144,6 @@ export default class SceneManager {
         while (i--) {
             const scene = scenes[i];
 
-            if (scene === this.globalScene || scene === this.editorScene) {
-                continue;
-            }
-
             if (excludes !== null && excludes.indexOf(scene) >= 0) {
                 continue;
             }
@@ -140,7 +155,7 @@ export default class SceneManager {
      * 通过场景名称获取该应用程序的一个场景。
      * @param name 场景名称。
      */
-    public getScene(name: string): Scene | null {
+    public getSceneByName(name: string): Scene | null {
         for (const scene of this.scenes) {
             if (scene.name === name) {
                 return scene;
@@ -159,16 +174,16 @@ export default class SceneManager {
      * 该应用程序的激活场景。
      * - 实体默认创建到激活场景。
      */
-    public get activeScene(): Scene {
+    public get activeScene(): TScene {
         const { scenes } = this;
 
         if (scenes.length === 0) {
-            this.createScene(DefaultNames.NoName);
+            this.createScene(DefaultNames.Noname);
         }
 
         return scenes[0];
     }
-    public set activeScene(value: Scene) {
+    public set activeScene(value: TScene) {
         if (
             this.globalScene === value || // Cannot active global scene.
             this.editorScene === value // Cannot active editor scene.
@@ -182,8 +197,12 @@ export default class SceneManager {
 
         const { scenes } = this;
 
+        if (scenes.length === 0) {
+            throw new Error();
+        }
+
         if (
-            scenes.length <= 1 ||
+            scenes.length === 1 ||
             scenes[0] === value
         ) {
             return;
@@ -192,8 +211,8 @@ export default class SceneManager {
         const index = scenes.indexOf(value);
 
         if (index >= 0) {
-            (scenes as Scene[]).splice(index, 1);
-            (scenes as Scene[]).unshift(value);
+            (scenes as TScene[]).splice(index, 1);
+            (scenes as TScene[]).unshift(value);
         }
         else if (DEBUG) {
             console.error("Active scene error.");
