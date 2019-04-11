@@ -5,14 +5,14 @@ namespace examples {
         async start() {
             // Load resource config.
             await RES.loadConfig("default.res.json", "resource/");
-            
+
             egret3d.Camera.main.gameObject.addComponent(Start);
         }
     }
 
     class Start extends paper.Behaviour {
 
-        public onAwake() {            
+        public onAwake() {
             egret3d.renderState.enableGPUInstancing = true;
 
             const mainCamera = egret3d.Camera.main;
@@ -21,35 +21,42 @@ namespace examples {
                 mainCamera.fov = 40.0 * egret3d.Const.DEG_RAD;
                 mainCamera.far = 10000.0;
                 mainCamera.near = 1.0;
-                mainCamera.backgroundColor.fromHex(0xFFFFFF);
-                mainCamera.transform.setLocalPosition(0.0, 0.0, -3200.0);
-                mainCamera.gameObject.addComponent(behaviors.FollowTouch);
+                mainCamera.transform.setLocalPosition(0.0, 1000.0, -3200.0);
             }
 
-            { // Create game objects.
-                const sphereMesh = egret3d.MeshBuilder.createSphere(100.0, 0.0, 0.0, 0.0, 20.0, 20.0);
-                const sphere = egret3d.creater.createGameObject("Sphere", {
-                    mesh: sphereMesh,
-                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL)
-                });
-                sphere.addComponent(behaviors.Wander).radius = 2000.0;
+            {
+                const directionalLight = paper.GameObject.create("Directional Light").addComponent(egret3d.DirectionalLight);
+                directionalLight.intensity = 0.4;
+                directionalLight.transform.setLocalPosition(0.0, 20.0, -10.0).lookAt(egret3d.Vector3.ZERO);
+            }
 
-                const coneMesh = egret3d.MeshBuilder.createCylinder(0.0, 10.0, 100.0).applyMatrix(egret3d.Matrix4.create().fromRotationX(Math.PI * 0.5));
-                const coneMaterial = egret3d.Material.create(egret3d.DefaultShaders.MESH_NORMAL);
-                coneMaterial.enableGPUInstancing = true;
-                for (let i = 0; i < 5000; ++i) {
-                    const cone = egret3d.creater.createGameObject(`Cone ${i}`, {
-                        mesh: coneMesh,
-                        material: coneMaterial
-                    });
-                    cone.transform
-                        .setLocalPosition(
+            {
+                const randomMaterials: egret3d.Material[] =
+                    [
+                        egret3d.DefaultMaterials.MESH_PHYSICAL.clone().setColor(egret3d.Color.RED),
+                        egret3d.DefaultMaterials.MESH_PHYSICAL.clone().setColor(egret3d.Color.BLUE),
+                        egret3d.DefaultMaterials.MESH_PHYSICAL.clone().setColor(egret3d.Color.GREEN),
+                    ];
+                const randomMeshs: egret3d.Mesh[] =
+                    [
+                        egret3d.MeshBuilder.createSphere(5),
+                    ];
+                for (let i = 0; i < 10000; ++i) {
+                    const mesh = randomMeshs[Math.floor(Math.random() * randomMeshs.length)];
+                    const material = randomMaterials[Math.floor(Math.random() * randomMaterials.length)];
+                    material.enableGPUInstancing = true;
+                    const cone = egret3d.creater.createGameObject(`Cone ${i}`, { mesh, material });
+                    cone.transform.setLocalPosition
+                        (
                             Math.random() * 4000.0 - 2000.0,
                             Math.random() * 4000.0 - 2000.0,
                             Math.random() * 4000.0 - 2000.0,
                         )
                         .setLocalScale(Math.random() * 4.0 + 2.0);
-                    cone.addComponent(behaviors.LookAtTarget).target = sphere;
+                    const wander = cone.addComponent(behaviors.Wander);
+                    wander.radius = Math.random() * 400.0 + 200;
+                    wander.timeScale.set(Math.random() * 0.5 + 0.5, Math.random() * 0.5 + 0.5, Math.random() * 0.5 + 0.5);
+                    wander.center.copy(cone.transform.localPosition);
                 }
             }
         }
