@@ -25,7 +25,7 @@ export class Node extends Parent {
         super._destroy();
     }
 
-    protected _onChangeParent(isBefore: boolean, worldTransformStays: boolean): void {
+    protected _onChangeParent(_isBefore: boolean, _worldTransformStays: boolean): void {
     }
     /**
      * @internal

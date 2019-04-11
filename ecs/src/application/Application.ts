@@ -29,13 +29,13 @@ export default class Application<TScene extends Scene> {
      * 获取该应用程序的场景实现。
      */
     protected getSceneClass(): ISceneClass<TScene> {
-        return Scene as ISceneClass<TScene>;
+        return Scene as any;
     }
     /**
      * 初始化该应用程序。
      */
     public initialize(): void {
-        Application.current = this;
+        Application.current = this as any;
         const { systemManager } = this;
         (this.sceneManager as SceneManager<TScene>) = systemManager.registerSystem<SceneManager<TScene>>(SceneManager, Entity, SystemOrder.Enable);
         (this.globalEntity as Entity) = systemManager.getContext(Entity)!.createEntity();

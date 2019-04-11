@@ -12,7 +12,13 @@ import Context from "../core/Context";
  * 应用程序的场景管理器。
  */
 export default class SceneManager<TScene extends Scene> extends System<Entity> {
+    /**
+     * 
+     */
     public readonly onNodeSceneChanged: signals.Signal<[Node, TScene, TScene]> = new signals.Signal();
+    /**
+     * 
+     */
     public readonly onNodeParentChanged: signals.Signal<[Node, Node | null, Node | null]> = new signals.Signal();
     /**
      * 该应用程序的全部场景。
@@ -29,15 +35,19 @@ export default class SceneManager<TScene extends Scene> extends System<Entity> {
     /**
      * 该应用程序的全局编辑场景。
      */
-    public sceneClass: ISceneClass<TScene> | null = null;
-
+    public sceneClass: ISceneClass<TScene> | null = Scene as any;
+    /**
+     * @internal
+     */
     protected getMatchers() {
         return [
             Matcher.create(false, Scene),
             Matcher.create(false, Node),
         ];
     }
-
+    /**
+     * @internal
+     */
     public initialize(order: SystemOrder, context: Context<Entity>) {
         super.initialize(order, context);
 
@@ -45,7 +55,9 @@ export default class SceneManager<TScene extends Scene> extends System<Entity> {
         (this.globalScene as TScene) = this.createScene(DefaultNames.Global, false);
         (this.scenes as TScene[]).length = 0;
     }
-
+    /**
+     * @internal
+     */
     public onEntityRemoved(entity: Entity, group: Group<Entity>) {
         const { groups } = this;
 
@@ -59,7 +71,9 @@ export default class SceneManager<TScene extends Scene> extends System<Entity> {
             }
         }
     }
-
+    /**
+     * @internal
+     */
     public onEntityAdded(entity: Entity, group: Group<Entity>) {
         const { groups } = this;
 

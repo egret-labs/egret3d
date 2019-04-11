@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
-        "declaration": true,
+        "declaration": false,
+        "sourceMap": false,
         "stripInternal": true,
         "skipLibCheck": true,
         "experimentalDecorators": true,
@@ -15,9 +16,11 @@
             "dom",
             "es2015.promise"
         ],
-        "module": "commonjs"
+        "module": "amd",
+        "newLine": "LF",
+        "outDir": "./dist/"
     },
     "includes": [
-        "src"
+        "src",
     ]
 }
