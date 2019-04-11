@@ -20,15 +20,20 @@ namespace examples.oimo {
 
         public onEnable() {
             //
+            egret3d.renderState.enableGPUInstancing = true;
             egret3d.Camera.main.entity.addComponent(behaviors.RotateAround);
             //
             createGridRoom(10.0);
 
+            const cubeMesh = egret3d.DefaultMeshes.CUBE.clone();
+            const cubeMaterial = egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT);
+            cubeMaterial.enableGPUInstancing = true;
+
             { // Create ground.
                 const groundSize = egret3d.Vector3.create(10.0, 0.2, 10.0).release();
                 const entity = egret3d.creater.createGameObject("Ground", {
-                    mesh: egret3d.DefaultMeshes.CUBE,
-                    material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT),
+                    mesh: cubeMesh,
+                    material: cubeMaterial,
                     castShadows: true,
                     receiveShadows: true,
                 });
@@ -44,8 +49,8 @@ namespace examples.oimo {
                 for (let i = 0; i < 100; i++) {
                     const cubeSize = egret3d.Vector3.create(Math.random() * 1.5 + 0.5, Math.random() * 1.5 + 0.5, Math.random() * 1.5 + 0.5).release();
                     const gameObject = egret3d.creater.createGameObject(`Cube_${i}`, {
-                        mesh: egret3d.DefaultMeshes.CUBE,
-                        material: egret3d.Material.create(egret3d.DefaultShaders.MESH_LAMBERT),
+                        mesh: cubeMesh,
+                        material: cubeMaterial,
                         castShadows: true,
                         receiveShadows: true,
                     });

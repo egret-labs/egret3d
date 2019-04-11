@@ -2,8 +2,19 @@ namespace egret3d.webgl {
     const _patternInclude = /^[ \t]*#include +<([\w\d./]+)>/gm;
     const _patternLoop = /#pragma unroll_loop[\s]+?for \( int i \= (\d+)\; i < (\d+)\; i \+\+ \) \{([\s\S]+?)(?=\})\}/g;
 
-    const combineModelMats: Matrix4[] = [];
-    const combineModelViewMats: Matrix4[] = [];
+    const _instancingAttributes: gltf.AttributeSemantics[] =
+        [
+            gltf.AttributeSemantics._INSTANCED_MODEL0,
+            gltf.AttributeSemantics._INSTANCED_MODEL1,
+            gltf.AttributeSemantics._INSTANCED_MODEL2,
+            gltf.AttributeSemantics._INSTANCED_MODEL3,
+            gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0,
+            gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1,
+            gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2,
+            gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2,
+        ];
+    const _combineModelMats: Matrix4[] = [];
+    const _combineModelViewMats: Matrix4[] = [];
 
     function _replace(match: string, include: string): string {
         let flag = true;
@@ -666,8 +677,8 @@ namespace egret3d.webgl {
         }
 
         private _combineDraw(drawCalls: DrawCall[], overrideMaterial: Material | null = null) {
-            const modelMats = combineModelMats;
-            const modelViewMats = combineModelViewMats;
+            const modelMats = _combineModelMats;
+            const modelViewMats = _combineModelViewMats;
             let combineCount: number = 0;
             let isSameCount: boolean = true;
             let model0: Float32Array;
@@ -686,9 +697,6 @@ namespace egret3d.webgl {
                 const mesh = drawCall.mesh;
                 const nextMaterial = overrideMaterial !== null ? overrideMaterial : nextDrawCall.material;
                 const nextMesh = nextDrawCall.mesh;
-                // const { material, mesh } = drawCall;
-                // const { material: nextMaterial, mesh: nextMesh } = nextDrawCall;
-
                 if (material.enableGPUInstancing) {
                     modelMats[combineCount] = drawCall.matrix;
                     modelViewMats[combineCount] = drawCall.modelViewMatrix;
@@ -700,7 +708,7 @@ namespace egret3d.webgl {
                     }
                 }
                 //
-                const temp = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0);
+                const temp = mesh.getAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0);
                 if (temp !== null) {
                     isSameCount = (temp.length / 4 === combineCount);
                     if (!isSameCount) {
@@ -717,7 +725,6 @@ namespace egret3d.webgl {
                 else {
                     isSameCount = false;
                 }
-
                 //被打断，合并
                 if (combineCount > 0) {
                     if (isSameCount) {
@@ -740,14 +747,6 @@ namespace egret3d.webgl {
                         modelViews2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2, gltf.AccessorType.VEC4, combineCount, 1)!;
                         modelViews3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3, gltf.AccessorType.VEC4, combineCount, 1)!;
                     }
-                    // const model0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL0, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    // const model1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL1, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    // const model2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL2, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    // const model3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL3, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    // const modelViews0 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    // const modelViews1 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    // const modelViews2 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2, gltf.AccessorType.VEC4, combineCount, 1)!;
-                    // const modelViews3 = mesh.addAttribute(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3, gltf.AccessorType.VEC4, combineCount, 1)!;
                     for (let j = 0; j < combineCount; j++) {
                         const modelData = modelMats[j].rawData;
                         model0[j * 4 + 0] = modelData[0];
@@ -794,14 +793,7 @@ namespace egret3d.webgl {
                     drawCall.instanced = combineCount;
                     combineCount = 0;
                     if (isSameCount) {
-                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL0);
-                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL1);
-                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL2);
-                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL3);
-                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW0);
-                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW1);
-                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW2);
-                        mesh.uploadVertexBuffer(gltf.AttributeSemantics._INSTANCED_MODEL_VIEW3);
+                        mesh.uploadVertexBuffer(_instancingAttributes);
                     }
                 }
 
@@ -895,7 +887,7 @@ namespace egret3d.webgl {
                     }
 
                     //防止点光源camera因为缓存没有更新 TODO
-                    this._cacheCamera = null;
+                    this._cacheProgram = null;
                 }
             }
 
@@ -963,8 +955,8 @@ namespace egret3d.webgl {
                 this._renderState.clearBuffer(gltf.BufferMask.DepthAndColor);
             }
             //
-            combineModelMats.length = 0;
-            combineModelViewMats.length = 0;
+            _combineModelMats.length = 0;
+            _combineModelViewMats.length = 0;
         }
 
         public onFrameCleanup() {
