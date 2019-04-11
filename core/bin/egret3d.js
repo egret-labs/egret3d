@@ -6236,7 +6236,7 @@ var egret3d;
                 boneCount: 0,
                 egret2DOrderCount: 0,
                 clockBuffer: new Float32Array(4),
-                skyBoxTexture: null,
+                skyBoxTexture: null
             };
             _this.customShaderChunks = null;
             /**
@@ -32238,6 +32238,9 @@ var egret3d;
                 var primitive = glTFMesh.primitives[subMeshIndex];
                 var primitiveExtras = primitive.extras;
                 if ((needUpdate & 8 /* VertexBuffer */) !== 0) {
+                    if (egret3d.renderState.vertexArrayObject !== null) {
+                        webgl.bindVertexArray(null);
+                    }
                     if (glTFMeshExtras.vbo === null) {
                         var vbo = webgl.createBuffer();
                         if (vbo !== null) {
@@ -32262,6 +32265,9 @@ var egret3d;
                 }
                 needUpdate = primitiveExtras.needUpdate & mask;
                 if ((needUpdate & 16 /* IndexBuffer */) !== 0 && primitive.indices !== undefined) {
+                    if (egret3d.renderState.vertexArrayObject !== null) {
+                        webgl.bindVertexArray(null);
+                    }
                     if (primitiveExtras.ibo === null) {
                         var ibo = webgl.createBuffer();
                         if (ibo !== null) {
@@ -33503,6 +33509,8 @@ var egret3d;
                             }
                         }
                     }
+                    //TODO 防止vao绑定混乱
+                    webgl.bindVertexArray(null);
                     if (true) {
                         //
                         if (!drawCall.renderer || drawCall.renderer.gameObject.tag !== "EditorOnly" /* EditorOnly */) {

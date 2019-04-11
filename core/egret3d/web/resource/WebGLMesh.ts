@@ -3,43 +3,6 @@ namespace egret3d.webgl {
      * @internal
      */
     export class WebGLMesh extends Mesh {
-
-        private _bindVAO(primitive: gltf.MeshPrimitive) {
-            const webgl = WebGLRenderState.webgl!;
-            const primitiveExtras = primitive.extras!;
-
-            if (renderState.vertexArrayObject !== null) {
-                if (primitiveExtras.vaos === null) {
-                    primitiveExtras.vaos = {};
-                }
-
-                const { program, vaos } = primitiveExtras;
-                const attributesMask = (program as WebGLProgramBinder).attributesMask;
-
-                if (attributesMask in vaos!) {
-                    webgl.bindVertexArray(vaos![attributesMask]);
-                    return 2; // Created.
-                }
-                else {
-                    const vao = webgl.createVertexArray();
-
-                    if (vao !== null) {
-                        vaos![attributesMask] = vao;
-                        webgl.bindVertexArray(vao);
-
-                        return 1; // Create.
-                    }
-                    else if (DEBUG) {
-                        console.error("Create webgl vertex array error.");
-                    }
-
-                    return -1; // Error.
-                }
-            }
-
-            return 0; // Nonsupport
-        }
-
         public update(mask: MeshNeedUpdate, subMeshIndex: uint = 0) {
             let needUpdate = this._needUpdate & mask;
             const webgl = WebGLRenderState.webgl!;
@@ -47,10 +10,11 @@ namespace egret3d.webgl {
             const glTFMeshExtras = glTFMesh.extras!;
             const primitive = glTFMesh!.primitives[subMeshIndex];
             const primitiveExtras = primitive.extras!;
-            let bindVAO: -2 | -1 | 0 | 1 | 2 = -2;
 
             if ((needUpdate & MeshNeedUpdate.VertexBuffer) !== 0) {
-                bindVAO = this._bindVAO(primitive);//TODO 
+                if (renderState.vertexArrayObject !== null) {
+                    webgl.bindVertexArray(null);
+                }
 
                 if (glTFMeshExtras.vbo === null) {
                     const vbo = webgl.createBuffer();
@@ -83,8 +47,8 @@ namespace egret3d.webgl {
             needUpdate = primitiveExtras.needUpdate & mask;
 
             if ((needUpdate & MeshNeedUpdate.IndexBuffer) !== 0 && primitive.indices !== undefined) {
-                if (bindVAO === -2) {
-                    bindVAO = this._bindVAO(primitive);
+                if (renderState.vertexArrayObject !== null) {
+                    webgl.bindVertexArray(null);
                 }
 
                 if (primitiveExtras.ibo === null) {
@@ -106,43 +70,32 @@ namespace egret3d.webgl {
             }
 
             if ((needUpdate & MeshNeedUpdate.VertexArray) !== 0) {
-                if (bindVAO === -2) {
-                    bindVAO = this._bindVAO(primitive);
+                if (renderState.vertexArrayObject !== null) {
+                    if (primitiveExtras.vaos === null) {
+                        primitiveExtras.vaos = {};
+                    }
+
+                    const { program, vaos } = primitiveExtras;
+                    const attributesMask = (program as WebGLProgramBinder).attributesMask;
+
+                    let vao: WebGLVertexArrayObject | null = vaos![attributesMask];
+                    if (!vao) {
+                        vao = webgl.createVertexArray();
+                        if (vao) {
+                            vaos![attributesMask] = vao;
+                        }
+                        else if (DEBUG) {
+                            console.error("Create webgl vertex array error.");
+                        }
+                    }
+                    if (vao) {
+                        webgl.bindVertexArray(vao);
+                        webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
+                        renderState.updateVertexAttributes(this, subMeshIndex);
+                        webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
+                        webgl.bindVertexArray(null);
+                    }
                 }
-
-                if (bindVAO === 1 || bindVAO === 2) {
-                    webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
-                    webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
-                    renderState.updateVertexAttributes(this, subMeshIndex);
-                    webgl.bindVertexArray(null);
-                }
-
-                // if (renderState.vertexArrayObject !== null) {
-                //     if (primitiveExtras.vaos === null) {
-                //         primitiveExtras.vaos = {};
-                //     }
-
-                //     const { program, vaos } = primitiveExtras;
-                //     const attributesMask = (program as WebGLProgramBinder).attributesMask;
-
-                //     let vao: WebGLVertexArrayObject | null = vaos![attributesMask];
-                //     if (!vao) {
-                //         vao = webgl.createVertexArray();
-                //         if (vao) {
-                //             vaos![attributesMask] = vao;
-                //         }
-                //         else if (DEBUG) {
-                //             console.error("Create webgl vertex array error.");
-                //         }
-                //     }
-                //     if (vao) {
-                //         webgl.bindVertexArray(vao);
-                //         webgl.bindBuffer(gltf.BufferViewTarget.ArrayBuffer, glTFMeshExtras.vbo);
-                //         renderState.updateVertexAttributes(this, subMeshIndex);
-                //         webgl.bindBuffer(gltf.BufferViewTarget.ElementArrayBuffer, primitiveExtras.ibo);
-                //         webgl.bindVertexArray(null);
-                //     }
-                // }
             }
 
             super.update(mask, subMeshIndex);
