@@ -1,14 +1,15 @@
-import { DefaultNames } from "../types";
-import { component } from "../../core/Decorators";
-import { Parent } from "./Parent";
-import { Scene } from "./Scene";
+import { NodeNames, NodeLayer, NodeTags } from "../types";
+import { component } from "../../ecs/Decorators";
+import Parent from "./Parent";
+import Scene from "./Scene";
 /**
  * 基础节点组件。
  */
 @component()
-export class Node extends Parent {
-    public name: string = DefaultNames.Noname;
-    public tag: string = "";
+export default class Node extends Parent {
+    public name: string = NodeNames.Noname;
+    public tag: NodeTags | string = NodeTags.Untagged;
+    public layer: NodeLayer = NodeLayer.Default;
     /**
      * @internal
      */
@@ -28,12 +29,13 @@ export class Node extends Parent {
     protected _onChangeParent(_isBefore: boolean, _worldTransformStays: boolean): void {
     }
     /**
+     * @override
      * @internal
      */
     public uninitialize(): void {
         super.uninitialize();
 
-        this.name = DefaultNames.Noname;
+        this.name = NodeNames.Noname;
         this.tag = "";
 
         this._parent = null;
@@ -166,12 +168,13 @@ export class Node extends Parent {
         return ancestor === this;
     }
     /**
+     * @override
      * @internal
      */
     public get isActiveAndEnabled(): boolean {
         if (this._globalEnabledDirty) {
             if (this._parent!.isActiveAndEnabled) {
-                this._globalEnabled = this._enabled && this.entity.enabled;
+                this._globalEnabled = this.isActiveAndEnabled;
             }
             else {
                 this._globalEnabled = false;
@@ -181,6 +184,20 @@ export class Node extends Parent {
         }
 
         return this._globalEnabled;
+    }
+    /**
+     * 该实体的路径。
+     */
+    public get path(): string {
+        let path = this.name;
+        let ancestor = this._parent;
+
+        while (ancestor !== this._scene) {
+            path = (ancestor as Node).name + "/" + path;
+            ancestor = (ancestor as Node).parent;
+        }
+
+        return path;
     }
     /**
      * 该节点的父节点。

@@ -9,7 +9,7 @@ const _indices: uint[] = [];
  */
 export default class Matcher extends Releasable implements IAllOfMatcher {
     /**
-     * @internal
+     * @ignore
      */
     public static readonly instances: ReadonlyArray<Matcher> = [];
     /**
@@ -116,6 +116,7 @@ export default class Matcher extends Releasable implements IAllOfMatcher {
         }
     }
     /**
+     * @override
      * @internal
      */
     public initialize(componentEnabledFilter: boolean = true, components: ReadonlyArray<IComponentClass<Component>> | null = null): void {
@@ -128,6 +129,7 @@ export default class Matcher extends Releasable implements IAllOfMatcher {
         }
     }
     /**
+     * @override
      * @internal
      */
     public uninitialize(): void {

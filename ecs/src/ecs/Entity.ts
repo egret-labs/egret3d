@@ -1,19 +1,17 @@
-import { uuid } from "../uuid/Decorators";
 import UUID from "../uuid/UUID";
 import { IComponentClass, IEntity } from "./types";
+import { entity } from "./Decorators";
 import Component from "./Component";
+import GroupComponent from "./GroupComponent";
 import Context from "./Context";
-import { component } from "./Decorators";
 /**
  * 基础实体。
  */
-@uuid
+@entity()
 export default class Entity extends UUID implements IEntity {
-    /**
-     * 反序列化设置默认激活。
-     * @internal
-     */
-    public static createDefaultEnabled: boolean = true;
+
+    public static readonly requireComponents: ReadonlyArray<IComponentClass<Component>> | null = null;
+    public static readonly extensions: { [key: string]: any } | null = null;
     /**
      * @internal
      */
@@ -40,6 +38,10 @@ export default class Entity extends UUID implements IEntity {
         super();
     }
 
+    protected _destroyError() {
+        throw new Error("The entity has been destroyed.");
+    }
+
     protected _setEnabled(value: boolean) {
         for (const component of this._components) {
             if (component === undefined) { // TODO remove undefined
@@ -57,6 +59,10 @@ export default class Entity extends UUID implements IEntity {
                 component.dispatchEnabledEvent(value);
             }
         }
+    }
+
+    protected _addComponent(_component: Component) {
+
     }
 
     protected _removeComponent(component: Component, groupComponent: GroupComponent | null): void {
@@ -81,7 +87,7 @@ export default class Entity extends UUID implements IEntity {
         this._componentsDirty = true;
     }
 
-    private _isRequireComponent(componentClass: IComponentClass<Component>) {
+    protected _isRequireComponent(componentClass: IComponentClass<Component>) {
         for (const component of this._components) {
             if (component !== undefined) { // TODO remove undefined
                 const requireComponents = ((
@@ -90,7 +96,7 @@ export default class Entity extends UUID implements IEntity {
                         component
                 ).constructor as IComponentClass<Component>).requireComponents;
 
-                if (requireComponents!.indexOf(componentClass) >= 0) {
+                if (requireComponents !== null && requireComponents.indexOf(componentClass) >= 0) {
                     // TODO
                     return true;
                 }
@@ -100,11 +106,11 @@ export default class Entity extends UUID implements IEntity {
         return false;
     }
 
-    public initialize(context: Context<this>): void {
+    public initialize(defaultEnabled: boolean, context: Context<this>): void {
         (this.isDestroyed as boolean) = false;
         (this.context as Context<this>) = context;
 
-        this._enabled = Entity.createDefaultEnabled;
+        this._enabled = defaultEnabled;
     }
 
     public uninitialize(): void {
@@ -118,7 +124,7 @@ export default class Entity extends UUID implements IEntity {
     public destroy(): boolean {
         if (this.isDestroyed) {
             if (DEBUG) {
-                console.warn("The entity has been destroyed.");
+                this._destroyError();
             }
 
             return false;
@@ -134,13 +140,13 @@ export default class Entity extends UUID implements IEntity {
         return true;
     }
 
-    public addComponent<T extends Component>(componentClass: IComponentClass<T>): T {
+    public addComponent<T extends Component>(componentClass: IComponentClass<T>, defaultEnabled: boolean = true): T {
         if (!componentClass) {
             throw new Error();
         }
 
         if (this.isDestroyed) {
-            throw new Error("The entity has been destroyed.");
+            this._destroyError();
         }
 
         const { allowMultiple, componentIndex, requireComponents } = componentClass;
@@ -157,23 +163,23 @@ export default class Entity extends UUID implements IEntity {
         }
 
         // Require components.
-        if (requireComponents!.length > 0) {
+        if (requireComponents !== null) {
             for (const requireComponentClass of requireComponents!) {
                 if (this.getComponent(requireComponentClass as IComponentClass<Component>) === null) {
-                    this.addComponent(requireComponentClass as IComponentClass<Component>);
+                    this.addComponent(requireComponentClass as IComponentClass<Component>, defaultEnabled);
                 }
             }
         }
 
         // Create and add component.
-        const component = Component.create(componentClass, this);
+        const component = Component.create(componentClass, defaultEnabled, this);
 
         if (existedComponent !== null) {
             if (existedComponent.constructor === GroupComponent) {
                 (existedComponent as GroupComponent).addComponent(component);
             }
             else {
-                const groupComponent = Component.create(GroupComponent, this);
+                const groupComponent = Component.create(GroupComponent, true, this);
                 groupComponent.componentIndex = componentIndex;
                 groupComponent.addComponent(existedComponent);
                 groupComponent.addComponent(component);
@@ -185,6 +191,7 @@ export default class Entity extends UUID implements IEntity {
         }
 
         this._componentsDirty = true;
+        this._addComponent(component);
         this.context.onComponentCreated.dispatch([this, component]);
 
         if (component.isActiveAndEnabled) {
@@ -205,7 +212,7 @@ export default class Entity extends UUID implements IEntity {
 
         if (this.isDestroyed) {
             if (DEBUG) {
-                throw new Error("The entity has been destroyed.");
+                this._destroyError();
             }
 
             return false;
@@ -286,7 +293,7 @@ export default class Entity extends UUID implements IEntity {
     public getComponent<T extends Component>(componentClass: IComponentClass<T>): T | null {
         if (this.isDestroyed) {
             if (DEBUG) {
-                throw new Error("The entity has been destroyed.");
+                this._destroyError();
             }
 
             return null;
@@ -323,7 +330,7 @@ export default class Entity extends UUID implements IEntity {
 
         if (this.isDestroyed) {
             if (DEBUG) {
-                throw new Error("The entity has been destroyed.");
+                this._destroyError();
             }
 
             return output;
@@ -423,7 +430,7 @@ export default class Entity extends UUID implements IEntity {
     public set enabled(value: boolean) {
         if (this.isDestroyed) {
             if (DEBUG) {
-                throw new Error("The entity has been destroyed.");
+                this._destroyError();
             }
 
             return;
@@ -433,8 +440,16 @@ export default class Entity extends UUID implements IEntity {
             return;
         }
 
+        const prevEnabled = this.isActiveAndEnabled;
         this._enabled = value;
-        this._setEnabled(value);
+
+        if (prevEnabled !== this.isActiveAndEnabled) {
+            this._setEnabled(value);
+        }
+    }
+
+    public get isActiveAndEnabled(): boolean {
+        return this._enabled;
     }
 
     public get components(): ReadonlyArray<Component> {
@@ -442,7 +457,7 @@ export default class Entity extends UUID implements IEntity {
 
         if (this.isDestroyed) {
             if (DEBUG) {
-                throw new Error("The entity has been destroyed.");
+                this._destroyError();
             }
 
             return cachedComponents;
@@ -472,47 +487,5 @@ export default class Entity extends UUID implements IEntity {
         }
 
         return cachedComponents;
-    }
-}
-
-@component()
-class GroupComponent extends Component {
-    public componentIndex: int = -1;
-    public readonly components: Component[] = [];
-
-    public uninitialize(): void {
-        super.uninitialize();
-
-        this.componentIndex = -1;
-        this.components.length = 0;
-    }
-
-    public addComponent(component: Component): boolean {
-        const { components } = this;
-        if (components.indexOf(component) < 0) {
-            this.components.push(component);
-
-            return true;
-        }
-        else if (DEBUG) {
-            console.error("The component has been added to the group.");
-        }
-
-        return false;
-    }
-
-    public removeComponent(component: Component): boolean {
-        const index = this.components.indexOf(component);
-
-        if (index >= 0) {
-            this.components.splice(index, 1);
-
-            return true;
-        }
-        else if (DEBUG) {
-            console.error("The component has been removed from the group.");
-        }
-
-        return false;
     }
 }

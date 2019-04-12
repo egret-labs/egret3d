@@ -1,13 +1,14 @@
 import * as signals from "signals";
-import { DefaultNames, ISceneClass } from "./types";
-import Entity from "../core/Entity";
-import System from "../core/System";
-import { Scene } from "./components/Scene";
-import { Node } from "./components/Node";
-import Matcher from "../core/Matcher";
-import Group from "../core/Group";
-import { SystemOrder } from "../core/types";
-import Context from "../core/Context";
+import { SystemOrder } from "../../ecs/types";
+import Entity from "../../ecs/Entity";
+import System from "../../ecs/System";
+import Matcher from "../../ecs/Matcher";
+import Group from "../../ecs/Group";
+import Context from "../../ecs/Context";
+
+import { NodeNames, ISceneClass } from "../types";
+import Scene from "../components/Scene";
+import Node from "../components/Node";
 /**
  * 应用程序的场景管理器。
  */
@@ -37,6 +38,7 @@ export default class SceneManager<TScene extends Scene> extends System<Entity> {
      */
     public sceneClass: ISceneClass<TScene> | null = Scene as any;
     /**
+     * @override
      * @internal
      */
     protected getMatchers() {
@@ -46,13 +48,14 @@ export default class SceneManager<TScene extends Scene> extends System<Entity> {
         ];
     }
     /**
+     * @override
      * @internal
      */
     public initialize(order: SystemOrder, context: Context<Entity>) {
         super.initialize(order, context);
 
-        (this.editorScene as TScene) = this.createScene(DefaultNames.Editor, false);
-        (this.globalScene as TScene) = this.createScene(DefaultNames.Global, false);
+        (this.editorScene as TScene) = this.createScene(NodeNames.Editor, false);
+        (this.globalScene as TScene) = this.createScene(NodeNames.Global, false);
         (this.scenes as TScene[]).length = 0;
     }
     /**
@@ -90,6 +93,7 @@ export default class SceneManager<TScene extends Scene> extends System<Entity> {
         for (const scene of this.scenes) {
             scene.children; // Remove cache.
         }
+        console.log(123);
     }
     /**
      * 创建一个空场景到该应用程序。
@@ -192,7 +196,7 @@ export default class SceneManager<TScene extends Scene> extends System<Entity> {
         const { scenes } = this;
 
         if (scenes.length === 0) {
-            this.createScene(DefaultNames.Noname);
+            this.createScene(NodeNames.Noname);
         }
 
         return scenes[0];

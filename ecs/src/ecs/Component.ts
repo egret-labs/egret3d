@@ -3,7 +3,6 @@ import { IAbstractComponentClass, IComponentClass, IComponent } from "./types";
 import { component } from "./Decorators";
 import Entity from "./Entity";
 
-let _componentClassCount = 0;
 /**
  * 基础组件。
  * - 所有组件的基类。
@@ -13,40 +12,16 @@ export default abstract class Component extends UUID implements IComponent {
     public static readonly isAbstract: IAbstractComponentClass | null = null;
     public static readonly allowMultiple: boolean = false;
     public static readonly componentIndex: int = -1;
+    public static readonly tag: string = "";
     public static readonly requireComponents: ReadonlyArray<IComponentClass<Component>> | null = null;
-    /**
-     * 反序列化设置默认激活。
-     * @internal
-     */
-    public static createDefaultEnabled: boolean = true;
-
-    public static register(): boolean {
-        if (!UUID.register.call(this)) { // Super.
-            return false;
-        }
-
-        if (this.isAbstract === this) {
-            return false;
-        }
-
-        (this.componentIndex as int) = _componentClassCount++;
-
-        if (this.requireComponents !== null) { // Inherited parent class require components.
-            (this.requireComponents as IComponentClass<Component>[] | null) = this.requireComponents.concat();
-        }
-        else {
-            (this.requireComponents as IComponentClass<Component>[] | null) = [];
-        }
-
-        return true;
-    }
+    public static readonly extensions: { [key: string]: any } | null = null;
     /**
      * @internal
      */
-    public static create<TComponent extends Component>(componentClass: IComponentClass<TComponent>, entity: Entity): TComponent {
+    public static create<TComponent extends Component>(componentClass: IComponentClass<TComponent>, defaultEnabled: boolean, entity: Entity): TComponent {
         // TODO pool
         const component = new componentClass();
-        component.initialize(entity);
+        component.initialize(defaultEnabled, entity);
 
         return component;
     }
@@ -65,19 +40,19 @@ export default abstract class Component extends UUID implements IComponent {
         super();
     }
 
+    protected _destroyError() {
+        throw new Error("The component has been destroyed.");
+    }
+
     protected _destroy() {
         (this.isDestroyed as boolean) = true;
     }
 
-    protected _setEnabled(value: boolean) {
-        this.dispatchEnabledEvent(value);
-    }
-
-    public initialize(entity: Entity): void {
+    public initialize(defaultEnabled: boolean, entity: Entity): void {
         (this.isDestroyed as boolean) = false;
         (this.entity as Entity) = entity;
 
-        this._enabled = Component.createDefaultEnabled;
+        this._enabled = defaultEnabled;
     }
 
     public uninitialize(): void {
@@ -91,7 +66,7 @@ export default abstract class Component extends UUID implements IComponent {
     public destroy(): boolean {
         if (this.isDestroyed) {
             if (DEBUG) {
-                console.warn("The component has been destroyed.");
+                this._destroyError();
             }
 
             return false;
@@ -123,15 +98,27 @@ export default abstract class Component extends UUID implements IComponent {
         return this._enabled;
     }
     public set enabled(value: boolean) {
-        if (this._enabled === value || this.isDestroyed) {
+        if (this.isDestroyed) {
+            if (DEBUG) {
+                this._destroyError();
+            }
+
             return;
         }
 
+        if (this._enabled === value) {
+            return;
+        }
+
+        const prevEnabled = this.isActiveAndEnabled;
         this._enabled = value;
-        this._setEnabled(value);
+
+        if (prevEnabled !== this.isActiveAndEnabled) {
+            this.dispatchEnabledEvent(value);
+        }
     }
 
     public get isActiveAndEnabled(): boolean {
-        return this._enabled && this.entity.enabled;
+        return this._enabled && this.entity.isActiveAndEnabled;
     }
 }

@@ -84,7 +84,7 @@ export default class Group<TEntity extends Entity> implements IGroup<Entity> {
                 break;
         }
     }
-    
+
     public containsEntity(entity: TEntity): boolean {
         return this._entities.indexOf(entity) >= 0;
     }

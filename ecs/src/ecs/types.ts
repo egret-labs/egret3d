@@ -52,6 +52,14 @@ export const enum SystemOrder {
  */
 export interface IEntityClass<TEntity extends IEntity> extends IUUIDClass {
     /**
+     * 该实体的必须组件。
+     */
+    readonly requireComponents: ReadonlyArray<IComponentClass<IComponent>> | null;
+    /**
+     * 
+     */
+    readonly extensions: { [key: string]: any } | null;
+    /**
      * 禁止实例化实体。
      * @protected
      */
@@ -75,9 +83,17 @@ export interface IAbstractComponentClass extends IUUIDClass {
      */
     readonly componentIndex: int;
     /**
+     * 
+     */
+    readonly tag: string;
+    /**
      * 该组件依赖的其他前置组件。
      */
     readonly requireComponents: ReadonlyArray<IComponentClass<IComponent>> | null;
+    /**
+     * 
+     */
+    readonly extensions: { [key: string]: any } | null;
 }
 /**
  * 组件类接口。
