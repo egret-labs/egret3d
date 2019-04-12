@@ -1,11 +1,11 @@
 import { IBaseClass, ISerializedObject, ISerializable, ISerializedData, KEY_COMPONENTS, KEY_CLASS, KEY_UUID, KEY_DESERIALIZE, IUUID } from "./types";
 import { SerializeUtil } from "./SerializeUtil";
-import Component from "../core/Component";
-import Entity from "../core/Entity";
+import Component from "../ecs/Component";
+import Entity from "../ecs/Entity";
 import { MissingComponent } from "../component/MissingComponent";
 import { ObjectFactory } from "./ObjectFactory";
 import { DeserializeContext } from "./DeserializeContext";
-import Context from "../core/Context";
+import Context from "../ecs/Context";
 
 export { Deserializer };
 
@@ -177,14 +177,16 @@ class Deserializer {
             }
             // 默认的反序列化
             else {
-                // REVIEW: 奇怪的策略
-                Component.createDefaultEnabled = componentSource._enabled === undefined ? true : componentSource._enabled;
-                componentTarget = (target || this._context.rootTarget as Entity).addComponent(clazz);
+                const enabled = componentSource._enabled === undefined ? true : componentSource._enabled;
+                componentTarget = (target || this._context.rootTarget as Entity).addComponent(clazz, enabled);
             }
         }
         else { // Missing component.
-            componentTarget = target!.addComponent(MissingComponent);
-            (componentTarget as MissingComponent).missingObject = componentSource;
+            // TODO:
+            {
+                // componentTarget = target!.addComponent(MissingComponent);
+                // (componentTarget as MissingComponent).missingObject = componentSource;
+            }
 
             if (DEBUG) { console.warn(`Component ${className} is not defined.`); }
         }

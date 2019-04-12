@@ -1,9 +1,9 @@
-import Component from "../core/Component";
-import Entity from "../core/Entity";
-import { ISerializedData, ISerializedObject, IBaseClass, KEY_SERIALIZE, ISerializable, ISerializedStruct, KEY_UUID, KEY_ENTITIES, KEY_COMPONENTS, IUUID, KEY_CHILDREN } from "./types";
+import Component from "../ecs/Component";
+import Entity from "../ecs/Entity";
+import { ISerializedData, ISerializedObject, IBaseClass, KEY_SERIALIZE, ISerializable, ISerializedStruct, KEY_UUID, IUUID } from "./types";
 import { SerializeContext } from "./SerializeContext";
 import { SerializeUtil } from "./SerializeUtil";
-import { IComponentClass } from "../core/types";
+import { IComponentClass } from "../ecs/types";
 
 export { Serializer }
 

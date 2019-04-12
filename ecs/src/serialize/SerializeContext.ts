@@ -1,4 +1,4 @@
-import Entity from "../core/Entity";
+import Entity from "../ecs/Entity";
 import { ISerializedData, DATA_VERSION } from "./types";
 import { ObjectFactory } from "./ObjectFactory";
 

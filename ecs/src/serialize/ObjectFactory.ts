@@ -1,5 +1,5 @@
-import Entity from "../core/Entity";
-import Component from "../core/Component";
+import Entity from "../ecs/Entity";
+import Component from "../ecs/Component";
 
 export { ObjectFactory };
 

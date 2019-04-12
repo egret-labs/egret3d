@@ -1,6 +1,6 @@
-import Component from "../core/Component";
-import Entity from "../core/Entity";
-import Context from "../core/Context";
+import Component from "../ecs/Component";
+import Entity from "../ecs/Entity";
+import Context from "../ecs/Context";
 
 export { DeserializeContext }
 class DeserializeContext {
