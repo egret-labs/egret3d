@@ -172,6 +172,37 @@ namespace paper.editor {
         /**变换 TODO remove*/
         TRANSFROM = "TRANSFROM",
     }
+
+        /**
+     * 装饰器可配置资源类型
+     */
+    export const enum AssetType{
+        /**
+         * 着色器
+         */
+        Shader = 'Shader',
+        /**
+         * 网格
+         */
+        Mesh = 'Mesh',
+        /**
+         * 动画
+         */
+        Animation = 'Animation',
+        /**
+         * 材质
+         */
+        Material = 'Material',
+        /**
+         * 贴图配置文件
+         */
+        TextureDesc = 'TextureDesc',
+        /**
+         * 声音
+         */
+        Sound = "sound",
+    }
+
     /**
      * 自定义装饰器。
      */
