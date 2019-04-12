@@ -56,11 +56,15 @@ namespace paper.editor {
          */
         set?: string;
         /**
+         * 资源类型 适用编辑类型：ASSET
+         */
+        assetType?:AssetType;
+        /**
          * 内容描述 适用编辑类型：ARRAY
          * */
         contentDesc?: { editType: EditType, option?: PropertyOption }
         /**
-         * 
+         * 组件
          */
         componentClass?: IComponentClass<IComponent> | string;
         /**
@@ -172,9 +176,14 @@ namespace paper.editor {
          * 内嵌的。
          */
         NESTED = "NESTED",
-
-        /**变换 TODO remove*/
+        /**
+         * 变换 TODO remove
+         * */
         TRANSFROM = "TRANSFROM",
+        /**
+         * 资源 
+         * */
+        ASSET='ASSET'
     }
 
         /**
