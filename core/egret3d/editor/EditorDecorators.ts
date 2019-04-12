@@ -56,6 +56,10 @@ namespace paper.editor {
          */
         set?: string;
         /**
+         * 内容描述 适用编辑类型：ARRAY
+         * */
+        contentDesc?: { editType: EditType, option?: PropertyOption }
+        /**
          * 
          */
         componentClass?: IComponentClass<IComponent> | string;
