@@ -58,7 +58,7 @@ namespace paper.editor {
         /**
          * 资源类型 适用编辑类型：ASSET
          */
-        assetType?:AssetType;
+        assetType?: AssetType;
         /**
          * 内容描述 适用编辑类型：ARRAY
          * */
@@ -183,13 +183,13 @@ namespace paper.editor {
         /**
          * 资源 
          * */
-        ASSET='ASSET'
+        ASSET = 'ASSET'
     }
 
-        /**
-     * 装饰器可配置资源类型
-     */
-    export const enum AssetType{
+    /**
+ * 装饰器可配置资源类型
+ */
+    export const enum AssetType {
         /**
          * 着色器
          */
@@ -236,8 +236,18 @@ namespace paper.editor {
             }
 
             if (editType !== undefined) {
-                if (option && option.componentClass) {
-                    option.componentClass = egret.getQualifiedClassName(option.componentClass);
+                let currentOption = option;
+                while (currentOption) {
+                    if (currentOption.componentClass) {
+                        currentOption.componentClass = egret.getQualifiedClassName(currentOption.componentClass);
+                    }
+                    if (currentOption.contentDesc) {
+                        currentOption = currentOption.contentDesc.option
+                        continue;
+                    }
+                    else
+                        break;
+
                 }
 
                 target['__props__'].push(new PropertyInfo(property, editType, option));
