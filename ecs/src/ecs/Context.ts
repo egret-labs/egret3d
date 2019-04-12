@@ -141,14 +141,22 @@ export default class Context<TEntity extends Entity> implements IContext<TEntity
      * @param scene 实体被添加到的场景。
      * - 未设置则使用应用程序的激活场景。
      */
-    public createEntity(): TEntity {
+    public createEntity(defaultEnabled: boolean = true): TEntity {
+        const { entityClass } = this;
+        const { requireComponents } = entityClass;
         const entities = this._entities;
-        const entity = new this.entityClass();
-        entity.initialize(this);
+        const entity = new entityClass();
+        entity.initialize(defaultEnabled, this);
         entities[entities.length] = entity;
         this._entitiesDirty = true;
         this._entityCount++;
         this.onEntityCreated.dispatch(entity);
+
+        if (requireComponents !== null) {
+            for (const requireComponent of requireComponents!) {
+                entity.addComponent(requireComponent as IComponentClass<Component>);
+            }
+        }
 
         return entity;
     }

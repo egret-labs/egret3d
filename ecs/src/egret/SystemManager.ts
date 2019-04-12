@@ -1,8 +1,9 @@
-import { SystemOrder, IEntityClass, ISystemClass } from "../core/types";
-import Entity from "../core/Entity";
-import System from "../core/System";
-import Context from "../core/Context";
-import { Clock } from "./components/Clock";
+import { SystemOrder, IEntityClass, ISystemClass, IContext, IEntity } from "../ecs/types";
+import Entity from "../ecs/Entity";
+import System from "../ecs/System";
+import Context from "../ecs/Context";
+
+import Clock from "./components/Clock";
 import Application from "./Application";
 
 type PreSystemPair = [
@@ -73,7 +74,7 @@ export default class SystemManager {
     }
 
     private _registerSystem(system: System<Entity>) {
-        const order = system.order;
+        const {order} = system;
         const {
             _systems,
             _startSystems,
@@ -365,7 +366,7 @@ export default class SystemManager {
      * 为该应用程序注册一个实体上下文。
      * @param entityClass 一个实体类。
      */
-    public registerContext<TContext extends Context<Entity>>(entityClass: IEntityClass<Entity>): TContext {
+    public registerContext<TContext extends Context<TEntity>, TEntity extends Entity>(entityClass: IEntityClass<TEntity>): TContext {
         let context = this.getContext(entityClass);
 
         if (context !== null) {
@@ -377,8 +378,7 @@ export default class SystemManager {
         }
 
         context = Context.create(entityClass);
-
-        this._contexts.push(context);
+        this._contexts.push(context as IContext<IEntity> as Context<Entity>);
 
         return context as TContext;
     }
@@ -386,10 +386,10 @@ export default class SystemManager {
      * 获取该应用程序中一个实体上下文。
      * @param entityClass 一个实体类。
      */
-    public getContext<TContext extends Context<Entity>>(entityClass: IEntityClass<Entity>): TContext | null {
+    public getContext<TContext extends Context<TEntity>, TEntity extends Entity>(entityClass: IEntityClass<TEntity>): TContext | null {
         for (const context of this._contexts) {
             if (context.entityClass === entityClass) {
-                return <any>context as TContext;
+                return context as IContext<IEntity> as TContext;
             }
         }
 

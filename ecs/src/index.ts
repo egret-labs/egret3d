@@ -1,26 +1,29 @@
-import Application from "./application/Application";
-import { Scene } from "./application/components/Scene";
-
+import Application from "./egret/Application";
+import { Scene } from "./egret/components/Scene";
+//
 const application = new Application<Scene>();
-
+//
 application.initialize();
-
+//
 application.start();
-
+//
 function loop(timestamp: number) {
-    const result = application.clock.update(timestamp);
+    if (application.isRunning) {
+        Application.current = application;
 
-    if (result.tickCount > 0) {
-        const { systemManager } = application;
+        const { tickCount, frameCount } = application.clock.update(timestamp);
 
-        systemManager.startup(0);
-        systemManager.execute(result.tickCount, result.frameCount);
-        systemManager.cleanup(result.frameCount);
-        systemManager.teardown();
+        if (tickCount > 0) {
+            const { runningMode, systemManager } = application;
+
+            systemManager.startup(runningMode);
+            systemManager.execute(tickCount, frameCount);
+            systemManager.cleanup(frameCount);
+            systemManager.teardown();
+        }
+
+        requestAnimationFrame(loop);
     }
-
-    // 下一次循环
-    requestAnimationFrame(loop);
 }
 
 requestAnimationFrame(loop);

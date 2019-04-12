@@ -1,14 +1,14 @@
-import { DefaultNames, IScene } from "../types";
-import { component } from "../../core/Decorators";
-import { Parent } from "./Parent";
-import { Node } from "./Node";
+import { NodeNames, IScene } from "../types";
+import { component } from "../../ecs/Decorators";
+import Parent from "./Parent";
+import Node from "./Node";
 /**
  * 基础场景组件。
  */
 @component()
-export class Scene extends Parent implements IScene {
+export default class Scene extends Parent implements IScene {
 
-    public name: string = DefaultNames.Noname;
+    public name: string = NodeNames.Noname;
 
     public addChild(node: Node): Node {
         if (node._parent !== this) {

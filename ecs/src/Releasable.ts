@@ -1,4 +1,4 @@
-import { IReleasable } from "./core/types";
+import { IReleasable } from "./ecs/types";
 /**
  * 
  */

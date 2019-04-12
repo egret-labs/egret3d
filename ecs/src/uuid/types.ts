@@ -1,4 +1,3 @@
-
 /**
  * 唯一识别码类接口。
  */
@@ -11,10 +10,6 @@ export interface IUUIDClass {
      * 注册标识。
      */
     readonly registered: IUUIDClass | null;
-    /**
-     * 注册器。
-     */
-    register(): boolean;
 }
 /**
  * 唯一识别码接口。

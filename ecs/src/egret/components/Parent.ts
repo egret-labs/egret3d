@@ -1,12 +1,12 @@
 import { filterArray } from "../../uuid/Utility";
-import { component } from "../../core/Decorators";
-import Component from "../../core/Component";
-import { Node } from "./Node";
+import { component } from "../../ecs/Decorators";
+import Component from "../../ecs/Component";
+import Node from "./Node";
 /**
  * @ignore
  */
 @component()
-export abstract class Parent extends Component {
+export default abstract class Parent extends Component {
 
     protected _globalEnabledDirty: boolean = true;
     protected _globalEnabled: boolean = false;
@@ -23,6 +23,7 @@ export abstract class Parent extends Component {
      */
     public readonly _children: (Node | null)[] = [];
     /**
+     * @override
      * @internal
      */
     public uninitialize(): void {
@@ -35,6 +36,7 @@ export abstract class Parent extends Component {
         this._children.length = 0;
     }
     /**
+     * @override
      * @internal
      */
     public dispatchEnabledEvent(enabled: boolean): void {
