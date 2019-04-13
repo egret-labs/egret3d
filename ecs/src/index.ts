@@ -1,6 +1,7 @@
 export * from "./uuid/index";
 export * from "./ecs/index";
 export * from "./egret/index";
+export * from "./editor/index";
 
 import { ApplicationInitializeOptions, RunningMode } from "./egret/types";
 import { Application } from "./egret/Application";
