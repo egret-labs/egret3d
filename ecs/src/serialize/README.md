@@ -14,7 +14,24 @@
 
 ## 注意事项
 
+一些字段需要成为保留字, 如果用户的数据结构中使用了如下键值, 会对序列化系统造成影响
+
+```ts
+export const KEY_SERIALIZE: keyof ISerializable = "serialize";
+export const KEY_UUID: keyof IUUID = "uuid";
+export const KEY_CLASS = "class";
+export const KEY_DESERIALIZE = "deserialize";
+export const KEY_COMPONENTS = "components";
+export const KEY_ENTITIES = "entities";
+export const KEY_CHILDREN = "children";
+```
+
 ## TODO
 
-* 规范类型判断
-* 规范错误处理
+* [ ] 规范类型判断
+* [ ] 规范插件接口
+* [ ] 规范错误处理
+* [ ] prefab 支持
+* [ ] MissingComponent 可以对用户更友善
+* [ ] 去掉 any
+* [ ] uuid 生成策略

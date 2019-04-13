@@ -1,6 +1,6 @@
 import { Entity } from "../ecs/Entity";
 import { Component } from "../ecs/Component";
-import { KEY_SERIALIZE, ISerializable, KEY_UUID } from "./types";
+import { KEY_SERIALIZE, ISerializable, KEY_UUID, IBaseClass } from "./types";
 import { Asset } from "../asset/Asset";
 
 export { SerializeUtil };
@@ -36,30 +36,21 @@ class SerializeUtil {
         const typeSource = typeof source;
         const typeTarget = typeof target;
 
+        // 最基本的类型要一致
         if (typeSource !== typeTarget) {
             return false;
         }
 
+        // null 的处理
         if (source === null && target === null) {
             return true;
         }
-
         if (source === null || target === null) {
             return false;
         }
-
-        switch (typeSource) {
-            case "undefined":
-            case "boolean":
-            case "number":
-            case "string":
-            case "symbol":
-            case "function":
-                return source === target;
-
-            case "object":
-            default:
-                break;
+        // 非 null 非 object, 即用严格比较
+        if (typeSource !== 'object') {
+            return source === target;
         }
 
         if (
@@ -121,5 +112,39 @@ class SerializeUtil {
             }
         }
         throw new Error("Unsupported data.");
+    }
+
+    public static getDeserializedKeys(serializedClass: IBaseClass, keys: { [key: string]: string } = {}) {
+        const serializeKeys = serializedClass.__serializeKeys;
+
+        if (serializeKeys) {
+            keys = keys;
+
+            for (const k in serializeKeys) {
+                keys[k] = serializeKeys[k] || k;
+            }
+        }
+
+        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
+            this.getDeserializedKeys(serializedClass.prototype.__proto__.constructor, keys);
+        }
+
+        return keys;
+    }
+
+    public static getDeserializedIgnoreKeys(serializedClass: IBaseClass, keys: string[] | null = null) {
+        if (serializedClass.__deserializeIgnore) {
+            keys = keys || [];
+
+            for (const key of serializedClass.__deserializeIgnore) {
+                keys.push(key);
+            }
+        }
+
+        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
+            this.getDeserializedIgnoreKeys(serializedClass.prototype.__proto__.constructor, keys);
+        }
+
+        return keys;
     }
 }

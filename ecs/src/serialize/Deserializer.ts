@@ -89,10 +89,12 @@ class Deserializer {
                 // 组件实例化
                 if (target instanceof Entity && KEY_COMPONENTS in source) {
                     for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
-                        this._deserializeComponent(components[componentUUID.uuid], target);
+                        this._createComponent(components[componentUUID.uuid], target);
                     }
                 }
             }
+
+            // TODO: // 重新设置 rootID（只有编辑模式需要处理该内容）
         }
 
         if (data.components) {
@@ -108,7 +110,7 @@ class Deserializer {
                 }
                 // 整个反序列化过程只反序列化组件
                 else if (rootTarget) {
-                    component = this._deserializeComponent(componentSource);
+                    component = this._createComponent(componentSource);
                     root = root || component;
                     if (component) {
                         this._deserializeObject(componentSource, component);
@@ -126,13 +128,19 @@ class Deserializer {
 
         if (target instanceof Entity && KEY_COMPONENTS in source) {
             for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
-                this._deserializeComponent(components[componentUUID.uuid], target);
+                this._createComponent(components[componentUUID.uuid], target);
             }
         }
     }
+    /**
+     * 把对象的属性值反序列化到对应的对象
+     *
+     * @param source 反序列化的源数据体
+     * @param target 对应的对象
+     */
     private _deserializeObject(source: ISerializedObject, target: Entity | Component) {
-        const deserializedKeys = this._getDeserializedKeys(target.constructor as IBaseClass);
-        const deserializedIgnoreKeys = this._getDeserializedIgnoreKeys(target.constructor as IBaseClass);
+        const deserializedKeys = SerializeUtil.getDeserializedKeys(target.constructor as IBaseClass);
+        const deserializedIgnoreKeys = SerializeUtil.getDeserializedIgnoreKeys(target.constructor as IBaseClass);
 
         for (const k in source) {
             // 类名不需要反序列化
@@ -167,7 +175,13 @@ class Deserializer {
 
         return target;
     }
-    private _deserializeComponent(componentSource: ISerializedObject, target?: Entity) {
+    /**
+     * 生成对应的 `Component`
+     *
+     * @param componentSource 反序列化的源数据体
+     * @param target 
+     */
+    private _createComponent(componentSource: ISerializedObject, target?: Entity) {
         const className = componentSource.class;
         const clazz = egret.getDefinitionByName(className);
         let componentTarget: Component | null = null;
@@ -185,10 +199,8 @@ class Deserializer {
             }
         }
         else { // Missing component.
-            {
-                componentTarget = target!.addComponent(MissingComponent);
-                (componentTarget as MissingComponent).missingObject = componentSource;
-            }
+            componentTarget = target!.addComponent(MissingComponent);
+            (componentTarget as MissingComponent).missingObject = componentSource;
 
             if (DEBUG) { console.warn(`Component ${className} is not defined.`); }
         }
@@ -199,6 +211,12 @@ class Deserializer {
         return componentTarget;
     }
 
+    /**
+     * 反序列化属性
+     * 
+     * @param source 反序列化的源数据体
+     * @param target 如果属性值对应一个数组或对象, 可以传过来
+     */
     private _deserializeProperty(source: any, target: any = null) {
         if (source === null || source === undefined) { return source; }
         switch (typeof source) {
@@ -265,7 +283,7 @@ class Deserializer {
             else if (uuid in this._context.components) { // Component.
                 return this._context.components[uuid];
             }
-            else if (classCodeOrName) { // Link expand objects and components.
+            else { // Link expand objects and components.
                 if (this._context.context) {
                     for (const entity of this._context.context.entities) {
                         if (entity.uuid === uuid) {
@@ -278,17 +296,22 @@ class Deserializer {
                         }
                     }
                 }
+                console.warn("Cant find corresponding object with link:", source);
+                return undefined;
             }
         }
-        // 嵌套解构
         else if (classCodeOrName) {
             const clazz = egret.getDefinitionByName(classCodeOrName);
 
             if (clazz) {
                 target = new clazz();
-
+                if (target.deserialize && typeof target.default === 'function') {
+                    return target.deserialize(source);
+                }
                 return (target as ISerializable).deserialize(source);
             }
+            console.warn('Can create a ISerializable instance of', classCodeOrName);
+            return undefined;
         }
         // Object
         else {
@@ -300,43 +323,5 @@ class Deserializer {
 
             return target;
         }
-        console.warn("Deserialize error.", source);
-        return undefined;
-    }
-    private _getDeserializedKeys(serializedClass: IBaseClass, keys: { [key: string]: string } = {}) {
-        const serializeKeys = serializedClass.__serializeKeys;
-
-        if (serializeKeys) {
-            keys = keys;
-
-            for (const k in serializeKeys) {
-                keys[k] = serializeKeys[k] || k;
-            }
-        }
-
-        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
-            this._getDeserializedKeys(serializedClass.prototype.__proto__.constructor, keys);
-        }
-
-        return keys;
-    }
-    /**
-     * @param serializedClass 
-     * @param keys 
-     */
-    private _getDeserializedIgnoreKeys(serializedClass: IBaseClass, keys: string[] | null = null) {
-        if (serializedClass.__deserializeIgnore) {
-            keys = keys || [];
-
-            for (const key of serializedClass.__deserializeIgnore) {
-                keys.push(key);
-            }
-        }
-
-        if (serializedClass.prototype && serializedClass.prototype.__proto__.constructor !== Object) {
-            this._getDeserializedIgnoreKeys(serializedClass.prototype.__proto__.constructor, keys);
-        }
-
-        return keys;
     }
 }

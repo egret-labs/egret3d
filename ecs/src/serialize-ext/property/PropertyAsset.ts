@@ -33,8 +33,21 @@ const PropertyAssetSerialize = {
     match: (source: any, _context: SerializeContext) => {
         return (KEY_ASSET in source) && source instanceof Asset;
     },
-    serialize: (_source: any, _context: SerializeContext) => {
-        return null;
+    serialize: (source: any, _context: SerializeContext) => {
+        // 没有名字的 Asset 为非法情况
+        if (!source.name) {
+            return { asset: -1 };
+        }
+
+        const assets = _context.result.assets;
+        let index = assets.indexOf(source.name);
+
+        if (index < 0) {
+            index = assets.length;
+            assets.push(source.name);
+        }
+
+        return { asset: index };
     },
 }
 
