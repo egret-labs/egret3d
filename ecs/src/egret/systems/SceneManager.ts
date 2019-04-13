@@ -1,18 +1,20 @@
 import * as signals from "signals";
-import { SystemOrder } from "../../ecs/types";
-import Entity from "../../ecs/Entity";
-import System from "../../ecs/System";
-import Matcher from "../../ecs/Matcher";
-import Group from "../../ecs/Group";
-import Context from "../../ecs/Context";
+import {
+    SystemOrder,
+    Entity,
+    System,
+    Matcher,
+    Group,
+    Context,
+} from "../../ecs/index";
 
 import { NodeNames, ISceneClass } from "../types";
-import Scene from "../components/Scene";
-import Node from "../components/Node";
+import { Scene } from "../components/Scene";
+import { Node } from "../components/Node";
 /**
  * 应用程序的场景管理器。
  */
-export default class SceneManager<TScene extends Scene> extends System<Entity> {
+export class SceneManager<TScene extends Scene> extends System<Entity> {
     /**
      * 
      */
@@ -61,30 +63,12 @@ export default class SceneManager<TScene extends Scene> extends System<Entity> {
     /**
      * @internal
      */
-    public onEntityRemoved(entity: Entity, group: Group<Entity>) {
-        const { groups } = this;
-
-        if (group === groups[0]) {
-        }
-        else {
-            const node = entity.getRemovedComponent(Node)!;
-
-            if (node.parent === null) {
-                this.activeScene.removeChild(node);
-            }
-        }
+    public onEntityRemoved(_entity: Entity, _group: Group<Entity>) {
     }
     /**
      * @internal
      */
-    public onEntityAdded(entity: Entity, group: Group<Entity>) {
-        const { groups } = this;
-
-        if (group === groups[0]) {
-        }
-        else {
-            this.activeScene.addChild(entity.getComponent(Node)!);
-        }
+    public onEntityAdded(_entity: Entity, _group: Group<Entity>) {
     }
     /**
      * @internal
@@ -93,7 +77,6 @@ export default class SceneManager<TScene extends Scene> extends System<Entity> {
         for (const scene of this.scenes) {
             scene.children; // Remove cache.
         }
-        console.log(123);
     }
     /**
      * 创建一个空场景到该应用程序。

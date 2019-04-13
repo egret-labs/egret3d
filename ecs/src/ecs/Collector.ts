@@ -1,12 +1,11 @@
-
 import { ICollector } from "./types";
-import Entity from "./Entity";
-import Component from "./Component";
-import Group from "./Group";
+import { Entity } from "./Entity";
+import { Component } from "./Component";
+import { Group } from "./Group";
 /**
  * 响应收集器。
  */
-export default class Collector<TEntity extends Entity> implements ICollector<TEntity> {
+export class Collector<TEntity extends Entity> implements ICollector<TEntity> {
     /**
      * @internal
      */

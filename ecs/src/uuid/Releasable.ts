@@ -1,8 +1,8 @@
-import { IReleasable } from "./ecs/types";
+import { IReleasable } from "./types";
 /**
  * 
  */
-export default abstract class Releasable implements IReleasable {
+export abstract class Releasable implements IReleasable {
 
     public static readonly releases: ReadonlyArray<IReleasable> = [];
 

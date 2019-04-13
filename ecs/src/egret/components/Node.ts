@@ -1,12 +1,13 @@
 import { NodeNames, NodeLayer, NodeTags } from "../types";
-import { component } from "../../ecs/Decorators";
-import Parent from "./Parent";
-import Scene from "./Scene";
+import { component, Entity } from "../../ecs/index";
+import { Parent } from "./Parent";
+import { Scene } from "./Scene";
+import { Application } from "../Application";
 /**
  * 基础节点组件。
  */
 @component()
-export default class Node extends Parent {
+export class Node extends Parent {
     public name: string = NodeNames.Noname;
     public tag: NodeTags | string = NodeTags.Untagged;
     public layer: NodeLayer = NodeLayer.Default;
@@ -27,6 +28,15 @@ export default class Node extends Parent {
     }
 
     protected _onChangeParent(_isBefore: boolean, _worldTransformStays: boolean): void {
+    }
+    /**
+     * @override
+     * @internal
+     */
+    public initialize(defaultEnabled: boolean, entity: Entity): void {
+        super.initialize(defaultEnabled, entity);
+
+        Application.current.sceneManager.activeScene.addChild(this);
     }
     /**
      * @override
@@ -80,7 +90,7 @@ export default class Node extends Parent {
             parent.addChild(this);
         }
         else {
-            this._parent = this._scene;
+            this._parent = this._scene as any; // TODO
             this._scene!.addChild(this);
         }
 

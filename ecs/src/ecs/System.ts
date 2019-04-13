@@ -1,15 +1,15 @@
 import { SystemOrder, ISystemClass, ISystem, IMatcher } from "./types";
-import Entity from "./Entity";
-import Component from "./Component";
-import Matcher from "./Matcher";
-import Group from "./Group";
-import Collector from "./Collector";
-import Context from "./Context";
+import { Entity } from "./Entity";
+import { Component } from "./Component";
+import { Matcher } from "./Matcher";
+import { Group } from "./Group";
+import { Collector } from "./Collector";
+import { Context } from "./Context";
 /**
  * 基础系统。
  * - 全部系统的基类。
  */
-export default abstract class System<TEntity extends Entity> implements ISystem<TEntity> {
+export abstract class System<TEntity extends Entity> implements ISystem<TEntity> {
 
     public static readonly executeMode: uint = 0;
     /**

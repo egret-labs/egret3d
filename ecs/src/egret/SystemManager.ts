@@ -1,10 +1,16 @@
-import { SystemOrder, IEntityClass, ISystemClass, IContext, IEntity } from "../ecs/types";
-import Entity from "../ecs/Entity";
-import System from "../ecs/System";
-import Context from "../ecs/Context";
+import {
+    SystemOrder,
+    IEntityClass,
+    ISystemClass,
+    IContext,
+    IEntity,
+    Entity,
+    System,
+    Context,
+} from "../ecs/index";
 
-import Clock from "./components/Clock";
-import Application from "./Application";
+import { Clock } from "./components/Clock";
+import { Application } from "./Application";
 
 type PreSystemPair = [
     ISystemClass<System<Entity>>,
@@ -14,7 +20,7 @@ type PreSystemPair = [
 /**
  * 应用程序的系统管理器。
  */
-export default class SystemManager {
+export class SystemManager {
     /**
      * @internal
      */
@@ -74,7 +80,7 @@ export default class SystemManager {
     }
 
     private _registerSystem(system: System<Entity>) {
-        const {order} = system;
+        const { order } = system;
         const {
             _systems,
             _startSystems,

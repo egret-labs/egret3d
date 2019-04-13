@@ -1,13 +1,13 @@
-import Releasable from "../Releasable";
+import { Releasable } from "../uuid/index";
 import { IComponentClass, IAllOfMatcher, IAnyOfMatcher, INoneOfMatcher } from "./types";
-import Entity from "./Entity";
-import Component from "./Component";
+import { Entity } from "./Entity";
+import { Component } from "./Component";
 
 const _indices: uint[] = [];
 /**
  * 实体组件匹配器。
  */
-export default class Matcher extends Releasable implements IAllOfMatcher {
+export class Matcher extends Releasable implements IAllOfMatcher {
     /**
      * @ignore
      */

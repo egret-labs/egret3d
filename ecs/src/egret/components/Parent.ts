@@ -1,12 +1,11 @@
-import { filterArray } from "../../uuid/Utility";
-import { component } from "../../ecs/Decorators";
-import Component from "../../ecs/Component";
-import Node from "./Node";
+import { filterArray } from "../../uuid/index";
+import { component, Component } from "../../ecs/index";
+import { Node } from "./Node";
 /**
  * @ignore
  */
 @component()
-export default abstract class Parent extends Component {
+export abstract class Parent extends Component {
 
     protected _globalEnabledDirty: boolean = true;
     protected _globalEnabled: boolean = false;

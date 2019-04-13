@@ -1,17 +1,16 @@
 import * as signals from "signals";
-import { SystemOrder } from "../ecs/types";
-import Entity from "../ecs/Entity";
+import { SystemOrder, Entity } from "../ecs/index";
 
 import { ISceneClass, RunningMode, ApplicationInitializeOptions } from "./types";
-import SystemManager from "./SystemManager";
-import SceneManager from "./systems/SceneManager";
-import Clock from "./components/Clock";
-import Scene from "./components/Scene";
+import { SystemManager } from "./SystemManager";
+import { SceneManager } from "./systems/SceneManager";
+import { Clock } from "./components/Clock";
+import { Scene } from "./components/Scene";
 /**
  * 基础应用程序。
  * - 应用程序的基类。
  */
-export default class Application<TScene extends Scene> {
+export class Application<TScene extends Scene> {
     /**
      * 
      */
