@@ -1,10 +1,11 @@
-import Component from "../core/Component";
+import Component from "../../ecs/Component";
+import { serializedField } from "../Decorators";
 
 export class MissingComponent extends Component {
     /**
      * 丢失的组件类名
      */
-    @editor.property(editor.EditType.TEXT, { readonly: true })
+    // @editor.property(editor.EditType.TEXT, { readonly: true }) // TODO:
     public get missingClass(): string {
         if (this.missingObject) {
             return this.missingObject.class;

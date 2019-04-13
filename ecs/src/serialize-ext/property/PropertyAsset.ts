@@ -1,12 +1,13 @@
-import { Deserializer } from "../Deserializer";
-import { DeserializeContext } from "../DeserializeContext";
-import { SerializeContext } from "../SerializeContext";
+import { Deserializer } from "../../serialize/Deserializer";
+import { DeserializeContext } from "../../serialize/DeserializeContext";
+import { SerializeContext } from "../../serialize/SerializeContext";
+import { Serializer } from "../../serialize/Serializer";
+import { Asset } from "../../asset/Asset";
 
 export { PropertyAssetDeserialize, PropertyAssetSerialize };
 
 // TODO: IAssetReference
 type IAssetReference = any;
-const Assets: any = {};
 
 const KEY_ASSET: keyof IAssetReference = "asset";
 const PropertyAssetDeserialize = {
@@ -21,7 +22,7 @@ const PropertyAssetDeserialize = {
             // Shader 
             // Mesh
             // ...
-            return Assets.find(context.assets[assetIndex]);
+            return Asset.find(context.assets[assetIndex]);
         }
         return null;
     },
@@ -29,10 +30,13 @@ const PropertyAssetDeserialize = {
 
 const PropertyAssetSerialize = {
     name: 'asset',
-    match: (source: any) => (KEY_ASSET in source),
+    match: (source: any, context: SerializeContext) => {
+        return (KEY_ASSET in source) && source instanceof Asset;
+    },
     serialize: (source: any, context: SerializeContext) => {
         return null;
     },
 }
 
 Deserializer.propertyHandlers[PropertyAssetDeserialize.name] = PropertyAssetDeserialize;
+Serializer.propertyHandlers[PropertyAssetSerialize.name] = PropertyAssetSerialize;
