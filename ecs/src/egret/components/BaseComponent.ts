@@ -24,6 +24,7 @@ export abstract class BaseComponent extends Component {
         super.initialize(defaultEnabled, entity);
 
         (this.gameEntity as GameEntity) = entity as IEntity as GameEntity;
+        (this.gameObject as GameEntity) = entity as IEntity as GameEntity;
     }
     /**
      * @override
@@ -33,5 +34,11 @@ export abstract class BaseComponent extends Component {
         super.uninitialize();
 
         (this.gameEntity as GameEntity) = null!;
+        (this.gameObject as GameEntity) = null!;
     }
+
+    /**
+     * @deprecated
+     */
+    public readonly gameObject: GameEntity = null!;
 }

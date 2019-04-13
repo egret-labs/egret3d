@@ -61,6 +61,7 @@ export class GameEntity<TNode extends Node = Node> extends Entity {
 
         if (component instanceof Node) {
             (this.node as TNode) = component as TNode;
+            (this.transform as TNode) = component as TNode;
         }
         else if (component instanceof BaseRenderer) {
             (this.renderer as BaseRenderer) = component;
@@ -78,6 +79,7 @@ export class GameEntity<TNode extends Node = Node> extends Entity {
 
         if (component === this.node) {
             (this.node as TNode) = null!;
+            (this.transform as TNode) = null!;
         }
         else if (component === this.renderer) {
             (this.renderer as BaseRenderer | null) = null;
@@ -103,4 +105,8 @@ export class GameEntity<TNode extends Node = Node> extends Entity {
 
         return this._enabled;
     }
+    /**
+     * @deprecated
+     */
+    public readonly transform: TNode = null!;
 }
