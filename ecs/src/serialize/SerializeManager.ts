@@ -1,0 +1,5 @@
+export { SerializeManager }
+
+class SerializeManager {
+    
+}
