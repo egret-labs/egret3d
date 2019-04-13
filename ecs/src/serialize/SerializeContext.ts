@@ -1,8 +1,8 @@
-import Entity from "../ecs/Entity";
+import { Entity } from "../ecs/Entity";
 import { ISerializedData, DATA_VERSION } from "./types";
 import { SerializeUtil } from "./SerializeUtil";
 
-export { SerializeContext }
+export { SerializeContext };
 
 /**
  * @internal
@@ -17,7 +17,7 @@ class SerializeContext {
     private _defaultGameObjects: StringMap<Entity> = {};
 
     public getEntityTemplate(className: string) {
-        let entity: Entity | null = this._defaultGameObjects[className]
+        let entity: Entity | null = this._defaultGameObjects[className];
         if (!entity) {
             entity = SerializeUtil.factory!.createEntityTemplate(className);
             if (!entity) { return null; }

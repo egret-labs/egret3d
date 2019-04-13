@@ -1,18 +1,18 @@
-import Entity from "../ecs/Entity";
-import Component from "../ecs/Component";
+import { Entity } from "../ecs/Entity";
+import { Component } from "../ecs/Component";
 import { SerializeUtil } from "./SerializeUtil";
 
 /**
  * @internal
  */
 class ObjectFactory implements ObjectFactory {
-    public createEntityTemplate(className: string): Entity | null {
+    public createEntityTemplate(_className: string): Entity | null {
         return null;
     }
-    public createComponentTemplate(entityClassName: string, componentClassName: string): Component | null {
+    public createComponentTemplate(_entityClassName: string, _componentClassName: string): Component | null {
         return null;
     }
-    public createEntity(className: string): Entity | null {
+    public createEntity(_className: string): Entity | null {
         return null;
     }
 }

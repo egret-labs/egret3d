@@ -1,5 +1,8 @@
 export * from "./uuid/index";
 export * from "./ecs/index";
+export * from "./asset/index";
+export * from "./serialize/index";
+export * from "./serialize-ext/index";
 export * from "./egret/index";
 export * from "./editor/index";
 

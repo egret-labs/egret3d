@@ -1,4 +1,4 @@
-import UUID from "../uuid/UUID";
+import { UUID } from "../uuid/UUID";
 
 /**
     * 基础资源。

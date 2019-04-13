@@ -1,5 +1,5 @@
-import Entity from "../ecs/Entity";
-import Component from "../ecs/Component";
+import { Entity } from "../ecs/Entity";
+import { Component } from "../ecs/Component";
 import { KEY_SERIALIZE, ISerializable, KEY_UUID } from "./types";
 import { Asset } from "../asset/Asset";
 

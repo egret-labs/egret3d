@@ -1,8 +1,8 @@
-import Component from "../ecs/Component";
-import Entity from "../ecs/Entity";
-import Context from "../ecs/Context";
+import { Component } from "../ecs/Component";
+import { Entity } from "../ecs/Entity";
+import { Context } from "../ecs/Context";
 
-export { DeserializeContext }
+export { DeserializeContext };
 class DeserializeContext {
     public keepUUID: boolean = false;
     public rootTarget: Entity | null = null;

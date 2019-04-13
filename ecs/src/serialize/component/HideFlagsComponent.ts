@@ -1,7 +1,7 @@
-import Component from "../../ecs/Component";
+import { Component } from "../../ecs/Component";
 import { serializedField } from "../Decorators";
 
-export { HideFlagsComponent, HideFlags }
+export { HideFlagsComponent, HideFlags };
 
 /**
  *
@@ -45,7 +45,7 @@ class HideFlagsComponent extends Component {
         return !!(this._flag & HideFlags.DontSave);
     }
     public set dontSave(save: boolean) {
-        if (save) { 
+        if (save) {
             this._flag = this._flag | HideFlags.DontSave;
         } else {
             this._flag = this._flag & ~(HideFlags.DontSave);

@@ -30,10 +30,10 @@ const PropertyAssetDeserialize = {
 
 const PropertyAssetSerialize = {
     name: 'asset',
-    match: (source: any, context: SerializeContext) => {
+    match: (source: any, _context: SerializeContext) => {
         return (KEY_ASSET in source) && source instanceof Asset;
     },
-    serialize: (source: any, context: SerializeContext) => {
+    serialize: (_source: any, _context: SerializeContext) => {
         return null;
     },
 }

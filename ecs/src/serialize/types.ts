@@ -1,3 +1,5 @@
+import { IUUID } from "../index";
+
 export const DATA_VERSION: string = "5";
 /**
  * @private
@@ -11,15 +13,6 @@ export const KEY_COMPONENTS = "components";
 export const KEY_ENTITIES = "entities";
 export const KEY_CHILDREN = "children";
 
-/**
- * 
- */
-export interface IUUID {
-    /**
-     * 对象的唯一标识。
-     */
-    readonly uuid: string;
-}
 /**
  * 
  */

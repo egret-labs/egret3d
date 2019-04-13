@@ -1,16 +1,17 @@
-import Component from "../ecs/Component";
-import Entity from "../ecs/Entity";
-import { ISerializedData, ISerializedObject, IBaseClass, KEY_SERIALIZE, ISerializable, ISerializedStruct, KEY_UUID, IUUID } from "./types";
+import { Component } from "../ecs/Component";
+import { Entity } from "../ecs/Entity";
+import { ISerializedData, ISerializedObject, IBaseClass, KEY_SERIALIZE, ISerializable, ISerializedStruct, KEY_UUID } from "./types";
 import { SerializeContext } from "./SerializeContext";
 import { SerializeUtil } from "./SerializeUtil";
 import { IComponentClass } from "../ecs/types";
 import { HideFlagsComponent, HideFlags } from "./component/HideFlagsComponent";
+import { IUUID } from "../index";
 
-export { Serializer }
+export { Serializer };
 
 interface IPropertySerialier {
-    name: 'asset',
-    match: (source: any, context: SerializeContext) => boolean,
+    name: 'asset';
+    match: (source: any, context: SerializeContext) => boolean;
     serialize: (source: any, context: SerializeContext) => any;
 }
 
@@ -74,7 +75,7 @@ class Serializer {
                 return false;
             }
 
-            if (!source.entity) { 
+            if (!source.entity) {
                 console.warn(`Component`, source, 'has not an entity');
                 return false;
             }
@@ -172,7 +173,7 @@ class Serializer {
         }
 
         if (Serializer.propertyHandlers.length) {
-            for (let k of Object.keys(Serializer.propertyHandlers)) {
+            for (const k of Object.keys(Serializer.propertyHandlers)) {
                 const handler = Serializer.propertyHandlers[k];
                 if (handler.match(source, this._context)) {
                     return handler.serialize(source, this._context);
@@ -194,7 +195,7 @@ class Serializer {
     private serializeStruct(source: Entity | Component): ISerializedStruct {
         const className = egret.getQualifiedClassName(source);
         const target = { class: className } as ISerializedStruct;
-        this._serializeChildren(source, target, null, null);
+        this._serializeChildren(source, target, null);
 
         return target;
     }

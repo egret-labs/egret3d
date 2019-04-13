@@ -1,11 +1,11 @@
-import Entity from "../ecs/Entity";
-import Component from "../ecs/Component";
+import { Entity } from "../ecs/Entity";
+import { Component } from "../ecs/Component";
 import { ISerializedData } from "./types";
 import { Serializer } from "./Serializer";
 import { Deserializer } from "./Deserializer";
-import Context from "../ecs/Context";
+import { Context } from "../ecs/Context";
 
-export { clone, deserialize, serialize }
+export { clone, deserialize, serialize };
 
 const serializer = new Serializer();
 const deserializer = new Deserializer();

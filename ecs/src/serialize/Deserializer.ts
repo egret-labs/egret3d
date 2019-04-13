@@ -1,10 +1,11 @@
-import { IBaseClass, ISerializedObject, ISerializable, ISerializedData, KEY_COMPONENTS, KEY_CLASS, KEY_UUID, KEY_DESERIALIZE, IUUID } from "./types";
+import { IBaseClass, ISerializedObject, ISerializable, ISerializedData, KEY_COMPONENTS, KEY_CLASS, KEY_UUID, KEY_DESERIALIZE } from "./types";
 import { SerializeUtil } from "./SerializeUtil";
-import Component from "../ecs/Component";
-import Entity from "../ecs/Entity";
+import { Component } from "../ecs/Component";
+import { Entity } from "../ecs/Entity";
 import { MissingComponent } from "./component/MissingComponent";
 import { DeserializeContext } from "./DeserializeContext";
-import Context from "../ecs/Context";
+import { Context } from "../ecs/Context";
+import { IUUID } from "../index";
 
 export { Deserializer };
 
@@ -55,7 +56,7 @@ class Deserializer {
         if (data.objects) {
             for (const source of data.objects) {
                 const className = source.class;
-                let target: Entity | null = SerializeUtil.factory!.createEntity(className);
+                const target: Entity | null = SerializeUtil.factory!.createEntity(className);
 
                 // 对象无法生成
                 if (!target) { continue; }

@@ -1,4 +1,4 @@
-import Component from "../../ecs/Component";
+import { Component } from "../../ecs/Component";
 import { serializedField } from "../Decorators";
 
 export class MissingComponent extends Component {

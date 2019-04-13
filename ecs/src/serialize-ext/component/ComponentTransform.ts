@@ -1,7 +1,8 @@
-import { ISerializedObject, IUUID } from "../../serialize/types";
-import Node from "../../egret/components/Node";
+import { ISerializedObject } from "../../serialize/types";
+import { Node } from "../../egret/components/Node";
 import { Deserializer } from "../../serialize/Deserializer";
 import { DeserializeContext } from "../../serialize/DeserializeContext";
+import { IUUID } from "../../uuid/index";
 
 export { ComponentTransform };
 
