@@ -105,17 +105,13 @@ export interface IBaseClass extends Function {
     /**
      * @internal
      */
-    readonly __owner?: IBaseClass;
+    __deserializeIgnore?: string[];
     /**
      * @internal
      */
-    readonly __deserializeIgnore?: string[];
-    /**
-     * @internal
-     */
-    readonly __serializeKeys?: { [key: string]: string | null };
-    /**
-     * @internal
-     */
-    readonly __onRegister: () => boolean;
+    __serializeKeys?: { [key: string]: string | null };
+    // /**
+    //  * @internal
+    //  */
+    // readonly __onRegister: () => boolean;
 }

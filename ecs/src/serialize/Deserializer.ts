@@ -2,26 +2,28 @@ import { IBaseClass, ISerializedObject, ISerializable, ISerializedData, KEY_COMP
 import { SerializeUtil } from "./SerializeUtil";
 import Component from "../ecs/Component";
 import Entity from "../ecs/Entity";
-import { MissingComponent } from "../component/MissingComponent";
-import { ObjectFactory } from "./ObjectFactory";
+import { MissingComponent } from "./component/MissingComponent";
 import { DeserializeContext } from "./DeserializeContext";
 import Context from "../ecs/Context";
 
 export { Deserializer };
 
-interface IComponentSerialier {
+interface IComponentDeserialier {
     name: string;
     deserialize: (componentSource: ISerializedObject, context: DeserializeContext) => Component | null;
 }
-interface IPropertySerializer {
+interface IPropertyDeserializer {
     name: string;
     match: (source: any) => boolean;
     deserialize: (source: any, context: DeserializeContext) => string | null;
 }
 
+/**
+ * @internal
+ */
 class Deserializer {
-    public static componentHandlers: StringMap<IComponentSerialier> = {};
-    public static propertyHandlers: StringMap<IPropertySerializer> = {};
+    public static componentHandlers: StringMap<IComponentDeserialier> = {};
+    public static propertyHandlers: StringMap<IPropertyDeserializer> = {};
 
     public root: Entity | Component | null = null;
     private _context = new DeserializeContext();
@@ -30,7 +32,7 @@ class Deserializer {
         data: ISerializedData,
         config: StringMap<any> | null = null, //keepUUID: boolean = false, makeLink: boolean = false,
         context: Context<Entity> | null = null,
-        rootTarget: Entity | null = null, // TODO: 考虑只传一个 component 的情况
+        rootTarget: Entity | null = null, // 考虑只传一个 component 的情况
     ): Entity | Component | null {
         if (data.assets) {
             for (const assetName of data.assets) {
@@ -53,7 +55,7 @@ class Deserializer {
         if (data.objects) {
             for (const source of data.objects) {
                 const className = source.class;
-                let target: Entity | null = ObjectFactory.instance().createEntity(className);
+                let target: Entity | null = SerializeUtil.factory!.createEntity(className);
 
                 // 对象无法生成
                 if (!target) { continue; }
@@ -182,10 +184,9 @@ class Deserializer {
             }
         }
         else { // Missing component.
-            // TODO:
             {
-                // componentTarget = target!.addComponent(MissingComponent);
-                // (componentTarget as MissingComponent).missingObject = componentSource;
+                componentTarget = target!.addComponent(MissingComponent);
+                (componentTarget as MissingComponent).missingObject = componentSource;
             }
 
             if (DEBUG) { console.warn(`Component ${className} is not defined.`); }
@@ -319,7 +320,6 @@ class Deserializer {
         return keys;
     }
     /**
-     * TODO: 可能不需要
      * @param serializedClass 
      * @param keys 
      */

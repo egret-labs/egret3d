@@ -1,5 +1,0 @@
-export { SerializeManager }
-
-class SerializeManager {
-    
-}

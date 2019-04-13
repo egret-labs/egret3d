@@ -1,10 +1,25 @@
 import Entity from "../ecs/Entity";
 import Component from "../ecs/Component";
 import { KEY_SERIALIZE, ISerializable, KEY_UUID } from "./types";
+import { Asset } from "../asset/Asset";
 
-export { SerializeUtil };
+export { ObjectFactory, SerializeUtil };
 
+/**
+ * @internal
+ */
+interface ObjectFactory {
+    createEntityTemplate(className: string): Entity | null;
+    createComponentTemplate(entityClassName: string, componentClassName: string): Component | null;
+    createEntity(className: string): Entity | null;
+}
+
+/**
+ * 序列化/反序列化 ⚠️(实现内部) 用到的一些工具函数
+ * @internal
+ */
 class SerializeUtil {
+    public static factory: ObjectFactory | null = null;
     public static propertyHasGetterAndSetter(target: any, propName: string): boolean {
         let prototype = Object.getPrototypeOf(target);
 
@@ -18,6 +33,7 @@ class SerializeUtil {
         }
         return false;
     }
+
     public static equal(source: any, target: any): boolean {
         const typeSource = typeof source;
         const typeTarget = typeof target;
@@ -75,8 +91,7 @@ class SerializeUtil {
         }
 
         if (
-            // TODO: Asset
-            // source instanceof Asset ||
+            source instanceof Asset ||
             source instanceof Entity ||
             source instanceof Component
         ) {
@@ -101,9 +116,12 @@ class SerializeUtil {
         }
 
         if (KEY_UUID in source) {
-            return source.uuid === target.uuid;
+            for (const k in source) {
+                if (!this.equal(source[k], target[k])) {
+                    return false;
+                }
+            }
         }
-
         throw new Error("Unsupported data.");
     }
 }

@@ -1,18 +1,11 @@
 import Entity from "../ecs/Entity";
 import Component from "../ecs/Component";
+import { SerializeUtil } from "./SerializeUtil";
 
-export { ObjectFactory };
-
-class ObjectFactory {
-    public static instance() {
-        this._instance = this._instance || new ObjectFactory();
-        return this._instance;
-    }
-    private static _instance: ObjectFactory | null = null;
-
-    // singleton
-    private constructor() {}
-
+/**
+ * @internal
+ */
+class ObjectFactory implements ObjectFactory {
     public createEntityTemplate(className: string): Entity | null {
         return null;
     }
@@ -23,3 +16,5 @@ class ObjectFactory {
         return null;
     }
 }
+
+SerializeUtil.factory = new ObjectFactory();

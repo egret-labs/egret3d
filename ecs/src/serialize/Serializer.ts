@@ -4,41 +4,50 @@ import { ISerializedData, ISerializedObject, IBaseClass, KEY_SERIALIZE, ISeriali
 import { SerializeContext } from "./SerializeContext";
 import { SerializeUtil } from "./SerializeUtil";
 import { IComponentClass } from "../ecs/types";
+import { HideFlagsComponent, HideFlags } from "./component/HideFlagsComponent";
 
 export { Serializer }
 
-// TODO:
-const _ignoreKeys: string[] = ["extras"];
+interface IPropertySerialier {
+    name: 'asset',
+    match: (source: any, context: SerializeContext) => boolean,
+    serialize: (source: any, context: SerializeContext) => any;
+}
 
+/**
+ * @internal
+ */
 class Serializer {
-    public context: SerializeContext = new SerializeContext();
+    public static propertyHandlers: StringMap<IPropertySerialier> = {};
+    private _context: SerializeContext = new SerializeContext();
 
-    public serialize(source: Entity | Component, entity?: Entity, config?: StringMap<any>): ISerializedData {
-        if (this.context.running) {
+    public serialize(source: Entity | Component, config?: StringMap<any>): ISerializedData {
+        return this._serialize(source, config);
+    }
+    private _serialize(source: Entity | Component, config?: StringMap<any>): ISerializedData {
+        if (this._context.running) {
             console.error("The deserialization is not complete.");
         }
 
         if (config) {
-            this.context.inline = config.prefab && config.prefab.inline;
+            this._context.inline = config.prefab && config.prefab.inline;
         }
 
-        this.context.entity = entity || null;
-        this.context.running = true;
+        this._context.running = true;
         this._serializeObject(source);
 
-        const serializeData = this.context.result;
-        this.context.reset();
+        const serializeData = this._context.result;
+        this._context.reset();
 
         return serializeData;
     }
     private _serializeObject(source: Entity | Component) {
         // 已经序列化过了, 忽略
-        if (this.context.serializeds.indexOf(source.uuid) >= 0) {
+        if (this._context.serializeds.indexOf(source.uuid) >= 0) {
             return true;
         }
 
         const target = this._serializeReference(source);
-        let ignoreKeys = _ignoreKeys;
         let equalTemplate: Entity | Component | null = null;
 
         if (source instanceof Entity) {
@@ -46,8 +55,13 @@ class Serializer {
                 console.warn("Entity is destroyed");
                 return false;
             }
-            equalTemplate = this.context.getEntityTemplate(egret.getQualifiedClassName(source));
-            this.context.result.objects!.push(target);
+
+            // 设置了不保存
+            const hideFlags = source.getComponent(HideFlagsComponent);
+            if (hideFlags && hideFlags.dontSave) { return false; }
+
+            equalTemplate = this._context.getEntityTemplate(egret.getQualifiedClassName(source));
+            this._context.result.objects!.push(target);
         }
         else if (source instanceof Component) {
             if (source.isDestroyed) {
@@ -55,22 +69,24 @@ class Serializer {
                 return false;
             }
 
-            // TODO:
-            {
-                // if (source.hideFlags & HideFlags.DontSave) {
-                //     return false;
-                // }
+            // TODO: 需要写一个装饰器
+            if ((source as any).hideFlags & HideFlags.DontSave) {
+                return false;
             }
 
-            equalTemplate = this.context.entity!.getOrAddComponent(source.constructor as IComponentClass<Component>);
-            this.context.result.components.push(target as ISerializedObject);
+            if (!source.entity) { 
+                console.warn(`Component`, source, 'has not an entity');
+                return false;
+            }
+            equalTemplate = source.entity!.getOrAddComponent(source.constructor as IComponentClass<Component>);
+            this._context.result.components.push(target as ISerializedObject);
         }
         else {
-            this.context.result.objects.push(target);
+            this._context.result.objects.push(target);
         }
 
-        this.context.serializeds.push(source.uuid);
-        this._serializeChildren(source, target, equalTemplate, ignoreKeys);
+        this._context.serializeds.push(source.uuid);
+        this._serializeChildren(source, target, equalTemplate);
 
         return true;
     }
@@ -82,7 +98,6 @@ class Serializer {
         source: IUUID,
         target: ISerializedObject | ISerializedStruct,
         equalTemplate: Entity | Component | null,
-        ignoreKeys: string[] | null,
     ) {
         const serializedKeys = this._getSerializedKeys(source.constructor as IBaseClass);
 
@@ -90,7 +105,6 @@ class Serializer {
             for (const k in serializedKeys) {
                 if (
                     equalTemplate &&
-                    (!ignoreKeys || ignoreKeys.indexOf(k) < 0) &&
                     SerializeUtil.equal((source as any)[k], (equalTemplate as any)[k])
                 ) {
                     continue;
@@ -157,55 +171,21 @@ class Serializer {
             return (source as ISerializable).serialize();
         }
 
+        if (Serializer.propertyHandlers.length) {
+            for (let k of Object.keys(Serializer.propertyHandlers)) {
+                const handler = Serializer.propertyHandlers[k];
+                if (handler.match(source, this._context)) {
+                    return handler.serialize(source, this._context);
+                }
+            }
+        }
         // 生成引用
         if (KEY_UUID in source) {
-            // TODO:
-            {
-                // if (source instanceof Scene) { // Cannot serialize scene reference.
-                //     return undefined; // Pass.
-                // }
-
-                // if (source instanceof Asset) {
-                //     return serializeAsset(source);
-                // }
-            }
-
             if (source instanceof Entity || source instanceof Component) {
-                // TODO:
-                {
-                    // if (source instanceof Entity && ((source as Entity).hideFlags & paper.HideFlags.DontSave)) {
-                    //     return undefined; // Pass.
-                    // }
-
-                    // if (source instanceof Component && ((source as Component).hideFlags & paper.HideFlags.DontSave)) {
-                    //     return undefined; // Pass.
-                    // }
-                }
-                // TODO:
-                {
-                    // if (parent) {
-                    //     if (parent instanceof Scene) {
-                    //         if (key === KEY_ENTITIES) {
-                    //             return this._serializeObject(source) ? { uuid: source.uuid } : undefined; // Pass.
-                    //         }
-                    //     }
-                    //     else if (parent instanceof Entity) {
-                    //         if (key === KEY_COMPONENTS) {
-                    //             return this._serializeObject(source) ? { uuid: source.uuid } : undefined; // Pass.
-                    //         }
-                    //     }
-                    //     else if (key === KEY_CHILDREN) {
-                    //         if (parent instanceof BaseTransform) {
-                    //             return this._serializeObject((source as Component).entity) ? { uuid: source.uuid } : undefined; // Pass.
-                    //         }
-                    //     }
-                    // }
-                }
-
-                return this._serializeReference(source);
+                return this._serializeObject(source) ? { uuid: source.uuid } : undefined; // Pass.
+            } else {
+                return this.serializeStruct(source);
             }
-
-            return this.serializeStruct(source);
         }
 
         console.error("Serialize error.", source);
