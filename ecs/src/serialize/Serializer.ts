@@ -10,7 +10,7 @@ import { IUUID } from "../index";
 export { Serializer };
 
 interface IPropertySerialier {
-    name: 'asset';
+    name: string;
     match: (source: any, context: SerializeContext) => boolean;
     serialize: (source: any, context: SerializeContext) => any;
 }

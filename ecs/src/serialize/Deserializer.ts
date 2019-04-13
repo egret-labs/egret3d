@@ -16,7 +16,7 @@ interface IComponentDeserialier {
 interface IPropertyDeserializer {
     name: string;
     match: (source: any) => boolean;
-    deserialize: (source: any, context: DeserializeContext) => string | null;
+    deserialize: (source: any, context: DeserializeContext) => any;
 }
 
 /**
