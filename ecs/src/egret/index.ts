@@ -10,3 +10,11 @@ export * from "./components/Behaviour";
 export * from "./systems/SceneManager";
 export * from "./SystemManager";
 export * from "./Application";
+/**
+ * @deprecated
+ */
+export { GameEntity as GameObject } from "./entities/GameEntity";
+/**
+ * @deprecated
+ */
+export { Node as Transform } from "./components/Node";
