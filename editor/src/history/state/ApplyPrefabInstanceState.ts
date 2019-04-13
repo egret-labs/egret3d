@@ -17,7 +17,7 @@ namespace paper.editor {
 
         public static create(applyData: editor.ApplyData, applyPrefabRootId: string, prefabName: string): ApplyPrefabInstanceState | null {
             const state = new ApplyPrefabInstanceState();
-            const prefab:Prefab | null = paper.Asset.find(prefabName);
+            const prefab: Prefab | null = paper.Asset.find(prefabName);
             if (!prefab) {
                 console.log(`apply prefab can not find asset ${prefabName}`);
                 return null;
@@ -26,7 +26,7 @@ namespace paper.editor {
 
             let data: ApplyPrefabInstanceStateData = {
                 applyPrefabRootId,
-                prefabAssetName:prefab.name,
+                prefabAssetName: prefab.name,
                 applyData,
                 cachePrefabSerializedData
             };
@@ -42,7 +42,7 @@ namespace paper.editor {
 
         public undo(): boolean {
             if (super.undo()) {
-                const prefab:Prefab | null = this.getPrefabAsset();
+                const prefab: Prefab | null = this.getPrefabAsset();
                 if (!prefab) {
                     return false;
                 }
@@ -194,51 +194,55 @@ namespace paper.editor {
             }
         }
 
-        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any) {
+        protected dispathPropertyEvent(modifyObj: any, propName: string[], newValue: any) {
             this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
         }
 
-        private modifyPrefabGameObjectPropertyValues(linkedId: string, tempObj: GameObject, valueList: any[]) {
+        private modifyPrefabGameObjectPropertyValues(linkedId: string, tempObj: GameObject, valueList: HistoryProperyInfo[]) {
             let prefabObj = this.getGameObjectByLinkedId(tempObj, linkedId);
             let objects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
             valueList.forEach((propertyValue) => {
-                const { propName, copyValue, valueEditType } = propertyValue;
-                let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                let newValue = this.editorModel.deserializeProperty(propertyValue.propName, propertyValue.propertyInfo);
 
                 objects.forEach(object => {
-                    if (paper.equal((object as any)[propName], (prefabObj as any)[propName])) {
-                        this.editorModel.setTargetProperty(propName, object, newValue, valueEditType);
-                        this.dispathPropertyEvent(object, propName, newValue);
+                    let obj1 = this.editorModel.getTargetByPropertyChain(propertyValue.propName, object);
+                    let obj2 = this.editorModel.getTargetByPropertyChain(propertyValue.propName, prefabObj);
+
+                    if (paper.equal(obj1[propertyValue.propName.length - 1], obj2[propertyValue.propName.length - 1])) {
+                        this.editorModel.setTargetProperty(propertyValue.propName, object, newValue, propertyValue.propertyInfo.editType);
+                        this.dispathPropertyEvent(object, propertyValue.propName, newValue);
                     }
                 });
 
-                this.editorModel.setTargetProperty(propName, prefabObj, newValue, valueEditType);
+                this.editorModel.setTargetProperty(propertyValue.propName, prefabObj, newValue, propertyValue.propertyInfo.editType);
             });
 
             this.dispatchEditorModelEvent(EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
         }
 
-        public modifyPrefabComponentPropertyValues(linkedId: string, componentUUid: string, tempObj: GameObject, valueList: any[]) {
+        public modifyPrefabComponentPropertyValues(linkedId: string, componentUUid: string, tempObj: GameObject, valueList: HistoryProperyInfo[]) {
             let prefabObj = this.getGameObjectByLinkedId(tempObj, linkedId) as GameObject;
             let objects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
             for (let k: number = 0; k < prefabObj.components.length; k++) {
                 let prefabComp = prefabObj.components[k];
                 if (prefabComp.uuid === componentUUid) {
                     valueList.forEach((propertyValue) => {
-                        const { propName, copyValue, valueEditType } = propertyValue;
-                        let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
+                        let newValue = this.editorModel.deserializeProperty(propertyValue.copyValue, propertyValue.propertyInfo);
 
                         objects.forEach(object => {
                             let objectComp = this.editorModel.getComponentByAssetId(object, prefabComp.extras!.linkedID!);
                             if (objectComp !== null) {
-                                if (paper.equal((objectComp as any)[propName], (prefabComp as any)[propName])) {
-                                    this.editorModel.setTargetProperty(propName, objectComp, newValue, valueEditType);
-                                    this.dispathPropertyEvent(objectComp, propName, newValue);
+                                let obj1 = this.editorModel.getTargetByPropertyChain(propertyValue.propName, objectComp);
+                                let obj2 = this.editorModel.getTargetByPropertyChain(propertyValue.propName, prefabComp);
+
+                                if (paper.equal(obj1[propertyValue.propName.length - 1], obj2[propertyValue.propName.length - 1])) {
+                                    this.editorModel.setTargetProperty(propertyValue.propName, objectComp, newValue, propertyValue.propertyInfo.editType);
+                                    this.dispathPropertyEvent(objectComp, propertyValue.propName, newValue);
                                 }
                             }
                         });
 
-                        this.editorModel.setTargetProperty(propName, prefabComp, newValue, valueEditType);
+                        this.editorModel.setTargetProperty(propertyValue.propName, prefabComp, newValue, propertyValue.propertyInfo.editType);
                     });
                 }
             }
@@ -315,36 +319,36 @@ namespace paper.editor {
             return result;
         }
 
-        private getPrefabAsset(){
-            const prefab:Prefab | null = paper.Asset.find(this.stateData.prefabAssetName);
+        private getPrefabAsset() {
+            const prefab: Prefab | null = paper.Asset.find(this.stateData.prefabAssetName);
 
             if (!prefab) {
                 console.log(`apply prefab can not find asset ${this.stateData.prefabAssetName}`);
             }
-            
+
             return prefab;
         }
 
         public redo(): boolean {
             if (super.redo()) {
-                const prefab:Prefab | null = this.getPrefabAsset();
+                const prefab: Prefab | null = this.getPrefabAsset();
 
                 if (!prefab) {
                     return false;
                 }
 
-                const applyGameObject:GameObject | null = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
+                const applyGameObject: GameObject | null = Editor.activeEditorModel.getGameObjectByUUid(this.stateData.applyPrefabRootId);
                 if (!applyGameObject) {
                     return false;
                 }
 
-                const tempPrefabObject:GameObject | null = prefab.createInstance(Application.sceneManager.globalScene, true);
+                const tempPrefabObject: GameObject | null = prefab.createInstance(Application.sceneManager.globalScene, true);
                 if (!tempPrefabObject) {
                     return false;
                 }
                 tempPrefabObject.enabled = false;
 
-                const tempGameObjects:GameObject[] = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
+                const tempGameObjects: GameObject[] = Editor.activeEditorModel.getAllGameObjectsFromPrefabInstance(tempPrefabObject);
 
                 for (const gameObj of tempGameObjects!) {
                     const applyData: editor.ApplyDataDetail = this.stateData.applyData[gameObj!.extras!.linkedID!];

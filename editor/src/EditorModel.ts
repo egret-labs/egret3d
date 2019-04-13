@@ -81,19 +81,19 @@ namespace paper.editor {
             }
         }
         public setTransformProperty(propName: string, propOldValue: any, propNewValue: any, target: BaseComponent): void {
-            let valueEditType: paper.editor.EditType | null = getEditType(target, propName);
+            let propertyInfo: paper.editor.PropertyInfo | null = getPropertyInfo(target, propName);
 
-            if (valueEditType !== null) {
+            if (propertyInfo !== null) {
                 let newPropertyData = {
                     propName: [propName],
-                    copyValue: this.serializeProperty(propNewValue, valueEditType),
-                    valueEditType
+                    copyValue: this.serializeProperty(propNewValue, propertyInfo),
+                    propertyInfo: propertyInfo
                 };
 
                 let prePropertyData = {
                     propName: [propName],
-                    copyValue: this.serializeProperty(propOldValue, valueEditType),
-                    valueEditType
+                    copyValue: this.serializeProperty(propOldValue, propertyInfo),
+                    propertyInfo: propertyInfo
                 };
 
                 this.createModifyComponent(target.gameObject.uuid, target.uuid, [newPropertyData], [prePropertyData]);
@@ -115,13 +115,13 @@ namespace paper.editor {
             this.addState(state);
         }
 
-        public createModifyScenePropertyState(sceneUUid:string,newValueList: any[], preValueCopylist: any[]){
-            const state = ModifyScenePropertyState.create(sceneUUid,newValueList,preValueCopylist);
+        public createModifyScenePropertyState(sceneUUid: string, newValueList: any[], preValueCopylist: any[]) {
+            const state = ModifyScenePropertyState.create(sceneUUid, newValueList, preValueCopylist);
             this.addState(state);
         }
 
-        public serializeProperty(value: any, editType: paper.editor.EditType): any {
-            switch (editType) {
+        public serializeProperty(value: any, propertyInfo: paper.editor.PropertyInfo): any {
+            switch (propertyInfo.editType) {
                 case paper.editor.EditType.UINT:
                 case paper.editor.EditType.INT:
                 case paper.editor.EditType.FLOAT:
@@ -160,10 +160,14 @@ namespace paper.editor {
                         return null;
                     }
                     return { gameObjuuid: value.gameObjuuid, componentuuid: value.componentuuid };
+                case paper.editor.EditType.ARRAY:
+                    let returnValue = value.map((item: any) => {
+                        return this.serializeProperty(item, propertyInfo.option!.contentDesc as any);
+                    })
+                    return returnValue;
                 case paper.editor.EditType.MATERIAL:
                 case paper.editor.EditType.TRANSFROM:
                 case paper.editor.EditType.SOUND:
-                case paper.editor.EditType.ARRAY:
                     //TODO
                     console.error("not supported!");
                     break;
@@ -172,8 +176,8 @@ namespace paper.editor {
             }
         }
 
-        public deserializeProperty(serializeData: any, editType: paper.editor.EditType) {
-            switch (editType) {
+        public deserializeProperty(serializeData: any, propertyInfo: paper.editor.PropertyInfo) {
+            switch (propertyInfo.editType) {
                 case paper.editor.EditType.UINT:
                 case paper.editor.EditType.INT:
                 case paper.editor.EditType.FLOAT:
@@ -225,10 +229,14 @@ namespace paper.editor {
                         return this.getComponentById(gameObj!, serializeData.componentuuid);
                     }
                     return null;
+                case paper.editor.EditType.ARRAY:
+                    let returnValue = serializeData.map((item: any) => {
+                        return this.deserializeProperty(item,propertyInfo.option!.contentDesc as any);
+                    })
+                    return returnValue;
                 case paper.editor.EditType.MATERIAL:
                 case paper.editor.EditType.TRANSFROM:
                 case paper.editor.EditType.SOUND:
-                case paper.editor.EditType.ARRAY:
                     //TODO
                     console.error("not supported!");
                     return null;
@@ -506,7 +514,7 @@ namespace paper.editor {
             }
 
             //标脏根对象数组（不标脏的话根对象数组和gameobjects的排序会不对）
-            (this.scene as any)['_rootEntitiesDirty']=true;
+            (this.scene as any)['_rootEntitiesDirty'] = true;
         }
         /**
          * 筛选层级中的顶层游戏对象
@@ -583,16 +591,9 @@ namespace paper.editor {
             throw new Error("can not find target");
         }
 
-        public setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void;
-        public setTargetProperty(propNameOrpropertyChain: string | string[], target: any, value: any, editType: paper.editor.EditType) {
-            let propertyName: string;
-
-            if (Array.isArray(propNameOrpropertyChain)) {
-                target = this.getTargetByPropertyChain(propNameOrpropertyChain, target);
-                propertyName = propNameOrpropertyChain[propNameOrpropertyChain.length - 1];
-            } else {
-                propertyName = propNameOrpropertyChain;
-            }
+        public setTargetProperty(propNameOrpropertyChain:string[], target: any, value: any, editType: paper.editor.EditType) {
+            target = this.getTargetByPropertyChain(propNameOrpropertyChain, target);
+            let propertyName: string = propNameOrpropertyChain[propNameOrpropertyChain.length - 1];
 
             if (editType !== paper.editor.EditType.VECTOR2 &&
                 editType !== paper.editor.EditType.VECTOR3 &&

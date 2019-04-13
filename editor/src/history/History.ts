@@ -29,6 +29,12 @@ namespace paper.editor {
         HistoryFree: "HistoryFree"
     };
 
+    export type HistoryProperyInfo={
+        propName:string[],
+        copyValue:any,
+        propertyInfo:paper.editor.PropertyInfo
+    }
+
     export class History {
         public dispatcher: EventDispatcher | null = null;
         private _locked: 0 | 1 | 2 | 3 = 0;

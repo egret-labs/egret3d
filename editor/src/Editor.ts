@@ -30,16 +30,16 @@ namespace paper.editor {
         return retrunList;
     }
     /**
-     * 获取一个实例对象某个属性的编辑类型
+     * 获取一个实例对象某个属性的编辑信息
      * @param classInstance 实例对象
      * @param propName 属性名
      */
-    export function getEditType(classInstance: any, propName: string): paper.editor.EditType | null {
+    export function getPropertyInfo(classInstance: any, propName: string): paper.editor.PropertyInfo | null {
         const editInfoList = getEditInfo(classInstance);
         for (let index = 0; index < editInfoList.length; index++) {
             const element = editInfoList[index];
             if (element.name === propName) {
-                return element.editType;
+                return element;
             }
         }
         return null;

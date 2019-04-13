@@ -4,6 +4,7 @@ namespace paper.editor{
     //添加组件
     export class AddComponentState extends BaseState {
         public static toString(): string {
+
             return "[class common.AddComponentState]";
         }
 

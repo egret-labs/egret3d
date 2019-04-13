@@ -947,9 +947,45 @@ var paper;
              * 内嵌的。
              */
             EditType["NESTED"] = "NESTED";
-            /**变换 TODO remove*/
+            /**
+             * 变换 TODO remove
+             * */
             EditType["TRANSFROM"] = "TRANSFROM";
+            /**
+             * 资源
+             * */
+            EditType["ASSET"] = "ASSET";
         })(EditType = editor.EditType || (editor.EditType = {}));
+        /**
+     * 装饰器可配置资源类型
+     */
+        var AssetType;
+        (function (AssetType) {
+            /**
+             * 着色器
+             */
+            AssetType["Shader"] = "Shader";
+            /**
+             * 网格
+             */
+            AssetType["Mesh"] = "Mesh";
+            /**
+             * 动画
+             */
+            AssetType["Animation"] = "Animation";
+            /**
+             * 材质
+             */
+            AssetType["Material"] = "Material";
+            /**
+             * 贴图配置文件
+             */
+            AssetType["TextureDesc"] = "TextureDesc";
+            /**
+             * 声音
+             */
+            AssetType["Sound"] = "sound";
+        })(AssetType = editor.AssetType || (editor.AssetType = {}));
         /**
          * 自定义装饰器。
          */
@@ -964,16 +1000,37 @@ var paper;
          * @param editType 编辑类型。
          * @param option 配置。
          */
-        function property(editType, option) {
+        function property(editType, option, isArray) {
+            if (isArray === void 0) { isArray = false; }
             return function (target, property) {
                 if (!target.hasOwnProperty('__props__')) {
                     target['__props__'] = [];
                 }
                 if (editType !== undefined) {
-                    if (option && option.componentClass) {
-                        option.componentClass = egret.getQualifiedClassName(option.componentClass);
+                    var currentOption = option;
+                    while (currentOption) {
+                        if (currentOption.componentClass) {
+                            currentOption.componentClass = egret.getQualifiedClassName(currentOption.componentClass);
+                        }
+                        if (currentOption.contentDesc) {
+                            currentOption = currentOption.contentDesc.option;
+                            continue;
+                        }
+                        else
+                            break;
                     }
-                    target['__props__'].push(new PropertyInfo(property, editType, option));
+                    if (isArray) {
+                        var tmpOption = {
+                            contentDesc: {
+                                editType: editType,
+                                option: option
+                            }
+                        };
+                        target['__props__'].push(new PropertyInfo(property, "ARRAY" /* ARRAY */, tmpOption));
+                    }
+                    else {
+                        target['__props__'].push(new PropertyInfo(property, editType, option));
+                    }
                 }
                 else {
                     //TODO:自动分析编辑类型
@@ -6340,6 +6397,9 @@ var paper;
         Context.create = function (entityClass) {
             return new Context(entityClass);
         };
+        /**
+         * @internal
+         */
         Context.prototype._onComponentCreated = function (_a) {
             var entity = _a[0], component = _a[1];
             if (entity.constructor !== this._entityClass) {
@@ -6354,6 +6414,9 @@ var paper;
                 }
             }
         };
+        /**
+         * @internal
+         */
         Context.prototype._onComponentEnabled = function (_a) {
             var entity = _a[0], component = _a[1];
             if (entity.constructor !== this._entityClass) {
@@ -6375,6 +6438,9 @@ var paper;
                 }
             }
         };
+        /**
+         * @internal
+         */
         Context.prototype._onComponentDisabled = function (_a) {
             var entity = _a[0], component = _a[1];
             if (entity.constructor !== this._entityClass) {
@@ -6396,6 +6462,9 @@ var paper;
                 }
             }
         };
+        /**
+         * @internal
+         */
         Context.prototype._onComponentDestroyed = function (_a) {
             var entity = _a[0], component = _a[1];
             if (entity.constructor !== this._entityClass) {
@@ -6959,6 +7028,9 @@ var paper;
             }
             return this._instance;
         };
+        /**
+         * @internal
+         */
         SceneManager.prototype._addScene = function (_a) {
             var scene = _a[0], isActive = _a[1];
             var scenes = this._scenes;
@@ -14142,9 +14214,9 @@ var egret3d;
                 this.scaler = egret3d.math.lerp(viewport.w / screenW, viewport.h / screenH, this._matchFactor);
             }
         };
-        Stage.prototype.initialize = function (_a) {
-            var size = _a.size, screenSize = _a.screenSize;
+        Stage.prototype.initialize = function (sizes) {
             _super.prototype.initialize.call(this);
+            var size = sizes.size, screenSize = sizes.screenSize;
             egret3d.stage = this;
             this._size.w = size.w > 1.0 ? size.w : 1.0;
             this._size.h = size.h > 1.0 ? size.h : 1.0;
@@ -17860,6 +17932,9 @@ var paper;
             var collector = new Collector(group);
             return collector;
         };
+        /**
+         * @internal
+         */
         Collector.prototype._onEntityAdded = function (_a) {
             var group = _a[0], entity = _a[1];
             if (this._group !== group) {
@@ -17871,6 +17946,9 @@ var paper;
             }
             this.addedEntities.push(entity);
         };
+        /**
+         * @internal
+         */
         Collector.prototype._onEntityRemoved = function (_a) {
             var group = _a[0], entity = _a[1];
             if (this._group !== group) {
@@ -17882,6 +17960,9 @@ var paper;
             }
             this.removedEntities.push(entity);
         };
+        /**
+         * @internal
+         */
         Collector.prototype._onComponentEnabled = function (_a) {
             var group = _a[0], component = _a[1];
             if (this._group !== group) {
@@ -17893,6 +17974,9 @@ var paper;
             }
             this.addedComponentes.push(component);
         };
+        /**
+        * @internal
+        */
         Collector.prototype._onComponentDisabled = function (_a) {
             var group = _a[0], component = _a[1];
             if (this._group !== group) {
@@ -27226,6 +27310,8 @@ var paper;
         };
         /**
          * including calculating, status updating, rerendering and logical updating
+         *
+         * @internal
          */
         ECS.prototype._update = function (_a) {
             var _b = _a === void 0 ? { tickCount: 1, frameCount: 1 } : _a, tickCount = _b.tickCount, frameCount = _b.frameCount;

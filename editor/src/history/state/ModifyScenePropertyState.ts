@@ -1,8 +1,8 @@
 namespace paper.editor{
-    type ModifyScenePropertyStateData = {sceneUUid:string,newValueList:any[],preValueCopylist:any[]};
+    type ModifyScenePropertyStateData = {sceneUUid:string,newValueList:HistoryProperyInfo[],preValueCopylist:HistoryProperyInfo[]};
 
     export class ModifyScenePropertyState extends BaseState {
-        public static create(sceneUUid:string,newValueList:any[],preValueCopylist:any[]){
+        public static create(sceneUUid:string,newValueList:HistoryProperyInfo[],preValueCopylist:HistoryProperyInfo[]){
             const state = new ModifyScenePropertyState();
             const data:ModifyScenePropertyStateData = {
                 sceneUUid,
@@ -26,14 +26,13 @@ namespace paper.editor{
             return false;
         }
 
-        private modifyProperty(valueList: any[]) {
+        private modifyProperty(valueList: HistoryProperyInfo[]) {
             let modifyObj = this.editorModel.scene;
             if (modifyObj !== null) {
                 valueList.forEach(async (propertyValue) => {
-                    const { propName, copyValue, valueEditType } = propertyValue;
-                    const newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                    this.editorModel.setTargetProperty(propName, modifyObj, newValue,valueEditType);
-                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
+                    const newValue = this.editorModel.deserializeProperty(propertyValue.copyValue, propertyValue.propertyInfo);
+                    this.editorModel.setTargetProperty(propertyValue.propName, modifyObj, newValue,propertyValue.propertyInfo.editType);
+                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propertyValue.propName, propValue: newValue })
                 });
             }
         }

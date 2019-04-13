@@ -3136,17 +3136,17 @@ var paper;
                 }
             };
             EditorModel.prototype.setTransformProperty = function (propName, propOldValue, propNewValue, target) {
-                var valueEditType = editor.getEditType(target, propName);
-                if (valueEditType !== null) {
+                var propertyInfo = editor.getPropertyInfo(target, propName);
+                if (propertyInfo !== null) {
                     var newPropertyData = {
                         propName: [propName],
-                        copyValue: this.serializeProperty(propNewValue, valueEditType),
-                        valueEditType: valueEditType
+                        copyValue: this.serializeProperty(propNewValue, propertyInfo),
+                        propertyInfo: propertyInfo
                     };
                     var prePropertyData = {
                         propName: [propName],
-                        copyValue: this.serializeProperty(propOldValue, valueEditType),
-                        valueEditType: valueEditType
+                        copyValue: this.serializeProperty(propOldValue, propertyInfo),
+                        propertyInfo: propertyInfo
                     };
                     this.createModifyComponent(target.gameObject.uuid, target.uuid, [newPropertyData], [prePropertyData]);
                 }
@@ -3167,8 +3167,9 @@ var paper;
                 var state = editor.ModifyScenePropertyState.create(sceneUUid, newValueList, preValueCopylist);
                 this.addState(state);
             };
-            EditorModel.prototype.serializeProperty = function (value, editType) {
-                switch (editType) {
+            EditorModel.prototype.serializeProperty = function (value, propertyInfo) {
+                var _this = this;
+                switch (propertyInfo.editType) {
                     case "UINT" /* UINT */:
                     case "INT" /* INT */:
                     case "FLOAT" /* FLOAT */:
@@ -3207,10 +3208,14 @@ var paper;
                             return null;
                         }
                         return { gameObjuuid: value.gameObjuuid, componentuuid: value.componentuuid };
+                    case "ARRAY" /* ARRAY */:
+                        var returnValue = value.map(function (item) {
+                            return _this.serializeProperty(item, propertyInfo.option.contentDesc);
+                        });
+                        return returnValue;
                     case "MATERIAL" /* MATERIAL */:
                     case "TRANSFROM" /* TRANSFROM */:
                     case "SOUND" /* SOUND */:
-                    case "ARRAY" /* ARRAY */:
                         //TODO
                         console.error("not supported!");
                         break;
@@ -3218,8 +3223,9 @@ var paper;
                         break;
                 }
             };
-            EditorModel.prototype.deserializeProperty = function (serializeData, editType) {
-                switch (editType) {
+            EditorModel.prototype.deserializeProperty = function (serializeData, propertyInfo) {
+                var _this = this;
+                switch (propertyInfo.editType) {
                     case "UINT" /* UINT */:
                     case "INT" /* INT */:
                     case "FLOAT" /* FLOAT */:
@@ -3272,10 +3278,14 @@ var paper;
                             return this.getComponentById(gameObj, serializeData.componentuuid);
                         }
                         return null;
+                    case "ARRAY" /* ARRAY */:
+                        var returnValue = serializeData.map(function (item) {
+                            return _this.deserializeProperty(item, propertyInfo.option.contentDesc);
+                        });
+                        return returnValue;
                     case "MATERIAL" /* MATERIAL */:
                     case "TRANSFROM" /* TRANSFROM */:
                     case "SOUND" /* SOUND */:
-                    case "ARRAY" /* ARRAY */:
                         //TODO
                         console.error("not supported!");
                         return null;
@@ -3615,14 +3625,8 @@ var paper;
                 throw new Error("can not find target");
             };
             EditorModel.prototype.setTargetProperty = function (propNameOrpropertyChain, target, value, editType) {
-                var propertyName;
-                if (Array.isArray(propNameOrpropertyChain)) {
-                    target = this.getTargetByPropertyChain(propNameOrpropertyChain, target);
-                    propertyName = propNameOrpropertyChain[propNameOrpropertyChain.length - 1];
-                }
-                else {
-                    propertyName = propNameOrpropertyChain;
-                }
+                target = this.getTargetByPropertyChain(propNameOrpropertyChain, target);
+                var propertyName = propNameOrpropertyChain[propNameOrpropertyChain.length - 1];
                 if (editType !== "VECTOR2" /* VECTOR2 */ &&
                     editType !== "VECTOR3" /* VECTOR3 */ &&
                     editType !== "VECTOR4" /* VECTOR4 */ &&
@@ -8165,21 +8169,21 @@ var paper;
         }
         editor.getEditInfo = getEditInfo;
         /**
-         * 获取一个实例对象某个属性的编辑类型
+         * 获取一个实例对象某个属性的编辑信息
          * @param classInstance 实例对象
          * @param propName 属性名
          */
-        function getEditType(classInstance, propName) {
+        function getPropertyInfo(classInstance, propName) {
             var editInfoList = getEditInfo(classInstance);
             for (var index = 0; index < editInfoList.length; index++) {
                 var element = editInfoList[index];
                 if (element.name === propName) {
-                    return element.editType;
+                    return element;
                 }
             }
             return null;
         }
-        editor.getEditType = getEditType;
+        editor.getPropertyInfo = getPropertyInfo;
         /**
          * 编辑器事件
          */
@@ -8925,15 +8929,16 @@ var paper;
                 var prefabObj = this.getGameObjectByLinkedId(tempObj, linkedId);
                 var objects = this.getGameObjectsByLinkedId(linkedId, this.stateData.applyPrefabRootId);
                 valueList.forEach(function (propertyValue) {
-                    var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                    var newValue = _this.editorModel.deserializeProperty(copyValue, valueEditType);
+                    var newValue = _this.editorModel.deserializeProperty(propertyValue.propName, propertyValue.propertyInfo);
                     objects.forEach(function (object) {
-                        if (paper.equal(object[propName], prefabObj[propName])) {
-                            _this.editorModel.setTargetProperty(propName, object, newValue, valueEditType);
-                            _this.dispathPropertyEvent(object, propName, newValue);
+                        var obj1 = _this.editorModel.getTargetByPropertyChain(propertyValue.propName, object);
+                        var obj2 = _this.editorModel.getTargetByPropertyChain(propertyValue.propName, prefabObj);
+                        if (paper.equal(obj1[propertyValue.propName.length - 1], obj2[propertyValue.propName.length - 1])) {
+                            _this.editorModel.setTargetProperty(propertyValue.propName, object, newValue, propertyValue.propertyInfo.editType);
+                            _this.dispathPropertyEvent(object, propertyValue.propName, newValue);
                         }
                     });
-                    _this.editorModel.setTargetProperty(propName, prefabObj, newValue, valueEditType);
+                    _this.editorModel.setTargetProperty(propertyValue.propName, prefabObj, newValue, propertyValue.propertyInfo.editType);
                 });
                 this.dispatchEditorModelEvent(editor.EditorModelEvent.UPDATE_GAMEOBJECTS_HIREARCHY);
             };
@@ -8945,18 +8950,19 @@ var paper;
                     var prefabComp = prefabObj.components[k];
                     if (prefabComp.uuid === componentUUid) {
                         valueList.forEach(function (propertyValue) {
-                            var propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                            var newValue = _this.editorModel.deserializeProperty(copyValue, valueEditType);
+                            var newValue = _this.editorModel.deserializeProperty(propertyValue.copyValue, propertyValue.propertyInfo);
                             objects.forEach(function (object) {
                                 var objectComp = _this.editorModel.getComponentByAssetId(object, prefabComp.extras.linkedID);
                                 if (objectComp !== null) {
-                                    if (paper.equal(objectComp[propName], prefabComp[propName])) {
-                                        _this.editorModel.setTargetProperty(propName, objectComp, newValue, valueEditType);
-                                        _this.dispathPropertyEvent(objectComp, propName, newValue);
+                                    var obj1 = _this.editorModel.getTargetByPropertyChain(propertyValue.propName, objectComp);
+                                    var obj2 = _this.editorModel.getTargetByPropertyChain(propertyValue.propName, prefabComp);
+                                    if (paper.equal(obj1[propertyValue.propName.length - 1], obj2[propertyValue.propName.length - 1])) {
+                                        _this.editorModel.setTargetProperty(propertyValue.propName, objectComp, newValue, propertyValue.propertyInfo.editType);
+                                        _this.dispathPropertyEvent(objectComp, propertyValue.propName, newValue);
                                     }
                                 }
                             });
-                            _this.editorModel.setTargetProperty(propName, prefabComp, newValue, valueEditType);
+                            _this.editorModel.setTargetProperty(propertyValue.propName, prefabComp, newValue, propertyValue.propertyInfo.editType);
                         });
                     }
                 };
@@ -9863,12 +9869,11 @@ var paper;
                     modifyObj = this.editorModel.getComponentById(gameObj, componentUUid);
                     if (modifyObj) {
                         valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                            var propName, copyValue, valueEditType, newValue;
+                            var newValue;
                             return __generator(this, function (_a) {
-                                propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                                newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                                this.editorModel.setTargetProperty(propName, modifyObj, newValue, valueEditType);
-                                this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+                                newValue = this.editorModel.deserializeProperty(propertyValue.copyValue, propertyValue.propertyInfo);
+                                this.editorModel.setTargetProperty(propertyValue.propName, modifyObj, newValue, propertyValue.propertyInfo.editType);
+                                this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propertyValue.propName, propValue: newValue });
                                 return [2 /*return*/];
                             });
                         }); });
@@ -9927,12 +9932,11 @@ var paper;
                 var modifyObj = this.editorModel.getGameObjectByUUid(uuid);
                 if (modifyObj !== null) {
                     valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                        var propName, copyValue, valueEditType, newValue;
+                        var newValue;
                         return __generator(this, function (_a) {
-                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                            newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                            this.editorModel.setTargetProperty(propName, modifyObj, newValue, valueEditType);
-                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+                            newValue = this.editorModel.deserializeProperty(propertyValue.copyValue, propertyValue.propertyInfo);
+                            this.editorModel.setTargetProperty(propertyValue.propName, modifyObj, newValue, propertyValue.propertyInfo.editType);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propertyValue.propName, propValue: newValue });
                             return [2 /*return*/];
                         });
                     }); });
@@ -9989,12 +9993,11 @@ var paper;
                 var modifyObj = this.editorModel.scene;
                 if (modifyObj !== null) {
                     valueList.forEach(function (propertyValue) { return __awaiter(_this, void 0, void 0, function () {
-                        var propName, copyValue, valueEditType, newValue;
+                        var newValue;
                         return __generator(this, function (_a) {
-                            propName = propertyValue.propName, copyValue = propertyValue.copyValue, valueEditType = propertyValue.valueEditType;
-                            newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                            this.editorModel.setTargetProperty(propName, modifyObj, newValue, valueEditType);
-                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+                            newValue = this.editorModel.deserializeProperty(propertyValue.copyValue, propertyValue.propertyInfo);
+                            this.editorModel.setTargetProperty(propertyValue.propName, modifyObj, newValue, propertyValue.propertyInfo.editType);
+                            this.dispatchEditorModelEvent(editor.EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propertyValue.propName, propValue: newValue });
                             return [2 /*return*/];
                         });
                     }); });

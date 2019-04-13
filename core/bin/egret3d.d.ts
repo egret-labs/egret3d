@@ -984,7 +984,18 @@ declare namespace paper.editor {
          */
         set?: string;
         /**
-         *
+         * 资源类型 适用编辑类型：ASSET
+         */
+        assetType?: AssetType;
+        /**
+         * 内容描述 适用编辑类型：ARRAY
+         * */
+        contentDesc?: {
+            editType: EditType;
+            option?: PropertyOption;
+        };
+        /**
+         * 组件
          */
         componentClass?: IComponentClass<IComponent> | string;
         /**
@@ -1096,8 +1107,43 @@ declare namespace paper.editor {
          * 内嵌的。
          */
         NESTED = "NESTED",
-        /**变换 TODO remove*/
+        /**
+         * 变换 TODO remove
+         * */
         TRANSFROM = "TRANSFROM",
+        /**
+         * 资源
+         * */
+        ASSET = "ASSET",
+    }
+    /**
+ * 装饰器可配置资源类型
+ */
+    const enum AssetType {
+        /**
+         * 着色器
+         */
+        Shader = "Shader",
+        /**
+         * 网格
+         */
+        Mesh = "Mesh",
+        /**
+         * 动画
+         */
+        Animation = "Animation",
+        /**
+         * 材质
+         */
+        Material = "Material",
+        /**
+         * 贴图配置文件
+         */
+        TextureDesc = "TextureDesc",
+        /**
+         * 声音
+         */
+        Sound = "sound",
     }
     /**
      * 自定义装饰器。
@@ -1108,7 +1154,7 @@ declare namespace paper.editor {
      * @param editType 编辑类型。
      * @param option 配置。
      */
-    function property(editType?: EditType, option?: PropertyOption): (target: any, property: string) => void;
+    function property(editType?: EditType, option?: PropertyOption, isArray?: boolean): (target: any, property: string) => void;
     /**
      * 从枚举中生成装饰器列表项。
      */
@@ -4550,10 +4596,6 @@ declare namespace paper {
         private readonly _componentsGroupsB;
         private readonly _groups;
         private constructor();
-        private _onComponentCreated([entity, component]);
-        private _onComponentEnabled([entity, component]);
-        private _onComponentDisabled([entity, component]);
-        private _onComponentDestroyed([entity, component]);
         containsEntity(entity: TEntity): boolean;
         getGroup(matcher: ICompoundMatcher<TEntity>): Group<TEntity>;
         readonly entityCount: uint;
@@ -4761,7 +4803,6 @@ declare namespace paper {
         private _globalScene;
         private _editorScene;
         private constructor();
-        private _addScene([scene, isActive]);
         private _removeScene(scene);
         /**
          * 创建一个空场景。
@@ -7171,7 +7212,7 @@ declare namespace egret3d {
         private readonly _size;
         private readonly _viewport;
         private _updateViewport();
-        initialize({size, screenSize}: {
+        initialize(sizes: {
             size: Readonly<ISize>;
             screenSize: Readonly<ISize>;
         }): void;
@@ -8541,10 +8582,6 @@ declare namespace paper {
         readonly removedComponentes: (IComponent | null)[];
         private _group;
         private constructor();
-        private _onEntityAdded([group, entity]);
-        private _onEntityRemoved([group, entity]);
-        private _onComponentEnabled([group, component]);
-        private _onComponentDisabled([group, component]);
         clear(): void;
         readonly group: Group<TEntity>;
     }
@@ -10649,10 +10686,6 @@ declare namespace paper {
          * core updating loop
          */
         private _loop(timestamp);
-        /**
-         * including calculating, status updating, rerendering and logical updating
-         */
-        private _update({tickCount, frameCount}?);
         /**
          * 初始化程序。
          */

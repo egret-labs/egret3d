@@ -1,5 +1,5 @@
 namespace paper.editor{
-    type ModifyComponentPropertyStateData = {gameObjUUid:string,componentUUid:string,newValueList:any[],preValueCopylist:any[]};
+    type ModifyComponentPropertyStateData = {gameObjUUid:string,componentUUid:string,newValueList:HistoryProperyInfo[],preValueCopylist:HistoryProperyInfo[]};
 
     //修改组件属性属性
     export class ModifyComponentPropertyState extends BaseState {
@@ -7,7 +7,7 @@ namespace paper.editor{
             return "[class common.ModifyComponentPropertyState]";
         }
 
-        public static create(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyComponentPropertyState | null {
+        public static create(gameObjUUid: string, componentUUid: string, newValueList: HistoryProperyInfo[], preValueCopylist: HistoryProperyInfo[]): ModifyComponentPropertyState | null {
             const state = new ModifyComponentPropertyState();
             let data:ModifyComponentPropertyStateData = {
                 gameObjUUid,
@@ -32,7 +32,7 @@ namespace paper.editor{
             return false;
         }
 
-        private modifyProperty(valueList: any[]) {
+        private modifyProperty(valueList: HistoryProperyInfo[]) {
             const gameObjectUUid = this.stateData.gameObjUUid;
             const componentUUid = this.stateData.componentUUid;
             let gameObj: GameObject | null = this.editorModel.getGameObjectByUUid(gameObjectUUid);
@@ -41,10 +41,9 @@ namespace paper.editor{
                 modifyObj = this.editorModel.getComponentById(gameObj, componentUUid);
                 if (modifyObj) {
                     valueList.forEach(async (propertyValue) => {
-                        const { propName, copyValue, valueEditType } = propertyValue;
-                        let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                        this.editorModel.setTargetProperty(propName, modifyObj, newValue,valueEditType);
-                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue });
+                        let newValue = this.editorModel.deserializeProperty(propertyValue.copyValue, propertyValue.propertyInfo);
+                        this.editorModel.setTargetProperty(propertyValue.propName, modifyObj, newValue,propertyValue.propertyInfo.editType);
+                        this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propertyValue.propName, propValue: newValue });
                     });
                 }
             }

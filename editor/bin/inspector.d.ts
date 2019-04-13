@@ -220,8 +220,8 @@ declare namespace paper.editor {
         createModifyComponent(gameObjectUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): any;
         createPrefabState(prefab: Prefab, parent?: GameObject): void;
         createModifyScenePropertyState(sceneUUid: string, newValueList: any[], preValueCopylist: any[]): void;
-        serializeProperty(value: any, editType: paper.editor.EditType): any;
-        deserializeProperty(serializeData: any, editType: paper.editor.EditType): any;
+        serializeProperty(value: any, propertyInfo: paper.editor.PropertyInfo): any;
+        deserializeProperty(serializeData: any, propertyInfo: paper.editor.PropertyInfo): any;
         createGameObject(parentList: (GameObject | Scene)[], createType: string, mesh: egret3d.Mesh): void;
         addComponent(gameObjectUUid: string, compClzName: string): void;
         removeComponent(gameObjectUUid: string, componentUUid: string): void;
@@ -270,7 +270,7 @@ declare namespace paper.editor {
         getGameObjectByUUid(uuid: string): GameObject | null;
         getGameObjectsByUUids(uuids: string[]): GameObject[];
         getTargetByPropertyChain(propertyChain: string[], target: any): any;
-        setTargetProperty(propName: string, target: any, value: any, editType: paper.editor.EditType): void;
+        setTargetProperty(propNameOrpropertyChain: string[], target: any, value: any, editType: paper.editor.EditType): void;
         private propertyHasGetterSetter(propName, target);
         /**当前选中的对象 */
         currentSelected: GameObject[];
@@ -545,11 +545,11 @@ declare namespace paper.editor {
      */
     function getEditInfo(classInstance: any): PropertyInfo[];
     /**
-     * 获取一个实例对象某个属性的编辑类型
+     * 获取一个实例对象某个属性的编辑信息
      * @param classInstance 实例对象
      * @param propName 属性名
      */
-    function getEditType(classInstance: any, propName: string): paper.editor.EditType | null;
+    function getPropertyInfo(classInstance: any, propName: string): paper.editor.PropertyInfo | null;
     /**
      * 编辑器事件
      */
@@ -669,6 +669,11 @@ declare namespace paper.editor {
         HistoryAdd: string;
         HistoryFree: string;
     };
+    type HistoryProperyInfo = {
+        propName: string[];
+        copyValue: any;
+        propertyInfo: paper.editor.PropertyInfo;
+    };
     class History {
         dispatcher: EventDispatcher | null;
         private _locked;
@@ -715,9 +720,9 @@ declare namespace paper.editor {
         getAllUUidFromGameObject(gameObj: paper.GameObject, uuids?: string[] | null): string[];
         setLinkedId(gameObj: GameObject, ids: string[]): void;
         clearLinkedId(gameObj: GameObject): void;
-        protected dispathPropertyEvent(modifyObj: any, propName: string, newValue: any): void;
+        protected dispathPropertyEvent(modifyObj: any, propName: string[], newValue: any): void;
         private modifyPrefabGameObjectPropertyValues(linkedId, tempObj, valueList);
-        modifyPrefabComponentPropertyValues(linkedId: string, componentUUid: string, tempObj: GameObject, valueList: any[]): void;
+        modifyPrefabComponentPropertyValues(linkedId: string, componentUUid: string, tempObj: GameObject, valueList: HistoryProperyInfo[]): void;
         setGameObjectPrefabRootId(gameObj: GameObject, rootID: string): void;
         getGameObjectsByLinkedId(linkedId: string, filterApplyRootId: string): GameObject[];
         getGameObjectByLinkedId(gameObj: paper.GameObject, linkedID: string): GameObject | null | undefined;
@@ -811,7 +816,7 @@ declare namespace paper.editor {
 declare namespace paper.editor {
     class ModifyComponentPropertyState extends BaseState {
         static toString(): string;
-        static create(gameObjUUid: string, componentUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyComponentPropertyState | null;
+        static create(gameObjUUid: string, componentUUid: string, newValueList: HistoryProperyInfo[], preValueCopylist: HistoryProperyInfo[]): ModifyComponentPropertyState | null;
         private readonly stateData;
         undo(): boolean;
         private modifyProperty(valueList);
@@ -820,7 +825,7 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
     class ModifyGameObjectPropertyState extends BaseState {
-        static create(gameObjectUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyGameObjectPropertyState | null;
+        static create(gameObjectUUid: string, newValueList: HistoryProperyInfo[], preValueCopylist: HistoryProperyInfo[]): ModifyGameObjectPropertyState | null;
         private readonly stateData;
         undo(): boolean;
         private modifyProperty(valueList);
@@ -829,7 +834,7 @@ declare namespace paper.editor {
 }
 declare namespace paper.editor {
     class ModifyScenePropertyState extends BaseState {
-        static create(sceneUUid: string, newValueList: any[], preValueCopylist: any[]): ModifyScenePropertyState;
+        static create(sceneUUid: string, newValueList: HistoryProperyInfo[], preValueCopylist: HistoryProperyInfo[]): ModifyScenePropertyState;
         private readonly stateData;
         undo(): boolean;
         private modifyProperty(valueList);

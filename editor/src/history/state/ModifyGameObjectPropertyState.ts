@@ -1,9 +1,9 @@
 namespace paper.editor{
-    type ModifyGameObjectPropertyStateData = {gameObjectUUid:string,newValueList:any[],preValueCopylist:any[]};
+    type ModifyGameObjectPropertyStateData = {gameObjectUUid:string,newValueList:HistoryProperyInfo[],preValueCopylist:HistoryProperyInfo[]};
 
     export class ModifyGameObjectPropertyState extends BaseState {
 
-        public static create(gameObjectUUid:string,newValueList:any[],preValueCopylist:any[]): ModifyGameObjectPropertyState | null {
+        public static create(gameObjectUUid:string,newValueList:HistoryProperyInfo[],preValueCopylist:HistoryProperyInfo[]): ModifyGameObjectPropertyState | null {
             const state = new ModifyGameObjectPropertyState();
             const data:ModifyGameObjectPropertyStateData = {
                 gameObjectUUid,
@@ -27,15 +27,14 @@ namespace paper.editor{
             return false;
         }
 
-        private modifyProperty(valueList: any[]) {
+        private modifyProperty(valueList: HistoryProperyInfo[]) {
             let uuid:string = this.stateData.gameObjectUUid;
             let modifyObj = this.editorModel.getGameObjectByUUid(uuid);
             if (modifyObj !== null) {
                 valueList.forEach(async (propertyValue) => {
-                    const { propName, copyValue, valueEditType } = propertyValue;
-                    let newValue = this.editorModel.deserializeProperty(copyValue, valueEditType);
-                    this.editorModel.setTargetProperty(propName, modifyObj, newValue,valueEditType);
-                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName: propName, propValue: newValue })
+                    let newValue = this.editorModel.deserializeProperty(propertyValue.copyValue, propertyValue.propertyInfo);
+                    this.editorModel.setTargetProperty(propertyValue.propName, modifyObj, newValue,propertyValue.propertyInfo.editType);
+                    this.dispatchEditorModelEvent(EditorModelEvent.CHANGE_PROPERTY, { target: modifyObj, propName:propertyValue.propName, propValue: newValue })
                 });
             }
         }

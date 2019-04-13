@@ -229,7 +229,7 @@ namespace paper.editor {
      * @param editType 编辑类型。
      * @param option 配置。
      */
-    export function property(editType?: EditType, option?: PropertyOption) {
+    export function property(editType?: EditType, option?: PropertyOption,isArray:boolean=false) {
         return function (target: any, property: string) {
             if (!target.hasOwnProperty('__props__')) {
                 target['__props__'] = [];
@@ -249,8 +249,18 @@ namespace paper.editor {
                         break;
 
                 }
-
-                target['__props__'].push(new PropertyInfo(property, editType, option));
+                if(isArray){
+                    let tmpOption:PropertyOption={
+                        contentDesc:{
+                            editType:editType,
+                            option:option
+                        }
+                    }
+                    target['__props__'].push(new PropertyInfo(property, EditType.ARRAY, tmpOption));
+                }
+                else{
+                    target['__props__'].push(new PropertyInfo(property, editType, option));
+                }
             }
             else {
                 //TODO:自动分析编辑类型
