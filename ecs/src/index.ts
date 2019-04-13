@@ -194,3 +194,5 @@ export async function runEgret(options: ApplicationInitializeOptions | null = nu
 }
 
 (window as any).Application = Application;
+(window as any).egret3d = (window as any).egret;
+(window as any).paper = (window as any).egret;

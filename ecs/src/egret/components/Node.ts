@@ -171,7 +171,7 @@ export class Node extends Parent {
 
         let ancestor = node;
 
-        while (ancestor !== this && ancestor !== this._scene) {
+        while (ancestor !== this && ancestor !== this._scene as any) { // TODO
             ancestor = ancestor._parent as Node;
         }
 
@@ -183,11 +183,13 @@ export class Node extends Parent {
      */
     public get isActiveAndEnabled(): boolean {
         if (this._globalEnabledDirty) {
-            if (this._parent!.isActiveAndEnabled) {
-                this._globalEnabled = this.isActiveAndEnabled;
-            }
-            else {
-                this._globalEnabled = false;
+            if (this._parent !== null) {
+                if (this._parent.isActiveAndEnabled) {
+                    this._globalEnabled = this.isActiveAndEnabled;
+                }
+                else {
+                    this._globalEnabled = false;
+                }
             }
 
             this._globalEnabledDirty = false;

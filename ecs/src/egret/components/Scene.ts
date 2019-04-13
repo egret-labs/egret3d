@@ -67,4 +67,11 @@ export class Scene extends Parent implements IScene {
     public contains(node: Node): boolean {
         return node._scene === this;
     }
+
+    /**
+     * @deprecated
+     */
+    public getRootGameObjects() {
+        return this.children;
+    }
 }
