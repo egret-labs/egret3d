@@ -1,13 +1,13 @@
 import * as signals from "signals";
+import { filterArray } from "../uuid/index";
 import { IComponentClass, IGroup } from "./types";
-import { filterArray } from "../uuid/Utility";
-import Entity from "./Entity";
-import Component from "./Component";
-import Matcher from "./Matcher";
+import { Entity } from "./Entity";
+import { Component } from "./Component";
+import { Matcher } from "./Matcher";
 /**
  * 实体组。
  */
-export default class Group<TEntity extends Entity> implements IGroup<Entity> {
+export class Group<TEntity extends Entity> implements IGroup<Entity> {
     /**
      * @internal
      */

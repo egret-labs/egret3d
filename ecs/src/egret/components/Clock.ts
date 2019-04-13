@@ -1,5 +1,5 @@
-import { component } from "../../ecs/Decorators";
-import Component from "../../ecs/Component";
+import { component } from "../../ecs/index";
+import { Component } from "../../ecs/Component";
 
 export interface ClockUpdateFlags {
     frameCount: uint;
@@ -9,7 +9,7 @@ export interface ClockUpdateFlags {
  * 全局时钟信息组件。
  */
 @component()
-export default class Clock extends Component {
+export class Clock extends Component {
     /**
      * 逻辑帧补偿速度。
      */

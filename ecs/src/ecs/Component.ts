@@ -1,14 +1,13 @@
-import UUID from "../uuid/UUID";
+import { UUID } from "../uuid/index";
 import { IAbstractComponentClass, IComponentClass, IComponent } from "./types";
 import { component } from "./Decorators";
-import Entity from "./Entity";
-
+import { Entity } from "./Entity";
 /**
  * 基础组件。
  * - 所有组件的基类。
  */
 @component({ isAbstract: true })
-export default abstract class Component extends UUID implements IComponent {
+export abstract class Component extends UUID implements IComponent {
     public static readonly isAbstract: IAbstractComponentClass | null = null;
     public static readonly allowMultiple: boolean = false;
     public static readonly componentIndex: int = -1;

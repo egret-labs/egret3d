@@ -12,7 +12,7 @@ export let createInscanceUUID: () => string = (): string => {
  * 唯一识别码对象。
  */
 @uuid
-export default abstract class UUID implements IUUID {
+export abstract class UUID implements IUUID {
     public static readonly uuid: string = "";
     public static readonly registered: IUUIDClass | null = null;
 

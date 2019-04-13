@@ -6,6 +6,9 @@ module.exports = {
 
     entry: "./src/index.ts",
     output: {
+        library: 'egret',
+        libraryTarget: 'assign',
+
         filename: "main.js",
         path: path.resolve(__dirname, "dist")
     },
@@ -14,8 +17,6 @@ module.exports = {
         rules: [{
             test: /\.ts$/,
             use: "ts-loader",
-            
-            exclude: /node_modules/
         }]
     },
     resolve: {

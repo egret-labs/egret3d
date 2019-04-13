@@ -9,6 +9,7 @@
   "author": "egret",
   "license": "ISC",
   "dependencies": {
+    "@egret/ts-transformer": "^1.0.1",
     "@types/signals": "^1.0.1",
     "signals": "^1.0.0"
   },

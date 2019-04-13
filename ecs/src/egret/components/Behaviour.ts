@@ -1,16 +1,21 @@
-import { IComponentClass, IEntity, IComponent } from "../../ecs/types";
-import { component } from "../../ecs/Decorators";
-import Entity from "../../ecs/Entity";
+import {
+    IComponentClass,
+    IEntity,
+    IComponent,
+    component,
+    Entity,
+} from "../../ecs/index";
+
 import { RunningMode, IComponentClassExtensions } from "../types";
-import GameEntity from "../entities/GameEntity";
-import BaseComponent from "./BaseComponent";
-import Application from "../Application";
+import { GameEntity } from "../entities/GameEntity";
+import { BaseComponent } from "./BaseComponent";
+import { Application } from "../Application";
 /**
  * 基础游戏组件。
  * - 全部游戏组件的基类。
  */
 @component({ isAbstract: true })
-export default abstract class Behaviour extends BaseComponent {
+export abstract class Behaviour extends BaseComponent {
     /**
      * @override
      * @internal

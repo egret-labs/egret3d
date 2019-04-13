@@ -7,5 +7,12 @@ declare namespace egret {
 declare type int = number;
 declare type uint = number;
 declare type float = number;
-
 declare type StringMap<T> = { [key: string]: T};
+
+declare interface Window {
+    gltf: any;
+    paper: any;
+    egret3d: any;
+    // WX
+    canvas: HTMLCanvasElement;
+}

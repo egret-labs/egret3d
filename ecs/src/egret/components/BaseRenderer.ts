@@ -1,9 +1,9 @@
-import { component } from "../../ecs/Decorators";
-import BaseComponent from "./BaseComponent";
+import { component } from "../../ecs/index";
+import { BaseComponent } from "./BaseComponent";
 /**
  * 基础渲染组件。
  */
 @component({ isAbstract: true })
-export default abstract class BaseRenderer extends BaseComponent {
+export abstract class BaseRenderer extends BaseComponent {
 
 }

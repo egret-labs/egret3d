@@ -1,14 +1,14 @@
-import UUID from "../uuid/UUID";
+import { UUID } from "../uuid/index";
 import { IComponentClass, IEntity } from "./types";
 import { entity } from "./Decorators";
-import Component from "./Component";
-import GroupComponent from "./GroupComponent";
-import Context from "./Context";
+import { Component } from "./Component";
+import { GroupComponent } from "./GroupComponent";
+import { Context } from "./Context";
 /**
  * 基础实体。
  */
 @entity()
-export default class Entity extends UUID implements IEntity {
+export class Entity extends UUID implements IEntity {
 
     public static readonly requireComponents: ReadonlyArray<IComponentClass<Component>> | null = null;
     public static readonly extensions: { [key: string]: any } | null = null;

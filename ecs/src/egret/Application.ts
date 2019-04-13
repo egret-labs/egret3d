@@ -1,17 +1,17 @@
 import * as signals from "signals";
-import { SystemOrder } from "../ecs/types";
-import Entity from "../ecs/Entity";
+import { SystemOrder, Entity } from "../ecs/index";
 
 import { ISceneClass, RunningMode, ApplicationInitializeOptions } from "./types";
-import SystemManager from "./SystemManager";
-import SceneManager from "./systems/SceneManager";
-import Clock from "./components/Clock";
-import Scene from "./components/Scene";
+import { GameEntity } from "./entities/GameEntity";
+import { Clock } from "./components/Clock";
+import { Scene } from "./components/Scene";
+import { SceneManager } from "./systems/SceneManager";
+import { SystemManager } from "./SystemManager";
 /**
  * 基础应用程序。
  * - 应用程序的基类。
  */
-export default class Application<TScene extends Scene> {
+export class Application<TScene extends Scene> {
     /**
      * 
      */
@@ -66,6 +66,8 @@ export default class Application<TScene extends Scene> {
         this._runningMode = options.playerMode!;
 
         const { systemManager } = this;
+        systemManager.registerContext(Entity);
+        systemManager.registerContext(GameEntity);
         (this.sceneManager as SceneManager<TScene>) = systemManager.registerSystem<SceneManager<TScene>>(SceneManager, Entity, SystemOrder.Enable);
         (this.globalEntity as Entity) = systemManager.getContext(Entity)!.createEntity();
         (this.clock as Clock) = this.globalEntity.addComponent(Clock);
@@ -117,5 +119,18 @@ export default class Application<TScene extends Scene> {
 
         this._runningMode = value;
         this.onRunningModeChanged.dispatch(this.runningMode);
+    }
+
+    /**
+     * @deprecated
+     */
+    public static get systemManager() {
+        return this.current.systemManager;
+    }
+    /**
+     * @deprecated
+     */
+    public static get sceneManager() {
+        return this.current.sceneManager;
     }
 }

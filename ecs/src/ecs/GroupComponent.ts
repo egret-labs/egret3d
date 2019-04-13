@@ -1,10 +1,10 @@
 import { component } from "./Decorators";
-import Component from "./Component";
+import { Component } from "./Component";
 /**
  * @ignore
  */
 @component({ tag: "internal" })
-export default class GroupComponent extends Component {
+export class GroupComponent extends Component {
     public componentIndex: int = -1;
     public readonly components: Component[] = [];
 

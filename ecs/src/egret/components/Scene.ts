@@ -1,12 +1,12 @@
 import { NodeNames, IScene } from "../types";
 import { component } from "../../ecs/Decorators";
-import Parent from "./Parent";
-import Node from "./Node";
+import { Parent } from "./Parent";
+import { Node } from "./Node";
 /**
  * 基础场景组件。
  */
 @component()
-export default class Scene extends Parent implements IScene {
+export class Scene extends Parent implements IScene {
 
     public name: string = NodeNames.Noname;
 
@@ -18,7 +18,7 @@ export default class Scene extends Parent implements IScene {
                 children[children.length] = node;
 
                 if (node._parent !== this) {
-                    node.parent = null;
+                    node.parent = this as any;
                 }
 
                 this._childrenDirty = true;
@@ -66,5 +66,12 @@ export default class Scene extends Parent implements IScene {
      */
     public contains(node: Node): boolean {
         return node._scene === this;
+    }
+
+    /**
+     * @deprecated
+     */
+    public getRootGameObjects() {
+        return this.children;
     }
 }

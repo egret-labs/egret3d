@@ -1,14 +1,14 @@
 import * as signals from "signals";
-import { filterArray } from "../uuid/Utility";
+import { filterArray } from "../uuid/index";
 import { IEntityClass, IComponentClass, IContext } from "./types";
-import Entity from "./Entity";
-import Component from "./Component";
-import Matcher from "./Matcher";
-import Group from "./Group";
+import { Entity } from "./Entity";
+import { Component } from "./Component";
+import { Matcher } from "./Matcher";
+import { Group } from "./Group";
 /**
  * 实体上下文。
  */
-export default class Context<TEntity extends Entity> implements IContext<TEntity> {
+export class Context<TEntity extends Entity> implements IContext<TEntity> {
     /**
      * @internal
      */

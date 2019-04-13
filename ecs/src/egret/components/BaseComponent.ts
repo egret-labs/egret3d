@@ -1,14 +1,17 @@
-import { IEntity } from "../../ecs/types";
-import { component } from "../../ecs/Decorators";
-import Entity from "../../ecs/Entity";
-import Component from "../../ecs/Component";
-import GameEntity from "../entities/GameEntity";
+import {
+    IEntity,
+    component,
+    Entity,
+    Component,
+} from "../../ecs/index";
+
+import { GameEntity } from "../entities/GameEntity";
 /**
  * 基础游戏组件。
  * - 全部游戏组件的基类。
  */
 @component({ isAbstract: true })
-export default abstract class BaseComponent extends Component {
+export abstract class BaseComponent extends Component {
     /**
      * 该组件的游戏实体。
      */
