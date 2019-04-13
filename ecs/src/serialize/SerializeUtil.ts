@@ -3,14 +3,12 @@ import { Component } from "../ecs/Component";
 import { KEY_SERIALIZE, ISerializable, KEY_UUID } from "./types";
 import { Asset } from "../asset/Asset";
 
-export { ObjectFactory, SerializeUtil };
+export { SerializeUtil };
 
 /**
  * @internal
  */
-interface ObjectFactory {
-    createEntityTemplate(className: string): Entity | null;
-    createComponentTemplate(entityClassName: string, componentClassName: string): Component | null;
+interface IObjectFactory {
     createEntity(className: string): Entity | null;
 }
 
@@ -19,7 +17,7 @@ interface ObjectFactory {
  * @internal
  */
 class SerializeUtil {
-    public static factory: ObjectFactory | null = null;
+    public static factory: IObjectFactory | null = null;
     public static propertyHasGetterAndSetter(target: any, propName: string): boolean {
         let prototype = Object.getPrototypeOf(target);
 
