@@ -1,4 +1,5 @@
 const path = require("path");
+const transformers = require('@egret/ts-transformer');
 
 module.exports = {
     mode: "development",
@@ -16,8 +17,19 @@ module.exports = {
     module: {
         rules: [{
             test: /\.ts$/,
-            use: "ts-loader",
-        }]
+            loader: 'ts-loader',
+            options: {
+                getCustomTransformers: (program) => {
+                    return ({
+                        before: [
+                            transformers.emitClassName(program),
+                            transformers.emitDefine({ DEBUG: true })
+                        ]
+                    })
+                }
+            }
+        }
+    ]
     },
     resolve: {
         extensions: [
