@@ -58,7 +58,6 @@ export abstract class Component extends UUID implements IComponent {
 
     public uninitialize(): void {
         // delete (this.entity as Entity)._removedComponents[(this.constructor as IComponentClass<IComponent>).componentIndex]; TODO
-        (this.isDestroyed as boolean) = true;
         (this.entity as Entity) = null!;
 
         this._enabled = false;

@@ -1,42 +1,35 @@
 import { filterArray } from "../../basic";
-import { component, Entity, Component } from "../../ecs";
-import { ComponentType, NodeNames, NodeLayer, NodeTags } from "../types";
+import { component, Component } from "../../ecs";
+import { ComponentType, NodeNames, NodeLayer, NodeTags, ConstString } from "../types";
 import { Scene } from "./Scene";
-import { Application } from "../Application";
+import { serializedField } from "../../serialize";
 /**
  * 基础节点组件。
  */
 @component({ type: ComponentType.Node })
 export class Node extends Component {
+    @serializedField
     public name: string = NodeNames.Noname;
+    @serializedField
     public tag: NodeTags | string = NodeTags.Untagged;
+    @serializedField
     public layer: NodeLayer = NodeLayer.Default;
+    /**
+     * 
+     */
+    public readonly scene: Scene = null!;
+    /**
+     * 该节点的父节点。
+     */
+    public readonly parent: Node | null = null;
 
     protected _globalEnabledDirty: boolean = true;
     protected _globalEnabled: boolean = false;
     protected _childrenDirty: boolean = false;
     protected _childCount: uint = 0;
     protected readonly _children: (Node | null)[] = [];
-    protected _parent: Node | null = null;
-    protected _scene: Scene | null = null;
-
-    protected _destroy() {
-        this.removeChildren();
-        this._parent!.removeChild(this);
-
-        super._destroy();
-    }
 
     protected _onChangeParent(_isBefore: boolean, _worldTransformStays: boolean): void {
-    }
-    /**
-     * @override
-     * @internal
-     */
-    public initialize(defaultEnabled: boolean, entity: Entity): void {
-        super.initialize(defaultEnabled, entity);
-
-        Application.current.sceneManager.activeScene.addChild(this);
     }
     /**
      * @override
@@ -47,93 +40,14 @@ export class Node extends Component {
 
         this.name = NodeNames.Noname;
         this.tag = "";
+        (this.scene as Scene) = null!;
+        (this.parent as Node | null) = null;
 
         this._globalEnabledDirty = true;
         this._globalEnabled = false;
         this._childrenDirty = false;
         this._childCount = 0;
         this._children.length = 0;
-        this._parent = null;
-        this._scene = null;
-    }
-    /**
-     * 
-     */
-    public setParent(parent: Node | null, worldTransformStays: boolean = false): Node {
-        if (parent !== null && this.contains(parent)) {
-            console.warn("Set the parent of the node error.");
-
-            return this;
-        }
-
-        const prevParent = this._parent;
-
-        if (prevParent === parent) {
-            return this;
-        }
-
-        this._onChangeParent(true, worldTransformStays);
-
-        const prevEnabled = this.isActiveAndEnabled;
-
-        if (prevParent !== null) {
-            const children = prevParent._children;
-            const index = children.indexOf(this);
-
-            if (index >= 0) {
-                children[index] = null;
-                prevParent._childrenDirty = true;
-                prevParent._childCount--;
-            }
-            else if (DEBUG) {
-            }
-        }
-
-        if (parent !== null) {
-            this._parent = parent;
-            this._scene = parent._scene;
-            parent.addChild(this);
-        }
-        else {
-            this._parent = this._scene as any; // TODO
-            this._scene!.addChild(this);
-        }
-
-        const currentEnabled = this.isActiveAndEnabled;
-
-        if (prevEnabled !== currentEnabled) {
-            this.dispatchEnabledEvent(currentEnabled);
-        }
-
-        this._onChangeParent(false, worldTransformStays);
-
-        // BaseTransform.onTransformParentChanged.dispatch([this, prevParent, parent]);
-
-        return this;
-    }
-    /**
-     * 
-     * @param node 
-     */
-    public addChild(node: Node): Node {
-        if (node._parent !== this) {
-            const children = this._children;
-
-            if (children.indexOf(node) < 0) {
-                children[children.length] = node;
-
-                if (node._parent !== this) {
-                    node.parent = this;
-                }
-
-                this._childrenDirty = true;
-                this._childCount++;
-            }
-            else if (DEBUG) {
-            }
-        }
-
-        return node;
     }
     /**
      * @override
@@ -156,26 +70,46 @@ export class Node extends Component {
     }
     /**
      * 
+     * @param node 
+     */
+    public addChild(node: Node): Node {
+        const children = this._children;
+
+        if (children.indexOf(node) < 0) {
+            children[children.length] = node;
+
+            if (node.parent !== this) {
+                node.setParent(this, false);
+            }
+
+            this._childrenDirty = true;
+            this._childCount++;
+        }
+        else if (DEBUG) {
+        }
+
+        return node;
+    }
+    /**
+     * 
      */
     public removeChild(node: Node): boolean {
-        if (node._parent === this) {
-            const children = this._children;
-            const index = children.indexOf(node);
+        const children = this._children;
+        const index = children.indexOf(node);
 
-            if (index >= 0) {
-                children[index] = null;
+        if (index >= 0) {
+            children[index] = null;
 
-                if (!node.entity.isDestroyed) {
-                    node.entity.destroy();
-                }
-
-                this._childrenDirty = true;
-                this._childCount--;
-
-                return true;
+            if (!node.isDestroyed) {
+                node.destroy();
             }
-            else if (DEBUG) {
-            }
+
+            this._childrenDirty = true;
+            this._childCount--;
+
+            return true;
+        }
+        else if (DEBUG) {
         }
 
         return false;
@@ -199,7 +133,7 @@ export class Node extends Component {
      * 
      */
     public getChildIndex(node: Node): int {
-        if (node._parent === this) {
+        if (node.parent === this) {
             return this.children.indexOf(node);
         }
 
@@ -209,7 +143,7 @@ export class Node extends Component {
      * 
      */
     public setChildIndex(node: Node, index: uint): boolean {
-        if (node._parent === this) {
+        if (node.parent === this) {
             if (0 <= index && index < this._childCount) {
                 const { children } = this;
                 const prevIndex = children.indexOf(node);
@@ -227,6 +161,55 @@ export class Node extends Component {
         }
 
         return false;
+    }
+    /**
+     * 
+     */
+    public setParent(node: Node, worldTransformStays: boolean = false): Node {
+        if (this.contains(node)) {
+            console.warn("Set the parent of the node error.");
+
+            return this;
+        }
+
+        const prevParent = this.parent;
+
+        if (prevParent === node) {
+            return this;
+        }
+
+        this._onChangeParent(true, worldTransformStays);
+
+        const prevEnabled = this.isActiveAndEnabled;
+
+        if (prevParent !== null) {
+            const children = prevParent._children;
+            const index = children.indexOf(this);
+
+            if (index >= 0) {
+                children[index] = null;
+                prevParent._childrenDirty = true;
+                prevParent._childCount--;
+            }
+            else if (DEBUG) {
+            }
+        }
+
+        (this.parent as Node | null) = node;
+        (this.scene as Scene) = node.scene;
+        node.addChild(this);
+
+        const currentEnabled = this.isActiveAndEnabled;
+
+        if (prevEnabled !== currentEnabled) {
+            this.dispatchEnabledEvent(currentEnabled);
+        }
+
+        this._onChangeParent(false, worldTransformStays);
+
+        // BaseTransform.onTransformParentChanged.dispatch([this, prevParent, parent]);
+
+        return this;
     }
     /**
      * 
@@ -291,14 +274,14 @@ export class Node extends Component {
      * @param node 一个节点。
      */
     public contains(node: Node): boolean {
-        if (node._scene !== this._scene) {
+        if (node.scene !== this.scene) {
             return false;
         }
 
-        let ancestor = node;
+        let ancestor: Node | null = node;
 
-        while (ancestor !== this && ancestor !== this._scene as any) { // TODO
-            ancestor = ancestor._parent as Node;
+        while (ancestor !== this && ancestor !== null) {
+            ancestor = ancestor.parent;
         }
 
         return ancestor === this;
@@ -309,8 +292,8 @@ export class Node extends Component {
      */
     public get isActiveAndEnabled(): boolean {
         if (this._globalEnabledDirty) {
-            if (this._parent !== null) {
-                if (this._parent.isActiveAndEnabled) {
+            if (this.parent !== null) {
+                if (this.parent.isActiveAndEnabled) {
                     this._globalEnabled = this.isActiveAndEnabled;
                 }
                 else {
@@ -324,28 +307,29 @@ export class Node extends Component {
         return this._globalEnabled;
     }
     /**
-     * 该实体的路径。
+     * 该节点的路径。
      */
     public get path(): string {
         let path = this.name;
-        let ancestor = this._parent;
+        let ancestor = this.parent;
 
-        while (ancestor !== this._scene) {
-            path = (ancestor as Node).name + "/" + path;
-            ancestor = (ancestor as Node).parent;
+        while (ancestor !== null) {
+            path = ancestor.name + ConstString.PathSeparator + path;
+            ancestor = ancestor.parent;
         }
 
         return path;
     }
     /**
-     * 该场景（节点）的全部子节点数量。
+     * 该节点的全部子节点数量。
      */
     public get childCount(): uint {
         return this._childCount;
     }
     /**
-     * 该场景（节点）的全部子节点。
+     * 该节点的全部子节点。
      */
+    @serializedField
     public get children(): ReadonlyArray<Node> {
         const children = this._children;
 
@@ -355,14 +339,5 @@ export class Node extends Component {
         }
 
         return children as Node[];
-    }
-    /**
-     * 该节点的父节点。
-     */
-    public get parent(): Node | null {
-        return this._parent;
-    }
-    public set parent(value: Node | null) {
-        this.setParent(value, false);
     }
 }

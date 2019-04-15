@@ -61,7 +61,7 @@ export class Application {
         const { systemManager } = this;
         systemManager.registerContext(Entity);
         systemManager.registerContext(GameEntity);
-        (this.sceneManager as SceneManager) = systemManager.registerSystem<SceneManager>(SceneManager, Entity, SystemOrder.Enable);
+        (this.sceneManager as SceneManager) = systemManager.registerSystem(SceneManager as any, GameEntity as any, SystemOrder.Enable) as any;
         (this.globalEntity as Entity) = systemManager.getContext(Entity)!.createEntity();
         (this.clock as Clock) = this.globalEntity.addComponent(Clock);
     }

@@ -15,7 +15,7 @@ export abstract class System<TEntity extends Entity> implements ISystem<TEntity>
     /**
      * @internal
      */
-    public static create<TSystem extends System<Entity>>(systemClass: ISystemClass<TSystem>, order: int, context: Context<Entity>): TSystem {
+    public static create<TSystem extends System<TEntity>, TEntity extends Entity>(systemClass: ISystemClass<TSystem>, order: int, context: Context<TEntity>): TSystem {
         const system = new systemClass();
         system.initialize(order, context);
 

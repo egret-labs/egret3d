@@ -30,11 +30,9 @@ export class GameEntity<TNode extends Node = Node> extends Entity {
         node.name = name;
         node.tag = tag;
 
-        if (scene === null) {
-            scene = Application.current.sceneManager.activeScene;
+        if (scene !== null) {
+            scene.root.addChild(node);
         }
-
-        scene.addChild(node);
 
         return entity;
     }

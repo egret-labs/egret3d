@@ -139,6 +139,7 @@ export class Matcher extends Releasable implements IAllOfMatcher {
         this._components.length = 0;
         this._allOfComponents.length = 0;
         this._anyOfComponents.length = 0;
+
         this._noneOfComponents.length = 0;
         this._extraOfComponents.length = 0;
     }
@@ -176,26 +177,8 @@ export class Matcher extends Releasable implements IAllOfMatcher {
     public matches(entity: Entity, component: IAbstractComponentClass<Component> | null, isAdd: boolean, isAdded: boolean): -2 | -1 | 0 | 1 | 2 {
         const { componentEnabledFilter, _allOfComponents, _anyOfComponents, _noneOfComponents, _extraOfComponents } = this;
 
-        if (component) {
-            const isNoneOf = _noneOfComponents.length > 0 && _noneOfComponents.indexOf(component) >= 0;
-
-            if (isNoneOf) {
-                if (isAdd === isAdded) {
-                    if (isAdd) {
-                        // remove
-                        return -1;
-                    }
-                    else if (
-                        (_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
-                        (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter)) &&
-                        !entity.hasAnyComponents(_noneOfComponents, componentEnabledFilter)
-                    ) {
-                        // add
-                        return 1;
-                    }
-                }
-            }
-            else if (isAdd) {
+        if (component !== null) {
+            if (isAdd) {
                 if (isAdded) {
                     if (_extraOfComponents.length > 0 && _extraOfComponents.indexOf(component) >= 0) {
                         // add extra
@@ -204,7 +187,8 @@ export class Matcher extends Releasable implements IAllOfMatcher {
                 }
                 else if (
                     (_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
-                    (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter))
+                    (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter)) &&
+                    (_noneOfComponents.length === 0 || !entity.hasAnyComponents(_noneOfComponents, componentEnabledFilter))
                 ) {
                     // add
                     return 1;
@@ -217,7 +201,8 @@ export class Matcher extends Releasable implements IAllOfMatcher {
                 }
                 else if (
                     (_allOfComponents.length === 0 || entity.hasComponents(_allOfComponents, componentEnabledFilter)) &&
-                    (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter))
+                    (_anyOfComponents.length === 0 || entity.hasAnyComponents(_anyOfComponents, componentEnabledFilter)) &&
+                    (_noneOfComponents.length === 0 || !entity.hasAnyComponents(_noneOfComponents, componentEnabledFilter))
                 ) {
                 }
                 else {

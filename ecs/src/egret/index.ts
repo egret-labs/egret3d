@@ -1,7 +1,6 @@
 export * from "./types";
 export * from "./entities/GameEntity";
 export * from "./components/singleton/Clock";
-export * from "./components/Parent";
 export * from "./components/Node";
 export * from "./components/Scene";
 export * from "./components/BaseComponent";

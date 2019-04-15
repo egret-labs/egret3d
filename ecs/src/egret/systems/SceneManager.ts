@@ -1,20 +1,20 @@
 import * as signals from "signals";
 import {
-    SystemOrder,
-    Entity,
     System,
     Matcher,
     Group,
     Context,
+    CollectorReactiveType,
 } from "../../ecs";
 
 import { NodeNames } from "../types";
+import { GameEntity } from "../entities/GameEntity";
 import { Scene } from "../components/Scene";
 import { Node } from "../components/Node";
 /**
  * 应用程序的场景管理器。
  */
-export class SceneManager extends System<Entity> {
+export class SceneManager extends System<any> {
     /**
      * 
      */
@@ -35,44 +35,109 @@ export class SceneManager extends System<Entity> {
      * 该应用程序的全局编辑场景。
      */
     public readonly editorScene: Scene = null!;
+
+    private _isActiveScene: boolean = false;
     /**
      * @override
      * @internal
      */
     protected getMatchers() {
         return [
-            Matcher.create(false, Scene),
-            Matcher.create(false, Node),
+            Matcher.create(false, Scene, Node),
+            Matcher.create(false, Node).noneOf(Scene),
         ];
     }
     /**
      * @override
      * @internal
      */
-    public initialize(order: SystemOrder, context: Context<Entity>) {
+    public initialize(order: int, context: Context<any>) {
         super.initialize(order, context);
-
-        (this.editorScene as Scene) = this.createScene(NodeNames.Editor, false);
+        //
+        this.collectors[0].reactiveType = this.collectors[1].reactiveType =
+            CollectorReactiveType.AddEntityImmediately | CollectorReactiveType.RemoveEntityImmediately;
+        //
         (this.globalScene as Scene) = this.createScene(NodeNames.Global, false);
+        (this.editorScene as Scene) = this.createScene(NodeNames.Editor, false);
         (this.scenes as Scene[]).length = 0;
     }
     /**
      * @internal
      */
-    public onEntityRemoved(_entity: Entity, _group: Group<Entity>) {
+    public onEntityRemoved(entity: GameEntity, group: Group<any>) {
+        const { groups } = this;
+
+        if (group === groups[0]) {
+            const { scenes } = this;
+            const scene = entity.getComponent(Scene)!;
+            const index = scenes.indexOf(scene);
+
+            if (index >= 0) {
+                (scenes as Scene[]).splice(index, 1);
+
+                if (!scene.entity.isDestroyed) {
+                    scene.entity.destroy();
+                }
+            }
+            else if (DEBUG) {
+                console.error("The scene has been removed.");
+            }
+        }
+        else if (group === groups[1]) {
+            const node = entity.getComponent(Node)!;
+            const parent = node.parent;
+
+            node.removeChildren();
+
+            if (parent !== null) {
+                parent.removeChild(node);
+            }
+
+            if (!entity.isDestroyed) {
+                entity.destroy();
+            }
+        }
     }
     /**
      * @internal
      */
-    public onEntityAdded(_entity: Entity, _group: Group<Entity>) {
+    public onEntityAdded(entity: GameEntity, group: Group<any>) {
+        const { groups } = this;
+
+        if (group === groups[0]) {
+            const { scenes } = this;
+            const scene = entity.getComponent(Scene)!;
+
+            if (!(scene === this.globalScene || scene === this.editorScene)) {
+                const node = entity.getComponent(Node)!;
+                (node.scene as Scene) = scene;
+                node.name = "root"; //
+
+                if (scenes.indexOf(scene) < 0) {
+                    if (this._isActiveScene) {
+                        (scenes as Scene[]).unshift(scene);
+                    }
+                    else {
+                        (scenes as Scene[]).push(scene);
+                    }
+                }
+                else if (DEBUG) {
+                    console.error("Create scene error.");
+                }
+            }
+        }
+        else if (group === groups[1]) {
+            const node = entity.getComponent(Node)!;
+            this.activeScene.root.addChild(node);
+        }
     }
     /**
      * @internal
      */
     public onTickCleanup() {
-        for (const scene of this.scenes) {
-            scene.children; // Remove cache.
-        }
+        // for (const scene of this.scenes) { // TODO 更新所有节点的 cache
+        //     scene.children; // Remove cache.
+        // }
     }
     /**
      * 创建一个空场景到该应用程序。
@@ -80,21 +145,13 @@ export class SceneManager extends System<Entity> {
      * @param isActive 是否激活场景。
      */
     public createScene(name: string, isActive: boolean = true): Scene {
-        const { scenes } = this;
-        const scene = this.context.createEntity().addComponent(Scene);
+        this._isActiveScene = isActive;
+
+        const entity = this.context.createEntity();
+        const scene = entity.addComponent(Scene);
         scene.name = name;
 
-        if (scenes.indexOf(scene) < 0) {
-            if (isActive) {
-                (scenes as Scene[]).unshift(scene);
-            }
-            else {
-                (scenes as Scene[]).push(scene);
-            }
-        }
-        else if (DEBUG) {
-            console.error("Create scene error.");
-        }
+        entity.addComponent(Node);
 
         return scene;
     }
@@ -111,20 +168,10 @@ export class SceneManager extends System<Entity> {
             return false;
         }
 
-        const { scenes } = this;
-        const index = scenes.indexOf(scene);
-
-        if (index >= 0) {
-            (scenes as Scene[]).splice(index, 1);
-
-            if (!scene.isDestroyed) {
-                scene.destroy();
-            }
+        if (!scene.isDestroyed) {
+            scene.destroy();
 
             return true;
-        }
-        else if (DEBUG) {
-            console.warn("The scene has been removed.");
         }
 
         return false;

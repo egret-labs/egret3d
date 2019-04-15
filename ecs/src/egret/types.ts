@@ -1,4 +1,3 @@
-import { IComponent } from "../ecs";
 /**
  * 组件类型。
  */
@@ -99,6 +98,12 @@ export const enum SystemOrder {
     End = 10000,
 }
 /**
+ * 
+ */
+export const enum ConstString {
+    PathSeparator = "/",
+}
+/**
  * 应用程序的运行模式。
  */
 export const enum RunningMode {
@@ -128,25 +133,6 @@ export const enum RunningMode {
  */
 export interface IComponentClassExtensions {
     executeMode?: RunningMode;
-}
-/**
- * 
- */
-export interface INode extends IParent {
-}
-/**
- * 
- */
-export interface IParent extends IComponent {
-    readonly childCount: uint;
-    readonly children: ReadonlyArray<INode>;
-
-    removeChild(node: INode): void;
-    removeChildren(): void;
-    getChildIndex(node: INode): int;
-    setChildIndex(node: INode, index: uint): boolean;
-    getChildren(output: INode[] | null, depth: uint): INode[];
-    getChildAt<TNode extends INode>(): TNode | null;
 }
 /**
  * 
