@@ -42,8 +42,8 @@ export class Stage2D extends Component {
      * @override
      * @internal
      */
-    public initialize(defaultEnabled: boolean, entity: Entity) {
-        super.initialize(defaultEnabled, entity);
+    public initialize(defaultEnabled: boolean, config: any, entity: Entity) {
+        super.initialize(defaultEnabled, config, entity);
 
         (this.stage as egret.Stage) = new egret.Stage();
     }

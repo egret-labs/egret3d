@@ -1,5 +1,6 @@
 import { serializedField } from '../../serialize/Decorators';
 import { Renderer2D } from './Renderer2D';
+import { Entity } from '../../ecs';
 
 /**
  * fontFamily
@@ -37,8 +38,8 @@ export class TextField extends Renderer2D {
      * @param defaultEnabled 
      * @param entity 
      */
-    public initialize(defaultEnabled: boolean, entity: any) {
-        super.initialize(defaultEnabled, entity);
+    public initialize(defaultEnabled: boolean, config: any, entity: Entity) {
+        super.initialize(defaultEnabled, config, entity);
 
         (this._displayObject as egret.DisplayObject) = new egret.TextField();
     }

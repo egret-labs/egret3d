@@ -42,8 +42,8 @@ export class Transform2D extends Node {
      * @override
      * @internal
      */
-    public initialize(defaultEnabled: boolean, entity: Entity) {
-        super.initialize(defaultEnabled, entity);
+    public initialize(defaultEnabled: boolean, config: any, entity: Entity) {
+        super.initialize(defaultEnabled, config, entity);
 
         //
         (this._container as egret.DisplayObjectContainer) = new egret.DisplayObjectContainer();
