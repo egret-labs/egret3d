@@ -13,6 +13,8 @@ declare interface Window {
     gltf: any;
     paper: any;
     egret3d: any;
+    egret: any;
+    pro: any;
     // WX
     canvas: HTMLCanvasElement;
 }

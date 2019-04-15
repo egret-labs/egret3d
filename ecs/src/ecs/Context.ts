@@ -1,5 +1,5 @@
 import * as signals from "signals";
-import { filterArray } from "../uuid/index";
+import { filterArray } from "../basic";
 import { IEntityClass, IComponentClass, IContext } from "./types";
 import { Entity } from "./Entity";
 import { Component } from "./Component";

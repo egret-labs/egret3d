@@ -1,4 +1,4 @@
-export * from "./uuid/index";
+export * from "./basic/index";
 export * from "./ecs/index";
 export * from "./asset/index";
 export * from "./serialize/index";
@@ -8,11 +8,10 @@ export * from "./editor/index";
 
 import { ApplicationInitializeOptions, RunningMode } from "./egret/types";
 import { Application } from "./egret/Application";
-import { Scene } from "./egret/components/Scene";
 
 //
 let _runEditor: boolean = false;
-export const _application = new Application<Scene>();
+export const _application = new Application();
 //
 function _loop(timestamp: number) {
     if (_application.isRunning) {
@@ -191,12 +190,8 @@ export async function runEgret(options: ApplicationInitializeOptions | null = nu
         _application.start();
         //
         requestAnimationFrame(_loop);
-
+        //
         await _entry(options);
         await _scene(options);
     }
 }
-
-(window as any).Application = Application;
-(window as any).egret3d = (window as any).egret;
-(window as any).paper = (window as any).egret;

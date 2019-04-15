@@ -1,4 +1,4 @@
-import { Releasable } from "../uuid/index";
+import { Releasable } from "../basic";
 import { IComponentClass, IAllOfMatcher, IAnyOfMatcher, INoneOfMatcher } from "./types";
 import { Entity } from "./Entity";
 import { Component } from "./Component";

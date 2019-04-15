@@ -3,7 +3,7 @@ import {
     Entity,
     Component,
     GroupComponent,
-} from "../../ecs/index";
+} from "../../ecs";
 
 import { NodeNames, NodeTags } from "../types";
 import { Node } from "../components/Node";
@@ -19,24 +19,22 @@ export class GameEntity<TNode extends Node = Node> extends Entity {
     /**
      * 创建游戏实体，并添加到当前场景中。
      */
-    public static create({
-        name = NodeNames.Noname,
-        tag = NodeTags.Untagged,
-        scene = null,
-    }: {
-        name: string,
-        tag: NodeTags | string,
-        scene: Scene | null,
-    }): GameEntity {
+    public static create(
+        name: string = NodeNames.Noname,
+        tag: NodeTags | string = NodeTags.Untagged,
+        scene: Scene | null = null,
+    ): GameEntity {
         const context = Application.current.systemManager.getContext(this)!;
         const entity = context.createEntity();
         const node = entity.addComponent(Node);
         node.name = name;
         node.tag = tag;
 
-        if (scene !== null) {
-            scene.addChild(node);
+        if (scene === null) {
+            scene = Application.current.sceneManager.activeScene;
         }
+
+        scene.addChild(node);
 
         return entity;
     }

@@ -1,4 +1,4 @@
-import { IComponentClass, IComponent } from "../ecs/types";
+import { IComponentClass, IComponent } from "../ecs";
 /**
  * 属性信息。
  */
@@ -241,7 +241,7 @@ export function property(editType?: EditType, option?: PropertyOption, isArray: 
                     currentOption.componentClass = egret.getQualifiedClassName(currentOption.componentClass);
                 }
                 if (currentOption.contentDesc) {
-                    currentOption = currentOption.contentDesc.option
+                    currentOption = currentOption.contentDesc.option;
                     continue;
                 }
                 else
@@ -249,12 +249,12 @@ export function property(editType?: EditType, option?: PropertyOption, isArray: 
 
             }
             if (isArray) {
-                let tmpOption: PropertyOption = {
+                const tmpOption: PropertyOption = {
                     contentDesc: {
                         editType: editType,
                         option: option
                     }
-                }
+                };
                 target['__props__'].push(new PropertyInfo(property, EditType.ARRAY, tmpOption));
             }
             else {

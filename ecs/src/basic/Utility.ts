@@ -1,5 +1,5 @@
 /**
- * 
+ * @ignore
  * @param array 
  */
 export function filterArray<T, M>(array: (T | M)[], remove: M) {

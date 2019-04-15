@@ -3,7 +3,7 @@ import {
     component,
     Entity,
     Component,
-} from "../../ecs/index";
+} from "../../ecs";
 
 import { GameEntity } from "../entities/GameEntity";
 /**

@@ -1,4 +1,4 @@
-import { UUID } from "../uuid/index";
+import { UUID } from "../basic";
 import { IComponentClass, IEntity } from "./types";
 import { entity } from "./Decorators";
 import { Component } from "./Component";

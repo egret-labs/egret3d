@@ -6,19 +6,19 @@ import {
     Matcher,
     Group,
     Context,
-} from "../../ecs/index";
+} from "../../ecs";
 
-import { NodeNames, ISceneClass } from "../types";
+import { NodeNames } from "../types";
 import { Scene } from "../components/Scene";
 import { Node } from "../components/Node";
 /**
  * 应用程序的场景管理器。
  */
-export class SceneManager<TScene extends Scene> extends System<Entity> {
+export class SceneManager extends System<Entity> {
     /**
      * 
      */
-    public readonly onNodeSceneChanged: signals.Signal<[Node, TScene, TScene]> = new signals.Signal();
+    public readonly onNodeSceneChanged: signals.Signal<[Node, Scene, Scene]> = new signals.Signal();
     /**
      * 
      */
@@ -26,19 +26,15 @@ export class SceneManager<TScene extends Scene> extends System<Entity> {
     /**
      * 该应用程序的全部场景。
      */
-    public readonly scenes: ReadonlyArray<TScene> = [];
+    public readonly scenes: ReadonlyArray<Scene> = [];
     /**
      * 该应用程序的全局场景。
      */
-    public readonly globalScene: TScene = null!;
+    public readonly globalScene: Scene = null!;
     /**
      * 该应用程序的全局编辑场景。
      */
-    public readonly editorScene: TScene = null!;
-    /**
-     * 该应用程序的全局编辑场景。
-     */
-    public sceneClass: ISceneClass<TScene> | null = Scene as any;
+    public readonly editorScene: Scene = null!;
     /**
      * @override
      * @internal
@@ -56,9 +52,9 @@ export class SceneManager<TScene extends Scene> extends System<Entity> {
     public initialize(order: SystemOrder, context: Context<Entity>) {
         super.initialize(order, context);
 
-        (this.editorScene as TScene) = this.createScene(NodeNames.Editor, false);
-        (this.globalScene as TScene) = this.createScene(NodeNames.Global, false);
-        (this.scenes as TScene[]).length = 0;
+        (this.editorScene as Scene) = this.createScene(NodeNames.Editor, false);
+        (this.globalScene as Scene) = this.createScene(NodeNames.Global, false);
+        (this.scenes as Scene[]).length = 0;
     }
     /**
      * @internal
@@ -83,17 +79,17 @@ export class SceneManager<TScene extends Scene> extends System<Entity> {
      * @param name 场景名称。
      * @param isActive 是否激活场景。
      */
-    public createScene(name: string, isActive: boolean = true): TScene {
+    public createScene(name: string, isActive: boolean = true): Scene {
         const { scenes } = this;
-        const scene = this.context.createEntity().addComponent(this.sceneClass!);
+        const scene = this.context.createEntity().addComponent(Scene);
         scene.name = name;
 
         if (scenes.indexOf(scene) < 0) {
             if (isActive) {
-                (scenes as TScene[]).unshift(scene);
+                (scenes as Scene[]).unshift(scene);
             }
             else {
-                (scenes as TScene[]).push(scene);
+                (scenes as Scene[]).push(scene);
             }
         }
         else if (DEBUG) {
@@ -106,7 +102,7 @@ export class SceneManager<TScene extends Scene> extends System<Entity> {
      * 从该应用程序中移除一个场景。
      * @param scene 要移除的场景。
      */
-    public removeScene(scene: TScene): boolean {
+    public removeScene(scene: Scene): boolean {
         if (scene === this.globalScene || scene === this.editorScene) {
             if (DEBUG) {
                 console.warn("Cannot remove the global scene.");
@@ -119,7 +115,7 @@ export class SceneManager<TScene extends Scene> extends System<Entity> {
         const index = scenes.indexOf(scene);
 
         if (index >= 0) {
-            (scenes as TScene[]).splice(index, 1);
+            (scenes as Scene[]).splice(index, 1);
 
             if (!scene.isDestroyed) {
                 scene.destroy();
@@ -175,7 +171,7 @@ export class SceneManager<TScene extends Scene> extends System<Entity> {
      * 该应用程序的激活场景。
      * - 实体默认创建到激活场景。
      */
-    public get activeScene(): TScene {
+    public get activeScene(): Scene {
         const { scenes } = this;
 
         if (scenes.length === 0) {
@@ -184,7 +180,7 @@ export class SceneManager<TScene extends Scene> extends System<Entity> {
 
         return scenes[0];
     }
-    public set activeScene(value: TScene) {
+    public set activeScene(value: Scene) {
         if (
             this.globalScene === value || // Cannot active global scene.
             this.editorScene === value // Cannot active editor scene.
@@ -212,8 +208,8 @@ export class SceneManager<TScene extends Scene> extends System<Entity> {
         const index = scenes.indexOf(value);
 
         if (index >= 0) {
-            (scenes as TScene[]).splice(index, 1);
-            (scenes as TScene[]).unshift(value);
+            (scenes as Scene[]).splice(index, 1);
+            (scenes as Scene[]).unshift(value);
         }
         else if (DEBUG) {
             console.error("Active scene error.");

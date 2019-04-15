@@ -1,21 +1,20 @@
 import * as signals from "signals";
-import { SystemOrder, Entity } from "../ecs/index";
+import { SystemOrder, Entity } from "../ecs";
 
-import { ISceneClass, RunningMode, ApplicationInitializeOptions } from "./types";
+import { RunningMode, ApplicationInitializeOptions } from "./types";
 import { GameEntity } from "./entities/GameEntity";
-import { Clock } from "./components/Clock";
-import { Scene } from "./components/Scene";
+import { Clock } from "./components/singleton/Clock";
 import { SceneManager } from "./systems/SceneManager";
-import { SystemManager } from "./SystemManager";
+import { SystemManager } from "./systems/SystemManager";
 /**
  * 基础应用程序。
  * - 应用程序的基类。
  */
-export class Application<TScene extends Scene> {
+export class Application {
     /**
      * 
      */
-    public static current: Application<Scene> = null!;
+    public static current: Application = null!;
     /**
      * 当该应用程序的运行模式改变时派发事件。
      */
@@ -43,16 +42,10 @@ export class Application<TScene extends Scene> {
     /**
      * 该应用程序的场景管理器。
      */
-    public readonly sceneManager: SceneManager<TScene> = null!;
+    public readonly sceneManager: SceneManager = null!;
 
     private _isRunning: boolean = false;
     private _runningMode: RunningMode = RunningMode.Normal;
-    /**
-     * 获取该应用程序的场景实现。
-     */
-    protected getSceneClass(): ISceneClass<TScene> {
-        return Scene as any;
-    }
     /**
      * 初始化该应用程序。
      */
@@ -68,7 +61,7 @@ export class Application<TScene extends Scene> {
         const { systemManager } = this;
         systemManager.registerContext(Entity);
         systemManager.registerContext(GameEntity);
-        (this.sceneManager as SceneManager<TScene>) = systemManager.registerSystem<SceneManager<TScene>>(SceneManager, Entity, SystemOrder.Enable);
+        (this.sceneManager as SceneManager) = systemManager.registerSystem<SceneManager>(SceneManager, Entity, SystemOrder.Enable);
         (this.globalEntity as Entity) = systemManager.getContext(Entity)!.createEntity();
         (this.clock as Clock) = this.globalEntity.addComponent(Clock);
     }

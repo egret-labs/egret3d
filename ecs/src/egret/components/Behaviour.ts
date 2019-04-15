@@ -4,7 +4,7 @@ import {
     IComponent,
     component,
     Entity,
-} from "../../ecs/index";
+} from "../../ecs";
 
 import { RunningMode, IComponentClassExtensions } from "../types";
 import { GameEntity } from "../entities/GameEntity";

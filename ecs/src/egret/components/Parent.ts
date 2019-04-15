@@ -1,5 +1,5 @@
-import { filterArray } from "../../uuid/index";
-import { component, Component } from "../../ecs/index";
+import { filterArray } from "../../basic";
+import { component, Component } from "../../ecs";
 import { Node } from "./Node";
 /**
  * @ignore

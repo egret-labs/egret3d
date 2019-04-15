@@ -6,7 +6,7 @@ module.exports = {
 
     entry: "./src/index.ts",
     output: {
-        library: 'egret',
+        library: 'pro',
         libraryTarget: 'assign',
 
         filename: "main.js",

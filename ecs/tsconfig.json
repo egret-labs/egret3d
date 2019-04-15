@@ -14,7 +14,7 @@
         "lib": [
             "es5",
             "dom",
-            "es2015.promise"
+            "es2015"
         ],
         "module": "commonjs",
         "newLine": "LF",

@@ -1,12 +1,12 @@
-import { NodeNames, IScene } from "../types";
-import { component } from "../../ecs/Decorators";
+import { component } from "../../ecs";
+import { NodeNames } from "../types";
 import { Parent } from "./Parent";
 import { Node } from "./Node";
 /**
  * 基础场景组件。
  */
 @component()
-export class Scene extends Parent implements IScene {
+export class Scene extends Parent {
 
     public name: string = NodeNames.Noname;
 

@@ -1,4 +1,4 @@
-import { component } from "../../ecs/index";
+import { component } from "../../ecs";
 import { BaseComponent } from "./BaseComponent";
 /**
  * 基础渲染组件。

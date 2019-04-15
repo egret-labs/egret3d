@@ -7,10 +7,10 @@ import {
     Entity,
     System,
     Context,
-} from "../ecs/index";
+} from "../../ecs";
 
-import { Clock } from "./components/Clock";
-import { Application } from "./Application";
+import { Clock } from "../components/singleton/Clock";
+import { Application } from "../Application";
 
 type PreSystemPair = [
     ISystemClass<System<Entity>>,

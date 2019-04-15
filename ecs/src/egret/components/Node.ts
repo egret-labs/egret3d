@@ -1,5 +1,5 @@
 import { NodeNames, NodeLayer, NodeTags } from "../types";
-import { component, Entity } from "../../ecs/index";
+import { component, Entity } from "../../ecs";
 import { Parent } from "./Parent";
 import { Scene } from "./Scene";
 import { Application } from "../Application";

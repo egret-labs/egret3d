@@ -1,4 +1,5 @@
-import { IComponentClass, IComponent } from "../ecs/types";
+import { IComponent } from "../ecs";
+
 /**
  * 节点名称。
  */
@@ -109,14 +110,21 @@ export interface IComponentClassExtensions {
 /**
  * 
  */
-export interface ISceneClass<TScene extends IScene> extends IComponentClass<TScene> {
-
+export interface INode extends IParent {
 }
 /**
  * 
  */
-export interface IScene extends IComponent {
+export interface IParent extends IComponent {
+    readonly childCount: uint;
+    readonly children: ReadonlyArray<INode>;
 
+    removeChild(node: INode): void;
+    removeChildren(): void;
+    getChildIndex(node: INode): int;
+    setChildIndex(node: INode, index: uint): boolean;
+    getChildren(output: INode[] | null, depth: uint): INode[];
+    getChildAt<TNode extends INode>(): TNode | null;
 }
 /**
  * 

@@ -1,4 +1,4 @@
-import { IUUIDClass } from "../uuid/index";
+import { IUUIDClass } from "../basic";
 /**
  * 系统排序。
  */

@@ -1,5 +1,5 @@
-import { component } from "../../ecs/index";
-import { Component } from "../../ecs/Component";
+import { component } from "../../../ecs";
+import { Component } from "../../../ecs/Component";
 
 export interface ClockUpdateFlags {
     frameCount: uint;

@@ -1,4 +1,4 @@
-import { uuid } from "../uuid/index";
+import { uuid } from "../basic";
 import { IEntityClass, IAbstractComponentClass, IComponentClass, IEntity, IComponent } from "./types";
 
 let _componentClassCount = 0;

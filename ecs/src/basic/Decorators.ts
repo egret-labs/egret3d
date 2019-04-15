@@ -1,10 +1,8 @@
 import { IUUIDClass } from "./types";
 
 let _classCount: uint = 0;
-/**
- * 
- */
-export let createClassUUID: () => string = (): string => {
+
+function _createClassUUID() {
     return (_classCount++).toString();
 };
 /**
@@ -16,6 +14,6 @@ export function uuid(uuidClass: IUUIDClass) {
         return;
     }
 
-    (uuidClass.uuid as string) = createClassUUID();
+    (uuidClass.uuid as string) = _createClassUUID();
     (uuidClass.registered as IUUIDClass | null) = uuidClass;
 }
