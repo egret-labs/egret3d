@@ -2,6 +2,7 @@ node_modules
 .wing
 TODO
 docs
+ecs/dist
 
 *bin-debug
 *bin-release

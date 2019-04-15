@@ -5,6 +5,7 @@ export const DATA_VERSION: string = "5";
  * @private
  */
 export const DATA_VERSIONS = [DATA_VERSION];
+
 export const KEY_SERIALIZE: keyof ISerializable = "serialize";
 export const KEY_UUID: keyof IUUID = "uuid";
 export const KEY_CLASS = "class";
@@ -108,3 +109,5 @@ export interface IBaseClass extends Function {
     //  */
     // readonly __onRegister: () => boolean;
 }
+
+// type PropertyType = number | string | undefined | null | bigint | boolean | Array<PropertyType> | { [ key: string]: PropertyType };

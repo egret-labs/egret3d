@@ -79,7 +79,10 @@ class Serializer {
                 console.warn(`Component`, source, 'has not an entity');
                 return false;
             }
-            equalTemplate = source.entity!.getOrAddComponent(source.constructor as IComponentClass<Component>);
+            const templateEntity = this._context.getEntityTemplate(egret.getQualifiedClassName(source.entity));
+            if (templateEntity) {
+                equalTemplate = templateEntity.getOrAddComponent(source.constructor as IComponentClass<Component>);
+            }
             this._context.result.components.push(target as ISerializedObject);
         }
         else {

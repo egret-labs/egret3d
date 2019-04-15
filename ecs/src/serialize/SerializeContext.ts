@@ -19,7 +19,7 @@ class SerializeContext {
     public getEntityTemplate(className: string) {
         let entity: Entity | null = this._defaultGameObjects[className];
         if (!entity) {
-            entity = SerializeUtil.factory!.createEntityTemplate(className);
+            entity = SerializeUtil.factory!.createEntity(className);
             if (!entity) { return null; }
             this._defaultGameObjects[className] = entity;
         }
