@@ -6,6 +6,7 @@ import { MissingComponent } from "./component/MissingComponent";
 import { DeserializeContext } from "./DeserializeContext";
 import { Context } from "../ecs/Context";
 import { IUUID } from "../index";
+import { Reflect } from "../basic/Reflect";
 
 export { Deserializer };
 
@@ -66,7 +67,7 @@ class Deserializer {
                     if (KEY_COMPONENTS in source) {
                         for (const componentUUID of source[KEY_COMPONENTS] as IUUID[]) {
                             const uuid = componentUUID.uuid;
-                            if (components[uuid].class === egret.getQualifiedClassName(comp)) {
+                            if (components[uuid].class === Reflect.getQualifiedClassName(comp)) {
                                 this._context.components[uuid] = comp; break;
                             }
                         }
@@ -149,6 +150,9 @@ class Deserializer {
             // 是否需要记忆 UUID
             if (!this._context.keepUUID && k === KEY_UUID) { continue; }
 
+            // Entity 的 components 只有 getter, 没有 setter, 不在这里处理
+            if (k === KEY_COMPONENTS) { continue; }
+
             // 重定向反序列化 key
             const retargetKey = (deserializedKeys && k in deserializedKeys) ? deserializedKeys[k] : k;
 
@@ -183,7 +187,7 @@ class Deserializer {
      */
     private _createComponent(componentSource: ISerializedObject, target?: Entity) {
         const className = componentSource.class;
-        const clazz = egret.getDefinitionByName(className);
+        const clazz = Reflect.getDefinitionByName(className);
         let componentTarget: Component | null = null;
 
         if (clazz) {
@@ -301,7 +305,7 @@ class Deserializer {
             }
         }
         else if (classCodeOrName) {
-            const clazz = egret.getDefinitionByName(classCodeOrName);
+            const clazz = Reflect.getDefinitionByName(classCodeOrName);
 
             if (clazz) {
                 target = new clazz();

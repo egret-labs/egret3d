@@ -6,6 +6,7 @@ import { SerializeUtil } from "./SerializeUtil";
 import { IComponentClass } from "../ecs/types";
 import { HideFlagsComponent, HideFlags } from "./component/HideFlagsComponent";
 import { IUUID } from "../index";
+import { Reflect } from "../basic/Reflect";
 
 export { Serializer };
 
@@ -61,7 +62,7 @@ class Serializer {
             const hideFlags = source.getComponent(HideFlagsComponent);
             if (hideFlags && hideFlags.dontSave) { return false; }
 
-            equalTemplate = this._context.getEntityTemplate(egret.getQualifiedClassName(source));
+            equalTemplate = this._context.getEntityTemplate(Reflect.getQualifiedClassName(source));
             this._context.result.objects!.push(target);
         }
         else if (source instanceof Component) {
@@ -79,7 +80,7 @@ class Serializer {
                 console.warn(`Component`, source, 'has not an entity');
                 return false;
             }
-            const templateEntity = this._context.getEntityTemplate(egret.getQualifiedClassName(source.entity));
+            const templateEntity = this._context.getEntityTemplate(Reflect.getQualifiedClassName(source.entity));
             if (templateEntity) {
                 equalTemplate = templateEntity.getOrAddComponent(source.constructor as IComponentClass<Component>);
             }
@@ -90,21 +91,26 @@ class Serializer {
         }
 
         this._context.serializeds.push(source.uuid);
-        this._serializeChildren(source, target, equalTemplate);
+        this._serializeProperties(source, target, equalTemplate);
 
         return true;
     }
     private _serializeReference(source: IUUID): ISerializedObject {
-        const className = egret.getQualifiedClassName(source);
+        const className = Reflect.getQualifiedClassName(source);
         return { uuid: source.uuid, class: className };
     }
-    private _serializeChildren(
+    private _serializeProperties(
         source: IUUID,
         target: ISerializedObject | ISerializedStruct,
         equalTemplate: Entity | Component | null,
     ) {
         const serializedKeys = this._getSerializedKeys(source.constructor as IBaseClass);
-
+        serializedKeys['enabled'] = 'enabled';
+        serializedKeys['uuid'] = 'uuid';
+        
+        if (source instanceof Entity) {
+            serializedKeys['components'] = 'components';
+        }
         if (serializedKeys) {
             for (const k in serializedKeys) {
                 if (
@@ -114,7 +120,7 @@ class Serializer {
                     continue;
                 }
 
-                target[k] = this._serializeChild((source as any)[k], source, k);
+                target[k] = this._serializeProperty((source as any)[k], source, k);
             }
         }
     }
@@ -130,7 +136,7 @@ class Serializer {
         }
         return keys;
     }
-    private _serializeChild(source: any, parent: any, key: string | null): any {
+    private _serializeProperty(source: any, parent: any, key: string | null): any {
         if (source === null || source === undefined) {
             return source;
         }
@@ -146,7 +152,7 @@ class Serializer {
             const target = [];
 
             for (const element of source as any[]) {
-                const result = this._serializeChild(element, parent, key);
+                const result = this._serializeProperty(element, parent, key);
 
                 if (result !== undefined) { // Pass undefined.
                     target.push(result);
@@ -160,7 +166,7 @@ class Serializer {
             const target = {} as any;
 
             for (const k in source) {
-                const result = this._serializeChild(source[k], parent, key);
+                const result = this._serializeProperty(source[k], parent, key);
 
                 if (result !== undefined) { // Pass undefined.
                     target[k] = result;
@@ -196,9 +202,9 @@ class Serializer {
         return undefined; // Pass.
     }
     private serializeStruct(source: Entity | Component): ISerializedStruct {
-        const className = egret.getQualifiedClassName(source);
+        const className = Reflect.getQualifiedClassName(source);
         const target = { class: className } as ISerializedStruct;
-        this._serializeChildren(source, target, null);
+        this._serializeProperties(source, target, null);
 
         return target;
     }
