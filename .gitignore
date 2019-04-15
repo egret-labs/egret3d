@@ -3,6 +3,7 @@ node_modules
 TODO
 docs
 ecs/dist
+ecs/out
 
 *bin-debug
 *bin-release

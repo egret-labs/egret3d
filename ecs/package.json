@@ -4,7 +4,9 @@
   "description": "egret 3d lib",
   "private": true,
   "scripts": {
-    "build": "webpack --config webpack.config.js"
+    "build": "webpack --config webpack.config.js",
+    "build-test": "rm -fr ./out && tsc --outDir ./out",
+    "test": "mocha"
   },
   "author": "egret",
   "license": "ISC",
@@ -14,6 +16,9 @@
   },
   "devDependencies": {
     "@egret/ts-transformer": "^1.0.1",
+    "@types/assert": "^1.4.2",
+    "@types/mocha": "^5.2.6",
+    "mocha": "^6.1.3",
     "ts-loader": "^5.3.3",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.3.0"

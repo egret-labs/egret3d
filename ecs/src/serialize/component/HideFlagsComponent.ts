@@ -1,5 +1,6 @@
 import { Component } from "../../ecs/Component";
 import { serializedField } from "../Decorators";
+import { component } from "../../ecs/Decorators";
 
 export { HideFlagsComponent, HideFlags };
 
@@ -36,6 +37,7 @@ const enum HideFlags {
 /**
  * 隐藏标志, 存放诸如是否保存, 是否编辑时显示等等
  */
+@component()
 class HideFlagsComponent extends Component {
     /**
      * 已丢失或不支持的组件数据。
