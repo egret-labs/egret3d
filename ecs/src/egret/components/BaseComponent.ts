@@ -19,8 +19,8 @@ export abstract class BaseComponent extends Component {
      * @override
      * @internal
      */
-    public initialize(defaultEnabled: boolean, entity: Entity): void {
-        super.initialize(defaultEnabled, entity);
+    public initialize(defaultEnabled: boolean, config: any, entity: Entity): void {
+        super.initialize(defaultEnabled, config, entity);
 
         (this.gameEntity as GameEntity) = entity as IEntity as GameEntity;
         (this.gameObject as GameEntity) = entity as IEntity as GameEntity;

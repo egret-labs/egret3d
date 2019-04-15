@@ -19,10 +19,10 @@ export abstract class Component extends UUID implements IComponent {
     /**
      * @internal
      */
-    public static create<TComponent extends Component>(componentClass: IComponentClass<TComponent>, defaultEnabled: boolean, entity: Entity): TComponent {
+    public static create<TComponent extends Component>(componentClass: IComponentClass<TComponent>, defaultEnabled: boolean, config: any, entity: Entity): TComponent {
         // TODO pool
         const component = new componentClass();
-        component.initialize(defaultEnabled, entity);
+        component.initialize(defaultEnabled, config, entity);
 
         return component;
     }
@@ -49,7 +49,7 @@ export abstract class Component extends UUID implements IComponent {
         (this.isDestroyed as boolean) = true;
     }
 
-    public initialize(defaultEnabled: boolean, entity: Entity): void {
+    public initialize(defaultEnabled: boolean, _config: any, entity: Entity): void {
         (this.isDestroyed as boolean) = false;
         (this.entity as Entity) = entity;
 

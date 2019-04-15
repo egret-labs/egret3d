@@ -138,8 +138,6 @@ export class Context<TEntity extends Entity> implements IContext<TEntity> {
     }
     /**
      * 创建一个该上下文的实体。
-     * @param scene 实体被添加到的场景。
-     * - 未设置则使用应用程序的激活场景。
      */
     public createEntity(defaultEnabled: boolean = true): TEntity {
         const { entityClass } = this;

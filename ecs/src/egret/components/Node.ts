@@ -1,21 +1,31 @@
 import { filterArray } from "../../basic";
-import { component, Component } from "../../ecs";
-import { ComponentType, NodeNames, NodeLayer, NodeTags, ConstString } from "../types";
-import { Scene } from "./Scene";
+import { component } from "../../ecs";
 import { serializedField } from "../../serialize";
+import { ComponentType, NodeNames, NodeLayer, NodeTags, ConstString } from "../types";
+import { BaseComponent } from "./BaseComponent";
+import { Scene } from "./Scene";
 /**
  * 基础节点组件。
  */
 @component({ type: ComponentType.Node })
-export class Node extends Component {
+export class Node extends BaseComponent {
+    /**
+     * 该节点的名称。
+     */
     @serializedField
     public name: string = NodeNames.Noname;
+    /**
+     * 该节点的标识。
+     */
     @serializedField
     public tag: NodeTags | string = NodeTags.Untagged;
+    /**
+     * 该节点层级。
+     */
     @serializedField
     public layer: NodeLayer = NodeLayer.Default;
     /**
-     * 
+     * 该节点所属的场景。
      */
     public readonly scene: Scene = null!;
     /**
@@ -70,7 +80,6 @@ export class Node extends Component {
     }
     /**
      * 
-     * @param node 
      */
     public addChild(node: Node): Node {
         const children = this._children;
@@ -239,36 +248,36 @@ export class Node extends Component {
 
         return null;
     }
-    // /**
-    //  * 通过指定的名称或路径获取该节点的子（孙）节点。
-    //  * @param nameOrPath 名称或路径。
-    //  * - `"xxx"` 或 `"xxx/xxx"` 。
-    //  */
-    // public getChildByName(nameOrPath: string): Node | null {
-    //     const names = nameOrPath.split("/");
-    //     let ancestor = this as Node;
+    /**
+     * 通过指定的名称或路径获取该节点的子（孙）节点。
+     * @param nameOrPath 一个名称或路径。
+     * - `"xxx"` 或 `"xxx/xxx"` 。
+     */
+    public getChildByName(nameOrPath: string): Node | null {
+        const names = nameOrPath.split(ConstString.PathSeparator);
+        let ancestor = this as Node;
 
-    //     for (const name of names) {
-    //         if (name === "") {
-    //             return ancestor;
-    //         }
+        for (const name of names) {
+            if (name === "") {
+                return ancestor;
+            }
 
-    //         const prevAncestor = ancestor;
+            const prevAncestor = ancestor;
 
-    //         for (const child of ancestor.children) {
-    //             if (child.name === name) {
-    //                 ancestor = child;
-    //                 break;
-    //             }
-    //         }
+            for (const child of ancestor.children) {
+                if (child.name === name) {
+                    ancestor = child;
+                    break;
+                }
+            }
 
-    //         if (prevAncestor === ancestor) {
-    //             return null;
-    //         }
-    //     }
+            if (prevAncestor === ancestor) {
+                return null;
+            }
+        }
 
-    //     return ancestor;
-    // }
+        return ancestor;
+    }
     /**
      * 该节点是否包含指定的子（孙）节点。
      * @param node 一个节点。

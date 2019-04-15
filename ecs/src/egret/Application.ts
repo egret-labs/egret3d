@@ -50,7 +50,7 @@ export class Application {
      * 初始化该应用程序。
      */
     public initialize(options: ApplicationInitializeOptions): void {
-        Application.current = this as any;
+        Application.current = this;
 
         console.info("Egret", this.version);
         console.info("Egret initialize.");
@@ -69,7 +69,7 @@ export class Application {
      * 启动该应用程序。
      */
     public start(): void {
-        Application.current = this as any;
+        Application.current = this;
         this.systemManager.start();
         this.resume();
 
@@ -79,6 +79,7 @@ export class Application {
      * 
      */
     public pause(): void {
+        Application.current = this;
         this._isRunning = false;
         this.clock.reset();
     }
@@ -86,6 +87,8 @@ export class Application {
      * 
      */
     public resume(): void {
+        Application.current = this;
+
         if (this._isRunning) {
             return;
         }
