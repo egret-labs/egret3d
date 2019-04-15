@@ -142,7 +142,7 @@ export class Entity extends UUID implements IEntity {
         return true;
     }
 
-    public addComponent<T extends Component>(componentClass: IComponentClass<T>, defaultEnabled: boolean = true): T {
+    public addComponent<T extends Component>(componentClass: IComponentClass<T>, defaultEnabled: boolean = true, config: any = null): T {
         if (!componentClass) {
             throw new Error();
         }
@@ -177,14 +177,14 @@ export class Entity extends UUID implements IEntity {
         }
 
         // Create and add component.
-        const component = Component.create(componentClass, defaultEnabled, this);
+        const component = Component.create(componentClass, defaultEnabled, config, this);
 
         if (existedComponent !== null) {
             if (existedComponent.constructor === GroupComponent) {
                 (existedComponent as GroupComponent).addComponent(component);
             }
             else {
-                const groupComponent = Component.create(GroupComponent, true, this);
+                const groupComponent = Component.create(GroupComponent, true, config, this);
                 groupComponent.componentIndex = componentIndex;
                 groupComponent.addComponent(existedComponent);
                 groupComponent.addComponent(component);

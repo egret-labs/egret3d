@@ -111,7 +111,7 @@ export class SceneManager extends System<any> {
             if (!(scene === this.globalScene || scene === this.editorScene)) {
                 const node = entity.getComponent(Node)!;
                 (node.scene as Scene) = scene;
-                node.name = "root"; //
+                node.name = NodeNames.Root;
 
                 if (scenes.indexOf(scene) < 0) {
                     if (this._isActiveScene) {

@@ -3,7 +3,7 @@ import { serializedField } from "../../serialize";
 import { NodeNames } from "../types";
 import { Node } from "./Node";
 /**
- * 基础场景组件。
+ * 场景组件。
  */
 @component()
 export class Scene extends Component {

@@ -10,8 +10,8 @@ export const enum ComponentType {
  */
 export const enum NodeNames {
     Noname = "Noname",
-    Default = "Default",
     Global = "Global",
+    Root = "Root",
     MainCamera = "Main Camera",
     EditorCamera = "Editor Camera",
     Editor = "Editor",

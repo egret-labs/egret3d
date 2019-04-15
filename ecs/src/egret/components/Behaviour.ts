@@ -1,12 +1,10 @@
 import {
     IComponentClass,
-    IEntity,
     component,
     Entity,
 } from "../../ecs";
 
 import { RunningMode, IComponentClassExtensions } from "../types";
-import { GameEntity } from "../entities/GameEntity";
 import { BaseComponent } from "./BaseComponent";
 import { Application } from "../Application";
 /**
@@ -16,14 +14,17 @@ import { Application } from "../Application";
 @component({ isAbstract: true })
 export abstract class Behaviour extends BaseComponent {
     /**
+     * @internal
+     */
+    public _isAwaked: boolean = false;
+    private _config: any = null;
+    /**
      * @override
      * @internal
      */
     public _destroy() {
-        if (this._getExecuteEnabled()) {
-            // if (this._lifeStates & ComponentLifeState.Awaked) { // TODO
+        if (this._getExecuteEnabled() && this._isAwaked) {
             this.onDestroy && this.onDestroy();
-            // }
         }
 
         super._destroy();
@@ -50,19 +51,28 @@ export abstract class Behaviour extends BaseComponent {
      * @override
      * @internal
      */
-    public initialize(defaultEnabled: boolean, entity: Entity): void {
-        super.initialize(defaultEnabled, entity);
+    public initialize(defaultEnabled: boolean, config: any, entity: Entity): void {
+        super.initialize(defaultEnabled, config, entity);
 
-        // if (Application.playerMode !== PlayerMode.Editor || (this.constructor as IComponentClass<Behaviour>).executeInEditMode) { TODO
-        //     (this.gameObject as GameObject) = this.entity as GameObject; //
+        if (this._getExecuteEnabled()) {
+            if (this.isActiveAndEnabled) {
+                this.onAwake && this.onAwake(config);
+                this._isAwaked = true;
+            }
+            else {
+                this._config = config;
+            }
+        }
+    }
+    /**
+     * @override
+     * @internal
+     */
+    public uninitialize(): void {
+        super.uninitialize();
 
-        //     if (this.isActiveAndEnabled) {
-        //         this.onAwake && this.onAwake!(config);
-        //         this._lifeStates |= ComponentLifeState.Awaked;
-        //     }
-        // }
-
-        (this.gameEntity as GameEntity) = entity as IEntity as GameEntity;
+        this._isAwaked = false;
+        this._config = null;
     }
     /**
      * @override
@@ -71,10 +81,11 @@ export abstract class Behaviour extends BaseComponent {
     public dispatchEnabledEvent(enabled: boolean): void {
         if (this._getExecuteEnabled()) {
             if (enabled) {
-                // if ((this._lifeStates & ComponentLifeState.Awaked) === 0) { TODO
-                //     this.onAwake && this.onAwake();
-                //     this._lifeStates |= ComponentLifeState.Awaked;
-                // }
+                if (!this._isAwaked) {
+                    this.onAwake && this.onAwake(this._config);
+                    this._isAwaked = true;
+                    this._config = null;
+                }
 
                 this.onEnable && this.onEnable();
             }
