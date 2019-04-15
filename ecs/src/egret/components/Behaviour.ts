@@ -1,7 +1,6 @@
 import {
     IComponentClass,
     IEntity,
-    IComponent,
     component,
     Entity,
 } from "../../ecs";
@@ -34,7 +33,7 @@ export abstract class Behaviour extends BaseComponent {
      */
     public _getExecuteEnabled() {
         const { runningMode } = Application.current;
-        const { extensions } = this.constructor as IComponentClass<IComponent>;
+        const { extensions } = this.constructor as IComponentClass<Behaviour>;
 
         if (extensions !== null) {
             const { executeMode = 0 } = (extensions as IComponentClassExtensions);

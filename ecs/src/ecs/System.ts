@@ -1,4 +1,4 @@
-import { SystemOrder, ISystemClass, ISystem, IMatcher } from "./types";
+import { ISystemClass, ISystem, IMatcher } from "./types";
 import { Entity } from "./Entity";
 import { Component } from "./Component";
 import { Matcher } from "./Matcher";
@@ -15,7 +15,7 @@ export abstract class System<TEntity extends Entity> implements ISystem<TEntity>
     /**
      * @internal
      */
-    public static create<TSystem extends System<Entity>>(systemClass: ISystemClass<TSystem>, order: SystemOrder, context: Context<Entity>): TSystem {
+    public static create<TSystem extends System<Entity>>(systemClass: ISystemClass<TSystem>, order: int, context: Context<Entity>): TSystem {
         const system = new systemClass();
         system.initialize(order, context);
 
@@ -28,7 +28,7 @@ export abstract class System<TEntity extends Entity> implements ISystem<TEntity>
     /**
      * 该系统的排列顺序。
      */
-    public readonly order: SystemOrder = SystemOrder.Update;
+    public readonly order: int = 0;
     /**
      * 
      */
@@ -63,8 +63,8 @@ export abstract class System<TEntity extends Entity> implements ISystem<TEntity>
         return null;
     }
 
-    public initialize(order: SystemOrder, context: Context<TEntity>): void {
-        (this.order as SystemOrder) = order;
+    public initialize(order: int, context: Context<TEntity>): void {
+        (this.order as int) = order;
         (this.context as Context<TEntity>) = context;
         const matchers = this.getMatchers();
         const listeners = this.getListeners();
@@ -72,7 +72,7 @@ export abstract class System<TEntity extends Entity> implements ISystem<TEntity>
         if (matchers !== null) {
             for (const matcher of matchers) {
                 const group = context.getGroup(matcher as Matcher);
-                const collector = Collector.create(group);
+                const collector = Collector.create(group, this);
                 (this.groups as Group<TEntity>[]).push(group);
                 (this.collectors as Collector<TEntity>[]).push(collector);
             }

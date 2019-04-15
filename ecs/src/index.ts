@@ -1,10 +1,13 @@
-export * from "./basic/index";
-export * from "./ecs/index";
-export * from "./asset/index";
-export * from "./serialize/index";
-export * from "./serialize-ext/index";
-export * from "./egret/index";
-export * from "./editor/index";
+import * as ecs from "./ecs";
+import * as editor from "./editor";
+
+export * from "./basic";
+export { ecs };
+export * from "./asset";
+export * from "./serialize";
+export * from "./serialize-ext";
+export * from "./egret";
+export { editor };
 
 import { ApplicationInitializeOptions, RunningMode } from "./egret/types";
 import { Application } from "./egret/Application";

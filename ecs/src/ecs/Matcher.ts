@@ -1,5 +1,5 @@
 import { Releasable } from "../basic";
-import { IComponentClass, IAllOfMatcher, IAnyOfMatcher, INoneOfMatcher } from "./types";
+import { IAbstractComponentClass, IAllOfMatcher, IAnyOfMatcher, INoneOfMatcher } from "./types";
 import { Entity } from "./Entity";
 import { Component } from "./Component";
 
@@ -16,13 +16,13 @@ export class Matcher extends Releasable implements IAllOfMatcher {
      * 创建一个匹配器。
      * @param componentClasses 必须包含的全部组件。
      */
-    public static create(...componentClasses: ReadonlyArray<IComponentClass<Component>>): IAllOfMatcher;
+    public static create(...componentClasses: ReadonlyArray<IAbstractComponentClass<Component>>): IAllOfMatcher;
     /**
      * 创建一个匹配器。
      * @param componentEnabledFilter 是否以组件的激活状态做为匹配条件。
      * @param componentClasses 必须包含的全部组件。
      */
-    public static create(componentEnabledFilter: false, ...componentClasses: ReadonlyArray<IComponentClass<Component>>): IAllOfMatcher;
+    public static create(componentEnabledFilter: false, ...componentClasses: ReadonlyArray<IAbstractComponentClass<Component>>): IAllOfMatcher;
     public static create(...args: any[]): IAllOfMatcher {
         let instance: Matcher;
 
@@ -48,21 +48,21 @@ export class Matcher extends Releasable implements IAllOfMatcher {
     public readonly componentEnabledFilter: boolean = true;
 
     private _id: string = "";
-    private readonly _components: IComponentClass<Component>[] = [];
-    private readonly _allOfComponents: IComponentClass<Component>[] = [];
-    private readonly _anyOfComponents: IComponentClass<Component>[] = [];
-    private readonly _noneOfComponents: IComponentClass<Component>[] = [];
-    private readonly _extraOfComponents: IComponentClass<Component>[] = [];
+    private readonly _components: IAbstractComponentClass<Component>[] = [];
+    private readonly _allOfComponents: IAbstractComponentClass<Component>[] = [];
+    private readonly _anyOfComponents: IAbstractComponentClass<Component>[] = [];
+    private readonly _noneOfComponents: IAbstractComponentClass<Component>[] = [];
+    private readonly _extraOfComponents: IAbstractComponentClass<Component>[] = [];
 
     private constructor() {
         super();
     }
 
-    private _sortComponents(a: IComponentClass<Component>, b: IComponentClass<Component>) {
+    private _sortComponents(a: IAbstractComponentClass<Component>, b: IAbstractComponentClass<Component>) {
         return a.componentIndex - b.componentIndex;
     }
 
-    private _distinct(source: ReadonlyArray<IComponentClass<Component>>, target: IComponentClass<Component>[]) {
+    private _distinct(source: ReadonlyArray<IAbstractComponentClass<Component>>, target: IAbstractComponentClass<Component>[]) {
         if (source.length === 0) {
             return;
         }
@@ -119,7 +119,7 @@ export class Matcher extends Releasable implements IAllOfMatcher {
      * @override
      * @internal
      */
-    public initialize(componentEnabledFilter: boolean = true, components: ReadonlyArray<IComponentClass<Component>> | null = null): void {
+    public initialize(componentEnabledFilter: boolean = true, components: ReadonlyArray<IAbstractComponentClass<Component>> | null = null): void {
         super.initialize();
 
         (this.componentEnabledFilter as boolean) = componentEnabledFilter;
@@ -143,7 +143,7 @@ export class Matcher extends Releasable implements IAllOfMatcher {
         this._extraOfComponents.length = 0;
     }
 
-    public anyOf(...components: ReadonlyArray<IComponentClass<Component>>): IAnyOfMatcher {
+    public anyOf(...components: ReadonlyArray<IAbstractComponentClass<Component>>): IAnyOfMatcher {
         if (this._id !== "") {
             return this;
         }
@@ -153,7 +153,7 @@ export class Matcher extends Releasable implements IAllOfMatcher {
         return this;
     }
 
-    public noneOf(...components: ReadonlyArray<IComponentClass<Component>>): INoneOfMatcher {
+    public noneOf(...components: ReadonlyArray<IAbstractComponentClass<Component>>): INoneOfMatcher {
         if (this._id !== "") {
             return this;
         }
@@ -163,7 +163,7 @@ export class Matcher extends Releasable implements IAllOfMatcher {
         return this;
     }
 
-    public extraOf(...components: ReadonlyArray<IComponentClass<Component>>): INoneOfMatcher {
+    public extraOf(...components: ReadonlyArray<IAbstractComponentClass<Component>>): INoneOfMatcher {
         if (this._id !== "") {
             return this;
         }
@@ -173,7 +173,7 @@ export class Matcher extends Releasable implements IAllOfMatcher {
         return this;
     }
 
-    public matches(entity: Entity, component: IComponentClass<Component> | null, isAdd: boolean, isAdded: boolean): -2 | -1 | 0 | 1 | 2 {
+    public matches(entity: Entity, component: IAbstractComponentClass<Component> | null, isAdd: boolean, isAdded: boolean): -2 | -1 | 0 | 1 | 2 {
         const { componentEnabledFilter, _allOfComponents, _anyOfComponents, _noneOfComponents, _extraOfComponents } = this;
 
         if (component) {
@@ -302,7 +302,7 @@ export class Matcher extends Releasable implements IAllOfMatcher {
         return id;
     }
 
-    public get components(): ReadonlyArray<IComponentClass<Component>> {
+    public get components(): ReadonlyArray<IAbstractComponentClass<Component>> {
         const { _components } = this;
 
         if (_components.length === 0) {
@@ -312,19 +312,19 @@ export class Matcher extends Releasable implements IAllOfMatcher {
         return _components;
     }
 
-    public get allOfComponents(): ReadonlyArray<IComponentClass<Component>> {
+    public get allOfComponents(): ReadonlyArray<IAbstractComponentClass<Component>> {
         return this._allOfComponents;
     }
 
-    public get anyOfComponents(): ReadonlyArray<IComponentClass<Component>> {
+    public get anyOfComponents(): ReadonlyArray<IAbstractComponentClass<Component>> {
         return this._anyOfComponents;
     }
 
-    public get noneOfComponents(): ReadonlyArray<IComponentClass<Component>> {
+    public get noneOfComponents(): ReadonlyArray<IAbstractComponentClass<Component>> {
         return this._noneOfComponents;
     }
 
-    public get extraOfComponents(): ReadonlyArray<IComponentClass<Component>> {
+    public get extraOfComponents(): ReadonlyArray<IAbstractComponentClass<Component>> {
         return this._extraOfComponents;
     }
 }

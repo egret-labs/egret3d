@@ -1,5 +1,4 @@
 import {
-    SystemOrder,
     IEntityClass,
     ISystemClass,
     IContext,
@@ -9,6 +8,7 @@ import {
     Context,
 } from "../../ecs";
 
+import { SystemOrder } from "../types";
 import { Clock } from "../components/singleton/Clock";
 import { Application } from "../Application";
 

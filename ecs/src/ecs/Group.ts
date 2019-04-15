@@ -17,11 +17,11 @@ export class Group<TEntity extends Entity> implements IGroup<Entity> {
         return group;
     }
     /**
-     * 
+     * 当实体被收集到该组时派发事件。
      */
     public readonly onEntityAdded: signals.Signal<TEntity> = new signals.Signal();
     /**
-     * 
+     * 当实体从该组移除时派发事件。
      */
     public readonly onEntityRemoved: signals.Signal<TEntity> = new signals.Signal();
     /**

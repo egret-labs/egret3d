@@ -1,5 +1,11 @@
 import { IComponent } from "../ecs";
-
+/**
+ * 组件类型。
+ */
+export const enum ComponentType {
+    Node = "Node",
+    Renderer = "Renderer",
+}
 /**
  * 节点名称。
  */
@@ -75,6 +81,22 @@ export const enum NodeLayer {
     EditorUI = BuiltinLayer7,
 
     Postprocessing = UserLayer8,
+}
+/**
+ * 系统排序。
+ */
+export const enum SystemOrder {
+    Begin = 0,
+    Enable = 1000,
+    Start = 2000,
+    FixedUpdate = 3000,
+    Update = 4000,
+    Animation = 5000,
+    LateUpdate = 6000,
+    BeforeRenderer = 7000,
+    Renderer = 8000,
+    Disable = 9000,
+    End = 10000,
 }
 /**
  * 应用程序的运行模式。

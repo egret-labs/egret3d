@@ -2,6 +2,7 @@ import { uuid } from "../basic";
 import { IEntityClass, IAbstractComponentClass, IComponentClass, IEntity, IComponent } from "./types";
 
 let _componentClassCount = 0;
+const _componentIndices: { [key: string]: uint } = {};
 /**
  * 实体装饰器。
  */
@@ -45,17 +46,19 @@ export function entity({
 export function component({
     isAbstract = false,
     allowMultiple = false,
+    type = "",
     tag = "",
     requireComponents = null,
     extensions = null,
 }: {
     isAbstract?: boolean,
     allowMultiple?: boolean,
+    type?: string,
     tag?: string,
     requireComponents?: ReadonlyArray<IComponentClass<IComponent>> | null,
     extensions?: { [key: string]: any } | null,
 } = {}) {
-    return function (componentClass: IAbstractComponentClass) {
+    return function (componentClass: IAbstractComponentClass<IComponent>) {
         if (componentClass.registered === componentClass) {
             return;
         }
@@ -65,14 +68,27 @@ export function component({
         (componentClass.allowMultiple as boolean) = allowMultiple;
 
         if (isAbstract) {
-            (componentClass.isAbstract as IAbstractComponentClass | null) = componentClass;
+            (componentClass.isAbstract as IAbstractComponentClass<IComponent> | null) = componentClass;
         }
         else {
-            (componentClass.isAbstract as IAbstractComponentClass | null) = null;
+            (componentClass.isAbstract as IAbstractComponentClass<IComponent> | null) = null;
+        }
+
+        if (type !== "") {
+            (componentClass.componentType as string) = type;
+
+            if (type in _componentIndices) {
+                (componentClass.componentIndex as int) = _componentIndices[type];
+            }
+            else {
+                (componentClass.componentIndex as int) = _componentIndices[type] = _componentClassCount++;
+            }
+        }
+        else if (!isAbstract) {
             (componentClass.componentIndex as int) = _componentClassCount++;
         }
 
-        (componentClass.tag as string) = tag;
+        (componentClass.componentTag as string) = tag;
 
         if (requireComponents !== null) {
             if (componentClass.requireComponents !== null) { // Inherited parent class require components.

@@ -1,7 +1,7 @@
 import * as signals from "signals";
-import { SystemOrder, Entity } from "../ecs";
+import { Entity } from "../ecs";
 
-import { RunningMode, ApplicationInitializeOptions } from "./types";
+import { SystemOrder, RunningMode, ApplicationInitializeOptions } from "./types";
 import { GameEntity } from "./entities/GameEntity";
 import { Clock } from "./components/singleton/Clock";
 import { SceneManager } from "./systems/SceneManager";

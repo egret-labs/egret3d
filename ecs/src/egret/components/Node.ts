@@ -1,24 +1,24 @@
-import { NodeNames, NodeLayer, NodeTags } from "../types";
-import { component, Entity } from "../../ecs";
-import { Parent } from "./Parent";
+import { filterArray } from "../../basic";
+import { component, Entity, Component } from "../../ecs";
+import { ComponentType, NodeNames, NodeLayer, NodeTags } from "../types";
 import { Scene } from "./Scene";
 import { Application } from "../Application";
 /**
  * 基础节点组件。
  */
-@component()
-export class Node extends Parent {
+@component({ type: ComponentType.Node })
+export class Node extends Component {
     public name: string = NodeNames.Noname;
     public tag: NodeTags | string = NodeTags.Untagged;
     public layer: NodeLayer = NodeLayer.Default;
-    /**
-     * @internal
-     */
-    public _parent: Parent | null = null;
-    /**
-     * @internal
-     */
-    public _scene: Scene | null = null;
+
+    protected _globalEnabledDirty: boolean = true;
+    protected _globalEnabled: boolean = false;
+    protected _childrenDirty: boolean = false;
+    protected _childCount: uint = 0;
+    protected readonly _children: (Node | null)[] = [];
+    protected _parent: Node | null = null;
+    protected _scene: Scene | null = null;
 
     protected _destroy() {
         this.removeChildren();
@@ -48,6 +48,11 @@ export class Node extends Parent {
         this.name = NodeNames.Noname;
         this.tag = "";
 
+        this._globalEnabledDirty = true;
+        this._globalEnabled = false;
+        this._childrenDirty = false;
+        this._childCount = 0;
+        this._children.length = 0;
         this._parent = null;
         this._scene = null;
     }
@@ -129,6 +134,127 @@ export class Node extends Parent {
         }
 
         return node;
+    }
+    /**
+     * @override
+     * @internal
+     */
+    public dispatchEnabledEvent(enabled: boolean): void {
+        this._globalEnabledDirty = true;
+
+        for (const child of this._children) {
+            if (child !== null && child.entity.enabled) {
+                for (const component of child.entity.components) {
+                    if (component.enabled) {
+                        component.dispatchEnabledEvent(enabled);
+                    }
+                }
+            }
+        }
+
+        super.dispatchEnabledEvent(enabled);
+    }
+    /**
+     * 
+     */
+    public removeChild(node: Node): boolean {
+        if (node._parent === this) {
+            const children = this._children;
+            const index = children.indexOf(node);
+
+            if (index >= 0) {
+                children[index] = null;
+
+                if (!node.entity.isDestroyed) {
+                    node.entity.destroy();
+                }
+
+                this._childrenDirty = true;
+                this._childCount--;
+
+                return true;
+            }
+            else if (DEBUG) {
+            }
+        }
+
+        return false;
+    }
+    /**
+     * 
+     */
+    public removeChildren(): void {
+        const children = this._children;
+        let i = children.length;
+
+        while (i--) {
+            const child = children[i];
+
+            if (child !== null) {
+                this.removeChild(child);
+            }
+        }
+    }
+    /**
+     * 
+     */
+    public getChildIndex(node: Node): int {
+        if (node._parent === this) {
+            return this.children.indexOf(node);
+        }
+
+        return -1;
+    }
+    /**
+     * 
+     */
+    public setChildIndex(node: Node, index: uint): boolean {
+        if (node._parent === this) {
+            if (0 <= index && index < this._childCount) {
+                const { children } = this;
+                const prevIndex = children.indexOf(node);
+
+                if (prevIndex !== index) {
+                    (children as Node[]).splice(prevIndex, 1);
+                    (children as Node[]).splice(index, 0, node);
+
+                    return true;
+                }
+            }
+        }
+        else if (DEBUG) {
+            console.warn("Set child index error.");
+        }
+
+        return false;
+    }
+    /**
+     * 
+     */
+    public getChildren(output: Node[] | null = null, depth: uint = 0): Node[] {
+        if (output === null) {
+            output = [];
+        }
+
+        for (const child of this.children) {
+            output[output.length] = child;
+
+            if (depth !== 1) {
+                child.getChildren(output, depth > 0 ? depth - 1 : 0);
+            }
+        }
+
+        return output;
+    }
+    /**
+     * 
+     */
+    public getChildAt(index: uint): Node | null {
+        if (0 <= index && index < this._childCount) {
+            return this.children[index];
+        }
+
+        return null;
     }
     // /**
     //  * 通过指定的名称或路径获取该节点的子（孙）节点。
@@ -212,11 +338,29 @@ export class Node extends Parent {
         return path;
     }
     /**
+     * 该场景（节点）的全部子节点数量。
+     */
+    public get childCount(): uint {
+        return this._childCount;
+    }
+    /**
+     * 该场景（节点）的全部子节点。
+     */
+    public get children(): ReadonlyArray<Node> {
+        const children = this._children;
+
+        if (this._childrenDirty) {
+            filterArray(children, null);
+            this._childrenDirty = false;
+        }
+
+        return children as Node[];
+    }
+    /**
      * 该节点的父节点。
      */
     public get parent(): Node | null {
-        const parent = this._parent;
-        return parent !== this._scene ? parent as Node : null;
+        return this._parent;
     }
     public set parent(value: Node | null) {
         this.setParent(value, false);

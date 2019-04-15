@@ -1,19 +1,28 @@
 import { IUUIDClass } from "../basic";
 /**
- * 系统排序。
+ * 实体响应收集器响应类型。
  */
-export const enum SystemOrder {
-    Begin = 0,
-    Enable = 1000,
-    Start = 2000,
-    FixedUpdate = 3000,
-    Update = 4000,
-    Animation = 5000,
-    LateUpdate = 6000,
-    BeforeRenderer = 7000,
-    Renderer = 8000,
-    Disable = 9000,
-    End = 10000,
+export const enum CollectorReactiveType {
+    /**
+     * 按照系统排序响应。
+     */
+    InOrder = 0,
+    /**
+     * 添加实体时立即响应。
+     */
+    AddEntityImmediately = 0b0001,
+    /**
+     * 移除实体时立即响应。
+     */
+    RemoveEntityImmediately = 0b0010,
+    /**
+     * 激活组件时立即响应。
+     */
+    EnabledComponentImmediately = 0b0100,
+    /**
+     * 禁用组件时立即响应。
+     */
+    DisabledComponentImmediately = 0b1000,
 }
 /**
  * 实体类接口。
@@ -38,11 +47,11 @@ export interface IEntityClass<TEntity extends IEntity> extends IUUIDClass {
  * 组件类接口。
  * - 仅用于约束组件类传递。
  */
-export interface IAbstractComponentClass extends IUUIDClass {
+export interface IAbstractComponentClass<TComponent extends IComponent> extends IUUIDClass {
     /**
      * 该组件是否为抽象组件。
      */
-    readonly isAbstract: IAbstractComponentClass | null;
+    readonly isAbstract: IAbstractComponentClass<TComponent> | null;
     /**
      * 是否允许在同一实体上添加多个该组件。
      */
@@ -54,7 +63,11 @@ export interface IAbstractComponentClass extends IUUIDClass {
     /**
      * 
      */
-    readonly tag: string;
+    readonly componentType: string;
+    /**
+     * 
+     */
+    readonly componentTag: string;
     /**
      * 该组件依赖的其他前置组件。
      */
@@ -68,7 +81,7 @@ export interface IAbstractComponentClass extends IUUIDClass {
  * 组件类接口。
  * - 仅用于约束组件类传递。
  */
-export interface IComponentClass<TComponent extends IComponent> extends IAbstractComponentClass {
+export interface IComponentClass<TComponent extends IComponent> extends IAbstractComponentClass<TComponent> {
     /**
      * 禁止实例化组件。
      * @protected
@@ -131,23 +144,23 @@ export interface IMatcher {
     /**
      * 该匹配器的全部组件。
      */
-    readonly components: ReadonlyArray<IComponentClass<IComponent>>;
+    readonly components: ReadonlyArray<IAbstractComponentClass<IComponent>>;
     /**
      * 必须包含的全部组件。
      */
-    readonly allOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
+    readonly allOfComponents: ReadonlyArray<IAbstractComponentClass<IComponent>>;
     /**
      * 必须包含的任一组件。
      */
-    readonly anyOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
+    readonly anyOfComponents: ReadonlyArray<IAbstractComponentClass<IComponent>>;
     /**
      * 不能包含的任一组件。
      */
-    readonly noneOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
+    readonly noneOfComponents: ReadonlyArray<IAbstractComponentClass<IComponent>>;
     /**
      * 可以包含的任一组件。
      */
-    readonly extraOfComponents: ReadonlyArray<IComponentClass<IComponent>>;
+    readonly extraOfComponents: ReadonlyArray<IAbstractComponentClass<IComponent>>;
 }
 /**
  * 不能包含任一组件的匹配器接口。
@@ -157,7 +170,7 @@ export interface INoneOfMatcher extends IMatcher {
      * 设置可以包含的任一组件。
      * @param componentClasses 可以包含的任一组件。
      */
-    extraOf(...componentClasses: ReadonlyArray<IComponentClass<IComponent>>): INoneOfMatcher;
+    extraOf(...componentClasses: ReadonlyArray<IAbstractComponentClass<IComponent>>): INoneOfMatcher;
 }
 /**
  * 必须包含任一组件的匹配器接口。
@@ -167,7 +180,7 @@ export interface IAnyOfMatcher extends INoneOfMatcher {
      * 设置不能包含的任一组件。
      * @param componentClasses 不能包含的任一组件。
      */
-    noneOf(...componentClasses: ReadonlyArray<IComponentClass<IComponent>>): INoneOfMatcher;
+    noneOf(...componentClasses: ReadonlyArray<IAbstractComponentClass<IComponent>>): INoneOfMatcher;
 }
 /**
  * 必须包含全部组件的匹配器接口。
@@ -177,7 +190,7 @@ export interface IAllOfMatcher extends IAnyOfMatcher {
      * 设置必须包含的任一组件。
      * @param componentClasses 必须包含的任一组件。
      */
-    anyOf(...componentClasses: ReadonlyArray<IComponentClass<IComponent>>): IAnyOfMatcher;
+    anyOf(...componentClasses: ReadonlyArray<IAbstractComponentClass<IComponent>>): IAnyOfMatcher;
 }
 /**
  * 实体组接口。
@@ -214,14 +227,6 @@ export interface ICollector<TEntity extends IEntity> {
      */
     readonly group: IGroup<TEntity>;
     /**
-     * 缓存添加的实体。
-     */
-    readonly addedEntities: ReadonlyArray<TEntity | null>;
-    /**
-     * 缓存添加的组件。
-     */
-    readonly addedComponentes: ReadonlyArray<IComponent | null>;
-    /**
      * 缓存移除的组件。
      */
     readonly removedComponentes: ReadonlyArray<IComponent | null>;
@@ -229,6 +234,14 @@ export interface ICollector<TEntity extends IEntity> {
      * 缓存移除的实体。
      */
     readonly removedEntities: ReadonlyArray<TEntity | null>;
+    /**
+     * 缓存添加的实体。
+     */
+    readonly addedEntities: ReadonlyArray<TEntity | null>;
+    /**
+     * 缓存添加的组件。
+     */
+    readonly addedComponentes: ReadonlyArray<IComponent | null>;
 }
 /**
  * 实体上下文。

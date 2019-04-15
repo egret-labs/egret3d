@@ -4,7 +4,6 @@ import {
     Entity,
     Component,
 } from "../../ecs";
-
 import { GameEntity } from "../entities/GameEntity";
 /**
  * 基础游戏组件。

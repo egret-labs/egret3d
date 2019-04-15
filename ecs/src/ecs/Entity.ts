@@ -1,5 +1,5 @@
 import { UUID } from "../basic";
-import { IComponentClass, IEntity } from "./types";
+import { IComponentClass, IEntity, IAbstractComponentClass } from "./types";
 import { entity } from "./Decorators";
 import { Component } from "./Component";
 import { GroupComponent } from "./GroupComponent";
@@ -89,17 +89,19 @@ export class Entity extends UUID implements IEntity {
 
     protected _isRequireComponent(componentClass: IComponentClass<Component>) {
         for (const component of this._components) {
-            if (component !== undefined) { // TODO remove undefined
-                const requireComponents = ((
-                    (component.constructor === GroupComponent) ?
-                        (component as GroupComponent).components[0] :
-                        component
-                ).constructor as IComponentClass<Component>).requireComponents;
+            if (component === undefined) { // TODO remove undefined
+                continue;
+            }
 
-                if (requireComponents !== null && requireComponents.indexOf(componentClass) >= 0) {
-                    // TODO
-                    return true;
-                }
+            const requireComponents = ((
+                (component.constructor === GroupComponent) ?
+                    (component as GroupComponent).components[0] :
+                    component
+            ).constructor as IComponentClass<Component>).requireComponents;
+
+            if (requireComponents !== null && requireComponents.indexOf(componentClass) >= 0) {
+                // TODO
+                return true;
             }
         }
 
@@ -149,13 +151,16 @@ export class Entity extends UUID implements IEntity {
             this._destroyError();
         }
 
-        const { allowMultiple, componentIndex, requireComponents } = componentClass;
+        const { allowMultiple, componentIndex, componentType, requireComponents } = componentClass;
         const components = this._components;
         const existedComponent = components[componentIndex] || null;
 
         // Check multiple component.
         if (!allowMultiple && existedComponent !== null) {
-            if (DEBUG) {
+            if (componentType !== "" && existedComponent.constructor !== this.constructor) {
+                this.removeComponent(existedComponent);
+            }
+            else if (DEBUG) {
                 // console.warn(`Cannot add the ${egret.getQualifiedClassName(componentClass)} component to the entity again.`, this.uuid);
             }
 
@@ -201,7 +206,7 @@ export class Entity extends UUID implements IEntity {
         return component;
     }
 
-    public removeComponent<T extends Component>(componentInstanceOrClass: IComponentClass<T> | T): boolean {
+    public removeComponent<T extends Component>(componentInstanceOrClass: IAbstractComponentClass<T> | T): boolean {
         if (!componentInstanceOrClass) {
             if (DEBUG) {
                 throw new Error();
@@ -240,20 +245,17 @@ export class Entity extends UUID implements IEntity {
         else { // Remove component by class.
             componentClass = componentInstanceOrClass as IComponentClass<T>;
             componentIndex = componentClass.componentIndex;
+            const temp = this._components[componentIndex] || null;
 
-            if (componentIndex >= 0) {
-                const temp = this._components[componentIndex] || null;
-
-                if (temp !== null) {
-                    if (temp.constructor === GroupComponent) {
-                        groupComponent = temp as GroupComponent;
-                        component = groupComponent.components[0] as T;
-                    }
+            if (temp !== null) {
+                if (temp.constructor === GroupComponent) {
+                    groupComponent = temp as GroupComponent;
+                    component = groupComponent.components[0] as T;
                 }
             }
         }
 
-        if (componentIndex >= 0 && component !== null) {
+        if (component !== null) {
             if (
                 (groupComponent !== null && groupComponent.components.length > 1) || // 多组件实例时，不用检查依赖。
                 !this._isRequireComponent(componentClass)
@@ -266,7 +268,7 @@ export class Entity extends UUID implements IEntity {
         return result;
     }
 
-    public removeAllComponent(excludes: ReadonlyArray<IComponentClass<Component>> | null = null): void {
+    public removeAllComponent(excludes: ReadonlyArray<IAbstractComponentClass<Component>> | null = null): void {
         const components = this._components;
         let i = components.length;
 
@@ -309,16 +311,16 @@ export class Entity extends UUID implements IEntity {
             return component as T;
         }
 
-        return null;
-    }
+        // public getRemovedComponent<T extends Component>(componentClass: IComponentClass<T>): T | null { // TODO
+        //     const componentIndex = componentClass.componentIndex;
+        //     const component = this._removedComponents[componentIndex] || null;
 
-    public getRemovedComponent<T extends Component>(componentClass: IComponentClass<T>): T | null {
-        const componentIndex = componentClass.componentIndex;
-        const component = this._removedComponents[componentIndex] || null;
+        //     if (component !== null) {
+        //         return component as T;
+        //     }
 
-        if (component !== null) {
-            return component as T;
-        }
+        //     return null;
+        // }
 
         return null;
     }
@@ -362,7 +364,7 @@ export class Entity extends UUID implements IEntity {
         return component;
     }
 
-    public hasComponents(componentClasses: IComponentClass<Component>[], componentEnabled: boolean): boolean {
+    public hasComponents(componentClasses: IAbstractComponentClass<Component>[], componentEnabled: boolean): boolean {
         const components = this._components;
 
         for (let i = 0, l = componentClasses.length; i < l; ++i) {
@@ -396,7 +398,7 @@ export class Entity extends UUID implements IEntity {
         return true;
     }
 
-    public hasAnyComponents(componentClasses: IComponentClass<Component>[], componentEnabled: boolean): boolean {
+    public hasAnyComponents(componentClasses: IAbstractComponentClass<Component>[], componentEnabled: boolean): boolean {
         const components = this._components;
 
         for (let i = 0, l = componentClasses.length; i < l; ++i) {
@@ -467,15 +469,17 @@ export class Entity extends UUID implements IEntity {
             let index = 0;
 
             for (const component of this._components) {
-                if (component !== undefined) { // TODO remove undefined
-                    if (component.constructor === GroupComponent) {
-                        for (const componentInGroup of (component as GroupComponent).components) {
-                            cachedComponents[index++] = componentInGroup;
-                        }
+                if (component === undefined) { // TODO remove undefined
+                    continue;
+                }
+
+                if (component.constructor === GroupComponent) {
+                    for (const componentInGroup of (component as GroupComponent).components) {
+                        cachedComponents[index++] = componentInGroup;
                     }
-                    else {
-                        cachedComponents[index++] = component;
-                    }
+                }
+                else {
+                    cachedComponents[index++] = component;
                 }
             }
 

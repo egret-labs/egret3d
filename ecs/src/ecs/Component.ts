@@ -8,10 +8,12 @@ import { Entity } from "./Entity";
  */
 @component({ isAbstract: true })
 export abstract class Component extends UUID implements IComponent {
-    public static readonly isAbstract: IAbstractComponentClass | null = null;
+
+    public static readonly isAbstract: IAbstractComponentClass<Component> | null = null;
     public static readonly allowMultiple: boolean = false;
     public static readonly componentIndex: int = -1;
-    public static readonly tag: string = "";
+    public static readonly componentType: string = "";
+    public static readonly componentTag: string = "";
     public static readonly requireComponents: ReadonlyArray<IComponentClass<Component>> | null = null;
     public static readonly extensions: { [key: string]: any } | null = null;
     /**
