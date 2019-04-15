@@ -7,6 +7,7 @@ export * from "./asset";
 export * from "./serialize";
 export * from "./serialize-ext";
 export * from "./egret";
+export * from "./egret2d";
 export { editor };
 
 import { ApplicationInitializeOptions, RunningMode } from "./egret/types";

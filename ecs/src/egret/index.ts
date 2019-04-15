@@ -1,4 +1,5 @@
 export * from "./types";
+export * from "./math";
 export * from "./entities/GameEntity";
 export * from "./components/singleton/Clock";
 export * from "./components/Node";
