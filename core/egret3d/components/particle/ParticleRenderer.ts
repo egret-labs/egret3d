@@ -147,11 +147,11 @@ namespace egret3d.particle {
             }
 
             if (this.batchMesh) {
-                this.batchMesh.release();
+                this.batchMesh.dispose();
             }
 
             if (this.batchMaterial) {
-                this.batchMaterial.release();
+                this.batchMaterial.dispose();
             }
 
             this._renderMode = ParticleRenderMode.Billboard;

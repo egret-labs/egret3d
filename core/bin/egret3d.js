@@ -25953,10 +25953,10 @@ var egret3d;
                     this._mesh.release();
                 }
                 if (this.batchMesh) {
-                    this.batchMesh.release();
+                    this.batchMesh.dispose();
                 }
                 if (this.batchMaterial) {
-                    this.batchMaterial.release();
+                    this.batchMaterial.dispose();
                 }
                 this._renderMode = 0 /* Billboard */;
                 this.velocityScale = 1.0;
@@ -31376,9 +31376,9 @@ var egret3d;
             }
             WebGLMesh.prototype.onReferenceCountChange = function (isZero) {
                 if (isZero && this.vbo) {
-                    if (this.config && this.config.skins) {
-                        return false;
-                    }
+                    // if (this.config && this.config.skins) { // TODO
+                    //     return false;
+                    // }
                     var webgl_12 = webgl_11.WebGLRenderState.webgl;
                     webgl_12.deleteBuffer(this.vbo);
                     for (var _i = 0, _a = this.ibos; _i < _a.length; _i++) {

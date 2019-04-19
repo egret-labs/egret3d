@@ -8,9 +8,9 @@ namespace egret3d.webgl {
 
         public onReferenceCountChange(isZero: boolean) {
             if (isZero && this.vbo) {
-                if (this.config && this.config.skins) { // TODO
-                    return false;
-                }
+                // if (this.config && this.config.skins) { // TODO
+                //     return false;
+                // }
 
                 const webgl = WebGLRenderState.webgl!;
                 webgl.deleteBuffer(this.vbo);
