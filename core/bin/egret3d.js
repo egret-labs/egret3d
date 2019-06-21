@@ -23355,7 +23355,7 @@ var egret3d;
                     positionBuffer[vector3Offset + 2] = orginPostionBuffer[orginVertexIndex * 3 + 2];
                     if (orginUVBuffer) {
                         uvBuffer[vector2Offset] = orginUVBuffer[orginVertexIndex * 2];
-                        uvBuffer[vector2Offset + 1] = 1.0 - orginUVBuffer[orginVertexIndex * 2 + 1];
+                        uvBuffer[vector2Offset + 1] = orginUVBuffer[orginVertexIndex * 2 + 1];
                     }
                     if (orginColorBuffer) {
                         colorBuffer[vector4Offset] = orginColorBuffer[orginVertexIndex * 4];
